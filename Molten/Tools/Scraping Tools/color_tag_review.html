@@ -555,7 +555,7 @@
 
         async function loadSuggestions() {
             try {
-                const response = await fetch('color_tag_suggestions.json');
+                const response = await fetch(`color_tag_suggestions.json?t=${Date.now()}`);
                 if (!response.ok) throw new Error('Failed to load suggestions');
                 suggestions = await response.json();
                 console.log('Loaded suggestions:', suggestions);
@@ -567,7 +567,7 @@
 
         async function loadExistingApprovals() {
             try {
-                const response = await fetch('color_tag_approvals.json');
+                const response = await fetch(`color_tag_approvals.json?t=${Date.now()}`);
                 if (response.ok) {
                     const data = await response.json();
                     approvals = data.products || {};
@@ -671,7 +671,8 @@
             };
 
             const isApproved = approval.status === 'approved';
-            const imagePath = product.image_path ? `product-images/${product.image_path}` : '';
+            // Look up image by stable_id (try jpg, will fall back to error handler for other extensions or missing images)
+            const imagePath = `product-images/${stableId}.jpg`;
 
             // Calculate tag states
             const suggestedSet = new Set(product.suggested_tags || []);
@@ -749,6 +750,22 @@
                                                onchange="toggleTag('${stableId}', '${tag}', this.checked)">
                                         <label class="tag-label" for="${stableId}-${tag}">${tag}</label>
                                         <span class="tag-badge removed">REMOVED</span>
+                                    </div>
+                                `;
+                            }).join('')}
+
+                            ${(approval.manually_added || []).filter(tag =>
+                                !suggestedSet.has(tag) && !removedSet.has(tag)
+                            ).sort().map(tag => {
+                                const isChecked = approvedSet.has(tag);
+                                return `
+                                    <div class="tag-item" style="border: 1px dashed #0071e3;">
+                                        <input type="checkbox"
+                                               id="${stableId}-${tag}"
+                                               ${isChecked ? 'checked' : ''}
+                                               onchange="toggleTag('${stableId}', '${tag}', this.checked)">
+                                        <label class="tag-label" for="${stableId}-${tag}">${tag}</label>
+                                        <span class="tag-badge" style="background: #0071e3; color: white;">MANUAL</span>
                                     </div>
                                 `;
                             }).join('')}
@@ -830,6 +847,7 @@
 
             if (!tag) return;
 
+            // Initialize approval object if needed
             if (!approvals[stableId]) {
                 approvals[stableId] = {
                     approved_tags: [],
@@ -839,10 +857,29 @@
                 };
             }
 
-            const tags = new Set(approvals[stableId].approved_tags);
-            tags.add(tag);
-            approvals[stableId].approved_tags = Array.from(tags).sort();
+            // Get all currently checked tags from the DOM to preserve user's selections
+            const product = suggestions.products[stableId];
+            const allPossibleTags = [
+                ...(product.suggested_tags || []),
+                ...(product.tag_changes?.removed || []),
+                ...(approvals[stableId].manually_added || [])
+            ];
 
+            const currentlyChecked = [];
+            allPossibleTags.forEach(t => {
+                const checkbox = document.getElementById(`${stableId}-${t}`);
+                if (checkbox && checkbox.checked) {
+                    currentlyChecked.push(t);
+                }
+            });
+
+            // Add the new manual tag
+            currentlyChecked.push(tag);
+
+            // Update approved_tags with all checked tags (remove duplicates, sort)
+            approvals[stableId].approved_tags = Array.from(new Set(currentlyChecked)).sort();
+
+            // Track that this tag was manually added
             if (!approvals[stableId].manually_added.includes(tag)) {
                 approvals[stableId].manually_added.push(tag);
             }
@@ -877,6 +914,7 @@
         function saveApprovals() {
             const data = {
                 version: '1.0',
+                analysis_version: suggestions?.analysis_version || 'unknown',
                 approved_date: new Date().toISOString(),
                 products: approvals
             };
@@ -929,7 +967,7 @@
 
         function showModal(title, body, onConfirm) {
             document.getElementById('modalHeader').textContent = title;
-            document.getElementById('modalBody').textContent = body;
+            document.getElementById('modalBody').innerHTML = body;
             document.getElementById('modal').classList.add('active');
             window.modalConfirmCallback = onConfirm;
         }

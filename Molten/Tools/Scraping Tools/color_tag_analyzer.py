@@ -35,7 +35,9 @@ COLOR_TAXONOMY = [
     "brown", "gray", "black", "white", "clear",
     "teal", "amber", "lavender", "aqua", "cream", "magenta",
     # Attributes
-    "transparent", "opaque", "sparkle", "striker", "reducing", "uv"
+    "transparent", "opaque", "translucent", "sparkle", "striker", "reducing", "uv", "cfl", "silver",
+    # Special combinations
+    "amber-purple"
 ]
 
 # Paths
@@ -46,7 +48,7 @@ APPROVALS_PATH = SCRIPT_DIR / "color_tag_approvals.json"
 IMAGES_DIR = Path("/Users/binde/projects/misc/Molten/Sources/Resources/product-images")
 
 # Analysis version - increment when improving detection logic
-ANALYSIS_VERSION = "2.0"  # Updated to use LLM for text analysis
+ANALYSIS_VERSION = "2.3"  # Added amber-purple tag detection
 
 # Initialize Anthropic client (will use ANTHROPIC_API_KEY env var)
 anthropic_client = None
@@ -166,7 +168,7 @@ def find_image_file(stable_id):
     return None
 
 
-def analyze_text_for_colors(name, description):
+def analyze_text_for_colors(name, description, manufacturer):
     """
     Extract color tags from product name and description using Claude API.
     Returns list of color/attribute tags from the taxonomy.
@@ -178,6 +180,7 @@ def analyze_text_for_colors(name, description):
 
     prompt = f"""You are analyzing a glass product for a flameworking catalog. Based on the product name and description, identify which colors and attributes apply.
 
+Manufacturer: {manufacturer}
 Product Name: {name}
 Description: {description}
 
@@ -188,7 +191,11 @@ Rules:
 - Only return tags that are clearly indicated by the name or description
 - Consider context (e.g., "Blue Honey" is blue glass, not honey-colored)
 - Return multiple colors if the glass has multiple colors
-- Include attributes like "transparent", "opaque", "sparkle", "striker", "reducing", "uv" if mentioned
+- Include attributes like "transparent", "opaque", "translucent", "sparkle", "striker", "reducing", "uv", "cfl", "silver", "amber-purple" if mentioned
+- Tag as "cfl" if the product mentions CFL (Color-Changing in Fluorescent Light)
+- Tag as "translucent" if the product mentions: semi-transparent, translucent, misty, or milky
+- Tag as "silver" if the product mentions silver (this is a special technical attribute in glass)
+- Tag as "amber-purple" if: (1) it's a Glass Alchemy product mentioning "passion" OR (2) any product mentioning "amber purple"
 - If no colors/attributes are clearly indicated, return an empty list
 
 Return ONLY a JSON array of applicable tags, like: ["blue", "transparent"]
@@ -296,7 +303,7 @@ def analyze_product(product, existing_suggestions, approvals):
     image_checksum = calculate_image_checksum(image_path) if image_path else None
 
     # Analyze text
-    text_tags = analyze_text_for_colors(name, description)
+    text_tags = analyze_text_for_colors(name, description, manufacturer)
 
     # Analyze image (placeholder for now)
     image_tags = []
@@ -341,8 +348,7 @@ def analyze_product(product, existing_suggestions, approvals):
         "name": name,
         "description": description,
         "manufacturer_url": manufacturer_url,
-        "image_path": image_path.name if image_path else None,
-        "image_checksum": image_checksum,
+        "image_checksum": image_checksum,  # For detecting image changes, lookup by stable_id
         "current_tags": current_tags,
         "suggested_tags": suggested_tags,
         "previously_approved": previously_approved,

@@ -303,7 +303,7 @@ def format_products_for_csv(products):
             'coe': COE,
             'type': product_type,
             'manufacturer_url': product.get('manufacturer_url', ''),
-            'image_path': '',
+            
             'image_url': product.get('image_url', ''),
             'stock_type': ''
         })
@@ -354,7 +354,7 @@ def main():
 
         fieldnames = ['manufacturer', 'code', 'name', 'start_date', 'end_date',
                      'manufacturer_description', 'tags', 'synonyms', 'coe', 'type',
-                     'manufacturer_url', 'image_path', 'image_url', 'stock_type']
+                     'manufacturer_url', 'image_url', 'stock_type']
 
         with open(csv_filename, 'w', newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)

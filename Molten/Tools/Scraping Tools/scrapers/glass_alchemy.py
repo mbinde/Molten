@@ -91,11 +91,18 @@ def determine_product_type(product_name, product_type_field=None):
 
 def remove_brand_from_title(title):
     """Remove Glass Alchemy brand name, SKU, and product type from product title"""
-    
+
     # Extract name before comma if present (e.g., "Amazon Lagoon, 587" -> "Amazon Lagoon")
+    # BUT preserve ", Experimental" or ", Experimental Copy" in names
     if ',' in title:
-        title = title.split(',')[0].strip()
-    
+        parts = title.split(',')
+        if len(parts) >= 2 and 'experimental' in parts[1].lower():
+            # Keep "Name, Experimental"
+            title = ','.join(parts[:2]).strip()
+        else:
+            # Just keep first part (remove SKU numbers, etc)
+            title = parts[0].strip()
+
     # Remove SKU prefix (e.g., "103" from "103 Ketchup" or "974," from "974, Black Violet")
     cleaned_title = re.sub(r'^\d{3,4}[,\s]+', '', title)
     
@@ -226,16 +233,25 @@ def scrape_glass_alchemy_products(collection_handle='all', test_mode=False):
                 # Glass Alchemy displays SKUs in the title like "Ketchup, 103"
                 # Products without SKU in title (like "Argent Green") have only internal codes
                 name = product['name']
+                is_experimental = 'experimental' in name.lower()
 
                 # Try to extract SKU after comma: "Ketchup, 103" -> "103"
                 sku_match = re.search(r',\s*(\d{3,4})\s*$', name)
                 if sku_match:
-                    product['sku'] = sku_match.group(1)
+                    sku = sku_match.group(1)
+                    # Add -EXP suffix for experimental products
+                    if is_experimental:
+                        sku = f"{sku}-EXP"
+                    product['sku'] = sku
                 # Also try at start: "103 Ketchup" -> "103"
                 else:
                     sku_match = re.search(r'^(\d{3,4})[,\s]', name)
                     if sku_match:
-                        product['sku'] = sku_match.group(1)
+                        sku = sku_match.group(1)
+                        # Add -EXP suffix for experimental products
+                        if is_experimental:
+                            sku = f"{sku}-EXP"
+                        product['sku'] = sku
                 
                 # Check for duplicate SKUs
                 sku = product.get('sku')
@@ -330,7 +346,7 @@ def main():
         with open(csv_filename, 'w', newline='', encoding='utf-8') as f:
             fieldnames = ['manufacturer', 'code', 'name', 'start_date', 'end_date', 
                          'manufacturer_description', 'tags', 'synonyms', 'coe', 'type',
-                         'manufacturer_url', 'image_path', 'image_url']
+                         'manufacturer_url', 'image_url']
             
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
@@ -355,7 +371,7 @@ def main():
                     'coe': '33',  # Glass Alchemy is COE 33
                     'type': product_type,
                     'manufacturer_url': product.get('manufacturer_url', ''),
-                    'image_path': '',
+                    
                     'image_url': product.get('image_url', '')
                 })
         
@@ -406,9 +422,8 @@ def format_products_for_csv(products):
         cleaned_name = remove_brand_from_title(product['name'])
         code = product.get('sku', '')
 
-        # Ensure code has manufacturer prefix
-        if code and not code.upper().startswith(f"{MANUFACTURER_CODE}-"):
-            code = f"{MANUFACTURER_CODE}-{code}"
+        # Note: Don't add manufacturer prefix to code - it's already in the manufacturer field
+        # The code should be just the SKU as displayed on the manufacturer's site
 
         description = product.get('manufacturer_description', '')
         manufacturer_url = product.get('manufacturer_url', '')
@@ -426,7 +441,7 @@ def format_products_for_csv(products):
             'coe': COE,
             'type': product_type,
             'manufacturer_url': product.get('manufacturer_url', ''),
-            'image_path': '',
+            
             'image_url': product.get('image_url', ''),
             'stock_type': ''
         })

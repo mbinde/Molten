@@ -167,7 +167,6 @@ FIELDNAMES = [
     'coe',
     'type',  # Product form: rod, frit, tube, stringer, etc.
     'manufacturer_url',
-    'image_path',
     'image_url',
     'stock_type'  # Only DH uses this currently
 ]

@@ -225,6 +225,7 @@ TECHNICAL_PROPERTIES = {
         r'\bfluorescent\s+lighting\b',
         r'\bfluorescen[ct]e?\b',  # fluorescent, fluorescence
         r'\bcolor[\s-]?chang(?:e|es|ing)\s+(?:under|in)\s+fluorescent\b',
+        r'\bneo\s+opal\b',  # Neo Opal is always CFL-reactive
     ],
     'luster': [
         r'\bluster\b',  # luster
@@ -461,6 +462,11 @@ def combine_tags(product_name, description, manufacturer_url=None, manufacturer_
     if manufacturer_code:
         convention_tags = extract_manufacturer_convention_tags(product_name, manufacturer_code)
         all_tags.update(convention_tags)
+
+    # Special case: Neo Opal is always lavender-colored (in addition to cfl which is detected above)
+    combined_text = f"{product_name} {description or ''}".lower()
+    if re.search(r'\bneo\s+opal\b', combined_text):
+        all_tags.add('lavender')
 
     # Apply exclusions if URL is provided
     if manufacturer_url:

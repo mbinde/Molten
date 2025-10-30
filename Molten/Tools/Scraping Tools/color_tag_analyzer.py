@@ -48,7 +48,7 @@ APPROVALS_PATH = SCRIPT_DIR / "color_tag_approvals.json"
 IMAGES_DIR = Path("/Users/binde/projects/misc/Molten/Sources/Resources/product-images")
 
 # Analysis version - increment when improving detection logic
-ANALYSIS_VERSION = "2.4"  # Fixed false positive: don't tag as "clear" just because "glass" appears
+ANALYSIS_VERSION = "2.5"  # Added Heisenberg/Heisen detection for UV tag (PDX Tubing products)
 
 # Initialize Anthropic client (will use ANTHROPIC_API_KEY env var)
 anthropic_client = None
@@ -196,6 +196,7 @@ Rules:
 - Tag as "translucent" if the product mentions: semi-transparent, translucent, misty, or milky
 - Tag as "silver" if the product mentions silver (this is a special technical attribute in glass)
 - Tag as "amber-purple" if: (1) it's a Glass Alchemy product mentioning "passion" OR (2) any product mentioning "amber purple"
+- Tag as "uv" if the product mentions "Heisenberg" or "Heisen" (PDX Tubing's UV-reactive line)
 - IMPORTANT: Do NOT tag as "clear" or "transparent" just because the word "glass" appears - only tag as clear/transparent if explicitly mentioned (e.g., "clear glass", "transparent", "colorless")
 - If no colors/attributes are clearly indicated, return an empty list
 

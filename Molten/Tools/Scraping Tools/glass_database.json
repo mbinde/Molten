@@ -54446,7 +54446,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Limedrop",
-      "tags": "\"unknown\"",
+      "tags": [
+        "green",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54467,7 +54470,7 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Lemondrop (Encased)",
-      "tags": "\"unknown\"",
+      "tags": [],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54488,7 +54491,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Raindrop",
-      "tags": "\"unknown\"",
+      "tags": [
+        "blue",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54509,7 +54515,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Dragon\u2019s Eye.",
-      "tags": "\"unknown\"",
+      "tags": [
+        "blue",
+        "green",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54530,7 +54540,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Serum.",
-      "tags": "\"multicolored\"",
+      "tags": [
+        "pink",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54551,7 +54564,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Potion.",
-      "tags": "\"cfl\"",
+      "tags": [
+        "blue",
+        "cfl",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54572,7 +54589,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Brozay",
-      "tags": "\"unknown\"",
+      "tags": [
+        "brown",
+        "pink",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54593,7 +54614,13 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Brozay over Nimbus",
-      "tags": "\"unknown\"",
+      "tags": [
+        "brown",
+        "lavender",
+        "pink",
+        "purple",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54614,7 +54641,12 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Lost City with Silver!",
-      "tags": "\"gray\", \"silver\"",
+      "tags": [
+        "blue",
+        "green",
+        "silver",
+        "teal"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54635,7 +54667,12 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Atlantis over Ether.",
-      "tags": "\"unknown\"",
+      "tags": [
+        "blue",
+        "green",
+        "teal",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54656,7 +54693,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Purple Rain over Ether",
-      "tags": "\"unknown\"",
+      "tags": [
+        "blue",
+        "purple",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54677,7 +54718,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Olive.",
-      "tags": "\"brown\", \"green\"",
+      "tags": [
+        "green",
+        "opaque"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54698,7 +54742,9 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Copper free version of Mojito.",
-      "tags": "\"unknown\"",
+      "tags": [
+        "green"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54719,7 +54765,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Atlantis Over Antidote.",
-      "tags": "\"blue\"",
+      "tags": [
+        "blue",
+        "green",
+        "teal"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54740,7 +54790,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Encased Cobalt over Antidote.",
-      "tags": "\"blue\"",
+      "tags": [
+        "blue",
+        "opaque",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54761,7 +54815,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Blue Dream over Agua Azul",
-      "tags": "\"unknown\"",
+      "tags": [
+        "blue",
+        "opaque"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54782,7 +54839,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "",
-      "tags": "\"unknown\"",
+      "tags": [
+        "green",
+        "transparent",
+        "yellow"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54803,7 +54864,12 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Mint.",
-      "tags": "\"green\"",
+      "tags": [
+        "green",
+        "grey",
+        "opaque",
+        "teal"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54824,7 +54890,9 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Serum over Antidote.",
-      "tags": "\"unknown\"",
+      "tags": [
+        "pink"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54845,7 +54913,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Brozay over Antidote.",
-      "tags": "\"unknown\"",
+      "tags": [
+        "brown",
+        "opaque",
+        "pink"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54866,7 +54938,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Next-Gen Blue Dream.",
-      "tags": "\"blue\"",
+      "tags": [
+        "blue",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54887,7 +54962,12 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Mystique over Antidote",
-      "tags": "\"unknown\"",
+      "tags": [
+        "blue",
+        "green",
+        "teal",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54908,7 +54988,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Mystique.",
-      "tags": "\"unknown\"",
+      "tags": [
+        "blue",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54929,7 +55012,9 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Topaz.",
-      "tags": "\"orange\", \"yellow\"",
+      "tags": [
+        "orange"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54950,7 +55035,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Blue Dream and TTY combinations.",
-      "tags": "\"green\"",
+      "tags": [
+        "green",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54971,7 +55059,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Rozay.",
-      "tags": "\"unknown\"",
+      "tags": [
+        "pink",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -54992,7 +55083,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Serum over Ether over Antidote.",
-      "tags": "\"purple\"",
+      "tags": [
+        "grey",
+        "lavender",
+        "purple"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55013,7 +55108,7 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Thomas\u2019 Test Lab Transparent Orange.",
-      "tags": "\"unknown\"",
+      "tags": [],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55034,7 +55129,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Kryptonite.",
-      "tags": "\"unknown\"",
+      "tags": [
+        "green",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55055,7 +55153,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Serum over Ether",
-      "tags": "\"unknown\"",
+      "tags": [
+        "blue",
+        "lavender",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55076,7 +55178,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Purple Rain.",
-      "tags": "\"purple\"",
+      "tags": [
+        "purple",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55097,7 +55202,12 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Nimbus and Shane Smith Heisenberg",
-      "tags": "\"gray\", \"white\"",
+      "tags": [
+        "blue",
+        "green",
+        "transparent",
+        "uv"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55118,7 +55228,12 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Atlantis and Shane Smith Heisenberg.",
-      "tags": "\"uv\"",
+      "tags": [
+        "blue",
+        "green",
+        "transparent",
+        "uv"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55139,7 +55254,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Portland Green.",
-      "tags": "\"gray\", \"green\"",
+      "tags": [
+        "green",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55160,7 +55278,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Gluestick and Cobalt",
-      "tags": "\"blue\"",
+      "tags": [
+        "blue",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55181,7 +55302,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Prince fully encases Tonic in a teally shade of purple.",
-      "tags": "\"unknown\"",
+      "tags": [
+        "purple",
+        "teal",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55202,7 +55327,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Cobalt.",
-      "tags": "\"blue\"",
+      "tags": [
+        "blue",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55223,7 +55351,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Portland Gray.",
-      "tags": "\"gray\"",
+      "tags": [
+        "gray",
+        "opaque"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55244,7 +55375,12 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Glue Stick and Atlantis",
-      "tags": "\"unknown\"",
+      "tags": [
+        "blue",
+        "green",
+        "teal",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55254,7 +55390,7 @@
       "stable_id": "1FFW0U"
     },
     "PDX:PDX-SQ0831713": {
-      "status": "available",
+      "status": "excluded",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
       "discontinued_date": null,
@@ -55286,7 +55422,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Prince.",
-      "tags": "\"unknown\"",
+      "tags": [
+        "purple",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55296,7 +55435,7 @@
       "stable_id": "3nwt4L"
     },
     "PDX:PDX-SQ1652512": {
-      "status": "available",
+      "status": "excluded",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
       "discontinued_date": null,
@@ -55317,7 +55456,7 @@
       "stable_id": "6HgHRU"
     },
     "PDX:PDX-SQ8402965": {
-      "status": "available",
+      "status": "excluded",
       "added_date": "2025-10-29",
       "last_seen": "2025-10-29",
       "discontinued_date": null,
@@ -55349,7 +55488,13 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "",
-      "tags": "\"white\"",
+      "tags": [
+        "blue",
+        "green",
+        "opaque",
+        "translucent",
+        "white"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55370,7 +55515,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Crippy",
-      "tags": "\"unknown\"",
+      "tags": [
+        "green",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55391,7 +55539,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "",
-      "tags": "\"white\"",
+      "tags": [
+        "opaque",
+        "uv",
+        "white"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55412,7 +55564,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Limedrop over Lemondrop.",
-      "tags": "\"green\", \"yellow\"",
+      "tags": [
+        "green",
+        "transparent",
+        "yellow"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55433,7 +55589,10 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "",
-      "tags": "\"purple\"",
+      "tags": [
+        "blue",
+        "purple"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55454,7 +55613,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Encased Transparent Orange combinations. This beautiful color has micro air bubbles.",
-      "tags": "\"unknown\"",
+      "tags": [
+        "orange",
+        "seeded",
+        "transparent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55475,7 +55638,11 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "",
-      "tags": "\"unknown\"",
+      "tags": [
+        "green",
+        "opaque",
+        "white"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55496,7 +55663,12 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "Glass Alchemy Seabreeze.",
-      "tags": "\"unknown\"",
+      "tags": [
+        "blue",
+        "green",
+        "teal",
+        "translucent"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "tubing",
@@ -55748,6 +55920,7 @@
       "end_date": "",
       "manufacturer_description": "Dandelion is a soft, sunny cadmium based yellow that comes alive when worked, striking to a warmer yellow than the rod. The seeded texture adds depth and character. Working Tip: Pre-heat in outer flame. Avoid rapid heating.",
       "tags": [
+        "seeded",
         "striker",
         "transparent",
         "yellow"
@@ -56111,7 +56284,12 @@
       "start_date": "",
       "end_date": "",
       "manufacturer_description": "This soft, transparent orange has a touch of subtle warmth. This is a less refined cadmium color, with a seeded look, creating a playful texture. Working Tip: Pre-heat in outer flame. Avoid rapid heating.",
-      "tags": [],
+      "tags": [
+        "orange",
+        "seeded",
+        "transparent",
+        "yellow"
+      ],
       "synonyms": "",
       "coe": "33",
       "type": "rod",

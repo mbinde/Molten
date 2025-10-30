@@ -97,6 +97,63 @@ class GlassItemDataLoadingService {
         log.info("💾 Saved JSON checksum (size: \(fileSize) bytes, modified: \(modificationDate))")
     }
 
+    // MARK: - Catalog Data Version Management
+
+    private static let catalogDataVersionKey = "com.flameworker.catalog.data.version"
+
+    /// Check if JSON has a newer catalog_data_version that requires wiping and reloading all data
+    /// Returns true if JSON version > stored version (need to wipe and reload)
+    func needsCatalogDataWipe() throws -> Bool {
+        // Load JSON to check version
+        let data = try jsonLoader.findCatalogJSONData()
+
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let jsonVersion = json["catalog_data_version"] as? Int else {
+            log.warning("JSON does not contain catalog_data_version, assuming no wipe needed")
+            return false
+        }
+
+        // Get stored version (defaults to 0 if never set)
+        let storedVersion = UserDefaults.standard.integer(forKey: Self.catalogDataVersionKey)
+
+        if jsonVersion > storedVersion {
+            log.warning("🔄 Catalog data version increased (\(storedVersion) → \(jsonVersion)), will wipe and reload")
+            return true
+        } else {
+            log.info("✅ Catalog data version unchanged (\(storedVersion))")
+            return false
+        }
+    }
+
+    /// Save current catalog data version after successful load
+    func saveCatalogDataVersion() throws {
+        let data = try jsonLoader.findCatalogJSONData()
+
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let version = json["catalog_data_version"] as? Int else {
+            log.warning("JSON does not contain catalog_data_version, cannot save")
+            return
+        }
+
+        UserDefaults.standard.set(version, forKey: Self.catalogDataVersionKey)
+        log.info("💾 Saved catalog data version: \(version)")
+    }
+
+    /// Delete all catalog-related data (GlassItems and tags)
+    func wipeCatalogData() async throws {
+        log.warning("🗑️ Wiping all catalog data (GlassItems and tags)...")
+
+        // Delete all GlassItems
+        let allItems = try await catalogService.getAllGlassItems()
+        log.info("Deleting \(allItems.count) GlassItems...")
+
+        for item in allItems {
+            try await catalogService.deleteGlassItem(stableId: item.glassItem.stable_id)
+        }
+
+        log.info("✅ All catalog data wiped")
+    }
+
     // MARK: - Configuration
 
     /// Options for controlling the data loading behavior
@@ -234,12 +291,13 @@ class GlassItemDataLoadingService {
         // Log final results
         logLoadingResults(results)
 
-        // Save checksum after successful load (only if no critical errors)
+        // Save checksum and catalog data version after successful load (only if no critical errors)
         if results.itemsFailed == 0 || results.itemsCreated > 0 || results.itemsUpdated > 0 {
             do {
                 try saveJSONChecksum()
+                try saveCatalogDataVersion()
             } catch {
-                log.warning("Failed to save JSON checksum: \(error.localizedDescription)")
+                log.warning("Failed to save JSON checksum/version: \(error.localizedDescription)")
             }
         }
 

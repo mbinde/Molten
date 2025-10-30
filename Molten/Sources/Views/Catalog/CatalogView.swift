@@ -30,6 +30,7 @@ struct CatalogView: View {
     @State private var defaultSortOptionRawValue = SortOption.name.rawValue
     @State private var enabledManufacturersData: Data = Data()
     @State private var selectedProductType: String = "glass"  // Product type filter: "glass" or "coating"
+    @State private var showingProductTypeSelection = false
 
     private var userDefaults: UserDefaults {
         // Use isolated UserDefaults during testing to prevent Core Data conflicts
@@ -158,6 +159,7 @@ struct CatalogView: View {
             showingCOESelection: $showingCOESelection,
             allAvailableCOEs: allAvailableCOEs,
             selectedProductType: $selectedProductType,
+            showingProductTypeSelection: $showingProductTypeSelection,
             selectedManufacturers: $viewModel.selectedManufacturers,
             showingManufacturerSelection: $showingManufacturerFilterSelection,
             allAvailableManufacturers: availableManufacturers,

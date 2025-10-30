@@ -27,6 +27,7 @@ struct SearchAndFilterHeader: View {
 
     // Product type filter state
     @Binding var selectedProductType: String  // "glass" or "coating"
+    @Binding var showingProductTypeSelection: Bool
 
     // Manufacturer filter state
     @Binding var selectedManufacturers: Set<String>
@@ -65,6 +66,7 @@ struct SearchAndFilterHeader: View {
         showingCOESelection: Binding<Bool>,
         allAvailableCOEs: [Int32],
         selectedProductType: Binding<String>,
+        showingProductTypeSelection: Binding<Bool>,
         selectedManufacturers: Binding<Set<String>>,
         showingManufacturerSelection: Binding<Bool>,
         allAvailableManufacturers: [String],
@@ -87,6 +89,7 @@ struct SearchAndFilterHeader: View {
         self._showingCOESelection = showingCOESelection
         self.allAvailableCOEs = allAvailableCOEs
         self._selectedProductType = selectedProductType
+        self._showingProductTypeSelection = showingProductTypeSelection
         self._selectedManufacturers = selectedManufacturers
         self._showingManufacturerSelection = showingManufacturerSelection
         self.allAvailableManufacturers = allAvailableManufacturers
@@ -224,6 +227,9 @@ struct SearchAndFilterHeader: View {
             }
         }
         .background(DesignSystem.Colors.background)
+        .sheet(isPresented: $showingProductTypeSelection) {
+            ProductTypeSelectionSheet(selectedProductType: $selectedProductType)
+        }
         .sheet(isPresented: $showingManufacturerSelection) {
             FilterSelectionSheet.manufacturers(
                 availableManufacturers: allAvailableManufacturers,
@@ -549,44 +555,26 @@ struct SearchAndFilterHeader: View {
     }
 
     private var compactProductTypePicker: some View {
-        HStack(spacing: DesignSystem.Spacing.xxs) {
-            // Glass button
-            Button {
-                withAnimation {
-                    selectedProductType = "glass"
-                    userDefaults.set("glass", forKey: "selectedProductType")
-                }
-            } label: {
-                Text("Glass")
-                    .font(DesignSystem.Typography.caption)
-                    .fontWeight(selectedProductType == "glass" ? DesignSystem.FontWeight.semibold : DesignSystem.FontWeight.medium)
-                    .foregroundColor(selectedProductType == "glass" ? .white : DesignSystem.Colors.textSecondary)
-                    .padding(.horizontal, DesignSystem.Padding.chip)
-                    .padding(.vertical, DesignSystem.Padding.buttonVertical)
-                    .background(selectedProductType == "glass" ? DesignSystem.Colors.accentPrimary : DesignSystem.Colors.backgroundInput)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
-            }
+        Button {
+            showingProductTypeSelection = true
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                Image(systemName: "square.stack.3d.up")
+                    .font(DesignSystem.Typography.captionSmall)
+                Text(selectedProductType.capitalized)
+                    .font(DesignSystem.Typography.captionSmall)
+                    .fontWeight(DesignSystem.FontWeight.medium)
+                    .lineLimit(1)
 
-            // Coating button
-            Button {
-                withAnimation {
-                    selectedProductType = "coating"
-                    userDefaults.set("coating", forKey: "selectedProductType")
-                }
-            } label: {
-                Text("Coating")
-                    .font(DesignSystem.Typography.caption)
-                    .fontWeight(selectedProductType == "coating" ? DesignSystem.FontWeight.semibold : DesignSystem.FontWeight.medium)
-                    .foregroundColor(selectedProductType == "coating" ? .white : DesignSystem.Colors.textSecondary)
-                    .padding(.horizontal, DesignSystem.Padding.chip)
-                    .padding(.vertical, DesignSystem.Padding.buttonVertical)
-                    .background(selectedProductType == "coating" ? DesignSystem.Colors.accentPrimary : DesignSystem.Colors.backgroundInput)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+                Image(systemName: "chevron.down")
+                    .font(Font.system(size: 10))
             }
+            .foregroundColor(.white)
+            .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)
+            .padding(.vertical, DesignSystem.Padding.buttonVertical)
+            .background(DesignSystem.Colors.accentPrimary)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
-        .padding(2)
-        .background(DesignSystem.Colors.backgroundInputLight)
-        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium + 2))
     }
 
     private func hideKeyboard() {
@@ -597,6 +585,52 @@ struct SearchAndFilterHeader: View {
 
 }
 
+// MARK: - Product Type Selection Sheet
+
+struct ProductTypeSelectionSheet: View {
+    @Binding var selectedProductType: String
+    @Environment(\.dismiss) private var dismiss
+
+    private let productTypes = ["glass", "coating"]
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(productTypes, id: \.self) { type in
+                    Button {
+                        withAnimation {
+                            selectedProductType = type
+                            UserDefaults.standard.set(type, forKey: "selectedProductType")
+                        }
+                        dismiss()
+                    } label: {
+                        HStack {
+                            Text(type.capitalized)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                            Spacer()
+
+                            if selectedProductType == type {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(DesignSystem.Colors.accentPrimary)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Product Type")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
 #Preview {
     @Previewable @State var searchText = ""
     @Previewable @State var searchTitlesOnly = true
@@ -605,6 +639,7 @@ struct SearchAndFilterHeader: View {
     @Previewable @State var selectedCOEs: Set<Int32> = []
     @Previewable @State var showingCOESelection = false
     @Previewable @State var selectedProductType = "glass"
+    @Previewable @State var showingProductTypeSelection = false
     @Previewable @State var selectedManufacturers: Set<String> = []
     @Previewable @State var showingManufacturerSelection = false
     @Previewable @State var searchClearedFeedback = false
@@ -620,6 +655,7 @@ struct SearchAndFilterHeader: View {
             showingCOESelection: $showingCOESelection,
             allAvailableCOEs: [90, 96, 104],
             selectedProductType: $selectedProductType,
+            showingProductTypeSelection: $showingProductTypeSelection,
             selectedManufacturers: $selectedManufacturers,
             showingManufacturerSelection: $showingManufacturerSelection,
             allAvailableManufacturers: ["be", "cim", "ef", "ga", "tag"],

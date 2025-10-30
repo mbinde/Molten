@@ -431,6 +431,7 @@ def format_products_for_csv(products):
         
         csv_rows.append({
             'manufacturer': MANUFACTURER_CODE,
+            'product_type': 'glass',
             'code': code,
             'name': cleaned_name,
             'start_date': '',
@@ -441,7 +442,7 @@ def format_products_for_csv(products):
             'coe': COE,
             'type': product_type,
             'manufacturer_url': product.get('manufacturer_url', ''),
-            
+
             'image_url': product.get('image_url', ''),
             'stock_type': ''
         })

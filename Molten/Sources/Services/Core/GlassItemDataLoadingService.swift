@@ -1141,8 +1141,6 @@ extension GlassItemDataLoadingService {
 
                         itemsUpdated += 1
                         log.debug("Updated tags for item \(glassItem.stable_id)")
-                    } else {
-                        log.debug("Tags unchanged for item \(glassItem.stable_id), skipping update")
                     }
                 } catch {
                     itemsFailed += 1

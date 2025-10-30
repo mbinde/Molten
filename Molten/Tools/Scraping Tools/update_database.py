@@ -982,6 +982,36 @@ def main():
     print("=" * 70)
     print()
 
+    # Check if this is an export-only operation
+    export_only = args.export and not args.test and not args.mfr
+
+    if export_only:
+        # Skip scraping, just load database and export
+        print("Export-only mode: Skipping scraping, using existing database")
+        print("-" * 70)
+        db = ProductDatabase(DATABASE_FILE)
+
+        # Assign stable IDs if needed
+        print("\nAssigning stable IDs (if needed)...")
+        print("-" * 70)
+        assigned_count, collision_count = db.assign_stable_ids()
+
+        # Save database if we assigned any stable_ids
+        if assigned_count > 0:
+            db.save_database()
+
+        # Export
+        print("\nExporting to JSON...")
+        print("-" * 70)
+        db.export_to_json(
+            args.export,
+            include_discontinued=args.include_discontinued,
+            strip_metadata=args.strip_metadata
+        )
+
+        print("\n✅ Export complete!")
+        return 0
+
     # Step 1: Run scrapers
     print("Step 1: Running scrapers...")
     print("-" * 70)

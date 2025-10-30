@@ -53,6 +53,7 @@ def merge_tags(db, approvals, dry_run=False):
     stats = {
         'total_approvals': 0,
         'products_updated': 0,
+        'products_excluded': 0,
         'tags_added': 0,
         'tags_removed': 0,
         'tags_unchanged': 0,
@@ -76,6 +77,26 @@ def merge_tags(db, approvals, dry_run=False):
             stable_id_to_key[sid] = key
 
     for stable_id, approval in approved_products.items():
+        # Handle excluded products
+        if approval.get('status') == 'excluded':
+            # Find product in database by stable_id
+            if stable_id not in stable_id_to_key:
+                stats['products_not_found'].append(stable_id)
+                print(f"⚠️  Product not found in database: {stable_id}")
+                continue
+
+            product_key = stable_id_to_key[stable_id]
+            product = db_products[product_key]
+
+            # Mark as excluded
+            if not dry_run:
+                product['status'] = 'excluded'
+                stats['products_excluded'] += 1
+                print(f"\n⊗ Excluded: {product.get('manufacturer', '?')}-{product.get('name', '?')} ({stable_id})")
+                if approval.get('excluded_reason'):
+                    print(f"  Reason: {approval.get('excluded_reason')}")
+            continue
+
         # Skip if not actually approved
         if approval.get('status') != 'approved':
             continue
@@ -135,23 +156,33 @@ def merge_tags(db, approvals, dry_run=False):
 
 
 def export_database(db):
-    """Export database to JSON format for app."""
+    """Export database to JSON format for app (excludes discontinued and excluded products)."""
     print(f"\nExporting to: {EXPORT_PATH}")
 
-    # Same export logic as update_database.py
+    # Filter to only available products (exclude discontinued and excluded)
+    available_products = [
+        product for product in db.get('products', {}).values()
+        if product.get('status') == 'available'
+    ]
+
     export_data = {
         "version": "1.0",
         "generated": datetime.now().isoformat(),
-        "item_count": sum(1 for p in db.get('products', {}).values() if p.get('status') == 'available'),
-        "glassitems": [
-            product for product in db.get('products', {}).values()
-        ]
+        "item_count": len(available_products),
+        "glassitems": available_products
     }
 
     with open(EXPORT_PATH, 'w') as f:
         json.dump(export_data, f, indent=2)
 
-    print(f"✅ Exported {export_data['item_count']} glass items")
+    excluded_count = sum(1 for p in db.get('products', {}).values() if p.get('status') == 'excluded')
+    discontinued_count = sum(1 for p in db.get('products', {}).values() if p.get('status') == 'discontinued')
+
+    print(f"✅ Exported {export_data['item_count']} available glass items")
+    if excluded_count > 0:
+        print(f"   (Excluded {excluded_count} items marked as excluded)")
+    if discontinued_count > 0:
+        print(f"   (Excluded {discontinued_count} items marked as discontinued)")
 
 
 def main():
@@ -199,6 +230,7 @@ def main():
     print("=" * 70)
     print(f"Total approvals processed: {stats['total_approvals']}")
     print(f"Products updated: {stats['products_updated']}")
+    print(f"Products excluded: {stats['products_excluded']}")
     print(f"Tags added: {stats['tags_added']}")
     print(f"Tags removed: {stats['tags_removed']}")
     print(f"Tags unchanged: {stats['tags_unchanged']}")
@@ -234,7 +266,11 @@ def main():
         subprocess.run(['git', 'add', str(DATABASE_PATH), str(EXPORT_PATH)], cwd=SCRIPT_DIR.parent.parent)
 
         # Commit with summary
-        commit_msg = f"Update color tags: {stats['products_updated']} products, +{stats['tags_added']} -{stats['tags_removed']} tags"
+        commit_parts = [f"Update color tags: {stats['products_updated']} products"]
+        if stats['products_excluded'] > 0:
+            commit_parts.append(f"{stats['products_excluded']} excluded")
+        commit_parts.append(f"+{stats['tags_added']} -{stats['tags_removed']} tags")
+        commit_msg = ", ".join(commit_parts)
         subprocess.run(['git', 'commit', '-m', commit_msg], cwd=SCRIPT_DIR.parent.parent)
 
         print(f"✅ Committed: {commit_msg}")

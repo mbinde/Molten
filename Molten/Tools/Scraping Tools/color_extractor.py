@@ -216,6 +216,8 @@ TECHNICAL_PROPERTIES = {
         r'\bultraviolet\b',
         r'\bblack\s+light\b',
         r'\bblacklight\b',
+        r'\bheisenberg\b',  # PDX Tubing's UV-reactive line
+        r'\bheisen\b',  # Short form of Heisenberg
     ],
     'cfl': [
         r'\bcfl\b',  # CFL as a standalone word

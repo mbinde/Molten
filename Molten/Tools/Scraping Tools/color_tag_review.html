@@ -814,6 +814,12 @@
                 tags.delete(tag);
             }
             approvals[stableId].approved_tags = Array.from(tags).sort();
+
+            // If product was already approved, set back to pending so user can re-approve
+            if (approvals[stableId].status === 'approved') {
+                approvals[stableId].status = 'pending';
+                filterProducts(); // Re-render to show Approve button
+            }
         }
 
         function selectAllTags(stableId) {
@@ -832,6 +838,12 @@
                     toggleTag(stableId, tag, true);
                 }
             });
+
+            // If product was already approved, set back to pending
+            if (approvals[stableId] && approvals[stableId].status === 'approved') {
+                approvals[stableId].status = 'pending';
+                filterProducts(); // Re-render to show Approve button
+            }
         }
 
         function clearAllTags(stableId) {
@@ -850,6 +862,12 @@
                     toggleTag(stableId, tag, false);
                 }
             });
+
+            // If product was already approved, set back to pending
+            if (approvals[stableId] && approvals[stableId].status === 'approved') {
+                approvals[stableId].status = 'pending';
+                filterProducts(); // Re-render to show Approve button
+            }
         }
 
         function addManualTag(stableId) {
@@ -902,6 +920,11 @@
 
             // Update approved_tags with all checked tags (remove duplicates, sort)
             approvals[stableId].approved_tags = Array.from(new Set(currentlyChecked)).sort();
+
+            // If product was already approved, set back to pending so user can re-approve
+            if (approvals[stableId].status === 'approved') {
+                approvals[stableId].status = 'pending';
+            }
 
             input.value = '';
             filterProducts(); // Re-render to show new tags

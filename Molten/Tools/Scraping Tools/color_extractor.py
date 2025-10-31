@@ -497,6 +497,14 @@ def combine_tags(product_name, description, manufacturer_url=None, manufacturer_
         if negative_reactive:
             all_tags.discard('reactive')
 
+    # Special case: If text mentions "reacts with silver/gold/copper" or "non-reactive with silver/gold/copper",
+    # remove both "reactive" tag AND the metal color tag (it's describing a reaction, not the glass color)
+    metals = ['silver', 'gold', 'copper']
+    for metal in metals:
+        if re.search(rf'\b(?:reacts?|reactive|non-reactive|doesn\'t\s+react|does\s+not\s+react)\s+(?:with\s+)?{metal}\b', combined_text, re.IGNORECASE):
+            all_tags.discard('reactive')
+            all_tags.discard(metal)
+
     # Apply exclusions if URL is provided
     if manufacturer_url:
         exclusions = _load_tag_exclusions()

@@ -372,19 +372,11 @@ def analyze_image_with_claude(image_path, product_name):
         return []
 
     try:
-        # Encode image
+        # Encode image (always converts to JPEG for efficiency)
         image_base64 = encode_image_base64(image_path)
 
-        # Determine media type
-        ext = Path(image_path).suffix.lower()
-        media_type_map = {
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg',
-            '.png': 'image/png',
-            '.gif': 'image/gif',
-            '.webp': 'image/webp'
-        }
-        media_type = media_type_map.get(ext, 'image/jpeg')
+        # Media type is always JPEG since encode_image_base64 converts all images to JPEG
+        media_type = 'image/jpeg'
 
         prompt = f"""Analyze this glass product image for "{product_name}" and identify its colors and visual properties.
 

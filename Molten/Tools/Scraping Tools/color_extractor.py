@@ -233,6 +233,20 @@ TECHNICAL_PROPERTIES = {
         r'\bmetal(?:s|lic)?\b',  # metal, metals, metallic
         r'\biridescen[ct]e?\b',  # iridescent, iridescence
     ],
+    'cadmium': [
+        r'\bcadmium\b',  # cadmium
+        r'\bcad\b',  # cad (common abbreviation in glass)
+    ],
+    'copper': [
+        r'\bcopper\s+(?:ruby|red|blue|green|glass)\b',  # copper ruby, copper glass, etc.
+        r'\bcontains?\s+copper\b',  # contains copper
+        r'\bwith\s+copper\b',  # with copper
+        r'\bcopper[\s-]bearing\b',  # copper-bearing
+    ],
+    'chrome': [
+        r'\bchrome\b',  # chrome
+        r'\bchromium\b',  # chromium
+    ],
 }
 
 TAG_EXCLUSIONS_FILE = "tag_exclusions.txt"
@@ -467,6 +481,11 @@ def combine_tags(product_name, description, manufacturer_url=None, manufacturer_
     combined_text = f"{product_name} {description or ''}".lower()
     if re.search(r'\bneo\s+opal\b', combined_text):
         all_tags.add('lavender')
+
+    # Special case: If iridescent → luster, don't also tag as sparkle
+    # (Iridescent glass has shimmer/luster, but shouldn't be tagged as sparkle)
+    if 'luster' in all_tags and re.search(r'\biridescen[ct]e?\b', combined_text):
+        all_tags.discard('sparkle')
 
     # Apply exclusions if URL is provided
     if manufacturer_url:

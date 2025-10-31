@@ -48,7 +48,7 @@ APPROVALS_PATH = SCRIPT_DIR / "color_tag_approvals.json"
 IMAGES_DIR = Path("/Users/binde/projects/misc/Molten/Sources/Resources/product-images")
 
 # Analysis version - increment when improving detection logic
-ANALYSIS_VERSION = "2.7"  # Added cadmium, copper, chrome detection; clarified iridescent → luster
+ANALYSIS_VERSION = "2.8"  # Added reactive exclusion logic (only tag if "can react", not "doesn't react")
 
 # Initialize Anthropic client (will use ANTHROPIC_API_KEY env var)
 anthropic_client = None
@@ -202,6 +202,7 @@ Rules:
 - Tag as "cadmium" if the description mentions "cadmium" or "cad"
 - Tag as "copper" if the description mentions copper as a material/colorant (e.g., "copper ruby", "contains copper", "copper-bearing")
 - Tag as "chrome" if the description mentions "chrome" or "chromium"
+- Tag as "reactive" if the description says the glass "can react" or "reacts with" other glasses, but do NOT tag as "reactive" if it says "doesn't react" or "does not react"
 - IMPORTANT: If you tag something as "luster" (from iridescent), do NOT also tag it as "sparkle" - iridescent glass has luster/shimmer, not sparkles
 - IMPORTANT: Do NOT tag as "clear" or "transparent" just because the word "glass" appears - only tag as clear/transparent if explicitly mentioned (e.g., "clear glass", "transparent", "colorless")
 - If no colors/attributes are clearly indicated, return an empty list

@@ -28,6 +28,8 @@ import time
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from anthropic import Anthropic
+from PIL import Image
+import io
 
 # Full color taxonomy (expanded from original)
 COLOR_TAXONOMY = [
@@ -100,6 +102,41 @@ def get_anthropic_client():
             raise ValueError("ANTHROPIC_API_KEY environment variable not set")
         anthropic_client = Anthropic(api_key=api_key)
     return anthropic_client
+
+
+def api_call_with_retry(api_func, max_retries=5, initial_wait=1.0):
+    """
+    Wrapper for API calls with exponential backoff on rate limit errors.
+
+    Args:
+        api_func: Function that makes the API call (should return the result)
+        max_retries: Maximum number of retry attempts
+        initial_wait: Initial wait time in seconds (doubles each retry)
+
+    Returns:
+        Result from api_func, or raises exception after max retries
+    """
+    wait_time = initial_wait
+
+    for attempt in range(max_retries):
+        try:
+            return api_func()
+        except Exception as e:
+            error_str = str(e)
+
+            # Check if it's a rate limit error (429)
+            if 'rate_limit_error' in error_str or '429' in error_str:
+                if attempt < max_retries - 1:
+                    with progress_lock:
+                        print(f"  Rate limit hit, retrying in {wait_time:.1f}s (attempt {attempt + 1}/{max_retries})...")
+                    time.sleep(wait_time)
+                    wait_time *= 2  # Exponential backoff
+                    continue
+
+            # For other errors or final attempt, re-raise
+            raise
+
+    raise Exception(f"Max retries ({max_retries}) exceeded")
 
 
 def calculate_image_checksum(image_path):
@@ -251,14 +288,18 @@ Return ONLY a JSON array of applicable tags, like: ["blue", "transparent"]
 Do not include any explanation or additional text."""
 
     try:
-        # Rate limit using global rate limiter
-        rate_limiter.acquire()
+        def make_api_call():
+            # Rate limit using global rate limiter
+            rate_limiter.acquire()
 
-        response = client.messages.create(
-            model="claude-3-5-haiku-20241022",  # Fast, cheap model
-            max_tokens=100,
-            messages=[{"role": "user", "content": prompt}]
-        )
+            return client.messages.create(
+                model="claude-3-5-haiku-20241022",  # Fast, cheap model
+                max_tokens=100,
+                messages=[{"role": "user", "content": prompt}]
+            )
+
+        # Make API call with retry logic
+        response = api_call_with_retry(make_api_call)
 
         # Parse the response
         response_text = response.content[0].text.strip()
@@ -282,10 +323,37 @@ Do not include any explanation or additional text."""
         return []
 
 
-def encode_image_base64(image_path):
-    """Encode image to base64 for API."""
-    with open(image_path, 'rb') as f:
-        return base64.b64encode(f.read()).decode('utf-8')
+def encode_image_base64(image_path, max_size=512):
+    """
+    Encode image to base64 for API, resizing to reduce token usage.
+
+    Args:
+        image_path: Path to image file
+        max_size: Maximum dimension (width or height) in pixels
+
+    Returns:
+        Base64 encoded string of resized image
+    """
+    with Image.open(image_path) as img:
+        # Convert RGBA to RGB if needed (API doesn't support RGBA for JPEG)
+        if img.mode == 'RGBA':
+            # Create white background
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            background.paste(img, mask=img.split()[3])  # Use alpha channel as mask
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+
+        # Resize if needed (preserve aspect ratio)
+        if img.width > max_size or img.height > max_size:
+            img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+
+        # Save to bytes buffer as JPEG with reasonable quality
+        buffer = io.BytesIO()
+        img.save(buffer, format='JPEG', quality=85, optimize=True)
+        buffer.seek(0)
+
+        return base64.b64encode(buffer.read()).decode('utf-8')
 
 
 def analyze_image_with_claude(image_path, product_name):
@@ -334,30 +402,34 @@ Rules:
 
 Return ONLY the JSON array, no explanation."""
 
-        # Rate limit using global rate limiter
-        rate_limiter.acquire()
+        def make_api_call():
+            # Rate limit using global rate limiter
+            rate_limiter.acquire()
 
-        response = anthropic_client.messages.create(
-            model="claude-3-5-haiku-20241022",
-            max_tokens=100,
-            messages=[{
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": media_type,
-                            "data": image_base64
+            return anthropic_client.messages.create(
+                model="claude-3-5-haiku-20241022",
+                max_tokens=100,
+                messages=[{
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": media_type,
+                                "data": image_base64
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": prompt
                         }
-                    },
-                    {
-                        "type": "text",
-                        "text": prompt
-                    }
-                ]
-            }]
-        )
+                    ]
+                }]
+            )
+
+        # Make API call with retry logic
+        response = api_call_with_retry(make_api_call)
 
         # Parse response
         response_text = response.content[0].text.strip()

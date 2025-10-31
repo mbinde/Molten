@@ -304,7 +304,7 @@ def analyze_image_with_claude(image_path, product_name):
 
     try:
         # Encode image
-        image_base64 = encode_image(image_path)
+        image_base64 = encode_image_base64(image_path)
 
         # Determine media type
         ext = Path(image_path).suffix.lower()

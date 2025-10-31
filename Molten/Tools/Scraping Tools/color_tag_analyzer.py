@@ -124,11 +124,12 @@ def api_call_with_retry(api_func, max_retries=5, initial_wait=1.0):
         except Exception as e:
             error_str = str(e)
 
-            # Check if it's a rate limit error (429)
-            if 'rate_limit_error' in error_str or '429' in error_str:
+            # Check if it's a rate limit error (429) or server overload (529)
+            if 'rate_limit_error' in error_str or 'overloaded_error' in error_str or '429' in error_str or '529' in error_str:
                 if attempt < max_retries - 1:
+                    error_type = "Server overloaded" if '529' in error_str or 'overloaded' in error_str else "Rate limit"
                     with progress_lock:
-                        print(f"  Rate limit hit, retrying in {wait_time:.1f}s (attempt {attempt + 1}/{max_retries})...")
+                        print(f"  {error_type}, retrying in {wait_time:.1f}s (attempt {attempt + 1}/{max_retries})...")
                     time.sleep(wait_time)
                     wait_time *= 2  # Exponential backoff
                     continue

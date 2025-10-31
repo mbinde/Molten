@@ -55,7 +55,20 @@ struct TagFilterView: View {
     @FocusState private var isSearchFieldFocused: Bool
     
     // Technical tags that describe glass properties/effects (not colors)
-    private let technicalTags: Set<String> = ["uv", "cfl", "sparkles", "streamer", "striker", "silver", "copper", "reduction", "luster"]
+    private let technicalTags: Set<String> = [
+        "amber-purple", "cfl", "uv", "luster", "reducing", "reduction",
+        "silver", "sparkle", "sparkles", "striker", "striking",
+        "seeded", "reactive"
+    ]
+
+    // Known color tags in rainbow order
+    private let colorTags: [String] = [
+        // Rainbow colors
+        "red", "orange", "yellow", "green", "blue", "purple", "pink",
+        "teal", "aqua", "turquoise", "lavender", "magenta",
+        // Neutrals in specific order
+        "clear", "white", "cream", "brown", "gray", "grey", "black"
+    ]
 
     // Filtered tags based on search text
     private var filteredTags: [String] {
@@ -69,12 +82,28 @@ struct TagFilterView: View {
     }
 
     // Categorized tags for grouped display
-    private var technicalFilteredTags: [String] {
-        filteredTags.filter { technicalTags.contains($0.lowercased()) }.sorted()
+    private var userFilteredTags: [String] {
+        filteredTags.filter { tag in
+            let lowercased = tag.lowercased()
+            return !technicalTags.contains(lowercased) && !colorTags.contains(lowercased)
+        }.sorted()
     }
 
-    private var colorAndMiscFilteredTags: [String] {
-        filteredTags.filter { !technicalTags.contains($0.lowercased()) }.sorted()
+    private var technicalFilteredTags: [String] {
+        // Keep technical tags in the order specified
+        let techOrder: [String] = [
+            "amber-purple", "cfl", "uv", "luster", "reducing", "reduction",
+            "silver", "sparkle", "sparkles", "striker", "striking",
+            "seeded", "reactive"
+        ]
+        return techOrder.filter { techTag in
+            filteredTags.contains { $0.lowercased() == techTag }
+        }
+    }
+
+    private var colorFilteredTags: [String] {
+        let filteredColorSet = Set(filteredTags.map { $0.lowercased() })
+        return colorTags.filter { filteredColorSet.contains($0) }
     }
     
     var body: some View {
@@ -85,6 +114,19 @@ struct TagFilterView: View {
                 
                 // Tags list with categorization
                 List {
+                    // User tags section (custom tags)
+                    if !userFilteredTags.isEmpty {
+                        Section("User Tags (\(userFilteredTags.count))") {
+                            ForEach(userFilteredTags, id: \.self) { tag in
+                                let itemsWithTag = catalogItems.filter { item in
+                                    item.tags.contains(tag)
+                                }
+
+                                tagRow(for: tag, itemCount: itemsWithTag.count)
+                            }
+                        }
+                    }
+
                     // Technical tags section
                     if !technicalFilteredTags.isEmpty {
                         Section("Technical (\(technicalFilteredTags.count))") {
@@ -98,10 +140,10 @@ struct TagFilterView: View {
                         }
                     }
 
-                    // Colors & Misc tags section
-                    if !colorAndMiscFilteredTags.isEmpty {
-                        Section("Colors & Misc (\(colorAndMiscFilteredTags.count))") {
-                            ForEach(colorAndMiscFilteredTags, id: \.self) { tag in
+                    // Colors section (rainbow order)
+                    if !colorFilteredTags.isEmpty {
+                        Section("Colors (\(colorFilteredTags.count))") {
+                            ForEach(colorFilteredTags, id: \.self) { tag in
                                 let itemsWithTag = catalogItems.filter { item in
                                     item.tags.contains(tag)
                                 }
@@ -297,20 +339,26 @@ struct TagFilterView: View {
             return "sun.max"
         case "CFL":
             return "lightbulb"
-        case "SPARKLES":
+        case "SPARKLES", "SPARKLE":
             return "sparkles"
         case "STREAMER":
             return "waveform"
-        case "STRIKER":
+        case "STRIKER", "STRIKING":
             return "flame"
         case "SILVER":
             return "moon.stars"
         case "COPPER":
             return "dot.radiowaves.left.and.right"
-        case "REDUCTION":
+        case "REDUCTION", "REDUCING":
             return "flame"
         case "LUSTER":
             return "diamond"
+        case "AMBER-PURPLE":
+            return "circle.hexagongrid"
+        case "SEEDED":
+            return "circle.dotted"
+        case "REACTIVE":
+            return "bolt"
         default:
             return "circle"
         }
@@ -323,20 +371,26 @@ struct TagFilterView: View {
             return "sun.max.fill"
         case "CFL":
             return "lightbulb.fill"
-        case "SPARKLES":
+        case "SPARKLES", "SPARKLE":
             return "sparkles"  // sparkles doesn't have a .fill variant
         case "STREAMER":
             return "waveform"  // waveform doesn't have a .fill variant
-        case "STRIKER":
+        case "STRIKER", "STRIKING":
             return "flame.fill"
         case "SILVER":
             return "moon.stars.fill"
         case "COPPER":
             return "dot.radiowaves.left.and.right"  // no .fill variant
-        case "REDUCTION":
+        case "REDUCTION", "REDUCING":
             return "flame.fill"
         case "LUSTER":
             return "diamond.fill"
+        case "AMBER-PURPLE":
+            return "circle.hexagongrid.fill"
+        case "SEEDED":
+            return "circle.dotted"  // no .fill variant
+        case "REACTIVE":
+            return "bolt.fill"
         default:
             return "checkmark.circle.fill"
         }

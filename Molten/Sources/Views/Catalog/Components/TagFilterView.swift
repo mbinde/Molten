@@ -115,7 +115,7 @@ struct TagFilterView: View {
                 // Tags list with categorization
                 List {
                     // User tags section (custom tags)
-                    if !userFilteredTags.isEmpty {
+                    if !userFilteredTags.isEmpty && UserSettings.shared.showUserTagsInFilter {
                         Section("User Tags (\(userFilteredTags.count))") {
                             ForEach(userFilteredTags, id: \.self) { tag in
                                 let itemsWithTag = catalogItems.filter { item in
@@ -128,7 +128,7 @@ struct TagFilterView: View {
                     }
 
                     // Technical tags section
-                    if !technicalFilteredTags.isEmpty {
+                    if !technicalFilteredTags.isEmpty && UserSettings.shared.showTechnicalTagsInFilter {
                         Section("Technical (\(technicalFilteredTags.count))") {
                             ForEach(technicalFilteredTags, id: \.self) { tag in
                                 let itemsWithTag = catalogItems.filter { item in

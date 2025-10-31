@@ -487,6 +487,16 @@ def combine_tags(product_name, description, manufacturer_url=None, manufacturer_
     if 'luster' in all_tags and re.search(r'\biridescen[ct]e?\b', combined_text):
         all_tags.discard('sparkle')
 
+    # Special case: Don't tag as reactive if description says "doesn't react" or "does not react"
+    if 'reactive' in all_tags:
+        negative_reactive = re.search(
+            r'\b(?:doesn\'t|does\s+not|won\'t|will\s+not|cannot|can\'t|no)\s+react',
+            combined_text,
+            re.IGNORECASE
+        )
+        if negative_reactive:
+            all_tags.discard('reactive')
+
     # Apply exclusions if URL is provided
     if manufacturer_url:
         exclusions = _load_tag_exclusions()

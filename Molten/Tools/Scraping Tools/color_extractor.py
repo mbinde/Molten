@@ -505,6 +505,36 @@ def combine_tags(product_name, description, manufacturer_url=None, manufacturer_
             all_tags.discard('reactive')
             all_tags.discard(metal)
 
+    # Toxic ingredient detection - tag materials when present, exclude when explicitly absent
+    # These are important for material safety information
+    toxic_ingredients = {
+        'antimony': r'\bantimony\b',
+        'arsenic': r'\barsenic\b',
+        'cadmium': r'\b(?:cadmium|cad)\b',
+        'chromium': r'\b(?:chromium|chrome)\b',
+        'lead': r'\blead\b',
+        'nickel': r'\bnickel\b',
+        'silver': r'\bsilver\b',
+        'selenium': r'\bselenium\b'
+    }
+
+    for ingredient, pattern in toxic_ingredients.items():
+        if re.search(pattern, combined_text, re.IGNORECASE):
+            # Check if it's mentioned in a negative context (e.g., "without cadmium", "no lead")
+            # Look for negative phrases before or after the ingredient mention
+            negative_pattern = rf'\b(?:without|no|free\s+of|non[-\s]?\w*)\s+(?:\w+[,\s]+)*{pattern.strip(r"\b")}'
+            ingredient_free_pattern = rf'{pattern.strip(r"\b")}[-\s]?free\b'
+
+            is_negative = (
+                re.search(negative_pattern, combined_text, re.IGNORECASE) or
+                re.search(ingredient_free_pattern, combined_text, re.IGNORECASE)
+            )
+
+            if not is_negative:
+                # Normalize tag name (chromium → chrome for consistency with existing tags)
+                tag_name = 'chrome' if ingredient == 'chromium' else ingredient
+                all_tags.add(tag_name)
+
     # Apply exclusions if URL is provided
     if manufacturer_url:
         exclusions = _load_tag_exclusions()

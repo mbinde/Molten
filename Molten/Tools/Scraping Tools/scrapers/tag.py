@@ -232,7 +232,12 @@ class DescriptionParser(html.parser.HTMLParser):
                 description = description[len(prefix):].strip()
                 if description.startswith(':'):
                     description = description[1:].strip()
-        
+
+        # Remove form validation boilerplate text
+        boilerplate = "This field is for validation purposes and should be left unchanged."
+        if boilerplate in description:
+            description = description.replace(boilerplate, '').strip()
+
         return description
 
 

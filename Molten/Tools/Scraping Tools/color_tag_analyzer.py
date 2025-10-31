@@ -48,7 +48,7 @@ APPROVALS_PATH = SCRIPT_DIR / "color_tag_approvals.json"
 IMAGES_DIR = Path("/Users/binde/projects/misc/Molten/Sources/Resources/product-images")
 
 # Analysis version - increment when improving detection logic
-ANALYSIS_VERSION = "2.9"  # Exclude metal color tags when mentioned in reaction context (e.g., "reacts with silver")
+ANALYSIS_VERSION = "3.1"  # Enabled actual image analysis with Claude vision API + toxic ingredient detection
 
 # Initialize Anthropic client (will use ANTHROPIC_API_KEY env var)
 anthropic_client = None
@@ -204,6 +204,8 @@ Rules:
 - Tag as "chrome" if the description mentions "chrome" or "chromium"
 - Tag as "reactive" if the description says the glass "can react" or "reacts with" other glasses, but do NOT tag as "reactive" if it says "doesn't react" or "does not react"
 - IMPORTANT: If the description mentions "reacts with silver/gold/copper" or "non-reactive with silver/gold/copper", do NOT tag as "reactive" AND do NOT tag with the metal color (silver/gold/copper) - this is describing a chemical reaction, not the glass color
+- Tag toxic ingredients when present: antimony, arsenic, cadmium, chrome/chromium, lead, nickel, silver, selenium
+- IMPORTANT: Do NOT tag toxic ingredients if the description says "without X", "no X", "X-free", "free of X" (e.g., "without cadmium" = do NOT tag cadmium)
 - IMPORTANT: If you tag something as "luster" (from iridescent), do NOT also tag it as "sparkle" - iridescent glass has luster/shimmer, not sparkles
 - IMPORTANT: Do NOT tag as "clear" or "transparent" just because the word "glass" appears - only tag as clear/transparent if explicitly mentioned (e.g., "clear glass", "transparent", "colorless")
 - If no colors/attributes are clearly indicated, return an empty list
@@ -252,17 +254,89 @@ def encode_image_base64(image_path):
 def analyze_image_with_claude(image_path, product_name):
     """
     Analyze image using Claude API for color detection.
-
-    NOTE: This is a placeholder that will be called by the user (Claude Code).
-    When running the script, you'll need to integrate with the Anthropic API
-    or have the user (me) analyze images in batches.
+    Uses vision API to identify colors and properties from glass product images.
     """
-    # This will be implemented as a separate step where images are analyzed
-    # For now, return empty list - we'll do a two-phase approach:
-    # Phase 1: Generate text-based suggestions
-    # Phase 2: User runs analysis with Claude to enhance suggestions
+    global anthropic_client
 
-    print(f"  Image analysis needed for: {product_name}")
+    if not anthropic_client:
+        print(f"  Warning: API client not initialized, skipping image for {product_name}")
+        return []
+
+    if not image_path or not os.path.exists(image_path):
+        return []
+
+    try:
+        # Encode image
+        image_base64 = encode_image(image_path)
+
+        # Determine media type
+        ext = Path(image_path).suffix.lower()
+        media_type_map = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif',
+            '.webp': 'image/webp'
+        }
+        media_type = media_type_map.get(ext, 'image/jpeg')
+
+        prompt = f"""Analyze this glass product image for "{product_name}" and identify its colors and visual properties.
+
+Return ONLY a JSON array of applicable tags from this list:
+Colors: amber, amber-purple, aqua, black, blue, brown, clear, coral, cream, dark, gold, green, grey, ivory, lavender, light, orange, peach, pink, purple, red, silver, tan, teal, transparent, turquoise, white, yellow
+Properties: dichroic, luster, opaque, opal, reactive, sparkle, striking, translucent
+
+Rules:
+- Only tag colors/properties that are clearly visible in the image
+- Tag as "transparent" if you can see through the glass clearly
+- Tag as "translucent" if the glass is semi-transparent (lets light through but not clear)
+- Tag as "opaque" if the glass is not see-through at all
+- Tag as "luster" if the glass has iridescent, metallic, or rainbow shimmer
+- Tag as "sparkle" if you see glitter or metallic flecks (but NOT if it's just iridescent luster)
+- Return empty array [] if the image is unclear or colors cannot be determined
+
+Return ONLY the JSON array, no explanation."""
+
+        # Rate limit: 1 request per second
+        time.sleep(1)
+
+        response = anthropic_client.messages.create(
+            model="claude-3-5-haiku-20241022",
+            max_tokens=100,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": media_type,
+                            "data": image_base64
+                        }
+                    },
+                    {
+                        "type": "text",
+                        "text": prompt
+                    }
+                ]
+            }]
+        )
+
+        # Parse response
+        response_text = response.content[0].text.strip()
+
+        try:
+            tags = json.loads(response_text)
+            if isinstance(tags, list):
+                return [str(t).lower().strip() for t in tags if t]
+        except json.JSONDecodeError:
+            print(f"  Warning: Could not parse image analysis for {product_name}: {response_text[:100]}")
+            return []
+
+    except Exception as e:
+        print(f"  Error analyzing image for {product_name}: {e}")
+        return []
+
     return []
 
 
@@ -315,9 +389,11 @@ def analyze_product(product, existing_suggestions, approvals):
     # Analyze text
     text_tags = analyze_text_for_colors(name, description, manufacturer)
 
-    # Analyze image (placeholder for now)
+    # Analyze image if available
     image_tags = []
-    needs_image_analysis = bool(image_path)  # Track if image analysis is needed
+    if image_path and os.path.exists(image_path):
+        image_tags = analyze_image_with_claude(image_path, name)
+    needs_image_analysis = bool(image_path)  # Track if image analysis was attempted
 
     # Combine suggestions (remove duplicates, lowercase)
     # Don't include internal markers like __NEEDS_IMAGE_ANALYSIS__

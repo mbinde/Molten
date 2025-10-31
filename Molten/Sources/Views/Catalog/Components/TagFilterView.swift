@@ -58,7 +58,7 @@ struct TagFilterView: View {
     private let technicalTags: Set<String> = [
         "amber-purple", "cfl", "uv", "luster", "reducing", "reduction",
         "silver", "sparkle", "sparkles", "striker", "striking",
-        "seeded", "reactive"
+        "seeded", "reactive", "cadmium", "copper", "chrome"
     ]
 
     // Known color tags in rainbow order
@@ -94,7 +94,7 @@ struct TagFilterView: View {
         let techOrder: [String] = [
             "amber-purple", "cfl", "uv", "luster", "reducing", "reduction",
             "silver", "sparkle", "sparkles", "striker", "striking",
-            "seeded", "reactive"
+            "seeded", "reactive", "cadmium", "copper", "chrome"
         ]
         return techOrder.filter { techTag in
             filteredTags.contains { $0.lowercased() == techTag }
@@ -348,7 +348,7 @@ struct TagFilterView: View {
         case "SILVER":
             return "moon.stars"
         case "COPPER":
-            return "dot.radiowaves.left.and.right"
+            return "atom"
         case "REDUCTION", "REDUCING":
             return "flame"
         case "LUSTER":
@@ -359,6 +359,10 @@ struct TagFilterView: View {
             return "circle.dotted"
         case "REACTIVE":
             return "bolt"
+        case "CADMIUM":
+            return "exclamationmark.triangle"
+        case "CHROME":
+            return "atom"
         default:
             return "circle"
         }
@@ -380,7 +384,7 @@ struct TagFilterView: View {
         case "SILVER":
             return "moon.stars.fill"
         case "COPPER":
-            return "dot.radiowaves.left.and.right"  // no .fill variant
+            return "atom"  // no .fill variant
         case "REDUCTION", "REDUCING":
             return "flame.fill"
         case "LUSTER":
@@ -391,6 +395,10 @@ struct TagFilterView: View {
             return "circle.dotted"  // no .fill variant
         case "REACTIVE":
             return "bolt.fill"
+        case "CADMIUM":
+            return "exclamationmark.triangle.fill"
+        case "CHROME":
+            return "atom"  // no .fill variant
         default:
             return "checkmark.circle.fill"
         }

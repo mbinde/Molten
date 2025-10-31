@@ -48,7 +48,7 @@ APPROVALS_PATH = SCRIPT_DIR / "color_tag_approvals.json"
 IMAGES_DIR = Path("/Users/binde/projects/misc/Molten/Sources/Resources/product-images")
 
 # Analysis version - increment when improving detection logic
-ANALYSIS_VERSION = "2.6"  # Added Neo Opal detection for CFL and lavender tags
+ANALYSIS_VERSION = "2.7"  # Added cadmium, copper, chrome detection; clarified iridescent → luster
 
 # Initialize Anthropic client (will use ANTHROPIC_API_KEY env var)
 anthropic_client = None
@@ -198,6 +198,11 @@ Rules:
 - Tag as "amber-purple" if: (1) it's a Glass Alchemy product mentioning "passion" OR (2) any product mentioning "amber purple"
 - Tag as "uv" if the product mentions "Heisenberg" or "Heisen" (PDX Tubing's UV-reactive line)
 - Tag as "cfl" AND "lavender" if the product mentions "Neo Opal" (Neo Opal is always CFL-reactive and lavender-colored)
+- Tag as "luster" if the description mentions "iridescent" or "metallic" (but do NOT also tag as "sparkle" if tagging as "luster")
+- Tag as "cadmium" if the description mentions "cadmium" or "cad"
+- Tag as "copper" if the description mentions copper as a material/colorant (e.g., "copper ruby", "contains copper", "copper-bearing")
+- Tag as "chrome" if the description mentions "chrome" or "chromium"
+- IMPORTANT: If you tag something as "luster" (from iridescent), do NOT also tag it as "sparkle" - iridescent glass has luster/shimmer, not sparkles
 - IMPORTANT: Do NOT tag as "clear" or "transparent" just because the word "glass" appears - only tag as clear/transparent if explicitly mentioned (e.g., "clear glass", "transparent", "colorless")
 - If no colors/attributes are clearly indicated, return an empty list
 

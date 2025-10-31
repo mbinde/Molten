@@ -97,6 +97,37 @@ class UserSettings {
         }
     }
 
+    // MARK: - Tag Filter Settings
+
+    /// Controls whether user-created tags appear in the tag filter menu
+    /// - Default: true (shown)
+    /// - When false, user tags (tags not in color or technical categories) are hidden from filters
+    /// - Note: Tags remain visible on catalog items regardless of this setting
+    var showUserTagsInFilter: Bool {
+        get {
+            // Default to true if not set
+            UserDefaults.standard.object(forKey: Keys.showUserTagsInFilter) as? Bool ?? true
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: Keys.showUserTagsInFilter)
+        }
+    }
+
+    /// Controls whether technical property tags appear in the tag filter menu
+    /// - Default: true (shown)
+    /// - Technical tags include: reducing, seeded, reactive, striker, uv, cfl, luster, etc.
+    /// - When false, technical tags are hidden from filters
+    /// - Note: Tags remain visible on catalog items regardless of this setting
+    var showTechnicalTagsInFilter: Bool {
+        get {
+            // Default to true if not set
+            UserDefaults.standard.object(forKey: Keys.showTechnicalTagsInFilter) as? Bool ?? true
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: Keys.showTechnicalTagsInFilter)
+        }
+    }
+
     // MARK: - Label Settings
 
     /// Inventory owner name (optional)
@@ -349,6 +380,8 @@ class UserSettings {
         static let expandUserNotes = "expandUserNotesByDefault"
         static let appearanceMode = "appearanceMode"
         static let thumbnailDisplayMode = "thumbnailDisplayMode"
+        static let showUserTagsInFilter = "showUserTagsInFilter"
+        static let showTechnicalTagsInFilter = "showTechnicalTagsInFilter"
         static let inventoryOwner = "inventoryOwner"
         static let preferredTemperatureUnit = "preferredTemperatureUnit"
         static let lastSelectedKilnTechnique = "lastSelectedKilnTechnique"

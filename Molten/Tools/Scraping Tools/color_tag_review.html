@@ -940,6 +940,27 @@
                 };
             }
 
+            // Collect currently checked tags from the DOM before approving
+            const product = suggestions.products[stableId];
+            if (product) {
+                const allPossibleTags = [
+                    ...(product.suggested_tags || []),
+                    ...(product.tag_changes?.removed || []),
+                    ...(approvals[stableId].manually_added || [])
+                ];
+
+                const currentlyChecked = [];
+                allPossibleTags.forEach(tag => {
+                    const checkbox = document.getElementById(`${stableId}-${tag}`);
+                    if (checkbox && checkbox.checked) {
+                        currentlyChecked.push(tag);
+                    }
+                });
+
+                // Update approved_tags with currently checked tags
+                approvals[stableId].approved_tags = Array.from(new Set(currentlyChecked)).sort();
+            }
+
             approvals[stableId].status = 'approved';
             approvals[stableId].review_date = new Date().toISOString();
 

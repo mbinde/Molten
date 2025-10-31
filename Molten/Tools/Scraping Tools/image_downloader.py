@@ -3,6 +3,7 @@ import os
 import urllib.request
 import urllib.error
 import time
+import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -81,6 +82,24 @@ def download_single_image(item, output_dir, force=False):
         # Save the image
         with open(output_file, 'wb') as f:
             f.write(image_data)
+
+        # Convert HEIC to JPG if needed (iOS bundle may not display HEIC reliably)
+        if ext.lower() == '.heic':
+            jpg_file = output_file.with_suffix('.jpg')
+            try:
+                # Use macOS sips to convert HEIC to JPG
+                subprocess.run(
+                    ['sips', '-s', 'format', 'jpeg', str(output_file), '--out', str(jpg_file)],
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+                # Remove original HEIC file after successful conversion
+                output_file.unlink()
+                output_file = jpg_file
+            except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                # If conversion fails, keep the HEIC file
+                print(f"  Warning: Could not convert {output_file} to JPG: {e}")
 
         # Rate limiting - be polite to servers
         time.sleep(get_image_download_delay())

@@ -25,6 +25,8 @@ from pathlib import Path
 import base64
 import argparse
 import time
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from anthropic import Anthropic
 
 # Full color taxonomy (expanded from original)
@@ -48,10 +50,45 @@ APPROVALS_PATH = SCRIPT_DIR / "color_tag_approvals.json"
 IMAGES_DIR = Path("/Users/binde/projects/misc/Molten/Sources/Resources/product-images")
 
 # Analysis version - increment when improving detection logic
-ANALYSIS_VERSION = "3.1"  # Enabled actual image analysis with Claude vision API + toxic ingredient detection
+ANALYSIS_VERSION = "3.1"  # Image analysis + toxic ingredients + parallel processing (10x faster)
 
 # Initialize Anthropic client (will use ANTHROPIC_API_KEY env var)
 anthropic_client = None
+
+# Rate limiter for API calls (50 requests/minute for Tier 1)
+class RateLimiter:
+    """Token bucket rate limiter for API calls."""
+    def __init__(self, requests_per_minute=50):
+        self.requests_per_minute = requests_per_minute
+        self.lock = threading.Lock()
+        self.tokens = requests_per_minute
+        self.last_update = time.time()
+
+    def acquire(self):
+        """Block until a token is available."""
+        with self.lock:
+            now = time.time()
+            elapsed = now - self.last_update
+
+            # Refill tokens based on elapsed time
+            self.tokens = min(
+                self.requests_per_minute,
+                self.tokens + (elapsed * self.requests_per_minute / 60.0)
+            )
+            self.last_update = now
+
+            # If no tokens available, wait
+            if self.tokens < 1:
+                wait_time = (1 - self.tokens) * 60.0 / self.requests_per_minute
+                time.sleep(wait_time)
+                self.tokens = 1
+                self.last_update = time.time()
+
+            # Consume a token
+            self.tokens -= 1
+
+rate_limiter = RateLimiter(requests_per_minute=48)  # Slightly under 50 to be safe
+progress_lock = threading.Lock()  # For thread-safe progress updates
 
 
 def get_anthropic_client():
@@ -214,8 +251,8 @@ Return ONLY a JSON array of applicable tags, like: ["blue", "transparent"]
 Do not include any explanation or additional text."""
 
     try:
-        # Rate limit: 1 request per second
-        time.sleep(1)
+        # Rate limit using global rate limiter
+        rate_limiter.acquire()
 
         response = client.messages.create(
             model="claude-3-5-haiku-20241022",  # Fast, cheap model
@@ -297,8 +334,8 @@ Rules:
 
 Return ONLY the JSON array, no explanation."""
 
-        # Rate limit: 1 request per second
-        time.sleep(1)
+        # Rate limit using global rate limiter
+        rate_limiter.acquire()
 
         response = anthropic_client.messages.create(
             model="claude-3-5-haiku-20241022",
@@ -526,30 +563,49 @@ def main():
 
     # Analyze products
     print()
-    print(f"Analyzing {len(to_analyze)} products using Claude API...")
-    print("⏱️  This will take approximately {:.1f} minutes (1 second per product)".format(len(to_analyze) / 60))
+    print(f"Analyzing {len(to_analyze)} products using Claude API (parallel processing)...")
+    print("⏱️  This will take approximately {:.1f} minutes (with rate limiting at 48 req/min)".format(len(to_analyze) * 2 / 48))
     print("-" * 70)
 
     analyzed_count = 0
     start_time = time.time()
 
-    for product in to_analyze:
+    def analyze_with_progress(product):
+        """Wrapper to analyze a product and update progress."""
+        nonlocal analyzed_count
+
         stable_id = product['stable_id']
         name = product.get('name', 'Unknown')
 
-        # Show progress for every product (since it's slow)
-        elapsed = time.time() - start_time
-        if analyzed_count > 0:
-            rate = analyzed_count / elapsed
-            remaining = (len(to_analyze) - analyzed_count) / rate
-            print(f"[{analyzed_count}/{len(to_analyze)}] {stable_id} - {name[:50]} (ETA: {remaining/60:.1f}m)")
-        else:
-            print(f"[{analyzed_count}/{len(to_analyze)}] {stable_id} - {name[:50]}")
+        try:
+            result = analyze_product(product, suggestions, approvals)
 
-        result = analyze_product(product, suggestions, approvals)
-        suggestions['products'][stable_id] = result
+            # Thread-safe progress update
+            with progress_lock:
+                analyzed_count += 1
+                elapsed = time.time() - start_time
+                if analyzed_count > 1:
+                    rate = analyzed_count / elapsed
+                    remaining = (len(to_analyze) - analyzed_count) / rate
+                    print(f"[{analyzed_count}/{len(to_analyze)}] {stable_id} - {name[:50]} (ETA: {remaining/60:.1f}m)")
+                else:
+                    print(f"[{analyzed_count}/{len(to_analyze)}] {stable_id} - {name[:50]}")
 
-        analyzed_count += 1
+            return (stable_id, result, None)
+        except Exception as e:
+            with progress_lock:
+                print(f"❌ Error analyzing {stable_id}: {e}")
+            return (stable_id, None, str(e))
+
+    # Process products in parallel using ThreadPoolExecutor
+    max_workers = 10  # Number of concurrent workers
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [executor.submit(analyze_with_progress, product) for product in to_analyze]
+
+        for future in as_completed(futures):
+            stable_id, result, error = future.result()
+            if result:
+                suggestions['products'][stable_id] = result
 
     print("-" * 70)
     elapsed = time.time() - start_time

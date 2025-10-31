@@ -377,17 +377,21 @@ class ProductDatabase:
                 # Existing product
                 existing = self.data['products'][key]
 
-                # Check if any fields changed
+                # Check if any fields changed (excluding tags - only tag analysis system touches those)
                 changed_fields = []
                 field_deltas = {}
                 for field in row.keys():
+                    if field == 'tags':
+                        continue  # Never overwrite tags from scrapers
                     if field in existing and existing[field] != row[field]:
                         changed_fields.append(field)
                         field_deltas[field] = {'old': existing[field], 'new': row[field]}
 
                 if changed_fields:
-                    # Update changed fields
+                    # Update changed fields (excluding tags)
                     for field in row.keys():
+                        if field == 'tags':
+                            continue  # Never overwrite tags from scrapers
                         existing[field] = row[field]
 
                     existing['last_seen'] = today

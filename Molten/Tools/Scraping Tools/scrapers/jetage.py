@@ -323,7 +323,7 @@ def format_products_for_csv(products):
         code = product['listing_id']
 
         # Extract tags from name/description
-        tags = extract_tags(product['name'], product['description'])
+        tags = ''  # Tags handled by tag analysis system
 
         csv_rows.append({
             'manufacturer': MANUFACTURER_CODE,

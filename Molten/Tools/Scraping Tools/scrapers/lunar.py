@@ -175,8 +175,8 @@ def format_products_for_csv(products):
         # Generate product code
         code = generate_product_code(product_name)
 
-        # Extract color tags
-        tags = extract_tags_from_name(product_name)
+        # Tags are handled by the tag analysis system, not scrapers
+        tags = ''
 
         # Product type is rod (based on description: "based off Trautman 33 formulas")
         product_type = 'rod'

@@ -239,7 +239,7 @@ def format_products_for_csv(products):
         cleaned_name = remove_brand_from_title(product['name'])
         description = product.get('manufacturer_description', '')
         manufacturer_url = product.get('manufacturer_url', '')
-        tags = combine_tags(cleaned_name, description, manufacturer_url, MANUFACTURER_CODE)
+        tags = ''  # Tags handled by tag analysis system
 
         csv_rows.append({
             'manufacturer': MANUFACTURER_CODE,

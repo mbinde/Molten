@@ -187,8 +187,8 @@ def format_products_for_csv(products):
         # Product name: just the color since "Chinese Boro" is the manufacturer
         name = color_name
 
-        # Extract color tags
-        tags = extract_tags_from_name(name)
+        # Tags are handled by the tag analysis system, not scrapers
+        tags = ''
 
         # Product type is rod
         product_type = 'rod'

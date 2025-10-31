@@ -165,7 +165,7 @@ def format_products_for_csv(products):
 
         # Extract tags from color name
         # No description available for manual data
-        tags = combine_tags(cleaned_name, '', '', MANUFACTURER_CODE)
+        tags = ''  # Tags handled by tag analysis system
 
         # Use URL if available
         manufacturer_url = product.get('url', '')

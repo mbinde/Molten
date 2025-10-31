@@ -215,7 +215,7 @@ def scrape(test_mode=False, max_items=None):
                     stock_type = "semi-opaque"
 
                 # Extract color tags from name
-                tags = extract_tags(name)
+                tags = ''  # Tags handled by tag analysis system
 
                 product = {
                     'code': code,

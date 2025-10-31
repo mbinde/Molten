@@ -238,8 +238,8 @@ def format_products_for_csv(products):
         # Parse code and color name
         code, color_name = parse_product_code_and_name(full_name)
 
-        # Extract color tags from the color name
-        tags = extract_tags_from_name(color_name)
+        # Tags are handled by the tag analysis system, not scrapers
+        tags = ''
 
         # Determine product type from category
         product_type = product.get('category_type', 'sheet')

@@ -601,8 +601,9 @@ def main():
                 
                 cleaned_name = remove_brand_from_title(product['name'])
                 code = product.get('sku', '')
-                
-                tags = extract_tags_from_name(cleaned_name)
+
+                # Tags are handled by the tag analysis system, not scrapers
+                tags = ''
                 
                 writer.writerow({
                     'manufacturer': 'TAG',
@@ -675,7 +676,7 @@ def format_products_for_csv(products):
 
         description = product.get('manufacturer_description', '')
         manufacturer_url = product.get('manufacturer_url', '')
-        tags = combine_tags(cleaned_name, description, manufacturer_url, MANUFACTURER_CODE)
+        tags = ''  # Tags handled by tag analysis system
         
         csv_rows.append({
             'manufacturer': MANUFACTURER_CODE,

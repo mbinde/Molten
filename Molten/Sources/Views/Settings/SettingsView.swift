@@ -320,6 +320,25 @@ struct SettingsView: View {
                     }
                 }
 
+                // Tag Filters section
+                Section {
+                    Toggle("Show User Tags in Filters", isOn: Binding(
+                        get: { UserSettings.shared.showUserTagsInFilter },
+                        set: { UserSettings.shared.showUserTagsInFilter = $0 }
+                    ))
+                    .help("When enabled, user-created tags will appear in the tag filter menu")
+
+                    Toggle("Show Technical Tags in Filters", isOn: Binding(
+                        get: { UserSettings.shared.showTechnicalTagsInFilter },
+                        set: { UserSettings.shared.showTechnicalTagsInFilter = $0 }
+                    ))
+                    .help("When enabled, technical property tags (reducing, seeded, reactive, striker, uv, cfl, luster, etc.) will appear in the tag filter menu")
+                } header: {
+                    Text("Tag Filters")
+                } footer: {
+                    Text("Control which tag categories appear in the tag filter menu. Tags will remain visible on catalog items regardless of these settings.")
+                }
+
                 // Author Profile section
                 Section("Author Profile") {
                     NavigationLink {

@@ -31,7 +31,42 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
 
             do {
                 let entities = try self.context.fetch(request)
+                print("🚨 CoreDataGlassItemRepository.fetchItems: CoreData returned \(entities.count) entities")
+
+                // Check if entities have ObjectIDs from different persistent stores or are duplicates
+                if entities.count > 2000 {
+                    let objectIDs = entities.map { $0.objectID }
+                    let uniqueObjectIDs = Set(objectIDs)
+                    print("🔍 ObjectID analysis: \(objectIDs.count) entities, \(uniqueObjectIDs.count) unique ObjectIDs")
+
+                    // Check if any are temporary/faulted
+                    let temporary = entities.filter { $0.objectID.isTemporaryID }
+                    let faults = entities.filter { $0.isFault }
+                    print("🔍 Temporary IDs: \(temporary.count), Faults: \(faults.count)")
+                }
+
+                // Check for duplicates by stable_id
+                let stableIds = entities.compactMap { $0.value(forKey: "stable_id") as? String }
+                let uniqueStableIds = Set(stableIds)
+                if stableIds.count != uniqueStableIds.count {
+                    let duplicateCount = stableIds.count - uniqueStableIds.count
+                    print("⚠️⚠️⚠️ DUPLICATES DETECTED: \(duplicateCount) duplicate stable_ids found!")
+                    print("⚠️⚠️⚠️ Total entities: \(entities.count), Unique stable_ids: \(uniqueStableIds.count)")
+
+                    // Find which stable_ids are duplicated
+                    var stableIdCounts: [String: Int] = [:]
+                    for id in stableIds {
+                        stableIdCounts[id, default: 0] += 1
+                    }
+                    let duplicated = stableIdCounts.filter { $0.value > 1 }.sorted { $0.value > $1.value }
+                    print("⚠️⚠️⚠️ Most duplicated stable_ids:")
+                    duplicated.prefix(10).forEach { id, count in
+                        print("⚠️     \(id): \(count) copies")
+                    }
+                }
+
                 let models = entities.compactMap { self.convertToGlassItemModel($0) }
+                print("🚨 CoreDataGlassItemRepository.fetchItems: Converted to \(models.count) models")
                 return models
             } catch {
                 throw CoreDataGlassItemRepositoryError.fetchFailed(error)
@@ -57,6 +92,10 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
     
     func createItem(_ item: GlassItemModel) async throws -> GlassItemModel {
         return try await context.perform {
+            print("🔴🔴🔴 CoreDataGlassItemRepository.createItem: CALLED for stable_id=\(item.stable_id)")
+            print("🔴🔴🔴 CALL STACK (first 15 frames):")
+            Thread.callStackSymbols.prefix(15).forEach { print("    \($0)") }
+
             // Check if item already exists
             let existingRequest = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")
             existingRequest.predicate = NSPredicate(format: "stable_id == %@", item.stable_id)
@@ -64,12 +103,17 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
 
             do {
                 let existing = try self.context.fetch(existingRequest)
+                if !existing.isEmpty {
+                    print("⚠️ DUPLICATE CREATION ATTEMPT: stable_id=\(item.stable_id) already exists! Found \(existing.count) copies. Updating instead of creating.")
+                }
                 if let existingEntity = existing.first {
+                    print("🚨 CoreDataGlassItemRepository.createItem: Item exists, updating")
                     self.updateEntity(existingEntity, with: item)
                     try self.context.save()
                     return self.convertToGlassItemModel(existingEntity) ?? item
                 }
 
+                print("🚨 CoreDataGlassItemRepository.createItem: Creating NEW entity")
                 // Create new GlassItem entity using NSEntityDescription
                 guard let entityDescription = NSEntityDescription.entity(forEntityName: "GlassItem", in: self.context) else {
                     throw CoreDataGlassItemRepositoryError.createFailed("Could not find GlassItem entity description")
@@ -78,7 +122,11 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                 let entity = NSManagedObject(entity: entityDescription, insertInto: self.context)
                 self.updateEntity(entity, with: item)
 
+                let timestamp = Date().timeIntervalSince1970
+                print("🚨 CoreDataGlassItemRepository.createItem: About to save single entity... (timestamp: \(timestamp))")
                 try self.context.save()
+                let afterSave = Date().timeIntervalSince1970
+                print("🚨 CoreDataGlassItemRepository.createItem: Entity created and saved (took \(afterSave - timestamp)s)")
 
                 return self.convertToGlassItemModel(entity) ?? item
             } catch {
@@ -89,6 +137,7 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
     
     func createItems(_ items: [GlassItemModel]) async throws -> [GlassItemModel] {
         return try await context.perform {
+            print("🚨 CoreDataGlassItemRepository.createItems: CALLED with \(items.count) items")
             var createdItems: [GlassItemModel] = []
 
             for item in items {
@@ -99,8 +148,10 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                     throw CoreDataGlassItemRepositoryError.batchCreateFailed("Failed to create item \(item.stable_id): \(error.localizedDescription)")
                 }
             }
-            
+
+            print("🚨 CoreDataGlassItemRepository.createItems: About to save \(createdItems.count) items...")
             try self.context.save()
+            print("🚨 CoreDataGlassItemRepository.createItems: Successfully saved \(createdItems.count) items to CoreData")
             return createdItems
         }
     }
@@ -461,13 +512,16 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                 throw CoreDataGlassItemRepositoryError.itemNotFound(stableId)
             }
 
-            // Get the recommendedSchedules relationship
-            guard let schedules = glassItemEntity.value(forKey: "recommendedSchedules") as? Set<NSManagedObject> else {
+            // Get the recommended_schedule_ids string attribute (comma-separated UUIDs)
+            guard let idsString = glassItemEntity.value(forKey: "recommended_schedule_ids") as? String,
+                  !idsString.isEmpty else {
                 return []
             }
 
-            // Extract schedule IDs
-            return schedules.compactMap { $0.value(forKey: "id") as? UUID }
+            // Parse comma-separated UUID strings
+            return idsString
+                .split(separator: ",")
+                .compactMap { UUID(uuidString: String($0).trimmingCharacters(in: .whitespaces)) }
         }
     }
 
@@ -482,21 +536,19 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                 throw CoreDataGlassItemRepositoryError.itemNotFound(stableId)
             }
 
-            // Fetch the kiln schedule
-            let scheduleRequest = NSFetchRequest<NSManagedObject>(entityName: "KilnScheduleEntity")
-            scheduleRequest.predicate = NSPredicate(format: "id == %@", scheduleId as CVarArg)
-            scheduleRequest.fetchLimit = 1
+            // Get current schedule IDs
+            let currentIdsString = (glassItemEntity.value(forKey: "recommended_schedule_ids") as? String) ?? ""
+            var scheduleIds = currentIdsString
+                .split(separator: ",")
+                .compactMap { UUID(uuidString: String($0).trimmingCharacters(in: .whitespaces)) }
 
-            guard let scheduleEntity = try self.context.fetch(scheduleRequest).first else {
-                throw CoreDataGlassItemRepositoryError.queryFailed("Kiln schedule not found: \(scheduleId)")
+            // Add new schedule ID if not already present
+            if !scheduleIds.contains(scheduleId) {
+                scheduleIds.append(scheduleId)
+                let newIdsString = scheduleIds.map { $0.uuidString }.joined(separator: ",")
+                glassItemEntity.setValue(newIdsString, forKey: "recommended_schedule_ids")
+                try self.context.save()
             }
-
-            // Add to the relationship
-            var schedules = (glassItemEntity.value(forKey: "recommendedSchedules") as? Set<NSManagedObject>) ?? Set()
-            schedules.insert(scheduleEntity)
-            glassItemEntity.setValue(schedules, forKey: "recommendedSchedules")
-
-            try self.context.save()
         }
     }
 
@@ -511,15 +563,21 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                 throw CoreDataGlassItemRepositoryError.itemNotFound(stableId)
             }
 
-            // Get current schedules
-            guard var schedules = glassItemEntity.value(forKey: "recommendedSchedules") as? Set<NSManagedObject> else {
+            // Get current schedule IDs
+            guard let currentIdsString = glassItemEntity.value(forKey: "recommended_schedule_ids") as? String,
+                  !currentIdsString.isEmpty else {
                 return // No schedules to remove from
             }
 
-            // Find and remove the schedule
-            if let scheduleToRemove = schedules.first(where: { ($0.value(forKey: "id") as? UUID) == scheduleId }) {
-                schedules.remove(scheduleToRemove)
-                glassItemEntity.setValue(schedules, forKey: "recommendedSchedules")
+            var scheduleIds = currentIdsString
+                .split(separator: ",")
+                .compactMap { UUID(uuidString: String($0).trimmingCharacters(in: .whitespaces)) }
+
+            // Remove the schedule ID
+            if let index = scheduleIds.firstIndex(of: scheduleId) {
+                scheduleIds.remove(at: index)
+                let newIdsString = scheduleIds.isEmpty ? "" : scheduleIds.map { $0.uuidString }.joined(separator: ",")
+                glassItemEntity.setValue(newIdsString, forKey: "recommended_schedule_ids")
                 try self.context.save()
             }
         }

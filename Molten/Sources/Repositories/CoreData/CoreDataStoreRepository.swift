@@ -16,18 +16,19 @@ class CoreDataStoreRepository: @unchecked Sendable, StoreRepository {
 
     // MARK: - Dependencies
 
-    private let persistentContainer: NSPersistentContainer
+    private let context: NSManagedObjectContext
     private let backgroundContext: NSManagedObjectContext
     private let log = Logger(subsystem: "com.flameworker.app", category: "store-repository")
 
     // MARK: - Initialization
 
-    /// Initialize CoreDataStoreRepository with a Core Data persistent container
-    /// - Parameter persistentContainer: The NSPersistentContainer to use for store operations
-    /// - Note: In production, pass PersistenceController.shared.container
-    nonisolated init(storePersistentContainer persistentContainer: NSPersistentContainer) {
-        self.persistentContainer = persistentContainer
-        self.backgroundContext = persistentContainer.newBackgroundContext()
+    /// Initialize CoreDataStoreRepository with a Core Data context
+    /// - Parameter context: The NSManagedObjectContext to use for store operations
+    /// - Note: In production, pass PersistenceController.shared.cloudContext
+    nonisolated init(context: NSManagedObjectContext) {
+        self.context = context
+        self.context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        self.backgroundContext = context
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
     }
 

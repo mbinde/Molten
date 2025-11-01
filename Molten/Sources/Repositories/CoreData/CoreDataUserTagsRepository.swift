@@ -15,18 +15,19 @@ class CoreDataUserTagsRepository: @unchecked Sendable, UserTagsRepository {
 
     // MARK: - Dependencies
 
-    private let persistentContainer: NSPersistentContainer
+    private let context: NSManagedObjectContext
     private let backgroundContext: NSManagedObjectContext
     private let log = Logger(subsystem: "com.flameworker.app", category: "usertags-repository")
 
     // MARK: - Initialization
 
-    /// Initialize CoreDataUserTagsRepository with a Core Data persistent container
-    /// - Parameter persistentContainer: The NSPersistentContainer to use for user tags operations
-    /// - Note: In production, pass PersistenceController.shared.container
-    nonisolated init(userTagsPersistentContainer persistentContainer: NSPersistentContainer) {
-        self.persistentContainer = persistentContainer
-        self.backgroundContext = persistentContainer.newBackgroundContext()
+    /// Initialize CoreDataUserTagsRepository with a Core Data context
+    /// - Parameter context: The NSManagedObjectContext to use for user tags operations
+    /// - Note: In production, pass PersistenceController.shared.cloudContext
+    nonisolated init(context: NSManagedObjectContext) {
+        self.context = context
+        self.context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        self.backgroundContext = context
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
 
         // Kick off background migration of old records

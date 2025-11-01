@@ -45,6 +45,7 @@ nonisolated struct RepositoryFactory {
     nonisolated(unsafe) private static var mockPurchaseRecordRepo: MockPurchaseRecordRepository? = nil
     nonisolated(unsafe) private static var mockProjectImageRepo: MockProjectImageRepository? = nil
     nonisolated(unsafe) private static var mockStoreRepo: MockStoreRepository? = nil
+    nonisolated(unsafe) private static var mockClassLocationRepo: MockClassLocationRepository? = nil
     nonisolated(unsafe) private static var mockKilnScheduleRepo: MockKilnScheduleRepository? = nil
     #if canImport(UIKit)
     nonisolated(unsafe) private static var mockUserImageRepo: MockUserImageRepository? = nil
@@ -427,6 +428,7 @@ nonisolated struct RepositoryFactory {
     }
 
     /// Creates a StoreRepository based on current mode
+    /// Note: Uses localContext because stores are loaded from JSON (non-CloudKit syncing)
     nonisolated static func createStoreRepository() -> StoreRepository {
         switch mode {
         case .mock:
@@ -440,17 +442,46 @@ nonisolated struct RepositoryFactory {
 
         case .coreData:
             let controller = getSharedController()
-            guard let context = controller.cloudContext else {
-                fatalError("cloudContext not initialized")
+            guard let context = controller.localContext else {
+                fatalError("localContext not initialized")
             }
             return CoreDataStoreRepository(context: context)
 
         case .hybrid:
             let controller = getSharedController()
-            guard let context = controller.cloudContext else {
-                fatalError("cloudContext not initialized")
+            guard let context = controller.localContext else {
+                fatalError("localContext not initialized")
             }
             return CoreDataStoreRepository(context: context)
+        }
+    }
+
+    /// Creates a ClassLocationRepository based on current mode
+    /// Note: Uses localContext because class locations are loaded from JSON (non-CloudKit syncing)
+    nonisolated static func createClassLocationRepository() -> ClassLocationRepository {
+        switch mode {
+        case .mock:
+            // Return cached instance to ensure consistency
+            if let cached = mockClassLocationRepo {
+                return cached
+            }
+            let repo = MockClassLocationRepository()
+            mockClassLocationRepo = repo
+            return repo
+
+        case .coreData:
+            let controller = getSharedController()
+            guard let context = controller.localContext else {
+                fatalError("localContext not initialized")
+            }
+            return CoreDataClassLocationRepository(context: context)
+
+        case .hybrid:
+            let controller = getSharedController()
+            guard let context = controller.localContext else {
+                fatalError("localContext not initialized")
+            }
+            return CoreDataClassLocationRepository(context: context)
         }
     }
 

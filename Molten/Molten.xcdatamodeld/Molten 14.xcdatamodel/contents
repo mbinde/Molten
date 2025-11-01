@@ -31,9 +31,9 @@
         <attribute name="notes" optional="YES" attributeType="String"/>
     </entity>
     <entity name="CoatingItem" representedClassName="CoatingItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
-    <entity name="GlassItem" representedClassName="GlassItem" parentEntity="Item" syncable="NO" codeGenerationType="category">
+    <entity name="GlassItem" representedClassName="GlassItem" parentEntity="Item" syncable="YES" codeGenerationType="category">
         <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <relationship name="recommendedSchedules" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="KilnScheduleEntity" inverseName="recommendedForGlassItems" inverseEntity="KilnScheduleEntity"/>
+        <attribute name="recommended_schedule_ids" optional="YES" attributeType="String"/>
     </entity>
     <entity name="Inventory" representedClassName="Inventory" syncable="YES" codeGenerationType="category">
         <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -109,11 +109,11 @@
         <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="recommended_for_glass_item_ids" optional="YES" attributeType="String"/>
         <attribute name="schedule_description" optional="YES" attributeType="String"/>
         <attribute name="technique" optional="YES" attributeType="String"/>
         <attribute name="temperature_unit" optional="YES" attributeType="String"/>
         <relationship name="projects" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Project" inverseName="kilnSchedule" inverseEntity="Project"/>
-        <relationship name="recommendedForGlassItems" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="GlassItem" inverseName="recommendedSchedules" inverseEntity="GlassItem"/>
         <relationship name="segments" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="KilnSegmentEntity" inverseName="schedule" inverseEntity="KilnSegmentEntity"/>
     </entity>
     <entity name="KilnSegmentEntity" representedClassName="KilnSegmentEntity" syncable="YES" codeGenerationType="class">
@@ -309,4 +309,40 @@
         <attribute name="owner_type" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
     </entity>
+    <configuration name="Local">
+        <memberEntity name="CatalogItem"/>
+        <memberEntity name="CatalogItemParent"/>
+        <memberEntity name="CatalogItemUser"/>
+        <memberEntity name="CoatingItem"/>
+        <memberEntity name="GlassItem"/>
+        <memberEntity name="Item"/>
+        <memberEntity name="ItemTags"/>
+        <memberEntity name="ToolItem"/>
+    </configuration>
+    <configuration name="Cloud">
+        <memberEntity name="Inventory"/>
+        <memberEntity name="InventoryItem"/>
+        <memberEntity name="ItemDimensions"/>
+        <memberEntity name="ItemMinimum"/>
+        <memberEntity name="ItemShopping"/>
+        <memberEntity name="KilnScheduleEntity"/>
+        <memberEntity name="KilnSegmentEntity"/>
+        <memberEntity name="Location"/>
+        <memberEntity name="Logbook"/>
+        <memberEntity name="LogbookGlassItem"/>
+        <memberEntity name="Project"/>
+        <memberEntity name="ProjectGlassItem"/>
+        <memberEntity name="ProjectImage"/>
+        <memberEntity name="ProjectReferenceUrl"/>
+        <memberEntity name="ProjectStep"/>
+        <memberEntity name="ProjectStepGlassItem"/>
+        <memberEntity name="ProjectTechnique"/>
+        <memberEntity name="PurchaseRecord"/>
+        <memberEntity name="PurchaseRecordItem"/>
+        <memberEntity name="Store"/>
+        <memberEntity name="UserImage"/>
+        <memberEntity name="UserItem"/>
+        <memberEntity name="UserNotes"/>
+        <memberEntity name="UserTags"/>
+    </configuration>
 </model>

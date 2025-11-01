@@ -78,25 +78,20 @@ nonisolated struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use the new CoreDataGlassItemRepository
-            // Get or initialize the persistent container
-            let container: NSPersistentContainer
-            if let pc = persistentContainer {
-                container = pc
-            } else {
-                container = getSharedController().container
+            // GlassItem is catalog data → use localContext
+            let controller = getSharedController()
+            guard let context = controller.localContext else {
+                fatalError("localContext not initialized - call PersistenceController.shared.initialize() first")
             }
-            return CoreDataGlassItemRepository(persistentContainer: container)
+            return CoreDataGlassItemRepository(context: context)
 
         case .hybrid:
-            // Use Core Data implementation when available
-            let container: NSPersistentContainer
-            if let pc = persistentContainer {
-                container = pc
-            } else {
-                container = getSharedController().container
+            // GlassItem is catalog data → use localContext
+            let controller = getSharedController()
+            guard let context = controller.localContext else {
+                fatalError("localContext not initialized - call PersistenceController.shared.initialize() first")
             }
-            return CoreDataGlassItemRepository(persistentContainer: container)
+            return CoreDataGlassItemRepository(context: context)
         }
     }
     

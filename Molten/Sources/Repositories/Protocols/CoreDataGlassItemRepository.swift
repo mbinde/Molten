@@ -13,12 +13,10 @@ import Foundation
 /// Migrated from the legacy CatalogItem system to the new GlassItem architecture
 class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
     
-    private let persistentContainer: NSPersistentContainer
     private let context: NSManagedObjectContext
-    
-    nonisolated init(persistentContainer: NSPersistentContainer) {
-        self.persistentContainer = persistentContainer
-        self.context = persistentContainer.viewContext
+
+    nonisolated init(context: NSManagedObjectContext) {
+        self.context = context
     }
     
     // MARK: - Basic CRUD Operations

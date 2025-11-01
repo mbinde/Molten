@@ -167,11 +167,40 @@ let inventoryService = RepositoryFactory.createInventoryTrackingService()
 
 ### Core Data Model
 
-The app uses a versioned Core Data model (`Molten.xcdatamodeld`) with multiple versions. The current model includes entities for:
-- CatalogItem (glass items with manufacturer, SKU, COE)
-- Inventory records (quantity, type)
-- Location tracking (where items are stored)
-- Purchase records
+The app uses a versioned Core Data model (`Molten.xcdatamodeld`) with multiple versions.
+
+**🚨 CRITICAL: Two-Store Architecture Required**
+
+The app MUST use **two separate persistent stores** to prevent CloudKit duplication issues:
+
+**STORE 1: Local Store (No CloudKit)**
+- **GlassItem** - Catalog data loaded from JSON
+- **ItemTags** - Catalog metadata
+- **CatalogItem*** - Reference data entities
+- **Item** (parent entity)
+- **CoatingItem, ToolItem** - Other catalog subtypes
+
+**STORE 2: Cloud Store (CloudKit Sync)**
+- **Inventory** - User's glass inventory
+- **PurchaseRecord/PurchaseRecordItem** - Purchase history
+- **Project*** - Project planning entities
+- **Logbook*** - Project log entities
+- **KilnScheduleEntity/KilnSegmentEntity** - User kiln schedules
+- **Location, Store** - User locations and stores
+- **ItemShopping, ItemMinimum** - User shopping/minimum quantities
+- **User*** - All user-created entities
+
+**Why Two Stores?**
+- Catalog data (GlassItem) is shipped with app, identical for all users
+- If catalog data syncs via CloudKit, each device uploads it → every other device downloads it → creates duplicates
+- First install: 2,659 items ✅
+- Second install: 2,659 local + 2,659 from CloudKit = 5,318 duplicates ❌
+- See `duplication_investigation.md` for full investigation details
+
+**Cross-Store References:**
+- Use **string-based lookups** (like `stable_id`), NOT CoreData relationships
+- Example: Inventory stores `item_stable_id` (string), looks up GlassItem by that ID
+- **⚠️ IMPORTANT**: GlassItem ↔ KilnSchedule relationship must be converted to string-based
 
 **Model Management**:
 - Uses `PersistenceController.shared` for production data
@@ -188,6 +217,38 @@ The app uses a versioned Core Data model (`Molten.xcdatamodeld`) with multiple v
 - **See**: `Molten/Docs/Transformable-Attributes-Review.md` for detailed analysis and migration strategy
 - **Known Legacy Issues**: ProjectLog, ProjectPlan, and ProjectStep entities have Transformable attributes that need refactoring
 
+### CloudKit + Persistent History Best Practices
+
+**🚨 CRITICAL RULES when using NSPersistentCloudKitContainer:**
+
+1. **✅ NEVER manually purge persistent history**
+   - CloudKit uses persistent history tokens to track sync state
+   - Deleting history causes CloudKit to lose track of what's been synced
+   - This triggers re-imports and duplicates
+   - Apple engineer (WWDC22): "We don't recommend it. NSPersistentCloudKitContainer uses the persistent history token to track what to sync."
+   - Source: https://stackoverflow.com/questions/72557060/
+
+2. **✅ ALWAYS use `automaticallyMergesChangesFromParent = true`**
+   - Required for CloudKit to properly track processed changes
+   - Setting to `false` causes CloudKit to think changes haven't been processed
+   - Leads to repeated import attempts creating duplicates
+   - This is NOT optional when using CloudKit
+
+3. **✅ Use separate stores for catalog vs user data**
+   - Catalog data (GlassItem) = Local store (no CloudKit)
+   - User data (Inventory, Projects) = Cloud store (CloudKit sync)
+   - Mixing catalog data in CloudKit causes every device to upload/download the same data → duplicates
+
+4. **✅ Let CloudKit manage its own history tokens**
+   - Don't manipulate `transactionAuthor` to prevent tracking
+   - CloudKit needs complete history to maintain sync state
+
+**What Happens If You Violate These Rules:**
+- First install after CloudKit reset: 2,659 items ✅
+- Second install: 2,659 local + 2,659 from CloudKit = 5,318+ duplicates ❌
+- Purging history: COUNT BEFORE PURGE: 3,659 → COUNT AFTER PURGE: 5,259 (worse!)
+- See `duplication_investigation.md` for 5-day investigation details
+
 ### Key Design Patterns
 
 - **Service Coordination**: Services expose repositories for advanced operations
@@ -195,6 +256,7 @@ The app uses a versioned Core Data model (`Molten.xcdatamodeld`) with multiple v
 - **Complete Models**: `CompleteInventoryItemModel` aggregates data from multiple repositories
 - **Natural Keys**: Glass items use keys like "bullseye-clear-001" (format: `manufacturer-sku-variant`)
 - **Manufacturer Storage**: Stored as abbreviations ("be", "cim", "ef"), not full names
+- **Cross-Store Lookups**: Use string-based references (`stable_id`) instead of CoreData relationships when entities are in different stores
 
 ### User Image Upload System
 

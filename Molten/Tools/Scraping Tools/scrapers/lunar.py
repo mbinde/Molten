@@ -3,92 +3,86 @@
 Lunar Glass Scraper
 ===================
 
-Scrapes Lunar Glass from Artistry in Glass distributor.
-Platform: X-Cart (same as Parramore and Chinese Boro)
+Scrapes Lunar Glass from ABR Imagery (abrimagery.com).
+Platform: Shopify
 
-URL: https://artistryinglass.on.ca/BEADMAKING-and-FLAMEWORKING/lunar-glass/
+URL: https://abrimagery.com/collections/color-glass
 """
 
 import re
 import urllib.request
 import urllib.error
 import urllib.parse
+import json
+import time
 import sys
 import os
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from color_extractor import extract_tags_from_name
-from scraper_config import is_bot_protection_error
+from color_extractor import combine_tags
+from scraper_config import get_page_delay, is_bot_protection_error
 
 
 # Constants
 MANUFACTURER_CODE = 'LUN'
 MANUFACTURER_NAME = 'Lunar Glass'
 COE = '33'
-BASE_URL = 'https://artistryinglass.on.ca'
-CATEGORY_PATH = '/BEADMAKING-and-FLAMEWORKING/lunar-glass/'
+BASE_URL = 'https://abrimagery.com'
 
 
-def fetch_page():
-    """
-    Fetch the Lunar Glass category page.
+def determine_product_type(product_name, tags):
+    """Determine the type of glass product from its name and tags"""
+    name_lower = product_name.lower()
+    tags_lower = ' '.join(tags).lower() if tags else ''
 
-    Returns:
-        str: HTML content, or None if bot protection detected
-    """
-    url = f'{BASE_URL}{CATEGORY_PATH}'
-
-    try:
-        req = urllib.request.Request(url)
-        req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
-
-        with urllib.request.urlopen(req) as response:
-            return response.read().decode('utf-8')
-    except urllib.error.HTTPError as e:
-        if is_bot_protection_error(e):
-            print(f"  ⚠️  Bot protection detected (HTTP {e.code})")
-            print(f"  ⚠️  Cannot scrape - site is blocking requests")
-            return None
-        else:
-            raise
+    if 'frit' in name_lower or 'frit' in tags_lower:
+        return 'frit'
+    elif 'rod' in name_lower or 'rod' in tags_lower:
+        return 'rod'
+    elif 'tube' in name_lower or 'tubing' in name_lower or 'tube' in tags_lower:
+        return 'tube'
+    elif 'stringer' in name_lower or 'stringer' in tags_lower:
+        return 'stringer'
+    elif 'sheet' in name_lower or 'sheet' in tags_lower:
+        return 'sheet'
+    else:
+        return 'rod'  # Default to rod for Lunar Glass
 
 
-def extract_products_from_page(html_content):
-    """
-    Extract product names from X-Cart page using product URLs.
+def remove_brand_from_title(title):
+    """Remove Lunar Glass brand name and product type from title"""
+    cleaned_title = title
 
-    Lunar Glass products have URLs like:
-    "lunar-glass/blue-waves-opal.html"
-    "lunar-glass/dense-amethyst-opal.html"
+    # Remove "Lunar Glass" prefix
+    cleaned_title = re.sub(r'^Lunar\s+Glass\s*[-–]?\s*', '', cleaned_title, flags=re.IGNORECASE)
 
-    Returns list of product names.
-    """
-    products = []
+    # Remove brand patterns
+    brand_patterns = ['Lunar Glass', 'Lunar']
+    for pattern in brand_patterns:
+        cleaned_title = re.sub(f'^{re.escape(pattern)}\\s+', '', cleaned_title, flags=re.IGNORECASE)
+        cleaned_title = re.sub(f'\\b{re.escape(pattern)}\\b\\s*', '', cleaned_title, flags=re.IGNORECASE)
 
-    # Pattern to match product URLs
-    # Format: "lunar-glass/{product-slug}.html"
-    pattern = r'lunar-glass/([a-z0-9-]+)\.html'
+    # Remove product type terms
+    type_patterns = [r'\bRods?\b', r'\bFrit\b', r'\bPowder\b', r'\bSheet\b',
+                    r'\bStringers?\b', r'\bTubes?\b', r'\bTubing\b', r'\bPiece\b']
 
-    matches = re.findall(pattern, html_content, re.IGNORECASE)
+    for pattern in type_patterns:
+        cleaned_title = re.sub(pattern, '', cleaned_title, flags=re.IGNORECASE)
 
-    for slug in matches:
-        # Convert URL slug to readable product name
-        # "blue-waves-opal" → "Blue Waves Opal"
-        product_name = slug.replace('-', ' ').title()
+    # Remove COE references
+    cleaned_title = re.sub(r'\bCOE\s*33\b', '', cleaned_title, flags=re.IGNORECASE)
 
-        # Skip if we've already seen this product
-        if product_name not in [p['name'] for p in products]:
-            products.append({
-                'name': product_name
-            })
+    # Clean up extra whitespace and dashes
+    cleaned_title = re.sub(r'\s*[-–]\s*', ' ', cleaned_title)
+    cleaned_title = re.sub(r'\s+', ' ', cleaned_title).strip()
 
-    return products
+    return cleaned_title
 
 
 def scrape(test_mode=False, max_items=None):
     """
-    Scrape Lunar Glass products from Artistry in Glass.
+    Scrape Lunar Glass products from ABR Imagery using Shopify API.
 
     Args:
         test_mode: If True, limit to 2-3 items for testing
@@ -97,68 +91,126 @@ def scrape(test_mode=False, max_items=None):
     Returns:
         tuple: (products_list, duplicates_list)
     """
-    print(f"\nScraping {MANUFACTURER_NAME} ({MANUFACTURER_CODE})")
+    print(f"\n{'='*60}")
+    print(f"Scraping {MANUFACTURER_NAME} ({MANUFACTURER_CODE})")
+    print(f"{'='*60}")
 
-    # Determine item limit
-    if max_items:
-        item_limit = max_items
-    elif test_mode:
-        item_limit = 3
-    else:
-        item_limit = None
-
+    collection_handle = 'color-glass'
     all_products = []
-    seen_names = set()
+    seen_skus = {}
     duplicates = []
+    page = 1
 
-    # Fetch the category page (single page with all products)
-    print(f"Fetching Lunar Glass products...")
+    while True:
+        print(f"  Fetching page {page}...")
 
-    html_content = fetch_page()
+        url = f"{BASE_URL}/collections/{collection_handle}/products.json?page={page}&limit=250"
 
-    # If bot protection detected, stop scraping
-    if html_content is None:
-        print(f"  Stopping scrape due to bot protection")
-        return None, None  # Signal bot protection to caller
+        try:
+            req = urllib.request.Request(url)
+            req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
 
-    products_on_page = extract_products_from_page(html_content)
+            with urllib.request.urlopen(req, timeout=15) as response:
+                json_content = response.read().decode('utf-8')
+                data = json.loads(json_content)
 
-    print(f"Found {len(products_on_page)} products")
+            products = data.get('products', [])
+            products_found = len(products)
 
-    for product in products_on_page:
-        name = product['name']
+            print(f"    Found {products_found} products on page {page}")
 
-        # Check for duplicates
-        if name in seen_names:
-            duplicates.append(product)
-            continue
+            if products_found == 0:
+                break
 
-        seen_names.add(name)
-        all_products.append(product)
+            lunar_count = 0
+            for product_data in products:
+                # Only process Lunar Glass products
+                tags = product_data.get('tags', [])
+                if 'Lunar Glass' not in tags:
+                    continue
 
-        # Check item limit
-        if item_limit and len(all_products) >= item_limit:
-            print(f"Reached max items limit ({item_limit})")
-            break
+                lunar_count += 1
+                product_name = product_data.get('title', '')
 
-    print(f"Total products scraped: {len(all_products)}")
+                # Skip unwanted products
+                skip_terms = ['sample pack', 'sampler', 'bundle', 'set', 'gift card',
+                             'sticker', 'shirt', 't-shirt', 'hoodie', 'hat', 'cap']
+                if any(term in product_name.lower() for term in skip_terms):
+                    print(f"    Skipping: {product_name}")
+                    continue
+
+                # Get first variant for SKU
+                variants = product_data.get('variants', [])
+                sku = variants[0].get('sku', '') if variants else ''
+
+                # Get images
+                images = product_data.get('images', [])
+                image_url = images[0].get('src', '') if images else ''
+
+                # Get description
+                body_html = product_data.get('body_html', '')
+                description = re.sub(r'<[^>]+>', '', body_html)
+                description = re.sub(r'\s+', ' ', description).strip()
+
+                # Build product URL
+                product_url = f"{BASE_URL}/products/{product_data.get('handle', '')}"
+
+                product = {
+                    'name': product_name,
+                    'sku': sku,
+                    'url': product_url,
+                    'product_type': product_data.get('product_type', ''),
+                    'tags': tags,
+                    'image_url': image_url,
+                    'manufacturer_description': description,
+                    'manufacturer_url': product_url
+                }
+
+                # Check for duplicates by SKU
+                if sku and sku in seen_skus:
+                    duplicates.append({
+                        'sku': sku,
+                        'name': product_name,
+                        'url': product_url,
+                        'original_name': seen_skus[sku]['name'],
+                        'original_url': seen_skus[sku]['url']
+                    })
+                    print(f"    Skipping duplicate SKU: {sku}")
+                else:
+                    if sku:
+                        seen_skus[sku] = {'name': product_name, 'url': product_url}
+                    all_products.append(product)
+
+                # Check limits
+                if test_mode and len(all_products) >= 3:
+                    print(f"  Test mode: reached 3 products")
+                    return all_products, duplicates
+                if max_items and len(all_products) >= max_items:
+                    print(f"  Reached max items limit ({max_items})")
+                    return all_products, duplicates
+
+            print(f"    Found {lunar_count} Lunar Glass products on this page")
+
+            # If we got fewer than 250 products, we're on the last page
+            if products_found < 250:
+                break
+
+            page += 1
+            time.sleep(get_page_delay(MANUFACTURER_CODE))
+
+        except urllib.error.HTTPError as e:
+            if is_bot_protection_error(e):
+                print(f"  ⚠️  Bot protection detected (HTTP {e.code})")
+                print(f"  ⚠️  Cannot scrape - site is blocking requests")
+                return None, None
+            else:
+                raise
+
+    print(f"\n  Total Lunar Glass products scraped: {len(all_products)}")
     if duplicates:
-        print(f"Duplicates skipped: {len(duplicates)}")
+        print(f"  Duplicates skipped: {len(duplicates)}")
 
     return all_products, duplicates
-
-
-def generate_product_code(product_name):
-    """
-    Generate product code from product name.
-
-    Example: "Blue Waves Opal" → "LUN-BLUE-WAVES-OPAL"
-    """
-    # Convert to uppercase and replace spaces with hyphens
-    code = product_name.upper().replace(' ', '-')
-    # Remove special characters except hyphens
-    code = re.sub(r'[^A-Z0-9-]', '', code)
-    return f"{MANUFACTURER_CODE}-{code}"
 
 
 def format_products_for_csv(products):
@@ -171,32 +223,44 @@ def format_products_for_csv(products):
 
     for product in products:
         product_name = product['name']
+        cleaned_name = remove_brand_from_title(product_name)
+        sku = product.get('sku', '')
 
-        # Generate product code
-        code = generate_product_code(product_name)
+        # Determine product type
+        product_type = determine_product_type(product_name, product.get('tags', []))
 
-        # Tags are handled by the tag analysis system, not scrapers
+        # Ensure SKU has manufacturer prefix if it exists
+        code = sku
+        if code and not code.upper().startswith(f"{MANUFACTURER_CODE}-"):
+            # Some SKUs might already have LG- prefix from vendor
+            if code.upper().startswith('LG-'):
+                # Convert LG- to LUN-
+                code = f"{MANUFACTURER_CODE}-{code[3:]}"
+            else:
+                code = f"{MANUFACTURER_CODE}-{code}"
+        elif not code:
+            # Generate code from name if no SKU
+            code_part = cleaned_name.upper().replace(' ', '-')
+            code_part = re.sub(r'[^A-Z0-9-]', '', code_part)
+            code = f"{MANUFACTURER_CODE}-{code_part}"
+
+        # Tags handled by tag analysis system
         tags = ''
 
-        # Product type is rod (based on description: "based off Trautman 33 formulas")
-        product_type = 'rod'
-
-        # Build CSV row
         row = {
             'manufacturer': MANUFACTURER_CODE,
             'product_type': 'glass',
             'code': code,
-            'name': product_name,
+            'name': cleaned_name,
             'start_date': '',
             'end_date': '',
-            'manufacturer_description': f'Lunar Glass {product_name} Rod',
+            'manufacturer_description': product.get('manufacturer_description', ''),
             'tags': tags,
             'synonyms': '',
             'coe': COE,
             'type': product_type,
-            'manufacturer_url': f'{BASE_URL}{CATEGORY_PATH}',
-            
-            'image_url': '',
+            'manufacturer_url': product.get('manufacturer_url', ''),
+            'image_url': product.get('image_url', ''),
             'stock_type': ''
         }
 
@@ -208,10 +272,16 @@ def format_products_for_csv(products):
 if __name__ == '__main__':
     # Test the scraper
     products, dupes = scrape(test_mode=True)
-    print(f"\nTest results: {len(products)} products")
 
-    if products:
-        print("\nSample product:")
-        sample = format_products_for_csv([products[0]])[0]
-        for key, value in sample.items():
-            print(f"  {key}: {value}")
+    if products is None:
+        print("\n❌ Scrape failed due to bot protection")
+    else:
+        print(f"\nTest results: {len(products)} products")
+        if dupes:
+            print(f"Duplicates found: {len(dupes)}")
+
+        if products:
+            print("\nSample product:")
+            sample = format_products_for_csv([products[0]])[0]
+            for key, value in sample.items():
+                print(f"  {key}: {value}")

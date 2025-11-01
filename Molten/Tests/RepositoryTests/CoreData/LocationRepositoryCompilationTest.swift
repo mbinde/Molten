@@ -16,11 +16,11 @@ class LocationRepositoryCompilationTest {
     
     func testBasicCompilation() {
         // Test 1: Basic NSFetchRequest creation
-        let fetchRequest1 = NSFetchRequest<NSManagedObject>(entityName: "Location")
+        let fetchRequest1 = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
         print("Basic fetch request works: \(fetchRequest1)")
         
         // Test 2: Dictionary fetch request  
-        let fetchRequest2 = NSFetchRequest<NSDictionary>(entityName: "Location")
+        let fetchRequest2 = NSFetchRequest<NSDictionary>(entityName: "StorageLocation")
         fetchRequest2.propertiesToFetch = ["location"]
         fetchRequest2.returnsDistinctResults = true
         fetchRequest2.resultType = .dictionaryResultType

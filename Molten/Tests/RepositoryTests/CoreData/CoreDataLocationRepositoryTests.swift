@@ -37,18 +37,18 @@ struct CoreDataLocationRepositoryTests {
 
     // MARK: - Core Data Entity Structure Tests
 
-    @Test("Location entity does not have 'id' attribute")
+    @Test("StorageStorageLocation entity does not have 'id' attribute")
     func testLocationEntityHasNoIdAttribute() async throws {
         let context = testController.container.viewContext
 
         guard let entity = NSEntityDescription.entity(forEntityName: "Location", in: context) else {
-            Issue.record("Location entity not found")
+            Issue.record("StorageStorageLocation entity not found")
             return
         }
 
         // Verify the entity does NOT have an 'id' attribute
         let hasIdAttribute = entity.attributesByName.keys.contains("id")
-        #expect(!hasIdAttribute, "Location entity should NOT have an 'id' attribute")
+        #expect(!hasIdAttribute, "StorageStorageLocation entity should NOT have an 'id' attribute")
 
         // Verify it has the expected attributes
         #expect(entity.attributesByName.keys.contains("inventory_id"))
@@ -269,7 +269,7 @@ struct CoreDataLocationRepositoryTests {
 
         // Fetch the Core Data object directly to verify quantity is stored as string
         let context = testController.container.viewContext
-        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
         fetchRequest.predicate = NSPredicate(
             format: "inventory_id == %@ AND location == %@",
             inventoryId as CVarArg,

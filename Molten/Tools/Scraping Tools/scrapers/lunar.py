@@ -148,7 +148,7 @@ def scrape(test_mode=False, max_items=None):
                 image_url = images[0].get('src', '') if images else ''
 
                 # Get description
-                body_html = product_data.get('body_html', '')
+                body_html = product_data.get('body_html', '') or ''
                 description = re.sub(r'<[^>]+>', '', body_html)
                 description = re.sub(r'\s+', ' ', description).strip()
 

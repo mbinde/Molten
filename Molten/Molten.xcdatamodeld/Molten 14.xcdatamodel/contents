@@ -124,7 +124,7 @@
         <attribute name="target_temperature" optional="YES" attributeType="Decimal" defaultValueString="0"/>
         <relationship name="schedule" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="KilnScheduleEntity" inverseName="segments" inverseEntity="KilnScheduleEntity"/>
     </entity>
-    <entity name="Location" representedClassName="Location" syncable="YES" codeGenerationType="category">
+    <entity name="StorageLocation" representedClassName="StorageLocation" syncable="YES" codeGenerationType="category">
         <attribute name="inventory_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="location" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="String"/>
@@ -327,7 +327,7 @@
         <memberEntity name="ItemShopping"/>
         <memberEntity name="KilnScheduleEntity"/>
         <memberEntity name="KilnSegmentEntity"/>
-        <memberEntity name="Location"/>
+        <memberEntity name="StorageLocation"/>
         <memberEntity name="Logbook"/>
         <memberEntity name="LogbookGlassItem"/>
         <memberEntity name="Project"/>

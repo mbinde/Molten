@@ -23,6 +23,14 @@
   - Created "Local" configuration with: GlassItem, ItemTags, CatalogItem*, Item, CoatingItem, ToolItem
   - Created "Cloud" configuration with: Inventory, Purchases, Projects, Logbook, KilnSchedule, Location, Store, Shopping, User*
 
+## ✅ Completed Work (as of latest commit)
+
+1. ✅ Convert GlassItem ↔ KilnSchedule relationship to string-based
+2. ✅ Create "Local" and "Cloud" configurations in CoreData model
+3. ✅ Update Persistence.swift to configure two stores with separate contexts
+4. ✅ Update CoreDataGlassItemRepository to take context parameter
+5. ✅ Update RepositoryFactory.createGlassItemRepository() to use localContext
+
 ## ⏳ Remaining Work
 
 ### 4. Update Persistence.swift for Two Stores
@@ -88,21 +96,31 @@ class PersistenceController {
 - `Persistence.swift` lines 313-370 (initialize method)
 - Remove `container.viewContext` usage throughout
 
-### 5. Update All Repositories to Use Correct Context
+### Next: Update Remaining Repositories to Use Correct Context
 
 **Local Context (catalog data):**
-- `CoreDataGlassItemRepository` - Currently uses `viewContext`, needs `localContext`
-- `CoreDataItemTagsRepository` - Currently uses background context, needs `localContext`
-- Any repository dealing with CatalogItem entities
+- ✅ `CoreDataGlassItemRepository` - DONE, uses `localContext`
+- ⏳ `CoreDataItemTagsRepository` - Needs `localContext`
 
 **Cloud Context (user data):**
-- `CoreDataInventoryRepository` - Currently uses `viewContext`, needs `cloudContext`
-- `CoreDataPurchaseRecordRepository` - Currently uses `viewContext`, needs `cloudContext`
-- `CoreDataLocationRepository` - Currently uses `viewContext`, needs `cloudContext`
-- `CoreDataStoreRepository` - Currently uses `viewContext`, needs `cloudContext`
-- `CoreDataLogbookRepository` - Currently uses `viewContext`, needs `cloudContext`
-- `CoreDataUserImageRepository` - Currently uses `viewContext`, needs `cloudContext`
-- All Project/Kiln/Shopping repositories
+- ⏳ `CoreDataInventoryRepository` - Needs `cloudContext`
+- ⏳ `CoreDataLocationRepository` - Needs `cloudContext`
+- ⏳ `CoreDataStoreRepository` - Needs `cloudContext`
+- ⏳ `CoreDataShoppingListRepository` - Needs `cloudContext`
+- ⏳ `CoreDataUserNotesRepository` - Needs `cloudContext`
+- ⏳ `CoreDataUserTagsRepository` - Needs `cloudContext`
+- ⏳ Plus: PurchaseRecord, Logbook, Project, Kiln, UserImage repositories
+
+**Repositories found needing updates**:
+```
+CoreDataInventoryRepository.swift
+CoreDataItemTagsRepository.swift
+CoreDataLocationRepository.swift
+CoreDataShoppingListRepository.swift
+CoreDataStoreRepository.swift
+CoreDataUserNotesRepository.swift
+CoreDataUserTagsRepository.swift
+```
 
 **How to Update Repositories**:
 

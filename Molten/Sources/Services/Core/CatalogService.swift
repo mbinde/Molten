@@ -80,10 +80,12 @@ actor CatalogService {
         sortBy: GlassItemSortOption = .name,
         includeWithoutInventory: Bool = true
     ) async throws -> [CompleteInventoryItemModel] {
+        print("🚨 CatalogService.getAllGlassItems: CALLED")
         let trackingService = inventoryTrackingService
 
         // Get all glass items
         let glassItems = try await glassItemRepository.fetchItems(matching: nil)
+        print("🚨 CatalogService.getAllGlassItems: Repository returned \(glassItems.count) glass items")
 
         // Filter by inventory if requested
         let filteredItems: [GlassItemModel]
@@ -122,7 +124,9 @@ actor CatalogService {
         }
 
         // Apply sorting
-        return sortItems(completeItems, by: sortBy)
+        let sortedItems = sortItems(completeItems, by: sortBy)
+        print("🚨 CatalogService.getAllGlassItems: Returning \(sortedItems.count) complete items")
+        return sortedItems
     }
     
     /// Enhanced search with advanced filtering and sorting options

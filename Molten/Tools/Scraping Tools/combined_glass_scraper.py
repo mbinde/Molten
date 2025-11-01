@@ -6,6 +6,7 @@ Combined Glass Scraper
 Unified scraper that combines data from multiple glass manufacturers into a single CSV file.
 
 Manufacturers:
+- Asian Glass (CHB)
 - Boro Batch (BB)
 - Bullseye Glass (BE)
 - Creation is Messy (CIM)
@@ -14,6 +15,8 @@ Manufacturers:
 - Effetre/Vetrofond (EF)
 - Glass Alchemy (GA)
 - Greasy Glass (GRE)
+- Kashmir Glass (KAS)
+- Lunar Glass (LUN)
 - Molten Aura Labs (MA)
 - Momka Glass (MOM)
 - NorthStar Glassworks (NS)
@@ -41,7 +44,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from url_utils import clean_manufacturer_url
 
 # Import manufacturer scrapers
-from scrapers import boro_batch, bullseye, chinese_boro, cim, delphi_superior, double_helix, effetre_vetrofond, gaffer, glass_alchemy, greasy, lunar, molten_aura, momka, northstar, oceanside, origin, parramore, pdx_tubing, tag, ust_glass, wissmach, youghiogheny
+from scrapers import boro_batch, bullseye, chinese_boro, cim, delphi_superior, double_helix, effetre_vetrofond, gaffer, glass_alchemy, greasy, kashmir, lunar, molten_aura, momka, northstar, oceanside, origin, parramore, pdx_tubing, tag, ust_glass, wissmach, youghiogheny
 
 
 # Manufacturer registry
@@ -94,6 +97,11 @@ MANUFACTURERS = {
     'GRE': {
         'name': 'Greasy Glass',
         'module': greasy,
+        'enabled': True
+    },
+    'KAS': {
+        'name': 'Kashmir Glass',
+        'module': kashmir,
         'enabled': True
     },
     'LUN': {

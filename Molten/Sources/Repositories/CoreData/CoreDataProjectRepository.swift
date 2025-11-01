@@ -10,16 +10,13 @@ import Foundation
 
 /// Core Data implementation of ProjectRepository
 class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
-    private let persistenceController: PersistenceController
+    private let context: NSManagedObjectContext
     private let imageRepository: UserImageRepository?
 
-    nonisolated init(persistenceController: PersistenceController, imageRepository: UserImageRepository? = nil) {
-        self.persistenceController = persistenceController
+    nonisolated init(context: NSManagedObjectContext, imageRepository: UserImageRepository? = nil) {
+        self.context = context
+        self.context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
         self.imageRepository = imageRepository
-    }
-
-    private var context: NSManagedObjectContext {
-        persistenceController.container.viewContext
     }
 
     // MARK: - CRUD Operations

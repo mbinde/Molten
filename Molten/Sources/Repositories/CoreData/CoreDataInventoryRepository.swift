@@ -14,21 +14,18 @@ import OSLog
 class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     // MARK: - Dependencies
-    
-    private let persistentContainer: NSPersistentContainer
-    private let backgroundContext: NSManagedObjectContext
+
+    private let context: NSManagedObjectContext
     private let log = Logger(subsystem: "com.flameworker.app", category: "inventory-repository")
-    
+
     // MARK: - Initialization
-    
-    /// Initialize with a Core Data persistent container
-    /// - Parameter persistentContainer: The NSPersistentContainer to use for data operations
-    /// - Note: In production, pass PersistenceController.shared.container
-    nonisolated init(persistentContainer: NSPersistentContainer) {
-        self.persistentContainer = persistentContainer
-        self.backgroundContext = persistentContainer.newBackgroundContext()
-        self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-        
+
+    /// Initialize with a managed object context
+    /// - Parameter context: The NSManagedObjectContext to use for data operations
+    /// - Note: In production, pass PersistenceController.shared.cloudContext (user data)
+    nonisolated init(context: NSManagedObjectContext) {
+        self.context = context
+        self.context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
     }
     
     // MARK: - Basic CRUD Operations
@@ -36,7 +33,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     func fetchInventory(matching predicate: NSPredicate?) async throws -> [InventoryModel] {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[InventoryModel], Error>) in
             nonisolated(unsafe) let predicateCopy = predicate
-            backgroundContext.perform {
+            context.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
                     fetchRequest.predicate = predicateCopy
@@ -45,7 +42,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                         NSSortDescriptor(key: "type", ascending: true)
                     ]
                     
-                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
+                    let coreDataItems = try self.context.fetch(fetchRequest)
                     let inventoryItems = coreDataItems.compactMap { self.convertToInventoryModel($0) }
 
                     continuation.resume(returning: inventoryItems)
@@ -60,13 +57,13 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     func fetchInventory(byId id: UUID) async throws -> InventoryModel? {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<InventoryModel?, Error>) in
-            backgroundContext.perform {
+            context.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
                     fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
                     fetchRequest.fetchLimit = 1
                     
-                    let results = try self.backgroundContext.fetch(fetchRequest)
+                    let results = try self.context.fetch(fetchRequest)
                     let inventoryItem = results.first.flatMap { self.convertToInventoryModel($0) }
 
                     if inventoryItem != nil {
@@ -98,13 +95,13 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     func createInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<InventoryModel, Error>) in
-            backgroundContext.perform {
+            context.perform {
                 do {
                     // Create new Core Data entity
-                    guard let entity = NSEntityDescription.entity(forEntityName: "Inventory", in: self.backgroundContext) else {
+                    guard let entity = NSEntityDescription.entity(forEntityName: "Inventory", in: self.context) else {
                         throw CoreDataInventoryRepositoryError.entityNotFound("Inventory")
                     }
-                    let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
+                    let coreDataItem = NSManagedObject(entity: entity, insertInto: self.context)
                     
                     // Create a new inventory model with a fresh ID for Core Data
                     let newInventory = InventoryModel(
@@ -124,7 +121,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     self.updateCoreDataEntity(coreDataItem, with: newInventory)
                     
                     // Save context
-                    try self.backgroundContext.save()
+                    try self.context.save()
                     
                     self.log.info("Created inventory record: \(newInventory.item_stable_id) - \(newInventory.type)")
                     continuation.resume(returning: newInventory)
@@ -139,16 +136,16 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     func createInventories(_ inventories: [InventoryModel]) async throws -> [InventoryModel] {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[InventoryModel], Error>) in
-            backgroundContext.perform {
+            context.perform {
                 do {
                     var createdInventories: [InventoryModel] = []
                     
                     for inventory in inventories {
                         // Create new Core Data entity
-                        guard let entity = NSEntityDescription.entity(forEntityName: "Inventory", in: self.backgroundContext) else {
+                        guard let entity = NSEntityDescription.entity(forEntityName: "Inventory", in: self.context) else {
                             throw CoreDataInventoryRepositoryError.entityNotFound("Inventory")
                         }
-                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
+                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.context)
                         
                         // Create a new inventory model with a fresh ID for Core Data
                         let newInventory = InventoryModel(
@@ -170,7 +167,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     }
                     
                     // Save all changes at once
-                    try self.backgroundContext.save()
+                    try self.context.save()
                     
                     self.log.info("Created \(createdInventories.count) inventory records in batch")
                     continuation.resume(returning: createdInventories)
@@ -185,7 +182,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     func updateInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<InventoryModel, Error>) in
-            backgroundContext.perform {
+            context.perform {
                 do {
                     // Find existing item
                     guard let coreDataItem = try self.fetchCoreDataItemSync(byId: inventory.id) else {
@@ -198,7 +195,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     self.updateCoreDataEntity(coreDataItem, with: inventory)
                     
                     // Save context
-                    try self.backgroundContext.save()
+                    try self.context.save()
                     
                     self.log.info("Updated inventory record: \(inventory.id)")
                     continuation.resume(returning: inventory)
@@ -213,7 +210,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     func deleteInventory(id: UUID) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
+            context.perform {
                 do {
                     // Find existing item
                     guard let coreDataItem = try self.fetchCoreDataItemSync(byId: id) else {
@@ -223,10 +220,10 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     }
                     
                     // Delete item (this should also cascade delete any related locations)
-                    self.backgroundContext.delete(coreDataItem)
+                    self.context.delete(coreDataItem)
                     
                     // Save context
-                    try self.backgroundContext.save()
+                    try self.context.save()
                     
                     self.log.info("Deleted inventory record: \(id)")
                     continuation.resume()
@@ -241,19 +238,19 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     func deleteInventory(forItem item_stable_id: String) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
+            context.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
                     fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", item_stable_id)
                     
-                    let itemsToDelete = try self.backgroundContext.fetch(fetchRequest)
+                    let itemsToDelete = try self.context.fetch(fetchRequest)
                     
                     for item in itemsToDelete {
-                        self.backgroundContext.delete(item)
+                        self.context.delete(item)
                     }
                     
                     if !itemsToDelete.isEmpty {
-                        try self.backgroundContext.save()
+                        try self.context.save()
                     }
                     
                     self.log.info("Deleted \(itemsToDelete.count) inventory records for item: \(item_stable_id)")
@@ -271,19 +268,19 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
         let cleanType = InventoryModel.cleanType(type)
         
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
+            context.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
                     fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@ AND type == %@", item_stable_id, cleanType)
                     
-                    let itemsToDelete = try self.backgroundContext.fetch(fetchRequest)
+                    let itemsToDelete = try self.context.fetch(fetchRequest)
                     
                     for item in itemsToDelete {
-                        self.backgroundContext.delete(item)
+                        self.context.delete(item)
                     }
                     
                     if !itemsToDelete.isEmpty {
-                        try self.backgroundContext.save()
+                        try self.context.save()
                     }
                     
                     self.log.info("Deleted \(itemsToDelete.count) inventory records for item: \(item_stable_id) type: \(cleanType)")
@@ -313,7 +310,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
         let cleanType = InventoryModel.cleanType(type)
         
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<InventoryModel, Error>) in
-            backgroundContext.perform {
+            context.perform {
                 do {
                     // Look for existing inventory record
                     let existingRecords = try self.fetchInventorySync(forItem: item_stable_id, type: cleanType)
@@ -334,7 +331,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                         }
                         
                         self.updateCoreDataEntity(coreDataItem, with: updatedRecord)
-                        try self.backgroundContext.save()
+                        try self.context.save()
                         
                         continuation.resume(returning: updatedRecord)
                     } else {
@@ -345,13 +342,13 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                             quantity: quantity
                         )
                         
-                        guard let entity = NSEntityDescription.entity(forEntityName: "Inventory", in: self.backgroundContext) else {
+                        guard let entity = NSEntityDescription.entity(forEntityName: "Inventory", in: self.context) else {
                             throw CoreDataInventoryRepositoryError.entityNotFound("Inventory")
                         }
-                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
+                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.context)
                         
                         self.updateCoreDataEntity(coreDataItem, with: newRecord)
-                        try self.backgroundContext.save()
+                        try self.context.save()
                         
                         continuation.resume(returning: newRecord)
                     }
@@ -368,7 +365,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
         let cleanType = InventoryModel.cleanType(type)
         
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<InventoryModel?, Error>) in
-            backgroundContext.perform {
+            context.perform {
                 do {
                     // Look for existing inventory record
                     let existingRecords = try self.fetchInventorySync(forItem: item_stable_id, type: cleanType)
@@ -385,8 +382,8 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     
                     if newQuantity <= 0 {
                         // Delete the record if quantity reaches zero or below
-                        self.backgroundContext.delete(coreDataItem)
-                        try self.backgroundContext.save()
+                        self.context.delete(coreDataItem)
+                        try self.context.save()
                         continuation.resume(returning: nil)
                     } else {
                         // Update the record with new quantity
@@ -400,7 +397,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                         )
                         
                         self.updateCoreDataEntity(coreDataItem, with: updatedRecord)
-                        try self.backgroundContext.save()
+                        try self.context.save()
                         continuation.resume(returning: updatedRecord)
                     }
                     
@@ -450,14 +447,14 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     func getDistinctTypes() async throws -> [String] {
         return try await withCheckedThrowingContinuation { continuation in
-            backgroundContext.perform {
+            context.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
                     fetchRequest.propertiesToFetch = ["type"]
                     fetchRequest.returnsDistinctResults = true
                     fetchRequest.resultType = .dictionaryResultType
                     
-                    let results = try self.backgroundContext.fetch(fetchRequest)
+                    let results = try self.context.fetch(fetchRequest)
                     let types = results.compactMap { $0["type"] as? String }.sorted()
                     
                     self.log.debug("Found \(types.count) distinct inventory types")
@@ -473,14 +470,14 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     func getItemsWithInventory() async throws -> [String] {
         return try await withCheckedThrowingContinuation { continuation in
-            backgroundContext.perform {
+            context.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
                     fetchRequest.propertiesToFetch = ["item_stable_id"]
                     fetchRequest.returnsDistinctResults = true
                     fetchRequest.resultType = .dictionaryResultType
                     
-                    let results = try self.backgroundContext.fetch(fetchRequest)
+                    let results = try self.context.fetch(fetchRequest)
                     let naturalKeys = results.compactMap { $0["item_stable_id"] as? String }.sorted()
                     
                     self.log.debug("Found \(naturalKeys.count) items with inventory")
@@ -556,7 +553,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
 
     func getDistinctLocations() async throws -> [String] {
         return try await withCheckedThrowingContinuation { continuation in
-            backgroundContext.perform {
+            context.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
                     fetchRequest.propertiesToFetch = ["location"]
@@ -564,7 +561,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     fetchRequest.resultType = .dictionaryResultType
                     fetchRequest.predicate = NSPredicate(format: "location != nil")
 
-                    let results = try self.backgroundContext.fetch(fetchRequest)
+                    let results = try self.context.fetch(fetchRequest)
                     let locations = results.compactMap { $0["location"] as? String }.sorted()
 
                     self.log.debug("Found \(locations.count) distinct locations")
@@ -582,7 +579,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
         let cleanPrefix = LocationModel.cleanLocationName(prefix)
 
         return try await withCheckedThrowingContinuation { continuation in
-            backgroundContext.perform {
+            context.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
                     fetchRequest.propertiesToFetch = ["location"]
@@ -590,7 +587,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     fetchRequest.resultType = .dictionaryResultType
                     fetchRequest.predicate = NSPredicate(format: "location BEGINSWITH[c] %@", cleanPrefix)
 
-                    let results = try self.backgroundContext.fetch(fetchRequest)
+                    let results = try self.context.fetch(fetchRequest)
                     let locations = results.compactMap { $0["location"] as? String }.sorted()
 
                     self.log.debug("Found \(locations.count) locations with prefix: \(cleanPrefix)")
@@ -628,7 +625,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
         fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@ AND type == %@", item_stable_id, type)
         
-        let results = try backgroundContext.fetch(fetchRequest)
+        let results = try context.fetch(fetchRequest)
         return results.compactMap { convertToInventoryModel($0) }
     }
     
@@ -637,7 +634,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
         fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
         fetchRequest.fetchLimit = 1
         
-        let results = try backgroundContext.fetch(fetchRequest)
+        let results = try context.fetch(fetchRequest)
         return results.first
     }
     

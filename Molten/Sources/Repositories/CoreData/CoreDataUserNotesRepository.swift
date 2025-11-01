@@ -15,20 +15,20 @@ class CoreDataUserNotesRepository: @unchecked Sendable, UserNotesRepository {
 
     // MARK: - Dependencies
 
-    private let persistentContainer: NSPersistentContainer
+    private let context: NSManagedObjectContext
     private let backgroundContext: NSManagedObjectContext
     private let log = Logger(subsystem: "com.flameworker.app", category: "usernotes-repository")
 
     // MARK: - Initialization
 
     /// Initialize CoreDataUserNotesRepository with a Core Data persistent container
-    /// - Parameter persistentContainer: The NSPersistentContainer to use for user notes operations
-    /// - Note: In production, pass PersistenceController.shared.container
-    nonisolated init(userNotesPersistentContainer persistentContainer: NSPersistentContainer) {
-        self.persistentContainer = persistentContainer
-        self.backgroundContext = persistentContainer.newBackgroundContext()
+    /// - Parameter context: The NSManagedObjectContext to use for user notes operations
+    /// - Note: In production, pass PersistenceController.shared.cloudContext (user data)
+    nonisolated init(context: NSManagedObjectContext) {
+        self.context = context
+        self.context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        self.backgroundContext = context
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-
     }
 
     // MARK: - Basic CRUD Operations

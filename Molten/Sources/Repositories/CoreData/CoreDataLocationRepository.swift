@@ -21,20 +21,20 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
     
     // MARK: - Dependencies
     
-    private let persistentContainer: NSPersistentContainer
+    private let context: NSManagedObjectContext
     private let backgroundContext: NSManagedObjectContext
     private let log = Logger(subsystem: "com.flameworker.app", category: "location-repository")
     
     // MARK: - Initialization
     
-    /// Initialize CoreDataLocationRepository with a Core Data persistent container
-    /// - Parameter persistentContainer: The NSPersistentContainer to use for location data operations
-    /// - Note: In production, pass PersistenceController.shared.container
-    nonisolated init(locationPersistentContainer persistentContainer: NSPersistentContainer) {
-        self.persistentContainer = persistentContainer
-        self.backgroundContext = persistentContainer.newBackgroundContext()
+    /// Initialize CoreDataLocationRepository with a managed object context
+    /// - Parameter context: The NSManagedObjectContext to use for location data operations
+    /// - Note: In production, pass PersistenceController.shared.cloudContext (user data)
+    nonisolated init(context: NSManagedObjectContext) {
+        self.context = context
+        self.context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        self.backgroundContext = context
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-        
     }
     
     // MARK: - Basic CRUD Operations

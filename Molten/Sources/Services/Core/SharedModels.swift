@@ -163,7 +163,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
         self.subsubtype = subsubtype.map { Self.cleanType($0) }
         self.dimensions = dimensions
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
-        self.location = location.map { LocationModel.cleanLocationName($0) }
+        self.location = location.map { StorageLocationModel.cleanLocationName($0) }
         self.date_added = date_added
         self.date_modified = date_modified
     }
@@ -201,8 +201,8 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     }
 }
 
-/// Location model for tracking where inventory is stored
-struct LocationModel: Identifiable, Sendable {
+/// Storage location model for tracking where inventory is stored (e.g., "Shelf A", "Box 3")
+struct StorageLocationModel: Identifiable, Sendable {
     let id: UUID
     let inventory_id: UUID
     let location: String
@@ -239,13 +239,13 @@ struct LocationModel: Identifiable, Sendable {
 }
 
 // Explicit conformances to Equatable and Hashable
-extension LocationModel: Equatable {
-    nonisolated static func == (lhs: LocationModel, rhs: LocationModel) -> Bool {
+extension StorageLocationModel: Equatable {
+    nonisolated static func == (lhs: StorageLocationModel, rhs: StorageLocationModel) -> Bool {
         return lhs.id == rhs.id
     }
 }
 
-extension LocationModel: Hashable {
+extension StorageLocationModel: Hashable {
     nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }

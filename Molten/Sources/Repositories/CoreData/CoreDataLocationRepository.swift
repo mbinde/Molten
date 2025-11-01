@@ -39,8 +39,8 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
     
     // MARK: - Basic CRUD Operations
     
-    func fetchLocations(matching predicate: NSPredicate?) async throws -> [LocationModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[LocationModel], Error>) in
+    func fetchLocations(matching predicate: NSPredicate?) async throws -> [StorageLocationModel] {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[StorageLocationModel], Error>) in
             nonisolated(unsafe) let predicateCopy = predicate
             backgroundContext.perform {
                 do {
@@ -52,7 +52,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
                     ]
                     
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
-                    let locationItems = coreDataItems.compactMap { self.convertToLocationModel($0) }
+                    let locationItems = coreDataItems.compactMap { self.convertToStorageLocationModel($0) }
                     
                     continuation.resume(returning: locationItems)
                     
@@ -64,19 +64,19 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
         }
     }
     
-    func fetchLocations(forInventory inventory_id: UUID) async throws -> [LocationModel] {
+    func fetchLocations(forInventory inventory_id: UUID) async throws -> [StorageLocationModel] {
         let predicate = NSPredicate(format: "inventory_id == %@", inventory_id as CVarArg)
         return try await fetchLocations(matching: predicate)
     }
     
-    func fetchLocations(withName locationName: String) async throws -> [LocationModel] {
-        let cleanLocationName = LocationModel.cleanLocationName(locationName)
+    func fetchLocations(withName locationName: String) async throws -> [StorageLocationModel] {
+        let cleanLocationName = StorageLocationModel.cleanLocationName(locationName)
         let predicate = NSPredicate(format: "location == %@", cleanLocationName)
         return try await fetchLocations(matching: predicate)
     }
     
-    func createLocation(_ location: LocationModel) async throws -> LocationModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<LocationModel, Error>) in
+    func createLocation(_ location: StorageLocationModel) async throws -> StorageLocationModel {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<StorageLocationModel, Error>) in
             backgroundContext.perform {
                 do {
                     // Create new Core Data entity
@@ -102,11 +102,11 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
         }
     }
     
-    func createLocations(_ locations: [LocationModel]) async throws -> [LocationModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[LocationModel], Error>) in
+    func createLocations(_ locations: [StorageLocationModel]) async throws -> [StorageLocationModel] {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[StorageLocationModel], Error>) in
             backgroundContext.perform {
                 do {
-                    var createdLocations: [LocationModel] = []
+                    var createdLocations: [StorageLocationModel] = []
                     
                     for location in locations {
                         // Create new Core Data entity
@@ -134,8 +134,8 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
         }
     }
     
-    func updateLocation(_ location: LocationModel) async throws -> LocationModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<LocationModel, Error>) in
+    func updateLocation(_ location: StorageLocationModel) async throws -> StorageLocationModel {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<StorageLocationModel, Error>) in
             backgroundContext.perform {
                 do {
                     // Find existing item
@@ -162,7 +162,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
         }
     }
     
-    func deleteLocation(_ location: LocationModel) async throws {
+    func deleteLocation(_ location: StorageLocationModel) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
@@ -219,7 +219,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
     }
     
     func deleteLocations(withName locationName: String) async throws {
-        let cleanLocationName = LocationModel.cleanLocationName(locationName)
+        let cleanLocationName = StorageLocationModel.cleanLocationName(locationName)
         
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
@@ -270,7 +270,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
                         }
                         let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
                         
-                        let locationModel = LocationModel(
+                        let locationModel = StorageLocationModel(
                             inventory_id: inventory_id,
                             location: locationName,
                             quantity: quantity
@@ -293,10 +293,10 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
         }
     }
     
-    func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventory_id: UUID) async throws -> LocationModel {
-        let cleanLocationName = LocationModel.cleanLocationName(locationName)
+    func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventory_id: UUID) async throws -> StorageLocationModel {
+        let cleanLocationName = StorageLocationModel.cleanLocationName(locationName)
         
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<LocationModel, Error>) in
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<StorageLocationModel, Error>) in
             backgroundContext.perform {
                 do {
                     // Look for existing location record
@@ -304,7 +304,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
                     
                     if let existingLocation = existingLocations.first {
                         // Update existing record
-                        let updatedLocation = LocationModel(
+                        let updatedLocation = StorageLocationModel(
                             id: existingLocation.id,
                             inventory_id: existingLocation.inventory_id,
                             location: existingLocation.location,
@@ -321,7 +321,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
                         continuation.resume(returning: updatedLocation)
                     } else {
                         // Create new record
-                        let newLocation = LocationModel(
+                        let newLocation = StorageLocationModel(
                             inventory_id: inventory_id,
                             location: cleanLocationName,
                             quantity: quantity
@@ -346,10 +346,10 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
         }
     }
     
-    func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventory_id: UUID) async throws -> LocationModel? {
-        let cleanLocationName = LocationModel.cleanLocationName(locationName)
+    func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventory_id: UUID) async throws -> StorageLocationModel? {
+        let cleanLocationName = StorageLocationModel.cleanLocationName(locationName)
         
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<LocationModel?, Error>) in
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<StorageLocationModel?, Error>) in
             backgroundContext.perform {
                 do {
                     // Look for existing location record
@@ -372,7 +372,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
                         continuation.resume(returning: nil)
                     } else {
                         // Update the record with new quantity
-                        let updatedLocation = LocationModel(
+                        let updatedLocation = StorageLocationModel(
                             id: existingLocation.id,
                             inventory_id: existingLocation.inventory_id,
                             location: existingLocation.location,
@@ -432,7 +432,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
     }
     
     func getInventoriesInLocation(_ locationName: String) async throws -> [UUID] {
-        let cleanLocationName = LocationModel.cleanLocationName(locationName)
+        let cleanLocationName = StorageLocationModel.cleanLocationName(locationName)
         let locations = try await fetchLocations(withName: cleanLocationName)
         let inventory_ids = Set(locations.map { $0.inventory_id })
         return Array(inventory_ids).sorted { $0.uuidString < $1.uuidString }
@@ -468,7 +468,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
         return actualTotal - expectedTotal
     }
     
-    func findOrphanedLocations() async throws -> [LocationModel] {
+    func findOrphanedLocations() async throws -> [StorageLocationModel] {
         // This would require cross-referencing with the inventory table
         // For now, return empty array - in a real implementation, this would
         // be a complex query to find locations with non-existent inventory IDs
@@ -477,12 +477,12 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
     
     // MARK: - Private Helper Methods
     
-    private nonisolated func fetchLocationSync(forInventory inventory_id: UUID, locationName: String) throws -> [LocationModel] {
+    private nonisolated func fetchLocationSync(forInventory inventory_id: UUID, locationName: String) throws -> [StorageLocationModel] {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
         fetchRequest.predicate = NSPredicate(format: "inventory_id == %@ AND location == %@", inventory_id as CVarArg, locationName)
         
         let results = try backgroundContext.fetch(fetchRequest)
-        return results.compactMap { convertToLocationModel($0) }
+        return results.compactMap { convertToStorageLocationModel($0) }
     }
     
     private nonisolated func fetchCoreDataItemSync(byInventoryId inventory_id: UUID, locationName: String) throws -> NSManagedObject? {
@@ -494,7 +494,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
         return results.first
     }
     
-    private nonisolated func convertToLocationModel(_ coreDataItem: NSManagedObject) -> LocationModel? {
+    private nonisolated func convertToStorageLocationModel(_ coreDataItem: NSManagedObject) -> StorageLocationModel? {
         guard let inventory_id = coreDataItem.value(forKey: "inventory_id") as? UUID,
               let location = coreDataItem.value(forKey: "location") as? String,
               let quantityString = coreDataItem.value(forKey: "quantity") as? String,
@@ -503,14 +503,14 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
             return nil
         }
 
-        return LocationModel(
+        return StorageLocationModel(
             inventory_id: inventory_id,
             location: location,
             quantity: quantity
         )
     }
     
-    private nonisolated func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with location: LocationModel) {
+    private nonisolated func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with location: StorageLocationModel) {
         coreDataItem.setValue(location.inventory_id, forKey: "inventory_id")
         coreDataItem.setValue(location.location, forKey: "location")
         coreDataItem.setValue(String(location.quantity), forKey: "quantity")

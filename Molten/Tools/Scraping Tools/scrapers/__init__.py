@@ -15,6 +15,7 @@ from . import effetre_vetrofond
 from . import gaffer
 from . import glass_alchemy
 from . import greasy
+from . import kashmir
 from . import lunar
 from . import molten_aura
 from . import momka
@@ -28,4 +29,4 @@ from . import ust_glass
 from . import wissmach
 from . import youghiogheny
 
-__all__ = ['boro_batch', 'bullseye', 'chinese_boro', 'cim', 'delphi_superior', 'double_helix', 'effetre_vetrofond', 'gaffer', 'glass_alchemy', 'greasy', 'lunar', 'molten_aura', 'momka', 'northstar', 'oceanside', 'origin', 'parramore', 'pdx_tubing', 'tag', 'ust_glass', 'wissmach', 'youghiogheny']
+__all__ = ['boro_batch', 'bullseye', 'chinese_boro', 'cim', 'delphi_superior', 'double_helix', 'effetre_vetrofond', 'gaffer', 'glass_alchemy', 'greasy', 'kashmir', 'lunar', 'molten_aura', 'momka', 'northstar', 'oceanside', 'origin', 'parramore', 'pdx_tubing', 'tag', 'ust_glass', 'wissmach', 'youghiogheny']

@@ -1,15 +1,15 @@
 //
-//  StoreModel.swift
-//  Flameworker
+//  ClassLocationModel.swift
+//  Molten
 //
-//  Created for Store Feature on 10/26/25.
+//  Created for ClassLocation Feature on 11/1/25.
 //
 
 import Foundation
 import CoreLocation
 
-/// Business model for local glass stores
-struct StoreModel: LocationModel {
+/// Business model for glass art class locations
+struct ClassLocationModel: LocationModel {
     let stable_id: String
     let name: String
     let addressLine1: String?
@@ -85,13 +85,13 @@ struct StoreModel: LocationModel {
     }
 
     // MARK: - Business Logic
-    // (Most business logic methods inherited from LocationModel protocol)
+    // (All business logic methods inherited from LocationModel protocol)
 }
 
 // MARK: - Helper Extensions
 
-extension StoreModel {
-    /// Create a store with generated stable_id from name
+extension ClassLocationModel {
+    /// Create a class location with generated stable_id from name
     static func create(
         name: String,
         addressLine1: String? = nil,
@@ -114,14 +114,14 @@ extension StoreModel {
         supportsGlassBlowing: Bool = false,
         supportsStainedGlass: Bool = false,
         supportsOther: Bool = false
-    ) -> StoreModel {
+    ) -> ClassLocationModel {
         // Generate stable_id from name (simple slug)
         let stableId = name
             .lowercased()
             .replacingOccurrences(of: " ", with: "-")
             .replacingOccurrences(of: "[^a-z0-9-]", with: "", options: .regularExpression)
 
-        return StoreModel(
+        return ClassLocationModel(
             stable_id: stableId,
             name: name,
             addressLine1: addressLine1,
@@ -164,7 +164,7 @@ extension StoreModel {
         notes: String? = nil,
         isVerified: Bool = false,
         techniques: [TechniqueType] = []
-    ) -> StoreModel {
+    ) -> ClassLocationModel {
         return create(
             name: name,
             addressLine1: addressLine1,

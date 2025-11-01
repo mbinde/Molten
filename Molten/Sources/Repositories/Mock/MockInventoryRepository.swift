@@ -534,7 +534,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
 
     func fetchInventory(atLocation location: String) async throws -> [InventoryModel] {
         return try await simulateOperation {
-            let cleanLocation = LocationModel.cleanLocationName(location)
+            let cleanLocation = StorageLocationModel.cleanLocationName(location)
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let values = Array(self.inventories.values)
@@ -561,7 +561,7 @@ class MockInventoryRepository: @unchecked Sendable, InventoryRepository {
 
     func getLocationNames(withPrefix prefix: String) async throws -> [String] {
         return try await simulateOperation {
-            let cleanPrefix = LocationModel.cleanLocationName(prefix).lowercased()
+            let cleanPrefix = StorageLocationModel.cleanLocationName(prefix).lowercased()
             return await withCheckedContinuation { continuation in
                 self.queue.async {
                     let values = Array(self.inventories.values)

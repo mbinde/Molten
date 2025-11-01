@@ -546,7 +546,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     // MARK: - Location Operations
 
     func fetchInventory(atLocation location: String) async throws -> [InventoryModel] {
-        let cleanLocation = LocationModel.cleanLocationName(location)
+        let cleanLocation = StorageLocationModel.cleanLocationName(location)
         let predicate = NSPredicate(format: "location == %@", cleanLocation)
         return try await fetchInventory(matching: predicate)
     }
@@ -576,7 +576,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     }
 
     func getLocationNames(withPrefix prefix: String) async throws -> [String] {
-        let cleanPrefix = LocationModel.cleanLocationName(prefix)
+        let cleanPrefix = StorageLocationModel.cleanLocationName(prefix)
 
         return try await withCheckedThrowingContinuation { continuation in
             context.perform {

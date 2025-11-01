@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 /// Reusable row component for displaying any location (store, class, workshop)
 struct LocationRow: View {

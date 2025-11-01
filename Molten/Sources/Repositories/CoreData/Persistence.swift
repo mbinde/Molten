@@ -340,88 +340,74 @@ class PersistenceController {
         log.info("🔄 Starting async persistent store loading...")
 
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            var retryAttempted = false
             let expectedStoreCount = self.container.persistentStoreDescriptions.count
             var loadedStoreCount = 0
+            var hasResumed = false
             let storeLock = NSLock()
 
-            func loadStoresWithSmartRetry() {
-                container.loadPersistentStores { storeDescription, error in
-                    if let error = error as NSError? {
-                        self.storeLoadingError = error
-                        self.log.error("Core Data load error: \(String(describing: error))")
+            container.loadPersistentStores { storeDescription, error in
+                if let error = error as NSError? {
+                    self.storeLoadingError = error
+                    self.log.error("❌ Core Data load error for \(storeDescription.url?.lastPathComponent ?? "unknown"): \(error)")
+                } else {
+                    self.log.info("✅ Store loaded successfully: \(storeDescription.url?.lastPathComponent ?? "unknown")")
+                }
 
-                        // Attempt recovery for migration errors (only once)
-                        if !retryAttempted && error.domain == NSCocoaErrorDomain &&
-                           (error.code == NSPersistentStoreIncompatibleVersionHashError ||
-                            error.code == NSMigrationMissingSourceModelError ||
-                            error.code == NSMigrationError) {
+                // Track how many stores have completed (success or failure)
+                storeLock.lock()
+                loadedStoreCount += 1
+                let allStoresProcessed = loadedStoreCount >= expectedStoreCount
+                let shouldResume = allStoresProcessed && !hasResumed
+                if shouldResume {
+                    hasResumed = true
+                }
+                storeLock.unlock()
 
-                            self.log.warning("⚠️ Migration failed - attempting recovery...")
-                            retryAttempted = true
+                // Only proceed after ALL stores are processed (success or failure)
+                guard shouldResume else {
+                    self.log.info("⏳ Waiting for remaining stores... (\(loadedStoreCount)/\(expectedStoreCount))")
+                    return
+                }
 
-                            if let storeURL = storeDescription.url {
-                                self.cleanupCorruptedStore(at: storeURL)
-                                self.storeLoadingError = nil
-                                loadStoresWithSmartRetry()
-                                return
-                            }
-                        }
-                    } else {
-                        if retryAttempted {
-                            self.log.info("✅ Store loaded successfully after recovery: \(storeDescription.url?.lastPathComponent ?? "unknown")")
-                        } else {
-                            self.log.info("✅ Store loaded successfully: \(storeDescription.url?.lastPathComponent ?? "unknown")")
-                        }
-                    }
+                self.log.info("🎉 All stores processed (\(loadedStoreCount)/\(expectedStoreCount))")
 
-                    // Track how many stores have loaded
-                    storeLock.lock()
-                    loadedStoreCount += 1
-                    let allStoresLoaded = loadedStoreCount >= expectedStoreCount
-                    storeLock.unlock()
-
-                    // Only proceed after ALL stores are loaded
-                    guard allStoresLoaded else {
-                        self.log.info("⏳ Waiting for remaining stores... (\(loadedStoreCount)/\(expectedStoreCount))")
-                        return
-                    }
-
-                    self.log.info("🎉 All stores loaded (\(loadedStoreCount)/\(expectedStoreCount))")
-
-                    // Validate entity registration
-                    if self.storeLoadingError == nil {
-                        let validationSuccess = self.validateEntityRegistration()
-                        if !validationSuccess {
-                            self.log.error("❌ Entity validation failed")
-                            self.storeLoadingError = NSError(domain: "PersistenceController", code: 1004, userInfo: [
-                                NSLocalizedDescriptionKey: "Entity registration validation failed"
-                            ])
-                        }
-                    }
-
-                    // Create separate contexts for local and cloud stores after successful load
-                    if self.storeLoadingError == nil {
-                        self.configureContexts()
-
-                        // Run Transformable migration (only on cloud context for user data)
-                        // Do this asynchronously after contexts are configured
-                        Task { @MainActor in
-                            do {
-                                try TransformableMigrationHelper.runAllMigrations(in: self.cloudContext)
-                            } catch {
-                                self.log.error("❌ Transformable migration failed: \(error)")
-                            }
-                        }
-                    }
-
-                    // Mark as initialized and resume continuation (only once, after all stores loaded)
+                // Check if there were any errors
+                if self.storeLoadingError != nil {
+                    self.log.error("❌ Store loading failed, skipping context configuration")
                     self.isInitialized = true
                     continuation.resume()
+                    return
                 }
-            }
 
-            loadStoresWithSmartRetry()
+                // Validate entity registration
+                let validationSuccess = self.validateEntityRegistration()
+                if !validationSuccess {
+                    self.log.error("❌ Entity validation failed")
+                    self.storeLoadingError = NSError(domain: "PersistenceController", code: 1004, userInfo: [
+                        NSLocalizedDescriptionKey: "Entity registration validation failed"
+                    ])
+                    self.isInitialized = true
+                    continuation.resume()
+                    return
+                }
+
+                // Create separate contexts for local and cloud stores after successful load
+                self.configureContexts()
+
+                // Run Transformable migration (only on cloud context for user data)
+                // Do this asynchronously after contexts are configured
+                Task { @MainActor in
+                    do {
+                        try TransformableMigrationHelper.runAllMigrations(in: self.cloudContext)
+                    } catch {
+                        self.log.error("❌ Transformable migration failed: \(error)")
+                    }
+                }
+
+                // Mark as initialized and resume continuation (only once, after all stores loaded)
+                self.isInitialized = true
+                continuation.resume()
+            }
         }
     }
 

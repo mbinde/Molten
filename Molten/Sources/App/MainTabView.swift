@@ -128,11 +128,11 @@ struct MainTabView: View {
                     }
                 }
 
-                // Stores tab
-                if selectedTab == .stores || storesHasBeenViewed {
-                    StoreListView()
-                        .opacity(selectedTab == .stores ? 1 : 0)
-                        .id("stores-view")
+                // Locations tab (stores, classes, workshops)
+                if selectedTab == .locations || locationsHasBeenViewed {
+                    LocationsView()
+                        .opacity(selectedTab == .locations ? 1 : 0)
+                        .id("locations-view")
                 }
 
                 // Kiln Schedules tab
@@ -230,7 +230,7 @@ struct MainTabView: View {
             case .inventory: inventoryHasBeenViewed = true
             case .shopping: shoppingHasBeenViewed = true
             case .purchases: purchasesHasBeenViewed = true
-            case .stores: storesHasBeenViewed = true
+            case .locations: locationsHasBeenViewed = true
             case .kilnSchedules: kilnSchedulesHasBeenViewed = true
             default: break
             }
@@ -243,7 +243,7 @@ struct MainTabView: View {
     @State private var inventoryHasBeenViewed = false
     @State private var shoppingHasBeenViewed = false
     @State private var purchasesHasBeenViewed = false
-    @State private var storesHasBeenViewed = false
+    @State private var locationsHasBeenViewed = false
     @State private var kilnSchedulesHasBeenViewed = false
     @State private var hasRestoredTab = false
     
@@ -319,7 +319,7 @@ struct MainTabView: View {
         case .inventory: inventoryHasBeenViewed = true
         case .shopping: shoppingHasBeenViewed = true
         case .purchases: purchasesHasBeenViewed = true
-        case .stores: storesHasBeenViewed = true
+        case .locations: locationsHasBeenViewed = true
         case .kilnSchedules: kilnSchedulesHasBeenViewed = true
         default: break
         }

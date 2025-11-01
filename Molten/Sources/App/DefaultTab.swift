@@ -16,7 +16,7 @@ enum DefaultTab: Int, CaseIterable {
     case projectPlans = 5 // Deprecated - now accessed through projects menu
     case logbook = 6 // Deprecated - now accessed through projects menu
     case settings = 7
-    case stores = 8
+    case locations = 8
     case kilnSchedules = 9
 
     var displayName: String {
@@ -37,8 +37,8 @@ enum DefaultTab: Int, CaseIterable {
             return "Logbook"
         case .settings:
             return "Settings"
-        case .stores:
-            return "Stores"
+        case .locations:
+            return "Locations"
         case .kilnSchedules:
             return "Kiln"
         }
@@ -62,8 +62,8 @@ enum DefaultTab: Int, CaseIterable {
             return "book.pages" // Consistent with existing MainTabView
         case .settings:
             return "gear" // Consistent with existing MainTabView
-        case .stores:
-            return "storefront"
+        case .locations:
+            return "map" // Unified locations view for stores, classes, workshops
         case .kilnSchedules:
             return "fireplace.fill" // Matches Hot Shop terminology
         }

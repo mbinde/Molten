@@ -108,14 +108,18 @@ nonisolated struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use Core Data implementation for production
-            let container = getContainer()
-            return CoreDataInventoryRepository(persistentContainer: container)
+            let controller = getSharedController()
+            guard let context = controller.localContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataInventoryRepository(context: context)
 
         case .hybrid:
-            // Use Core Data implementation when available
-            let container = getContainer()
-            return CoreDataInventoryRepository(persistentContainer: container)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataInventoryRepository(context: context)
         }
     }
     
@@ -132,14 +136,18 @@ nonisolated struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use Core Data implementation for production
-            let container = getContainer()
-            return CoreDataLocationRepository(locationPersistentContainer: container)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataLocationRepository(context: context)
 
         case .hybrid:
-            // Use Core Data implementation when available
-            let container = getContainer()
-            return CoreDataLocationRepository(locationPersistentContainer: container)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataLocationRepository(context: context)
         }
     }
     
@@ -156,14 +164,18 @@ nonisolated struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use Core Data implementation for production
-            let container = getContainer()
-            return CoreDataItemTagsRepository(itemTagsPersistentContainer: container)
+            let controller = getSharedController()
+            guard let context = controller.localContext else {
+                fatalError("localContext not initialized")
+            }
+            return CoreDataItemTagsRepository(context: context)
 
         case .hybrid:
-            // Use Core Data implementation when available
-            let container = getContainer()
-            return CoreDataItemTagsRepository(itemTagsPersistentContainer: container)
+            let controller = getSharedController()
+            guard let context = controller.localContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataItemTagsRepository(context: context)
         }
     }
 
@@ -180,14 +192,18 @@ nonisolated struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use Core Data implementation for production
-            let container = getContainer()
-            return CoreDataUserTagsRepository(userTagsPersistentContainer: container)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataUserTagsRepository(context: context)
 
         case .hybrid:
-            // Use Core Data implementation when available
-            let container = getContainer()
-            return CoreDataUserTagsRepository(userTagsPersistentContainer: container)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataUserTagsRepository(context: context)
         }
     }
 
@@ -204,14 +220,18 @@ nonisolated struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use Core Data implementation for production
-            let container = getContainer()
-            return CoreDataUserNotesRepository(userNotesPersistentContainer: container)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataUserNotesRepository(context: context)
 
         case .hybrid:
-            // Use Core Data implementation when available
-            let container = getContainer()
-            return CoreDataUserNotesRepository(userNotesPersistentContainer: container)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataUserNotesRepository(context: context)
         }
     }
 
@@ -228,14 +248,18 @@ nonisolated struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use Core Data implementation for production
-            let container = getContainer()
-            return CoreDataShoppingListRepository(persistentContainer: container)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataShoppingListRepository(context: context)
 
         case .hybrid:
-            // Use Core Data implementation when available
-            let container = getContainer()
-            return CoreDataShoppingListRepository(persistentContainer: container)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataShoppingListRepository(context: context)
         }
     }
 
@@ -274,16 +298,18 @@ nonisolated struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use Core Data implementation with CloudKit sync
-            let container = getContainer()
-            let repo: CoreDataUserImageRepository = CoreDataUserImageRepository(context: container.viewContext)
-            return repo
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataUserImageRepository(context: context)
 
         case .hybrid:
-            // Use Core Data implementation when available
-            let container = getContainer()
-            let repo: CoreDataUserImageRepository = CoreDataUserImageRepository(context: container.viewContext)
-            return repo
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataUserImageRepository(context: context)
         }
     }
     #endif
@@ -301,12 +327,18 @@ nonisolated struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use Core Data implementation for production
-            return CoreDataProjectRepository(persistenceController: getSharedController())
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataProjectRepository(context: context)
 
         case .hybrid:
-            // Use Core Data implementation when available
-            return CoreDataProjectRepository(persistenceController: getSharedController())
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataProjectRepository(context: context)
         }
     }
 
@@ -323,14 +355,18 @@ nonisolated struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use Core Data implementation for production
-            let container = getContainer()
-            return CoreDataLogbookRepository(context: container.viewContext)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataLogbookRepository(context: context)
 
         case .hybrid:
-            // Use Core Data implementation when available
-            let container = getContainer()
-            return CoreDataLogbookRepository(context: container.viewContext)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataLogbookRepository(context: context)
         }
     }
 
@@ -347,12 +383,18 @@ nonisolated struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use Core Data implementation for production
-            return CoreDataPurchaseRecordRepository(persistenceController: getSharedController())
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataPurchaseRecordRepository(context: context)
 
         case .hybrid:
-            // Use Core Data implementation when available
-            return CoreDataPurchaseRecordRepository(persistenceController: getSharedController())
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataPurchaseRecordRepository(context: context)
         }
     }
 
@@ -369,14 +411,18 @@ nonisolated struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use Core Data implementation for production
-            let container = getContainer()
-            return CoreDataProjectImageRepository(context: container.viewContext)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataProjectImageRepository(context: context)
 
         case .hybrid:
-            // Use Core Data implementation when available
-            let container = getContainer()
-            return CoreDataProjectImageRepository(context: container.viewContext)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataProjectImageRepository(context: context)
         }
     }
 
@@ -393,14 +439,18 @@ nonisolated struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use Core Data implementation for production
-            let container = getContainer()
-            return CoreDataStoreRepository(storePersistentContainer: container)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataStoreRepository(context: context)
 
         case .hybrid:
-            // Use Core Data implementation when available
-            let container = getContainer()
-            return CoreDataStoreRepository(storePersistentContainer: container)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataStoreRepository(context: context)
         }
     }
 
@@ -417,14 +467,18 @@ nonisolated struct RepositoryFactory {
             return repo
 
         case .coreData:
-            // Use Core Data implementation for production
-            let container = getContainer()
-            return CoreDataKilnScheduleRepository(context: container.viewContext)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataKilnScheduleRepository(context: context)
 
         case .hybrid:
-            // Use Core Data implementation when available
-            let container = getContainer()
-            return CoreDataKilnScheduleRepository(context: container.viewContext)
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataKilnScheduleRepository(context: context)
         }
     }
 

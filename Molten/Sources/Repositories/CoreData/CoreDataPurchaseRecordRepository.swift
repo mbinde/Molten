@@ -12,31 +12,30 @@ import Foundation
 /// Core Data implementation of PurchaseRecordRepository
 class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepository {
 
-    private let persistenceController: PersistenceController
+    private let context: NSManagedObjectContext
 
-    nonisolated init(persistenceController: PersistenceController) {
-        self.persistenceController = persistenceController
+    nonisolated init(context: NSManagedObjectContext) {
+        self.context = context
+        self.context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
     }
 
     // MARK: - Purchase Record CRUD
 
     func getAllRecords() async throws -> [PurchaseRecordModel] {
-        let context = persistenceController.container.viewContext
 
-        return try await context.perform {
+        return try await self.context.perform {
             let request = PurchaseRecord.fetchRequest()
             request.sortDescriptors = [NSSortDescriptor(key: "date_purchased", ascending: false)]
             request.relationshipKeyPathsForPrefetching = ["purchaserecorditem"]
 
-            let entities = try context.fetch(request)
+            let entities = try self.context.fetch(request)
             return entities.compactMap { self.mapToModel($0) }
         }
     }
 
     func fetchRecords(from startDate: Date, to endDate: Date) async throws -> [PurchaseRecordModel] {
-        let context = persistenceController.container.viewContext
 
-        return try await context.perform {
+        return try await self.context.perform {
             let request = PurchaseRecord.fetchRequest()
             request.predicate = NSPredicate(
                 format: "date_purchased >= %@ AND date_purchased <= %@",
@@ -46,21 +45,20 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
             request.sortDescriptors = [NSSortDescriptor(key: "date_purchased", ascending: false)]
             request.relationshipKeyPathsForPrefetching = ["purchaserecorditem"]
 
-            let entities = try context.fetch(request)
+            let entities = try self.context.fetch(request)
             return entities.compactMap { self.mapToModel($0) }
         }
     }
 
     func fetchRecord(byId id: UUID) async throws -> PurchaseRecordModel? {
-        let context = persistenceController.container.viewContext
 
-        return try await context.perform {
+        return try await self.context.perform {
             let request = PurchaseRecord.fetchRequest()
             request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
             request.fetchLimit = 1
             request.relationshipKeyPathsForPrefetching = ["purchaserecorditem"]
 
-            guard let entity = try context.fetch(request).first else {
+            guard let entity = try self.context.fetch(request).first else {
                 return nil
             }
 
@@ -69,61 +67,54 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
     }
 
     func createRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel {
-        let context = persistenceController.container.newBackgroundContext()
-
-        return try await context.perform {
-            let entity = PurchaseRecord(context: context)
+        return try await self.context.perform {
+            let entity = PurchaseRecord(context: self.context)
             self.updateEntity(entity, from: record)
 
-            try context.save()
+            try self.context.save()
 
             return record
         }
     }
 
     func updateRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel {
-        let context = persistenceController.container.newBackgroundContext()
-
-        return try await context.perform {
+        return try await self.context.perform {
             let request = PurchaseRecord.fetchRequest()
             request.predicate = NSPredicate(format: "id == %@", record.id as CVarArg)
             request.fetchLimit = 1
 
-            guard let entity = try context.fetch(request).first else {
+            guard let entity = try self.context.fetch(request).first else {
                 throw PurchaseRecordRepositoryError.recordNotFound(record.id.uuidString)
             }
 
             self.updateEntity(entity, from: record)
 
-            try context.save()
+            try self.context.save()
 
             return record
         }
     }
 
     func deleteRecord(id: UUID) async throws {
-        let context = persistenceController.container.newBackgroundContext()
-
-        try await context.perform {
+        try await self.context.perform {
             let request = PurchaseRecord.fetchRequest()
             request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
             request.fetchLimit = 1
 
-            guard let entity = try context.fetch(request).first else {
+            guard let entity = try self.context.fetch(request).first else {
                 throw PurchaseRecordRepositoryError.recordNotFound(id.uuidString)
             }
 
-            context.delete(entity)
-            try context.save()
+            self.context.delete(entity)
+            try self.context.save()
         }
     }
 
     // MARK: - Search & Filter
 
     func searchRecords(text: String) async throws -> [PurchaseRecordModel] {
-        let context = persistenceController.container.viewContext
 
-        return try await context.perform {
+        return try await self.context.perform {
             let request = PurchaseRecord.fetchRequest()
             request.predicate = NSPredicate(
                 format: "supplier CONTAINS[cd] %@ OR notes CONTAINS[cd] %@",
@@ -132,21 +123,20 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
             request.sortDescriptors = [NSSortDescriptor(key: "date_purchased", ascending: false)]
             request.relationshipKeyPathsForPrefetching = ["purchaserecorditem"]
 
-            let entities = try context.fetch(request)
+            let entities = try self.context.fetch(request)
             return entities.compactMap { self.mapToModel($0) }
         }
     }
 
     func fetchRecords(bySupplier supplier: String) async throws -> [PurchaseRecordModel] {
-        let context = persistenceController.container.viewContext
 
-        return try await context.perform {
+        return try await self.context.perform {
             let request = PurchaseRecord.fetchRequest()
             request.predicate = NSPredicate(format: "supplier ==[cd] %@", supplier)
             request.sortDescriptors = [NSSortDescriptor(key: "date_purchased", ascending: false)]
             request.relationshipKeyPathsForPrefetching = ["purchaserecorditem"]
 
-            let entities = try context.fetch(request)
+            let entities = try self.context.fetch(request)
             return entities.compactMap { self.mapToModel($0) }
         }
     }
@@ -154,15 +144,14 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
     // MARK: - Analytics
 
     func getDistinctSuppliers() async throws -> [String] {
-        let context = persistenceController.container.viewContext
 
-        return try await context.perform {
+        return try await self.context.perform {
             let request = NSFetchRequest<NSDictionary>(entityName: "PurchaseRecord")
             request.resultType = .dictionaryResultType
             request.returnsDistinctResults = true
             request.propertiesToFetch = ["supplier"]
 
-            let results = try context.fetch(request)
+            let results = try self.context.fetch(request)
             let suppliers = results.compactMap { $0["supplier"] as? String }
             return suppliers.sorted()
         }
@@ -189,29 +178,27 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
     // MARK: - Item Operations
 
     func fetchItemsForGlassItem(stableId: String) async throws -> [PurchaseRecordItemModel] {
-        let context = persistenceController.container.viewContext
 
-        return try await context.perform {
+        return try await self.context.perform {
             let request = PurchaseRecordItem.fetchRequest()
             request.predicate = NSPredicate(format: "item_stable_id == %@", stableId)
             request.sortDescriptors = [NSSortDescriptor(key: "order_index", ascending: true)]
 
-            let entities = try context.fetch(request)
+            let entities = try self.context.fetch(request)
             return entities.compactMap { self.mapItemToModel($0) }
         }
     }
 
     func getTotalPurchasedQuantity(for stableId: String, type: String) async throws -> Double {
-        let context = persistenceController.container.viewContext
 
-        return try await context.perform {
+        return try await self.context.perform {
             let request = PurchaseRecordItem.fetchRequest()
             request.predicate = NSPredicate(
                 format: "item_stable_id == %@ AND type == %@",
                 stableId, type
             )
 
-            let entities = try context.fetch(request)
+            let entities = try self.context.fetch(request)
             return entities.reduce(0.0) { $0 + $1.quantity }
         }
     }

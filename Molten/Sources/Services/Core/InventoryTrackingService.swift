@@ -60,27 +60,31 @@ actor InventoryTrackingService {
         
         // 1. Create the glass item
         let createdGlassItem = try await glassItemRepository.createItem(glassItem)
-        
+
         // 2. Add tags if provided
-        if !tags.isEmpty {
-            try await _itemTagsRepository.addTags(tags, toItem: createdGlassItem.stable_id)
-        }
-        
+        // TEMPORARILY DISABLED to test if ItemTags background context is causing GlassItem duplication
+        print("🧪 SKIPPING tag creation to test duplication hypothesis")
+        // if !tags.isEmpty {
+        //     try await _itemTagsRepository.addTags(tags, toItem: createdGlassItem.stable_id)
+        // }
+
         // 3. Create inventory records if provided
+        // TEMPORARILY DISABLED to test if Inventory background context is causing GlassItem duplication
         var createdInventory: [InventoryModel] = []
-        if !initialInventory.isEmpty {
-            // Update inventory records to use the created item's stable_id
-            let updatedInventoryRecords = initialInventory.map { inventory in
-                InventoryModel(
-                    id: inventory.id,
-                    item_stable_id: createdGlassItem.stable_id,
-                    type: inventory.type,
-                    quantity: inventory.quantity,
-                    location: inventory.location
-                )
-            }
-            createdInventory = try await self.inventoryRepository.createInventories(updatedInventoryRecords)
-        }
+        print("🧪 SKIPPING inventory creation to test duplication hypothesis")
+        // if !initialInventory.isEmpty {
+        //     // Update inventory records to use the created item's stable_id
+        //     let updatedInventoryRecords = initialInventory.map { inventory in
+        //         InventoryModel(
+        //             id: inventory.id,
+        //             item_stable_id: createdGlassItem.stable_id,
+        //             type: inventory.type,
+        //             quantity: inventory.quantity,
+        //             location: inventory.location
+        //         )
+        //     }
+        //     createdInventory = try await self.inventoryRepository.createInventories(updatedInventoryRecords)
+        // }
 
         // 4. Get the tags that were created
         let createdTags = try await _itemTagsRepository.fetchTags(forItem: createdGlassItem.stable_id)

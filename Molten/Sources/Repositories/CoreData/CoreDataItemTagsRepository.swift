@@ -15,18 +15,16 @@ class CoreDataItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
 
     // MARK: - Dependencies
 
-    private let persistentContainer: NSPersistentContainer
     private let backgroundContext: NSManagedObjectContext
     private let log = Logger(subsystem: "com.flameworker.app", category: "itemtags-repository")
 
     // MARK: - Initialization
 
-    /// Initialize CoreDataItemTagsRepository with a Core Data persistent container
-    /// - Parameter persistentContainer: The NSPersistentContainer to use for item tags operations
-    /// - Note: In production, pass PersistenceController.shared.container
-    nonisolated init(itemTagsPersistentContainer persistentContainer: NSPersistentContainer) {
-        self.persistentContainer = persistentContainer
-        self.backgroundContext = persistentContainer.newBackgroundContext()
+    /// Initialize CoreDataItemTagsRepository with a managed object context
+    /// - Parameter context: The NSManagedObjectContext to use for item tags operations
+    /// - Note: In production, pass PersistenceController.shared.localContext (catalog data)
+    nonisolated init(context: NSManagedObjectContext) {
+        self.backgroundContext = context
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
 
         // DEBUG: Track when objects are faulted/inserted into this context

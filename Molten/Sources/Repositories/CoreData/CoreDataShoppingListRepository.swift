@@ -15,20 +15,20 @@ class CoreDataShoppingListRepository: @unchecked Sendable, ShoppingListRepositor
 
     // MARK: - Dependencies
 
-    private let persistentContainer: NSPersistentContainer
+    private let context: NSManagedObjectContext
     private let backgroundContext: NSManagedObjectContext
     private let log = Logger(subsystem: "com.flameworker.app", category: "shopping-list-repository")
 
     // MARK: - Initialization
 
     /// Initialize CoreDataShoppingListRepository with a Core Data persistent container
-    /// - Parameter persistentContainer: The NSPersistentContainer to use for shopping list operations
-    /// - Note: In production, pass PersistenceController.shared.container
-    nonisolated init(persistentContainer: NSPersistentContainer) {
-        self.persistentContainer = persistentContainer
-        self.backgroundContext = persistentContainer.newBackgroundContext()
+    /// - Parameter context: The NSManagedObjectContext to use for shopping list operations
+    /// - Note: In production, pass PersistenceController.shared.cloudContext (user data)
+    nonisolated init(context: NSManagedObjectContext) {
+        self.context = context
+        self.context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        self.backgroundContext = context
         self.backgroundContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-
     }
 
     // MARK: - Basic CRUD Operations

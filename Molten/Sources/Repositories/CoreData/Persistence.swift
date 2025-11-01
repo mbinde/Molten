@@ -127,8 +127,12 @@ class PersistenceController {
     // Two separate contexts for two-store architecture
     // localContext: For catalog data (GlassItem, ItemTags) - no CloudKit sync
     // cloudContext: For user data (Inventory, Purchases, Projects) - CloudKit sync
-    private(set) var localContext: NSManagedObjectContext!
-    private(set) var cloudContext: NSManagedObjectContext!
+    // nonisolated(unsafe) is safe here because:
+    // - Set once during initialization in configureContexts()
+    // - Read-only after initialization
+    // - Accessed from multiple threads but never modified
+    nonisolated(unsafe) private(set) var localContext: NSManagedObjectContext!
+    nonisolated(unsafe) private(set) var cloudContext: NSManagedObjectContext!
 
     nonisolated init(inMemory: Bool = false) {
         // Use the shared model instance to prevent multiple models

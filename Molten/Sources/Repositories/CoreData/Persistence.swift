@@ -383,8 +383,6 @@ class PersistenceController {
                         }
                     }
 
-                    self.isInitialized = true
-
                     // Create separate contexts for local and cloud stores after successful load
                     if self.storeLoadingError == nil {
                         Task { @MainActor in
@@ -396,10 +394,16 @@ class PersistenceController {
                             } catch {
                                 self.log.error("❌ Transformable migration failed: \(error)")
                             }
-                        }
-                    }
 
-                    continuation.resume()
+                            // Mark as initialized and resume AFTER contexts are configured
+                            self.isInitialized = true
+                            continuation.resume()
+                        }
+                    } else {
+                        // If there was an error, still need to resume
+                        self.isInitialized = true
+                        continuation.resume()
+                    }
                 }
             }
 

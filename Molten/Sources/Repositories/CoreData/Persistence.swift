@@ -385,25 +385,22 @@ class PersistenceController {
 
                     // Create separate contexts for local and cloud stores after successful load
                     if self.storeLoadingError == nil {
-                        Task { @MainActor in
-                            self.configureContexts()
+                        self.configureContexts()
 
-                            // Run Transformable migration (only on cloud context for user data)
+                        // Run Transformable migration (only on cloud context for user data)
+                        // Do this asynchronously after contexts are configured
+                        Task { @MainActor in
                             do {
                                 try TransformableMigrationHelper.runAllMigrations(in: self.cloudContext)
                             } catch {
                                 self.log.error("❌ Transformable migration failed: \(error)")
                             }
-
-                            // Mark as initialized and resume AFTER contexts are configured
-                            self.isInitialized = true
-                            continuation.resume()
                         }
-                    } else {
-                        // If there was an error, still need to resume
-                        self.isInitialized = true
-                        continuation.resume()
                     }
+
+                    // Mark as initialized and resume continuation
+                    self.isInitialized = true
+                    continuation.resume()
                 }
             }
 
@@ -413,7 +410,6 @@ class PersistenceController {
 
     /// Configure separate contexts for local and cloud stores
     /// Called after stores are loaded
-    @MainActor
     private func configureContexts() {
         log.info("🔄 Configuring local and cloud contexts...")
 

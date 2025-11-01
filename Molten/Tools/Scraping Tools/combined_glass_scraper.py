@@ -16,6 +16,7 @@ Manufacturers:
 - Greasy Glass (GRE)
 - Molten Aura Labs (MA)
 - Momka Glass (MOM)
+- NorthStar Glassworks (NS)
 - Oceanside Glass (OC)
 - Origin Glass (OR)
 - Parramore Glass (PAR)
@@ -40,7 +41,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from url_utils import clean_manufacturer_url
 
 # Import manufacturer scrapers
-from scrapers import boro_batch, bullseye, chinese_boro, cim, delphi_superior, double_helix, effetre_vetrofond, gaffer, glass_alchemy, greasy, lunar, molten_aura, momka, oceanside, origin, parramore, pdx_tubing, tag, ust_glass, wissmach, youghiogheny
+from scrapers import boro_batch, bullseye, chinese_boro, cim, delphi_superior, double_helix, effetre_vetrofond, gaffer, glass_alchemy, greasy, lunar, molten_aura, momka, northstar, oceanside, origin, parramore, pdx_tubing, tag, ust_glass, wissmach, youghiogheny
 
 
 # Manufacturer registry
@@ -108,6 +109,11 @@ MANUFACTURERS = {
     'MOM': {
         'name': 'Momka Glass',
         'module': momka,
+        'enabled': True
+    },
+    'NS': {
+        'name': 'NorthStar Glassworks',
+        'module': northstar,
         'enabled': True
     },
     'OC': {

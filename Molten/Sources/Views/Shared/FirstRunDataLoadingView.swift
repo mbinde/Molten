@@ -200,6 +200,11 @@ struct FirstRunDataLoadingView: View {
                 if let loadingResult = result {
                     itemsLoaded = loadingResult.itemsCreated
                     print("✅ Loaded \(itemsLoaded) items from JSON")
+
+                    // DO NOT purge persistent history when using CloudKit!
+                    // Purging causes CloudKit to lose sync state and re-import everything, creating duplicates.
+                    // See: https://stackoverflow.com/questions/72557060/
+                    print("🐛✅ Loaded \(itemsLoaded) items - letting CloudKit manage persistent history")
                 }
             } else if needsDataUpdate {
                 print("🔄 JSON file changed - updating existing catalog data")

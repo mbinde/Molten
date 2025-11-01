@@ -229,7 +229,8 @@ class GlassItemDataLoadingService {
         // Skip system readiness validation for initial loading scenarios
         // The validateSystemReadiness check was preventing initial data loading into empty systems
         // TODO: Add a more appropriate validation that allows initial loading but prevents other issues
-        
+
+        print("🚨 loadGlassItemsFromJSON STARTED")
         log.info("Starting GlassItem data loading from JSON with options: \(String(describing: options))")
         
         // Load and decode JSON data
@@ -301,6 +302,7 @@ class GlassItemDataLoadingService {
             }
         }
 
+        print("🚨 loadGlassItemsFromJSON COMPLETED (created=\(results.itemsCreated), updated=\(results.itemsUpdated))")
         return results
     }
     
@@ -330,13 +332,17 @@ class GlassItemDataLoadingService {
     /// - Parameter options: Configuration options for loading behavior
     /// - Returns: Results of the loading operation, or nil if system already has data
     func loadGlassItemsFromJSONIfEmpty(options: LoadingOptions = .default) async throws -> GlassItemLoadingResult? {
+        print("🚨 loadGlassItemsFromJSONIfEmpty CALLED")
+
         // Check if new system has any data
         let existingItems = try await catalogService.getAllGlassItems()
-        
+
         if existingItems.isEmpty {
+            print("🚨 System is empty - will load from JSON")
             log.info("New GlassItem system is empty, proceeding with JSON load")
             return try await loadGlassItemsFromJSON(options: options)
         } else {
+            print("🚨 System has \(existingItems.count) items - SKIPPING JSON load")
             log.warning("New GlassItem system contains \(existingItems.count) items, skipping JSON load")
             return nil
         }

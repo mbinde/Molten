@@ -124,52 +124,202 @@ class PersistenceController {
     let container: NSPersistentCloudKitContainer
     nonisolated(unsafe) private(set) var storeLoadingError: Error?
 
+    // Two separate contexts for two-store architecture
+    // localContext: For catalog data (GlassItem, ItemTags) - no CloudKit sync
+    // cloudContext: For user data (Inventory, Purchases, Projects) - CloudKit sync
+    private(set) var localContext: NSManagedObjectContext!
+    private(set) var cloudContext: NSManagedObjectContext!
+
     nonisolated init(inMemory: Bool = false) {
         // Use the shared model instance to prevent multiple models
         Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Creating PersistenceController with shared model...")
         container = NSPersistentCloudKitContainer(name: "Molten", managedObjectModel: Self.sharedModel)
 
         if inMemory {
+            // For in-memory stores (tests), use default single store
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
             // For in-memory stores (tests), load synchronously since they're fast
             loadStoresSynchronously()
         } else {
-            // Configure store URL to use App Group container for sharing with extensions
-            if let description = container.persistentStoreDescriptions.first,
-               let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.melissabinde.molten") {
-                // Place Core Data store in App Group container
-                let storeURL = appGroupURL.appendingPathComponent("Molten.sqlite")
-                description.url = storeURL
-                Logger(subsystem: "com.flameworker.app", category: "persistence").info("📁 Using App Group store at: \(storeURL.path)")
+            // TWO-STORE ARCHITECTURE for CloudKit duplication prevention
+            // Local store: Catalog data (GlassItem, ItemTags) - NO CloudKit
+            // Cloud store: User data (Inventory, Purchases, Projects) - WITH CloudKit
+
+            guard let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.melissabinde.molten") else {
+                Logger(subsystem: "com.flameworker.app", category: "persistence").error("❌ Failed to get App Group container URL")
+                return
             }
 
-            // Configure CloudKit options
-            if let description = container.persistentStoreDescriptions.first {
-                description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
-                description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+            // STORE 1: Local (catalog data, no CloudKit)
+            let localDescription = NSPersistentStoreDescription()
+            localDescription.url = appGroupURL.appendingPathComponent("local.sqlite")
+            localDescription.configuration = "Local"
+            localDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+            localDescription.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
+            localDescription.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
+            localDescription.timeout = 30
+            // NO cloudKitContainerOptions = local only
+            Logger(subsystem: "com.flameworker.app", category: "persistence").info("📁 Local store: \(localDescription.url?.path ?? "unknown")")
 
-                // Enable lightweight migration for simple model changes
-                description.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
-                description.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
+            // STORE 2: Cloud (user data, with CloudKit)
+            let cloudDescription = NSPersistentStoreDescription()
+            cloudDescription.url = appGroupURL.appendingPathComponent("cloud.sqlite")
+            cloudDescription.configuration = "Cloud"
+            cloudDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+            cloudDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+            cloudDescription.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
+            cloudDescription.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
+            cloudDescription.timeout = 30
 
-                // Set timeout to prevent indefinite hanging
-                description.timeout = 30 // 30 seconds timeout
+            // Enable CloudKit sync for cloud store
+            cloudDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
+                containerIdentifier: "iCloud.com.melissabinde.molten"
+            )
+            Logger(subsystem: "com.flameworker.app", category: "persistence").info("☁️ Cloud store: \(cloudDescription.url?.path ?? "unknown")")
 
-                // Add device-specific workaround for iPhone 17 entity resolution issues
-                if ProcessInfo.processInfo.isiOSAppOnMac == false {
-                    // Force model validation on iOS devices (especially iPhone 17)
-                    description.setOption(true as NSNumber, forKey: "NSValidateXMLStoreOption")
-                }
+            // Add device-specific workaround for iPhone 17 entity resolution issues
+            if ProcessInfo.processInfo.isiOSAppOnMac == false {
+                localDescription.setOption(true as NSNumber, forKey: "NSValidateXMLStoreOption")
+                cloudDescription.setOption(true as NSNumber, forKey: "NSValidateXMLStoreOption")
             }
+
+            // Set both store descriptions
+            container.persistentStoreDescriptions = [localDescription, cloudDescription]
 
             // For production stores, DO NOT load synchronously!
             // Store loading will happen asynchronously when initialize() is called
-            Logger(subsystem: "com.flameworker.app", category: "persistence").info("⏸️ PersistenceController created - stores will load asynchronously")
+            Logger(subsystem: "com.flameworker.app", category: "persistence").info("⏸️ PersistenceController created - two stores will load asynchronously")
         }
 
-        // Re-enabled after CloudKit schema reset
-        container.viewContext.automaticallyMergesChangesFromParent = true
-        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        // Contexts will be created in initialize() after stores load
+        // We can't configure them here because stores aren't loaded yet
+
+        // Track context save operations
+        NotificationCenter.default.addObserver(
+            forName: .NSManagedObjectContextDidSave,
+            object: nil,
+            queue: nil
+        ) { notification in
+            if let context = notification.object as? NSManagedObjectContext {
+                let inserted = (notification.userInfo?[NSInsertedObjectsKey] as? Set<NSManagedObject>)?.count ?? 0
+                let updated = (notification.userInfo?[NSUpdatedObjectsKey] as? Set<NSManagedObject>)?.count ?? 0
+                let deleted = (notification.userInfo?[NSDeletedObjectsKey] as? Set<NSManagedObject>)?.count ?? 0
+
+                if inserted > 0 || updated > 0 || deleted > 0 {
+                    let contextType = context == self.container.viewContext ? "VIEW" : "BACKGROUND"
+                    let contextID = String(format: "%p", unsafeBitCast(context, to: Int.self))
+                    let contextName = context.name ?? "unnamed"
+                    let parentContext = context.parent != nil ? "HAS PARENT" : "NO PARENT"
+
+                    print("🚨 [\(contextType) \(contextID)] SAVE: inserted=\(inserted), updated=\(updated), deleted=\(deleted)")
+                    print("🚨   Context name: '\(contextName)', \(parentContext)")
+
+                    // Log what entity types are being saved
+                    if let insertedObjects = notification.userInfo?[NSInsertedObjectsKey] as? Set<NSManagedObject> {
+                        let entityNames = Set(insertedObjects.map { $0.entity.name ?? "unknown" })
+                        print("🚨   Inserted entities: \(entityNames.joined(separator: ", "))")
+                    }
+                }
+            }
+        }
+
+        // Track when objects are IMPORTED from persistent store (CloudKit/persistent history)
+        NotificationCenter.default.addObserver(
+            forName: .NSManagedObjectContextObjectsDidChange,
+            object: container.viewContext,
+            queue: nil
+        ) { notification in
+            // This fires when objects are inserted/updated/deleted in the context
+            // INCLUDING when persistent store coordinator imports them from persistent history
+            if let inserted = notification.userInfo?[NSInsertedObjectsKey] as? Set<NSManagedObject>, !inserted.isEmpty {
+                let glassItems = inserted.filter { $0.entity.name == "GlassItem" }
+                if !glassItems.isEmpty {
+                    print("🐛☁️ VIEW CONTEXT: \(glassItems.count) GlassItem(s) INSERTED (may be from persistent history import)")
+                    if glassItems.count <= 5 {
+                        glassItems.forEach { item in
+                            if let stableId = item.value(forKey: "stable_id") as? String {
+                                print("🐛☁️   - \(stableId)")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // DISABLED: This observer was causing a feedback loop!
+        // Each save triggered a remote change, which triggered persistent history replay,
+        // which created duplicates, which triggered more remote changes, etc.
+        // We need proper persistent history token management instead.
+
+        // Track persistent store remote changes (CloudKit imports)
+        // var remoteChangeCount = 0
+        // NotificationCenter.default.addObserver(
+        //     forName: .NSPersistentStoreRemoteChange,
+        //     object: nil,
+        //     queue: nil
+        // ) { [weak container] notification in
+        //     remoteChangeCount += 1
+        //     print("📡📡📡 PERSISTENT STORE REMOTE CHANGE #\(remoteChangeCount) detected!")
+        //
+        //     // Try to fetch persistent history to see what changed
+        //     if let container = container {
+        //         let context = container.newBackgroundContext()
+        //         context.perform {
+        //             // Fetch count of GlassItems to see if it's growing
+        //             let request = NSFetchRequest<NSFetchRequestResult>(entityName: "GlassItem")
+        //             request.resultType = .countResultType
+        //             do {
+        //                 let count = try context.count(for: request)
+        //                 print("📡     GlassItem count in store: \(count)")
+        //             } catch {
+        //                 print("📡     Error counting GlassItems: \(error)")
+        //             }
+        //         }
+        //     }
+        // }
+    }
+
+    /// Purge GlassItem persistent history transactions to prevent replay
+    /// Call this after bulk GlassItem loading (like JSON import) completes
+    /// This only deletes persistent HISTORY, not the actual entities
+    func purgeGlassItemHistory() async {
+        print("🐛🧹 purgeGlassItemHistory() called")
+        let context = container.newBackgroundContext()
+        await context.perform {
+            do {
+                // Fetch all persistent history transactions
+                let fetchRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: Date.distantPast)
+
+                if let historyResult = try context.execute(fetchRequest) as? NSPersistentHistoryResult,
+                   let transactions = historyResult.result as? [NSPersistentHistoryTransaction] {
+
+                    // Filter to only transactions that involve GlassItem or ItemTags
+                    var transactionsToDelete: [NSPersistentHistoryTransaction] = []
+
+                    for transaction in transactions {
+                        if let changes = transaction.changes {
+                            let hasGlassItemChanges = changes.contains { change in
+                                change.changedObjectID.entity.name == "GlassItem" ||
+                                change.changedObjectID.entity.name == "ItemTags"
+                            }
+                            if hasGlassItemChanges {
+                                transactionsToDelete.append(transaction)
+                            }
+                        }
+                    }
+
+                    // Delete only the GlassItem/ItemTags transactions
+                    for transaction in transactionsToDelete {
+                        let deleteRequest = NSPersistentHistoryChangeRequest.deleteHistory(before: transaction.timestamp.addingTimeInterval(0.001))
+                        try context.execute(deleteRequest)
+                    }
+
+                    print("🐛✅ Purged \(transactionsToDelete.count) GlassItem/ItemTags history transactions")
+                }
+            } catch {
+                print("🐛⚠️ Failed to purge GlassItem history: \(error)")
+            }
+        }
     }
 
     /// Asynchronously initialize the persistent stores
@@ -231,11 +381,14 @@ class PersistenceController {
 
                     self.isInitialized = true
 
-                    // Run Transformable migration after successful store load
+                    // Create separate contexts for local and cloud stores after successful load
                     if self.storeLoadingError == nil {
                         Task { @MainActor in
+                            self.configureContexts()
+
+                            // Run Transformable migration (only on cloud context for user data)
                             do {
-                                try TransformableMigrationHelper.runAllMigrations(in: self.container.viewContext)
+                                try TransformableMigrationHelper.runAllMigrations(in: self.cloudContext)
                             } catch {
                                 self.log.error("❌ Transformable migration failed: \(error)")
                             }
@@ -248,6 +401,27 @@ class PersistenceController {
 
             loadStoresWithSmartRetry()
         }
+    }
+
+    /// Configure separate contexts for local and cloud stores
+    /// Called after stores are loaded
+    @MainActor
+    private func configureContexts() {
+        log.info("🔄 Configuring local and cloud contexts...")
+
+        // Local context for catalog data (GlassItem, ItemTags)
+        localContext = container.newBackgroundContext()
+        localContext.automaticallyMergesChangesFromParent = true  // Important for consistency
+        localContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        localContext.transactionAuthor = "MoltenApp-Local"
+        log.info("✅ Local context configured")
+
+        // Cloud context for user data (Inventory, Purchases, Projects)
+        cloudContext = container.newBackgroundContext()
+        cloudContext.automaticallyMergesChangesFromParent = true  // CRITICAL for CloudKit
+        cloudContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        cloudContext.transactionAuthor = "MoltenApp-Cloud"
+        log.info("✅ Cloud context configured")
     }
 
     /// Synchronous store loading for tests only (in-memory stores are fast)
@@ -266,6 +440,13 @@ class PersistenceController {
         semaphore.wait()
         self.storeLoadingError = capturedError
         self.isInitialized = true
+
+        // For in-memory tests, use viewContext for both local and cloud
+        // (simpler than configuring two separate in-memory stores)
+        Task { @MainActor in
+            self.localContext = self.container.viewContext
+            self.cloudContext = self.container.viewContext
+        }
     }
 
     /// Helper to clean up corrupted store files
@@ -424,8 +605,9 @@ class PersistenceController {
     /// Use this if you suspect entity resolution issues
     func rebuildEntityCaches() {
         log.info("🔄 Rebuilding Core Data entity caches using shared model...")
-        
+
         // Create a new context to force entity cache refresh
+        print("🚨 Creating background context in rebuildEntityCaches()")
         let testContext = container.newBackgroundContext()
         testContext.mergePolicy = container.viewContext.mergePolicy
         

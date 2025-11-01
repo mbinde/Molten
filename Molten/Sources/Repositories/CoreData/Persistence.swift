@@ -341,6 +341,9 @@ class PersistenceController {
 
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             var retryAttempted = false
+            let expectedStoreCount = self.container.persistentStoreDescriptions.count
+            var loadedStoreCount = 0
+            let storeLock = NSLock()
 
             func loadStoresWithSmartRetry() {
                 container.loadPersistentStores { storeDescription, error in
@@ -366,11 +369,25 @@ class PersistenceController {
                         }
                     } else {
                         if retryAttempted {
-                            self.log.info("✅ Store loaded successfully after recovery!")
+                            self.log.info("✅ Store loaded successfully after recovery: \(storeDescription.url?.lastPathComponent ?? "unknown")")
                         } else {
-                            self.log.info("✅ Store loaded successfully")
+                            self.log.info("✅ Store loaded successfully: \(storeDescription.url?.lastPathComponent ?? "unknown")")
                         }
                     }
+
+                    // Track how many stores have loaded
+                    storeLock.lock()
+                    loadedStoreCount += 1
+                    let allStoresLoaded = loadedStoreCount >= expectedStoreCount
+                    storeLock.unlock()
+
+                    // Only proceed after ALL stores are loaded
+                    guard allStoresLoaded else {
+                        self.log.info("⏳ Waiting for remaining stores... (\(loadedStoreCount)/\(expectedStoreCount))")
+                        return
+                    }
+
+                    self.log.info("🎉 All stores loaded (\(loadedStoreCount)/\(expectedStoreCount))")
 
                     // Validate entity registration
                     if self.storeLoadingError == nil {
@@ -398,7 +415,7 @@ class PersistenceController {
                         }
                     }
 
-                    // Mark as initialized and resume continuation
+                    // Mark as initialized and resume continuation (only once, after all stores loaded)
                     self.isInitialized = true
                     continuation.resume()
                 }

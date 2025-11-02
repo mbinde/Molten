@@ -47,7 +47,9 @@ struct InventoryDetailViewUserNotesTests {
             userNotesRepository: mockUserNotesRepo,
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: View should be created successfully
@@ -77,7 +79,9 @@ struct InventoryDetailViewUserNotesTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: View should be created and ready to show add note button
@@ -110,7 +114,9 @@ struct InventoryDetailViewUserNotesTests {
             userNotesRepository: mockRepo,
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: View should handle special characters in notes gracefully
@@ -140,7 +146,9 @@ struct InventoryDetailViewUserNotesTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: View should handle long notes with Show More/Less functionality
@@ -170,7 +178,9 @@ struct InventoryDetailViewUserNotesTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: Should handle empty notes gracefully
@@ -202,7 +212,9 @@ struct InventoryDetailViewUserNotesTests {
             userNotesRepository: mockRepo,
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: Should support editing notes via UserNotesEditor
@@ -232,7 +244,9 @@ struct InventoryDetailViewUserNotesTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: Should show expandable notes section
@@ -262,7 +276,9 @@ struct InventoryDetailViewUserNotesTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: Should maintain consistent styling (blue theme for notes)
@@ -292,7 +308,9 @@ struct InventoryDetailViewUserNotesTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: Should reload notes after UserNotesEditor dismisses
@@ -322,7 +340,9 @@ struct InventoryDetailViewUserNotesTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: Should handle errors gracefully and show "Add note" button

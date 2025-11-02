@@ -52,14 +52,14 @@ struct LocationsView: View {
             .navigationTitle("Locations")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showLocationPicker = true
                     } label: {
                         Image(systemName: "location.circle")
                     }
                 }
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         viewModel.toggleMap()
                     } label: {

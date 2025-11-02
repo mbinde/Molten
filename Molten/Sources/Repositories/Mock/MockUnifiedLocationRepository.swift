@@ -108,7 +108,7 @@ class MockUnifiedLocationRepository: @unchecked Sendable, UnifiedLocationReposit
     private nonisolated func convertStoreDataToUnifiedLocation(_ storeData: StoreData) -> UnifiedLocationModel {
         var retailCapabilities: [RetailCapability] = []
         var educationCapabilities: [EducationCapability] = []
-        var servicesCapabilities: [ServiceCapability] = []
+        var servicesCapabilities: [ServicesCapability] = []
 
         // Convert retail capability flags (prefer new format, fall back to legacy)
         if (storeData.retail_supports_casting ?? storeData.supports_casting) == true {
@@ -157,26 +157,17 @@ class MockUnifiedLocationRepository: @unchecked Sendable, UnifiedLocationReposit
         }
 
         // Convert service capability flags (new format)
-        if storeData.rentals_supports_casting == true {
-            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental, technique: .casting))
-        }
-        if storeData.rentals_supports_flameworking_hard == true {
-            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental, technique: .flameworkinghard))
-        }
-        if storeData.rentals_supports_flameworking_soft == true {
-            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental, technique: .flameworkingsoft))
-        }
-        if storeData.rentals_supports_fusing == true {
-            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental, technique: .fusing))
-        }
-        if storeData.rentals_supports_glass_blowing == true {
-            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental, technique: .glassBlowing))
-        }
-        if storeData.rentals_supports_stained_glass == true {
-            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental, technique: .stainedGlass))
-        }
-        if storeData.rentals_supports_other == true {
-            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental, technique: .other))
+        // Services are technique-agnostic - just check if any rental is supported
+        let hasAnyRental = (storeData.rentals_supports_casting == true) ||
+                          (storeData.rentals_supports_flameworking_hard == true) ||
+                          (storeData.rentals_supports_flameworking_soft == true) ||
+                          (storeData.rentals_supports_fusing == true) ||
+                          (storeData.rentals_supports_glass_blowing == true) ||
+                          (storeData.rentals_supports_stained_glass == true) ||
+                          (storeData.rentals_supports_other == true)
+
+        if hasAnyRental {
+            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental))
         }
 
         return UnifiedLocationModel(

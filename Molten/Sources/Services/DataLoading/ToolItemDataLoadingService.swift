@@ -225,7 +225,14 @@ class ToolItemDataLoadingService {
         )
 
         // List of all tool manufacturer files
-        let manufacturers = ["taglia"] // Add more as they're added
+        let manufacturers = [
+            "taglia",
+            "leonardo",
+            "cgbeads",
+            "ennion",
+            "mikepeterson",
+            "firebug"
+        ]
 
         for manufacturer in manufacturers {
             do {

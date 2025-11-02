@@ -7,7 +7,6 @@
 
 import Foundation
 import CoreData
-import UIKit
 
 /// Service for exporting all app data to JSON format
 @MainActor

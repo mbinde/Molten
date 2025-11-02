@@ -9,7 +9,6 @@ import Foundation
 
 /// Business model for shopping list items with validation and business logic
 /// Maps to ItemShopping Core Data entity
-@preconcurrency
 struct ItemShoppingModel: ItemQuantityModel, @unchecked Sendable {
     let id: UUID
     let item_stable_id: String
@@ -95,6 +94,16 @@ struct ItemShoppingModel: ItemQuantityModel, @unchecked Sendable {
 
     // Note: hasValidQuantity, formattedQuantity, isValid, and validationErrors
     // are provided by the ItemQuantityModel protocol's default implementations
+
+    // MARK: - Equatable & Hashable (explicit nonisolated implementations)
+
+    nonisolated static func == (lhs: ItemShoppingModel, rhs: ItemShoppingModel) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
 
 // MARK: - Helper Extensions

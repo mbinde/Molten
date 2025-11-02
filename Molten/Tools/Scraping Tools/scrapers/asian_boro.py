@@ -60,12 +60,16 @@ def remove_brand_from_title(title):
     # Remove "Asian" prefix
     cleaned_title = re.sub(r'^Asian\s+', '', cleaned_title, flags=re.IGNORECASE)
 
-    # Remove size specifications (e.g., "7-8mm", "12mm", "16mm", "25mm")
-    cleaned_title = re.sub(r'\b\d+(-\d+)?mm\b', '', cleaned_title)
+    # Remove size prefixes at beginning (e.g., "16"", "38MM", "25mm")
+    cleaned_title = re.sub(r'^\d+"\s*', '', cleaned_title)  # Sizes with inch marks like "16" "
+    cleaned_title = re.sub(r'^\d+MM\s+', '', cleaned_title, flags=re.IGNORECASE)  # "38MM "
 
-    # Remove product type terms
+    # Remove size specifications anywhere (e.g., "7-8mm", "12mm", "16mm", "25mm")
+    cleaned_title = re.sub(r'\d+(-\d+)?mm\s*', '', cleaned_title, flags=re.IGNORECASE)
+
+    # Remove product type terms (but keep "Tube" - tubes are special!)
     type_patterns = [r'\bRods?\b', r'\bFrit\b', r'\bPowder\b', r'\bSheet\b',
-                    r'\bStringers?\b', r'\bTubes?\b', r'\bTubing\b', r'\bFatboy\b',
+                    r'\bStringers?\b', r'\bTubing\b', r'\bFatboy\b',
                     r'\bFlat\b', r'\bProfile\b']
 
     for pattern in type_patterns:
@@ -76,6 +80,10 @@ def remove_brand_from_title(title):
 
     # Remove COE references
     cleaned_title = re.sub(r'\bCOE\s*33\b', '', cleaned_title, flags=re.IGNORECASE)
+
+    # Remove length specifications (e.g., "long", "1350-1500mm long")
+    cleaned_title = re.sub(r'\b\d+-?\d*mm\s+long\b', '', cleaned_title, flags=re.IGNORECASE)
+    cleaned_title = re.sub(r'\blong\b', '', cleaned_title, flags=re.IGNORECASE)
 
     # Clean up extra whitespace and dashes
     cleaned_title = re.sub(r'\s*[-–]\s*', ' ', cleaned_title)

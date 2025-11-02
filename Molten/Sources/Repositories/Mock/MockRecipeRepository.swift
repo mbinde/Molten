@@ -9,63 +9,63 @@
 
 /// Mock implementation of RecipeRepository for testing
 final class MockRecipeRepository: @unchecked Sendable, RecipeRepository {
-    nonisolated(unsafe) private var fritRecipes: [UUID: FritRecipeModel] = [:]
+    nonisolated(unsafe) private var recipes: [UUID: RecipeModel] = [:]
     private let queue = DispatchQueue(label: "mock.recipe.repository", attributes: .concurrent)
 
     nonisolated init() {}
 
-    // MARK: - Frit Recipe Operations
+    // MARK: - Recipe Operations
 
-    nonisolated func fetchAllFritRecipes() async throws -> [FritRecipeModel] {
+    nonisolated func fetchAllRecipes() async throws -> [RecipeModel] {
         return await withCheckedContinuation { continuation in
             queue.async {
-                let sorted = Array(self.fritRecipes.values).sorted { $0.dateCreated > $1.dateCreated }
+                let sorted = Array(self.recipes.values).sorted { $0.dateCreated > $1.dateCreated }
                 continuation.resume(returning: sorted)
             }
         }
     }
 
-    nonisolated func fetchFritRecipe(byId id: UUID) async throws -> FritRecipeModel? {
+    nonisolated func fetchRecipe(byId id: UUID) async throws -> RecipeModel? {
         return await withCheckedContinuation { continuation in
             queue.async {
-                continuation.resume(returning: self.fritRecipes[id])
+                continuation.resume(returning: self.recipes[id])
             }
         }
     }
 
-    nonisolated func createFritRecipe(_ recipe: FritRecipeModel) async throws -> FritRecipeModel {
+    nonisolated func createRecipe(_ recipe: RecipeModel) async throws -> RecipeModel {
         return await withCheckedContinuation { continuation in
             queue.async(flags: .barrier) {
-                self.fritRecipes[recipe.id] = recipe
+                self.recipes[recipe.id] = recipe
                 continuation.resume(returning: recipe)
             }
         }
     }
 
-    nonisolated func updateFritRecipe(_ recipe: FritRecipeModel) async throws -> FritRecipeModel {
+    nonisolated func updateRecipe(_ recipe: RecipeModel) async throws -> RecipeModel {
         return try await withCheckedThrowingContinuation { continuation in
             queue.async(flags: .barrier) {
-                guard self.fritRecipes[recipe.id] != nil else {
+                guard self.recipes[recipe.id] != nil else {
                     continuation.resume(throwing: RecipeRepositoryError.recipeNotFound)
                     return
                 }
 
                 let updated = recipe.withUpdatedModificationDate()
-                self.fritRecipes[updated.id] = updated
+                self.recipes[updated.id] = updated
                 continuation.resume(returning: updated)
             }
         }
     }
 
-    nonisolated func deleteFritRecipe(id: UUID) async throws {
+    nonisolated func deleteRecipe(id: UUID) async throws {
         return try await withCheckedThrowingContinuation { continuation in
             queue.async(flags: .barrier) {
-                guard self.fritRecipes[id] != nil else {
+                guard self.recipes[id] != nil else {
                     continuation.resume(throwing: RecipeRepositoryError.recipeNotFound)
                     return
                 }
 
-                self.fritRecipes.removeValue(forKey: id)
+                self.recipes.removeValue(forKey: id)
                 continuation.resume()
             }
         }
@@ -73,11 +73,11 @@ final class MockRecipeRepository: @unchecked Sendable, RecipeRepository {
 
     // MARK: - Search Operations
 
-    nonisolated func searchFritRecipes(byTitle query: String) async throws -> [FritRecipeModel] {
+    nonisolated func searchRecipes(byTitle query: String) async throws -> [RecipeModel] {
         return await withCheckedContinuation { continuation in
             queue.async {
                 let lowercasedQuery = query.lowercased()
-                let results = self.fritRecipes.values.filter {
+                let results = self.recipes.values.filter {
                     $0.title.lowercased().contains(lowercasedQuery)
                 }
                 continuation.resume(returning: results)
@@ -85,10 +85,10 @@ final class MockRecipeRepository: @unchecked Sendable, RecipeRepository {
         }
     }
 
-    nonisolated func fetchFritRecipes(containingIngredient stableId: String) async throws -> [FritRecipeModel] {
+    nonisolated func fetchRecipes(containingIngredient stableId: String) async throws -> [RecipeModel] {
         return await withCheckedContinuation { continuation in
             queue.async {
-                let results = self.fritRecipes.values.filter { recipe in
+                let results = self.recipes.values.filter { recipe in
                     recipe.ingredients.contains { ingredient in
                         ingredient.stableId == stableId
                     }
@@ -98,10 +98,10 @@ final class MockRecipeRepository: @unchecked Sendable, RecipeRepository {
         }
     }
 
-    nonisolated func fetchFritRecipes(byMeasurementType measurementType: FritMeasurementType) async throws -> [FritRecipeModel] {
+    nonisolated func fetchRecipes(byMeasurementType measurementType: MeasurementType) async throws -> [RecipeModel] {
         return await withCheckedContinuation { continuation in
             queue.async {
-                let results = self.fritRecipes.values.filter {
+                let results = self.recipes.values.filter {
                     $0.measurementType == measurementType
                 }
                 continuation.resume(returning: results)
@@ -114,7 +114,7 @@ final class MockRecipeRepository: @unchecked Sendable, RecipeRepository {
     /// Clear all recipes (for test teardown)
     nonisolated func clear() {
         queue.async(flags: .barrier) {
-            self.fritRecipes.removeAll()
+            self.recipes.removeAll()
         }
     }
 
@@ -122,7 +122,7 @@ final class MockRecipeRepository: @unchecked Sendable, RecipeRepository {
     nonisolated func count() async -> Int {
         return await withCheckedContinuation { continuation in
             queue.async {
-                continuation.resume(returning: self.fritRecipes.count)
+                continuation.resume(returning: self.recipes.count)
             }
         }
     }

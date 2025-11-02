@@ -16,46 +16,46 @@ actor RecipeService {
         self.repository = repository
     }
 
-    // MARK: - Frit Recipe CRUD Operations
+    // MARK: -  Recipe CRUD Operations
 
     /// Get all frit recipes
-    func getAllFritRecipes() async throws -> [FritRecipeModel] {
-        return try await repository.fetchAllFritRecipes()
+    func getAllRecipes() async throws -> [RecipeModel] {
+        return try await repository.fetchAllRecipes()
     }
 
     /// Get a single frit recipe by ID
-    func getFritRecipe(byId id: UUID) async throws -> FritRecipeModel? {
-        return try await repository.fetchFritRecipe(byId: id)
+    func getRecipe(byId id: UUID) async throws -> RecipeModel? {
+        return try await repository.fetchRecipe(byId: id)
     }
 
     /// Create a new frit recipe
     /// - Parameter recipe: The recipe to create
     /// - Returns: The created recipe with generated ID and timestamps
-    func createFritRecipe(_ recipe: FritRecipeModel) async throws -> FritRecipeModel {
+    func createRecipe(_ recipe: RecipeModel) async throws -> RecipeModel {
         // Validate title before creating
-        guard FritRecipeModel.isValidTitle(recipe.title) else {
+        guard RecipeModel.isValidTitle(recipe.title) else {
             throw RecipeServiceError.invalidTitle
         }
 
-        return try await repository.createFritRecipe(recipe)
+        return try await repository.createRecipe(recipe)
     }
 
     /// Update an existing frit recipe
     /// - Parameter recipe: The recipe with updated values
     /// - Returns: The updated recipe with new modification timestamp
-    func updateFritRecipe(_ recipe: FritRecipeModel) async throws -> FritRecipeModel {
+    func updateRecipe(_ recipe: RecipeModel) async throws -> RecipeModel {
         // Validate title before updating
-        guard FritRecipeModel.isValidTitle(recipe.title) else {
+        guard RecipeModel.isValidTitle(recipe.title) else {
             throw RecipeServiceError.invalidTitle
         }
 
-        return try await repository.updateFritRecipe(recipe)
+        return try await repository.updateRecipe(recipe)
     }
 
     /// Delete a frit recipe
     /// - Parameter id: The UUID of the recipe to delete
-    func deleteFritRecipe(id: UUID) async throws {
-        try await repository.deleteFritRecipe(id: id)
+    func deleteRecipe(id: UUID) async throws {
+        try await repository.deleteRecipe(id: id)
     }
 
     // MARK: - Search & Filter Operations
@@ -63,27 +63,27 @@ actor RecipeService {
     /// Search frit recipes by title
     /// - Parameter query: The search query (case-insensitive)
     /// - Returns: Array of matching recipes
-    func searchFritRecipes(byTitle query: String) async throws -> [FritRecipeModel] {
+    func searchRecipes(byTitle query: String) async throws -> [RecipeModel] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             // If search is empty, return all recipes
-            return try await getAllFritRecipes()
+            return try await getAllRecipes()
         }
-        return try await repository.searchFritRecipes(byTitle: trimmed)
+        return try await repository.searchRecipes(byTitle: trimmed)
     }
 
     /// Find frit recipes that use a specific glass item
     /// - Parameter stableId: The stable_id of the glass item
     /// - Returns: Array of recipes containing this ingredient
-    func getFritRecipes(containingGlassItem stableId: String) async throws -> [FritRecipeModel] {
-        return try await repository.fetchFritRecipes(containingIngredient: stableId)
+    func getRecipes(containingGlassItem stableId: String) async throws -> [RecipeModel] {
+        return try await repository.fetchRecipes(containingIngredient: stableId)
     }
 
     /// Get frit recipes filtered by measurement type
     /// - Parameter measurementType: The measurement type to filter by
     /// - Returns: Array of recipes with this measurement type
-    func getFritRecipes(byMeasurementType measurementType: FritMeasurementType) async throws -> [FritRecipeModel] {
-        return try await repository.fetchFritRecipes(byMeasurementType: measurementType)
+    func getRecipes(byMeasurementType measurementType: MeasurementType) async throws -> [RecipeModel] {
+        return try await repository.fetchRecipes(byMeasurementType: measurementType)
     }
 
     // MARK: - Recipe Validation
@@ -92,20 +92,20 @@ actor RecipeService {
     /// - Parameter title: The title to validate
     /// - Returns: True if valid, false otherwise
     func isValidTitle(_ title: String) -> Bool {
-        return FritRecipeModel.isValidTitle(title)
+        return RecipeModel.isValidTitle(title)
     }
 
     // MARK: - Recipe Analytics
 
     /// Get count of all frit recipes
-    func getFritRecipeCount() async throws -> Int {
-        let recipes = try await getAllFritRecipes()
+    func getRecipeCount() async throws -> Int {
+        let recipes = try await getAllRecipes()
         return recipes.count
     }
 
     /// Get recipes grouped by measurement type
-    func getRecipesByMeasurementType() async throws -> [FritMeasurementType: [FritRecipeModel]] {
-        let allRecipes = try await getAllFritRecipes()
+    func getRecipesByMeasurementType() async throws -> [MeasurementType: [RecipeModel]] {
+        let allRecipes = try await getAllRecipes()
         return Dictionary(grouping: allRecipes) { $0.measurementType }
     }
 
@@ -113,7 +113,7 @@ actor RecipeService {
     /// - Parameter limit: Maximum number of items to return
     /// - Returns: Array of (stableId, count) tuples sorted by usage frequency
     func getMostUsedIngredients(limit: Int = 10) async throws -> [(stableId: String, count: Int)] {
-        let allRecipes = try await getAllFritRecipes()
+        let allRecipes = try await getAllRecipes()
 
         // Count occurrences of each ingredient
         var ingredientCounts: [String: Int] = [:]

@@ -98,7 +98,10 @@ struct LocationPickerSheet: View {
 
         Task {
             do {
-                let placemarks = try await geocoder.geocodeAddressString(searchText)
+                // Add timeout to prevent infinite spinning
+                let placemarks = try await withTimeout(seconds: 10) {
+                    try await geocoder.geocodeAddressString(searchText)
+                }
 
                 await MainActor.run {
                     isGeocoding = false
@@ -112,12 +115,35 @@ struct LocationPickerSheet: View {
                     // Success - return the coordinate
                     onLocationSelected(location.coordinate)
                 }
+            } catch is CancellationError {
+                await MainActor.run {
+                    isGeocoding = false
+                    errorMessage = "Location lookup timed out. Check your network connection."
+                }
             } catch {
                 await MainActor.run {
                     isGeocoding = false
                     errorMessage = "Could not find location. Try a different search term."
                 }
             }
+        }
+    }
+
+    // Helper for timeout
+    private func withTimeout<T>(seconds: TimeInterval, operation: @escaping () async throws -> T) async throws -> T {
+        try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask {
+                try await operation()
+            }
+
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                throw CancellationError()
+            }
+
+            let result = try await group.next()!
+            group.cancelAll()
+            return result
         }
     }
 }

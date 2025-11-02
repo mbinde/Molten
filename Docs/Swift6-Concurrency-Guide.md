@@ -16,6 +16,7 @@ This guide covers Swift 6 concurrency patterns used in the Molten codebase.
 3. **Mark individual members** - Use `nonisolated` on init/static methods only when needed
 4. **Service classes need `@preconcurrency`** - Prevents MainActor inference
 5. **Test suites need `@MainActor`** - When accessing MainActor-isolated properties
+6. **Let Swift synthesize Equatable/Hashable** - Don't write explicit implementations for protocol-conforming Sendable structs
 
 ## Common Patterns
 
@@ -408,11 +409,84 @@ When creating a shared protocol for models:
 7. ✅ Use `@unchecked Sendable` on conforming structs (if all fields are value types)
 8. ✅ Test with repository classes that call from background queues
 
+### 🚨 CRITICAL: Explicit vs Synthesized Equatable/Hashable Conformance
+
+**The Problem:** After adding `nonisolated` everywhere, you may still get alternating conformance errors:
+
+```
+error: type 'InventoryModel' does not conform to protocol 'ItemQuantityModel'
+error: main actor-isolated conformance of 'InventoryModel' to 'Hashable' cannot satisfy conformance requirement for a 'Sendable' type parameter 'Self'
+```
+
+These errors alternate between models depending on compilation order, which is a sign of **explicit conformance conflicting with Swift's synthesized conformance**.
+
+**The Solution: Let Swift Synthesize Equatable/Hashable**
+
+```swift
+// ❌ WRONG - Explicit implementations can conflict with protocol synthesis
+struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
+    let id: UUID
+    let quantity: Double
+
+    // ❌ Remove these explicit implementations!
+    nonisolated static func == (lhs: InventoryModel, rhs: InventoryModel) -> Bool {
+        return lhs.id == rhs.id
+    }
+
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
+// ✅ CORRECT - Let Swift synthesize based on stored properties
+struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
+    let id: UUID
+    let quantity: Double
+    // No explicit == or hash implementation needed!
+    // Swift synthesizes them automatically for Sendable structs
+}
+```
+
+**Why this fixes the error:**
+- Swift 6's synthesized conformance for `Sendable` structs is always correctly isolated
+- Explicit `nonisolated` implementations can conflict with the protocol's synthesis requirements
+- When you declare conformance to `Equatable` and `Hashable` but don't implement them explicitly, Swift synthesizes correct implementations
+- The synthesized conformance "just works" with protocol inheritance (ItemQuantityModel inherits Equatable/Hashable)
+
+**Real-World Impact:**
+- Started with 350+ errors after adding `nonisolated` to protocol
+- Fixed 348 errors by adding `nonisolated` everywhere
+- Last 2 errors alternated between `InventoryModel` and `ItemShoppingModel`
+- **Fixed by removing explicit Equatable/Hashable implementations** from both models
+- Build now succeeds (only unrelated UIKit errors remain)
+
+**When to use explicit vs synthesized:**
+- ✅ **Use synthesized** (no explicit implementation) when:
+  - Conforming to protocols that inherit Equatable/Hashable
+  - All stored properties are already Equatable/Hashable
+  - Using `@unchecked Sendable` structs
+  - Working with Swift 6 strict concurrency
+
+- ❌ **Use explicit** (manual implementation) only when:
+  - You need custom equality logic (e.g., comparing only certain fields)
+  - You need custom hash logic (e.g., hashing only business keys)
+  - Type has properties that aren't Equatable/Hashable
+  - **NOT when conforming to protocols in Swift 6 strict concurrency mode**
+
+**Investigation Timeline:**
+- This took 5 days to debug across 350+ errors
+- Tried: renaming properties, adding/removing `@preconcurrency`, explicit conformance declarations
+- **Root cause:** Explicit `nonisolated static func ==` and `nonisolated func hash` conflicted with protocol synthesis
+- **Solution:** Delete explicit implementations, let Swift synthesize
+
 ### Resources
 
 This pattern was learned from investigating Swift 6 strict concurrency in January 2025:
 - Donny Wals: "Solving actor-isolated protocol conformance" (donnywals.com)
 - Swift Evolution: Sendable and actor isolation inference
 - Apple: Swift Concurrency Adoption Guidelines
+- Swift Forums: "Protocol conformance errors from 6.1 toolchain" thread
 
-**Key insight:** Protocol conformance creates isolation boundaries. Use `nonisolated` liberally on protocol APIs that need cross-actor access.
+**Key insights:**
+1. Protocol conformance creates isolation boundaries - use `nonisolated` liberally on protocol APIs that need cross-actor access
+2. Let Swift synthesize Equatable/Hashable for protocol-conforming Sendable structs - explicit implementations can conflict with synthesis

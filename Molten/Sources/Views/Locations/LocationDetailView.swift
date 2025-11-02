@@ -149,7 +149,7 @@ struct LocationDetailView: View {
                 .fontWeight(.semibold)
         }
         .padding(.horizontal, DesignSystem.Padding.compact)
-        .padding(.vertical, DesignSystem.Spacing.xs)
+        .padding(.vertical, DesignSystem.Padding.chipVertical)
         .background(DesignSystem.Colors.accentPrimary.opacity(0.1))
         .foregroundStyle(DesignSystem.Colors.accentPrimary)
         .cornerRadius(DesignSystem.CornerRadius.small)

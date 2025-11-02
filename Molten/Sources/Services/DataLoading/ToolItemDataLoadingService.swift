@@ -275,7 +275,7 @@ class ToolItemDataLoadingService {
         existingItems: [ToolItemModel],
         manufacturer: String,
         options: LoadingOptions
-    ) -> ComparisonResult {
+    ) -> ToolComparisonResult {
 
         // Create lookup dictionary for existing items by SKU
         let existingBySKU = Dictionary(uniqueKeysWithValues:
@@ -285,7 +285,7 @@ class ToolItemDataLoadingService {
         )
 
         var toCreate: [ToolJSONItem] = []
-        var toUpdate: [ItemUpdatePair] = []
+        var toUpdate: [ToolUpdatePair] = []
         var unchanged: [ToolItemModel] = []
 
         for jsonTool in jsonTools {
@@ -301,7 +301,7 @@ class ToolItemDataLoadingService {
                 if differences.isEmpty {
                     unchanged.append(existingItem)
                 } else {
-                    let updatePair = ItemUpdatePair(
+                    let updatePair = ToolUpdatePair(
                         existing: existingItem,
                         updated: jsonTool,
                         differences: differences
@@ -315,7 +315,7 @@ class ToolItemDataLoadingService {
             }
         }
 
-        return ComparisonResult(
+        return ToolComparisonResult(
             toCreate: toCreate,
             toUpdate: toUpdate,
             unchanged: unchanged
@@ -408,7 +408,7 @@ class ToolItemDataLoadingService {
     }
 
     /// Process items that need to be updated
-    private func processUpdates(_ updates: [ItemUpdatePair], options: LoadingOptions) async throws -> UpdateResult {
+    private func processUpdates(_ updates: [ToolUpdatePair], options: LoadingOptions) async throws -> ToolUpdateResult {
         var itemsUpdated = 0
         var itemsFailed = 0
 
@@ -449,7 +449,7 @@ class ToolItemDataLoadingService {
             try await Task.sleep(nanoseconds: 10_000_000) // 10ms
         }
 
-        return UpdateResult(
+        return ToolUpdateResult(
             itemsUpdated: itemsUpdated,
             itemsFailed: itemsFailed
         )
@@ -520,21 +520,21 @@ struct FailedToolItem {
 }
 
 /// Result of comparing JSON data with existing tools
-struct ComparisonResult {
+struct ToolComparisonResult {
     let toCreate: [ToolJSONItem]      // Items that don't exist yet
-    let toUpdate: [ItemUpdatePair]    // Items that exist but have changed
+    let toUpdate: [ToolUpdatePair]    // Items that exist but have changed
     let unchanged: [ToolItemModel]    // Items that exist and haven't changed
 }
 
 /// Pair of items for updating - old and new data
-struct ItemUpdatePair {
+struct ToolUpdatePair {
     let existing: ToolItemModel
     let updated: ToolJSONItem
     let differences: [String]  // Description of what changed
 }
 
 /// Result of processing updates
-struct UpdateResult {
+struct ToolUpdateResult {
     let itemsUpdated: Int
     let itemsFailed: Int
 }

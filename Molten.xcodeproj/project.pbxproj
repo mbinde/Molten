@@ -98,7 +98,7 @@
 		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
 		71B28ACB3DDD2787C1BC0554 /* ToolItemRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemRepositoryTests.swift; sourceTree = "<group>"; };
 		878F664543088F1B86740DD2 /* UnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationRepository.swift; sourceTree = "<group>"; };
-		95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToolItemDataLoadingServiceTests.swift; path = ToolItemDataLoadingServiceTests.swift; sourceTree = "<group>"; };
+		95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemDataLoadingServiceTests.swift; sourceTree = "<group>"; };
 		B244734885B21EAEB2AAC553 /* ServiceType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceType.swift; sourceTree = "<group>"; };
 		DB95FB5AC403E8CFD93211C5 /* CoreDataUnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataUnifiedLocationRepository.swift; sourceTree = "<group>"; };
 		E7C7A65B94A6533A14E7AE47 /* taglia_tools.json */ = {isa = PBXFileReference; includeInIndex = 1; name = taglia_tools.json; path = taglia_tools.json; sourceTree = "<group>"; };
@@ -203,6 +203,7 @@
 				Tests/MoltenTests/Services/ServiceCoordinationTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
 				Tests/MoltenTests/Services/StoreServiceTests.swift,
+				Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
 				Tests/MoltenTests/Utilities/CatalogFormattersTests.swift,
 				Tests/MoltenTests/Utilities/ErrorBoundaryTests.swift,
@@ -346,6 +347,7 @@
 				Tests/MoltenTests/Services/ServiceCoordinationTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
 				Tests/MoltenTests/Services/StoreServiceTests.swift,
+				Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
 				Tests/MoltenTests/Utilities/CatalogFormattersTests.swift,
 				Tests/MoltenTests/Utilities/ErrorBoundaryTests.swift,
@@ -547,8 +549,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};
@@ -658,7 +658,6 @@
 			children = (
 				95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */,
 			);
-			name = Services;
 			path = Services;
 			sourceTree = "<group>";
 		};

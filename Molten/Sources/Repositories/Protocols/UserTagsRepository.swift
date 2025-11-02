@@ -12,12 +12,14 @@ enum TagOwnerType: String, CaseIterable, Codable, Sendable {
     case glassItem = "glassItem"
     case project = "project"
     case logbook = "logbook"
+    case recipe = "recipe"
 
     var displayName: String {
         switch self {
         case .glassItem: return "Glass Item"
         case .project: return "Project"
         case .logbook: return "Logbook"
+        case .recipe: return "Recipe"
         }
     }
 }

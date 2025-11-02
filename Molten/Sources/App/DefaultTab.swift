@@ -15,9 +15,10 @@ enum DefaultTab: Int, CaseIterable {
     case purchases = 4 // Kept for backwards compatibility, but disabled in UI
     case projectPlans = 5 // Deprecated - now accessed through projects menu
     case logbook = 6 // Deprecated - now accessed through projects menu
-    case settings = 7
-    case locations = 8
-    case kilnSchedules = 9
+    case recipes = 7
+    case settings = 8
+    case locations = 9
+    case kilnSchedules = 10
 
     var displayName: String {
         switch self {
@@ -35,6 +36,8 @@ enum DefaultTab: Int, CaseIterable {
             return "Projects"
         case .logbook:
             return "Logbook"
+        case .recipes:
+            return "Recipes"
         case .settings:
             return "Settings"
         case .locations:
@@ -60,6 +63,8 @@ enum DefaultTab: Int, CaseIterable {
             return "pencil.and.list.clipboard" // Planning icon
         case .logbook:
             return "book.pages" // Consistent with existing MainTabView
+        case .recipes:
+            return "book.closed" // Recipe book icon
         case .settings:
             return "gear" // Consistent with existing MainTabView
         case .locations:

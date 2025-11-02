@@ -9,7 +9,7 @@ import Foundation
 
 /// Business model for shopping list items with validation and business logic
 /// Maps to ItemShopping Core Data entity
-nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable {
+nonisolated struct ItemShoppingModel: ItemQuantityModel, Codable {
     let id: UUID
     let item_stable_id: String
     let quantity: Double
@@ -40,7 +40,7 @@ nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable
         self.dateAdded = dateAdded
     }
 
-    // MARK: - Business Logic
+    // MARK: - Shopping-Specific Business Logic
 
     /// Check if this item is for a specific store
     nonisolated func isForStore(_ storeName: String) -> Bool {
@@ -48,7 +48,30 @@ nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable
         return store.lowercased() == storeName.lowercased()
     }
 
-    /// Check if this item matches search text
+    /// Get a copy with updated store
+    nonisolated func withStore(_ newStore: String?) -> ItemShoppingModel {
+        return ItemShoppingModel(
+            id: id,
+            item_stable_id: item_stable_id,
+            quantity: quantity,
+            store: newStore,
+            type: type,
+            subtype: subtype,
+            subsubtype: subsubtype,
+            dateAdded: dateAdded
+        )
+    }
+
+    /// Compare items for changes (useful for updates)
+    nonisolated static func hasChanges(existing: ItemShoppingModel, new: ItemShoppingModel) -> Bool {
+        return existing.item_stable_id != new.item_stable_id ||
+               existing.quantity != new.quantity ||
+               existing.store != new.store
+    }
+
+    // MARK: - ItemQuantityModel Protocol Implementation
+
+    /// Check if this item matches search text (overrides default to include store)
     nonisolated func matchesSearchText(_ searchText: String) -> Bool {
         let lowercaseSearch = searchText.lowercased()
         return item_stable_id.lowercased().contains(lowercaseSearch) ||
@@ -69,62 +92,8 @@ nonisolated struct ItemShoppingModel: Identifiable, Equatable, Codable, Sendable
         )
     }
 
-    /// Get a copy with updated store
-    nonisolated func withStore(_ newStore: String?) -> ItemShoppingModel {
-        return ItemShoppingModel(
-            id: id,
-            item_stable_id: item_stable_id,
-            quantity: quantity,
-            store: newStore,
-            type: type,
-            subtype: subtype,
-            subsubtype: subsubtype,
-            dateAdded: dateAdded
-        )
-    }
-
-    /// Check if quantity is valid (greater than 0)
-    nonisolated var hasValidQuantity: Bool {
-        return quantity > 0
-    }
-
-    /// Get formatted quantity string
-    nonisolated var formattedQuantity: String {
-        if quantity.truncatingRemainder(dividingBy: 1) == 0 {
-            return String(format: "%.0f", quantity)
-        } else {
-            return String(format: "%.2f", quantity)
-        }
-    }
-
-    /// Compare items for changes (useful for updates)
-    nonisolated static func hasChanges(existing: ItemShoppingModel, new: ItemShoppingModel) -> Bool {
-        return existing.item_stable_id != new.item_stable_id ||
-               existing.quantity != new.quantity ||
-               existing.store != new.store
-    }
-
-    // MARK: - Validation
-
-    /// Validate that the shopping list item has required data
-    nonisolated var isValid: Bool {
-        return !item_stable_id.isEmpty && quantity > 0
-    }
-
-    /// Get validation errors if any
-    nonisolated var validationErrors: [String] {
-        var errors: [String] = []
-
-        if item_stable_id.isEmpty {
-            errors.append("Item natural key is required")
-        }
-
-        if quantity <= 0 {
-            errors.append("Quantity must be greater than 0")
-        }
-
-        return errors
-    }
+    // Note: hasValidQuantity, formattedQuantity, isValid, and validationErrors
+    // are provided by the ItemQuantityModel protocol's default implementations
 }
 
 // MARK: - Helper Extensions

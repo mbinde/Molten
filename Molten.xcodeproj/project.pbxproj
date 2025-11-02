@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		035572C16D05D83FC69976B6 /* TrivialTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */; };
 		1139C08B532BCF8A0919A188 /* StoreAutoCompletePerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE5F5C77F84ABD15BFE0FD3 /* StoreAutoCompletePerformanceTests.swift */; };
 		3E27DFCD6BBA363302830817 /* KilnScheduleRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */; };
 		4E65C9860C296A1DEF96AA45 /* StoreDetailViewShoppingListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02AE330C7BB78A7D6F8C808E /* StoreDetailViewShoppingListTests.swift */; };
@@ -105,14 +104,13 @@
 /* Begin PBXFileReference section */
 		02AE330C7BB78A7D6F8C808E /* StoreDetailViewShoppingListTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreDetailViewShoppingListTests.swift; path = Molten/Tests/MoltenTests/Views/Stores/StoreDetailViewShoppingListTests.swift; sourceTree = "<group>"; };
 		0FE5F5C77F84ABD15BFE0FD3 /* StoreAutoCompletePerformanceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreAutoCompletePerformanceTests.swift; path = Molten/Tests/PerformanceTests/StoreAutoCompletePerformanceTests.swift; sourceTree = "<group>"; };
-		11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleRepositoryTests.swift; path = KilnScheduleRepositoryTests.swift; sourceTree = "<group>"; };
-		171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TrivialTest.swift; path = Molten/Tests/MoltenTests/TrivialTest.swift; sourceTree = "<group>"; };
+		11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KilnScheduleRepositoryTests.swift; sourceTree = "<group>"; };
 		2933704784628157538EB534 /* ShoppingListStoreFilteringTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ShoppingListStoreFilteringTests.swift; path = Molten/Tests/MoltenTests/Views/Shopping/ShoppingListStoreFilteringTests.swift; sourceTree = "<group>"; };
 		4D5D6E530D79D68A045AA897 /* StoreAutoCompleteFieldCombinedSourcesTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreAutoCompleteFieldCombinedSourcesTests.swift; path = Molten/Tests/MoltenTests/Views/Shared/StoreAutoCompleteFieldCombinedSourcesTests.swift; sourceTree = "<group>"; };
 		72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreListViewModelTests.swift; path = Molten/Tests/MoltenTests/Views/StoreListViewModelTests.swift; sourceTree = "<group>"; };
-		880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleModelTests.swift; path = KilnScheduleModelTests.swift; sourceTree = "<group>"; };
+		880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KilnScheduleModelTests.swift; sourceTree = "<group>"; };
 		B8618F1F2448ABF3422C5D70 /* StoreToShoppingListNavigationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreToShoppingListNavigationTests.swift; path = Molten/Tests/MoltenTests/Integration/StoreToShoppingListNavigationTests.swift; sourceTree = "<group>"; };
-		EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleServiceTests.swift; path = KilnScheduleServiceTests.swift; sourceTree = "<group>"; };
+		EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KilnScheduleServiceTests.swift; sourceTree = "<group>"; };
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
 		F506B6962EAFC16700CDBC6D /* ViewModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ViewModelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -205,6 +203,7 @@
 				Tests/MoltenTests/Services/InventoryTrackingServiceLocationTests.swift,
 				Tests/MoltenTests/Services/InventoryTrackingServiceTests.swift,
 				Tests/MoltenTests/Services/JSONDataLoaderTests.swift,
+				Tests/MoltenTests/Services/KilnScheduleServiceTests.swift,
 				Tests/MoltenTests/Services/LabelPrintingServiceTests.swift,
 				Tests/MoltenTests/Services/LocationServiceTests.swift,
 				Tests/MoltenTests/Services/ProjectExportServiceTests.swift,
@@ -270,6 +269,7 @@
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
 				Tests/MoltenTests/Views/Shopping/StoreAutoCompleteFieldTests.swift,
+				Tests/MoltenTests/Views/StoreListViewModelTests.swift,
 				Tests/RepositoryTests/GlassItemRepositoryDuplicateTests.swift,
 				Tools/Documentation/check_core_data_violations.sh,
 				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
@@ -351,6 +351,7 @@
 				Tests/MoltenTests/Services/InventoryTrackingServiceLocationTests.swift,
 				Tests/MoltenTests/Services/InventoryTrackingServiceTests.swift,
 				Tests/MoltenTests/Services/JSONDataLoaderTests.swift,
+				Tests/MoltenTests/Services/KilnScheduleServiceTests.swift,
 				Tests/MoltenTests/Services/LabelPrintingServiceTests.swift,
 				Tests/MoltenTests/Services/LocationServiceTests.swift,
 				Tests/MoltenTests/Services/ProjectExportServiceTests.swift,
@@ -415,6 +416,7 @@
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
 				Tests/MoltenTests/Views/Shopping/StoreAutoCompleteFieldTests.swift,
+				Tests/MoltenTests/Views/StoreListViewModelTests.swift,
 				Tests/MoltenUITests/AppLaunchUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITestsLaunchTests.swift,
@@ -663,7 +665,6 @@
 			children = (
 				4D5D6E530D79D68A045AA897 /* StoreAutoCompleteFieldCombinedSourcesTests.swift */,
 			);
-			name = Shared;
 			path = Shared;
 			sourceTree = "<group>";
 		};
@@ -680,7 +681,6 @@
 			children = (
 				2933704784628157538EB534 /* ShoppingListStoreFilteringTests.swift */,
 			);
-			name = Shopping;
 			path = Shopping;
 			sourceTree = "<group>";
 		};
@@ -689,7 +689,6 @@
 			children = (
 				11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */,
 			);
-			name = Repositories;
 			path = Repositories;
 			sourceTree = "<group>";
 		};
@@ -698,7 +697,6 @@
 			children = (
 				880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */,
 			);
-			name = Models;
 			path = Models;
 			sourceTree = "<group>";
 		};
@@ -707,7 +705,6 @@
 			children = (
 				EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */,
 			);
-			name = Services;
 			path = Services;
 			sourceTree = "<group>";
 		};
@@ -716,7 +713,6 @@
 			children = (
 				02AE330C7BB78A7D6F8C808E /* StoreDetailViewShoppingListTests.swift */,
 			);
-			name = Stores;
 			path = Stores;
 			sourceTree = "<group>";
 		};
@@ -725,7 +721,6 @@
 			children = (
 				B8618F1F2448ABF3422C5D70 /* StoreToShoppingListNavigationTests.swift */,
 			);
-			name = Integration;
 			path = Integration;
 			sourceTree = "<group>";
 		};
@@ -735,7 +730,6 @@
 				F6DB4733DC15C30EBE42763C /* MoltenTests */,
 				E85B6F2BAF14126FAE51CF36 /* PerformanceTests */,
 			);
-			name = Tests;
 			path = Tests;
 			sourceTree = "<group>";
 		};
@@ -747,7 +741,6 @@
 				10DABF2D8201D8197B277833 /* Shared */,
 				72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */,
 			);
-			name = Views;
 			path = Views;
 			sourceTree = "<group>";
 		};
@@ -816,9 +809,7 @@
 				5BE9585B556313C586724E35 /* Models */,
 				557854DA4E10F59CB2DF7CDC /* Repositories */,
 				8B58D0F53279BC93232E9FB0 /* Services */,
-				171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */,
 			);
-			name = MoltenTests;
 			path = MoltenTests;
 			sourceTree = "<group>";
 		};
@@ -1171,7 +1162,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				035572C16D05D83FC69976B6 /* TrivialTest.swift in Sources */,
 				A9F8B30E274AB9BAB53443BD /* StoreListViewModelTests.swift in Sources */,
 				75883EC305A611D0BD32D3EB /* KilnScheduleModelTests.swift in Sources */,
 				3E27DFCD6BBA363302830817 /* KilnScheduleRepositoryTests.swift in Sources */,

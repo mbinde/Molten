@@ -139,10 +139,17 @@ struct LocationsView: View {
                 if location.hasValidLocation {
                     Annotation(location.name, coordinate: location.coordinate) {
                         ZStack {
+                            // Outer colored ring
                             Circle()
-                                .fill(markerColor(for: location))
-                                .frame(width: 36, height: 36)
+                                .stroke(ringColor(for: location), lineWidth: 3)
+                                .frame(width: 40, height: 40)
 
+                            // Blue background circle
+                            Circle()
+                                .fill(DesignSystem.Colors.accentPrimary)
+                                .frame(width: 34, height: 34)
+
+                            // White icon(s)
                             markerIcon(for: location)
                                 .font(.caption)
                                 .foregroundStyle(.white)
@@ -156,8 +163,8 @@ struct LocationsView: View {
 
     // MARK: - Helper Methods
 
-    /// Determine marker color based on location capabilities
-    private func markerColor(for location: AnyLocationModel) -> Color {
+    /// Determine ring color based on location capabilities
+    private func ringColor(for location: AnyLocationModel) -> Color {
         if location.hasRetail && location.hasEducation {
             return .purple
         } else if location.hasEducation {

@@ -10,7 +10,7 @@ import Foundation
 /// Business model for shopping list items with validation and business logic
 /// Maps to ItemShopping Core Data entity
 @preconcurrency
-struct ItemShoppingModel: ItemQuantityModel, @unchecked Sendable, Codable {
+struct ItemShoppingModel: ItemQuantityModel, @unchecked Sendable {
     let id: UUID
     let item_stable_id: String
     let quantity: Double

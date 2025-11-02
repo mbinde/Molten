@@ -10,6 +10,7 @@ import Foundation
 @testable import Molten
 
 @Suite("ToolItemRepository Tests")
+@MainActor
 struct ToolItemRepositoryTests {
 
     // MARK: - Basic CRUD Tests
@@ -259,10 +260,11 @@ struct ToolItemRepositoryTests {
 
         let key1 = try await repository.generateNextNaturalKey(manufacturer: "Ronson", sku: "T001")
         #expect(!key1.isEmpty)
+        #expect(key1.count == 6) // Should be 6-char stable_id
 
-        let key2 = try await repository.generateNextNaturalKey(manufacturer: "Ronson", sku: "T001")
+        // Different input should generate different key
+        let key2 = try await repository.generateNextNaturalKey(manufacturer: "GlassCraft", sku: "T002")
         #expect(!key2.isEmpty)
-        // Should generate different keys
         #expect(key1 != key2)
     }
 

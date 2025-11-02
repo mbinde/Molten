@@ -319,7 +319,6 @@
 				Tests/MoltenTests/Models/ProjectReferenceUrlTests.swift,
 				Tests/MoltenTests/Models/TechniqueTypeTests.swift,
 				Tests/MoltenTests/Models/WeightUnitTests.swift,
-				Tests/MoltenTests/Repositories/GlassItemRepositoryDuplicateTests.swift,
 				Tests/MoltenTests/Repositories/InventoryRepositoryLocationTests.swift,
 				Tests/MoltenTests/Repositories/KilnScheduleRepositoryTests.swift,
 				Tests/MoltenTests/Repositories/MockLogbookRepositoryTests.swift,
@@ -510,7 +509,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Sources/Tests/RepositoryTests/CoreDataProjectImageRepositoryTests.swift,
-				Tests/MoltenTests/Repositories/GlassItemRepositoryDuplicateTests.swift,
 				Tests/MoltenTests/Repositories/KilnScheduleRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CatalogRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataDiagnosticTest.swift,

@@ -64,22 +64,50 @@ struct LocationRow: View {
 
     @ViewBuilder
     private var iconView: some View {
+        ZStack {
+            // Outer colored ring
+            Circle()
+                .stroke(ringColor, lineWidth: 2.5)
+                .frame(width: 32, height: 32)
+
+            // Blue background circle
+            Circle()
+                .fill(DesignSystem.Colors.accentPrimary)
+                .frame(width: 26, height: 26)
+
+            // White icon(s)
+            iconImage
+                .font(.system(size: 12))
+                .foregroundStyle(.white)
+        }
+    }
+
+    /// Ring color based on capabilities
+    private var ringColor: Color {
+        if location.hasRetail && location.hasEducation {
+            return .purple
+        } else if location.hasEducation {
+            return .green
+        } else {
+            return .orange
+        }
+    }
+
+    /// Icon image based on capabilities
+    @ViewBuilder
+    private var iconImage: some View {
         if location.hasRetail && location.hasEducation {
             // Both icons for mixed locations
-            HStack(spacing: 2) {
+            HStack(spacing: 1) {
                 Image(systemName: "storefront.fill")
-                    .foregroundStyle(.orange)
-                    .font(.caption)
+                    .font(.system(size: 8))
                 Image(systemName: "graduationcap.fill")
-                    .foregroundStyle(.green)
-                    .font(.caption)
+                    .font(.system(size: 8))
             }
         } else if location.hasEducation {
             Image(systemName: "graduationcap.fill")
-                .foregroundStyle(.green)
         } else {
             Image(systemName: "storefront.fill")
-                .foregroundStyle(.orange)
         }
     }
 }

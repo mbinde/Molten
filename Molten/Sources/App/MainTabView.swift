@@ -12,6 +12,7 @@ import SwiftUI
 private let isPurchaseRecordsEnabled = true
 private let isProjectPlansEnabled = true
 private let isLogbookEnabled = true
+private let isRecipesEnabled = true
 
 /// Notification names for tab interactions
 extension Notification.Name {
@@ -128,6 +129,18 @@ struct MainTabView: View {
                     }
                 }
 
+                // Recipes tab
+                if selectedTab == .recipes || recipesHasBeenViewed {
+                    if isRecipesEnabled {
+                        RecipesView()
+                            .opacity(selectedTab == .recipes ? 1 : 0)
+                            .id("recipes-view")
+                    } else {
+                        featureDisabledPlaceholder(title: "Recipes", icon: "book.closed")
+                            .opacity(selectedTab == .recipes ? 1 : 0)
+                    }
+                }
+
                 // Locations tab (stores, classes, workshops)
                 if selectedTab == .locations || locationsHasBeenViewed {
                     LocationsView()
@@ -232,6 +245,7 @@ struct MainTabView: View {
             case .purchases: purchasesHasBeenViewed = true
             case .locations: locationsHasBeenViewed = true
             case .kilnSchedules: kilnSchedulesHasBeenViewed = true
+            case .recipes: recipesHasBeenViewed = true
             default: break
             }
             print("📱 MainTabView: onChange(selectedTab) completed")
@@ -245,6 +259,7 @@ struct MainTabView: View {
     @State private var purchasesHasBeenViewed = false
     @State private var locationsHasBeenViewed = false
     @State private var kilnSchedulesHasBeenViewed = false
+    @State private var recipesHasBeenViewed = false
     @State private var hasRestoredTab = false
     
     // MARK: - Helper Functions
@@ -260,6 +275,8 @@ struct MainTabView: View {
                 return isProjectPlansEnabled
             case .logbook:
                 return isLogbookEnabled
+            case .recipes:
+                return isRecipesEnabled
             case .purchases:
                 return isPurchaseRecordsEnabled
             case .settings:
@@ -321,6 +338,7 @@ struct MainTabView: View {
         case .purchases: purchasesHasBeenViewed = true
         case .locations: locationsHasBeenViewed = true
         case .kilnSchedules: kilnSchedulesHasBeenViewed = true
+        case .recipes: recipesHasBeenViewed = true
         default: break
         }
     }

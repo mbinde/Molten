@@ -3,90 +3,369 @@
   "manufacturer_name": "Fire Bug Tools",
   "manufacturer_url": "https://firebugtools.com",
   "last_updated": "2025-11-02",
-  "note": "Product catalog extracted from category listings. Individual product details and prices require accessing individual product pages.",
   "tools": [
     {
-      "name": "Sculpting Tools",
-      "sku": "sculpting-tools",
+      "name": "Double edge sculpting tool",
+      "sku": "double-edge-sculpting",
       "category": "Sculpting Tools",
-      "price": null,
+      "price": 45.00,
       "status": "available"
     },
     {
-      "name": "Pencil Products",
-      "sku": "pencil-products",
-      "category": "Pencil Products",
-      "price": null,
+      "name": "Sculpting paddle (left hand style)",
+      "sku": "sculpting-paddle-left",
+      "category": "Sculpting Tools",
+      "price": 45.00,
       "status": "available"
     },
     {
-      "name": "Tool Racks",
-      "sku": "tool-racks",
-      "category": "Tool Racks",
-      "price": null,
+      "name": "Sculpting product (right hand style)",
+      "sku": "sculpting-paddle-right",
+      "category": "Sculpting Tools",
+      "price": 45.00,
       "status": "available"
     },
     {
-      "name": "Bowl Pushes",
-      "sku": "bowl-pushes",
+      "name": "Small sculpting paddle",
+      "sku": "small-sculpting-paddle",
+      "category": "Sculpting Tools",
+      "price": 30.00,
+      "status": "available"
+    },
+    {
+      "name": "1/2\" Bowl Push (BP12)",
+      "sku": "bp12",
       "category": "Bowl Pushes",
-      "price": null,
+      "price": 27.00,
       "status": "available"
     },
     {
-      "name": "Marble Tools",
-      "sku": "marble-tools",
+      "name": "1/4\" angled sculpting push",
+      "sku": "angled-push-14",
+      "category": "Bowl Pushes",
+      "price": 32.00,
+      "status": "available"
+    },
+    {
+      "name": "1/4\" bowl push (BP14)",
+      "sku": "bp14",
+      "category": "Bowl Pushes",
+      "price": 27.00,
+      "status": "available"
+    },
+    {
+      "name": "3/4\" Bowl Push (BP34)",
+      "sku": "bp34",
+      "category": "Bowl Pushes",
+      "price": 32.00,
+      "status": "available"
+    },
+    {
+      "name": "3/8\" angled sculpting push",
+      "sku": "angled-push-38",
+      "category": "Bowl Pushes",
+      "price": 32.00,
+      "status": "available"
+    },
+    {
+      "name": "3/8\" bowl push (BP38)",
+      "sku": "bp38",
+      "category": "Bowl Pushes",
+      "price": 27.00,
+      "status": "available"
+    },
+    {
+      "name": "3/8\" bowl push pendant",
+      "sku": "bp38-pendant",
+      "category": "Bowl Pushes",
+      "price": 37.00,
+      "status": "available"
+    },
+    {
+      "name": "5/8\" Bowl Push (BP58)",
+      "sku": "bp58",
+      "category": "Bowl Pushes",
+      "price": 30.00,
+      "status": "available"
+    },
+    {
+      "name": "Complete bowl push set",
+      "sku": "bowl-push-set",
+      "category": "Bowl Pushes",
+      "price": 110.00,
+      "status": "available"
+    },
+    {
+      "name": "XS bowl push pendant",
+      "sku": "xs-bowl-push-pendant",
+      "category": "Bowl Pushes",
+      "price": 37.00,
+      "status": "available"
+    },
+    {
+      "name": "2 piece marble tool set",
+      "sku": "marble-set-2pc",
       "category": "Marble Tools",
-      "price": null,
+      "price": 80.00,
       "status": "available"
     },
     {
-      "name": "Mashers",
-      "sku": "mashers",
+      "name": "3/4\" marble ring tool",
+      "sku": "marble-ring-34",
+      "category": "Marble Tools",
+      "price": 40.00,
+      "status": "available"
+    },
+    {
+      "name": "Marble ring",
+      "sku": "marble-ring",
+      "category": "Marble Tools",
+      "price": 70.00,
+      "status": "available"
+    },
+    {
+      "name": "Marble tongs",
+      "sku": "marble-tongs",
+      "category": "Marble Tools",
+      "price": 45.00,
+      "status": "available"
+    },
+    {
+      "name": "MF1 (1\" marble tool)",
+      "sku": "mf1",
+      "category": "Marble Tools",
+      "price": 35.00,
+      "status": "available"
+    },
+    {
+      "name": "MF12 (1/2\" marble tool)",
+      "sku": "mf12",
+      "category": "Marble Tools",
+      "price": 30.00,
+      "status": "available"
+    },
+    {
+      "name": "MF34 (3/4\" marble tool)",
+      "sku": "mf34",
+      "category": "Marble Tools",
+      "price": 35.00,
+      "status": "available"
+    },
+    {
+      "name": "Mini marble tool pendant",
+      "sku": "mini-marble-pendant",
+      "category": "Marble Tools",
+      "price": 37.00,
+      "status": "available"
+    },
+    {
+      "name": "MS1.5 (1.5\" marble tool)",
+      "sku": "ms1.5",
+      "category": "Marble Tools",
+      "price": 55.00,
+      "status": "available"
+    },
+    {
+      "name": "2\" Masher",
+      "sku": "masher-2",
       "category": "Mashers",
-      "price": null,
+      "price": 40.00,
       "status": "available"
     },
     {
-      "name": "Paddles",
-      "sku": "paddles",
+      "name": "3\" round masher",
+      "sku": "masher-3-round",
+      "category": "Mashers",
+      "price": 55.00,
+      "status": "available"
+    },
+    {
+      "name": "Mini masher (Model # M58)",
+      "sku": "m58",
+      "category": "Mashers",
+      "price": 25.00,
+      "status": "available"
+    },
+    {
+      "name": "mini masher pendant",
+      "sku": "mini-masher-pendant",
+      "category": "Mashers",
+      "price": 37.00,
+      "status": "available"
+    },
+    {
+      "name": "2×3 Paddle",
+      "sku": "paddle-2x3",
       "category": "Paddles",
-      "price": null,
+      "price": 55.00,
       "status": "available"
     },
     {
-      "name": "Reamers",
-      "sku": "reamers",
+      "name": "3\" round paddle",
+      "sku": "paddle-3-round",
+      "category": "Paddles",
+      "price": 55.00,
+      "status": "available"
+    },
+    {
+      "name": "3×3 Paddle",
+      "sku": "paddle-3x3",
+      "category": "Paddles",
+      "price": 65.00,
+      "status": "available"
+    },
+    {
+      "name": "3×6 Paddle",
+      "sku": "paddle-3x6",
+      "category": "Paddles",
+      "price": 75.00,
+      "status": "available"
+    },
+    {
+      "name": "Small budget paddle",
+      "sku": "paddle-small-budget",
+      "category": "Paddles",
+      "price": 35.00,
+      "status": "available"
+    },
+    {
+      "name": "Small paddle (model P1.5)",
+      "sku": "p1.5",
+      "category": "Paddles",
+      "price": 35.00,
+      "status": "available"
+    },
+    {
+      "name": "Unicorn / Darby paddle",
+      "sku": "unicorn-darby-paddle",
+      "category": "Paddles",
+      "price": 70.00,
+      "status": "available"
+    },
+    {
+      "name": "1/2\" flaring tool",
+      "sku": "flaring-12",
       "category": "Reamers",
-      "price": null,
+      "price": 45.00,
       "status": "available"
     },
     {
-      "name": "Tool Sets",
-      "sku": "tool-sets",
+      "name": "10mm joint forming reamer",
+      "sku": "reamer-10mm",
+      "category": "Reamers",
+      "price": 35.00,
+      "status": "available"
+    },
+    {
+      "name": "14mm joint forming reamer",
+      "sku": "reamer-14mm",
+      "category": "Reamers",
+      "price": 37.00,
+      "status": "available"
+    },
+    {
+      "name": "19mm joint forming reamer",
+      "sku": "reamer-19mm",
+      "category": "Reamers",
+      "price": 37.00,
+      "status": "available"
+    },
+    {
+      "name": "2 1/2\" Reamer",
+      "sku": "reamer-2.5",
+      "category": "Reamers",
+      "price": 37.00,
+      "status": "available"
+    },
+    {
+      "name": "3 sided flaring reamer (model # TFR1)",
+      "sku": "tfr1",
+      "category": "Reamers",
+      "price": 37.00,
+      "status": "available"
+    },
+    {
+      "name": "3\" Reamer",
+      "sku": "reamer-3",
+      "category": "Reamers",
+      "price": 34.00,
+      "status": "available"
+    },
+    {
+      "name": "4\" Reamer",
+      "sku": "reamer-4",
+      "category": "Reamers",
+      "price": 38.00,
+      "status": "available"
+    },
+    {
+      "name": "5/8\" Short Reamer",
+      "sku": "reamer-58-short",
+      "category": "Reamers",
+      "price": 30.00,
+      "status": "available"
+    },
+    {
+      "name": "Black pencil reamer",
+      "sku": "pencil-reamer-black",
+      "category": "Reamers",
+      "price": 35.00,
+      "status": "available"
+    },
+    {
+      "name": "Brass pendant reamer",
+      "sku": "brass-pendant-reamer",
+      "category": "Reamers",
+      "price": 65.00,
+      "status": "available"
+    },
+    {
+      "name": "Bright blue pencil reamer",
+      "sku": "pencil-reamer-blue",
+      "category": "Reamers",
+      "price": 35.00,
+      "status": "available"
+    },
+    {
+      "name": "10 piece lampworking tool kit with custom log stand",
+      "sku": "kit-10pc",
       "category": "Tool Sets",
-      "price": null,
+      "price": 451.00,
       "status": "available"
     },
     {
-      "name": "Pendants",
-      "sku": "pendants",
+      "name": "11 piece lampworking tool kit with custom log stand",
+      "sku": "kit-11pc",
+      "category": "Tool Sets",
+      "price": 495.00,
+      "status": "available"
+    },
+    {
+      "name": "4 piece Jumbo pencil set",
+      "sku": "jumbo-pencil-4pc",
+      "category": "Tool Sets",
+      "price": 119.00,
+      "status": "available"
+    },
+    {
+      "name": "7 piece lampworking tool kit",
+      "sku": "kit-7pc",
+      "category": "Tool Sets",
+      "price": 289.00,
+      "status": "available"
+    },
+    {
+      "name": "Reamer pendant",
+      "sku": "reamer-pendant",
       "category": "Pendants",
-      "price": null,
+      "price": 40.00,
       "status": "available"
     },
     {
-      "name": "Specialty Tools",
-      "sku": "specialty-tools",
-      "category": "Specialty Tools",
-      "price": null,
-      "status": "available"
-    },
-    {
-      "name": "Graphite Rods",
-      "sku": "graphite-rods",
-      "category": "Graphite Rods",
-      "price": null,
+      "name": "XS reamer pendant",
+      "sku": "xs-reamer-pendant",
+      "category": "Pendants",
+      "price": 40.00,
       "status": "available"
     }
   ]

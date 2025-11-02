@@ -91,7 +91,7 @@ actor RecipeService {
     /// Check if a recipe title is valid
     /// - Parameter title: The title to validate
     /// - Returns: True if valid, false otherwise
-    func isValidTitle(_ title: String) -> Bool {
+    nonisolated func isValidTitle(_ title: String) -> Bool {
         return RecipeModel.isValidTitle(title)
     }
 

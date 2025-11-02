@@ -1,0 +1,93 @@
+{
+  "manufacturer": "firebug",
+  "manufacturer_name": "Fire Bug Tools",
+  "manufacturer_url": "https://firebugtools.com",
+  "last_updated": "2025-11-02",
+  "note": "Product catalog extracted from category listings. Individual product details and prices require accessing individual product pages.",
+  "tools": [
+    {
+      "name": "Sculpting Tools",
+      "sku": "sculpting-tools",
+      "category": "Sculpting Tools",
+      "price": null,
+      "status": "available"
+    },
+    {
+      "name": "Pencil Products",
+      "sku": "pencil-products",
+      "category": "Pencil Products",
+      "price": null,
+      "status": "available"
+    },
+    {
+      "name": "Tool Racks",
+      "sku": "tool-racks",
+      "category": "Tool Racks",
+      "price": null,
+      "status": "available"
+    },
+    {
+      "name": "Bowl Pushes",
+      "sku": "bowl-pushes",
+      "category": "Bowl Pushes",
+      "price": null,
+      "status": "available"
+    },
+    {
+      "name": "Marble Tools",
+      "sku": "marble-tools",
+      "category": "Marble Tools",
+      "price": null,
+      "status": "available"
+    },
+    {
+      "name": "Mashers",
+      "sku": "mashers",
+      "category": "Mashers",
+      "price": null,
+      "status": "available"
+    },
+    {
+      "name": "Paddles",
+      "sku": "paddles",
+      "category": "Paddles",
+      "price": null,
+      "status": "available"
+    },
+    {
+      "name": "Reamers",
+      "sku": "reamers",
+      "category": "Reamers",
+      "price": null,
+      "status": "available"
+    },
+    {
+      "name": "Tool Sets",
+      "sku": "tool-sets",
+      "category": "Tool Sets",
+      "price": null,
+      "status": "available"
+    },
+    {
+      "name": "Pendants",
+      "sku": "pendants",
+      "category": "Pendants",
+      "price": null,
+      "status": "available"
+    },
+    {
+      "name": "Specialty Tools",
+      "sku": "specialty-tools",
+      "category": "Specialty Tools",
+      "price": null,
+      "status": "available"
+    },
+    {
+      "name": "Graphite Rods",
+      "sku": "graphite-rods",
+      "category": "Graphite Rods",
+      "price": null,
+      "status": "available"
+    }
+  ]
+}

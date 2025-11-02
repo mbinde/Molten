@@ -26,7 +26,7 @@ struct CoreDataStoreRepositoryTests {
         testController = PersistenceController.createTestController()
 
         // Create repository with test container
-        repository = CoreDataStoreRepository(storePersistentContainer: testController.container)
+        repository = CoreDataStoreRepository(context: testController.container.viewContext)
     }
 
     // MARK: - Helper Methods
@@ -581,7 +581,7 @@ struct CoreDataStoreRepositoryTests {
         }
 
         // Create new repository instance to force fresh fetch
-        let newRepository = CoreDataStoreRepository(storePersistentContainer: testController.container)
+        let newRepository = CoreDataStoreRepository(context: testController.container.viewContext)
         let fetched = try await newRepository.fetchStore(byId: "persist-test")
 
         #expect(fetched != nil)

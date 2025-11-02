@@ -16,7 +16,6 @@ struct MoltenApp: App {
     @State private var isLaunching = true
     @State private var showFirstRunDataLoading = false
     @State private var firstRunDataLoadingComplete = false
-    @State private var showTerminologyOnboarding = false
     @State private var showAlphaDisclaimer = false
     @State private var userSettings = UserSettings.shared
     @State private var syncMonitor: CloudKitSyncMonitor?
@@ -125,9 +124,6 @@ extension MoltenApp {
         }
 
         tabViewBase
-            .fullScreenCover(isPresented: $showTerminologyOnboarding) {
-                FirstRunTerminologyView()
-            }
             .sheet(isPresented: $showAlphaDisclaimer) {
                 AlphaDisclaimerView()
             }
@@ -202,12 +198,7 @@ extension MoltenApp {
                 handleOpenURL(url)
             }
             .onAppear {
-                checkOnboardingAndDisclaimer()
-            }
-            .onChange(of: showTerminologyOnboarding) { oldValue, newValue in
-                if oldValue && !newValue {
-                    checkAlphaDisclaimer()
-                }
+                checkAlphaDisclaimer()
             }
     }
 
@@ -243,10 +234,7 @@ extension MoltenApp {
                         mainTabView!
                     }
                 }
-                .sheet(isPresented: $showTerminologyOnboarding) {
-                        FirstRunTerminologyView()
-                    }
-                    .sheet(isPresented: $showAlphaDisclaimer) {
+                .sheet(isPresented: $showAlphaDisclaimer) {
                         AlphaDisclaimerView()
                     }
                     .sheet(isPresented: $showingImportPlan) {
@@ -289,13 +277,7 @@ extension MoltenApp {
                         handleOpenURL(url)
                     }
                     .onAppear {
-                        checkOnboardingAndDisclaimer()
-                    }
-                    .onChange(of: showTerminologyOnboarding) { oldValue, newValue in
-                        // When terminology onboarding closes, check if we need to show alpha disclaimer
-                        if oldValue && !newValue {
-                            checkAlphaDisclaimer()
-                        }
+                        checkAlphaDisclaimer()
                     }
                 #endif
             }
@@ -372,17 +354,6 @@ extension MoltenApp {
         }
     }
 
-    /// Check if user needs to see onboarding screens (terminology, then alpha disclaimer)
-    private func checkOnboardingAndDisclaimer() {
-        // Show terminology onboarding first if needed
-        if !GlassTerminologySettings.shared.hasCompletedOnboarding {
-            showTerminologyOnboarding = true
-        } else {
-            // After terminology is done (or skipped), check alpha disclaimer
-            checkAlphaDisclaimer()
-        }
-    }
-
     /// Check if user needs to acknowledge the alpha disclaimer
     /// NOTE: Currently set to show on EVERY launch during alpha testing
     private func checkAlphaDisclaimer() {
@@ -400,7 +371,6 @@ extension MoltenApp {
         print("🧪 Configuring Test Environment")
 
         // Skip all onboarding screens
-        GlassTerminologySettings.shared.hasCompletedOnboarding = true
         UserDefaults.standard.set(true, forKey: "hasAcknowledgedAlphaDisclaimer")
 
         // Disable animations for faster, more reliable tests

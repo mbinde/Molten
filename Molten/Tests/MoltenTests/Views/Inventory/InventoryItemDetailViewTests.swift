@@ -54,7 +54,9 @@ struct InventoryItemDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: View should be created successfully with business model
@@ -97,7 +99,9 @@ struct InventoryItemDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: Should work without Core Data environment
@@ -139,7 +143,9 @@ struct InventoryItemDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: Should accept service via dependency injection
@@ -172,7 +178,9 @@ struct InventoryItemDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: View should be created successfully without crashing
@@ -203,7 +211,9 @@ struct InventoryItemDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: View should be created successfully
@@ -234,7 +244,9 @@ struct InventoryItemDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: View should be created successfully
@@ -267,7 +279,9 @@ struct InventoryItemDetailViewTests {
             userNotesRepository: RepositoryFactory.createUserNotesRepository(),
             userTagsRepository: RepositoryFactory.createUserTagsRepository(),
             shoppingListRepository: RepositoryFactory.createShoppingListRepository(),
-            userImageRepository: RepositoryFactory.createUserImageRepository()
+            userImageRepository: RepositoryFactory.createUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: View should be created successfully and use ProductImageDetail
@@ -297,7 +311,9 @@ struct InventoryItemDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: View should handle missing images gracefully
@@ -327,7 +343,9 @@ struct InventoryItemDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: ProductImageDetail should use sku (591284) not natural_key (ef-591284-0)
@@ -369,7 +387,9 @@ struct InventoryItemDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: View should be created with expandable notes functionality
@@ -402,7 +422,9 @@ struct InventoryItemDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: View should handle short notes gracefully
@@ -433,7 +455,9 @@ struct InventoryItemDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: View should handle missing notes gracefully
@@ -464,7 +488,9 @@ struct InventoryItemDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         // Assert: View should handle empty notes gracefully

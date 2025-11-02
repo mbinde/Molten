@@ -144,9 +144,10 @@ class ReportingService {
         
         for item in items {
             for inventory in item.inventory {
-                let existing = typeStats[inventory.type] ?? InventoryTypeStats(type: inventory.type, count: 0, totalQuantity: 0.0)
-                typeStats[inventory.type] = InventoryTypeStats(
-                    type: inventory.type,
+                let typeKey = inventory.inventoryType  // Use non-optional accessor
+                let existing = typeStats[typeKey] ?? InventoryTypeStats(type: typeKey, count: 0, totalQuantity: 0.0)
+                typeStats[typeKey] = InventoryTypeStats(
+                    type: typeKey,
                     count: existing.count + 1,
                     totalQuantity: existing.totalQuantity + inventory.quantity
                 )

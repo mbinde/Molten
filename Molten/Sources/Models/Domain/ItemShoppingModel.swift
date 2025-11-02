@@ -9,7 +9,7 @@ import Foundation
 
 /// Business model for shopping list items with validation and business logic
 /// Maps to ItemShopping Core Data entity
-nonisolated struct ItemShoppingModel: ItemQuantityModel, Codable {
+struct ItemShoppingModel: ItemQuantityModel, Codable {
     let id: UUID
     let item_stable_id: String
     let quantity: Double

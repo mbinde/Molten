@@ -100,7 +100,10 @@ struct LocationDetailView: View {
                             .fontWeight(.semibold)
                             .padding(.horizontal, DesignSystem.Padding.standard)
 
-                        Map {
+                        Map(position: .constant(.region(MKCoordinateRegion(
+                            center: location.coordinate,
+                            span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+                        )))) {
                             Annotation(location.name, coordinate: location.coordinate) {
                                 ZStack {
                                     Circle()

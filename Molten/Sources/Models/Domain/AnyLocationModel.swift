@@ -72,16 +72,6 @@ struct AnyLocationModel: Identifiable, Equatable, Hashable {
     }
 
     // Initializers for each concrete type
-    init(store: StoreModel) {
-        self.type = .store
-        self._model = store
-    }
-
-    init(classLocation: ClassLocationModel) {
-        self.type = .classLocation
-        self._model = classLocation
-    }
-
     init(unified: UnifiedLocationModel) {
         // Determine primary type based on capabilities
         // Priority: retail > education > services

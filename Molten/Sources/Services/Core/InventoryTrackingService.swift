@@ -74,7 +74,7 @@ actor InventoryTrackingService {
                 InventoryModel(
                     id: inventory.id,
                     item_stable_id: createdGlassItem.stable_id,
-                    type: inventory.type,
+                    type: inventory.inventoryType,  // Use non-optional accessor
                     quantity: inventory.quantity,
                     location: inventory.location
                 )
@@ -192,10 +192,11 @@ actor InventoryTrackingService {
         for inventoryRecord in inventory {
             if let location = inventoryRecord.location {
                 let locationInfo = (location: location, quantity: inventoryRecord.quantity)
-                if locationDetails[inventoryRecord.type] == nil {
-                    locationDetails[inventoryRecord.type] = []
+                let typeKey = inventoryRecord.inventoryType  // Use non-optional accessor
+                if locationDetails[typeKey] == nil {
+                    locationDetails[typeKey] = []
                 }
-                locationDetails[inventoryRecord.type]?.append(locationInfo)
+                locationDetails[typeKey]?.append(locationInfo)
             }
         }
 

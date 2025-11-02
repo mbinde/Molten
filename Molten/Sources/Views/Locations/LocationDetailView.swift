@@ -244,7 +244,8 @@ struct FlowLayout: Layout {
 #Preview {
     NavigationStack {
         LocationDetailView(
-            location: AnyLocationModel(store: StoreModel.create(
+            location: AnyLocationModel(unified: UnifiedLocationModel(
+                stable_id: "frantz-art-glass",
                 name: "Frantz Art Glass",
                 addressLine1: "123 Main St",
                 city: "Shelton",
@@ -256,7 +257,11 @@ struct FlowLayout: Layout {
                 phone: "3605551234",
                 notes: "Family-owned glass supply shop with over 40 years of experience.",
                 isVerified: true,
-                techniques: [.fusing, .casting, .stainedGlass]
+                retailCapabilities: [
+                    RetailCapability(technique: .fusing),
+                    RetailCapability(technique: .casting),
+                    RetailCapability(technique: .stainedGlass)
+                ]
             ))
         )
     }

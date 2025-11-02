@@ -11,7 +11,7 @@ import Combine
 import CoreLocation
 
 enum StoreNavigationDestination: Hashable {
-    case storeDetail(store: StoreModel)
+    case storeDetail(store: UnifiedLocationModel)
 }
 
 struct StoreListView: View {
@@ -56,7 +56,7 @@ struct StoreListView: View {
             .navigationDestination(for: StoreNavigationDestination.self) { destination in
                 switch destination {
                 case .storeDetail(let store):
-                    StoreDetailView(store: store, storeService: RepositoryFactory.createStoreService())
+                    StoreDetailView(store: store, locationService: RepositoryFactory.createUnifiedLocationService())
                 }
             }
             .task {

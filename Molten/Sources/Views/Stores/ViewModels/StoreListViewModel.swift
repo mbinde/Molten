@@ -13,7 +13,7 @@ import Combine
 /// Concrete implementation of StoreListViewModelProtocol
 ///
 /// Manages state for both list and map views of stores, including:
-/// - Loading stores from StoreService
+/// - Loading stores from UnifiedLocationService
 /// - Filtering by search text and verified status
 /// - Sorting by various criteria (name, city, distance, etc.)
 /// - Tracking selected store for map callouts
@@ -33,7 +33,7 @@ class StoreListViewModel: StoreListViewModelProtocol {
 
     // MARK: - Published Properties
 
-    private(set) var stores: [StoreModel] = []
+    private(set) var stores: [UnifiedLocationModel] = []
     var searchText: String = "" {
         didSet {
             saveSearchText()
@@ -46,9 +46,9 @@ class StoreListViewModel: StoreListViewModelProtocol {
     }
     private(set) var isLoading: Bool = false
     private(set) var errorMessage: String?
-    var sortOption: StoreSortOption = .name
+    var sortOption: LocationSortOption = .name
     var showVerifiedOnly: Bool = false
-    var selectedStore: StoreModel?
+    var selectedStore: UnifiedLocationModel?
     var manualLocation: CLLocation? {
         didSet {
             saveManualLocation()
@@ -71,23 +71,23 @@ class StoreListViewModel: StoreListViewModelProtocol {
 
     // MARK: - Computed Properties
 
-    var filteredStores: [StoreModel] {
+    var filteredStores: [UnifiedLocationModel] {
         var result = stores
 
         // Filter by search text
         if !searchText.isEmpty {
-            result = result.filter { store in
-                store.name.localizedCaseInsensitiveContains(searchText) ||
-                store.city?.localizedCaseInsensitiveContains(searchText) == true ||
-                store.state?.localizedCaseInsensitiveContains(searchText) == true
+            result = result.filter { location in
+                location.name.localizedCaseInsensitiveContains(searchText) ||
+                location.city?.localizedCaseInsensitiveContains(searchText) == true ||
+                location.state?.localizedCaseInsensitiveContains(searchText) == true
             }
         }
 
         // Filter by techniques (OR logic - show stores that support ANY selected technique)
         if !selectedTechniques.isEmpty {
-            result = result.filter { store in
+            result = result.filter { location in
                 selectedTechniques.contains { technique in
-                    store.supportsTechnique(technique)
+                    location.supportsTechnique(technique)
                 }
             }
         }
@@ -106,19 +106,29 @@ class StoreListViewModel: StoreListViewModelProtocol {
         case .state:
             result.sort { ($0.state ?? "").localizedCaseInsensitiveCompare($1.state ?? "") == .orderedAscending }
         case .verified:
-            result.sort { store1, store2 in
-                if store1.isVerified != store2.isVerified {
-                    return store1.isVerified
+            result.sort { location1, location2 in
+                if location1.isVerified != location2.isVerified {
+                    return location1.isVerified
                 }
-                return store1.name.localizedCaseInsensitiveCompare(store2.name) == .orderedAscending
+                return location1.name.localizedCaseInsensitiveCompare(location2.name) == .orderedAscending
             }
         case .distance:
             if let effectiveLoc = effectiveLocation {
-                result.sort { store1, store2 in
-                    let dist1 = store1.distance(from: effectiveLoc.coordinate) ?? Double.greatestFiniteMagnitude
-                    let dist2 = store2.distance(from: effectiveLoc.coordinate) ?? Double.greatestFiniteMagnitude
+                result.sort { location1, location2 in
+                    let dist1 = location1.distance(from: effectiveLoc.coordinate) ?? Double.greatestFiniteMagnitude
+                    let dist2 = location2.distance(from: effectiveLoc.coordinate) ?? Double.greatestFiniteMagnitude
                     return dist1 < dist2
                 }
+            }
+        case .capabilities:
+            // Sort by number of capabilities (more capabilities first)
+            result.sort { location1, location2 in
+                let cap1 = location1.retailCapabilities.count + location1.educationCapabilities.count + location1.servicesCapabilities.count
+                let cap2 = location2.retailCapabilities.count + location2.educationCapabilities.count + location2.servicesCapabilities.count
+                if cap1 != cap2 {
+                    return cap1 > cap2
+                }
+                return location1.name.localizedCaseInsensitiveCompare(location2.name) == .orderedAscending
             }
         }
 
@@ -126,49 +136,49 @@ class StoreListViewModel: StoreListViewModelProtocol {
     }
 
     /// Stores visible in the current map region
-    var visibleStores: [StoreModel] {
+    var visibleStores: [UnifiedLocationModel] {
         guard let region = visibleRegion else {
             return filteredStores
         }
 
-        return filteredStores.filter { store in
-            guard store.hasValidLocation else { return false }
-            return isCoordinate(store.coordinate, inRegion: region)
+        return filteredStores.filter { location in
+            guard location.hasValidLocation else { return false }
+            return isCoordinate(location.coordinate, inRegion: region)
         }
     }
 
     /// Stores outside the current map region, sorted by distance from map center
-    var storesOutsideView: [StoreModel] {
+    var storesOutsideView: [UnifiedLocationModel] {
         guard let region = visibleRegion else {
             return []
         }
 
-        let outsideStores = filteredStores.filter { store in
-            guard store.hasValidLocation else { return false }
-            return !isCoordinate(store.coordinate, inRegion: region)
+        let outsideStores = filteredStores.filter { location in
+            guard location.hasValidLocation else { return false }
+            return !isCoordinate(location.coordinate, inRegion: region)
         }
 
         // Sort by distance from map center
         let mapCenter = CLLocation(latitude: region.center.latitude, longitude: region.center.longitude)
-        return outsideStores.sorted { store1, store2 in
-            let dist1 = store1.distance(from: mapCenter.coordinate) ?? Double.greatestFiniteMagnitude
-            let dist2 = store2.distance(from: mapCenter.coordinate) ?? Double.greatestFiniteMagnitude
+        return outsideStores.sorted { location1, location2 in
+            let dist1 = location1.distance(from: mapCenter.coordinate) ?? Double.greatestFiniteMagnitude
+            let dist2 = location2.distance(from: mapCenter.coordinate) ?? Double.greatestFiniteMagnitude
             return dist1 < dist2
         }
     }
 
     // MARK: - Dependencies
 
-    private let storeService: StoreService
+    private let locationService: UnifiedLocationService
     private let locationManager: LocationManager
 
     // MARK: - Initialization
 
     init(
-        storeService: StoreService = RepositoryFactory.createStoreService(),
+        locationService: UnifiedLocationService = RepositoryFactory.createUnifiedLocationService(),
         locationManager: LocationManager = LocationManager()
     ) {
-        self.storeService = storeService
+        self.locationService = locationService
         self.locationManager = locationManager
         loadPersistedState()
     }
@@ -181,22 +191,22 @@ class StoreListViewModel: StoreListViewModelProtocol {
 
         do {
             // Load stores using hybrid approach: bundle + web (web wins)
-            let storeCount = try await storeService.getStoreCount()
+            let storeCount = try await locationService.getRetailLocationCount()
 
             if storeCount == 0 {
                 // First launch - load stores with hybrid approach
-                print("📦 StoreListViewModel: No stores found, loading with hybrid approach...")
-                let result = try await storeService.loadStoresHybrid()
+                print("📦 StoreListViewModel: No locations found, loading with hybrid approach...")
+                let result = try await locationService.loadLocationsHybrid()
                 print("✅ StoreListViewModel: Loaded \(result.bundled) from bundle, \(result.web) from web, \(result.total) total")
             } else {
                 // Subsequent launches - refresh from web in background (non-blocking)
-                print("🔄 StoreListViewModel: Refreshing stores from web...")
+                print("🔄 StoreListViewModel: Refreshing locations from web...")
                 Task {
                     do {
-                        let webCount = try await storeService.fetchStoresFromWeb()
-                        print("✅ StoreListViewModel: Refreshed \(webCount) stores from web")
+                        let webCount = try await locationService.fetchLocationsFromWeb()
+                        print("✅ StoreListViewModel: Refreshed \(webCount) locations from web")
                         // Reload stores to show updates
-                        stores = try await storeService.getAllStores()
+                        stores = try await locationService.getRetailLocations()
                     } catch {
                         print("⚠️  StoreListViewModel: Failed to refresh from web (using cached): \(error.localizedDescription)")
                         // This is OK - we have cached data
@@ -204,16 +214,15 @@ class StoreListViewModel: StoreListViewModelProtocol {
                 }
             }
 
-            // Fetch all stores (from cache)
-            stores = try await storeService.getAllStores()
+            // Fetch all retail locations (from cache)
+            stores = try await locationService.getRetailLocations()
 
             // Debug: Check if stores have technique data
-            print("📊 Loaded \(stores.count) stores")
-            if let firstStore = stores.first {
-                print("📊 First store: \(firstStore.name)")
-                print("📊 Techniques: \(firstStore.techniques.map { $0.displayName })")
-                print("📊 supportsCasting: \(firstStore.supportsCasting)")
-                print("📊 supportsFusing: \(firstStore.supportsFusing)")
+            print("📊 Loaded \(stores.count) locations")
+            if let firstLocation = stores.first {
+                print("📊 First location: \(firstLocation.name)")
+                print("📊 Retail techniques: \(firstLocation.retailTechniques.map { $0.displayName })")
+                print("📊 Has retail: \(firstLocation.hasRetail)")
             }
         } catch {
             errorMessage = error.localizedDescription

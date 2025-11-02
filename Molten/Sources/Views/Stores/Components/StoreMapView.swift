@@ -184,7 +184,7 @@ struct StoreMapView: View {
     }
 
     /// Open store location in Apple Maps for turn-by-turn directions
-    private func openInMaps(store: StoreModel) {
+    private func openInMaps(store: UnifiedLocationModel) {
         let placemark = MKPlacemark(coordinate: store.coordinate)
         let mapItem = MKMapItem(placemark: placemark)
         mapItem.name = store.name
@@ -198,7 +198,7 @@ struct StoreMapView: View {
 
 /// Callout view shown when a store marker is selected
 struct StoreMapCalloutView: View {
-    let store: StoreModel
+    let store: UnifiedLocationModel
     let userLocation: CLLocation?
     let onClose: () -> Void
     let onGetDirections: () -> Void
@@ -292,7 +292,7 @@ struct StoreMapCalloutView: View {
 }
 
 #Preview("Map Callout") {
-    let store = StoreModel(
+    let store = UnifiedLocationModel(
         stable_id: "frantz-art-glass",
         name: "Frantz Art Glass",
         addressLine1: "205 E Alma Ave",
@@ -307,7 +307,8 @@ struct StoreMapCalloutView: View {
         hoursJson: nil,
         heroImagePath: nil,
         notes: nil,
-        isVerified: true
+        isVerified: true,
+        retailCapabilities: [RetailCapability(technique: .glassBlowing)]
     )
 
     let userLocation = CLLocation(latitude: 37.7749, longitude: -122.4194)

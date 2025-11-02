@@ -9,8 +9,8 @@ import SwiftUI
 import MapKit
 
 struct StoreDetailView: View {
-    let store: StoreModel
-    let storeService: StoreService
+    let store: UnifiedLocationModel
+    let locationService: UnifiedLocationService
     let shoppingListService: ShoppingListService
 
     @State private var region: MKCoordinateRegion
@@ -19,11 +19,11 @@ struct StoreDetailView: View {
     @State private var shoppingListItemCount = 0
     @Environment(\.openURL) private var openURL
 
-    init(store: StoreModel,
-         storeService: StoreService,
+    init(store: UnifiedLocationModel,
+         locationService: UnifiedLocationService = RepositoryFactory.createUnifiedLocationService(),
          shoppingListService: ShoppingListService = RepositoryFactory.createShoppingListService()) {
         self.store = store
-        self.storeService = storeService
+        self.locationService = locationService
         self.shoppingListService = shoppingListService
 
         // Initialize map region centered on store
@@ -67,7 +67,7 @@ struct StoreDetailView: View {
                     }
 
                     // Techniques
-                    if !store.techniques.isEmpty {
+                    if !store.retailTechniques.isEmpty {
                         Divider()
                         techniquesSection
                     }
@@ -215,7 +215,7 @@ struct StoreDetailView: View {
                 alignment: .leading,
                 spacing: DesignSystem.Spacing.sm
             ) {
-                ForEach(store.techniques, id: \.self) { technique in
+                ForEach(store.retailTechniques, id: \.self) { technique in
                     Text(technique.displayName)
                         .font(.caption)
                         .padding(.horizontal, DesignSystem.Spacing.sm)
@@ -352,7 +352,7 @@ struct StoreDetailView: View {
 #Preview("Store with Full Info") {
     NavigationStack {
         StoreDetailView(
-            store: StoreModel(
+            store: UnifiedLocationModel(
                 stable_id: "preview-1",
                 name: "Frantz Art Glass",
                 addressLine1: "1222 1st Ave W",
@@ -365,13 +365,15 @@ struct StoreDetailView: View {
                 phone: "(206) 284-5600",
                 notes: "Full-service glass art supplier with extensive inventory of rods, frits, and tools.",
                 isVerified: true,
-                supportsCasting: true,
-                supportsFlameworkingHard: true,
-                supportsFlameworkingSoft: true,
-                supportsFusing: true,
-                supportsGlassBlowing: true
+                retailCapabilities: [
+                    RetailCapability(technique: .casting),
+                    RetailCapability(technique: .flameworkinghard),
+                    RetailCapability(technique: .flameworkingsoft),
+                    RetailCapability(technique: .fusing),
+                    RetailCapability(technique: .glassBlowing)
+                ]
             ),
-            storeService: RepositoryFactory.createStoreService()
+            locationService: RepositoryFactory.createUnifiedLocationService()
         )
     }
 }
@@ -379,16 +381,18 @@ struct StoreDetailView: View {
 #Preview("Store with Minimal Info") {
     NavigationStack {
         StoreDetailView(
-            store: StoreModel(
+            store: UnifiedLocationModel(
                 stable_id: "preview-2",
                 name: "Local Glass Shop",
                 city: "Portland",
                 state: "OR",
                 isVerified: false,
-                supportsFusing: true,
-                supportsStainedGlass: true
+                retailCapabilities: [
+                    RetailCapability(technique: .fusing),
+                    RetailCapability(technique: .stainedGlass)
+                ]
             ),
-            storeService: RepositoryFactory.createStoreService()
+            locationService: RepositoryFactory.createUnifiedLocationService()
         )
     }
 }

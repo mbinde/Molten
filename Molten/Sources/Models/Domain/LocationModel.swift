@@ -11,7 +11,7 @@ import CoreLocation
 /// Protocol for location-based entities (stores, classes, etc.)
 /// Defines shared fields and business logic for places with addresses and techniques
 /// Note: Conforming types should add Codable separately if needed for JSON serialization
-protocol LocationModel: Identifiable, Sendable {
+protocol LocationModel: Identifiable, Equatable, Hashable, Sendable {
     nonisolated var stable_id: String { get }
     nonisolated var name: String { get }
     nonisolated var addressLine1: String? { get }
@@ -45,7 +45,7 @@ extension LocationModel {
     nonisolated var id: String { stable_id }
 
     /// Full formatted address for display
-    var fullAddress: String? {
+    nonisolated var fullAddress: String? {
         var components: [String] = []
 
         if let line1 = addressLine1 {
@@ -74,7 +74,7 @@ extension LocationModel {
     }
 
     /// Single-line address for compact display
-    var compactAddress: String? {
+    nonisolated var compactAddress: String? {
         var components: [String] = []
 
         if let city = city {
@@ -93,22 +93,22 @@ extension LocationModel {
     }
 
     /// CoreLocation coordinate for map display
-    var coordinate: CLLocationCoordinate2D {
+    nonisolated var coordinate: CLLocationCoordinate2D {
         return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
 
     /// Check if location has complete address information
-    var hasCompleteAddress: Bool {
+    nonisolated var hasCompleteAddress: Bool {
         return addressLine1 != nil && city != nil && state != nil
     }
 
     /// Check if location has any address information
-    var hasAnyAddress: Bool {
+    nonisolated var hasAnyAddress: Bool {
         return addressLine1 != nil || city != nil || state != nil || zip != nil
     }
 
     /// Formatted phone number for display (basic formatting)
-    var formattedPhone: String? {
+    nonisolated var formattedPhone: String? {
         guard let phone = phone else { return nil }
 
         // Remove all non-digit characters
@@ -127,7 +127,7 @@ extension LocationModel {
     }
 
     /// Display name with verification badge indicator
-    var displayName: String {
+    nonisolated var displayName: String {
         return isVerified ? "\(name) ✓" : name
     }
 
@@ -170,7 +170,7 @@ extension LocationModel {
     }
 
     /// Formatted list of technique names for display
-    var techniquesDisplay: String {
+    nonisolated var techniquesDisplay: String {
         let supportedTechniques = techniques
         guard !supportedTechniques.isEmpty else { return "No techniques listed" }
         return supportedTechniques.map { $0.displayName }.joined(separator: ", ")
@@ -187,7 +187,7 @@ extension LocationModel {
     }
 
     /// Formatted distance string (miles or km based on locale)
-    func formattedDistance(from coordinate: CLLocationCoordinate2D) -> String? {
+    nonisolated func formattedDistance(from coordinate: CLLocationCoordinate2D) -> String? {
         guard let meters = distance(from: coordinate) else { return nil }
 
         // Convert to miles for US locale
@@ -205,12 +205,12 @@ extension LocationModel {
     // MARK: - Validation
 
     /// Validate that the location has required data
-    var isValid: Bool {
+    nonisolated var isValid: Bool {
         return !stable_id.isEmpty && !name.isEmpty
     }
 
     /// Get validation errors if any
-    var validationErrors: [String] {
+    nonisolated var validationErrors: [String] {
         var errors: [String] = []
 
         if stable_id.isEmpty {
@@ -235,7 +235,35 @@ extension LocationModel {
     }
 
     /// Check if location has enough info to be useful
-    var hasMinimumInfo: Bool {
+    nonisolated var hasMinimumInfo: Bool {
         return isValid && (hasAnyAddress || hasValidLocation || websiteUrl != nil)
+    }
+
+    /// Convert to StoreData for JSON export
+    nonisolated func toData() -> StoreData {
+        return StoreData(
+            stable_id: stable_id,
+            name: name,
+            address_line1: addressLine1,
+            address_line2: addressLine2,
+            city: city,
+            state: state,
+            zip: zip,
+            latitude: latitude != 0.0 ? latitude : nil,
+            longitude: longitude != 0.0 ? longitude : nil,
+            website_url: websiteUrl,
+            phone: phone,
+            hours_json: hoursJson,
+            hero_image_path: heroImagePath,
+            notes: notes,
+            is_verified: isVerified,
+            supports_casting: supportsCasting,
+            supports_flameworking_hard: supportsFlameworkingHard,
+            supports_flameworking_soft: supportsFlameworkingSoft,
+            supports_fusing: supportsFusing,
+            supports_glass_blowing: supportsGlassBlowing,
+            supports_stained_glass: supportsStainedGlass,
+            supports_other: supportsOther
+        )
     }
 }

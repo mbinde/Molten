@@ -731,7 +731,7 @@
 				F6DB4733DC15C30EBE42763C /* MoltenTests */,
 				E85B6F2BAF14126FAE51CF36 /* PerformanceTests */,
 			);
-			path = Tests;
+			path = Molten/Tests;
 			sourceTree = "<group>";
 		};
 		DAA37666AFB88EDAC19FD0D5 /* Views */ = {

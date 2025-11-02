@@ -311,22 +311,20 @@
         <attribute name="owner_type" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="Recipe" representedClassName="Recipe" isAbstract="YES" syncable="YES" codeGenerationType="class">
+    <entity name="Recipe" representedClassName="Recipe" syncable="YES" codeGenerationType="class">
         <attribute name="date_created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="description_text" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="title" optional="YES" attributeType="String"/>
-    </entity>
-    <entity name="FritRecipe" representedClassName="FritRecipe" parentEntity="Recipe" syncable="YES" codeGenerationType="class">
         <attribute name="measurement_type" optional="YES" attributeType="String" defaultValueString="weight"/>
-        <relationship name="ingredients" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="FritIngredient" inverseName="recipe" inverseEntity="FritIngredient"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <relationship name="ingredients" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="RecipeIngredient" inverseName="recipe" inverseEntity="RecipeIngredient"/>
     </entity>
-    <entity name="FritIngredient" representedClassName="FritIngredient" syncable="YES" codeGenerationType="class">
+    <entity name="RecipeIngredient" representedClassName="RecipeIngredient" syncable="YES" codeGenerationType="class">
         <attribute name="amount" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="stable_id" optional="YES" attributeType="String"/>
-        <relationship name="recipe" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="FritRecipe" inverseName="ingredients" inverseEntity="FritRecipe"/>
+        <relationship name="recipe" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Recipe" inverseName="ingredients" inverseEntity="Recipe"/>
     </entity>
     <configuration name="Cloud">
         <memberEntity name="Inventory"/>
@@ -349,8 +347,7 @@
         <memberEntity name="PurchaseRecord"/>
         <memberEntity name="PurchaseRecordItem"/>
         <memberEntity name="Recipe"/>
-        <memberEntity name="FritRecipe"/>
-        <memberEntity name="FritIngredient"/>
+        <memberEntity name="RecipeIngredient"/>
         <memberEntity name="UserImage"/>
         <memberEntity name="UserItem"/>
         <memberEntity name="UserNotes"/>

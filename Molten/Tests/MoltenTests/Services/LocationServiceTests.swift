@@ -27,7 +27,7 @@ struct LocationServiceTests {
         let locationRepository = MockLocationRepository()
         let inventory_id = UUID()
         
-        let locationModel = LocationModel(
+        let locationModel = StorageLocationModel(
             inventory_id: inventory_id,
             location: "Workshop Storage",
             quantity: 10.0
@@ -60,12 +60,12 @@ struct LocationServiceTests {
         let inventory_id2 = UUID()
         
         // Add some test location records
-        let location1 = LocationModel(
+        let location1 = StorageLocationModel(
             inventory_id: inventory_id1,
             location: "Workshop",
             quantity: 5.0
         )
-        let location2 = LocationModel(
+        let location2 = StorageLocationModel(
             inventory_id: inventory_id2,
             location: "Storage Room",
             quantity: 15.0
@@ -88,7 +88,7 @@ struct LocationServiceTests {
         let locationRepository = MockLocationRepository()
         let inventory_id = UUID()
         
-        let workshopLocation = LocationModel(
+        let workshopLocation = StorageLocationModel(
             inventory_id: inventory_id,
             location: "Workshop Area",
             quantity: 20.0
@@ -129,9 +129,9 @@ struct LocationServiceTests {
         let inventory_id = UUID()
         
         let locations = [
-            LocationModel(inventory_id: inventory_id, location: "Bin 1", quantity: 10.0),
-            LocationModel(inventory_id: inventory_id, location: "Bin 2", quantity: 15.0),
-            LocationModel(inventory_id: inventory_id, location: "Bin 3", quantity: 5.0)
+            StorageLocationModel(inventory_id: inventory_id, location: "Bin 1", quantity: 10.0),
+            StorageLocationModel(inventory_id: inventory_id, location: "Bin 2", quantity: 15.0),
+            StorageLocationModel(inventory_id: inventory_id, location: "Bin 3", quantity: 5.0)
         ]
         
         // Act: Create multiple locations in batch

@@ -82,7 +82,7 @@ class TabConfiguration {
             .logbook,
             .kilnSchedules,
             .purchases,     // Minor feature
-            .stores,        // Minor feature
+            .locations,     // Minor feature
             .settings
         ]
 

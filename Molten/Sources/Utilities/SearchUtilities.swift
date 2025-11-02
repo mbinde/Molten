@@ -97,7 +97,7 @@ extension InventoryModel: Searchable {
         var searchableFields: [String] = []
 
         // Add item stable_id and type, filtering out empty strings
-        [item_stable_id, type].forEach { field in
+        [item_stable_id, inventoryType].forEach { field in
             if !field.isEmpty {
                 searchableFields.append(field)
             }
@@ -581,7 +581,7 @@ nonisolated struct FilterUtilities {
     /// Filter inventory models by type string
     static func filterInventoryByType(_ items: [InventoryModel], selectedTypes: Set<String>) -> [InventoryModel] {
         guard !selectedTypes.isEmpty else { return items }
-        return items.filter { selectedTypes.contains($0.type) }
+        return items.filter { selectedTypes.contains($0.inventoryType) }
     }
     
     /// Filter glass items by manufacturer

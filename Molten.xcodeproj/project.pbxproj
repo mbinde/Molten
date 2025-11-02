@@ -119,6 +119,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				README.md,
+				Sources/Tests/MoltenTests/AuthorModelTests.swift,
+				Sources/Tests/MoltenTests/CatalogItemDataTests.swift,
+				Sources/Tests/MoltenTests/GlassItemModelTests.swift,
 				Sources/Utilities/AdvancedTestingUtilities.swift,
 				Sources/Utilities/CollectionSafetyUtilities.swift,
 				Sources/Utilities/NetworkSimulationUtilities.swift,
@@ -259,6 +262,11 @@
 			membershipExceptions = (
 				Info.plist,
 				README.md,
+				Sources/Tests/MoltenTests/AuthorModelTests.swift,
+				Sources/Tests/MoltenTests/CatalogItemDataTests.swift,
+				Sources/Tests/MoltenTests/GlassItemModelTests.swift,
+				Sources/Tests/MoltenTests/MockProjectImageRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/CoreDataProjectImageRepositoryTests.swift,
 				Sources/Utilities/AdvancedTestingUtilities.swift,
 				Sources/Utilities/CollectionSafetyUtilities.swift,
 				Sources/Utilities/NetworkSimulationUtilities.swift,
@@ -493,6 +501,8 @@
 		F5FACB172EA0B4A10084A6D0 /* Exceptions for "Molten" folder in "RepositoryTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Sources/Tests/MoltenTests/MockProjectImageRepositoryTests.swift,
+				Sources/Tests/RepositoryTests/CoreDataProjectImageRepositoryTests.swift,
 				Tests/MoltenTests/Repositories/KilnScheduleRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CatalogRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataDiagnosticTest.swift,

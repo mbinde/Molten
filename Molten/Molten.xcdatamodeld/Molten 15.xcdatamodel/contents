@@ -311,6 +311,23 @@
         <attribute name="owner_type" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
     </entity>
+    <entity name="Recipe" representedClassName="Recipe" isAbstract="YES" syncable="YES" codeGenerationType="class">
+        <attribute name="date_created" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="date_modified" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="description_text" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="title" attributeType="String"/>
+    </entity>
+    <entity name="FritRecipe" representedClassName="FritRecipe" parentEntity="Recipe" syncable="YES" codeGenerationType="class">
+        <attribute name="measurement_type" attributeType="String" defaultValueString="weight"/>
+        <relationship name="ingredients" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="FritIngredient" inverseName="recipe" inverseEntity="FritIngredient"/>
+    </entity>
+    <entity name="FritIngredient" representedClassName="FritIngredient" syncable="YES" codeGenerationType="class">
+        <attribute name="amount" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="stable_id" attributeType="String"/>
+        <relationship name="recipe" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="FritRecipe" inverseName="ingredients" inverseEntity="FritRecipe"/>
+    </entity>
     <configuration name="Cloud">
         <memberEntity name="Inventory"/>
         <memberEntity name="InventoryItem"/>
@@ -331,6 +348,9 @@
         <memberEntity name="ProjectTechnique"/>
         <memberEntity name="PurchaseRecord"/>
         <memberEntity name="PurchaseRecordItem"/>
+        <memberEntity name="Recipe"/>
+        <memberEntity name="FritRecipe"/>
+        <memberEntity name="FritIngredient"/>
         <memberEntity name="UserImage"/>
         <memberEntity name="UserItem"/>
         <memberEntity name="UserNotes"/>

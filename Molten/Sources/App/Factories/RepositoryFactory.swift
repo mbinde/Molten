@@ -625,6 +625,13 @@ nonisolated struct RepositoryFactory {
         )
     }
 
+    /// Creates a RecipeService with all dependencies
+    nonisolated static func createRecipeService() -> RecipeService {
+        return RecipeService(
+            repository: createRecipeRepository()
+        )
+    }
+
     /// Creates an EntitlementService for subscription management
     /// TODO: Integrate with StoreKit to determine actual subscription tier
     /// For now, defaults to free tier

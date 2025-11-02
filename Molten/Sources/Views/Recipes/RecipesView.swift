@@ -21,12 +21,19 @@ struct RecipesView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
+            ZStack {
                 if isLoading {
                     ProgressView("Loading recipes...")
                 } else if let error = errorMessage {
                     errorView(error)
                 } else if filteredRecipes.isEmpty {
+                    // Always show List for searchable to work
+                    List {
+                        // Empty list so search bar appears
+                    }
+                    .listStyle(.plain)
+
+                    // Overlay empty state
                     emptyStateView
                 } else {
                     recipeList

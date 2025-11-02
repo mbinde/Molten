@@ -20,7 +20,7 @@ struct ItemShoppingModel: ItemQuantityModel, @unchecked Sendable, Codable {
     let dateAdded: Date
 
     /// Initialize with business logic validation
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         item_stable_id: String,
         quantity: Double,
@@ -43,13 +43,13 @@ struct ItemShoppingModel: ItemQuantityModel, @unchecked Sendable, Codable {
     // MARK: - Shopping-Specific Business Logic
 
     /// Check if this item is for a specific store
-    func isForStore(_ storeName: String) -> Bool {
+    nonisolated func isForStore(_ storeName: String) -> Bool {
         guard let store = store else { return false }
         return store.lowercased() == storeName.lowercased()
     }
 
     /// Get a copy with updated store
-    func withStore(_ newStore: String?) -> ItemShoppingModel {
+    nonisolated func withStore(_ newStore: String?) -> ItemShoppingModel {
         return ItemShoppingModel(
             id: id,
             item_stable_id: item_stable_id,
@@ -63,7 +63,7 @@ struct ItemShoppingModel: ItemQuantityModel, @unchecked Sendable, Codable {
     }
 
     /// Compare items for changes (useful for updates)
-    static func hasChanges(existing: ItemShoppingModel, new: ItemShoppingModel) -> Bool {
+    nonisolated static func hasChanges(existing: ItemShoppingModel, new: ItemShoppingModel) -> Bool {
         return existing.item_stable_id != new.item_stable_id ||
                existing.quantity != new.quantity ||
                existing.store != new.store
@@ -72,14 +72,14 @@ struct ItemShoppingModel: ItemQuantityModel, @unchecked Sendable, Codable {
     // MARK: - ItemQuantityModel Protocol Implementation
 
     /// Check if this item matches search text (overrides default to include store)
-    func matchesSearchText(_ searchText: String) -> Bool {
+    nonisolated func matchesSearchText(_ searchText: String) -> Bool {
         let lowercaseSearch = searchText.lowercased()
         return item_stable_id.lowercased().contains(lowercaseSearch) ||
                store?.lowercased().contains(lowercaseSearch) == true
     }
 
     /// Get a copy with updated quantity
-    func withQuantity(_ newQuantity: Double) -> ItemShoppingModel {
+    nonisolated func withQuantity(_ newQuantity: Double) -> ItemShoppingModel {
         return ItemShoppingModel(
             id: id,
             item_stable_id: item_stable_id,

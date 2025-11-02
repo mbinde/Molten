@@ -21,58 +21,58 @@ protocol ItemQuantityModel: Equatable, Hashable, Sendable {
     // MARK: - Core Fields (100% shared)
 
     /// Unique identifier for this quantity record
-    var id: UUID { get }
+    nonisolated var id: UUID { get }
 
     /// Reference to the glass item being tracked
-    var item_stable_id: String { get }
+    nonisolated var item_stable_id: String { get }
 
     /// Quantity of the item
-    var quantity: Double { get }
+    nonisolated var quantity: Double { get }
 
     /// Type/form of the glass (rod, frit, tube, etc.)
     /// Note: Optional in shopping list, required in inventory
-    var type: String? { get }
+    nonisolated var type: String? { get }
 
     /// Optional subtype (e.g., "clear" for tube type)
-    var subtype: String? { get }
+    nonisolated var subtype: String? { get }
 
     /// Optional sub-subtype for further categorization
-    var subsubtype: String? { get }
+    nonisolated var subsubtype: String? { get }
 
     /// Date this record was added
-    var dateAdded: Date { get }
+    nonisolated var dateAdded: Date { get }
 
     // MARK: - Business Logic (shared behavior)
 
     /// Check if quantity is valid (greater than 0)
-    var hasValidQuantity: Bool { get }
+    nonisolated var hasValidQuantity: Bool { get }
 
     /// Get formatted quantity string (e.g., "5" or "2.5")
-    var formattedQuantity: String { get }
+    nonisolated var formattedQuantity: String { get }
 
     /// Validate that the item has required data
-    var isValid: Bool { get }
+    nonisolated var isValid: Bool { get }
 
     /// Get validation errors if any
-    var validationErrors: [String] { get }
+    nonisolated var validationErrors: [String] { get }
 
     /// Get a copy with updated quantity
-    func withQuantity(_ newQuantity: Double) -> Self
+    nonisolated func withQuantity(_ newQuantity: Double) -> Self
 
     /// Check if this item matches search text
-    func matchesSearchText(_ searchText: String) -> Bool
+    nonisolated func matchesSearchText(_ searchText: String) -> Bool
 }
 
 // MARK: - Default Implementations
 
 extension ItemQuantityModel {
     /// Default: quantity is valid if greater than 0
-    var hasValidQuantity: Bool {
+    nonisolated var hasValidQuantity: Bool {
         return quantity > 0
     }
 
     /// Default: format quantity with appropriate decimal places
-    var formattedQuantity: String {
+    nonisolated var formattedQuantity: String {
         if quantity.truncatingRemainder(dividingBy: 1) == 0 {
             return String(format: "%.0f", quantity)
         } else {
@@ -81,12 +81,12 @@ extension ItemQuantityModel {
     }
 
     /// Default: valid if has item reference and positive quantity
-    var isValid: Bool {
+    nonisolated var isValid: Bool {
         return !item_stable_id.isEmpty && quantity > 0
     }
 
     /// Default: basic validation errors
-    var validationErrors: [String] {
+    nonisolated var validationErrors: [String] {
         var errors: [String] = []
 
         if item_stable_id.isEmpty {
@@ -101,7 +101,7 @@ extension ItemQuantityModel {
     }
 
     /// Default: match on item stable ID
-    func matchesSearchText(_ searchText: String) -> Bool {
+    nonisolated func matchesSearchText(_ searchText: String) -> Bool {
         let lowercaseSearch = searchText.lowercased()
         return item_stable_id.lowercased().contains(lowercaseSearch)
     }
@@ -111,12 +111,12 @@ extension ItemQuantityModel {
 
 extension ItemQuantityModel {
     /// Get non-optional type string (returns empty string if nil)
-    var typeOrEmpty: String {
+    nonisolated var typeOrEmpty: String {
         return type ?? ""
     }
 
     /// Get full type path (type/subtype/subsubtype)
-    var fullTypePath: String {
+    nonisolated var fullTypePath: String {
         guard let baseType = type else { return "" }
 
         var path = baseType
@@ -130,7 +130,7 @@ extension ItemQuantityModel {
     }
 
     /// Check if this item has a specific type
-    func hasType(_ typeName: String) -> Bool {
+    nonisolated func hasType(_ typeName: String) -> Bool {
         return type?.lowercased() == typeName.lowercased()
     }
 }

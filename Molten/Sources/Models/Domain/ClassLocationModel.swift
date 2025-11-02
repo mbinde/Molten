@@ -9,31 +9,31 @@ import Foundation
 import CoreLocation
 
 /// Business model for glass art class locations
-struct ClassLocationModel: LocationModel, Codable, Hashable, Equatable {
-    let stable_id: String
-    let name: String
-    let addressLine1: String?
-    let addressLine2: String?
-    let city: String?
-    let state: String?
-    let zip: String?
-    let latitude: Double
-    let longitude: Double
-    let websiteUrl: String?
-    let phone: String?
-    let hoursJson: String?
-    let heroImagePath: String?
-    let notes: String?
-    let isVerified: Bool
+struct ClassLocationModel: @preconcurrency LocationModel, Codable {
+    nonisolated let stable_id: String
+    nonisolated let name: String
+    nonisolated let addressLine1: String?
+    nonisolated let addressLine2: String?
+    nonisolated let city: String?
+    nonisolated let state: String?
+    nonisolated let zip: String?
+    nonisolated let latitude: Double
+    nonisolated let longitude: Double
+    nonisolated let websiteUrl: String?
+    nonisolated let phone: String?
+    nonisolated let hoursJson: String?
+    nonisolated let heroImagePath: String?
+    nonisolated let notes: String?
+    nonisolated let isVerified: Bool
 
     // Technique support (individual booleans for efficient Core Data querying)
-    let supportsCasting: Bool
-    let supportsFlameworkingHard: Bool
-    let supportsFlameworkingSoft: Bool
-    let supportsFusing: Bool
-    let supportsGlassBlowing: Bool
-    let supportsStainedGlass: Bool
-    let supportsOther: Bool
+    nonisolated let supportsCasting: Bool
+    nonisolated let supportsFlameworkingHard: Bool
+    nonisolated let supportsFlameworkingSoft: Bool
+    nonisolated let supportsFusing: Bool
+    nonisolated let supportsGlassBlowing: Bool
+    nonisolated let supportsStainedGlass: Bool
+    nonisolated let supportsOther: Bool
 
     /// Initialize with business logic validation
     nonisolated init(
@@ -190,3 +190,4 @@ extension ClassLocationModel {
         )
     }
 }
+

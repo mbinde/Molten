@@ -441,6 +441,11 @@ struct ShoppingListView: View {
                     await loadShoppingList()
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .filterShoppingListByStore)) { notification in
+                if let storeName = notification.userInfo?["storeName"] as? String {
+                    viewModel.selectedStore = storeName
+                }
+            }
             .alert("Keep Basket Items?", isPresented: $showingExitShoppingModeAlert) {
                 Button("Keep Items", role: .cancel) {
                     shoppingModeState.disableShoppingMode()

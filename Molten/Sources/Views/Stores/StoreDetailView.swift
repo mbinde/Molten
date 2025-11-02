@@ -11,14 +11,20 @@ import MapKit
 struct StoreDetailView: View {
     let store: StoreModel
     let storeService: StoreService
+    let shoppingListService: ShoppingListService
 
     @State private var region: MKCoordinateRegion
     @State private var showingDirections = false
+    @State private var hasShoppingListItems = false
+    @State private var shoppingListItemCount = 0
     @Environment(\.openURL) private var openURL
 
-    init(store: StoreModel, storeService: StoreService) {
+    init(store: StoreModel,
+         storeService: StoreService,
+         shoppingListService: ShoppingListService = RepositoryFactory.createShoppingListService()) {
         self.store = store
         self.storeService = storeService
+        self.shoppingListService = shoppingListService
 
         // Initialize map region centered on store
         _region = State(initialValue: MKCoordinateRegion(
@@ -76,6 +82,9 @@ struct StoreDetailView: View {
         }
         .navigationTitle(store.name)
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await checkForShoppingListItems()
+        }
     }
 
     // MARK: - Subviews
@@ -221,14 +230,36 @@ struct StoreDetailView: View {
 
     private var actionButtons: some View {
         VStack(spacing: DesignSystem.Spacing.md) {
+            // View Shopping List button (if items exist)
+            if hasShoppingListItems {
+                Button(action: navigateToShoppingList) {
+                    HStack {
+                        Label("View Shopping List", systemImage: "cart.fill")
+                        Spacer()
+                        Text("\(shoppingListItemCount)")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.white.opacity(0.3))
+                            .cornerRadius(DesignSystem.CornerRadius.small)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.accentColor)
+                    .foregroundStyle(.white)
+                    .cornerRadius(DesignSystem.CornerRadius.medium)
+                }
+            }
+
             // Get Directions button
             if store.hasValidLocation {
                 Button(action: openInMaps) {
                     Label("Get Directions", systemImage: "arrow.triangle.turn.up.right.diamond.fill")
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.accentColor)
-                        .foregroundStyle(.white)
+                        .background(hasShoppingListItems ? Color(.systemGray6) : Color.accentColor)
+                        .foregroundStyle(hasShoppingListItems ? .primary : .white)
                         .cornerRadius(DesignSystem.CornerRadius.medium)
                 }
             }
@@ -289,6 +320,32 @@ struct StoreDetailView: View {
         if let url = URL(string: "tel://\(cleaned)") {
             openURL(url)
         }
+    }
+
+    private func checkForShoppingListItems() async {
+        do {
+            // Fetch items for this store from shopping list
+            let items = try await shoppingListService.shoppingListRepository.fetchItems(forStore: store.name)
+            await MainActor.run {
+                hasShoppingListItems = !items.isEmpty
+                shoppingListItemCount = items.count
+            }
+        } catch {
+            print("❌ Error checking for shopping list items: \(error)")
+            await MainActor.run {
+                hasShoppingListItems = false
+                shoppingListItemCount = 0
+            }
+        }
+    }
+
+    private func navigateToShoppingList() {
+        // Post notification to switch to shopping tab and filter by this store
+        NotificationCenter.default.post(
+            name: .navigateToShoppingListForStore,
+            object: nil,
+            userInfo: ["storeName": store.name]
+        )
     }
 }
 

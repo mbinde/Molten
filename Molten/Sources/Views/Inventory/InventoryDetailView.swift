@@ -88,8 +88,8 @@ struct InventoryDetailView: View {
         userTagsRepository: UserTagsRepository,
         shoppingListRepository: ShoppingListRepository,
         userImageRepository: UserImageRepository,
-        kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService(),
-        glassItemRepository: GlassItemRepository = RepositoryFactory.createGlassItemRepository()
+        kilnScheduleService: KilnScheduleService,
+        glassItemRepository: GlassItemRepository
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
@@ -212,7 +212,7 @@ struct InventoryDetailView: View {
             ShoppingListOptionsView(item: item, shoppingListRepository: shoppingListRepository)
         }
         .sheet(item: $selectedInventoryType) { selection in
-            InventoryLocationDetailView(
+            InventoryStorageDetailView(
                 item: currentItem,
                 inventoryType: selection.type
             )
@@ -1265,7 +1265,7 @@ struct ShoppingListOptionsView: View {
 
 /// View showing all inventory records for an item
 /// Allows toggling between grouping by location or by type
-struct InventoryLocationDetailView: View {
+struct InventoryStorageDetailView: View {
     let item: CompleteInventoryItemModel
     let inventoryType: String
 
@@ -1798,7 +1798,9 @@ struct QuickAddInventoryView: View {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
     }
 }
@@ -1826,7 +1828,9 @@ struct QuickAddInventoryView: View {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
     }
 }

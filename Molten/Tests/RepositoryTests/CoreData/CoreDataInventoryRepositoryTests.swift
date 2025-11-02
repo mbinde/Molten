@@ -30,7 +30,7 @@ struct CoreDataInventoryRepositoryTests {
         }
 
         // Create repository with isolated container
-        repository = CoreDataInventoryRepository(persistentContainer: persistentContainer)
+        repository = CoreDataInventoryRepository(context: persistentContainer.viewContext)
 
         // Clean up any existing data to ensure clean test state
         try cleanupExistingData()

@@ -201,7 +201,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     }
 }
 
-/// Storage location model for tracking where inventory is stored (e.g., "Shelf A", "Box 3")
+/// Storage location model for tracking where inventory is stored (warehouse locations, shelves, bins, etc.)
 struct StorageLocationModel: Identifiable, Sendable {
     let id: UUID
     let inventory_id: UUID

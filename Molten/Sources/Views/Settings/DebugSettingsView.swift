@@ -10,7 +10,6 @@ import SwiftUI
 struct DebugSettingsView: View {
     @AppStorage("showDebugInfo") private var showDebugInfo = false
     @State private var showingResetDisclaimerAlert = false
-    @State private var showingResetTerminologyAlert = false
 
     private let catalogService: CatalogService
 
@@ -34,17 +33,10 @@ struct DebugSettingsView: View {
                     Label("Reset Alpha Disclaimer", systemImage: "exclamationmark.triangle")
                         .foregroundColor(.orange)
                 }
-
-                Button {
-                    showingResetTerminologyAlert = true
-                } label: {
-                    Label("Reset Terminology Onboarding", systemImage: "text.bubble")
-                        .foregroundColor(.blue)
-                }
             } header: {
                 Text("Onboarding & Disclaimers")
             } footer: {
-                Text("Reset onboarding screens to test the first-run experience. The disclaimer or onboarding will show again on next app launch.")
+                Text("Reset the alpha disclaimer to test the first-run experience. The disclaimer will show again on next app launch.")
             }
 
             Section {
@@ -80,24 +72,11 @@ struct DebugSettingsView: View {
         } message: {
             Text("This will reset the alpha disclaimer acknowledgment. The disclaimer will appear again on next app launch.")
         }
-        .alert("Reset Terminology Onboarding", isPresented: $showingResetTerminologyAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Reset", role: .destructive) {
-                resetTerminologyOnboarding()
-            }
-        } message: {
-            Text("This will reset the terminology onboarding. You'll see the onboarding screen again on next app launch.")
-        }
     }
 
     private func resetAlphaDisclaimer() {
         UserDefaults.standard.removeObject(forKey: "hasAcknowledgedAlphaDisclaimer")
         print("✅ Reset alpha disclaimer - will show on next launch")
-    }
-
-    private func resetTerminologyOnboarding() {
-        GlassTerminologySettings.shared.hasCompletedOnboarding = false
-        print("✅ Reset terminology onboarding - will show on next launch")
     }
 }
 

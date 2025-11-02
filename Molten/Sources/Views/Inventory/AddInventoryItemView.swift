@@ -295,18 +295,14 @@ struct AddInventoryFormView: View {
     
     // MARK: - Computed Properties
 
-    /// Get inventory types that should be visible based on terminology settings
+    /// Get all available inventory types
     private var visibleInventoryTypes: [String] {
-        return terminologySettings.visibleProductTypes()
+        return GlassItemTypeSystem.allTypeNames
     }
 
-    /// Get the default inventory type based on terminology settings
+    /// Get the default inventory type (rod)
     private var defaultInventoryType: String {
-        if terminologySettings.enableHotShop {
-            return GlassTerminologySettings.bigRodType  // "big-rod" for hot shop
-        } else {
-            return GlassTerminologySettings.rodType  // "rod" for flameworking
-        }
+        return GlassTerminologySettings.rodType  // "rod" as default
     }
 
     private var availableSubtypes: [String] {

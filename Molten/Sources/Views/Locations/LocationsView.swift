@@ -49,9 +49,16 @@ struct LocationsView: View {
                     listView
                 }
             }
-            .navigationTitle("Locations")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack {
+                        Text("Locations")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                        Spacer()
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Set Location") {
                         showLocationPicker = true

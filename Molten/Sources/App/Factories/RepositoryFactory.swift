@@ -50,8 +50,15 @@ nonisolated struct RepositoryFactory {
     nonisolated(unsafe) private static var mockUserImageRepo: MockUserImageRepository? = nil
     #endif
 
+    /// Test controller for isolated testing (when configureForTestingWithCoreData is used)
+    nonisolated(unsafe) private static var testController: PersistenceController? = nil
+
     /// Helper to get shared controller without autoclosure issues
     nonisolated private static func getSharedController() -> PersistenceController {
+        // If we have a test controller, use it instead of shared
+        if let testController = testController {
+            return testController
+        }
         return PersistenceController.shared
     }
 
@@ -609,8 +616,10 @@ nonisolated struct RepositoryFactory {
     /// Configure factory for testing with isolated Core Data
     nonisolated static func configureForTestingWithCoreData() {
         mode = .coreData
-        // Use an isolated test container
-        persistentContainer = PersistenceController.createTestController().container
+        // Use an isolated test controller
+        let controller = PersistenceController.createTestController()
+        testController = controller
+        persistentContainer = controller.container
     }
     
     /// Configure factory for production with Core Data

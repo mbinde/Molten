@@ -60,7 +60,7 @@ nonisolated struct GlassItemTypeSystem {
 
     static let rod = GlassItemType(
         name: "rod",
-        displayName: "Rod",  // Display name may change based on terminology settings
+        displayName: "Rod",
         subtypes: ["standard", "cane", "pull"],
         subsubtypes: [:],
         dimensionFields: [
@@ -71,7 +71,7 @@ nonisolated struct GlassItemTypeSystem {
 
     static let bigRod = GlassItemType(
         name: "big-rod",
-        displayName: "Rod",  // Display name may change based on terminology settings
+        displayName: "Bar",
         subtypes: [],
         subsubtypes: [:],
         dimensionFields: [
@@ -325,13 +325,13 @@ nonisolated struct GlassItemTypeSystem {
         return parts.joined(separator: " ")
     }
 
-    // MARK: - Terminology-Aware Methods
+    // MARK: - Display Name Methods
 
-    /// Get type display name based on current terminology settings
+    /// Get type display name (using terminology settings for customization)
     /// - Parameter typeName: Backend type name (e.g., "rod", "big-rod")
-    /// - Returns: User-facing display name based on terminology preferences
+    /// - Returns: User-facing display name
     @MainActor static func displayName(for typeName: String) -> String {
-        // For rod types, use terminology settings
+        // For rod types, use terminology settings (allows user customization)
         if typeName.lowercased() == "rod" || typeName.lowercased() == "big-rod" {
             return GlassTerminologySettings.shared.displayName(for: typeName.lowercased())
         }
@@ -340,31 +340,11 @@ nonisolated struct GlassItemTypeSystem {
         return getType(named: typeName)?.displayName ?? typeName.capitalized
     }
 
-    /// Get all type names that should be visible based on terminology settings
-    /// - Returns: Array of backend type names filtered by user preferences
-    @MainActor static var visibleTypeNames: [String] {
-        let settings = GlassTerminologySettings.shared
-        return allTypeNames.filter { settings.isVisible(productType: $0) }
-    }
-
-    /// Get all visible types with their terminology-aware display names
-    /// - Returns: Dictionary mapping backend type names to display names
-    @MainActor static var visibleTypesWithDisplayNames: [String: String] {
-        return Dictionary(uniqueKeysWithValues: visibleTypeNames.map { ($0, displayName(for: $0)) })
-    }
-
-    /// Check if a type should be visible based on terminology settings
-    /// - Parameter typeName: Backend type name
-    /// - Returns: True if this type should be shown to the user
-    @MainActor static func isVisible(_ typeName: String) -> Bool {
-        return GlassTerminologySettings.shared.isVisible(productType: typeName.lowercased())
-    }
-
     /// Get backend type name from a user-facing display name
     /// - Parameter displayName: The display name shown to the user
     /// - Returns: Backend storage type name, or nil if not found
     @MainActor static func backendTypeName(from displayName: String) -> String? {
-        // Check if this is a rod type that might need terminology conversion
+        // Check if this is a rod type that might use custom terminology
         if let converted = GlassTerminologySettings.shared.backendType(from: displayName) {
             if isValidType(converted) {
                 return converted

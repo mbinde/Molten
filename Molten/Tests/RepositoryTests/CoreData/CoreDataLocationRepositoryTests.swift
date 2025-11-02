@@ -29,7 +29,7 @@ struct CoreDataLocationRepositoryTests {
         testController = PersistenceController.createTestController()
 
         // Create repository with test container
-        repository = CoreDataLocationRepository(locationPersistentContainer: testController.container)
+        repository = CoreDataLocationRepository(context: testController.container.viewContext)
 
         // Create a test inventory ID that we'll use across tests
         inventoryId = UUID()

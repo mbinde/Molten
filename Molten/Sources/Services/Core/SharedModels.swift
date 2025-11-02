@@ -187,14 +187,14 @@ struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
     }
 
     /// Get a display-friendly description of this inventory record
-    var typeDescription: String {
+    nonisolated var typeDescription: String {
         GlassItemTypeSystem.shortDescription(type: _type, subtype: subtype, dimensions: dimensions)
     }
 
     // MARK: - ItemQuantityModel Protocol Implementation
 
     /// Get a copy with updated quantity
-    func withQuantity(_ newQuantity: Double) -> InventoryModel {
+    nonisolated func withQuantity(_ newQuantity: Double) -> InventoryModel {
         return InventoryModel(
             id: id,
             item_stable_id: item_stable_id,
@@ -210,12 +210,12 @@ struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
     }
 
     // Equatable conformance
-    static func == (lhs: InventoryModel, rhs: InventoryModel) -> Bool {
+    nonisolated static func == (lhs: InventoryModel, rhs: InventoryModel) -> Bool {
         return lhs.id == rhs.id
     }
 
     // Hashable conformance
-    func hash(into hasher: inout Hasher) {
+    nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }

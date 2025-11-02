@@ -82,15 +82,9 @@ struct LocationRow: View {
         }
     }
 
-    /// Ring color based on capabilities
+    /// Ring color - black outline for all locations
     private var ringColor: Color {
-        if location.hasRetail && location.hasEducation {
-            return .purple
-        } else if location.hasEducation {
-            return .green
-        } else {
-            return .orange
-        }
+        return .black
     }
 
     /// Icon image based on capabilities

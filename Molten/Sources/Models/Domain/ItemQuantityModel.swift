@@ -67,12 +67,12 @@ protocol ItemQuantityModel: Identifiable, Equatable, Hashable, Sendable where ID
 
 extension ItemQuantityModel {
     /// Default: quantity is valid if greater than 0
-    var hasValidQuantity: Bool {
+    nonisolated var hasValidQuantity: Bool {
         return quantity > 0
     }
 
     /// Default: format quantity with appropriate decimal places
-    var formattedQuantity: String {
+    nonisolated var formattedQuantity: String {
         if quantity.truncatingRemainder(dividingBy: 1) == 0 {
             return String(format: "%.0f", quantity)
         } else {
@@ -81,12 +81,12 @@ extension ItemQuantityModel {
     }
 
     /// Default: valid if has item reference and positive quantity
-    var isValid: Bool {
+    nonisolated var isValid: Bool {
         return !item_stable_id.isEmpty && quantity > 0
     }
 
     /// Default: basic validation errors
-    var validationErrors: [String] {
+    nonisolated var validationErrors: [String] {
         var errors: [String] = []
 
         if item_stable_id.isEmpty {
@@ -101,7 +101,7 @@ extension ItemQuantityModel {
     }
 
     /// Default: match on item stable ID
-    func matchesSearchText(_ searchText: String) -> Bool {
+    nonisolated func matchesSearchText(_ searchText: String) -> Bool {
         let lowercaseSearch = searchText.lowercased()
         return item_stable_id.lowercased().contains(lowercaseSearch)
     }
@@ -111,12 +111,12 @@ extension ItemQuantityModel {
 
 extension ItemQuantityModel {
     /// Get non-optional type string (returns empty string if nil)
-    var typeOrEmpty: String {
+    nonisolated var typeOrEmpty: String {
         return type ?? ""
     }
 
     /// Get full type path (type/subtype/subsubtype)
-    var fullTypePath: String {
+    nonisolated var fullTypePath: String {
         guard let baseType = type else { return "" }
 
         var path = baseType
@@ -130,7 +130,7 @@ extension ItemQuantityModel {
     }
 
     /// Check if this item has a specific type
-    func hasType(_ typeName: String) -> Bool {
+    nonisolated func hasType(_ typeName: String) -> Bool {
         return type?.lowercased() == typeName.lowercased()
     }
 }

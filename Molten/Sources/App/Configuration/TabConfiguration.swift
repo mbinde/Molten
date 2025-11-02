@@ -72,7 +72,7 @@ class TabConfiguration {
     static func defaultTabOrder() -> [DefaultTab] {
         let allAvailableTabs = Self.allAvailableTabs()
 
-        // Default order (major features first: Catalog, Inventory, Shopping, Projects, Logbook)
+        // Default order (major features first: Catalog, Inventory, Shopping, Projects, Logbook, Recipes)
         // Minor features (Purchases, Stores) come after, with Settings last
         let preferredOrder: [DefaultTab] = [
             .catalog,
@@ -80,6 +80,7 @@ class TabConfiguration {
             .shopping,
             .projectPlans,  // Projects
             .logbook,
+            .recipes,
             .kilnSchedules,
             .purchases,     // Minor feature
             .locations,     // Minor feature

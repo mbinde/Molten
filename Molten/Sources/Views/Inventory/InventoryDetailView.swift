@@ -212,7 +212,7 @@ struct InventoryDetailView: View {
             ShoppingListOptionsView(item: item, shoppingListRepository: shoppingListRepository)
         }
         .sheet(item: $selectedInventoryType) { selection in
-            LocationDetailView(
+            InventoryStorageDetailView(
                 item: currentItem,
                 inventoryType: selection.type
             )
@@ -1265,7 +1265,7 @@ struct ShoppingListOptionsView: View {
 
 /// View showing all inventory records for an item
 /// Allows toggling between grouping by location or by type
-struct LocationDetailView: View {
+struct InventoryStorageDetailView: View {
     let item: CompleteInventoryItemModel
     let inventoryType: String
 

@@ -63,7 +63,7 @@ struct CrossEntityIntegrationTests {
         let testTags = ["red", "bullseye", "transparent"]
         
         let testLocations = [
-            LocationModel(
+            StorageLocationModel(
                 id: UUID(),
                 inventory_id: testInventory[0].id, 
                 location: "Workshop Bin A", 

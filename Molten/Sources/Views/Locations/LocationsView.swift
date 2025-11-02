@@ -201,7 +201,6 @@ struct LocationsView: View {
         }
         .mapStyle(.standard)
         .mapControls {
-            MapUserLocationButton()
             MapCompass()
         }
     }

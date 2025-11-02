@@ -132,10 +132,10 @@ struct CoatingItemModel: Identifiable, Equatable, Hashable, Sendable {
 }
 
 /// Inventory model for tracking quantities by type with optional subtypes and dimensions
-struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
+struct InventoryModel: ItemQuantityModel {
     let id: UUID
     let item_stable_id: String
-    let type: String
+    private let _type: String  // Internal storage (always non-nil)
     let subtype: String?
     let subsubtype: String?
     let dimensions: [String: Double]?
@@ -143,6 +143,19 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     let location: String?
     let date_added: Date
     let date_modified: Date
+
+    // MARK: - ItemQuantityModel Conformance
+
+    /// Type as optional (protocol requirement)
+    var type: String? { _type }
+
+    /// Date added (protocol requirement)
+    var dateAdded: Date { date_added }
+
+    // MARK: - Inventory-Specific Properties
+
+    /// Type as non-optional (inventory always has a type)
+    var inventoryType: String { _type }
 
     nonisolated init(
         id: UUID = UUID(),
@@ -158,7 +171,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     ) {
         self.id = id
         self.item_stable_id = item_stable_id
-        self.type = Self.cleanType(type)
+        self._type = Self.cleanType(type)
         self.subtype = subtype.map { Self.cleanType($0) }
         self.subsubtype = subsubtype.map { Self.cleanType($0) }
         self.dimensions = dimensions
@@ -175,19 +188,25 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
 
     /// Get a display-friendly description of this inventory record
     nonisolated var typeDescription: String {
-        GlassItemTypeSystem.shortDescription(type: type, subtype: subtype, dimensions: dimensions)
+        GlassItemTypeSystem.shortDescription(type: _type, subtype: subtype, dimensions: dimensions)
     }
 
-    /// Get full type path (type/subtype/subsubtype)
-    nonisolated var fullTypePath: String {
-        var path = type
-        if let sub = subtype {
-            path += "/\(sub)"
-            if let subsub = subsubtype {
-                path += "/\(subsub)"
-            }
-        }
-        return path
+    // MARK: - ItemQuantityModel Protocol Implementation
+
+    /// Get a copy with updated quantity
+    func withQuantity(_ newQuantity: Double) -> InventoryModel {
+        return InventoryModel(
+            id: id,
+            item_stable_id: item_stable_id,
+            type: _type,
+            subtype: subtype,
+            subsubtype: subsubtype,
+            dimensions: dimensions,
+            quantity: newQuantity,
+            location: location,
+            date_added: date_added,
+            date_modified: Date()  // Update modification date
+        )
     }
 
     // Equatable conformance

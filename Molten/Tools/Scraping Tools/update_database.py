@@ -989,6 +989,22 @@ def main():
     # Check if this is an export-only operation
     export_only = args.export and not args.test and not args.mfr
 
+    # Warn if running without arguments (will scrape ALL manufacturers - slow!)
+    if not args.export and not args.test and not args.mfr and not args.dry_run:
+        print("⚠️  WARNING: Running without arguments will scrape ALL manufacturers!")
+        print("   This will take 10-30 minutes and may hit rate limits.")
+        print()
+        print("Did you mean to:")
+        print("  --export glass_database_export.json  # Just export existing database")
+        print("  --mfr BB                             # Update single manufacturer")
+        print("  --test                               # Quick test with 2-3 items")
+        print()
+        response = input("Continue with full scrape? [y/N]: ").strip().lower()
+        if response not in ['y', 'yes']:
+            print("\n❌ Aborted. Use --export to just export existing database.")
+            return 1
+        print()
+
     if export_only:
         # Skip scraping, just load database and export
         print("Export-only mode: Skipping scraping, using existing database")

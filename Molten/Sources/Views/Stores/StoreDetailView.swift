@@ -259,7 +259,7 @@ struct StoreDetailView: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(hasShoppingListItems ? Color(.systemGray6) : Color.accentColor)
-                        .foregroundStyle(hasShoppingListItems ? .primary : .white)
+                        .foregroundStyle(hasShoppingListItems ? .primary : Color.white)
                         .cornerRadius(DesignSystem.CornerRadius.medium)
                 }
             }

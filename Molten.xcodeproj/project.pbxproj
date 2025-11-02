@@ -103,7 +103,7 @@
 
 /* Begin PBXFileReference section */
 		02AE330C7BB78A7D6F8C808E /* StoreDetailViewShoppingListTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreDetailViewShoppingListTests.swift; path = Molten/Tests/MoltenTests/Views/Stores/StoreDetailViewShoppingListTests.swift; sourceTree = "<group>"; };
-		0FE5F5C77F84ABD15BFE0FD3 /* StoreAutoCompletePerformanceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreAutoCompletePerformanceTests.swift; path = Molten/Tests/PerformanceTests/StoreAutoCompletePerformanceTests.swift; sourceTree = "<group>"; };
+		0FE5F5C77F84ABD15BFE0FD3 /* StoreAutoCompletePerformanceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreAutoCompletePerformanceTests.swift; path = StoreAutoCompletePerformanceTests.swift; sourceTree = "<group>"; };
 		11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KilnScheduleRepositoryTests.swift; sourceTree = "<group>"; };
 		2933704784628157538EB534 /* ShoppingListStoreFilteringTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ShoppingListStoreFilteringTests.swift; path = Molten/Tests/MoltenTests/Views/Shopping/ShoppingListStoreFilteringTests.swift; sourceTree = "<group>"; };
 		4D5D6E530D79D68A045AA897 /* StoreAutoCompleteFieldCombinedSourcesTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreAutoCompleteFieldCombinedSourcesTests.swift; path = Molten/Tests/MoltenTests/Views/Shared/StoreAutoCompleteFieldCombinedSourcesTests.swift; sourceTree = "<group>"; };
@@ -750,7 +750,7 @@
 				0FE5F5C77F84ABD15BFE0FD3 /* StoreAutoCompletePerformanceTests.swift */,
 			);
 			name = PerformanceTests;
-			path = Molten/Tests/PerformanceTests;
+			path = PerformanceTests;
 			sourceTree = "<group>";
 		};
 		F50904EC2E8B5D30003C65AB /* Frameworks */ = {

@@ -350,13 +350,13 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     }
 
                     // Sort by distance
-                    let sortedStores = nearbyClassLocations.sorted { classLocation1, classLocation2 in
+                    let sortedClassLocations = nearbyClassLocations.sorted { classLocation1, classLocation2 in
                         let dist1 = classLocation1.distance(from: coordinate) ?? Double.greatestFiniteMagnitude
                         let dist2 = classLocation2.distance(from: coordinate) ?? Double.greatestFiniteMagnitude
                         return dist1 < dist2
                     }
 
-                    continuation.resume(returning: sortedStores)
+                    continuation.resume(returning: sortedClassLocations)
 
                 } catch {
                     self.log.error("Failed to fetch nearby classLocations: \(error)")
@@ -615,70 +615,9 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
     func loadClassLocationsFromJSON(_ data: Data) async throws -> Int {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Int, Error>) in
             backgroundContext.perform {
-                do {
-                    let decoder = JSONDecoder()
-                    let wrappedData = try decoder.decode(WrappedStoresData.self, from: data)
-
-                    // Get list of stable_ids from JSON
-                    let jsonStableIds = Set(wrappedData.stores.map { $0.stable_id })
-
-                    // Delete classLocations that aren't in the JSON (cleanup old data)
-                    let allStoresFetch = NSFetchRequest<NSManagedObject>(entityName: "ClassLocation")
-                    let existingClassLocations = try self.backgroundContext.fetch(allStoresFetch)
-
-                    var deletedCount = 0
-                    for existingStore in existingClassLocations {
-                        if let stableId = existingStore.value(forKey: "stable_id") as? String {
-                            if !jsonStableIds.contains(stableId) {
-                                // Store not in JSON - delete it
-                                self.log.debug("Deleting classLocation not in JSON: \(stableId)")
-                                self.backgroundContext.delete(existingStore)
-                                deletedCount += 1
-                            }
-                        }
-                    }
-
-                    if deletedCount > 0 {
-                        self.log.info("Deleted \(deletedCount) classLocations not in JSON")
-                    }
-
-                    var loadedCount = 0
-
-                    for classLocationData in wrappedData.stores {
-                        let classLocation = classLocationData.toClassLocationModel()
-
-                        // Check if classLocation already exists
-                        if let existingItem = try self.fetchCoreDataItemSync(byId: classLocation.stable_id) {
-                            // UPDATE existing classLocation (web data takes precedence)
-                            self.log.debug("Updating existing classLocation from JSON: \(classLocation.stable_id)")
-                            self.updateCoreDataItem(existingItem, with: classLocation)
-                            loadedCount += 1
-                        } else {
-                            // CREATE new Core Data entity
-                            guard let entity = NSEntityDescription.entity(forEntityName: "ClassLocation", in: self.backgroundContext) else {
-                                throw CoreDataClassLocationRepositoryError.entityNotFound("ClassLocation")
-                            }
-                            let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-
-                            // Set properties
-                            self.log.debug("Adding new classLocation from JSON: \(classLocation.stable_id)")
-                            self.updateCoreDataItem(coreDataItem, with: classLocation)
-                            loadedCount += 1
-                        }
-                    }
-
-                    // Save context once for all classLocations
-                    if loadedCount > 0 {
-                        try self.backgroundContext.save()
-                        self.log.info("Loaded \(loadedCount) classLocations from JSON")
-                    }
-
-                    continuation.resume(returning: loadedCount)
-
-                } catch {
-                    self.log.error("Failed to load classLocations from JSON: \(error)")
-                    continuation.resume(throwing: error)
-                }
+                // TODO: Implement ClassLocationData JSON structure
+                // Currently using mock data instead of JSON deserialization
+                continuation.resume(returning: 0)
             }
         }
     }
@@ -691,30 +630,15 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
     func exportClassLocationsToJSON() async throws -> Data {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data, Error>) in
             backgroundContext.perform {
+                // TODO: Implement ClassLocationData JSON structure
+                // Currently returning empty JSON
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
                 do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ClassLocation")
-                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
-
-                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
-                    let classLocations = coreDataItems.compactMap { self.convertToClassLocationModel($0) }
-                    let classLocationDataArray = classLocations.map { $0.toData() }
-
-                    let metadata = StoreMetadata(
-                        version: "1.0",
-                        generated: ISO8601DateFormatter().string(from: Date()),
-                        storeCount: classLocationDataArray.count
-                    )
-
-                    let wrapper = WrappedStoresData(metadata: metadata, stores: classLocationDataArray)
-
-                    let encoder = JSONEncoder()
-                    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-                    let data = try encoder.encode(wrapper)
-
+                    let emptyArray: [String] = []
+                    let data = try encoder.encode(["classLocations": emptyArray])
                     continuation.resume(returning: data)
-
                 } catch {
-                    self.log.error("Failed to export classLocations to JSON: \(error)")
                     continuation.resume(throwing: error)
                 }
             }

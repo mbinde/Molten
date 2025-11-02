@@ -606,4 +606,98 @@ struct AddInventoryItemViewTests {
         #expect(view != nil)
         // Workflow: setupInitialData() -> select item -> enter quantity -> save
     }
+
+    // MARK: - Terminology Tests (Post-Refactor)
+
+    @Test("All product types are visible in type picker")
+    func testAllProductTypesVisible() {
+        // When: Getting all available type names
+        let allTypes = GlassItemTypeSystem.allTypeNames
+
+        // Then: All types including both rod and big-rod are available
+        #expect(allTypes.contains("rod"))
+        #expect(allTypes.contains("big-rod"))
+        #expect(allTypes.contains("frit"))
+        #expect(allTypes.contains("tube"))
+        #expect(allTypes.contains("stringer"))
+        #expect(allTypes.contains("sheet"))
+
+        // And: No types are hidden
+        #expect(allTypes.count == 11)  // All 11 types should be visible
+    }
+
+    @Test("Rod type displays as Rod by default")
+    @MainActor
+    func testRodTypeDisplaysAsRod() {
+        // Given: Default terminology settings
+        let settings = GlassTerminologySettings.shared
+        settings.resetToDefaults()
+
+        // When: Getting display name for rod
+        let displayName = GlassItemTypeSystem.displayName(for: "rod")
+
+        // Then: Displays as "Rod"
+        #expect(displayName == "Rod")
+    }
+
+    @Test("Big rod type displays as Bar by default")
+    @MainActor
+    func testBigRodTypeDisplaysAsBar() {
+        // Given: Default terminology settings
+        let settings = GlassTerminologySettings.shared
+        settings.resetToDefaults()
+
+        // When: Getting display name for big-rod
+        let displayName = GlassItemTypeSystem.displayName(for: "big-rod")
+
+        // Then: Displays as "Bar"
+        #expect(displayName == "Bar")
+    }
+
+    @Test("Custom terminology settings affect display names")
+    @MainActor
+    func testCustomTerminologySettingsAffectDisplay() {
+        // Given: Custom terminology settings
+        let settings = GlassTerminologySettings.shared
+        settings.bigRodDisplayName = "Large Rod"
+        settings.rodDisplayName = "Small Rod"
+
+        // When: Getting display names
+        let bigRodDisplay = GlassItemTypeSystem.displayName(for: "big-rod")
+        let rodDisplay = GlassItemTypeSystem.displayName(for: "rod")
+
+        // Then: Custom names are used
+        #expect(bigRodDisplay == "Large Rod")
+        #expect(rodDisplay == "Small Rod")
+
+        // Cleanup
+        settings.resetToDefaults()
+    }
+
+    @Test("Both rod types are available simultaneously")
+    func testBothRodTypesAvailableSimultaneously() {
+        // When: Getting all type names
+        let allTypes = GlassItemTypeSystem.allTypeNames
+
+        // Then: Both rod and big-rod are present
+        #expect(allTypes.contains("rod"))
+        #expect(allTypes.contains("big-rod"))
+
+        // And: They are distinct types
+        let rodType = GlassItemTypeSystem.getType(named: "rod")
+        let bigRodType = GlassItemTypeSystem.getType(named: "big-rod")
+
+        #expect(rodType?.name == "rod")
+        #expect(bigRodType?.name == "big-rod")
+        #expect(rodType?.name != bigRodType?.name)
+    }
+
+    @Test("Default inventory type is rod")
+    func testDefaultInventoryTypeIsRod() {
+        // When: Getting default type
+        let defaultType = GlassTerminologySettings.rodType
+
+        // Then: Default is "rod" (not "big-rod")
+        #expect(defaultType == "rod")
+    }
 }

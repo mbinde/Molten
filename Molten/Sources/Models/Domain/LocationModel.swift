@@ -10,6 +10,7 @@ import CoreLocation
 
 /// Protocol for location-based entities (stores, classes, etc.)
 /// Defines shared fields and business logic for places with addresses and techniques
+/// Note: Conforming types should add Codable separately if needed for JSON serialization
 protocol LocationModel: Identifiable, Equatable, Hashable, Sendable {
     nonisolated var stable_id: String { get }
     nonisolated var name: String { get }

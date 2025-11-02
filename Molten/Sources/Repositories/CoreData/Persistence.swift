@@ -450,10 +450,9 @@ class PersistenceController {
 
         // For in-memory tests, use viewContext for both local and cloud
         // (simpler than configuring two separate in-memory stores)
-        Task { @MainActor in
-            self.localContext = self.container.viewContext
-            self.cloudContext = self.container.viewContext
-        }
+        // Set synchronously since tests need these immediately and they're nonisolated(unsafe)
+        self.localContext = self.container.viewContext
+        self.cloudContext = self.container.viewContext
     }
 
     /// Helper to clean up corrupted store files

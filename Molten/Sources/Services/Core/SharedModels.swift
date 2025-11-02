@@ -131,6 +131,66 @@ struct CoatingItemModel: Identifiable, Equatable, Hashable, Sendable {
     }
 }
 
+/// Tool item model representing tools, supports, and equipment
+///
+/// ⚠️ CRITICAL WARNING TO FUTURE DEVELOPERS (INCLUDING AI ASSISTANTS):
+/// - stable_id is the ONLY primary key (6-char hash like "abc123")
+/// - Unlike GlassItem, tools do NOT have a COE value
+/// - DO NOT add a "natural_key" field - it was deleted and should NEVER come back
+/// - DO NOT create any "manufacturer-001-001" format keys - those are legacy garbage
+/// - If you see natural_key in old tests, DELETE IT from the tests
+struct ToolItemModel: Identifiable, Equatable, Hashable, Sendable {
+    let stable_id: String  // PRIMARY KEY: MANDATORY 6-char hash (e.g., "abc123")
+    let name: String
+    let sku: String?  // Optional - some manufacturers don't use SKUs
+    let manufacturer: String
+    let mfr_notes: String?
+    let url: String?
+    let uri: String
+    let mfr_status: String
+    let image_url: String?
+    let image_path: String?
+
+    nonisolated var id: String { stable_id }
+
+    /// Initialize with computed URI
+    nonisolated init(stable_id: String, name: String, sku: String?, manufacturer: String,
+         mfr_notes: String? = nil, url: String? = nil, mfr_status: String,
+         image_url: String? = nil, image_path: String? = nil) {
+        self.stable_id = stable_id
+        self.name = name
+        self.sku = sku
+        self.manufacturer = manufacturer
+        self.mfr_notes = mfr_notes
+        self.url = url
+        self.uri = "moltenglass:tool?\(stable_id)"
+        self.mfr_status = mfr_status
+        self.image_url = image_url
+        self.image_path = image_path
+    }
+
+    // Equatable conformance - based on business key (manufacturer + SKU when available, else stable_id)
+    // stable_id is used as fallback when SKU is not available
+    nonisolated static func == (lhs: ToolItemModel, rhs: ToolItemModel) -> Bool {
+        if let lhsSku = lhs.sku, let rhsSku = rhs.sku {
+            return lhs.manufacturer == rhs.manufacturer && lhsSku == rhsSku
+        }
+        // Fallback to stable_id comparison when SKU is missing
+        return lhs.stable_id == rhs.stable_id
+    }
+
+    // Hashable conformance - based on business key (manufacturer + SKU when available, else stable_id)
+    // stable_id is used as fallback when SKU is not available
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(manufacturer)
+        if let sku = sku {
+            hasher.combine(sku)
+        } else {
+            hasher.combine(stable_id)
+        }
+    }
+}
+
 /// Inventory model for tracking quantities by type with optional subtypes and dimensions
 struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     let id: UUID

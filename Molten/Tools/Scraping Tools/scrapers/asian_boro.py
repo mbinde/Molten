@@ -67,13 +67,22 @@ def remove_brand_from_title(title):
     # Remove size specifications anywhere (e.g., "7-8mm", "12mm", "16mm", "25mm")
     cleaned_title = re.sub(r'\d+(-\d+)?mm\s*', '', cleaned_title, flags=re.IGNORECASE)
 
-    # Remove product type terms (but keep "Tube" - tubes are special!)
+    # Preserve "Profile Tubing" but remove other product type terms
+    # First, protect "Profile Tubing" by replacing with placeholder
+    has_profile_tubing = 'profile tubing' in cleaned_title.lower()
+    if has_profile_tubing:
+        cleaned_title = re.sub(r'\bProfile\s+Tubing\b', '__PROFILE_TUBE__', cleaned_title, flags=re.IGNORECASE)
+
+    # Remove product type terms (but keep "Tube" and protected "Profile Tube")
     type_patterns = [r'\bRods?\b', r'\bFrit\b', r'\bPowder\b', r'\bSheet\b',
-                    r'\bStringers?\b', r'\bTubing\b', r'\bFatboy\b',
-                    r'\bFlat\b', r'\bProfile\b']
+                    r'\bStringers?\b', r'\bTubing\b', r'\bFatboy\b', r'\bFlat\b']
 
     for pattern in type_patterns:
         cleaned_title = re.sub(pattern, '', cleaned_title, flags=re.IGNORECASE)
+
+    # Restore "Profile Tube"
+    if has_profile_tubing:
+        cleaned_title = cleaned_title.replace('__PROFILE_TUBE__', 'Profile Tube')
 
     # Remove frit size designations
     cleaned_title = re.sub(r'\(Fine\)', '', cleaned_title, flags=re.IGNORECASE)
@@ -159,8 +168,13 @@ def scrape(test_mode=False, max_items=None):
 
                 # Skip size variants - keep only base SKU
                 # Example: Keep "AR-AMBER", skip "AR-AMBER12", "AR-AMBER25"
-                # Pattern: base SKU ends with color name, variants have size suffix (digits)
-                base_sku = re.sub(r'\d+$', '', sku)  # Remove trailing digits to get base
+                # Example: Keep "ACT-YTC9", skip "ACT-YTC12", "ACT-YTC16"
+                # Example: Keep "ACT-YTC25PROFILE", skip "ACT-YTC30PROFILE", "ACT-YTC40PROFILE"
+
+                # Remove size suffixes to get base SKU
+                base_sku = re.sub(r'\d+$', '', sku)  # Remove trailing digits (AR-AMBER12 → AR-AMBER)
+                base_sku = re.sub(r'\d+(PROFILE)$', r'\1', base_sku, flags=re.IGNORECASE)  # ACT-YTC25PROFILE → ACT-YTCPROFILE
+
                 if base_sku in seen_base_skus:
                     # This is a size variant of a product we already have
                     print(f"    Skipping size variant: {product_name} (SKU: {sku}, base: {base_sku})")

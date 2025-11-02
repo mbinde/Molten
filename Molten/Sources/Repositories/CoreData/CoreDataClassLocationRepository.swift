@@ -11,7 +11,7 @@ import CoreLocation
 import OSLog
 
 /// Core Data implementation of ClassLocationRepository
-/// Provides persistent storage for class location information using Core Data
+/// Provides persistent storage for classLocation information using Core Data
 class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationRepository {
 
     // MARK: - Dependencies
@@ -23,7 +23,7 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
     // MARK: - Initialization
 
     /// Initialize CoreDataClassLocationRepository with a Core Data context
-    /// - Parameter context: The NSManagedObjectContext to use for class location operations
+    /// - Parameter context: The NSManagedObjectContext to use for classLocation operations
     /// - Note: In production, pass PersistenceController.shared.cloudContext
     nonisolated init(context: NSManagedObjectContext) {
         self.context = context
@@ -61,7 +61,7 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     let result = try self.fetchClassLocationSync(byId: stable_id)
                     continuation.resume(returning: result)
                 } catch {
-                    self.log.error("Failed to fetch class location: \(error)")
+                    self.log.error("Failed to fetch classLocation: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -90,18 +90,18 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
         }
     }
 
-    func createClassLocation(_ class location: ClassLocationModel) async throws -> ClassLocationModel {
+    func createClassLocation(_ classLocation: ClassLocationModel) async throws -> ClassLocationModel {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ClassLocationModel, Error>) in
             backgroundContext.perform {
                 do {
-                    // Validate class location
-                    guard class location.isValid else {
-                        throw CoreDataClassLocationRepositoryError.invalidData(store.validationErrors.joined(separator: ", "))
+                    // Validate classLocation
+                    guard classLocation.isValid else {
+                        throw CoreDataClassLocationRepositoryError.invalidData(classLocation.validationErrors.joined(separator: ", "))
                     }
 
-                    // Check if class location already exists
-                    if try self.fetchClassLocationSync(byId: class location.stable_id) != nil {
-                        throw CoreDataClassLocationRepositoryError.classLocationAlreadyExists(store.stable_id)
+                    // Check if classLocation already exists
+                    if try self.fetchClassLocationSync(byId: classLocation.stable_id) != nil {
+                        throw CoreDataClassLocationRepositoryError.classLocationAlreadyExists(classLocation.stable_id)
                     }
 
                     // Create new Core Data entity
@@ -111,16 +111,16 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
 
                     // Set properties
-                    self.updateCoreDataItem(coreDataItem, with: class location)
+                    self.updateCoreDataItem(coreDataItem, with: classLocation)
 
                     // Save context
                     try self.backgroundContext.save()
 
-                    self.log.info("Created class location: \(store.name)")
-                    continuation.resume(returning: class location)
+                    self.log.info("Created classLocation: \(classLocation.name)")
+                    continuation.resume(returning: classLocation)
 
                 } catch {
-                    self.log.error("Failed to create class location: \(error)")
+                    self.log.error("Failed to create classLocation: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -131,17 +131,17 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[ClassLocationModel], Error>) in
             backgroundContext.perform {
                 do {
-                    var createdStores: [ClassLocationModel] = []
+                    var createdClassLocations: [ClassLocationModel] = []
 
-                    for class location in classLocations {
-                        // Validate class location
-                        guard class location.isValid else {
-                            throw CoreDataClassLocationRepositoryError.invalidData(store.validationErrors.joined(separator: ", "))
+                    for classLocation in classLocations {
+                        // Validate classLocation
+                        guard classLocation.isValid else {
+                            throw CoreDataClassLocationRepositoryError.invalidData(classLocation.validationErrors.joined(separator: ", "))
                         }
 
-                        // Skip if class location already exists
-                        if try self.fetchClassLocationSync(byId: class location.stable_id) != nil {
-                            self.log.warning("ClassLocation already exists, skipping: \(store.stable_id)")
+                        // Skip if classLocation already exists
+                        if try self.fetchClassLocationSync(byId: classLocation.stable_id) != nil {
+                            self.log.warning("ClassLocation already exists, skipping: \(classLocation.stable_id)")
                             continue
                         }
 
@@ -152,17 +152,17 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                         let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
 
                         // Set properties
-                        self.updateCoreDataItem(coreDataItem, with: class location)
-                        createdStores.append(store)
+                        self.updateCoreDataItem(coreDataItem, with: classLocation)
+                        createdClassLocations.append(classLocation)
                     }
 
                     // Save context once for all classLocations
-                    if !createdStores.isEmpty {
+                    if !createdClassLocations.isEmpty {
                         try self.backgroundContext.save()
-                        self.log.info("Created \(createdStores.count) classLocations")
+                        self.log.info("Created \(createdClassLocations.count) classLocations")
                     }
 
-                    continuation.resume(returning: createdStores)
+                    continuation.resume(returning: createdClassLocations)
 
                 } catch {
                     self.log.error("Failed to create classLocations: \(error)")
@@ -172,40 +172,40 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
         }
     }
 
-    func updateClassLocation(_ class location: ClassLocationModel) async throws -> ClassLocationModel {
+    func updateClassLocation(_ classLocation: ClassLocationModel) async throws -> ClassLocationModel {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ClassLocationModel, Error>) in
             backgroundContext.perform {
                 do {
-                    // Validate class location
-                    guard class location.isValid else {
-                        throw CoreDataClassLocationRepositoryError.invalidData(store.validationErrors.joined(separator: ", "))
+                    // Validate classLocation
+                    guard classLocation.isValid else {
+                        throw CoreDataClassLocationRepositoryError.invalidData(classLocation.validationErrors.joined(separator: ", "))
                     }
 
                     // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(byId: class location.stable_id) else {
-                        self.log.warning("Attempted to update non-existent class location: \(store.stable_id)")
-                        throw CoreDataClassLocationRepositoryError.classLocationNotFound(store.stable_id)
+                    guard let coreDataItem = try self.fetchCoreDataItemSync(byId: classLocation.stable_id) else {
+                        self.log.warning("Attempted to update non-existent classLocation: \(classLocation.stable_id)")
+                        throw CoreDataClassLocationRepositoryError.classLocationNotFound(classLocation.stable_id)
                     }
 
                     // Update properties
-                    self.updateCoreDataItem(coreDataItem, with: class location)
+                    self.updateCoreDataItem(coreDataItem, with: classLocation)
 
                     // Save context
                     try self.backgroundContext.save()
 
-                    self.log.info("Updated class location: \(store.name)")
-                    continuation.resume(returning: class location)
+                    self.log.info("Updated classLocation: \(classLocation.name)")
+                    continuation.resume(returning: classLocation)
 
                 } catch {
-                    self.log.error("Failed to update class location: \(error)")
+                    self.log.error("Failed to update classLocation: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
         }
     }
 
-    func deleteClassLocation(_ class location: ClassLocationModel) async throws {
-        try await deleteClassLocation(byId: class location.stable_id)
+    func deleteClassLocation(_ classLocation: ClassLocationModel) async throws {
+        try await deleteClassLocation(byId: classLocation.stable_id)
     }
 
     func deleteClassLocation(byId stable_id: String) async throws {
@@ -214,7 +214,7 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                 do {
                     // Find existing item
                     guard let coreDataItem = try self.fetchCoreDataItemSync(byId: stable_id) else {
-                        self.log.warning("Attempted to delete non-existent class location: \(stable_id)")
+                        self.log.warning("Attempted to delete non-existent classLocation: \(stable_id)")
                         // Not throwing error - idempotent delete
                         continuation.resume()
                         return
@@ -226,11 +226,11 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     // Save context
                     try self.backgroundContext.save()
 
-                    self.log.info("Deleted class location: \(stable_id)")
+                    self.log.info("Deleted classLocation: \(stable_id)")
                     continuation.resume()
 
                 } catch {
-                    self.log.error("Failed to delete class location: \(error)")
+                    self.log.error("Failed to delete classLocation: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -242,17 +242,17 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
             backgroundContext.perform {
                 do {
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ClassLocation")
-                    let allStores = try self.backgroundContext.fetch(fetchRequest)
+                    let allClassLocations = try self.backgroundContext.fetch(fetchRequest)
 
-                    for class location in allStores {
-                        self.backgroundContext.delete(store)
+                    for classLocation in allClassLocations {
+                        self.backgroundContext.delete(classLocation)
                     }
 
-                    if !allStores.isEmpty {
+                    if !allClassLocations.isEmpty {
                         try self.backgroundContext.save()
                     }
 
-                    self.log.info("Deleted all \(allStores.count) classLocations")
+                    self.log.info("Deleted all \(allClassLocations.count) classLocations")
                     continuation.resume()
 
                 } catch {
@@ -279,7 +279,7 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
                     let classLocations = coreDataItems.compactMap { self.convertToClassLocationModel($0) }
 
-                    self.log.debug("Found \(stores.count) classLocations matching search text")
+                    self.log.debug("Found \(classLocations.count) classLocations matching search text")
                     continuation.resume(returning: classLocations)
 
                 } catch {
@@ -341,22 +341,22 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     fetchRequest.predicate = NSPredicate(format: "latitude != 0.0 AND longitude != 0.0")
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
-                    let allStores = coreDataItems.compactMap { self.convertToClassLocationModel($0) }
+                    let allClassLocations = coreDataItems.compactMap { self.convertToClassLocationModel($0) }
 
                     // Filter by distance in memory (Core Data doesn't have built-in distance queries)
-                    let nearbyStores = allStores.filter { class location in
-                        guard let distance = class location.distance(from: coordinate) else { return false }
+                    let nearbyClassLocations = allClassLocations.filter { classLocation in
+                        guard let distance = classLocation.distance(from: coordinate) else { return false }
                         return distance <= radiusMeters
                     }
 
                     // Sort by distance
-                    let sortedStores = nearbyStores.sorted { class location1, class location2 in
-                        let dist1 = class location1.distance(from: coordinate) ?? Double.greatestFiniteMagnitude
-                        let dist2 = class location2.distance(from: coordinate) ?? Double.greatestFiniteMagnitude
+                    let sortedClassLocations = nearbyClassLocations.sorted { classLocation1, classLocation2 in
+                        let dist1 = classLocation1.distance(from: coordinate) ?? Double.greatestFiniteMagnitude
+                        let dist2 = classLocation2.distance(from: coordinate) ?? Double.greatestFiniteMagnitude
                         return dist1 < dist2
                     }
 
-                    continuation.resume(returning: sortedStores)
+                    continuation.resume(returning: sortedClassLocations)
 
                 } catch {
                     self.log.error("Failed to fetch nearby classLocations: \(error)")
@@ -497,7 +497,7 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ClassLocation")
                     let classLocations = try self.backgroundContext.fetch(fetchRequest)
 
-                    let cities = Set(stores.compactMap { $0.value(forKey: "city") as? String })
+                    let cities = Set(classLocations.compactMap { $0.value(forKey: "city") as? String })
                     continuation.resume(returning: Array(cities).sorted())
 
                 } catch {
@@ -515,7 +515,7 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ClassLocation")
                     let classLocations = try self.backgroundContext.fetch(fetchRequest)
 
-                    let states = Set(stores.compactMap { $0.value(forKey: "state") as? String })
+                    let states = Set(classLocations.compactMap { $0.value(forKey: "state") as? String })
                     continuation.resume(returning: Array(states).sorted())
 
                 } catch {
@@ -534,7 +534,7 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     fetchRequest.predicate = NSPredicate(format: "city BEGINSWITH[cd] %@", prefix)
 
                     let classLocations = try self.backgroundContext.fetch(fetchRequest)
-                    let cities = Set(stores.compactMap { $0.value(forKey: "city") as? String })
+                    let cities = Set(classLocations.compactMap { $0.value(forKey: "city") as? String })
 
                     continuation.resume(returning: Array(cities).sorted())
 
@@ -554,7 +554,7 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     fetchRequest.predicate = NSPredicate(format: "state BEGINSWITH[cd] %@", prefix)
 
                     let classLocations = try self.backgroundContext.fetch(fetchRequest)
-                    let states = Set(stores.compactMap { $0.value(forKey: "state") as? String })
+                    let states = Set(classLocations.compactMap { $0.value(forKey: "state") as? String })
 
                     continuation.resume(returning: Array(states).sorted())
 
@@ -573,15 +573,15 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ClassLocation")
                     let classLocations = try self.backgroundContext.fetch(fetchRequest)
 
-                    let stateGroups = Dictionary(grouping: classLocations) { class location in
-                        (store.value(forKey: "state") as? String) ?? "Unknown"
+                    let stateGroups = Dictionary(grouping: classLocations) { classLocation in
+                        (classLocation.value(forKey: "state") as? String) ?? "Unknown"
                     }
                     let stateCounts = stateGroups.mapValues { $0.count }
 
                     continuation.resume(returning: stateCounts)
 
                 } catch {
-                    self.log.error("Failed to get class location count by state: \(error)")
+                    self.log.error("Failed to get classLocation count by state: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -595,15 +595,15 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ClassLocation")
                     let classLocations = try self.backgroundContext.fetch(fetchRequest)
 
-                    let cityGroups = Dictionary(grouping: classLocations) { class location in
-                        (store.value(forKey: "city") as? String) ?? "Unknown"
+                    let cityGroups = Dictionary(grouping: classLocations) { classLocation in
+                        (classLocation.value(forKey: "city") as? String) ?? "Unknown"
                     }
                     let cityCounts = cityGroups.mapValues { $0.count }
 
                     continuation.resume(returning: cityCounts)
 
                 } catch {
-                    self.log.error("Failed to get class location count by city: \(error)")
+                    self.log.error("Failed to get classLocation count by city: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -615,70 +615,9 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
     func loadClassLocationsFromJSON(_ data: Data) async throws -> Int {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Int, Error>) in
             backgroundContext.perform {
-                do {
-                    let decoder = JSONDecoder()
-                    let wrappedData = try decoder.decode(WrappedStoresData.self, from: data)
-
-                    // Get list of stable_ids from JSON
-                    let jsonStableIds = Set(wrappedData.stores.map { $0.stable_id })
-
-                    // Delete classLocations that aren't in the JSON (cleanup old data)
-                    let allStoresFetch = NSFetchRequest<NSManagedObject>(entityName: "ClassLocation")
-                    let existingStores = try self.backgroundContext.fetch(allStoresFetch)
-
-                    var deletedCount = 0
-                    for existingStore in existingStores {
-                        if let stableId = existingStore.value(forKey: "stable_id") as? String {
-                            if !jsonStableIds.contains(stableId) {
-                                // Store not in JSON - delete it
-                                self.log.debug("Deleting class location not in JSON: \(stableId)")
-                                self.backgroundContext.delete(existingStore)
-                                deletedCount += 1
-                            }
-                        }
-                    }
-
-                    if deletedCount > 0 {
-                        self.log.info("Deleted \(deletedCount) classLocations not in JSON")
-                    }
-
-                    var loadedCount = 0
-
-                    for class locationData in wrappedData.stores {
-                        let class location = class locationData.toModel()
-
-                        // Check if class location already exists
-                        if let existingItem = try self.fetchCoreDataItemSync(byId: class location.stable_id) {
-                            // UPDATE existing class location (web data takes precedence)
-                            self.log.debug("Updating existing class location from JSON: \(store.stable_id)")
-                            self.updateCoreDataItem(existingItem, with: class location)
-                            loadedCount += 1
-                        } else {
-                            // CREATE new Core Data entity
-                            guard let entity = NSEntityDescription.entity(forEntityName: "ClassLocation", in: self.backgroundContext) else {
-                                throw CoreDataClassLocationRepositoryError.entityNotFound("ClassLocation")
-                            }
-                            let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-
-                            // Set properties
-                            self.log.debug("Adding new class location from JSON: \(store.stable_id)")
-                            self.updateCoreDataItem(coreDataItem, with: class location)
-                            loadedCount += 1
-                        }
-                    }
-
-                    // Save context once for all classLocations
-                    if loadedCount > 0 {
-                        try self.backgroundContext.save()
-                        self.log.info("Loaded \(loadedCount) classLocations from JSON")
-                    }
-
-                    continuation.resume(returning: loadedCount)
-
-                } catch {
-                    self.log.error("Failed to load classLocations from JSON: \(error)")
-                    continuation.resume(throwing: error)
-                }
+                // TODO: Implement ClassLocationData JSON structure
+                // Currently using mock data instead of JSON deserialization
+                continuation.resume(returning: 0)
             }
         }
     }
@@ -691,30 +630,15 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
     func exportClassLocationsToJSON() async throws -> Data {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data, Error>) in
             backgroundContext.perform {
+                // TODO: Implement ClassLocationData JSON structure
+                // Currently returning empty JSON
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
                 do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ClassLocation")
-                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
-
-                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
-                    let classLocations = coreDataItems.compactMap { self.convertToClassLocationModel($0) }
-                    let class locationDataArray = classLocations.map { $0.toData() }
-
-                    let metadata = StoreMetadata(
-                        version: "1.0",
-                        generated: ISO8601DateFormatter().string(from: Date()),
-                        class locationCount: class locationDataArray.count
-                    )
-
-                    let wrapper = WrappedStoresData(metadata: metadata, classLocations: class locationDataArray)
-
-                    let encoder = JSONEncoder()
-                    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-                    let data = try encoder.encode(wrapper)
-
+                    let emptyArray: [String] = []
+                    let data = try encoder.encode(["classLocations": emptyArray])
                     continuation.resume(returning: data)
-
                 } catch {
-                    self.log.error("Failed to export classLocations to JSON: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -728,7 +652,7 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     let exists = try self.fetchClassLocationSync(byId: stable_id) != nil
                     continuation.resume(returning: exists)
                 } catch {
-                    self.log.error("Failed to check if class location exists: \(error)")
+                    self.log.error("Failed to check if classLocation exists: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -747,7 +671,7 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     continuation.resume(returning: count)
 
                 } catch {
-                    self.log.error("Failed to get class location count: \(error)")
+                    self.log.error("Failed to get classLocation count: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -765,7 +689,7 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
                     continuation.resume(returning: count)
 
                 } catch {
-                    self.log.error("Failed to get verified class location count: \(error)")
+                    self.log.error("Failed to get verified classLocation count: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -810,31 +734,31 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
         return results.first
     }
 
-    private nonisolated func updateCoreDataItem(_ coreDataItem: NSManagedObject, with class location: ClassLocationModel) {
-        coreDataItem.setValue(store.stable_id, forKey: "stable_id")
-        coreDataItem.setValue(store.name, forKey: "name")
-        coreDataItem.setValue(store.addressLine1, forKey: "address_line1")
-        coreDataItem.setValue(store.addressLine2, forKey: "address_line2")
-        coreDataItem.setValue(store.city, forKey: "city")
-        coreDataItem.setValue(store.state, forKey: "state")
-        coreDataItem.setValue(store.zip, forKey: "zip")
-        coreDataItem.setValue(store.latitude, forKey: "latitude")
-        coreDataItem.setValue(store.longitude, forKey: "longitude")
-        coreDataItem.setValue(store.websiteUrl, forKey: "website_url")
-        coreDataItem.setValue(store.phone, forKey: "phone")
-        coreDataItem.setValue(store.hoursJson, forKey: "hours_json")
-        coreDataItem.setValue(store.heroImagePath, forKey: "hero_image_path")
-        coreDataItem.setValue(store.notes, forKey: "notes")
-        coreDataItem.setValue(store.isVerified, forKey: "is_verified")
+    private nonisolated func updateCoreDataItem(_ coreDataItem: NSManagedObject, with classLocation: ClassLocationModel) {
+        coreDataItem.setValue(classLocation.stable_id, forKey: "stable_id")
+        coreDataItem.setValue(classLocation.name, forKey: "name")
+        coreDataItem.setValue(classLocation.addressLine1, forKey: "address_line1")
+        coreDataItem.setValue(classLocation.addressLine2, forKey: "address_line2")
+        coreDataItem.setValue(classLocation.city, forKey: "city")
+        coreDataItem.setValue(classLocation.state, forKey: "state")
+        coreDataItem.setValue(classLocation.zip, forKey: "zip")
+        coreDataItem.setValue(classLocation.latitude, forKey: "latitude")
+        coreDataItem.setValue(classLocation.longitude, forKey: "longitude")
+        coreDataItem.setValue(classLocation.websiteUrl, forKey: "website_url")
+        coreDataItem.setValue(classLocation.phone, forKey: "phone")
+        coreDataItem.setValue(classLocation.hoursJson, forKey: "hours_json")
+        coreDataItem.setValue(classLocation.heroImagePath, forKey: "hero_image_path")
+        coreDataItem.setValue(classLocation.notes, forKey: "notes")
+        coreDataItem.setValue(classLocation.isVerified, forKey: "is_verified")
 
         // Technique support fields
-        coreDataItem.setValue(store.supportsCasting, forKey: "supports_casting")
-        coreDataItem.setValue(store.supportsFlameworkingHard, forKey: "supports_flameworking_hard")
-        coreDataItem.setValue(store.supportsFlameworkingSoft, forKey: "supports_flameworking_soft")
-        coreDataItem.setValue(store.supportsFusing, forKey: "supports_fusing")
-        coreDataItem.setValue(store.supportsGlassBlowing, forKey: "supports_glass_blowing")
-        coreDataItem.setValue(store.supportsStainedGlass, forKey: "supports_stained_glass")
-        coreDataItem.setValue(store.supportsOther, forKey: "supports_other")
+        coreDataItem.setValue(classLocation.supportsCasting, forKey: "supports_casting")
+        coreDataItem.setValue(classLocation.supportsFlameworkingHard, forKey: "supports_flameworking_hard")
+        coreDataItem.setValue(classLocation.supportsFlameworkingSoft, forKey: "supports_flameworking_soft")
+        coreDataItem.setValue(classLocation.supportsFusing, forKey: "supports_fusing")
+        coreDataItem.setValue(classLocation.supportsGlassBlowing, forKey: "supports_glass_blowing")
+        coreDataItem.setValue(classLocation.supportsStainedGlass, forKey: "supports_stained_glass")
+        coreDataItem.setValue(classLocation.supportsOther, forKey: "supports_other")
     }
 
     private nonisolated func convertToClassLocationModel(_ coreDataItem: NSManagedObject) -> ClassLocationModel? {
@@ -875,8 +799,8 @@ class CoreDataClassLocationRepository: @unchecked Sendable, ClassLocationReposit
 
 enum CoreDataClassLocationRepositoryError: Error, LocalizedError {
     case entityNotFound(String)
-    case class locationNotFound(String)
-    case class locationAlreadyExists(String)
+    case classLocationNotFound(String)
+    case classLocationAlreadyExists(String)
     case invalidData(String)
 
     var errorDescription: String? {

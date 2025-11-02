@@ -60,7 +60,7 @@ struct CoreDataLocationRepositoryTests {
 
     @Test("Create location without id field")
     func testCreateLocationWithoutId() async throws {
-        let location = LocationModel(
+        let location = StorageLocationModel(
             inventory_id: inventoryId,
             location: "Studio",
             quantity: 10.0
@@ -81,8 +81,8 @@ struct CoreDataLocationRepositoryTests {
 
     @Test("Create multiple locations for same inventory")
     func testCreateMultipleLocationsForSameInventory() async throws {
-        let location1 = LocationModel(inventory_id: inventoryId, location: "Studio", quantity: 5.0)
-        let location2 = LocationModel(inventory_id: inventoryId, location: "Storage", quantity: 15.0)
+        let location1 = StorageLocationModel(inventory_id: inventoryId, location: "Studio", quantity: 5.0)
+        let location2 = StorageLocationModel(inventory_id: inventoryId, location: "Storage", quantity: 15.0)
 
         _ = try await repository.createLocation(location1)
         _ = try await repository.createLocation(location2)
@@ -98,11 +98,11 @@ struct CoreDataLocationRepositoryTests {
     @Test("Update location using composite key")
     func testUpdateLocationUsingCompositeKey() async throws {
         // Create initial location
-        let original = LocationModel(inventory_id: inventoryId, location: "Studio", quantity: 10.0)
+        let original = StorageLocationModel(inventory_id: inventoryId, location: "Studio", quantity: 10.0)
         _ = try await repository.createLocation(original)
 
         // Update using inventory_id + location name (composite key)
-        let updated = LocationModel(inventory_id: inventoryId, location: "Studio", quantity: 25.0)
+        let updated = StorageLocationModel(inventory_id: inventoryId, location: "Studio", quantity: 25.0)
         let result = try await repository.updateLocation(updated)
 
         #expect(result.quantity == 25.0)
@@ -116,7 +116,7 @@ struct CoreDataLocationRepositoryTests {
     @Test("Delete location using composite key")
     func testDeleteLocationUsingCompositeKey() async throws {
         // Create location
-        let location = LocationModel(inventory_id: inventoryId, location: "Studio", quantity: 10.0)
+        let location = StorageLocationModel(inventory_id: inventoryId, location: "Studio", quantity: 10.0)
         _ = try await repository.createLocation(location)
 
         // Verify it exists
@@ -264,7 +264,7 @@ struct CoreDataLocationRepositoryTests {
 
     @Test("Quantity stored as string in Core Data")
     func testQuantityStoredAsString() async throws {
-        let location = LocationModel(inventory_id: inventoryId, location: "Studio", quantity: 15.5)
+        let location = StorageLocationModel(inventory_id: inventoryId, location: "Studio", quantity: 15.5)
         _ = try await repository.createLocation(location)
 
         // Fetch the Core Data object directly to verify quantity is stored as string
@@ -288,7 +288,7 @@ struct CoreDataLocationRepositoryTests {
 
     @Test("Location name is trimmed and cleaned")
     func testLocationNameCleaned() async throws {
-        let location = LocationModel(inventory_id: inventoryId, location: "  Studio  ", quantity: 10.0)
+        let location = StorageLocationModel(inventory_id: inventoryId, location: "  Studio  ", quantity: 10.0)
         let created = try await repository.createLocation(location)
 
         // LocationModel should clean the location name

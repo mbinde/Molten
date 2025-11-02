@@ -35,7 +35,7 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
     /// Clear all classLocationd data (useful for test setup)
     nonisolated func clearAllData() {
         queue.async(flags: .barrier) {
-            self.stores.removeAll()
+            self.classLocations.removeAll()
         }
     }
 
@@ -43,7 +43,7 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
     nonisolated func getStorageCount() async -> Int {
         await withCheckedContinuation { continuation in
             queue.async {
-                continuation.resume(returning: self.stores.count)
+                continuation.resume(returning: self.classLocations.count)
             }
         }
     }
@@ -99,7 +99,7 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
 
     func fetchAllClassLocations() async throws -> [ClassLocationModel] {
         return try await simulateOperation {
-            return Array(stores.values).sorted { $0.name < $1.name }
+            return Array(classLocations.values).sorted { $0.name < $1.name }
         }
     }
 
@@ -111,7 +111,7 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
 
     @preconcurrency func fetchClassLocations(matching predicate: NSPredicate?) async throws -> [ClassLocationModel] {
         return try await simulateOperation {
-            let allStores = Array(stores.values)
+            let allStores = Array(classLocations.values)
 
             guard let predicate = predicate else {
                 return allStores.sorted { $0.name < $1.name }
@@ -126,7 +126,7 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
 
     func createClassLocation(_ classLocation: ClassLocationModel) async throws -> ClassLocationModel {
         return try await simulateOperation {
-            classLocations[store.stable_id] = classLocation
+            classLocations[classLocation.stable_id] = classLocation
             return classLocation
         }
     }
@@ -134,7 +134,7 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
     func createClassLocations(_ classLocations: [ClassLocationModel]) async throws -> [ClassLocationModel] {
         return try await simulateOperation {
             for classLocation in classLocations {
-                self.stores[store.stable_id] = classLocation
+                self.classLocations[classLocation.stable_id] = classLocation
             }
             return classLocations
         }
@@ -142,10 +142,10 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
 
     func updateClassLocation(_ classLocation: ClassLocationModel) async throws -> ClassLocationModel {
         return try await simulateOperation {
-            guard classLocations[store.stable_id] != nil else {
-                throw MockClassLocationRepositoryError.storeNotFound(store.stable_id)
+            guard classLocations[classLocation.stable_id] != nil else {
+                throw MockClassLocationRepositoryError.classLocationNotFound(classLocation.stable_id)
             }
-            classLocations[store.stable_id] = classLocation
+            classLocations[classLocation.stable_id] = classLocation
             return classLocation
         }
     }
@@ -251,14 +251,14 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
 
     func getDistinctCities() async throws -> [String] {
         return try await simulateOperation {
-            let cities = Set(stores.values.compactMap { $0.city })
+            let cities = Set(classLocations.values.compactMap { $0.city })
             return Array(cities).sorted()
         }
     }
 
     func getDistinctStates() async throws -> [String] {
         return try await simulateOperation {
-            let states = Set(stores.values.compactMap { $0.state })
+            let states = Set(classLocations.values.compactMap { $0.state })
             return Array(states).sorted()
         }
     }
@@ -266,7 +266,7 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
     func getCities(withPrefix prefix: String) async throws -> [String] {
         return try await simulateOperation {
             let lowercasePrefix = prefix.lowercased()
-            let cities = Set(stores.values.compactMap { $0.city })
+            let cities = Set(classLocations.values.compactMap { $0.city })
             return cities.filter { $0.lowercased().hasPrefix(lowercasePrefix) }.sorted()
         }
     }
@@ -274,7 +274,7 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
     func getStates(withPrefix prefix: String) async throws -> [String] {
         return try await simulateOperation {
             let lowercasePrefix = prefix.lowercased()
-            let states = Set(stores.values.compactMap { $0.state })
+            let states = Set(classLocations.values.compactMap { $0.state })
             return states.filter { $0.lowercased().hasPrefix(lowercasePrefix) }.sorted()
         }
     }
@@ -297,17 +297,9 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
 
     func loadClassLocationsFromJSON(_ data: Data) async throws -> Int {
         return try await simulateOperation {
-            let decoder = JSONDecoder()
-            let wrappedData = try decoder.decode(WrappedStoresData.self, from: data)
-
-            var loadedCount = 0
-            for classLocationData in wrappedData.stores {
-                let classLocation = classLocationData.toModel()
-                classLocations[store.stable_id] = classLocation
-                loadedCount += 1
-            }
-
-            return loadedCount
+            // TODO: Implement ClassLocationData JSON structure
+            // Currently using mock data instead of JSON deserialization
+            return 0
         }
     }
 
@@ -320,20 +312,12 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
 
     func exportClassLocationsToJSON() async throws -> Data {
         return try await simulateOperation {
-            let allStores = Array(stores.values).sorted { $0.name < $1.name }
-            let classLocationDataArray = allStores.map { $0.toData() }
-
-            let metadata = StoreMetadata(
-                version: "1.0",
-                generated: ISO8601DateFormatter().string(from: Date()),
-                classLocationCount: classLocationDataArray.count
-            )
-
-            let wrapper = WrappedStoresData(metadata: metadata, classLocations: classLocationDataArray)
-
+            // TODO: Implement ClassLocationData JSON structure
+            // Currently returning empty JSON
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            return try encoder.encode(wrapper)
+            let emptyArray: [String] = []
+            return try encoder.encode(["classLocations": emptyArray])
         }
     }
 
@@ -387,7 +371,7 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
 
         // Handle common predicate patterns
         if predicateString.contains("stable_id ==") {
-            if predicateString.contains(store.stable_id) {
+            if predicateString.contains(classLocation.stable_id) {
                 return true
             }
         }
@@ -451,7 +435,7 @@ enum MockClassLocationRepositoryError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .storeNotFound(let stable_id):
+        case .classLocationNotFound(let stable_id):
             return "Store not found with ID: \(stable_id)"
         case .simulatedFailure:
             return "Simulated repository failure for testing"

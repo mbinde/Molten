@@ -34,13 +34,13 @@ class LocationRepositoryCompilationTest {
         print("CoreDataLocationRepository compiles: \(repo)")
     }
     
-    func testLocationModelCreation() {
-        // Test creating LocationModel
-        let location = LocationModel(
+    func testStorageLocationModelCreation() {
+        // Test creating StorageLocationModel
+        let location = StorageLocationModel(
             inventory_id: UUID(),
-            location: "Test Location", 
+            location: "Test Location",
             quantity: 5.0
         )
-        print("LocationModel works: \(location)")
+        print("StorageLocationModel works: \(location)")
     }
 }

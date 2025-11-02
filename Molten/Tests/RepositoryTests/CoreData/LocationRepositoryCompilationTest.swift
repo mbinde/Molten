@@ -30,7 +30,7 @@ class LocationRepositoryCompilationTest {
     func testRepositoryCreation() {
         // Test creating the repository with explicit container
         let container = NSPersistentContainer(name: "TestModel")
-        let repo = CoreDataLocationRepository(locationPersistentContainer: container)
+        let repo = CoreDataLocationRepository(context: container.viewContext)
         print("CoreDataLocationRepository compiles: \(repo)")
     }
     

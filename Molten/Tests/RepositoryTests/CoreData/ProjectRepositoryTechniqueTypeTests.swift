@@ -19,13 +19,13 @@ struct ProjectRepositoryTechniqueTypeTests {
         // Configure for Core Data testing
         RepositoryFactory.configureForTestingWithCoreData()
         let controller = PersistenceController.createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let project = ProjectModel(
             title: "Flameworking Project",
             type: .technique,
             coe: "96",
-            techniqueType: .flameworkinghard,
+            techniqueType: TechniqueType.flameworkinghard,
             summary: "Test flameworking technique"
         )
 
@@ -45,7 +45,7 @@ struct ProjectRepositoryTechniqueTypeTests {
     func createProjectWithoutTechniqueType() async throws {
         RepositoryFactory.configureForTestingWithCoreData()
         let controller = PersistenceController.createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let project = ProjectModel(
             title: "Project Without Technique",
@@ -69,14 +69,14 @@ struct ProjectRepositoryTechniqueTypeTests {
     func updateProjectTechniqueType() async throws {
         RepositoryFactory.configureForTestingWithCoreData()
         let controller = PersistenceController.createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         // Create project with one techniqueType
         let original = ProjectModel(
             title: "Test Project",
             type: .recipe,
             coe: "96",
-            techniqueType: .fusing,
+            techniqueType: TechniqueType.fusing,
             summary: "Original"
         )
 
@@ -119,14 +119,14 @@ struct ProjectRepositoryTechniqueTypeTests {
     func clearProjectTechniqueType() async throws {
         RepositoryFactory.configureForTestingWithCoreData()
         let controller = PersistenceController.createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         // Create project with techniqueType
         let original = ProjectModel(
             title: "Test Project",
             type: .recipe,
             coe: "96",
-            techniqueType: .casting,
+            techniqueType: TechniqueType.casting,
             summary: "Original"
         )
 
@@ -169,7 +169,7 @@ struct ProjectRepositoryTechniqueTypeTests {
     func allTechniqueTypesPerist() async throws {
         RepositoryFactory.configureForTestingWithCoreData()
         let controller = PersistenceController.createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let allTypes: [TechniqueType] = [.glassBlowing, .flameworkinghard, .flameworkingsoft, .fusing, .casting, .other]
 
@@ -196,14 +196,14 @@ struct ProjectRepositoryTechniqueTypeTests {
     func queryProjectsByTechniqueType() async throws {
         RepositoryFactory.configureForTestingWithCoreData()
         let controller = PersistenceController.createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         // Create projects with different technique types
         let flameworkingProject = ProjectModel(
             title: "Flameworking Project",
             type: .technique,
             coe: "96",
-            techniqueType: .flameworkinghard,
+            techniqueType: TechniqueType.flameworkinghard,
             summary: "Flameworking test"
         )
 
@@ -211,7 +211,7 @@ struct ProjectRepositoryTechniqueTypeTests {
             title: "Fusing Project",
             type: .technique,
             coe: "96",
-            techniqueType: .fusing,
+            techniqueType: TechniqueType.fusing,
             summary: "Fusing test"
         )
 

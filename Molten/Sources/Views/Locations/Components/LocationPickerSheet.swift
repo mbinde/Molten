@@ -17,75 +17,64 @@ struct LocationPickerSheet: View {
     let onLocationSelected: (CLLocationCoordinate2D) -> Void
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: DesignSystem.Spacing.xl) {
-                Text("Enter a location to center the map")
-                    .font(DesignSystem.Typography.body)
-                    .foregroundStyle(DesignSystem.Colors.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, DesignSystem.Padding.standard)
+        VStack(spacing: DesignSystem.Spacing.lg) {
+            // Title
+            Text("Center the map")
+                .font(.headline)
+                .padding(.top, DesignSystem.Padding.standard)
 
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-                    TextField("City, State or Zip Code", text: $searchText)
-                        .textFieldStyle(.plain)
-                        .padding(DesignSystem.Padding.standard)
-                        .background(DesignSystem.Colors.backgroundSecondary)
-                        .cornerRadius(DesignSystem.CornerRadius.medium)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.words)
-                        .submitLabel(.search)
-                        .onSubmit {
-                            geocodeLocation()
-                        }
-
-                    if let error = errorMessage {
-                        Text(error)
-                            .font(DesignSystem.Typography.caption)
-                            .foregroundStyle(.red)
+            // Text field
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+                TextField("City, State or Zip Code", text: $searchText)
+                    .textFieldStyle(.plain)
+                    .padding(DesignSystem.Padding.standard)
+                    .background(DesignSystem.Colors.backgroundSecondary)
+                    .cornerRadius(DesignSystem.CornerRadius.medium)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.words)
+                    .submitLabel(.go)
+                    .onSubmit {
+                        geocodeLocation()
                     }
-                }
-                .padding(.horizontal, DesignSystem.Padding.standard)
 
-                // Example suggestions
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                    Text("Examples:")
+                if let error = errorMessage {
+                    Text(error)
                         .font(DesignSystem.Typography.caption)
-                        .foregroundStyle(DesignSystem.Colors.textTertiary)
-
-                    ForEach(["Seattle, WA", "Portland, OR", "97202"], id: \.self) { example in
-                        Button {
-                            searchText = example
-                            geocodeLocation()
-                        } label: {
-                            Text(example)
-                                .font(DesignSystem.Typography.caption)
-                                .foregroundStyle(DesignSystem.Colors.accentPrimary)
-                        }
-                    }
-                }
-                .padding(.horizontal, DesignSystem.Padding.standard)
-
-                Spacer()
-            }
-            .navigationTitle("Set Location")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+                        .foregroundStyle(.red)
                 }
             }
-            .overlay {
-                if isGeocoding {
-                    ProgressView()
-                        .controlSize(.large)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(.ultraThinMaterial)
+            .padding(.horizontal, DesignSystem.Padding.standard)
+
+            // Buttons
+            HStack(spacing: DesignSystem.Spacing.md) {
+                Button("Cancel") {
+                    dismiss()
                 }
+                .buttonStyle(.bordered)
+                .frame(maxWidth: .infinity)
+
+                Button("Go") {
+                    geocodeLocation()
+                }
+                .buttonStyle(.borderedProminent)
+                .frame(maxWidth: .infinity)
+                .disabled(searchText.isEmpty)
+            }
+            .padding(.horizontal, DesignSystem.Padding.standard)
+            .padding(.bottom, DesignSystem.Padding.standard)
+        }
+        .frame(maxWidth: .infinity)
+        .background(Color(UIColor.systemBackground))
+        .overlay {
+            if isGeocoding {
+                ProgressView()
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(.ultraThinMaterial)
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.height(220)])
+        .presentationDragIndicator(.visible)
     }
 
     private func geocodeLocation() {

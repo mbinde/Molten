@@ -53,10 +53,8 @@ struct LocationsView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
+                    Button("Set Location") {
                         showLocationPicker = true
-                    } label: {
-                        Image(systemName: "location.circle")
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {

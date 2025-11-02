@@ -39,6 +39,7 @@ struct AddInventoryFormView: View {
 
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
+    private let prefilledNaturalKey: String?
     @State private var viewModel: AddInventoryItemViewModel
     @StateObject private var terminologySettings = GlassTerminologySettings.shared
 
@@ -52,6 +53,7 @@ struct AddInventoryFormView: View {
          catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
         self.catalogService = catalogService
         self.inventoryTrackingService = inventoryTrackingService
+        self.prefilledNaturalKey = prefilledNaturalKey
         self._viewModel = State(initialValue: AddInventoryItemViewModel(
             prefilledNaturalKey: prefilledNaturalKey,
             inventoryTrackingService: inventoryTrackingService,
@@ -66,7 +68,7 @@ struct AddInventoryFormView: View {
                 GlassItemSearchSelector(
                     selectedGlassItem: $viewModel.selectedGlassItem,
                     searchText: $viewModel.searchText,
-                    prefilledNaturalKey: viewModel.stableId.isEmpty ? nil : viewModel.stableId,
+                    prefilledNaturalKey: prefilledNaturalKey,
                     glassItems: viewModel.glassItems,
                     onSelect: { item in
                         viewModel.selectGlassItem(item)

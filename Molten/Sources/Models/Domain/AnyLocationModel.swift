@@ -82,6 +82,20 @@ struct AnyLocationModel: Identifiable, Equatable, Hashable {
         self._model = classLocation
     }
 
+    init(unified: UnifiedLocationModel) {
+        // Determine primary type based on capabilities
+        // Priority: retail > education > services
+        if unified.hasRetail {
+            self.type = .store
+        } else if unified.hasEducation {
+            self.type = .classLocation
+        } else {
+            // Default to store if only services or nothing
+            self.type = .store
+        }
+        self._model = unified
+    }
+
     // Equatable conformance
     static func == (lhs: AnyLocationModel, rhs: AnyLocationModel) -> Bool {
         lhs.stable_id == rhs.stable_id && lhs.type == rhs.type

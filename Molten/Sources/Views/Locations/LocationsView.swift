@@ -14,8 +14,7 @@ struct LocationsView: View {
 
     // Default parameter evaluated once per view instance
     init(viewModel: LocationsViewModel = LocationsViewModel(
-        storeRepository: RepositoryFactory.createStoreRepository(),
-        classLocationRepository: RepositoryFactory.createClassLocationRepository()
+        locationService: RepositoryFactory.createUnifiedLocationService()
     )) {
         self.viewModel = viewModel
     }

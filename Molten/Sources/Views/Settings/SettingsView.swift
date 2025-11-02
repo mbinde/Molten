@@ -1405,75 +1405,65 @@ struct TemperatureRateRow: View {
 
 struct TerminologySettingsView: View {
     @ObservedObject var settings = GlassTerminologySettings.shared
-    @State private var showingBothEnabledAlert = false
 
     var body: some View {
         List {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("The glass industry uses different terms for rod sizes:")
+                    Text("Customize how different rod sizes are labeled in the app.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-
-                    HStack(alignment: .top, spacing: 12) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Hot Shop")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                            Text("\"Rods\" = 12mm+")
-                                .font(.caption2)
-                            Text("\"Cane\" = 2-10mm+")
-                                .font(.caption2)
-                        }
-
-                        Spacer()
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Flameworking/Fusing")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                            Text("\"Rods\" = 2-10mm+")
-                                .font(.caption2)
-                            Text("(calls cane \"rods\")")
-                                .font(.caption2)
-                                .italic()
-                        }
-                    }
-                    .padding(.vertical, 4)
                 }
                 .padding(.vertical, 4)
             }
 
             Section {
-                Toggle(isOn: Binding(
-                    get: { settings.enableHotShop },
-                    set: { newValue in
-                        settings.enableHotShop = newValue
-                        settings.validateSettings()
-                        if settings.enableHotShop && settings.enableFlameworking {
-                            showingBothEnabledAlert = true
-                        }
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Large Rods")
+                        Text("12mm+ diameter")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                )) {
-                    Label("Hot Shop / Glass Blowing", systemImage: "fireplace.fill")
+                    .frame(minWidth: 140, alignment: .leading)
+                    Spacer()
+                    TextField("Bar", text: $settings.bigRodDisplayName)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 150)
+                        .multilineTextAlignment(.trailing)
                 }
 
-                Toggle(isOn: Binding(
-                    get: { settings.enableFlameworking },
-                    set: { newValue in
-                        settings.enableFlameworking = newValue
-                        settings.validateSettings()
-                        if settings.enableHotShop && settings.enableFlameworking {
-                            showingBothEnabledAlert = true
-                        }
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Standard Rods")
+                        Text("5-6mm diameter")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                )) {
-                    Label("Flameworking / Fusing", systemImage: "flame")
+                    .frame(minWidth: 140, alignment: .leading)
+                    Spacer()
+                    TextField("Rod", text: $settings.rodDisplayName)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 150)
+                        .multilineTextAlignment(.trailing)
                 }
             } header: {
-                Text("Enable Terminology")
+                Text("Display Names")
             } footer: {
-                Text(settings.currentSettingsMessage)
+                Text("Customize how different rod sizes are labeled throughout the app.")
+            }
+
+            Section {
+                Button {
+                    settings.resetToDefaults()
+                } label: {
+                    HStack {
+                        Image(systemName: "arrow.counterclockwise")
+                        Text("Reset to Defaults")
+                    }
+                }
+            } footer: {
+                Text("Reset display names to \"Bar\" and \"Rod\"")
             }
 
             Section {
@@ -1484,11 +1474,11 @@ struct TerminologySettingsView: View {
                             .font(.headline)
 
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Changing terminology settings only affects how products are displayed in the app.")
+                            Text("Changing display names only affects how products are labeled in the interface.")
                                 .font(.callout)
                                 .foregroundStyle(.primary)
 
-                            Text("Your stored inventory data will not be affected, so you can safely switch between terminologies at any time.")
+                            Text("Your stored inventory data will not be affected, so you can safely customize terminology at any time.")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -1498,16 +1488,5 @@ struct TerminologySettingsView: View {
             }
         }
         .navigationTitle("Glass Terminology")
-        .alert("Both Terminologies Enabled", isPresented: $showingBothEnabledAlert) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text("""
-            When both terminologies are enabled:
-            • Hot shop rods (12mm+) will be called "Rods"
-            • Flameworking rods (5-6mm) will be called "Cane"
-
-            This lets you work with both types while keeping them distinct.
-            """)
-        }
     }
 }

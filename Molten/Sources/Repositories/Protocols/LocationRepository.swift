@@ -15,37 +15,37 @@ nonisolated protocol LocationRepository: Sendable {
 
     /// Fetch all location records matching the given predicate
     /// - Parameter predicate: Optional predicate for filtering
-    /// - Returns: Array of LocationModel instances
-    @preconcurrency func fetchLocations(matching predicate: NSPredicate?) async throws -> [LocationModel]
+    /// - Returns: Array of StorageLocationModel instances
+    @preconcurrency func fetchLocations(matching predicate: NSPredicate?) async throws -> [StorageLocationModel]
     
     /// Fetch all locations for a specific inventory record
     /// - Parameter inventory_id: The UUID of the inventory record
-    /// - Returns: Array of LocationModel instances for the inventory
-    func fetchLocations(forInventory inventory_id: UUID) async throws -> [LocationModel]
+    /// - Returns: Array of StorageLocationModel instances for the inventory
+    func fetchLocations(forInventory inventory_id: UUID) async throws -> [StorageLocationModel]
     
     /// Fetch all locations with a specific location name
     /// - Parameter locationName: The location name to search for
-    /// - Returns: Array of LocationModel instances with this location name
-    func fetchLocations(withName locationName: String) async throws -> [LocationModel]
+    /// - Returns: Array of StorageLocationModel instances with this location name
+    func fetchLocations(withName locationName: String) async throws -> [StorageLocationModel]
     
     /// Create a new location record
     /// - Parameter location: The LocationModel to create
     /// - Returns: The created LocationModel
-    func createLocation(_ location: LocationModel) async throws -> LocationModel
+    func createLocation(_ location: StorageLocationModel) async throws -> StorageLocationModel
     
     /// Create multiple location records in a batch operation
-    /// - Parameter locations: Array of LocationModel instances to create
-    /// - Returns: Array of created LocationModel instances
-    func createLocations(_ locations: [LocationModel]) async throws -> [LocationModel]
+    /// - Parameter locations: Array of StorageLocationModel instances to create
+    /// - Returns: Array of created StorageLocationModel instances
+    func createLocations(_ locations: [StorageLocationModel]) async throws -> [StorageLocationModel]
     
     /// Update an existing location record
     /// - Parameter location: The LocationModel with updated values
     /// - Returns: The updated LocationModel
-    func updateLocation(_ location: LocationModel) async throws -> LocationModel
+    func updateLocation(_ location: StorageLocationModel) async throws -> StorageLocationModel
     
     /// Delete a location record
     /// - Parameter location: The LocationModel to delete
-    func deleteLocation(_ location: LocationModel) async throws
+    func deleteLocation(_ location: StorageLocationModel) async throws
     
     /// Delete all locations for a specific inventory record
     /// - Parameter inventory_id: The UUID of the inventory record
@@ -69,7 +69,7 @@ nonisolated protocol LocationRepository: Sendable {
     ///   - locationName: The location name
     ///   - inventory_id: The UUID of the inventory record
     /// - Returns: The updated or created LocationModel
-    func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventory_id: UUID) async throws -> LocationModel
+    func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventory_id: UUID) async throws -> StorageLocationModel
     
     /// Subtract quantity from a specific location for an inventory record
     /// - Parameters:
@@ -77,7 +77,7 @@ nonisolated protocol LocationRepository: Sendable {
     ///   - locationName: The location name
     ///   - inventory_id: The UUID of the inventory record
     /// - Returns: The updated LocationModel, or nil if record was deleted due to zero quantity
-    func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventory_id: UUID) async throws -> LocationModel?
+    func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventory_id: UUID) async throws -> StorageLocationModel?
     
     /// Move quantity from one location to another within the same inventory record
     /// - Parameters:
@@ -128,8 +128,8 @@ nonisolated protocol LocationRepository: Sendable {
     func getLocationQuantityDiscrepancy(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Double
     
     /// Find locations with quantities but no corresponding inventory records
-    /// - Returns: Array of LocationModel instances that are orphaned
-    func findOrphanedLocations() async throws -> [LocationModel]
+    /// - Returns: Array of StorageLocationModel instances that are orphaned
+    func findOrphanedLocations() async throws -> [StorageLocationModel]
 }
 
 // Note: LocationModel is defined in SharedModels.swift

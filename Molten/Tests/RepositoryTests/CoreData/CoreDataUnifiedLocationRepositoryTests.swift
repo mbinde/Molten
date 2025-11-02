@@ -13,20 +13,24 @@ import CoreData
 
 /// Tests for CoreDataUnifiedLocationRepository Core Data implementation
 @Suite("CoreDataUnifiedLocationRepository Tests")
+@MainActor
 struct CoreDataUnifiedLocationRepositoryTests {
 
-    var repository: CoreDataUnifiedLocationRepository
+    let testController: PersistenceController
+    let repository: CoreDataUnifiedLocationRepository
 
     init() async throws {
-        // Create isolated test environment with Core Data
-        RepositoryFactory.configureForTestingWithCoreData()
-        self.repository = RepositoryFactory.createUnifiedLocationRepository() as! CoreDataUnifiedLocationRepository
+        // Create isolated test container
+        testController = PersistenceController.createTestController()
+
+        // Create repository with test container
+        repository = CoreDataUnifiedLocationRepository(context: testController.container.viewContext)
     }
 
-    // MARK: - Create Tests
+    // MARK: - Save Tests
 
-    @Test("Should create location with retail capabilities")
-    func testCreateLocationWithRetailCapabilities() async throws {
+    @Test("Should save location with retail capabilities")
+    func testSaveLocationWithRetailCapabilities() async throws {
         // Arrange
         let location = UnifiedLocationModel(
             stable_id: "test-store-1",
@@ -43,20 +47,22 @@ struct CoreDataUnifiedLocationRepositoryTests {
         )
 
         // Act
-        let created = try await repository.create(location)
+        try await repository.save(location)
 
         // Assert
-        #expect(created.stable_id == "test-store-1")
-        #expect(created.name == "Test Glass Store")
-        #expect(created.hasRetail == true)
-        #expect(created.hasEducation == false)
-        #expect(created.retailCapabilities.count == 2)
-        #expect(created.supportsFusing == true)
-        #expect(created.supportsCasting == true)
+        let fetched = try await repository.fetch(stableId: "test-store-1")
+        #expect(fetched != nil)
+        #expect(fetched?.stable_id == "test-store-1")
+        #expect(fetched?.name == "Test Glass Store")
+        #expect(fetched?.hasRetail == true)
+        #expect(fetched?.hasEducation == false)
+        #expect(fetched?.retailCapabilities.count == 2)
+        #expect(fetched?.supportsFusing == true)
+        #expect(fetched?.supportsCasting == true)
     }
 
-    @Test("Should create location with education capabilities")
-    func testCreateLocationWithEducationCapabilities() async throws {
+    @Test("Should save location with education capabilities")
+    func testSaveLocationWithEducationCapabilities() async throws {
         // Arrange
         let location = UnifiedLocationModel(
             stable_id: "test-school-1",
@@ -73,20 +79,22 @@ struct CoreDataUnifiedLocationRepositoryTests {
         )
 
         // Act
-        let created = try await repository.create(location)
+        try await repository.save(location)
 
         // Assert
-        #expect(created.stable_id == "test-school-1")
-        #expect(created.name == "Test Glass School")
-        #expect(created.hasRetail == false)
-        #expect(created.hasEducation == true)
-        #expect(created.educationCapabilities.count == 2)
-        #expect(created.supportsGlassBlowing == true)
-        #expect(created.supportsFusing == true)
+        let fetched = try await repository.fetch(stableId: "test-school-1")
+        #expect(fetched != nil)
+        #expect(fetched?.stable_id == "test-school-1")
+        #expect(fetched?.name == "Test Glass School")
+        #expect(fetched?.hasRetail == false)
+        #expect(fetched?.hasEducation == true)
+        #expect(fetched?.educationCapabilities.count == 2)
+        #expect(fetched?.supportsGlassBlowing == true)
+        #expect(fetched?.supportsFusing == true)
     }
 
-    @Test("Should create location with mixed capabilities")
-    func testCreateLocationWithMixedCapabilities() async throws {
+    @Test("Should save location with mixed capabilities")
+    func testSaveLocationWithMixedCapabilities() async throws {
         // Arrange
         let location = UnifiedLocationModel(
             stable_id: "test-mixed-1",
@@ -105,16 +113,18 @@ struct CoreDataUnifiedLocationRepositoryTests {
         )
 
         // Act
-        let created = try await repository.create(location)
+        try await repository.save(location)
 
         // Assert
-        #expect(created.hasRetail == true)
-        #expect(created.hasEducation == true)
-        #expect(created.retailCapabilities.count == 1)
-        #expect(created.educationCapabilities.count == 1)
+        let fetched = try await repository.fetch(stableId: "test-mixed-1")
+        #expect(fetched != nil)
+        #expect(fetched?.hasRetail == true)
+        #expect(fetched?.hasEducation == true)
+        #expect(fetched?.retailCapabilities.count == 1)
+        #expect(fetched?.educationCapabilities.count == 1)
     }
 
-    // MARK: - Read Tests
+    // MARK: - Fetch Tests
 
     @Test("Should fetch location by stable_id")
     func testFetchByStableId() async throws {
@@ -129,10 +139,10 @@ struct CoreDataUnifiedLocationRepositoryTests {
             isVerified: true,
             retailCapabilities: [RetailCapability(technique: .fusing)]
         )
-        _ = try await repository.create(location)
+        try await repository.save(location)
 
         // Act
-        let fetched = try await repository.fetch(byStableId: "fetch-test-1")
+        let fetched = try await repository.fetch(stableId: "fetch-test-1")
 
         // Assert
         #expect(fetched != nil)
@@ -143,7 +153,7 @@ struct CoreDataUnifiedLocationRepositoryTests {
     @Test("Should return nil for non-existent stable_id")
     func testFetchNonExistentStableId() async throws {
         // Act
-        let fetched = try await repository.fetch(byStableId: "does-not-exist")
+        let fetched = try await repository.fetch(stableId: "does-not-exist")
 
         // Assert
         #expect(fetched == nil)
@@ -172,8 +182,8 @@ struct CoreDataUnifiedLocationRepositoryTests {
             isVerified: true,
             educationCapabilities: [EducationCapability(technique: .glassBlowing)]
         )
-        _ = try await repository.create(location1)
-        _ = try await repository.create(location2)
+        try await repository.save(location1)
+        try await repository.save(location2)
 
         // Act
         let all = try await repository.fetchAll()
@@ -188,8 +198,8 @@ struct CoreDataUnifiedLocationRepositoryTests {
 
     @Test("Should update location capabilities")
     func testUpdateLocationCapabilities() async throws {
-        // Arrange
-        var location = UnifiedLocationModel(
+        // Arrange - Save initial location
+        let location = UnifiedLocationModel(
             stable_id: "update-test-1",
             name: "Update Test Store",
             city: "Seattle",
@@ -199,30 +209,31 @@ struct CoreDataUnifiedLocationRepositoryTests {
             isVerified: true,
             retailCapabilities: [RetailCapability(technique: .fusing)]
         )
-        location = try await repository.create(location)
+        try await repository.save(location)
 
-        // Act - Add more capabilities
-        location = UnifiedLocationModel(
-            stable_id: location.stable_id,
-            name: location.name,
-            city: location.city,
-            state: location.state,
-            latitude: location.latitude,
-            longitude: location.longitude,
-            isVerified: location.isVerified,
+        // Act - Update with more capabilities
+        let updatedLocation = UnifiedLocationModel(
+            stable_id: "update-test-1",
+            name: "Update Test Store",
+            city: "Seattle",
+            state: "WA",
+            latitude: 47.6,
+            longitude: -122.3,
+            isVerified: true,
             retailCapabilities: [
                 RetailCapability(technique: .fusing),
                 RetailCapability(technique: .casting),
                 RetailCapability(technique: .glassBlowing)
             ]
         )
-        let updated = try await repository.update(location)
+        try await repository.save(updatedLocation)
 
         // Assert
-        #expect(updated.retailCapabilities.count == 3)
-        #expect(updated.supportsFusing == true)
-        #expect(updated.supportsCasting == true)
-        #expect(updated.supportsGlassBlowing == true)
+        let fetched = try await repository.fetch(stableId: "update-test-1")
+        #expect(fetched?.retailCapabilities.count == 3)
+        #expect(fetched?.supportsFusing == true)
+        #expect(fetched?.supportsCasting == true)
+        #expect(fetched?.supportsGlassBlowing == true)
     }
 
     // MARK: - Delete Tests
@@ -240,20 +251,20 @@ struct CoreDataUnifiedLocationRepositoryTests {
             isVerified: true,
             retailCapabilities: [RetailCapability(technique: .fusing)]
         )
-        _ = try await repository.create(location)
+        try await repository.save(location)
 
         // Act
-        try await repository.delete(byStableId: "delete-test-1")
+        try await repository.delete(stableId: "delete-test-1")
 
         // Assert
-        let fetched = try await repository.fetch(byStableId: "delete-test-1")
+        let fetched = try await repository.fetch(stableId: "delete-test-1")
         #expect(fetched == nil)
     }
 
     // MARK: - Filtering Tests
 
-    @Test("Should filter by technique")
-    func testFilterByTechnique() async throws {
+    @Test("Should filter by retail technique")
+    func testFilterByRetailTechnique() async throws {
         // Arrange
         let location1 = UnifiedLocationModel(
             stable_id: "filter-test-1",
@@ -275,15 +286,49 @@ struct CoreDataUnifiedLocationRepositoryTests {
             isVerified: true,
             retailCapabilities: [RetailCapability(technique: .casting)]
         )
-        _ = try await repository.create(location1)
-        _ = try await repository.create(location2)
+        try await repository.save(location1)
+        try await repository.save(location2)
 
         // Act
-        let fusingLocations = try await repository.fetchAll(supportingTechnique: .fusing)
+        let fusingLocations = try await repository.fetchLocationsSellingTechnique(.fusing)
 
         // Assert
         #expect(fusingLocations.contains(where: { $0.stable_id == "filter-test-1" }))
         #expect(!fusingLocations.contains(where: { $0.stable_id == "filter-test-2" }))
+    }
+
+    @Test("Should filter by education technique")
+    func testFilterByEducationTechnique() async throws {
+        // Arrange
+        let location1 = UnifiedLocationModel(
+            stable_id: "edu-filter-1",
+            name: "Glassblowing School",
+            city: "Seattle",
+            state: "WA",
+            latitude: 47.6,
+            longitude: -122.3,
+            isVerified: true,
+            educationCapabilities: [EducationCapability(technique: .glassBlowing)]
+        )
+        let location2 = UnifiedLocationModel(
+            stable_id: "edu-filter-2",
+            name: "Fusing School",
+            city: "Portland",
+            state: "OR",
+            latitude: 45.5,
+            longitude: -122.6,
+            isVerified: true,
+            educationCapabilities: [EducationCapability(technique: .fusing)]
+        )
+        try await repository.save(location1)
+        try await repository.save(location2)
+
+        // Act
+        let glassblowingLocations = try await repository.fetchLocationsTeachingTechnique(.glassBlowing)
+
+        // Assert
+        #expect(glassblowingLocations.contains(where: { $0.stable_id == "edu-filter-1" }))
+        #expect(!glassblowingLocations.contains(where: { $0.stable_id == "edu-filter-2" }))
     }
 
     @Test("Should search by name")
@@ -309,15 +354,75 @@ struct CoreDataUnifiedLocationRepositoryTests {
             isVerified: true,
             retailCapabilities: [RetailCapability(technique: .casting)]
         )
-        _ = try await repository.create(location1)
-        _ = try await repository.create(location2)
+        try await repository.save(location1)
+        try await repository.save(location2)
 
         // Act
-        let results = try await repository.search(query: "Bullseye")
+        let results = try await repository.search(text: "Bullseye")
 
         // Assert
         #expect(results.contains(where: { $0.stable_id == "search-test-1" }))
         #expect(!results.contains(where: { $0.stable_id == "search-test-2" }))
+    }
+
+    // MARK: - Count Tests
+
+    @Test("Should count locations")
+    func testCountLocations() async throws {
+        // Arrange
+        let location1 = UnifiedLocationModel(
+            stable_id: "count-test-1",
+            name: "Store 1",
+            city: "Seattle",
+            state: "WA",
+            latitude: 47.6,
+            longitude: -122.3,
+            isVerified: true,
+            retailCapabilities: [RetailCapability(technique: .fusing)]
+        )
+        let location2 = UnifiedLocationModel(
+            stable_id: "count-test-2",
+            name: "Store 2",
+            city: "Portland",
+            state: "OR",
+            latitude: 45.5,
+            longitude: -122.6,
+            isVerified: true,
+            retailCapabilities: [RetailCapability(technique: .casting)]
+        )
+        try await repository.save(location1)
+        try await repository.save(location2)
+
+        // Act
+        let count = try await repository.count()
+
+        // Assert
+        #expect(count >= 2)
+    }
+
+    // MARK: - DeleteAll Tests
+
+    @Test("Should delete all locations")
+    func testDeleteAll() async throws {
+        // Arrange
+        let location = UnifiedLocationModel(
+            stable_id: "deleteall-test-1",
+            name: "Test Store",
+            city: "Seattle",
+            state: "WA",
+            latitude: 47.6,
+            longitude: -122.3,
+            isVerified: true,
+            retailCapabilities: [RetailCapability(technique: .fusing)]
+        )
+        try await repository.save(location)
+
+        // Act
+        try await repository.deleteAll()
+
+        // Assert
+        let count = try await repository.count()
+        #expect(count == 0)
     }
 }
 #endif

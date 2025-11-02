@@ -362,4 +362,80 @@ class CoreDataUnifiedLocationRepository: @unchecked Sendable, UnifiedLocationRep
         )
     }
 
+    // MARK: - JSON Loading
+
+    func loadLocationsFromJSON(_ data: Data) async throws -> Int {
+        let decoder = JSONDecoder()
+        let wrappedData = try decoder.decode(WrappedStoresData.self, from: data)
+
+        var loadedCount = 0
+
+        for storeData in wrappedData.stores {
+            // Convert StoreData to UnifiedLocationModel with retail capabilities
+            let location = self.convertStoreDataToUnifiedLocation(storeData)
+
+            // Use the existing save() method which handles create/update
+            try await save(location)
+            loadedCount += 1
+        }
+
+        return loadedCount
+    }
+
+    func loadLocationsFromJSONFile(at fileURL: URL) async throws -> Int {
+        let data = try Data(contentsOf: fileURL)
+        return try await loadLocationsFromJSON(data)
+    }
+
+    // MARK: - Private Helpers for JSON Loading
+
+    /// Convert old StoreData format to new UnifiedLocationModel with retail capabilities
+    private nonisolated func convertStoreDataToUnifiedLocation(_ storeData: StoreData) -> UnifiedLocationModel {
+        var retailCapabilities: [RetailCapability] = []
+
+        // Convert boolean flags to retail capabilities
+        if storeData.supports_casting == true {
+            retailCapabilities.append(RetailCapability(technique: .casting))
+        }
+        if storeData.supports_flameworking_hard == true {
+            retailCapabilities.append(RetailCapability(technique: .flameworkinghard))
+        }
+        if storeData.supports_flameworking_soft == true {
+            retailCapabilities.append(RetailCapability(technique: .flameworkingsoft))
+        }
+        if storeData.supports_fusing == true {
+            retailCapabilities.append(RetailCapability(technique: .fusing))
+        }
+        if storeData.supports_glass_blowing == true {
+            retailCapabilities.append(RetailCapability(technique: .glassBlowing))
+        }
+        if storeData.supports_stained_glass == true {
+            retailCapabilities.append(RetailCapability(technique: .stainedGlass))
+        }
+        if storeData.supports_other == true {
+            retailCapabilities.append(RetailCapability(technique: .other))
+        }
+
+        return UnifiedLocationModel(
+            stable_id: storeData.stable_id,
+            name: storeData.name,
+            addressLine1: storeData.address_line1,
+            addressLine2: storeData.address_line2,
+            city: storeData.city,
+            state: storeData.state,
+            zip: storeData.zip,
+            latitude: storeData.latitude ?? 0.0,
+            longitude: storeData.longitude ?? 0.0,
+            websiteUrl: storeData.website_url,
+            phone: storeData.phone,
+            hoursJson: storeData.hours_json,
+            heroImagePath: storeData.hero_image_path,
+            notes: storeData.notes,
+            isVerified: storeData.is_verified ?? false,
+            retailCapabilities: retailCapabilities,
+            educationCapabilities: [],  // No education data in stores.json
+            servicesCapabilities: []    // No services data in stores.json
+        )
+    }
+
 }

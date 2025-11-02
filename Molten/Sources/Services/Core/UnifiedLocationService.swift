@@ -285,6 +285,21 @@ class UnifiedLocationService: @unchecked Sendable {
             availableServices: Set(locations.flatMap { $0.services }).count
         )
     }
+
+    // MARK: - Data Loading
+
+    /// Load locations from bundle resource (stores.json)
+    func loadLocationsFromBundleResource(filename: String = "stores") async throws -> Int {
+        guard let url = Bundle.main.url(forResource: filename, withExtension: "json") else {
+            throw UnifiedLocationServiceError.missingRequiredField("stores.json not found in bundle")
+        }
+        return try await repository.loadLocationsFromJSONFile(at: url)
+    }
+
+    /// Load locations from JSON data
+    func loadLocationsFromJSON(_ data: Data) async throws -> Int {
+        return try await repository.loadLocationsFromJSON(data)
+    }
 }
 
 // MARK: - Supporting Types

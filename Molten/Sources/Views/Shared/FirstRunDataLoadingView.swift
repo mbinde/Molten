@@ -28,6 +28,7 @@ struct FirstRunDataLoadingView: View {
         case loadingCatalog = "Loading glass catalog..."
         case buildingSearchIndex = "Building search index..."
         case loadingImages = "Preparing product images..."
+        case loadingLocations = "Loading store locations..."
         case finalizing = "Finalizing setup..."
         case complete = "Ready to go!"
 
@@ -37,6 +38,7 @@ struct FirstRunDataLoadingView: View {
             case .loadingCatalog: return "📦"
             case .buildingSearchIndex: return "🔍"
             case .loadingImages: return "🖼️"
+            case .loadingLocations: return "📍"
             case .finalizing: return "⚡"
             case .complete: return "✅"
             }
@@ -243,7 +245,20 @@ struct FirstRunDataLoadingView: View {
             }
             progress = 0.85
 
-            // Step 4.5: Generate demo data if in screenshot mode
+            // Step 4.5: Load location data
+            currentStep = .loadingLocations
+            progress = 0.90
+
+            let locationService = RepositoryFactory.createUnifiedLocationService()
+            do {
+                let locationsLoaded = try await locationService.loadLocationsFromBundleResource(filename: "stores")
+                print("✅ Loaded \(locationsLoaded) locations from stores.json")
+            } catch {
+                print("⚠️  Failed to load locations: \(error.localizedDescription)")
+                // Continue - locations are optional
+            }
+
+            // Step 5: Generate demo data if in screenshot mode
             if isScreenshotMode {
                 print("🎬 [SCREENSHOTS] Generating demo data for screenshots...")
                 let inventoryService = RepositoryFactory.createInventoryTrackingService()

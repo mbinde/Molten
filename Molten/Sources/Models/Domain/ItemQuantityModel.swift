@@ -17,7 +17,7 @@ import Foundation
 ///
 /// The semantic difference (have vs want) is captured by domain-specific fields
 /// and the context in which the model is used.
-protocol ItemQuantityModel: Identifiable, Equatable, Hashable, Sendable where ID == UUID {
+protocol ItemQuantityModel: Equatable, Hashable, Sendable {
     // MARK: - Core Fields (100% shared)
 
     /// Unique identifier for this quantity record

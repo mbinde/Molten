@@ -44,7 +44,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
             nonisolated(unsafe) let predicateCopy = predicate
             backgroundContext.perform {
                 do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
                     fetchRequest.predicate = predicateCopy
                     fetchRequest.sortDescriptors = [
                         NSSortDescriptor(key: "location", ascending: true),
@@ -80,8 +80,8 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
             backgroundContext.perform {
                 do {
                     // Create new Core Data entity
-                    guard let entity = NSEntityDescription.entity(forEntityName: "Location", in: self.backgroundContext) else {
-                        throw CoreDataLocationRepositoryError.entityNotFound("Location")
+                    guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: self.backgroundContext) else {
+                        throw CoreDataLocationRepositoryError.entityNotFound("StorageLocation")
                     }
                     let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
                     
@@ -110,8 +110,8 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
                     
                     for location in locations {
                         // Create new Core Data entity
-                        guard let entity = NSEntityDescription.entity(forEntityName: "Location", in: self.backgroundContext) else {
-                            throw CoreDataLocationRepositoryError.entityNotFound("Location")
+                        guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: self.backgroundContext) else {
+                            throw CoreDataLocationRepositoryError.entityNotFound("StorageLocation")
                         }
                         let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
                         
@@ -194,7 +194,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
                     fetchRequest.predicate = NSPredicate(format: "inventory_id == %@", inventory_id as CVarArg)
                     
                     let locationsToDelete = try self.backgroundContext.fetch(fetchRequest)
@@ -224,7 +224,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
                     fetchRequest.predicate = NSPredicate(format: "location == %@", cleanLocationName)
                     
                     let locationsToDelete = try self.backgroundContext.fetch(fetchRequest)
@@ -255,7 +255,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
             backgroundContext.perform {
                 do {
                     // First, delete all existing locations for this inventory
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
                     fetchRequest.predicate = NSPredicate(format: "inventory_id == %@", inventory_id as CVarArg)
                     let existingLocations = try self.backgroundContext.fetch(fetchRequest)
                     
@@ -265,8 +265,8 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
                     
                     // Create new location records
                     for (locationName, quantity) in locations {
-                        guard let entity = NSEntityDescription.entity(forEntityName: "Location", in: self.backgroundContext) else {
-                            throw CoreDataLocationRepositoryError.entityNotFound("Location")
+                        guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: self.backgroundContext) else {
+                            throw CoreDataLocationRepositoryError.entityNotFound("StorageLocation")
                         }
                         let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
                         
@@ -327,8 +327,8 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
                             quantity: quantity
                         )
                         
-                        guard let entity = NSEntityDescription.entity(forEntityName: "Location", in: self.backgroundContext) else {
-                            throw CoreDataLocationRepositoryError.entityNotFound("Location")
+                        guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: self.backgroundContext) else {
+                            throw CoreDataLocationRepositoryError.entityNotFound("StorageLocation")
                         }
                         let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
                         
@@ -406,7 +406,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String], Error>) in
             backgroundContext.perform {
                 do {
-                    let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Location")
+                    let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "StorageLocation")
                     fetchRequest.propertiesToFetch = ["location"]
                     fetchRequest.returnsDistinctResults = true
                     fetchRequest.resultType = .dictionaryResultType
@@ -478,7 +478,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
     // MARK: - Private Helper Methods
     
     private nonisolated func fetchLocationSync(forInventory inventory_id: UUID, locationName: String) throws -> [LocationModel] {
-        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
         fetchRequest.predicate = NSPredicate(format: "inventory_id == %@ AND location == %@", inventory_id as CVarArg, locationName)
         
         let results = try backgroundContext.fetch(fetchRequest)
@@ -486,7 +486,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
     }
     
     private nonisolated func fetchCoreDataItemSync(byInventoryId inventory_id: UUID, locationName: String) throws -> NSManagedObject? {
-        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Location")
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
         fetchRequest.predicate = NSPredicate(format: "inventory_id == %@ AND location == %@", inventory_id as CVarArg, locationName)
         fetchRequest.fetchLimit = 1
 

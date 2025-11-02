@@ -10,38 +10,39 @@ import CoreLocation
 
 /// Protocol for location-based entities (stores, classes, etc.)
 /// Defines shared fields and business logic for places with addresses and techniques
-protocol LocationModel: Identifiable, Equatable, Hashable, Codable, Sendable {
-    var stable_id: String { get }
-    var name: String { get }
-    var addressLine1: String? { get }
-    var addressLine2: String? { get }
-    var city: String? { get }
-    var state: String? { get }
-    var zip: String? { get }
-    var latitude: Double { get }
-    var longitude: Double { get }
-    var websiteUrl: String? { get }
-    var phone: String? { get }
-    var hoursJson: String? { get }
-    var heroImagePath: String? { get }
-    var notes: String? { get }
-    var isVerified: Bool { get }
+/// Note: Conforming types should add Codable separately if needed for JSON serialization
+protocol LocationModel: Identifiable, Sendable {
+    nonisolated var stable_id: String { get }
+    nonisolated var name: String { get }
+    nonisolated var addressLine1: String? { get }
+    nonisolated var addressLine2: String? { get }
+    nonisolated var city: String? { get }
+    nonisolated var state: String? { get }
+    nonisolated var zip: String? { get }
+    nonisolated var latitude: Double { get }
+    nonisolated var longitude: Double { get }
+    nonisolated var websiteUrl: String? { get }
+    nonisolated var phone: String? { get }
+    nonisolated var hoursJson: String? { get }
+    nonisolated var heroImagePath: String? { get }
+    nonisolated var notes: String? { get }
+    nonisolated var isVerified: Bool { get }
 
     // Technique support
-    var supportsCasting: Bool { get }
-    var supportsFlameworkingHard: Bool { get }
-    var supportsFlameworkingSoft: Bool { get }
-    var supportsFusing: Bool { get }
-    var supportsGlassBlowing: Bool { get }
-    var supportsStainedGlass: Bool { get }
-    var supportsOther: Bool { get }
+    nonisolated var supportsCasting: Bool { get }
+    nonisolated var supportsFlameworkingHard: Bool { get }
+    nonisolated var supportsFlameworkingSoft: Bool { get }
+    nonisolated var supportsFusing: Bool { get }
+    nonisolated var supportsGlassBlowing: Bool { get }
+    nonisolated var supportsStainedGlass: Bool { get }
+    nonisolated var supportsOther: Bool { get }
 }
 
 // MARK: - Default Implementations (Shared Business Logic)
 
 extension LocationModel {
     /// ID for Identifiable conformance
-    var id: String { stable_id }
+    nonisolated var id: String { stable_id }
 
     /// Full formatted address for display
     var fullAddress: String? {

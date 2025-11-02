@@ -9,7 +9,7 @@ import Foundation
 import CoreLocation
 
 /// Business model for glass art class locations
-struct ClassLocationModel: LocationModel {
+struct ClassLocationModel: LocationModel, Codable, Hashable, Equatable {
     let stable_id: String
     let name: String
     let addressLine1: String?

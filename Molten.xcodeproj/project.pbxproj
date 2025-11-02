@@ -9,9 +9,11 @@
 /* Begin PBXBuildFile section */
 		035572C16D05D83FC69976B6 /* TrivialTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */; };
 		3E27DFCD6BBA363302830817 /* KilnScheduleRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */; };
+		619CE8E170B7A2498D31BBD3 /* MockRecipeRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59A5A3DE9C8C4F3DEA510930 /* MockRecipeRepositoryTests.swift */; };
 		75883EC305A611D0BD32D3EB /* KilnScheduleModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */; };
 		A9F8B30E274AB9BAB53443BD /* StoreListViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */; };
 		B38B08BE48A477290CAF8A23 /* RecipeModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411DF31D34752035DF39D94E /* RecipeModelTests.swift */; };
+		B7245613F3DC477F5507E7E1 /* RecipeServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5BF229E0B10DDAD2F4BB3E /* RecipeServiceTests.swift */; };
 		BE2EBFBA9D5C4EDEC7BD909C /* KilnScheduleServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */; };
 		F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */ = {isa = PBXBuildFile; fileRef = F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */; };
 		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
@@ -102,9 +104,11 @@
 		11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleRepositoryTests.swift; path = Tests/MoltenTests/Repositories/KilnScheduleRepositoryTests.swift; sourceTree = "<group>"; };
 		171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TrivialTest.swift; path = Tests/MoltenTests/TrivialTest.swift; sourceTree = "<group>"; };
 		411DF31D34752035DF39D94E /* RecipeModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RecipeModelTests.swift; path = Tests/MoltenTests/Models/RecipeModelTests.swift; sourceTree = "<group>"; };
+		59A5A3DE9C8C4F3DEA510930 /* MockRecipeRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MockRecipeRepositoryTests.swift; path = Tests/MoltenTests/Repositories/MockRecipeRepositoryTests.swift; sourceTree = "<group>"; };
 		72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreListViewModelTests.swift; path = Tests/MoltenTests/Views/StoreListViewModelTests.swift; sourceTree = "<group>"; };
 		880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleModelTests.swift; path = Tests/MoltenTests/Models/KilnScheduleModelTests.swift; sourceTree = "<group>"; };
 		98A57EDE16004D7734C1BC72 /* MockKilnScheduleService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MockKilnScheduleService.swift; path = Molten/Sources/Repositories/Mock/MockKilnScheduleService.swift; sourceTree = "<group>"; };
+		9F5BF229E0B10DDAD2F4BB3E /* RecipeServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RecipeServiceTests.swift; path = Tests/MoltenTests/Services/RecipeServiceTests.swift; sourceTree = "<group>"; };
 		EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleServiceTests.swift; path = Tests/MoltenTests/Services/KilnScheduleServiceTests.swift; sourceTree = "<group>"; };
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
@@ -667,6 +671,7 @@
 			isa = PBXGroup;
 			children = (
 				EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */,
+				9F5BF229E0B10DDAD2F4BB3E /* RecipeServiceTests.swift */,
 			);
 			name = Services;
 			sourceTree = "<group>";
@@ -675,6 +680,7 @@
 			isa = PBXGroup;
 			children = (
 				11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */,
+				59A5A3DE9C8C4F3DEA510930 /* MockRecipeRepositoryTests.swift */,
 			);
 			name = Repositories;
 			sourceTree = "<group>";
@@ -1103,6 +1109,7 @@
 				3E27DFCD6BBA363302830817 /* KilnScheduleRepositoryTests.swift in Sources */,
 				BE2EBFBA9D5C4EDEC7BD909C /* KilnScheduleServiceTests.swift in Sources */,
 				B38B08BE48A477290CAF8A23 /* RecipeModelTests.swift in Sources */,
+				B7245613F3DC477F5507E7E1 /* RecipeServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1138,6 +1145,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				619CE8E170B7A2498D31BBD3 /* MockRecipeRepositoryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -132,11 +132,20 @@ def scrape(test_mode=False, max_items=None):
                 kashmir_count += 1
                 product_name = product_data.get('title', '')
 
-                # Skip unwanted products
-                skip_terms = ['sample pack', 'sampler', 'bundle', 'set', 'gift card',
-                             'sticker', 'shirt', 't-shirt', 'hoodie', 'hat', 'cap']
-                if any(term in product_name.lower() for term in skip_terms):
-                    print(f"    Skipping: {product_name}")
+                # Skip unwanted products (use word boundaries to avoid false matches like "sunset")
+                product_name_lower = product_name.lower()
+                skip_patterns = [
+                    r'\bsample\s+pack\b', r'\bsampler\b', r'\bbundle\b', r'\bset\b',
+                    r'\bgift\s+card\b', r'\bsticker\b', r'\bshirt\b', r'\bt-shirt\b',
+                    r'\bhoodie\b', r'\bhat\b', r'\bcap\b'
+                ]
+                should_skip = False
+                for pattern in skip_patterns:
+                    if re.search(pattern, product_name_lower):
+                        print(f"    Skipping: {product_name}")
+                        should_skip = True
+                        break
+                if should_skip:
                     continue
 
                 # Get first variant for SKU

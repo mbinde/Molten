@@ -209,15 +209,6 @@ struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
         )
     }
 
-    // MARK: - Equatable & Hashable (explicit nonisolated implementations)
-
-    nonisolated static func == (lhs: InventoryModel, rhs: InventoryModel) -> Bool {
-        lhs.id == rhs.id
-    }
-
-    nonisolated func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
 }
 
 /// Storage location model for tracking where inventory is stored (warehouse locations, shelves, etc.)

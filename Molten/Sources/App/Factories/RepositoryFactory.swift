@@ -46,6 +46,7 @@ nonisolated struct RepositoryFactory {
     nonisolated(unsafe) private static var mockProjectImageRepo: MockProjectImageRepository? = nil
     nonisolated(unsafe) private static var mockStoreRepo: MockStoreRepository? = nil
     nonisolated(unsafe) private static var mockClassLocationRepo: MockClassLocationRepository? = nil
+    nonisolated(unsafe) private static var mockUnifiedLocationRepo: MockUnifiedLocationRepository? = nil
     nonisolated(unsafe) private static var mockKilnScheduleRepo: MockKilnScheduleRepository? = nil
     nonisolated(unsafe) private static var mockRecipeRepo: MockRecipeRepository? = nil
     #if canImport(UIKit)
@@ -550,6 +551,29 @@ nonisolated struct RepositoryFactory {
         }
     }
 
+    /// Creates a UnifiedLocationRepository based on current mode
+    /// Note: Uses localContext because locations are loaded from JSON (non-CloudKit syncing)
+    nonisolated static func createUnifiedLocationRepository() -> UnifiedLocationRepository {
+        switch mode {
+        case .mock:
+            // Return cached instance to ensure consistency
+            if let cached = mockUnifiedLocationRepo {
+                return cached
+            }
+            let repo = MockUnifiedLocationRepository()
+            mockUnifiedLocationRepo = repo
+            return repo
+
+        case .coreData:
+            let controller = getSharedController()
+            return CoreDataUnifiedLocationRepository(persistenceController: controller)
+
+        case .hybrid:
+            let controller = getSharedController()
+            return CoreDataUnifiedLocationRepository(persistenceController: controller)
+        }
+    }
+
     // MARK: - Service Creation (Convenience)
     
     /// Creates a complete InventoryTrackingService with all dependencies
@@ -632,6 +656,13 @@ nonisolated struct RepositoryFactory {
         )
     }
 
+    /// Creates a UnifiedLocationService with all dependencies
+    nonisolated static func createUnifiedLocationService() -> UnifiedLocationService {
+        return UnifiedLocationService(
+            repository: createUnifiedLocationRepository()
+        )
+    }
+
     /// Creates an EntitlementService for subscription management
     /// TODO: Integrate with StoreKit to determine actual subscription tier
     /// For now, defaults to free tier
@@ -675,6 +706,8 @@ nonisolated struct RepositoryFactory {
         mockPurchaseRecordRepo = nil
         mockProjectImageRepo = nil
         mockStoreRepo = nil
+        mockClassLocationRepo = nil
+        mockUnifiedLocationRepo = nil
         mockKilnScheduleRepo = nil
         mockRecipeRepo = nil
         #if canImport(UIKit)

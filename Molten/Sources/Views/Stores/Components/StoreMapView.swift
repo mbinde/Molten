@@ -46,16 +46,50 @@ struct StoreMapView: View {
                 }
             }
 
-            // Store markers with clustering
-            ForEach(viewModel.filteredStores, id: \.stable_id) { store in
-                if store.hasValidLocation {
-                    Marker(
-                        store.name,
-                        systemImage: "storefront",
-                        coordinate: store.coordinate
-                    )
-                    .tint(.orange)
-                    .tag(store.stable_id)
+            // Location markers with clustering
+            ForEach(viewModel.filteredStores, id: \.stable_id) { location in
+                if location.hasValidLocation {
+                    // Different markers based on location capabilities
+                    if location.hasRetail && location.hasEducation {
+                        // Mixed retail + education: Custom annotation with both icons
+                        Annotation(location.name, coordinate: location.coordinate) {
+                            ZStack {
+                                // Background circle
+                                Circle()
+                                    .fill(Color.purple)
+                                    .frame(width: 36, height: 36)
+
+                                // Both icons side-by-side
+                                HStack(spacing: 2) {
+                                    Image(systemName: "storefront.fill")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(.white)
+                                    Image(systemName: "graduationcap.fill")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(.white)
+                                }
+                            }
+                        }
+                        .tag(location.stable_id)
+                    } else if location.hasEducation {
+                        // Education only: graduation cap icon
+                        Marker(
+                            location.name,
+                            systemImage: "graduationcap.fill",
+                            coordinate: location.coordinate
+                        )
+                        .tint(.green)
+                        .tag(location.stable_id)
+                    } else {
+                        // Retail only: storefront icon
+                        Marker(
+                            location.name,
+                            systemImage: "storefront.fill",
+                            coordinate: location.coordinate
+                        )
+                        .tint(.orange)
+                        .tag(location.stable_id)
+                    }
                 }
             }
         }
@@ -208,8 +242,22 @@ struct StoreMapCalloutView: View {
             // Header with store name and close button
             HStack {
                 HStack(spacing: DesignSystem.Spacing.xs) {
-                    Image(systemName: "storefront")
-                        .foregroundStyle(.secondary)
+                    // Show appropriate icon(s) based on capabilities
+                    if store.hasRetail && store.hasEducation {
+                        // Both icons for mixed locations
+                        HStack(spacing: 2) {
+                            Image(systemName: "storefront.fill")
+                                .foregroundStyle(.orange)
+                            Image(systemName: "graduationcap.fill")
+                                .foregroundStyle(.green)
+                        }
+                    } else if store.hasEducation {
+                        Image(systemName: "graduationcap.fill")
+                            .foregroundStyle(.green)
+                    } else {
+                        Image(systemName: "storefront.fill")
+                            .foregroundStyle(.orange)
+                    }
 
                     Text(store.name)
                         .font(.headline)

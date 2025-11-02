@@ -300,6 +300,73 @@ class UnifiedLocationService: @unchecked Sendable {
     func loadLocationsFromJSON(_ data: Data) async throws -> Int {
         return try await repository.loadLocationsFromJSON(data)
     }
+
+    /// Fetch locations from web URL and merge with existing data (web takes precedence)
+    /// - Parameter url: URL to fetch stores.json from (default: https://moltenglass.app/stores.json)
+    /// - Returns: Number of locations loaded from web
+    func fetchLocationsFromWeb(url: URL = URL(string: "https://moltenglass.app/stores.json")!) async throws -> Int {
+        // Fetch JSON from web
+        let (data, response) = try await URLSession.shared.data(from: url)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw UnifiedLocationServiceError.invalidLocation
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            throw UnifiedLocationServiceError.missingRequiredField("HTTP error \(httpResponse.statusCode)")
+        }
+
+        // Load locations from web data
+        // The repository will update existing locations with matching stable_id (web takes precedence)
+        return try await repository.loadLocationsFromJSON(data)
+    }
+
+    /// Load locations with hybrid approach: bundle first, then fetch from web (web wins)
+    /// This provides instant offline data while ensuring web is source of truth
+    /// - Parameters:
+    ///   - bundleFilename: Bundle resource filename (default: "stores")
+    ///   - webURL: Web URL to fetch from (default: https://moltenglass.app/stores.json)
+    /// - Returns: Tuple of (bundledCount, webCount, totalCount)
+    func loadLocationsHybrid(
+        bundleFilename: String = "stores",
+        webURL: URL = URL(string: "https://moltenglass.app/stores.json")!
+    ) async throws -> (bundled: Int, web: Int, total: Int) {
+        var bundledCount = 0
+        var webCount = 0
+
+        // Step 1: Load bundled locations (offline fallback)
+        // Only load if bundle exists - don't fail if missing
+        if let bundleURL = Bundle.main.url(forResource: bundleFilename, withExtension: "json") {
+            do {
+                bundledCount = try await repository.loadLocationsFromJSONFile(at: bundleURL)
+                print("✅ Loaded \(bundledCount) locations from app bundle")
+            } catch {
+                print("⚠️  Failed to load bundled locations: \(error.localizedDescription)")
+                // Continue - we'll try web next
+            }
+        } else {
+            print("ℹ️  No bundled stores.json found (this is OK)")
+        }
+
+        // Step 2: Fetch from web (source of truth)
+        // This runs in background - non-blocking
+        do {
+            webCount = try await fetchLocationsFromWeb(url: webURL)
+            print("✅ Loaded \(webCount) locations from web (overriding any bundled duplicates)")
+        } catch {
+            print("⚠️  Failed to fetch locations from web: \(error.localizedDescription)")
+            // If we have bundled locations, this is OK - offline mode
+            if bundledCount == 0 {
+                // No bundled locations and web failed - re-throw error
+                throw error
+            }
+        }
+
+        // Get final count
+        let totalCount = try await repository.count()
+
+        return (bundled: bundledCount, web: webCount, total: totalCount)
+    }
 }
 
 // MARK: - Supporting Types

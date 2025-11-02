@@ -157,7 +157,8 @@ def scrape(test_mode=False, max_items=None):
                 # Skip unwanted products
                 skip_terms = ['sample pack', 'sampler', 'bundle', 'set', 'gift card',
                              'sticker', 'shirt', 't-shirt', 'hoodie', 'hat', 'cap',
-                             'budget tubes']  # Skip damaged/broken glass bundles
+                             'budget tubes',  # Skip damaged/broken glass bundles
+                             'frit']  # Skip frit - we don't track frit for other manufacturers
                 if any(term in product_name.lower() for term in skip_terms):
                     print(f"    Skipping: {product_name}")
                     continue

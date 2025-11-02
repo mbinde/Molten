@@ -15,10 +15,9 @@ struct LocationRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {
-            // Type icon
-            location.type.icon
+            // Type icon(s) based on capabilities
+            iconView
                 .font(.title2)
-                .foregroundStyle(DesignSystem.Colors.accentPrimary)
                 .frame(width: 32)
 
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
@@ -59,6 +58,29 @@ struct LocationRow: View {
                 .foregroundStyle(DesignSystem.Colors.textTertiary)
         }
         .padding(.vertical, DesignSystem.Padding.rowVertical)
+    }
+
+    // MARK: - Icon View
+
+    @ViewBuilder
+    private var iconView: some View {
+        if location.hasRetail && location.hasEducation {
+            // Both icons for mixed locations
+            HStack(spacing: 2) {
+                Image(systemName: "storefront.fill")
+                    .foregroundStyle(.orange)
+                    .font(.caption)
+                Image(systemName: "graduationcap.fill")
+                    .foregroundStyle(.green)
+                    .font(.caption)
+            }
+        } else if location.hasEducation {
+            Image(systemName: "graduationcap.fill")
+                .foregroundStyle(.green)
+        } else {
+            Image(systemName: "storefront.fill")
+                .foregroundStyle(.orange)
+        }
     }
 }
 

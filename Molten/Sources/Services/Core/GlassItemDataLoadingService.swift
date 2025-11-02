@@ -1119,8 +1119,6 @@ extension GlassItemDataLoadingService {
         }
 
         for (batchIndex, batch) in batches.enumerated() {
-            log.info("Processing tag sync batch \(batchIndex + 1)/\(batches.count) (\(batch.count) items)")
-
             for glassItem in batch {
                 guard let jsonItem = jsonByKey[glassItem.stable_id] else {
                     continue // Skip if no matching JSON item

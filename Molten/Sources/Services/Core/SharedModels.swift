@@ -132,7 +132,7 @@ struct CoatingItemModel: Identifiable, Equatable, Hashable, Sendable {
 }
 
 /// Inventory model for tracking quantities by type with optional subtypes and dimensions
-struct InventoryModel: ItemQuantityModel {
+struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
     let id: UUID
     let item_stable_id: String
     private let _type: String  // Internal storage (always non-nil)
@@ -187,7 +187,7 @@ struct InventoryModel: ItemQuantityModel {
     }
 
     /// Get a display-friendly description of this inventory record
-    nonisolated var typeDescription: String {
+    var typeDescription: String {
         GlassItemTypeSystem.shortDescription(type: _type, subtype: subtype, dimensions: dimensions)
     }
 
@@ -210,12 +210,12 @@ struct InventoryModel: ItemQuantityModel {
     }
 
     // Equatable conformance
-    nonisolated static func == (lhs: InventoryModel, rhs: InventoryModel) -> Bool {
+    static func == (lhs: InventoryModel, rhs: InventoryModel) -> Bool {
         return lhs.id == rhs.id
     }
 
     // Hashable conformance
-    nonisolated func hash(into hasher: inout Hasher) {
+    func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }

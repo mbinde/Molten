@@ -24,7 +24,7 @@ struct GlassItemSearchSelector: View {
     @FocusState private var isSearchFieldFocused: Bool
 
     var body: some View {
-        Section("Glass Item (UPDATED)") {
+        Section("Glass Item") {
             // Always show search field (even when item is selected)
             if prefilledNaturalKey == nil {
                 searchField

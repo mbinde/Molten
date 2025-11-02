@@ -6,9 +6,12 @@
 //
 
 import Foundation
+#if os(iOS)
 import UIKit
+#endif
 import Vision
 
+#if os(iOS)
 /// Extracts text from images using Vision framework's OCR capabilities
 struct ImageTextExtractor: Sendable {
 
@@ -130,3 +133,35 @@ enum ImageTextExtractionError: Error, LocalizedError {
         }
     }
 }
+#else
+// macOS stub - Image text extraction uses UIImage which is iOS-only
+struct ImageTextExtractor: Sendable {
+    nonisolated func extractText(from image: Any) async throws -> String {
+        throw ImageTextExtractionError.invalidImage
+    }
+
+    nonisolated func extractTextWithDetails(from image: Any) async throws -> [RecognizedText] {
+        throw ImageTextExtractionError.invalidImage
+    }
+}
+
+struct RecognizedText: Sendable {
+    let text: String
+    let confidence: Float
+    let boundingBox: CGRect
+}
+
+enum ImageTextExtractionError: Error, LocalizedError {
+    case invalidImage
+    case visionRequestFailed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidImage:
+            return "Image text extraction requires UIKit (iOS-only)"
+        case .visionRequestFailed(let reason):
+            return "Text recognition failed: \(reason)"
+        }
+    }
+}
+#endif

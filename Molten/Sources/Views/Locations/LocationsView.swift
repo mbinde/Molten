@@ -11,6 +11,7 @@ import MapKit
 /// Unified view for browsing stores, classes, and workshops
 struct LocationsView: View {
     @State private var viewModel: LocationsViewModel
+    @StateObject private var locationManager = LocationManager()
 
     // Default parameter evaluated once per view instance
     init(viewModel: LocationsViewModel = LocationsViewModel(
@@ -60,6 +61,17 @@ struct LocationsView: View {
             }
             .task {
                 await viewModel.loadLocations()
+            }
+            .onChange(of: locationManager.location) { oldValue, newValue in
+                if let location = newValue {
+                    viewModel.updateUserLocation(location.coordinate)
+                }
+            }
+            .onAppear {
+                // Request location permission on first appearance
+                if !locationManager.isAuthorized {
+                    locationManager.requestPermission()
+                }
             }
         }
     }
@@ -157,8 +169,27 @@ struct LocationsView: View {
                     }
                 }
             }
+
+            // Show user location if available
+            if let userLoc = locationManager.location {
+                Annotation("My Location", coordinate: userLoc.coordinate) {
+                    ZStack {
+                        Circle()
+                            .fill(.blue)
+                            .frame(width: 20, height: 20)
+
+                        Circle()
+                            .stroke(.white, lineWidth: 3)
+                            .frame(width: 20, height: 20)
+                    }
+                }
+            }
         }
         .mapStyle(.standard)
+        .mapControls {
+            MapUserLocationButton()
+            MapCompass()
+        }
     }
 
     // MARK: - Helper Methods

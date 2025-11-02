@@ -140,10 +140,10 @@ struct LocationsView: View {
                     Annotation(location.name, coordinate: location.coordinate) {
                         ZStack {
                             Circle()
-                                .fill(DesignSystem.Colors.accentPrimary)
-                                .frame(width: 32, height: 32)
+                                .fill(markerColor(for: location))
+                                .frame(width: 36, height: 36)
 
-                            location.type.icon
+                            markerIcon(for: location)
                                 .font(.caption)
                                 .foregroundStyle(.white)
                         }
@@ -152,6 +152,37 @@ struct LocationsView: View {
             }
         }
         .mapStyle(.standard)
+    }
+
+    // MARK: - Helper Methods
+
+    /// Determine marker color based on location capabilities
+    private func markerColor(for location: AnyLocationModel) -> Color {
+        if location.hasRetail && location.hasEducation {
+            return .purple
+        } else if location.hasEducation {
+            return .green
+        } else {
+            return .orange
+        }
+    }
+
+    /// Determine marker icon based on location capabilities
+    @ViewBuilder
+    private func markerIcon(for location: AnyLocationModel) -> some View {
+        if location.hasRetail && location.hasEducation {
+            // Both icons for mixed locations
+            HStack(spacing: 2) {
+                Image(systemName: "storefront.fill")
+                    .font(.system(size: 10))
+                Image(systemName: "graduationcap.fill")
+                    .font(.system(size: 10))
+            }
+        } else if location.hasEducation {
+            Image(systemName: "graduationcap.fill")
+        } else {
+            Image(systemName: "storefront.fill")
+        }
     }
 
     // MARK: - List View

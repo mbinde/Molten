@@ -54,6 +54,11 @@ struct AnyLocationModel: Identifiable, Equatable, Hashable {
     var validationErrors: [String] { _model.validationErrors }
     var hasMinimumInfo: Bool { _model.hasMinimumInfo }
 
+    // Capability properties
+    var hasRetail: Bool { _model.hasRetail }
+    var hasEducation: Bool { _model.hasEducation }
+    var hasServices: Bool { _model.hasServices }
+
     // Forward methods
     func matchesSearchText(_ searchText: String) -> Bool {
         _model.matchesSearchText(searchText)

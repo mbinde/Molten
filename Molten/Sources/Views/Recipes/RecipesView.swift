@@ -73,29 +73,34 @@ struct RecipesView: View {
     }
 
     private var emptyStateView: some View {
-        VStack(spacing: DesignSystem.Spacing.xl) {
-            Image(systemName: "book.closed")
-                .font(.system(size: 60))
-                .foregroundStyle(.secondary)
+        VStack(spacing: 0) {
+            Spacer()
 
-            Text("No Recipes")
-                .font(.title2)
-                .fontWeight(.semibold)
+            VStack(spacing: 20) {
+                Image(systemName: "book.closed")
+                    .font(.system(size: 70))
+                    .foregroundColor(.blue)
 
-            Text("Create your first frit recipe to get started")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+                Text("No Recipes Yet")
+                    .font(.title2)
+                    .fontWeight(.semibold)
 
-            Button {
-                // TODO: Show add recipe sheet
-            } label: {
-                Label("Add Recipe", systemImage: "plus")
-                    .font(.headline)
+                Text("Create recipes to blend frit colors and track your favorite combinations")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+
+                Button("Create Your First Recipe") {
+                    // TODO: Show add recipe sheet
+                }
+                .buttonStyle(.borderedProminent)
+                .padding(.top, 8)
             }
-            .buttonStyle(.borderedProminent)
+
+            Spacer()
         }
-        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func errorView(_ message: String) -> some View {

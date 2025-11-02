@@ -5,7 +5,9 @@
 //  Service for generating printable labels with QR codes for inventory items
 //
 
+#if os(iOS)
 import UIKit
+#endif
 import CoreImage.CIFilterBuiltins
 import Combine
 
@@ -500,6 +502,7 @@ struct LabelData: Sendable {
     let owner: String?
 }
 
+#if os(iOS)
 /// Service for generating printable label sheets with QR codes
 @preconcurrency
 class LabelPrintingService {
@@ -883,3 +886,11 @@ class LabelPrintingService {
         return point.y + font.lineHeight + 1
     }
 }
+#else
+// macOS stub - Label printing is iOS-only
+@preconcurrency
+class LabelPrintingService {
+    // Label printing requires UIKit (UIImage, UIFont, UIColor) which is iOS-only
+    // On macOS, this service is non-functional
+}
+#endif

@@ -13,7 +13,9 @@
 		4E65C9860C296A1DEF96AA45 /* StoreDetailViewShoppingListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02AE330C7BB78A7D6F8C808E /* StoreDetailViewShoppingListTests.swift */; };
 		705F2562F3466B79B4DE5118 /* ShoppingListStoreFilteringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2933704784628157538EB534 /* ShoppingListStoreFilteringTests.swift */; };
 		75883EC305A611D0BD32D3EB /* KilnScheduleModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */; };
+		83D7B0560E7DA5BE975B78DA /* ResourceManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFCA928F2D2B266568F02EF /* ResourceManagementTests.swift */; };
 		A9F8B30E274AB9BAB53443BD /* StoreListViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */; };
+		BDF096B2D706871923E8A93E /* RealisticLoadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE38936EAF5D5C1CB3A07C53 /* RealisticLoadTests.swift */; };
 		BE2EBFBA9D5C4EDEC7BD909C /* KilnScheduleServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */; };
 		C4FB811D85880540AD9DAE04 /* StoreToShoppingListNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8618F1F2448ABF3422C5D70 /* StoreToShoppingListNavigationTests.swift */; };
 		CB12E1970BDAC1FE91F47E1F /* StoreAutoCompleteFieldCombinedSourcesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5D6E530D79D68A045AA897 /* StoreAutoCompleteFieldCombinedSourcesTests.swift */; };
@@ -109,9 +111,11 @@
 		2933704784628157538EB534 /* ShoppingListStoreFilteringTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ShoppingListStoreFilteringTests.swift; path = Molten/Tests/MoltenTests/Views/Shopping/ShoppingListStoreFilteringTests.swift; sourceTree = "<group>"; };
 		4D5D6E530D79D68A045AA897 /* StoreAutoCompleteFieldCombinedSourcesTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreAutoCompleteFieldCombinedSourcesTests.swift; path = Molten/Tests/MoltenTests/Views/Shared/StoreAutoCompleteFieldCombinedSourcesTests.swift; sourceTree = "<group>"; };
 		72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreListViewModelTests.swift; path = Molten/Tests/MoltenTests/Views/StoreListViewModelTests.swift; sourceTree = "<group>"; };
+		7BFCA928F2D2B266568F02EF /* ResourceManagementTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ResourceManagementTests.swift; path = ResourceManagementTests.swift; sourceTree = "<group>"; };
 		880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KilnScheduleModelTests.swift; sourceTree = "<group>"; };
-		929F54CE6B43246DB4885335 /* PerformanceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PerformanceTests.swift; path = Molten/Tests/PerformanceTests/PerformanceTests.swift; sourceTree = "<group>"; };
+		929F54CE6B43246DB4885335 /* PerformanceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PerformanceTests.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
 		B8618F1F2448ABF3422C5D70 /* StoreToShoppingListNavigationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreToShoppingListNavigationTests.swift; path = Molten/Tests/MoltenTests/Integration/StoreToShoppingListNavigationTests.swift; sourceTree = "<group>"; };
+		CE38936EAF5D5C1CB3A07C53 /* RealisticLoadTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RealisticLoadTests.swift; path = RealisticLoadTests.swift; sourceTree = "<group>"; };
 		EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KilnScheduleServiceTests.swift; sourceTree = "<group>"; };
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
@@ -662,6 +666,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0296468A0E22E34A352CE6D2 /* PerformanceTests */ = {
+			isa = PBXGroup;
+			children = (
+				CE38936EAF5D5C1CB3A07C53 /* RealisticLoadTests.swift */,
+				7BFCA928F2D2B266568F02EF /* ResourceManagementTests.swift */,
+			);
+			name = PerformanceTests;
+			path = Molten/Tests/PerformanceTests;
+			sourceTree = "<group>";
+		};
 		10DABF2D8201D8197B277833 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
@@ -670,9 +684,19 @@
 			path = Shared;
 			sourceTree = "<group>";
 		};
+		44BA088A70B3B09F3D49AAF9 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				0296468A0E22E34A352CE6D2 /* PerformanceTests */,
+			);
+			name = Tests;
+			path = Molten/Tests;
+			sourceTree = "<group>";
+		};
 		4EEBA96496563B230FE3E2E0 /* Molten */ = {
 			isa = PBXGroup;
 			children = (
+				44BA088A70B3B09F3D49AAF9 /* Tests */,
 			);
 			path = Molten;
 			sourceTree = "<group>";
@@ -1189,6 +1213,8 @@
 			files = (
 				1139C08B532BCF8A0919A188 /* StoreAutoCompletePerformanceTests.swift in Sources */,
 				0B1CE848C054C0B58B608B27 /* PerformanceTests.swift in Sources */,
+				BDF096B2D706871923E8A93E /* RealisticLoadTests.swift in Sources */,
+				83D7B0560E7DA5BE975B78DA /* ResourceManagementTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

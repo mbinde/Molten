@@ -24,7 +24,8 @@ struct GlassItemSearchSelector: View {
     @FocusState private var isSearchFieldFocused: Bool
 
     var body: some View {
-        Section("Glass Item") {
+        Section("Glass Item (UPDATED)") {
+            // Always show search field (even when item is selected)
             if prefilledNaturalKey == nil {
                 searchField
             }
@@ -50,9 +51,8 @@ struct GlassItemSearchSelector: View {
                 localSearchText = newValue
             }
 
-            // If user continues typing while an item is selected, deselect it
-            // UNLESS it was manually selected (clicked by user)
-            if selectedGlassItem != nil && !newValue.isEmpty && newValue != oldValue && !wasManuallySelected {
+            // If user edits search text while an item is selected, deselect it immediately
+            if selectedGlassItem != nil && !newValue.isEmpty && newValue != oldValue {
                 selectedGlassItem = nil
             }
 
@@ -73,33 +73,48 @@ struct GlassItemSearchSelector: View {
     // MARK: - Sub-Views
 
     private var searchField: some View {
-        TextField("Search glass items...", text: $localSearchText)
-            .textFieldStyle(.roundedBorder)
-            .autocorrectionDisabled()
-            #if os(iOS)
-            .textInputAutocapitalization(.never)
-            #endif
-            .focused($isSearchFieldFocused)
-            .disabled(selectedGlassItem != nil)
-            .onChange(of: localSearchText) { oldValue, newValue in
-                // Debounce search text updates (200ms delay)
-                // This prevents expensive filtering on every keystroke
-                Task {
-                    try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
-                    if localSearchText == newValue {
-                        // Only update if the value hasn't changed (user stopped typing)
-                        searchText = newValue
-                        // Note: Auto-selection and filtering now happen in the view body
-                        // after searchText is updated, preventing image loading during debounce
+        HStack(spacing: 8) {
+            TextField("Search glass items...", text: $localSearchText)
+                .textFieldStyle(.roundedBorder)
+                .autocorrectionDisabled()
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                #endif
+                .focused($isSearchFieldFocused)
+                .onChange(of: localSearchText) { oldValue, newValue in
+                    // Debounce search text updates (200ms delay)
+                    // This prevents expensive filtering on every keystroke
+                    Task {
+                        try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+                        if localSearchText == newValue {
+                            // Only update if the value hasn't changed (user stopped typing)
+                            searchText = newValue
+                            // Note: Auto-selection and filtering now happen in the view body
+                            // after searchText is updated, preventing image loading during debounce
+                        }
                     }
                 }
+
+            // Clear button (X) appears when there's text
+            if !localSearchText.isEmpty {
+                Button(action: {
+                    localSearchText = ""
+                    searchText = ""
+                    onClear()
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
             }
+        }
     }
 
     private func selectedItemView(_ glassItem: GlassItemModel) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             selectedItemHeader
             GlassItemCard(item: glassItem, variant: .compact)
+                .allowsHitTesting(false) // Prevent card clicks from deselecting
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
@@ -114,25 +129,7 @@ struct GlassItemSearchSelector: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
             Spacer()
-            if prefilledNaturalKey == nil {
-                clearButton
-            }
         }
-    }
-
-    private var clearButton: some View {
-        Button("Clear") {
-            onClear()
-        }
-        .font(.caption)
-        .foregroundColor(.blue)
-        .disabled(shouldDisableClear)
-    }
-
-    /// Disable clear button when there's exactly one auto-selected result
-    /// This prevents users from accidentally deselecting the only match
-    private var shouldDisableClear: Bool {
-        return filteredGlassItems.count == 1 && !wasManuallySelected
     }
 
     private var selectedItemBackgroundColor: Color {
@@ -149,16 +146,23 @@ struct GlassItemSearchSelector: View {
     private var searchResultsView: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 4) {
-                ForEach(filteredGlassItems.prefix(10), id: \.stable_id) { item in
+                ForEach(filteredGlassItems, id: \.stable_id) { item in
                     Button(action: {
-                        // Always allow clicking an item (even if already selected)
-                        // Mark as manually selected so it won't deselect on typing
                         wasManuallySelected = true
                         onSelect(item)
+                        // Don't clear search text - keep it for refinement
                     }) {
                         GlassItemCard(item: item, variant: .compact)
                     }
                     .buttonStyle(.plain)
+                }
+
+                // Show message if results are very large
+                if filteredGlassItems.count > 50 {
+                    Text("Showing \(filteredGlassItems.count) results. Refine search for better results.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 8)
                 }
             }
             .padding(.horizontal, 4)

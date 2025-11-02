@@ -47,6 +47,7 @@ nonisolated struct RepositoryFactory {
     nonisolated(unsafe) private static var mockStoreRepo: MockStoreRepository? = nil
     nonisolated(unsafe) private static var mockClassLocationRepo: MockClassLocationRepository? = nil
     nonisolated(unsafe) private static var mockKilnScheduleRepo: MockKilnScheduleRepository? = nil
+    nonisolated(unsafe) private static var mockRecipeRepo: MockRecipeRepository? = nil
     #if canImport(UIKit)
     nonisolated(unsafe) private static var mockUserImageRepo: MockUserImageRepository? = nil
     #endif
@@ -520,6 +521,35 @@ nonisolated struct RepositoryFactory {
         }
     }
 
+    /// Creates a RecipeRepository based on current mode
+    /// Note: Uses cloudContext because recipes are user-created data that syncs via CloudKit
+    nonisolated static func createRecipeRepository() -> RecipeRepository {
+        switch mode {
+        case .mock:
+            // Return cached instance to ensure consistency
+            if let cached = mockRecipeRepo {
+                return cached
+            }
+            let repo = MockRecipeRepository()
+            mockRecipeRepo = repo
+            return repo
+
+        case .coreData:
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataRecipeRepository(context: context)
+
+        case .hybrid:
+            let controller = getSharedController()
+            guard let context = controller.cloudContext else {
+                fatalError("cloudContext not initialized")
+            }
+            return CoreDataRecipeRepository(context: context)
+        }
+    }
+
     // MARK: - Service Creation (Convenience)
     
     /// Creates a complete InventoryTrackingService with all dependencies
@@ -639,6 +669,7 @@ nonisolated struct RepositoryFactory {
         mockProjectImageRepo = nil
         mockStoreRepo = nil
         mockKilnScheduleRepo = nil
+        mockRecipeRepo = nil
         #if canImport(UIKit)
         mockUserImageRepo = nil
         #endif

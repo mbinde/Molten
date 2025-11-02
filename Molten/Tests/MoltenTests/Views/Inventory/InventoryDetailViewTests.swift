@@ -54,7 +54,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -77,7 +79,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -95,7 +99,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -137,7 +143,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -162,7 +170,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -204,7 +214,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -230,7 +242,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -253,7 +267,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -270,7 +286,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -311,7 +329,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -358,7 +378,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -373,7 +395,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -390,7 +414,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -412,7 +438,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -430,7 +458,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -459,7 +489,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -476,7 +508,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: mockRepo,
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -512,7 +546,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -601,7 +637,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -619,7 +657,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: mockNotesRepo,
             userTagsRepository: mockTagsRepo,
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -680,7 +720,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -697,7 +739,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -726,7 +770,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -755,7 +801,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -791,7 +839,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -807,7 +857,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)
@@ -901,7 +953,9 @@ struct InventoryDetailViewTests {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
 
         #expect(view != nil)

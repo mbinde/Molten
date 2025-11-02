@@ -88,8 +88,8 @@ struct InventoryDetailView: View {
         userTagsRepository: UserTagsRepository,
         shoppingListRepository: ShoppingListRepository,
         userImageRepository: UserImageRepository,
-        kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService(),
-        glassItemRepository: GlassItemRepository = RepositoryFactory.createGlassItemRepository()
+        kilnScheduleService: KilnScheduleService,
+        glassItemRepository: GlassItemRepository
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
@@ -1798,7 +1798,9 @@ struct QuickAddInventoryView: View {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
     }
 }
@@ -1826,7 +1828,9 @@ struct QuickAddInventoryView: View {
             userNotesRepository: MockUserNotesRepository(),
             userTagsRepository: MockUserTagsRepository(),
             shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository()
+            userImageRepository: MockUserImageRepository(),
+            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
+            glassItemRepository: MockGlassItemRepository()
         )
     }
 }

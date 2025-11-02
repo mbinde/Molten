@@ -12,6 +12,7 @@ import MapKit
 struct LocationsView: View {
     @State private var viewModel: LocationsViewModel
     @StateObject private var locationManager = LocationManager()
+    @State private var showLocationPicker = false
 
     // Default parameter evaluated once per view instance
     init(viewModel: LocationsViewModel = LocationsViewModel(
@@ -51,6 +52,13 @@ struct LocationsView: View {
             .navigationTitle("Locations")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showLocationPicker = true
+                    } label: {
+                        Image(systemName: "location.circle")
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         viewModel.toggleMap()
@@ -58,6 +66,12 @@ struct LocationsView: View {
                         Image(systemName: viewModel.showMap ? "map.fill" : "map")
                     }
                 }
+            }
+            .sheet(isPresented: $showLocationPicker) {
+                LocationPickerSheet(onLocationSelected: { coordinate in
+                    viewModel.updateUserLocation(coordinate)
+                    showLocationPicker = false
+                })
             }
             .task {
                 await viewModel.loadLocations()

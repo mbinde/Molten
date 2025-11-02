@@ -14,6 +14,7 @@ struct RecipesView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var searchText = ""
+    @State private var showingAddRecipe = false
 
     init(recipeService: RecipeService = RepositoryFactory.createRecipeService()) {
         self.recipeService = recipeService
@@ -59,11 +60,19 @@ struct RecipesView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        // TODO: Show add recipe sheet
+                        showingAddRecipe = true
                     } label: {
                         Image(systemName: "plus")
                     }
                 }
+            }
+            .sheet(isPresented: $showingAddRecipe) {
+                AddRecipeView(
+                    recipeService: recipeService,
+                    onSave: { newRecipe in
+                        recipes.append(newRecipe)
+                    }
+                )
             }
             .task {
                 await loadRecipes()
@@ -114,7 +123,7 @@ struct RecipesView: View {
                     .padding(.horizontal)
 
                 Button("Create Your First Recipe") {
-                    // TODO: Show add recipe sheet
+                    showingAddRecipe = true
                 }
                 .buttonStyle(.borderedProminent)
                 .padding(.top, 8)

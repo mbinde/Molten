@@ -25,6 +25,7 @@ struct InventoryDetailView: View {
     let userNotesRepository: UserNotesRepository
     let userTagsRepository: UserTagsRepository
     let shoppingListRepository: ShoppingListRepository
+    let storeRepository: StoreRepository
     let userImageRepository: UserImageRepository
     let kilnScheduleService: KilnScheduleService
     let glassItemRepository: GlassItemRepository
@@ -87,6 +88,7 @@ struct InventoryDetailView: View {
         userNotesRepository: UserNotesRepository,
         userTagsRepository: UserTagsRepository,
         shoppingListRepository: ShoppingListRepository,
+        storeRepository: StoreRepository = RepositoryFactory.createStoreRepository(),
         userImageRepository: UserImageRepository,
         kilnScheduleService: KilnScheduleService,
         glassItemRepository: GlassItemRepository
@@ -97,6 +99,7 @@ struct InventoryDetailView: View {
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
+        self.storeRepository = storeRepository
         self.userImageRepository = userImageRepository
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
@@ -1174,7 +1177,8 @@ struct ShoppingListOptionsView: View {
 
                             StoreAutoCompleteField(
                                 store: $store,
-                                shoppingListRepository: shoppingListRepository
+                                shoppingListRepository: shoppingListRepository,
+                                storeRepository: storeRepository
                             )
                         }
                     }

@@ -23,8 +23,8 @@ struct CoreDataUnifiedLocationRepositoryTests {
         // Create isolated test container
         testController = PersistenceController.createTestController()
 
-        // Create repository with test container
-        repository = CoreDataUnifiedLocationRepository(context: testController.container.viewContext)
+        // Create repository with test controller
+        repository = CoreDataUnifiedLocationRepository(persistenceController: testController)
     }
 
     // MARK: - Save Tests

@@ -319,3 +319,33 @@ extension StoreModel {
         )
     }
 }
+
+extension StoreData {
+    /// Convert StoreData to ClassLocationModel
+    nonisolated func toClassLocationModel() -> ClassLocationModel {
+        return ClassLocationModel(
+            stable_id: stable_id,
+            name: name,
+            addressLine1: address_line1,
+            addressLine2: address_line2,
+            city: city,
+            state: state,
+            zip: zip,
+            latitude: latitude ?? 0.0,
+            longitude: longitude ?? 0.0,
+            websiteUrl: website_url,
+            phone: phone,
+            hoursJson: hours_json,
+            heroImagePath: hero_image_path,
+            notes: notes,
+            isVerified: is_verified ?? false,
+            supportsCasting: supports_casting ?? false,
+            supportsFlameworkingHard: supports_flameworking_hard ?? false,
+            supportsFlameworkingSoft: supports_flameworking_soft ?? false,
+            supportsFusing: supports_fusing ?? false,
+            supportsGlassBlowing: supports_glass_blowing ?? false,
+            supportsStainedGlass: supports_stained_glass ?? false,
+            supportsOther: supports_other ?? false
+        )
+    }
+}

@@ -95,22 +95,29 @@ struct LocationPickerSheet: View {
         errorMessage = nil
 
         let geocoder = CLGeocoder()
-        geocoder.geocodeAddressString(searchText) { placemarks, error in
-            isGeocoding = false
 
-            if let error = error {
-                errorMessage = "Could not find location. Try a different search term."
-                return
+        Task {
+            do {
+                let placemarks = try await geocoder.geocodeAddressString(searchText)
+
+                await MainActor.run {
+                    isGeocoding = false
+
+                    guard let placemark = placemarks.first,
+                          let location = placemark.location else {
+                        errorMessage = "Could not find location. Try a different search term."
+                        return
+                    }
+
+                    // Success - return the coordinate
+                    onLocationSelected(location.coordinate)
+                }
+            } catch {
+                await MainActor.run {
+                    isGeocoding = false
+                    errorMessage = "Could not find location. Try a different search term."
+                }
             }
-
-            guard let placemark = placemarks?.first,
-                  let location = placemark.location else {
-                errorMessage = "Could not find location. Try a different search term."
-                return
-            }
-
-            // Success - return the coordinate
-            onLocationSelected(location.coordinate)
         }
     }
 }

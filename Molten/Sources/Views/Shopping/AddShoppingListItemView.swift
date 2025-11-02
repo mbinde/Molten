@@ -13,20 +13,24 @@ struct AddShoppingListItemView: View {
     let prefilledNaturalKey: String?
     let shoppingListService: ShoppingListService
     let catalogService: CatalogService
+    let storeRepository: StoreRepository
 
     init(prefilledNaturalKey: String? = nil,
          shoppingListService: ShoppingListService,
-         catalogService: CatalogService) {
+         catalogService: CatalogService,
+         storeRepository: StoreRepository = RepositoryFactory.createStoreRepository()) {
         self.prefilledNaturalKey = prefilledNaturalKey
         self.shoppingListService = shoppingListService
         self.catalogService = catalogService
+        self.storeRepository = storeRepository
     }
 
     var body: some View {
         AddShoppingListFormView(
             prefilledNaturalKey: prefilledNaturalKey,
             shoppingListService: shoppingListService,
-            catalogService: catalogService
+            catalogService: catalogService,
+            storeRepository: storeRepository
         )
     }
 }
@@ -38,6 +42,7 @@ struct AddShoppingListFormView: View {
     let prefilledNaturalKey: String?
     private let shoppingListService: ShoppingListService
     private let catalogService: CatalogService
+    private let storeRepository: StoreRepository
 
     @State private var stableId: String = ""
     @State private var selectedGlassItem: GlassItemModel?
@@ -58,10 +63,12 @@ struct AddShoppingListFormView: View {
 
     init(prefilledNaturalKey: String? = nil,
          shoppingListService: ShoppingListService,
-         catalogService: CatalogService) {
+         catalogService: CatalogService,
+         storeRepository: StoreRepository) {
         self.prefilledNaturalKey = prefilledNaturalKey
         self.shoppingListService = shoppingListService
         self.catalogService = catalogService
+        self.storeRepository = storeRepository
     }
 
     var body: some View {
@@ -137,8 +144,11 @@ struct AddShoppingListFormView: View {
 
     private var storeField: some View {
         LabeledField("Store (optional)") {
-            TextField("e.g., Frantz Art Glass", text: $store)
-                .textFieldStyle(.roundedBorder)
+            StoreAutoCompleteField(
+                store: $store,
+                shoppingListRepository: shoppingListService.shoppingListRepository,
+                storeRepository: storeRepository
+            )
         }
     }
 
@@ -335,7 +345,8 @@ struct AddShoppingListFormView: View {
     NavigationStack {
         AddShoppingListItemView(
             shoppingListService: RepositoryFactory.createShoppingListService(),
-            catalogService: RepositoryFactory.createCatalogService()
+            catalogService: RepositoryFactory.createCatalogService(),
+            storeRepository: RepositoryFactory.createStoreRepository()
         )
     }
 }

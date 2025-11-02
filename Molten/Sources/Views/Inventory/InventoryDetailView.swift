@@ -25,6 +25,7 @@ struct InventoryDetailView: View {
     let userNotesRepository: UserNotesRepository
     let userTagsRepository: UserTagsRepository
     let shoppingListRepository: ShoppingListRepository
+    let storeRepository: StoreRepository
     let userImageRepository: UserImageRepository
     let kilnScheduleService: KilnScheduleService
     let glassItemRepository: GlassItemRepository
@@ -87,6 +88,7 @@ struct InventoryDetailView: View {
         userNotesRepository: UserNotesRepository,
         userTagsRepository: UserTagsRepository,
         shoppingListRepository: ShoppingListRepository,
+        storeRepository: StoreRepository = RepositoryFactory.createStoreRepository(),
         userImageRepository: UserImageRepository,
         kilnScheduleService: KilnScheduleService,
         glassItemRepository: GlassItemRepository
@@ -97,6 +99,7 @@ struct InventoryDetailView: View {
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
+        self.storeRepository = storeRepository
         self.userImageRepository = userImageRepository
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
@@ -209,7 +212,11 @@ struct InventoryDetailView: View {
             // Reload shopping list after adding
             loadShoppingList()
         }) {
-            ShoppingListOptionsView(item: item, shoppingListRepository: shoppingListRepository)
+            ShoppingListOptionsView(
+                item: item,
+                shoppingListRepository: shoppingListRepository,
+                storeRepository: storeRepository
+            )
         }
         .sheet(item: $selectedInventoryType) { selection in
             InventoryStorageDetailView(
@@ -1128,6 +1135,7 @@ struct InventoryDetailTypeRow: View {
 struct ShoppingListOptionsView: View {
     let item: CompleteInventoryItemModel
     let shoppingListRepository: ShoppingListRepository
+    let storeRepository: StoreRepository
     @Environment(\.dismiss) private var dismiss
 
     @State private var quantity: String = ""
@@ -1137,9 +1145,14 @@ struct ShoppingListOptionsView: View {
     @State private var showingSuccessToast = false
     @State private var isSaving = false
 
-    init(item: CompleteInventoryItemModel, shoppingListRepository: ShoppingListRepository) {
+    init(
+        item: CompleteInventoryItemModel,
+        shoppingListRepository: ShoppingListRepository,
+        storeRepository: StoreRepository = RepositoryFactory.createStoreRepository()
+    ) {
         self.item = item
         self.shoppingListRepository = shoppingListRepository
+        self.storeRepository = storeRepository
     }
 
     var body: some View {
@@ -1174,7 +1187,8 @@ struct ShoppingListOptionsView: View {
 
                             StoreAutoCompleteField(
                                 store: $store,
-                                shoppingListRepository: shoppingListRepository
+                                shoppingListRepository: shoppingListRepository,
+                                storeRepository: storeRepository
                             )
                         }
                     }

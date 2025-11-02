@@ -65,14 +65,18 @@ struct LocationRow: View {
 #Preview("Store") {
     List {
         LocationRow(
-            location: AnyLocationModel(store: StoreModel.create(
+            location: AnyLocationModel(unified: UnifiedLocationModel(
+                stable_id: "frantz-art-glass",
                 name: "Frantz Art Glass",
                 city: "Shelton",
                 state: "WA",
                 latitude: 47.2,
                 longitude: -123.1,
                 isVerified: true,
-                techniques: [.fusing, .casting]
+                retailCapabilities: [
+                    RetailCapability(technique: .fusing),
+                    RetailCapability(technique: .casting)
+                ]
             )),
             userLocation: CLLocationCoordinate2D(latitude: 47.6, longitude: -122.3)
         )
@@ -82,14 +86,19 @@ struct LocationRow: View {
 #Preview("Class") {
     List {
         LocationRow(
-            location: AnyLocationModel(classLocation: ClassLocationModel.create(
+            location: AnyLocationModel(unified: UnifiedLocationModel(
+                stable_id: "pilchuck-glass-school",
                 name: "Pilchuck Glass School",
                 city: "Stanwood",
                 state: "WA",
                 latitude: 48.2,
                 longitude: -122.4,
                 isVerified: true,
-                techniques: [.glassBlowing, .fusing, .casting]
+                educationCapabilities: [
+                    EducationCapability(technique: .glassBlowing),
+                    EducationCapability(technique: .fusing),
+                    EducationCapability(technique: .casting)
+                ]
             )),
             userLocation: nil
         )

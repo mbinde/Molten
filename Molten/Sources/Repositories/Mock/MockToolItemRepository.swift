@@ -1,12 +1,12 @@
 //
 //  MockToolItemRepository.swift
-//  Molten
+//  Flameworker
 //
-//  Mock implementation of ToolItemRepository for testing
+//  Created by Assistant on 10/14/25.
 //
 
 @preconcurrency import Foundation
-@preconcurrency import CryptoKit
+import CryptoKit
 
 /// Mock implementation of ToolItemRepository for testing
 /// Provides in-memory storage with realistic behavior for unit tests
@@ -15,7 +15,7 @@ class MockToolItemRepository: @unchecked Sendable, ToolItemRepository {
     // MARK: - Test Data Storage
 
     nonisolated(unsafe) private var items: [String: ToolItemModel] = [:]
-    private let queue = DispatchQueue(label: "mock.tool.repository", attributes: .concurrent)
+    private let queue = DispatchQueue(label: "mock.glass.repository", attributes: .concurrent)
 
     nonisolated init() {}
 
@@ -30,6 +30,9 @@ class MockToolItemRepository: @unchecked Sendable, ToolItemRepository {
     /// Controls the probability of random failures (0.0 to 1.0)
     nonisolated(unsafe) var failureProbability: Double = 0.1
 
+    /// Controls whether to suppress verbose logging during tests
+    nonisolated(unsafe) var suppressVerboseLogging: Bool = true
+    
     // MARK: - Test State Management
 
     /// Clear all stored data (useful for test setup)
@@ -47,9 +50,16 @@ class MockToolItemRepository: @unchecked Sendable, ToolItemRepository {
             }
         }
     }
-
+    
+    /// Pre-populate with test data that matches expected test scenarios
+    func populateWithTestData() async throws {
+        // TestDataSetup moved to test bundle - this function is deprecated
+        // let testItems = TestDataSetup.createStandardTestToolItems()
+        // let _ = try await createItems(testItems)
+    }
+    
     // MARK: - Basic CRUD Operations
-
+    
     func fetchItems(matching predicate: NSPredicate?) async throws -> [ToolItemModel] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
@@ -62,18 +72,18 @@ class MockToolItemRepository: @unchecked Sendable, ToolItemRepository {
                         continuation.resume(returning: sortedItems)
                         return
                     }
-
+                    
                     // Simple predicate evaluation for testing
                     let filteredItems = allItems.filter { item in
                         self.evaluatePredicate(predicate, for: item)
                     }.sorted(by: { $0.stable_id < $1.stable_id })
-
+                    
                     continuation.resume(returning: filteredItems)
                 }
             }
         }
     }
-
+    
     func fetchItem(byStableId stableId: String) async throws -> ToolItemModel? {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
@@ -83,24 +93,41 @@ class MockToolItemRepository: @unchecked Sendable, ToolItemRepository {
             }
         }
     }
-
+    
     func createItem(_ item: ToolItemModel) async throws -> ToolItemModel {
         return try await simulateOperation {
             return try await withCheckedThrowingContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    // Check for duplicate stable_id
-                    if self.items[item.stable_id] != nil {
-                        continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(item.stable_id))
+                    // Auto-generate stable_id if it's a placeholder
+                    var finalItem = item
+                    if item.stable_id == "AUTO_ID" {
+                        let generatedStableId = self.generateStableId(manufacturer: item.manufacturer, sku: item.sku)
+                        finalItem = ToolItemModel(
+                            stable_id: generatedStableId,
+                            name: item.name,
+                            sku: item.sku,
+                            manufacturer: item.manufacturer,
+                            mfr_notes: item.mfr_notes,
+                            url: item.url,
+                            mfr_status: item.mfr_status,
+                            image_url: item.image_url,
+                            image_path: item.image_path
+                        )
+                    }
+
+                    // Check for duplicate stable ID
+                    if self.items[finalItem.stable_id] != nil {
+                        continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(finalItem.stable_id))
                         return
                     }
 
-                    self.items[item.stable_id] = item
-                    continuation.resume(returning: item)
+                    self.items[finalItem.stable_id] = finalItem
+                    continuation.resume(returning: finalItem)
                 }
             }
         }
     }
-
+    
     func createItems(_ items: [ToolItemModel]) async throws -> [ToolItemModel] {
         return try await simulateOperation {
             return try await withCheckedThrowingContinuation { continuation in
@@ -108,14 +135,31 @@ class MockToolItemRepository: @unchecked Sendable, ToolItemRepository {
                     var createdItems: [ToolItemModel] = []
 
                     for item in items {
-                        // Check for duplicates
-                        if self.items[item.stable_id] != nil {
-                            continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(item.stable_id))
+                        // Auto-generate stable_id if it's a placeholder
+                        var finalItem = item
+                        if item.stable_id == "AUTO_ID" {
+                            let generatedStableId = self.generateStableId(manufacturer: item.manufacturer, sku: item.sku)
+                            finalItem = ToolItemModel(
+                                stable_id: generatedStableId,
+                                name: item.name,
+                                sku: item.sku,
+                                manufacturer: item.manufacturer,
+                                mfr_notes: item.mfr_notes,
+                                url: item.url,
+                                mfr_status: item.mfr_status,
+                                image_url: item.image_url,
+                                image_path: item.image_path
+                            )
+                        }
+
+                        // Check for duplicate stable ID
+                        if self.items[finalItem.stable_id] != nil {
+                            continuation.resume(throwing: MockRepositoryError.duplicateNaturalKey(finalItem.stable_id))
                             return
                         }
 
-                        self.items[item.stable_id] = item
-                        createdItems.append(item)
+                        self.items[finalItem.stable_id] = finalItem
+                        createdItems.append(finalItem)
                     }
 
                     continuation.resume(returning: createdItems)
@@ -123,7 +167,7 @@ class MockToolItemRepository: @unchecked Sendable, ToolItemRepository {
             }
         }
     }
-
+    
     func updateItem(_ item: ToolItemModel) async throws -> ToolItemModel {
         return try await simulateOperation {
             return try await withCheckedThrowingContinuation { continuation in
@@ -140,26 +184,21 @@ class MockToolItemRepository: @unchecked Sendable, ToolItemRepository {
             }
         }
     }
-
+    
     func deleteItem(stableId: String) async throws {
-        return try await simulateOperation {
-            return try await withCheckedThrowingContinuation { continuation in
+        try await simulateOperation {
+            await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
-                    guard self.items[stableId] != nil else {
-                        continuation.resume(throwing: MockRepositoryError.itemNotFound(stableId))
-                        return
-                    }
-
                     self.items.removeValue(forKey: stableId)
                     continuation.resume()
                 }
             }
         }
     }
-
+    
     func deleteItems(stableIds: [String]) async throws {
-        return try await simulateOperation {
-            return try await withCheckedThrowingContinuation { continuation in
+        try await simulateOperation {
+            await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
                     for stableId in stableIds {
                         self.items.removeValue(forKey: stableId)
@@ -169,18 +208,27 @@ class MockToolItemRepository: @unchecked Sendable, ToolItemRepository {
             }
         }
     }
-
+    
     // MARK: - Search & Filter Operations
-
+    
     func searchItems(text: String) async throws -> [ToolItemModel] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let searchText = text.lowercased()
-                    let filteredItems = self.items.values.filter { item in
-                        item.name.lowercased().contains(searchText) ||
-                        item.manufacturer.lowercased().contains(searchText) ||
-                        (item.mfr_notes?.lowercased().contains(searchText) ?? false)
+                    guard !text.isEmpty else {
+                        let allItems = Array(self.items.values).sorted(by: { $0.stable_id < $1.stable_id })
+                        continuation.resume(returning: allItems)
+                        return
+                    }
+
+                    // Parse search text to determine search mode
+                    let searchMode = SearchTextParser.parseSearchText(text)
+
+                    // Filter items based on search mode
+                    let values = Array(self.items.values); let filteredItems = values.filter { item in
+                        // Search across name, manufacturer, SKU, and notes
+                        let fields = [item.name, item.manufacturer, item.sku, item.mfr_notes]
+                        return SearchTextParser.matchesAnyField(fields: fields, mode: searchMode)
                     }.sorted(by: { $0.stable_id < $1.stable_id })
 
                     continuation.resume(returning: filteredItems)
@@ -188,59 +236,57 @@ class MockToolItemRepository: @unchecked Sendable, ToolItemRepository {
             }
         }
     }
-
+    
     func fetchItems(byManufacturer manufacturer: String) async throws -> [ToolItemModel] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let filteredItems = self.items.values.filter { item in
-                        item.manufacturer == manufacturer
-                    }.sorted(by: { $0.stable_id < $1.stable_id })
-
-                    continuation.resume(returning: filteredItems)
+                    let values = Array(self.items.values); let filtered = values.filter { $0.manufacturer == manufacturer }
+                        .sorted(by: { $0.stable_id < $1.stable_id })
+                    continuation.resume(returning: filtered)
                 }
             }
         }
     }
-
+    
+    
     func fetchItems(byStatus status: String) async throws -> [ToolItemModel] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let filteredItems = self.items.values.filter { item in
-                        item.mfr_status == status
-                    }.sorted(by: { $0.stable_id < $1.stable_id })
-
-                    continuation.resume(returning: filteredItems)
+                    let values = Array(self.items.values); let filtered = values.filter { $0.mfr_status == status }
+                        .sorted(by: { $0.stable_id < $1.stable_id })
+                    continuation.resume(returning: filtered)
                 }
             }
         }
     }
-
+    
     // MARK: - Business Query Operations
-
+    
     func getDistinctManufacturers() async throws -> [String] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let manufacturers = Set(self.items.values.map { $0.manufacturer })
-                    continuation.resume(returning: Array(manufacturers).sorted())
+                    let values = Array(self.items.values); let manufacturers = Array(Set(values.map { $0.manufacturer })).sorted()
+                    continuation.resume(returning: manufacturers)
                 }
             }
         }
     }
-
+    
+    
     func getDistinctStatuses() async throws -> [String] {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
-                    let statuses = Set(self.items.values.map { $0.mfr_status })
-                    continuation.resume(returning: Array(statuses).sorted())
+                    let values = Array(self.items.values); let statuses = Array(Set(values.map { $0.mfr_status })).sorted()
+                    continuation.resume(returning: statuses)
                 }
             }
         }
     }
-
+    
     func stableIdExists(_ stableId: String) async throws -> Bool {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
@@ -250,53 +296,95 @@ class MockToolItemRepository: @unchecked Sendable, ToolItemRepository {
             }
         }
     }
-
+    
     func generateNextNaturalKey(manufacturer: String, sku: String?) async throws -> String {
-        // Generate a simple stable_id based on manufacturer + SKU + timestamp
-        let baseString = "\(manufacturer)-\(sku ?? "nosqu")-\(Date().timeIntervalSince1970)"
-        return generateStableId(from: baseString)
+        return try await simulateOperation {
+            return await withCheckedContinuation { continuation in
+                self.queue.async {
+                    var sequence = 0
+                    var stableId: String
+                    
+                    repeat {
+                        // Generate hash-based stable_id (6-char hash)
+                        let input = "\(manufacturer)-\(sku)-\(sequence)"
+                        stableId = String(format: "%06d", abs(input.hashValue % 1000000))
+                        sequence += 1
+                    } while self.items[stableId] != nil
+                    
+                    continuation.resume(returning: stableId)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Private Helper Methods
+
+    /// Generate a stable 6-character ID from manufacturer and SKU, matching the implementation
+    /// in TestHelpers.swift and Tools/Scraping Tools/update_database.py
+    private func generateStableId(manufacturer: String, sku: String?) -> String {
+        // Combine manufacturer and SKU for hashing (same format as Python and TestHelpers)
+        // If no SKU, use manufacturer only
+        let combined = if let sku = sku {
+            "\(manufacturer):\(sku)"
+        } else {
+            "\(manufacturer):NO_SKU:\(UUID().uuidString)"
+        }
+
+        // Hash it with SHA-256
+        let hash = SHA256.hash(data: combined.data(using: .utf8)!)
+        let hashBytes = Data(hash)
+
+        // Base62 character set (excluding confusing chars: I, O, l)
+        let base62Chars = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz"
+
+        // Take first 4 bytes (32 bits), convert to base62
+        var num = UInt32(bigEndian: hashBytes.withUnsafeBytes { $0.load(as: UInt32.self) })
+
+        // Generate 6-character ID
+        var stableId = ""
+        for _ in 0..<6 {
+            let index = Int(num % UInt32(base62Chars.count))
+            let char = base62Chars[base62Chars.index(base62Chars.startIndex, offsetBy: index)]
+            stableId = String(char) + stableId
+            num /= UInt32(base62Chars.count)
+        }
+
+        return stableId
     }
 
-    // MARK: - Private Helpers
-
-    /// Simulate async operation with optional latency and random failures
-    private func simulateOperation<T>(_ operation: @Sendable () async throws -> T) async throws -> T {
+    /// Simulate latency and random failures for realistic testing
+    nonisolated private func simulateOperation<T>(_ operation: () async throws -> T) async throws -> T {
+        // Simulate random failure if enabled
         if shouldRandomlyFail && Double.random(in: 0...1) < failureProbability {
             throw MockRepositoryError.simulatedFailure
         }
-
+        
+        // Simulate network latency if enabled
         if simulateLatency {
-            try await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            let delay = Double.random(in: 0.01...0.1) // 10-100ms
+            try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
         }
-
+        
         return try await operation()
     }
-
-    /// Generate a 6-character stable ID from a string using SHA256
-    private func generateStableId(from string: String) -> String {
-        let data = Data(string.utf8)
-        let hash = SHA256.hash(data: data)
-        let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
-        return String(hashString.prefix(6))
-    }
-
-    /// Simple predicate evaluation for testing
+    
+    /// Basic predicate evaluation for testing (supports common patterns)
     private func evaluatePredicate(_ predicate: NSPredicate, for item: ToolItemModel) -> Bool {
-        // Convert ToolItemModel to NSDictionary for predicate evaluation
-        let dict: [String: Any?] = [
-            "stable_id": item.stable_id,
-            "name": item.name,
-            "sku": item.sku as Any,
-            "manufacturer": item.manufacturer,
-            "mfr_notes": item.mfr_notes as Any,
-            "url": item.url as Any,
-            "uri": item.uri,
-            "mfr_status": item.mfr_status,
-            "image_url": item.image_url as Any,
-            "image_path": item.image_path as Any
-        ]
+        let predicateString = predicate.predicateFormat
+        
+        // Handle common predicate patterns
+        if predicateString.contains("manufacturer ==") {
+            if let range = predicateString.range(of: "\"") {
+                let afterFirstQuote = predicateString[range.upperBound...]
+                if let endRange = afterFirstQuote.range(of: "\"") {
+                    let manufacturer = String(afterFirstQuote[..<endRange.lowerBound])
+                    return item.manufacturer == manufacturer
+                }
+            }
+        }
+        
 
-        return predicate.evaluate(with: dict)
+        return false
     }
 }
 

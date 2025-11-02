@@ -14,7 +14,7 @@ enum FritMeasurementType: String, Codable, CaseIterable, Sendable {
     case byWeight = "weight"
     case byRatio = "ratio"
 
-    var displayName: String {
+    nonisolated var displayName: String {
         switch self {
         case .byWeight:
             return "By Weight"
@@ -32,7 +32,7 @@ struct FritIngredientModel: Identifiable, Equatable, Hashable, Sendable {
     let stableId: String  // References a GlassItem in Local Store (cross-store reference)
     let amount: Double    // Interpreted based on parent recipe's measurementType
 
-    init(id: UUID = UUID(), stableId: String, amount: Double) {
+    nonisolated init(id: UUID = UUID(), stableId: String, amount: Double) {
         self.id = id
         self.stableId = stableId
         self.amount = amount
@@ -51,7 +51,7 @@ struct FritRecipeModel: Identifiable, Equatable, Sendable {
     let dateCreated: Date
     let dateModified: Date
 
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         title: String,
         descriptionText: String,
@@ -74,13 +74,13 @@ struct FritRecipeModel: Identifiable, Equatable, Sendable {
     /// Validates if a title is acceptable for a recipe
     /// - Parameter title: The title to validate
     /// - Returns: True if valid, false otherwise
-    static func isValidTitle(_ title: String) -> Bool {
+    nonisolated static func isValidTitle(_ title: String) -> Bool {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         return !trimmed.isEmpty && trimmed.count <= 100
     }
 
     /// Creates a copy with updated modification date
-    func withUpdatedModificationDate() -> FritRecipeModel {
+    nonisolated func withUpdatedModificationDate() -> FritRecipeModel {
         FritRecipeModel(
             id: id,
             title: title,

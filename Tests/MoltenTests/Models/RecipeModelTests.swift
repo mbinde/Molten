@@ -10,6 +10,7 @@ import Foundation
 @testable import Molten
 
 @Suite("RecipeModel Tests")
+@MainActor
 struct RecipeModelTests {
 
     @Test("FritIngredientModel should initialize with required properties")

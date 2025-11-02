@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		035572C16D05D83FC69976B6 /* TrivialTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */; };
+		1CF1B2AB941ABAF399B73BA6 /* RecipeModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ABAB6526BF656F9675D0043 /* RecipeModelTests.swift */; };
 		3E27DFCD6BBA363302830817 /* KilnScheduleRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F64C1685AAD0E03C6C8597 /* KilnScheduleRepositoryTests.swift */; };
 		6831744F7FC5EAEB262806DA /* Location+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 206F48B4CA82C67CE81378C8 /* Location+CoreDataClass.swift */; };
 		75883EC305A611D0BD32D3EB /* KilnScheduleModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */; };
@@ -107,6 +108,7 @@
 		171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TrivialTest.swift; path = Tests/MoltenTests/TrivialTest.swift; sourceTree = "<group>"; };
 		206F48B4CA82C67CE81378C8 /* Location+CoreDataClass.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Location+CoreDataClass.swift"; path = "Molten/Sources/Repositories/CoreData/Generated/Location+CoreDataClass.swift"; sourceTree = "<group>"; };
 		33833545663991FAF72E9147 /* Store+CoreDataClass.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Store+CoreDataClass.swift"; path = "Molten/Sources/Repositories/CoreData/Generated/Store+CoreDataClass.swift"; sourceTree = "<group>"; };
+		3ABAB6526BF656F9675D0043 /* RecipeModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RecipeModelTests.swift; path = Tests/MoltenTests/Models/RecipeModelTests.swift; sourceTree = "<group>"; };
 		72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreListViewModelTests.swift; path = Tests/MoltenTests/Views/StoreListViewModelTests.swift; sourceTree = "<group>"; };
 		880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleModelTests.swift; path = Tests/MoltenTests/Models/KilnScheduleModelTests.swift; sourceTree = "<group>"; };
 		A8401DCBED62EC1764925A62 /* StorageLocation+CoreDataClass.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "StorageLocation+CoreDataClass.swift"; path = "Molten/Sources/Repositories/CoreData/Generated/StorageLocation+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -659,6 +661,7 @@
 			isa = PBXGroup;
 			children = (
 				880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */,
+				3ABAB6526BF656F9675D0043 /* RecipeModelTests.swift */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -1109,6 +1112,7 @@
 				876F572741E85348014F3AEF /* StorageLocation+CoreDataClass.swift in Sources */,
 				B34753267B0FBA08D9B2C283 /* Store+CoreDataClass.swift in Sources */,
 				90BF08B8BB1562ECFDAE4F7C /* ClassLocation+CoreDataClass.swift in Sources */,
+				1CF1B2AB941ABAF399B73BA6 /* RecipeModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

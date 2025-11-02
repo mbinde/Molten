@@ -30,17 +30,17 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
 
     // MARK: - Frit Recipe Operations
 
-    func fetchAllFritRecipes() async throws -> [FritRecipeModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[FritRecipeModel], Error>) in
+    func fetchAllRecipes() async throws -> [RecipeModel] {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[RecipeModel], Error>) in
             context.perform {
                 do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "FritRecipe")
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
                     fetchRequest.sortDescriptors = [
                         NSSortDescriptor(key: "date_created", ascending: false)
                     ]
 
                     let coreDataRecipes = try self.context.fetch(fetchRequest)
-                    let recipes = coreDataRecipes.compactMap { self.convertToFritRecipeModel($0) }
+                    let recipes = coreDataRecipes.compactMap { self.convertToRecipeModel($0) }
 
                     self.log.debug("Fetched \(recipes.count) frit recipes")
                     continuation.resume(returning: recipes)
@@ -53,16 +53,16 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
         }
     }
 
-    func fetchFritRecipe(byId id: UUID) async throws -> FritRecipeModel? {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<FritRecipeModel?, Error>) in
+    func fetchRecipe(byId id: UUID) async throws -> RecipeModel? {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<RecipeModel?, Error>) in
             context.perform {
                 do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "FritRecipe")
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
                     fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
                     fetchRequest.fetchLimit = 1
 
                     let results = try self.context.fetch(fetchRequest)
-                    let recipe = results.first.flatMap { self.convertToFritRecipeModel($0) }
+                    let recipe = results.first.flatMap { self.convertToRecipeModel($0) }
 
                     if recipe != nil {
                         self.log.debug("Found frit recipe with ID: \(id)")
@@ -80,12 +80,12 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
         }
     }
 
-    func createFritRecipe(_ recipe: FritRecipeModel) async throws -> FritRecipeModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<FritRecipeModel, Error>) in
+    func createRecipe(_ recipe: RecipeModel) async throws -> RecipeModel {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<RecipeModel, Error>) in
             context.perform {
                 do {
                     // Create new Core Data entity
-                    guard let entity = NSEntityDescription.entity(forEntityName: "FritRecipe", in: self.context) else {
+                    guard let entity = NSEntityDescription.entity(forEntityName: "Recipe", in: self.context) else {
                         throw RecipeRepositoryError.persistenceError("FritRecipe entity not found")
                     }
                     let coreDataRecipe = NSManagedObject(entity: entity, insertInto: self.context)
@@ -107,11 +107,11 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
         }
     }
 
-    func updateFritRecipe(_ recipe: FritRecipeModel) async throws -> FritRecipeModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<FritRecipeModel, Error>) in
+    func updateRecipe(_ recipe: RecipeModel) async throws -> RecipeModel {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<RecipeModel, Error>) in
             context.perform {
                 do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "FritRecipe")
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
                     fetchRequest.predicate = NSPredicate(format: "id == %@", recipe.id as CVarArg)
                     fetchRequest.fetchLimit = 1
 
@@ -137,11 +137,11 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
         }
     }
 
-    func deleteFritRecipe(id: UUID) async throws {
+    func deleteRecipe(id: UUID) async throws {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             context.perform {
                 do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "FritRecipe")
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
                     fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
                     fetchRequest.fetchLimit = 1
 
@@ -165,16 +165,16 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
 
     // MARK: - Search Operations
 
-    func searchFritRecipes(byTitle query: String) async throws -> [FritRecipeModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[FritRecipeModel], Error>) in
+    func searchRecipes(byTitle query: String) async throws -> [RecipeModel] {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[RecipeModel], Error>) in
             context.perform {
                 do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "FritRecipe")
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
                     fetchRequest.predicate = NSPredicate(format: "title CONTAINS[cd] %@", query)
                     fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
 
                     let coreDataRecipes = try self.context.fetch(fetchRequest)
-                    let recipes = coreDataRecipes.compactMap { self.convertToFritRecipeModel($0) }
+                    let recipes = coreDataRecipes.compactMap { self.convertToRecipeModel($0) }
 
                     self.log.debug("Search '\(query)' found \(recipes.count) recipes")
                     continuation.resume(returning: recipes)
@@ -187,12 +187,12 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
         }
     }
 
-    func fetchFritRecipes(containingIngredient stableId: String) async throws -> [FritRecipeModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[FritRecipeModel], Error>) in
+    func fetchRecipes(containingIngredient stableId: String) async throws -> [RecipeModel] {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[RecipeModel], Error>) in
             context.perform {
                 do {
                     // Fetch all ingredients with this stable_id
-                    let ingredientFetch = NSFetchRequest<NSManagedObject>(entityName: "FritIngredient")
+                    let ingredientFetch = NSFetchRequest<NSManagedObject>(entityName: "RecipeIngredient")
                     ingredientFetch.predicate = NSPredicate(format: "stable_id == %@", stableId)
 
                     let ingredients = try self.context.fetch(ingredientFetch)
@@ -212,11 +212,11 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
                         return
                     }
 
-                    let recipeFetch = NSFetchRequest<NSManagedObject>(entityName: "FritRecipe")
+                    let recipeFetch = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
                     recipeFetch.predicate = NSPredicate(format: "id IN %@", recipeIds)
 
                     let coreDataRecipes = try self.context.fetch(recipeFetch)
-                    let recipes = coreDataRecipes.compactMap { self.convertToFritRecipeModel($0) }
+                    let recipes = coreDataRecipes.compactMap { self.convertToRecipeModel($0) }
 
                     self.log.debug("Found \(recipes.count) recipes containing ingredient \(stableId)")
                     continuation.resume(returning: recipes)
@@ -229,16 +229,16 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
         }
     }
 
-    func fetchFritRecipes(byMeasurementType measurementType: FritMeasurementType) async throws -> [FritRecipeModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[FritRecipeModel], Error>) in
+    func fetchRecipes(byMeasurementType measurementType: MeasurementType) async throws -> [RecipeModel] {
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[RecipeModel], Error>) in
             context.perform {
                 do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "FritRecipe")
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
                     fetchRequest.predicate = NSPredicate(format: "measurement_type == %@", measurementType.rawValue)
                     fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
 
                     let coreDataRecipes = try self.context.fetch(fetchRequest)
-                    let recipes = coreDataRecipes.compactMap { self.convertToFritRecipeModel($0) }
+                    let recipes = coreDataRecipes.compactMap { self.convertToRecipeModel($0) }
 
                     self.log.debug("Found \(recipes.count) recipes with measurement type \(measurementType.rawValue)")
                     continuation.resume(returning: recipes)
@@ -253,7 +253,7 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
 
     // MARK: - Private Conversion Methods
 
-    private func convertToFritRecipeModel(_ coreDataRecipe: NSManagedObject) -> FritRecipeModel? {
+    private func convertToRecipeModel(_ coreDataRecipe: NSManagedObject) -> RecipeModel? {
         guard let id = coreDataRecipe.value(forKey: "id") as? UUID,
               let title = coreDataRecipe.value(forKey: "title") as? String,
               let dateCreated = coreDataRecipe.value(forKey: "date_created") as? Date,
@@ -264,16 +264,16 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
 
         let descriptionText = coreDataRecipe.value(forKey: "description_text") as? String ?? ""
         let measurementTypeStr = coreDataRecipe.value(forKey: "measurement_type") as? String ?? "weight"
-        let measurementType = FritMeasurementType(rawValue: measurementTypeStr) ?? .byWeight
+        let measurementType = MeasurementType(rawValue: measurementTypeStr) ?? .byWeight
 
         // Convert ingredients
         let ingredientsSet = coreDataRecipe.value(forKey: "ingredients") as? NSSet
-        let ingredients = ingredientsSet?.allObjects.compactMap { obj -> FritIngredientModel? in
+        let ingredients = ingredientsSet?.allObjects.compactMap { obj -> RecipeIngredientModel? in
             guard let ingredient = obj as? NSManagedObject else { return nil }
-            return self.convertToFritIngredientModel(ingredient)
+            return self.convertToRecipeIngredientModel(ingredient)
         } ?? []
 
-        return FritRecipeModel(
+        return RecipeModel(
             id: id,
             title: title,
             descriptionText: descriptionText,
@@ -284,7 +284,7 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
         )
     }
 
-    private func convertToFritIngredientModel(_ coreDataIngredient: NSManagedObject) -> FritIngredientModel? {
+    private func convertToRecipeIngredientModel(_ coreDataIngredient: NSManagedObject) -> RecipeIngredientModel? {
         guard let id = coreDataIngredient.value(forKey: "id") as? UUID,
               let stableId = coreDataIngredient.value(forKey: "stable_id") as? String else {
             log.error("Missing required fields in FritIngredient Core Data object")
@@ -293,14 +293,14 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
 
         let amount = coreDataIngredient.value(forKey: "amount") as? Double ?? 0.0
 
-        return FritIngredientModel(
+        return RecipeIngredientModel(
             id: id,
             stableId: stableId,
             amount: amount
         )
     }
 
-    private func updateCoreDataFritRecipe(_ coreDataRecipe: NSManagedObject, with model: FritRecipeModel) {
+    private func updateCoreDataFritRecipe(_ coreDataRecipe: NSManagedObject, with model: RecipeModel) {
         coreDataRecipe.setValue(model.id, forKey: "id")
         coreDataRecipe.setValue(model.title, forKey: "title")
         coreDataRecipe.setValue(model.descriptionText, forKey: "description_text")
@@ -317,7 +317,7 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
 
         // Create new ingredients
         for ingredientModel in model.ingredients {
-            guard let entity = NSEntityDescription.entity(forEntityName: "FritIngredient", in: context) else {
+            guard let entity = NSEntityDescription.entity(forEntityName: "RecipeIngredient", in: context) else {
                 log.error("FritIngredient entity not found")
                 continue
             }

@@ -7,10 +7,10 @@
 
 import Foundation
 
-// MARK: - FritMeasurementType
+// MARK: - MeasurementType
 
-/// How measurements are interpreted in a frit recipe
-enum FritMeasurementType: String, Codable, CaseIterable, Sendable {
+/// How measurements are interpreted in a recipe
+enum MeasurementType: String, Codable, CaseIterable, Sendable {
     case byWeight = "weight"
     case byRatio = "ratio"
 
@@ -24,10 +24,10 @@ enum FritMeasurementType: String, Codable, CaseIterable, Sendable {
     }
 }
 
-// MARK: - FritIngredientModel
+// MARK: - RecipeIngredientModel
 
-/// Represents a single ingredient in a frit recipe
-struct FritIngredientModel: Identifiable, Equatable, Hashable, Sendable {
+/// Represents a single ingredient in a recipe
+struct RecipeIngredientModel: Identifiable, Equatable, Hashable, Sendable {
     let id: UUID
     let stableId: String  // References a GlassItem in Local Store (cross-store reference)
     let amount: Double    // Interpreted based on parent recipe's measurementType
@@ -39,15 +39,15 @@ struct FritIngredientModel: Identifiable, Equatable, Hashable, Sendable {
     }
 }
 
-// MARK: - FritRecipeModel
+// MARK: - RecipeModel
 
-/// Represents a recipe for mixing glass frit
-struct FritRecipeModel: Identifiable, Equatable, Sendable {
+/// Represents a recipe for mixing glass
+struct RecipeModel: Identifiable, Equatable, Sendable {
     let id: UUID
     let title: String
     let descriptionText: String
-    let measurementType: FritMeasurementType
-    let ingredients: [FritIngredientModel]
+    let measurementType: MeasurementType
+    let ingredients: [RecipeIngredientModel]
     let dateCreated: Date
     let dateModified: Date
 
@@ -55,8 +55,8 @@ struct FritRecipeModel: Identifiable, Equatable, Sendable {
         id: UUID = UUID(),
         title: String,
         descriptionText: String,
-        measurementType: FritMeasurementType,
-        ingredients: [FritIngredientModel],
+        measurementType: MeasurementType,
+        ingredients: [RecipeIngredientModel],
         dateCreated: Date = Date(),
         dateModified: Date = Date()
     ) {
@@ -80,8 +80,8 @@ struct FritRecipeModel: Identifiable, Equatable, Sendable {
     }
 
     /// Creates a copy with updated modification date
-    nonisolated func withUpdatedModificationDate() -> FritRecipeModel {
-        FritRecipeModel(
+    nonisolated func withUpdatedModificationDate() -> RecipeModel {
+        RecipeModel(
             id: id,
             title: title,
             descriptionText: descriptionText,
@@ -95,7 +95,7 @@ struct FritRecipeModel: Identifiable, Equatable, Sendable {
 
 // MARK: - Hashable Conformance
 
-extension FritRecipeModel: Hashable {
+extension RecipeModel: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }

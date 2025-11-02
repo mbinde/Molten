@@ -132,6 +132,7 @@ struct CoatingItemModel: Identifiable, Equatable, Hashable, Sendable {
 }
 
 /// Inventory model for tracking quantities by type with optional subtypes and dimensions
+@preconcurrency
 struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
     let id: UUID
     let item_stable_id: String
@@ -147,15 +148,15 @@ struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
     // MARK: - ItemQuantityModel Conformance
 
     /// Type as optional (protocol requirement)
-    var type: String? { _type }
+    nonisolated var type: String? { _type }
 
     /// Date added (protocol requirement)
-    var dateAdded: Date { date_added }
+    nonisolated var dateAdded: Date { date_added }
 
     // MARK: - Inventory-Specific Properties
 
     /// Type as non-optional (inventory always has a type)
-    var inventoryType: String { _type }
+    nonisolated var inventoryType: String { _type }
 
     nonisolated init(
         id: UUID = UUID(),
@@ -299,7 +300,7 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
 
     /// Inventory grouped by type with total quantities
     nonisolated var inventoryByType: [String: Double] {
-        Dictionary(grouping: inventory, by: { $0.type })
+        Dictionary(grouping: inventory, by: { $0.inventoryType })
             .mapValues { inventoryRecords in
                 inventoryRecords.reduce(0.0) { $0 + $1.quantity }
             }
@@ -342,7 +343,7 @@ struct InventorySummaryModel: Identifiable, Equatable, Sendable {
 
     /// Inventory grouped by type with total quantities
     nonisolated var inventoryByType: [String: Double] {
-        Dictionary(grouping: inventories, by: { $0.type })
+        Dictionary(grouping: inventories, by: { $0.inventoryType })
             .mapValues { inventoryRecords in
                 inventoryRecords.reduce(0.0) { $0 + $1.quantity }
             }
@@ -350,7 +351,7 @@ struct InventorySummaryModel: Identifiable, Equatable, Sendable {
 
     /// Available inventory types
     nonisolated var availableTypes: [String] {
-        Array(Set(inventories.map { $0.type })).sorted()
+        Array(Set(inventories.map { $0.inventoryType })).sorted()
     }
 
     nonisolated static func == (lhs: InventorySummaryModel, rhs: InventorySummaryModel) -> Bool {

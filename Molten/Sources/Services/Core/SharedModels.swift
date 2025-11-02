@@ -133,10 +133,10 @@ struct CoatingItemModel: Identifiable, Equatable, Hashable, Sendable {
 
 /// Inventory model for tracking quantities by type with optional subtypes and dimensions
 @preconcurrency
-struct InventoryModel: ItemQuantityModel, @unchecked Sendable, Codable {
+struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
     let id: UUID
     let item_stable_id: String
-    let _type: String  // Internal storage (always non-nil) - made internal for Codable synthesis
+    private let _type: String  // Internal storage (always non-nil)
     let subtype: String?
     let subsubtype: String?
     let dimensions: [String: Double]?

@@ -239,6 +239,30 @@ extension LocationModel {
         return isValid && (hasAnyAddress || hasValidLocation || websiteUrl != nil)
     }
 
+    // MARK: - Capability Detection (Default Implementations)
+
+    /// Check if location offers retail capabilities
+    /// Override this in UnifiedLocationModel to check retailCapabilities array
+    nonisolated var hasRetail: Bool {
+        // Default: check if any technique flags are set (legacy behavior)
+        return supportsCasting || supportsFlameworkingHard || supportsFlameworkingSoft ||
+               supportsFusing || supportsGlassBlowing || supportsStainedGlass || supportsOther
+    }
+
+    /// Check if location offers education capabilities
+    /// Override this in UnifiedLocationModel to check educationCapabilities array
+    nonisolated var hasEducation: Bool {
+        // Default: return false (UnifiedLocationModel will override)
+        return false
+    }
+
+    /// Check if location offers services
+    /// Override this in UnifiedLocationModel to check serviceCapabilities array
+    nonisolated var hasServices: Bool {
+        // Default: return false (UnifiedLocationModel will override)
+        return false
+    }
+
     /// Convert to StoreData for JSON export
     nonisolated func toData() -> StoreData {
         return StoreData(

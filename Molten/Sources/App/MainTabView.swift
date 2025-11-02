@@ -12,6 +12,7 @@ import SwiftUI
 private let isPurchaseRecordsEnabled = true
 private let isProjectPlansEnabled = true
 private let isLogbookEnabled = true
+private let isRecipesEnabled = true
 
 /// Notification names for tab interactions
 extension Notification.Name {
@@ -24,6 +25,8 @@ extension Notification.Name {
     static let inventoryItemAdded = Notification.Name("inventoryItemAdded")
     static let shoppingListItemAdded = Notification.Name("shoppingListItemAdded")
     static let showSettings = Notification.Name("showSettings")
+    static let navigateToShoppingListForStore = Notification.Name("navigateToShoppingListForStore")
+    static let filterShoppingListByStore = Notification.Name("filterShoppingListByStore")
 }
 
 /// Main tab view that provides navigation between the app's primary sections
@@ -128,6 +131,18 @@ struct MainTabView: View {
                     }
                 }
 
+                // Recipes tab
+                if selectedTab == .recipes || recipesHasBeenViewed {
+                    if isRecipesEnabled {
+                        RecipesView()
+                            .opacity(selectedTab == .recipes ? 1 : 0)
+                            .id("recipes-view")
+                    } else {
+                        featureDisabledPlaceholder(title: "Recipes", icon: "book.closed")
+                            .opacity(selectedTab == .recipes ? 1 : 0)
+                    }
+                }
+
                 // Locations tab (stores, classes, workshops)
                 if selectedTab == .locations || locationsHasBeenViewed {
                     LocationsView()
@@ -216,6 +231,22 @@ struct MainTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .showSettings)) { _ in
             showingSettings = true
         }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToShoppingListForStore)) { notification in
+            // Switch to shopping tab and filter by store
+            if let storeName = notification.userInfo?["storeName"] as? String {
+                selectedTab = .shopping
+                markTabAsViewed(.shopping)
+
+                // Post notification to filter shopping list by store
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    NotificationCenter.default.post(
+                        name: .filterShoppingListByStore,
+                        object: nil,
+                        userInfo: ["storeName": storeName]
+                    )
+                }
+            }
+        }
         .onChange(of: selectedTab) { oldTab, newTab in
             print("📱 MainTabView: onChange(selectedTab) - from \(oldTab) to \(newTab)")
             // Save the selected tab whenever it changes (but only if it actually changed)
@@ -232,6 +263,7 @@ struct MainTabView: View {
             case .purchases: purchasesHasBeenViewed = true
             case .locations: locationsHasBeenViewed = true
             case .kilnSchedules: kilnSchedulesHasBeenViewed = true
+            case .recipes: recipesHasBeenViewed = true
             default: break
             }
             print("📱 MainTabView: onChange(selectedTab) completed")
@@ -245,6 +277,7 @@ struct MainTabView: View {
     @State private var purchasesHasBeenViewed = false
     @State private var locationsHasBeenViewed = false
     @State private var kilnSchedulesHasBeenViewed = false
+    @State private var recipesHasBeenViewed = false
     @State private var hasRestoredTab = false
     
     // MARK: - Helper Functions
@@ -260,6 +293,8 @@ struct MainTabView: View {
                 return isProjectPlansEnabled
             case .logbook:
                 return isLogbookEnabled
+            case .recipes:
+                return isRecipesEnabled
             case .purchases:
                 return isPurchaseRecordsEnabled
             case .settings:
@@ -321,6 +356,7 @@ struct MainTabView: View {
         case .purchases: purchasesHasBeenViewed = true
         case .locations: locationsHasBeenViewed = true
         case .kilnSchedules: kilnSchedulesHasBeenViewed = true
+        case .recipes: recipesHasBeenViewed = true
         default: break
         }
     }

@@ -272,3 +272,147 @@ grep -rn "compactMap.*value(forKey" Molten/Sources/Repositories/CoreData/ --incl
 ```
 
 Each match needs to be replaced with an explicit `for` loop.
+
+## 🔥 CRITICAL: Protocol-Based DRY with Sendable and nonisolated
+
+### The Challenge
+
+When creating protocols for DRY (Don't Repeat Yourself) code sharing in Swift 6, you'll encounter MainActor isolation issues even with `Sendable` structs. This happens because Swift 6 infers MainActor isolation for protocol conformances unless explicitly told otherwise.
+
+### The Problem Pattern
+
+```swift
+// ❌ THIS WILL CAUSE 350+ COMPILE ERRORS
+protocol ItemQuantityModel: Sendable {
+    var quantity: Double { get }           // Inferred as MainActor-isolated!
+    func withQuantity(_ newQuantity: Double) -> Self
+}
+
+struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
+    let quantity: Double
+    // ERROR: "main actor-isolated property 'quantity' cannot be accessed from outside of the actor"
+}
+```
+
+**Why this fails:**
+- Protocol properties are inferred as MainActor-isolated by default
+- Even though the struct is `Sendable`, the protocol conformance creates isolation boundaries
+- Repository classes calling these methods from background queues fail with actor isolation errors
+
+### The Solution: Mark Everything nonisolated
+
+The key insight from Swift 6 research: **Mark both protocol requirements AND their implementations as `nonisolated`**
+
+```swift
+// ✅ CORRECT - Mark protocol requirements as nonisolated
+protocol ItemQuantityModel: Sendable {
+    // Core fields must be nonisolated for cross-actor access
+    nonisolated var id: UUID { get }
+    nonisolated var quantity: Double { get }
+    nonisolated var item_stable_id: String { get }
+
+    // Business logic methods must also be nonisolated
+    nonisolated var isValid: Bool { get }
+    nonisolated func withQuantity(_ newQuantity: Double) -> Self
+    nonisolated func matchesSearchText(_ searchText: String) -> Bool
+}
+
+// ✅ Protocol extension default implementations also need nonisolated
+extension ItemQuantityModel {
+    nonisolated var isValid: Bool {
+        return !item_stable_id.isEmpty && quantity > 0
+    }
+
+    nonisolated func matchesSearchText(_ searchText: String) -> Bool {
+        return item_stable_id.lowercased().contains(searchText.lowercased())
+    }
+}
+
+// ✅ Conforming struct needs nonisolated on methods
+struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
+    let id: UUID
+    let quantity: Double
+    let item_stable_id: String
+
+    // Mark init as nonisolated so it can be called from any isolation domain
+    nonisolated init(id: UUID = UUID(), quantity: Double, item_stable_id: String) {
+        self.id = id
+        self.quantity = quantity
+        self.item_stable_id = item_stable_id
+    }
+
+    // Protocol implementation must be nonisolated
+    nonisolated func withQuantity(_ newQuantity: Double) -> InventoryModel {
+        return InventoryModel(id: id, quantity: newQuantity, item_stable_id: item_stable_id)
+    }
+
+    // Equatable/Hashable implementations also need nonisolated
+    nonisolated static func == (lhs: InventoryModel, rhs: InventoryModel) -> Bool {
+        return lhs.id == rhs.id
+    }
+
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+```
+
+### Why This Works
+
+1. **`nonisolated` on protocol requirements** - Tells Swift these properties/methods can be accessed from any isolation domain
+2. **`@unchecked Sendable`** - Asserts to the compiler that the type is safe for concurrent access (use carefully!)
+3. **`nonisolated` on implementations** - Matches the protocol requirement, allowing cross-actor calls
+4. **Value types with immutable fields** - Safe because there's no mutable shared state
+
+### Common Errors You'll See Without This Pattern
+
+```
+error: main actor-isolated property 'quantity' cannot be accessed from outside of the actor
+error: main actor-isolated initializer 'init(...)' cannot be called from outside of the actor
+error: main actor-isolated instance method 'withQuantity' cannot be called from outside of the actor
+error: main actor-isolated conformance of 'MyModel' to 'Hashable' cannot satisfy conformance requirement for a 'Sendable' type parameter
+```
+
+### Real-World Example: ItemQuantityModel Protocol
+
+This pattern was successfully used to eliminate ~60% code duplication between `InventoryModel` and `ItemShoppingModel`:
+
+**Before:** Each model had duplicate validation, formatting, and search logic (150+ lines duplicated)
+
+**After:** Shared protocol with default implementations (80 lines shared, 70 lines domain-specific)
+
+**Result:** Reduced 350+ compile errors to 7 by systematically applying `nonisolated` to:
+- All protocol property requirements (id, quantity, item_stable_id, etc.)
+- All protocol method requirements (withQuantity, matchesSearchText, etc.)
+- All protocol extension implementations
+- All struct initializers and methods
+- Equatable/Hashable conformances
+
+### When NOT to Use This Pattern
+
+- ❌ **Types with mutable state** - Use proper actor isolation instead
+- ❌ **Classes** - Use actors or `@MainActor` isolation
+- ❌ **ObservableObject** - Keep MainActor-isolated
+- ❌ **Reference types** - Not safe for `@unchecked Sendable`
+
+### Checklist for Protocol-Based DRY
+
+When creating a shared protocol for models:
+
+1. ✅ Make protocol inherit from `Sendable`
+2. ✅ Mark ALL protocol property requirements as `nonisolated`
+3. ✅ Mark ALL protocol method requirements as `nonisolated`
+4. ✅ Mark ALL protocol extension implementations as `nonisolated`
+5. ✅ Mark conforming struct init as `nonisolated`
+6. ✅ Mark conforming struct methods as `nonisolated`
+7. ✅ Use `@unchecked Sendable` on conforming structs (if all fields are value types)
+8. ✅ Test with repository classes that call from background queues
+
+### Resources
+
+This pattern was learned from investigating Swift 6 strict concurrency in January 2025:
+- Donny Wals: "Solving actor-isolated protocol conformance" (donnywals.com)
+- Swift Evolution: Sendable and actor isolation inference
+- Apple: Swift Concurrency Adoption Guidelines
+
+**Key insight:** Protocol conformance creates isolation boundaries. Use `nonisolated` liberally on protocol APIs that need cross-actor access.

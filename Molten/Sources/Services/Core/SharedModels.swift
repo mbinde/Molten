@@ -136,7 +136,7 @@ struct CoatingItemModel: Identifiable, Equatable, Hashable, Sendable {
 struct InventoryModel: ItemQuantityModel, @unchecked Sendable, Codable {
     let id: UUID
     let item_stable_id: String
-    private let _type: String  // Internal storage (always non-nil)
+    let _type: String  // Internal storage (always non-nil) - made internal for Codable synthesis
     let subtype: String?
     let subsubtype: String?
     let dimensions: [String: Double]?

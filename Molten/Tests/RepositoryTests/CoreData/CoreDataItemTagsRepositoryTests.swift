@@ -30,7 +30,7 @@ struct CoreDataItemTagsRepositoryTests {
         }
 
         // Create repository with isolated container
-        repository = CoreDataItemTagsRepository(itemTagsPersistentContainer: persistentContainer)
+        repository = CoreDataItemTagsRepository(context: persistentContainer.viewContext)
 
         // Clean up any existing data to ensure clean test state
         try cleanupExistingData()

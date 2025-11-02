@@ -17,7 +17,7 @@ protocol GlassItemSortable {
 protocol InventorySortable {
     nonisolated var item_stable_id: String { get }
     nonisolated var quantity: Double { get }
-    nonisolated var type: String { get }
+    nonisolated var inventoryType: String { get }
 }
 
 // MARK: - Model Conformance
@@ -29,7 +29,7 @@ extension GlassItemModel: GlassItemSortable {
 
 /// Make InventoryModel conform to InventorySortable
 extension InventoryModel: InventorySortable {
-    // Already has item_stable_id, quantity, type properties - no additional implementation needed
+    // Already has item_stable_id, quantity, inventoryType properties - no additional implementation needed
 }
 
 /// Make CompleteInventoryItemModel conform to GlassItemSortable protocol
@@ -132,10 +132,10 @@ nonisolated struct SortUtilities {
         case .type:
             return items.sorted { item1, item2 in
                 // Sort by type first, then by stable_id
-                if item1.type == item2.type {
+                if item1.inventoryType == item2.inventoryType {
                     return item1.item_stable_id.localizedCaseInsensitiveCompare(item2.item_stable_id) == .orderedAscending
                 }
-                return item1.type.localizedCaseInsensitiveCompare(item2.type) == .orderedAscending
+                return item1.inventoryType.localizedCaseInsensitiveCompare(item2.inventoryType) == .orderedAscending
             }
         }
     }

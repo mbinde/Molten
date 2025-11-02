@@ -21,26 +21,41 @@ struct RecipesView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
+            VStack(spacing: 0) {
+                // Search bar at top
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    TextField("Search recipes", text: $searchText)
+                        .textFieldStyle(.plain)
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .padding(DesignSystem.Padding.standard)
+                .background(DesignSystem.Colors.backgroundSecondary)
+
+                Divider()
+
+                // Content
                 if isLoading {
                     ProgressView("Loading recipes...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let error = errorMessage {
                     errorView(error)
                 } else if filteredRecipes.isEmpty {
-                    // Always show List for searchable to work
-                    List {
-                        // Empty list so search bar appears
-                    }
-                    .listStyle(.plain)
-
-                    // Overlay empty state
                     emptyStateView
                 } else {
                     recipeList
                 }
             }
             .navigationTitle("Recipes")
-            .searchable(text: $searchText, prompt: "Search recipes")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {

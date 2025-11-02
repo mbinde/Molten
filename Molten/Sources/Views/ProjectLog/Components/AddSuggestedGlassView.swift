@@ -39,7 +39,7 @@ struct AddSuggestedGlassView: View {
                 glassItems: glassItems,
                 onSelect: { item in
                     selectedGlassItem = item
-                    searchText = ""
+                    // Keep search text for refinement
                 },
                 onClear: {
                     selectedGlassItem = nil

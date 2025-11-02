@@ -443,25 +443,25 @@ class CoreDataUnifiedLocationRepository: @unchecked Sendable, UnifiedLocationRep
 
         // Convert service capability flags (new format)
         if storeData.rentals_supports_casting == true {
-            servicesCapabilities.append(ServiceCapability(serviceType: .kilnRental, technique: .casting))
+            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental, technique: .casting))
         }
         if storeData.rentals_supports_flameworking_hard == true {
-            servicesCapabilities.append(ServiceCapability(serviceType: .kilnRental, technique: .flameworkinghard))
+            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental, technique: .flameworkinghard))
         }
         if storeData.rentals_supports_flameworking_soft == true {
-            servicesCapabilities.append(ServiceCapability(serviceType: .kilnRental, technique: .flameworkingsoft))
+            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental, technique: .flameworkingsoft))
         }
         if storeData.rentals_supports_fusing == true {
-            servicesCapabilities.append(ServiceCapability(serviceType: .kilnRental, technique: .fusing))
+            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental, technique: .fusing))
         }
         if storeData.rentals_supports_glass_blowing == true {
-            servicesCapabilities.append(ServiceCapability(serviceType: .kilnRental, technique: .glassBlowing))
+            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental, technique: .glassBlowing))
         }
         if storeData.rentals_supports_stained_glass == true {
-            servicesCapabilities.append(ServiceCapability(serviceType: .kilnRental, technique: .stainedGlass))
+            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental, technique: .stainedGlass))
         }
         if storeData.rentals_supports_other == true {
-            servicesCapabilities.append(ServiceCapability(serviceType: .kilnRental, technique: .other))
+            servicesCapabilities.append(ServicesCapability(serviceType: .kilnRental, technique: .other))
         }
 
         return UnifiedLocationModel(

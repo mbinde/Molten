@@ -19,7 +19,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Add and fetch single tag")
     func addAndFetchSingleTag() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTag("favorite", toItem: "test-item-1")
 
@@ -32,7 +32,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Add multiple tags")
     func addMultipleTags() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTag("favorite", toItem: "test-item-1")
         try await repository.addTag("wishlist", toItem: "test-item-1")
@@ -49,7 +49,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Add tags array")
     func addTagsArray() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTags(["favorite", "wishlist", "test"], toItem: "test-item-1")
 
@@ -64,7 +64,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Add duplicate tag is idempotent")
     func addDuplicateTag() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTag("favorite", toItem: "test-item-1")
         try await repository.addTag("favorite", toItem: "test-item-1")
@@ -77,7 +77,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Tag cleaning and normalization")
     func tagCleaning() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTag("  Favorite  ", toItem: "test-item-1")
         try await repository.addTag("WISHLIST", toItem: "test-item-1")
@@ -93,7 +93,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Remove tag")
     func removeTag() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTags(["favorite", "wishlist", "test"], toItem: "test-item-1")
         try await repository.removeTag("wishlist", fromItem: "test-item-1")
@@ -109,7 +109,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Remove all tags")
     func removeAllTags() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTags(["favorite", "wishlist", "test"], toItem: "test-item-1")
         try await repository.removeAllTags(fromItem: "test-item-1")
@@ -122,7 +122,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Set tags replaces existing tags")
     func setTags() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTags(["favorite", "wishlist"], toItem: "test-item-1")
         try await repository.setTags(["archived", "surplus"], forItem: "test-item-1")
@@ -141,7 +141,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Fetch tags for multiple items")
     func fetchTagsForMultipleItems() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTags(["favorite", "test"], toItem: "test-item-1")
         try await repository.addTags(["wishlist", "archived"], toItem: "test-item-2")
@@ -161,7 +161,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Get all distinct tags")
     func getAllTags() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTags(["favorite", "wishlist"], toItem: "test-item-1")
         try await repository.addTags(["favorite", "archived"], toItem: "test-item-2")
@@ -179,7 +179,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Get tags with prefix")
     func getTagsWithPrefix() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTags(["favorite", "fantasy", "wishlist"], toItem: "test-item-1")
         try await repository.addTags(["archived", "favorite"], toItem: "test-item-2")
@@ -194,7 +194,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Get most used tags")
     func getMostUsedTags() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTags(["favorite"], toItem: "test-item-1")
         try await repository.addTags(["favorite", "wishlist"], toItem: "test-item-2")
@@ -213,7 +213,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Fetch items with specific tag")
     func fetchItemsWithTag() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTags(["favorite", "test"], toItem: "test-item-1")
         try await repository.addTags(["favorite", "wishlist"], toItem: "test-item-2")
@@ -229,7 +229,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Fetch items with all specified tags")
     func fetchItemsWithAllTags() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTags(["favorite", "wishlist", "test"], toItem: "test-item-1")
         try await repository.addTags(["favorite", "wishlist"], toItem: "test-item-2")
@@ -245,7 +245,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Fetch items with any of specified tags")
     func fetchItemsWithAnyTags() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTags(["favorite"], toItem: "test-item-1")
         try await repository.addTags(["wishlist"], toItem: "test-item-2")
@@ -263,7 +263,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Get tag usage counts")
     func getTagUsageCounts() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTags(["favorite"], toItem: "test-item-1")
         try await repository.addTags(["favorite", "wishlist"], toItem: "test-item-2")
@@ -279,7 +279,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Get tags with minimum count threshold")
     func getTagsWithCounts() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTags(["favorite"], toItem: "test-item-1")
         try await repository.addTags(["favorite", "wishlist"], toItem: "test-item-2")
@@ -298,7 +298,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Check tag existence")
     func tagExists() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTag("favorite", toItem: "test-item-1")
 
@@ -314,7 +314,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Fetch tags for non-existent item returns empty array")
     func fetchTagsForNonExistentItem() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         let tags = try await repository.fetchTags(forItem: "non-existent-item")
 
@@ -324,7 +324,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Remove tag from non-existent item does not throw")
     func removeTagFromNonExistentItem() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.removeTag("favorite", fromItem: "non-existent-item")
     }
@@ -332,7 +332,7 @@ struct CoreDataUserTagsRepositoryTests {
     @Test("Empty tag prefix returns all tags")
     func emptyTagPrefix() async throws {
         let testController = PersistenceController.createTestController()
-        let repository = CoreDataUserTagsRepository(userTagsPersistentContainer: testController.container)
+        let repository = CoreDataUserTagsRepository(context: testController.container.viewContext)
 
         try await repository.addTags(["favorite", "wishlist"], toItem: "test-item-1")
 

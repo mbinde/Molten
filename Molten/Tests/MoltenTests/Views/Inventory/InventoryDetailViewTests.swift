@@ -635,7 +635,7 @@ struct InventoryDetailViewTests {
         ]
 
         let item = createTestItem(with: inventory)
-        let view = LocationDetailView(item: item, inventoryType: "rod")
+        let view = InventoryStorageDetailView(item: item, inventoryType: "rod")
 
         #expect(view != nil)
     }

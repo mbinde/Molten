@@ -133,7 +133,7 @@ struct CoatingItemModel: Identifiable, Equatable, Hashable, Sendable {
 
 /// Inventory model for tracking quantities by type with optional subtypes and dimensions
 @preconcurrency
-struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
+struct InventoryModel: ItemQuantityModel, @unchecked Sendable, Codable {
     let id: UUID
     let item_stable_id: String
     private let _type: String  // Internal storage (always non-nil)
@@ -208,16 +208,6 @@ struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
             date_added: date_added,
             date_modified: Date()  // Update modification date
         )
-    }
-
-    // Equatable conformance
-    nonisolated static func == (lhs: InventoryModel, rhs: InventoryModel) -> Bool {
-        return lhs.id == rhs.id
-    }
-
-    // Hashable conformance
-    nonisolated func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
     }
 }
 

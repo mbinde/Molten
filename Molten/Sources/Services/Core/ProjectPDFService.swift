@@ -5,9 +5,12 @@
 //  Service for exporting project plans as PDF documents
 //
 
+#if os(iOS)
 import UIKit
+#endif
 import SwiftUI
 
+#if os(iOS)
 /// Service for generating PDF documents from project plans
 actor ProjectPDFService {
     private let userImageRepository: UserImageRepository
@@ -378,3 +381,18 @@ actor ProjectPDFService {
             .trimmingCharacters(in: .whitespaces)
     }
 }
+#else
+// macOS stub - PDF generation is iOS-only
+actor ProjectPDFService {
+    private let userImageRepository: UserImageRepository
+
+    init(userImageRepository: UserImageRepository) {
+        self.userImageRepository = userImageRepository
+    }
+
+    func exportPlanAsPDF(_ plan: ProjectModel) async throws -> URL {
+        throw NSError(domain: "ProjectPDFService", code: -1,
+                     userInfo: [NSLocalizedDescriptionKey: "PDF generation requires UIKit (iOS-only)"])
+    }
+}
+#endif

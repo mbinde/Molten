@@ -6,7 +6,7 @@ Combined Glass Scraper
 Unified scraper that combines data from multiple glass manufacturers into a single CSV file.
 
 Manufacturers:
-- Asian Glass (CHB)
+- Asian Boro (AB)
 - Boro Batch (BB)
 - Bullseye Glass (BE)
 - Creation is Messy (CIM)
@@ -44,7 +44,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from url_utils import clean_manufacturer_url
 
 # Import manufacturer scrapers
-from scrapers import boro_batch, bullseye, chinese_boro, cim, delphi_superior, double_helix, effetre_vetrofond, gaffer, glass_alchemy, greasy, kashmir, lunar, molten_aura, momka, northstar, oceanside, origin, parramore, pdx_tubing, tag, ust_glass, wissmach, youghiogheny
+from scrapers import boro_batch, bullseye, asian_boro, cim, delphi_superior, double_helix, effetre_vetrofond, gaffer, glass_alchemy, greasy, kashmir, kugler, lunar, molten_aura, momka, northstar, oceanside, origin, parramore, pdx_tubing, tag, ust_glass, wissmach, youghiogheny
 
 
 # Manufacturer registry
@@ -59,9 +59,9 @@ MANUFACTURERS = {
         'module': bullseye,
         'enabled': True
     },
-    'CHB': {
-        'name': 'Chinese Boro',
-        'module': chinese_boro,
+    'AB': {
+        'name': 'Asian Boro',
+        'module': asian_boro,
         'enabled': True
     },
     'CIM': {
@@ -102,6 +102,11 @@ MANUFACTURERS = {
     'KAS': {
         'name': 'Kashmir Glass',
         'module': kashmir,
+        'enabled': True
+    },
+    'KUG': {
+        'name': 'Kugler',
+        'module': kugler,
         'enabled': True
     },
     'LUN': {
@@ -285,7 +290,7 @@ def main(argv=None):
     parser.add_argument(
         '--mfr',
         choices=list(MANUFACTURERS.keys()),
-        help='Scrape only this manufacturer (e.g., BB, BE, CHB, CIM, DS, DH, EF, GA, GAF, GRE, LUN, MA, MOM, OC, OR, PAR, PDX, TAG, UST, WM, Y96)'
+        help='Scrape only this manufacturer (e.g., BB, BE, AB, CIM, DS, DH, EF, GA, GAF, GRE, KAS, KUG, LUN, MA, MOM, NS, OC, OR, PAR, PDX, TAG, UST, WM, Y96)'
     )
     parser.add_argument(
         '--max-items',

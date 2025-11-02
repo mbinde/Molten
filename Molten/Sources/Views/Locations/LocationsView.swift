@@ -165,13 +165,7 @@ struct LocationsView: View {
 
     /// Determine ring color based on location capabilities
     private func ringColor(for location: AnyLocationModel) -> Color {
-        if location.hasRetail && location.hasEducation {
-            return .purple
-        } else if location.hasEducation {
-            return .green
-        } else {
-            return .orange
-        }
+        return .black
     }
 
     /// Determine marker icon based on location capabilities

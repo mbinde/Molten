@@ -33,10 +33,11 @@ filename = path_parts.pop
 group_names = path_parts
 
 # Helper to find or create a group
-def find_or_create_group(parent, name, path)
+def find_or_create_group(parent, name)
   group = parent.groups.find { |g| g.display_name == name }
   unless group
-    group = parent.new_group(name, path)
+    # Use just the name as the path (relative to parent)
+    group = parent.new_group(name, name)
     puts "  Created group: #{name}"
   end
   group
@@ -44,22 +45,26 @@ end
 
 # Navigate/create the group hierarchy
 current_group = project.main_group
-current_path = ""
 
 group_names.each do |group_name|
-  current_path = current_path.empty? ? group_name : "#{current_path}/#{group_name}"
-  current_group = find_or_create_group(current_group, group_name, current_path)
+  current_group = find_or_create_group(current_group, group_name)
 end
 
-# Check if file already exists in project
-existing = project.files.find { |f| f.path == file_path }
+# Check if file already exists in project (by filename in this group)
+existing = current_group.files.find { |f| f.path == filename }
 if existing
   puts "File already in project: #{filename}"
   exit 0
 end
 
 # Add the file to the final group
+# new_file needs the actual file path on disk, but we'll fix the reference after
 file_ref = current_group.new_file(file_path)
+
+# Fix the file reference to use just the filename with relative source tree
+file_ref.path = filename
+file_ref.source_tree = '<group>'
+
 puts "✅ Added #{filename} to project"
 puts "   Group path: #{group_names.join(' > ')}"
 puts "   File path: #{file_path}"

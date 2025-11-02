@@ -83,7 +83,7 @@ nonisolated struct StoreData: Codable, Sendable {
     let notes: String?
     let is_verified: Bool?
 
-    // Technique support fields
+    // Legacy technique support fields (for backward compatibility)
     let supports_casting: Bool?
     let supports_flameworking_hard: Bool?
     let supports_flameworking_soft: Bool?
@@ -91,6 +91,33 @@ nonisolated struct StoreData: Codable, Sendable {
     let supports_glass_blowing: Bool?
     let supports_stained_glass: Bool?
     let supports_other: Bool?
+
+    // Retail capability fields (new format)
+    let retail_supports_casting: Bool?
+    let retail_supports_flameworking_hard: Bool?
+    let retail_supports_flameworking_soft: Bool?
+    let retail_supports_fusing: Bool?
+    let retail_supports_glass_blowing: Bool?
+    let retail_supports_stained_glass: Bool?
+    let retail_supports_other: Bool?
+
+    // Education capability fields (new format)
+    let classes_supports_casting: Bool?
+    let classes_supports_flameworking_hard: Bool?
+    let classes_supports_flameworking_soft: Bool?
+    let classes_supports_fusing: Bool?
+    let classes_supports_glass_blowing: Bool?
+    let classes_supports_stained_glass: Bool?
+    let classes_supports_other: Bool?
+
+    // Service capability fields (new format)
+    let rentals_supports_casting: Bool?
+    let rentals_supports_flameworking_hard: Bool?
+    let rentals_supports_flameworking_soft: Bool?
+    let rentals_supports_fusing: Bool?
+    let rentals_supports_glass_blowing: Bool?
+    let rentals_supports_stained_glass: Bool?
+    let rentals_supports_other: Bool?
 
     // Custom initializer to handle different JSON structures
     nonisolated init(from decoder: Decoder) throws {
@@ -136,7 +163,7 @@ nonisolated struct StoreData: Codable, Sendable {
         self.notes = try? container.decode(String.self, forKey: .notes)
         self.is_verified = try? container.decode(Bool.self, forKey: .is_verified)
 
-        // Optional technique fields
+        // Optional technique fields (legacy)
         self.supports_casting = try? container.decode(Bool.self, forKey: .supports_casting)
         self.supports_flameworking_hard = try? container.decode(Bool.self, forKey: .supports_flameworking_hard)
         self.supports_flameworking_soft = try? container.decode(Bool.self, forKey: .supports_flameworking_soft)
@@ -144,6 +171,33 @@ nonisolated struct StoreData: Codable, Sendable {
         self.supports_glass_blowing = try? container.decode(Bool.self, forKey: .supports_glass_blowing)
         self.supports_stained_glass = try? container.decode(Bool.self, forKey: .supports_stained_glass)
         self.supports_other = try? container.decode(Bool.self, forKey: .supports_other)
+
+        // Retail capability fields (new format)
+        self.retail_supports_casting = try? container.decode(Bool.self, forKey: .retail_supports_casting)
+        self.retail_supports_flameworking_hard = try? container.decode(Bool.self, forKey: .retail_supports_flameworking_hard)
+        self.retail_supports_flameworking_soft = try? container.decode(Bool.self, forKey: .retail_supports_flameworking_soft)
+        self.retail_supports_fusing = try? container.decode(Bool.self, forKey: .retail_supports_fusing)
+        self.retail_supports_glass_blowing = try? container.decode(Bool.self, forKey: .retail_supports_glass_blowing)
+        self.retail_supports_stained_glass = try? container.decode(Bool.self, forKey: .retail_supports_stained_glass)
+        self.retail_supports_other = try? container.decode(Bool.self, forKey: .retail_supports_other)
+
+        // Education capability fields (new format)
+        self.classes_supports_casting = try? container.decode(Bool.self, forKey: .classes_supports_casting)
+        self.classes_supports_flameworking_hard = try? container.decode(Bool.self, forKey: .classes_supports_flameworking_hard)
+        self.classes_supports_flameworking_soft = try? container.decode(Bool.self, forKey: .classes_supports_flameworking_soft)
+        self.classes_supports_fusing = try? container.decode(Bool.self, forKey: .classes_supports_fusing)
+        self.classes_supports_glass_blowing = try? container.decode(Bool.self, forKey: .classes_supports_glass_blowing)
+        self.classes_supports_stained_glass = try? container.decode(Bool.self, forKey: .classes_supports_stained_glass)
+        self.classes_supports_other = try? container.decode(Bool.self, forKey: .classes_supports_other)
+
+        // Service capability fields (new format)
+        self.rentals_supports_casting = try? container.decode(Bool.self, forKey: .rentals_supports_casting)
+        self.rentals_supports_flameworking_hard = try? container.decode(Bool.self, forKey: .rentals_supports_flameworking_hard)
+        self.rentals_supports_flameworking_soft = try? container.decode(Bool.self, forKey: .rentals_supports_flameworking_soft)
+        self.rentals_supports_fusing = try? container.decode(Bool.self, forKey: .rentals_supports_fusing)
+        self.rentals_supports_glass_blowing = try? container.decode(Bool.self, forKey: .rentals_supports_glass_blowing)
+        self.rentals_supports_stained_glass = try? container.decode(Bool.self, forKey: .rentals_supports_stained_glass)
+        self.rentals_supports_other = try? container.decode(Bool.self, forKey: .rentals_supports_other)
     }
 
     // Regular initializer for programmatic creation
@@ -169,7 +223,28 @@ nonisolated struct StoreData: Codable, Sendable {
         supports_fusing: Bool? = nil,
         supports_glass_blowing: Bool? = nil,
         supports_stained_glass: Bool? = nil,
-        supports_other: Bool? = nil
+        supports_other: Bool? = nil,
+        retail_supports_casting: Bool? = nil,
+        retail_supports_flameworking_hard: Bool? = nil,
+        retail_supports_flameworking_soft: Bool? = nil,
+        retail_supports_fusing: Bool? = nil,
+        retail_supports_glass_blowing: Bool? = nil,
+        retail_supports_stained_glass: Bool? = nil,
+        retail_supports_other: Bool? = nil,
+        classes_supports_casting: Bool? = nil,
+        classes_supports_flameworking_hard: Bool? = nil,
+        classes_supports_flameworking_soft: Bool? = nil,
+        classes_supports_fusing: Bool? = nil,
+        classes_supports_glass_blowing: Bool? = nil,
+        classes_supports_stained_glass: Bool? = nil,
+        classes_supports_other: Bool? = nil,
+        rentals_supports_casting: Bool? = nil,
+        rentals_supports_flameworking_hard: Bool? = nil,
+        rentals_supports_flameworking_soft: Bool? = nil,
+        rentals_supports_fusing: Bool? = nil,
+        rentals_supports_glass_blowing: Bool? = nil,
+        rentals_supports_stained_glass: Bool? = nil,
+        rentals_supports_other: Bool? = nil
     ) {
         self.stable_id = stable_id
         self.name = name
@@ -193,6 +268,27 @@ nonisolated struct StoreData: Codable, Sendable {
         self.supports_glass_blowing = supports_glass_blowing
         self.supports_stained_glass = supports_stained_glass
         self.supports_other = supports_other
+        self.retail_supports_casting = retail_supports_casting
+        self.retail_supports_flameworking_hard = retail_supports_flameworking_hard
+        self.retail_supports_flameworking_soft = retail_supports_flameworking_soft
+        self.retail_supports_fusing = retail_supports_fusing
+        self.retail_supports_glass_blowing = retail_supports_glass_blowing
+        self.retail_supports_stained_glass = retail_supports_stained_glass
+        self.retail_supports_other = retail_supports_other
+        self.classes_supports_casting = classes_supports_casting
+        self.classes_supports_flameworking_hard = classes_supports_flameworking_hard
+        self.classes_supports_flameworking_soft = classes_supports_flameworking_soft
+        self.classes_supports_fusing = classes_supports_fusing
+        self.classes_supports_glass_blowing = classes_supports_glass_blowing
+        self.classes_supports_stained_glass = classes_supports_stained_glass
+        self.classes_supports_other = classes_supports_other
+        self.rentals_supports_casting = rentals_supports_casting
+        self.rentals_supports_flameworking_hard = rentals_supports_flameworking_hard
+        self.rentals_supports_flameworking_soft = rentals_supports_flameworking_soft
+        self.rentals_supports_fusing = rentals_supports_fusing
+        self.rentals_supports_glass_blowing = rentals_supports_glass_blowing
+        self.rentals_supports_stained_glass = rentals_supports_stained_glass
+        self.rentals_supports_other = rentals_supports_other
     }
 
     nonisolated func encode(to encoder: Encoder) throws {
@@ -220,6 +316,27 @@ nonisolated struct StoreData: Codable, Sendable {
         try container.encodeIfPresent(supports_glass_blowing, forKey: .supports_glass_blowing)
         try container.encodeIfPresent(supports_stained_glass, forKey: .supports_stained_glass)
         try container.encodeIfPresent(supports_other, forKey: .supports_other)
+        try container.encodeIfPresent(retail_supports_casting, forKey: .retail_supports_casting)
+        try container.encodeIfPresent(retail_supports_flameworking_hard, forKey: .retail_supports_flameworking_hard)
+        try container.encodeIfPresent(retail_supports_flameworking_soft, forKey: .retail_supports_flameworking_soft)
+        try container.encodeIfPresent(retail_supports_fusing, forKey: .retail_supports_fusing)
+        try container.encodeIfPresent(retail_supports_glass_blowing, forKey: .retail_supports_glass_blowing)
+        try container.encodeIfPresent(retail_supports_stained_glass, forKey: .retail_supports_stained_glass)
+        try container.encodeIfPresent(retail_supports_other, forKey: .retail_supports_other)
+        try container.encodeIfPresent(classes_supports_casting, forKey: .classes_supports_casting)
+        try container.encodeIfPresent(classes_supports_flameworking_hard, forKey: .classes_supports_flameworking_hard)
+        try container.encodeIfPresent(classes_supports_flameworking_soft, forKey: .classes_supports_flameworking_soft)
+        try container.encodeIfPresent(classes_supports_fusing, forKey: .classes_supports_fusing)
+        try container.encodeIfPresent(classes_supports_glass_blowing, forKey: .classes_supports_glass_blowing)
+        try container.encodeIfPresent(classes_supports_stained_glass, forKey: .classes_supports_stained_glass)
+        try container.encodeIfPresent(classes_supports_other, forKey: .classes_supports_other)
+        try container.encodeIfPresent(rentals_supports_casting, forKey: .rentals_supports_casting)
+        try container.encodeIfPresent(rentals_supports_flameworking_hard, forKey: .rentals_supports_flameworking_hard)
+        try container.encodeIfPresent(rentals_supports_flameworking_soft, forKey: .rentals_supports_flameworking_soft)
+        try container.encodeIfPresent(rentals_supports_fusing, forKey: .rentals_supports_fusing)
+        try container.encodeIfPresent(rentals_supports_glass_blowing, forKey: .rentals_supports_glass_blowing)
+        try container.encodeIfPresent(rentals_supports_stained_glass, forKey: .rentals_supports_stained_glass)
+        try container.encodeIfPresent(rentals_supports_other, forKey: .rentals_supports_other)
     }
 
     // Custom keys mapping for different JSON field names
@@ -246,6 +363,33 @@ nonisolated struct StoreData: Codable, Sendable {
         case supports_glass_blowing = "supports_glass_blowing"
         case supports_stained_glass = "supports_stained_glass"
         case supports_other = "supports_other"
+
+        // Retail capability keys
+        case retail_supports_casting = "retail_supports_casting"
+        case retail_supports_flameworking_hard = "retail_supports_flameworking_hard"
+        case retail_supports_flameworking_soft = "retail_supports_flameworking_soft"
+        case retail_supports_fusing = "retail_supports_fusing"
+        case retail_supports_glass_blowing = "retail_supports_glass_blowing"
+        case retail_supports_stained_glass = "retail_supports_stained_glass"
+        case retail_supports_other = "retail_supports_other"
+
+        // Education capability keys
+        case classes_supports_casting = "classes_supports_casting"
+        case classes_supports_flameworking_hard = "classes_supports_flameworking_hard"
+        case classes_supports_flameworking_soft = "classes_supports_flameworking_soft"
+        case classes_supports_fusing = "classes_supports_fusing"
+        case classes_supports_glass_blowing = "classes_supports_glass_blowing"
+        case classes_supports_stained_glass = "classes_supports_stained_glass"
+        case classes_supports_other = "classes_supports_other"
+
+        // Service capability keys
+        case rentals_supports_casting = "rentals_supports_casting"
+        case rentals_supports_flameworking_hard = "rentals_supports_flameworking_hard"
+        case rentals_supports_flameworking_soft = "rentals_supports_flameworking_soft"
+        case rentals_supports_fusing = "rentals_supports_fusing"
+        case rentals_supports_glass_blowing = "rentals_supports_glass_blowing"
+        case rentals_supports_stained_glass = "rentals_supports_stained_glass"
+        case rentals_supports_other = "rentals_supports_other"
 
         // Alternative key names (camelCase variants)
         case stableId = "stableId"

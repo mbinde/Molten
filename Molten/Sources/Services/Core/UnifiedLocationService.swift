@@ -66,6 +66,12 @@ class UnifiedLocationService: @unchecked Sendable {
         return try await repository.fetchLocationsTeachingTechnique(technique)
     }
 
+    /// Get locations that support a technique (either selling OR teaching)
+    func getLocations(supportingTechnique technique: TechniqueType) async throws -> [UnifiedLocationModel] {
+        let allLocations = try await getAllLocations()
+        return allLocations.filter { $0.supportsTechnique(technique) }
+    }
+
     /// Get locations that offer a specific service
     func getLocations(offeringService service: ServiceType) async throws -> [UnifiedLocationModel] {
         return try await repository.fetchLocationsOfferingService(service)

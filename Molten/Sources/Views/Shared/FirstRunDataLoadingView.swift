@@ -245,14 +245,14 @@ struct FirstRunDataLoadingView: View {
             }
             progress = 0.85
 
-            // Step 4.5: Load location data
+            // Step 4.5: Load location data (hybrid: bundle + web)
             currentStep = .loadingLocations
             progress = 0.90
 
             let locationService = RepositoryFactory.createUnifiedLocationService()
             do {
-                let locationsLoaded = try await locationService.loadLocationsFromBundleResource(filename: "stores")
-                print("✅ Loaded \(locationsLoaded) locations from stores.json")
+                let result = try await locationService.loadLocationsHybrid()
+                print("✅ Loaded \(result.total) locations total (\(result.bundled) from bundle, \(result.web) from web)")
             } catch {
                 print("⚠️  Failed to load locations: \(error.localizedDescription)")
                 // Continue - locations are optional

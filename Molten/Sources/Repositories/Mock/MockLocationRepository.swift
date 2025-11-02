@@ -90,7 +90,7 @@ class MockLocationRepository: @unchecked Sendable, LocationRepository {
     
     func fetchLocations(withName locationName: String) async throws -> [StorageLocationModel] {
         return try await simulateOperation {
-            let cleanLocation = StorageLocationModel.cleanLocationName(locationName)
+            let cleanLocation = StorageLocationModel.cleanLocation(locationName)
             return locations
                 .filter { $0.location == cleanLocation }
                 .sorted { $0.inventory_id.uuidString < $1.inventory_id.uuidString }
@@ -134,7 +134,7 @@ class MockLocationRepository: @unchecked Sendable, LocationRepository {
     
     func deleteLocations(withName locationName: String) async throws {
         try await simulateOperation {
-            let cleanLocation = StorageLocationModel.cleanLocationName(locationName)
+            let cleanLocation = StorageLocationModel.cleanLocation(locationName)
             locations = locations.filter { $0.location != cleanLocation }
         }
     }
@@ -160,7 +160,7 @@ class MockLocationRepository: @unchecked Sendable, LocationRepository {
     
     func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventory_id: UUID) async throws -> StorageLocationModel {
         return try await simulateOperation {
-            let cleanLocation = StorageLocationModel.cleanLocationName(locationName)
+            let cleanLocation = StorageLocationModel.cleanLocation(locationName)
 
             // Find existing location or create new one
             let existingLocation = locations.first {
@@ -193,7 +193,7 @@ class MockLocationRepository: @unchecked Sendable, LocationRepository {
 
     func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventory_id: UUID) async throws -> StorageLocationModel? {
         return try await simulateOperation {
-            let cleanLocation = StorageLocationModel.cleanLocationName(locationName)
+            let cleanLocation = StorageLocationModel.cleanLocation(locationName)
 
             guard let existingLocation = locations.first(where: {
                 $0.inventory_id == inventory_id && $0.location == cleanLocation
@@ -246,7 +246,7 @@ class MockLocationRepository: @unchecked Sendable, LocationRepository {
     
     func getInventoriesInLocation(_ locationName: String) async throws -> [UUID] {
         return try await simulateOperation {
-            let cleanLocation = StorageLocationModel.cleanLocationName(locationName)
+            let cleanLocation = StorageLocationModel.cleanLocation(locationName)
             let inventoriesInLocation = Set(locations
                 .filter { $0.location == cleanLocation }
                 .map { $0.inventory_id })

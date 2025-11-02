@@ -102,6 +102,7 @@
 		171EBDB9F7F2F33E0E224D65 /* TrivialTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TrivialTest.swift; path = Tests/MoltenTests/TrivialTest.swift; sourceTree = "<group>"; };
 		72EC6006545AA63F3488EE00 /* StoreListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreListViewModelTests.swift; path = Tests/MoltenTests/Views/StoreListViewModelTests.swift; sourceTree = "<group>"; };
 		880FB85A25C1537F03EDF07A /* KilnScheduleModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleModelTests.swift; path = Tests/MoltenTests/Models/KilnScheduleModelTests.swift; sourceTree = "<group>"; };
+		98A57EDE16004D7734C1BC72 /* MockKilnScheduleService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MockKilnScheduleService.swift; path = Molten/Sources/Repositories/Mock/MockKilnScheduleService.swift; sourceTree = "<group>"; };
 		EC6E516E277D669D9128E68C /* KilnScheduleServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KilnScheduleServiceTests.swift; path = Tests/MoltenTests/Services/KilnScheduleServiceTests.swift; sourceTree = "<group>"; };
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
@@ -142,6 +143,8 @@
 				Sources/Utilities/NetworkSimulationUtilities.swift,
 				Sources/Utilities/StringValidationUtilities.swift,
 				Sources/Views/Shared/Helpers/UIStateManagers.swift,
+				Tests/MoltenTests/GlassItemTypeSystemTests.swift,
+				Tests/MoltenTests/GlassTerminologySettingsTests.swift,
 				Tests/MoltenTests/Infrastructure/CoreDataLeakDiagnostic.swift,
 				Tests/MoltenTests/Infrastructure/CoreDataPreventionSystem.swift,
 				Tests/MoltenTests/Infrastructure/DiagnosticTests.swift,
@@ -283,6 +286,8 @@
 				Sources/Utilities/StringValidationUtilities.swift,
 				Sources/Views/Shared/Helpers/UIStateManagers.swift,
 				Tests/InventoryImport/InventoryImportServiceTests.swift,
+				Tests/MoltenTests/GlassItemTypeSystemTests.swift,
+				Tests/MoltenTests/GlassTerminologySettingsTests.swift,
 				Tests/MoltenTests/Infrastructure/CoreDataLeakDiagnostic.swift,
 				Tests/MoltenTests/Infrastructure/CoreDataPreventionSystem.swift,
 				Tests/MoltenTests/Infrastructure/DiagnosticTests.swift,
@@ -706,6 +711,7 @@
 				F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */,
 				F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */,
 				325F282DD9ED11C00DE73F44 /* Tests */,
+				98A57EDE16004D7734C1BC72 /* MockKilnScheduleService.swift */,
 			);
 			sourceTree = "<group>";
 		};

@@ -47,7 +47,7 @@ protocol UnifiedLocationRepository: Sendable {
 
     // MARK: - Bulk Data Loading
 
-    /// Load locations from JSON data (e.g., from stores.json)
+    /// Load locations from JSON data (e.g., from locations.json)
     /// - Parameter data: JSON data containing location information
     /// - Returns: Number of locations loaded
     func loadLocationsFromJSON(_ data: Data) async throws -> Int

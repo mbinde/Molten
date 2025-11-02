@@ -196,7 +196,7 @@ struct LocationsView: View {
                 .font(DesignSystem.Typography.body)
                 .foregroundStyle(DesignSystem.Colors.textSecondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, DesignSystem.Padding.large)
+                .padding(.horizontal, DesignSystem.Padding.generous)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

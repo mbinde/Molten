@@ -30,6 +30,7 @@
     <entity name="CatalogItemUser" representedClassName="CatalogItemUser" parentEntity="CatalogItem" syncable="YES" codeGenerationType="category">
         <attribute name="notes" optional="YES" attributeType="String"/>
     </entity>
+    <entity name="ClassLocation" representedClassName="ClassLocation" parentEntity="Location" syncable="YES" codeGenerationType="class"/>
     <entity name="CoatingItem" representedClassName="CoatingItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
     <entity name="GlassItem" representedClassName="GlassItem" parentEntity="Item" syncable="YES" codeGenerationType="category">
         <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
@@ -124,10 +125,29 @@
         <attribute name="target_temperature" optional="YES" attributeType="Decimal" defaultValueString="0"/>
         <relationship name="schedule" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="KilnScheduleEntity" inverseName="segments" inverseEntity="KilnScheduleEntity"/>
     </entity>
-    <entity name="StorageLocation" representedClassName="StorageLocation" syncable="YES" codeGenerationType="category">
-        <attribute name="inventory_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="location" optional="YES" attributeType="String"/>
-        <attribute name="quantity" optional="YES" attributeType="String"/>
+    <entity name="Location" representedClassName="Location" isAbstract="YES" syncable="YES" codeGenerationType="category">
+        <attribute name="address_line1" optional="YES" attributeType="String"/>
+        <attribute name="address_line2" optional="YES" attributeType="String"/>
+        <attribute name="city" optional="YES" attributeType="String"/>
+        <attribute name="hero_image_path" optional="YES" attributeType="String"/>
+        <attribute name="hours_json" optional="YES" attributeType="String"/>
+        <attribute name="is_verified" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="latitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="longitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="phone" optional="YES" attributeType="String"/>
+        <attribute name="stable_id" optional="YES" attributeType="String"/>
+        <attribute name="state" optional="YES" attributeType="String"/>
+        <attribute name="supports_casting" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="supports_flameworking_hard" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="supports_flameworking_soft" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="supports_fusing" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="supports_glass_blowing" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="supports_other" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="supports_stained_glass" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="website_url" optional="YES" attributeType="String"/>
+        <attribute name="zip" optional="YES" attributeType="String"/>
     </entity>
     <entity name="Logbook" representedClassName="Logbook" syncable="YES" codeGenerationType="category">
         <attribute name="based_on_plan_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
@@ -263,32 +283,12 @@
         <attribute name="type" optional="YES" attributeType="String"/>
         <relationship name="purchaserecord" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PurchaseRecord" inverseName="purchaserecorditem" inverseEntity="PurchaseRecord"/>
     </entity>
-    <entity name="Location" representedClassName="Location" isAbstract="YES" syncable="YES" codeGenerationType="category">
-        <attribute name="address_line1" optional="YES" attributeType="String"/>
-        <attribute name="address_line2" optional="YES" attributeType="String"/>
-        <attribute name="city" optional="YES" attributeType="String"/>
-        <attribute name="hero_image_path" optional="YES" attributeType="String"/>
-        <attribute name="hours_json" optional="YES" attributeType="String"/>
-        <attribute name="is_verified" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
-        <attribute name="latitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <attribute name="longitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <attribute name="name" optional="YES" attributeType="String"/>
-        <attribute name="notes" optional="YES" attributeType="String"/>
-        <attribute name="phone" optional="YES" attributeType="String"/>
-        <attribute name="stable_id" optional="YES" attributeType="String"/>
-        <attribute name="state" optional="YES" attributeType="String"/>
-        <attribute name="supports_casting" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
-        <attribute name="supports_flameworking_hard" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
-        <attribute name="supports_flameworking_soft" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
-        <attribute name="supports_fusing" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
-        <attribute name="supports_glass_blowing" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
-        <attribute name="supports_other" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
-        <attribute name="supports_stained_glass" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
-        <attribute name="website_url" optional="YES" attributeType="String"/>
-        <attribute name="zip" optional="YES" attributeType="String"/>
+    <entity name="StorageLocation" representedClassName="StorageLocation" syncable="YES" codeGenerationType="class">
+        <attribute name="inventory_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="location" optional="YES" attributeType="String"/>
+        <attribute name="quantity" optional="YES" attributeType="String"/>
     </entity>
     <entity name="Store" representedClassName="Store" parentEntity="Location" syncable="YES" codeGenerationType="category"/>
-    <entity name="ClassLocation" representedClassName="ClassLocation" parentEntity="Location" syncable="YES" codeGenerationType="category"/>
     <entity name="ToolItem" representedClassName="ToolItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
     <entity name="UserImage" representedClassName="UserImage" syncable="YES" codeGenerationType="category">
         <attribute name="dateCreated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -311,19 +311,6 @@
         <attribute name="owner_type" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
     </entity>
-    <configuration name="Local">
-        <memberEntity name="CatalogItem"/>
-        <memberEntity name="CatalogItemParent"/>
-        <memberEntity name="CatalogItemUser"/>
-        <memberEntity name="ClassLocation"/>
-        <memberEntity name="CoatingItem"/>
-        <memberEntity name="GlassItem"/>
-        <memberEntity name="Item"/>
-        <memberEntity name="ItemTags"/>
-        <memberEntity name="Location"/>
-        <memberEntity name="Store"/>
-        <memberEntity name="ToolItem"/>
-    </configuration>
     <configuration name="Cloud">
         <memberEntity name="Inventory"/>
         <memberEntity name="InventoryItem"/>
@@ -348,5 +335,18 @@
         <memberEntity name="UserItem"/>
         <memberEntity name="UserNotes"/>
         <memberEntity name="UserTags"/>
+    </configuration>
+    <configuration name="Local">
+        <memberEntity name="CatalogItem"/>
+        <memberEntity name="CatalogItemParent"/>
+        <memberEntity name="CatalogItemUser"/>
+        <memberEntity name="ClassLocation"/>
+        <memberEntity name="CoatingItem"/>
+        <memberEntity name="GlassItem"/>
+        <memberEntity name="Item"/>
+        <memberEntity name="ItemTags"/>
+        <memberEntity name="Location"/>
+        <memberEntity name="Store"/>
+        <memberEntity name="ToolItem"/>
     </configuration>
 </model>

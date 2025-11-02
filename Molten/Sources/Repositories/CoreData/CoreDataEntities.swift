@@ -50,12 +50,6 @@ public class ItemTags: NSManagedObject {}
 @preconcurrency @objc(Location)
 public class Location: NSManagedObject {}
 
-@preconcurrency @objc(StorageLocation)
-public class StorageLocation: NSManagedObject {}
-
-@preconcurrency @objc(ClassLocation)
-public class ClassLocation: Location {}
-
 @preconcurrency @objc(ProjectImage)
 public class ProjectImage: NSManagedObject {}
 

@@ -93,7 +93,7 @@
 
 /* Begin PBXFileReference section */
 		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
-		71B28ACB3DDD2787C1BC0554 /* ToolItemRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToolItemRepositoryTests.swift; path = ToolItemRepositoryTests.swift; sourceTree = "<group>"; };
+		71B28ACB3DDD2787C1BC0554 /* ToolItemRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemRepositoryTests.swift; sourceTree = "<group>"; };
 		878F664543088F1B86740DD2 /* UnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationRepository.swift; sourceTree = "<group>"; };
 		B244734885B21EAEB2AAC553 /* ServiceType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceType.swift; sourceTree = "<group>"; };
 		DB95FB5AC403E8CFD93211C5 /* CoreDataUnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataUnifiedLocationRepository.swift; sourceTree = "<group>"; };
@@ -317,6 +317,7 @@
 				Tests/MoltenTests/Repositories/MockLogbookRepositoryTests.swift,
 				Tests/MoltenTests/Repositories/MockUserImageRepositoryTests.swift,
 				Tests/MoltenTests/Repositories/ShoppingListRepositoryTests.swift,
+				Tests/MoltenTests/Repositories/ToolItemRepositoryTests.swift,
 				Tests/MoltenTests/Repositories/UserImageRepositoryTests.swift,
 				Tests/MoltenTests/Services/CatalogServiceAdvancedTests.swift,
 				Tests/MoltenTests/Services/DataExportServiceTests.swift,
@@ -502,6 +503,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Tests/MoltenTests/Repositories/KilnScheduleRepositoryTests.swift,
+				Tests/MoltenTests/Repositories/ToolItemRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CatalogRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataDiagnosticTest.swift,
 				Tests/RepositoryTests/CoreData/CoreDataHelpersTests.swift,
@@ -539,8 +541,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};

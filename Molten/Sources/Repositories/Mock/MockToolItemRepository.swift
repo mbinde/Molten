@@ -6,7 +6,7 @@
 //
 
 @preconcurrency import Foundation
-import CryptoKit
+@preconcurrency import CryptoKit
 
 /// Mock implementation of ToolItemRepository for testing
 /// Provides in-memory storage with realistic behavior for unit tests
@@ -300,24 +300,4 @@ class MockToolItemRepository: @unchecked Sendable, ToolItemRepository {
     }
 }
 
-// MARK: - Mock Repository Errors
-
-enum MockRepositoryError: Error, LocalizedError {
-    case duplicateNaturalKey(String)
-    case itemNotFound(String)
-    case simulatedFailure
-    case invalidPredicate
-
-    var errorDescription: String? {
-        switch self {
-        case .duplicateNaturalKey(let key):
-            return "Duplicate natural key: \(key)"
-        case .itemNotFound(let id):
-            return "Item not found: \(id)"
-        case .simulatedFailure:
-            return "Simulated failure for testing"
-        case .invalidPredicate:
-            return "Invalid predicate"
-        }
-    }
-}
+// Note: MockRepositoryError is defined in MockGlassItemRepository.swift and shared across all mock repositories

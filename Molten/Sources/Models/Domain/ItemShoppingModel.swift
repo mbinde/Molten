@@ -9,7 +9,7 @@ import Foundation
 
 /// Business model for shopping list items with validation and business logic
 /// Maps to ItemShopping Core Data entity
-struct ItemShoppingModel: ItemQuantityModel, Codable {
+struct ItemShoppingModel: ItemQuantityModel, @unchecked Sendable, Codable {
     let id: UUID
     let item_stable_id: String
     let quantity: Double
@@ -20,7 +20,7 @@ struct ItemShoppingModel: ItemQuantityModel, Codable {
     let dateAdded: Date
 
     /// Initialize with business logic validation
-    nonisolated init(
+    init(
         id: UUID = UUID(),
         item_stable_id: String,
         quantity: Double,
@@ -43,13 +43,13 @@ struct ItemShoppingModel: ItemQuantityModel, Codable {
     // MARK: - Shopping-Specific Business Logic
 
     /// Check if this item is for a specific store
-    nonisolated func isForStore(_ storeName: String) -> Bool {
+    func isForStore(_ storeName: String) -> Bool {
         guard let store = store else { return false }
         return store.lowercased() == storeName.lowercased()
     }
 
     /// Get a copy with updated store
-    nonisolated func withStore(_ newStore: String?) -> ItemShoppingModel {
+    func withStore(_ newStore: String?) -> ItemShoppingModel {
         return ItemShoppingModel(
             id: id,
             item_stable_id: item_stable_id,
@@ -63,7 +63,7 @@ struct ItemShoppingModel: ItemQuantityModel, Codable {
     }
 
     /// Compare items for changes (useful for updates)
-    nonisolated static func hasChanges(existing: ItemShoppingModel, new: ItemShoppingModel) -> Bool {
+    static func hasChanges(existing: ItemShoppingModel, new: ItemShoppingModel) -> Bool {
         return existing.item_stable_id != new.item_stable_id ||
                existing.quantity != new.quantity ||
                existing.store != new.store
@@ -72,14 +72,14 @@ struct ItemShoppingModel: ItemQuantityModel, Codable {
     // MARK: - ItemQuantityModel Protocol Implementation
 
     /// Check if this item matches search text (overrides default to include store)
-    nonisolated func matchesSearchText(_ searchText: String) -> Bool {
+    func matchesSearchText(_ searchText: String) -> Bool {
         let lowercaseSearch = searchText.lowercased()
         return item_stable_id.lowercased().contains(lowercaseSearch) ||
                store?.lowercased().contains(lowercaseSearch) == true
     }
 
     /// Get a copy with updated quantity
-    nonisolated func withQuantity(_ newQuantity: Double) -> ItemShoppingModel {
+    func withQuantity(_ newQuantity: Double) -> ItemShoppingModel {
         return ItemShoppingModel(
             id: id,
             item_stable_id: item_stable_id,
@@ -100,7 +100,7 @@ struct ItemShoppingModel: ItemQuantityModel, Codable {
 
 extension ItemShoppingModel {
     /// Create shopping list item from a dictionary (useful for JSON parsing)
-    nonisolated static func from(dictionary: [String: Any]) -> ItemShoppingModel? {
+    static func from(dictionary: [String: Any]) -> ItemShoppingModel? {
         guard let item_stable_id = dictionary["item_stable_id"] as? String,
               let quantity = dictionary["quantity"] as? Double else {
             return nil
@@ -138,7 +138,7 @@ extension ItemShoppingModel {
     }
 
     /// Convert to dictionary (useful for storage or API calls)
-    nonisolated func toDictionary() -> [String: Any] {
+    func toDictionary() -> [String: Any] {
         var dict: [String: Any] = [
             "id": id.uuidString,
             "item_stable_id": item_stable_id,
@@ -168,15 +168,15 @@ extension ItemShoppingModel {
 extension ItemShoppingModel {
     /// Common store names for convenience
     enum CommonStore {
-        nonisolated static let frantzArtGlass = "Frantz Art Glass"
-        nonisolated static let olympicColor = "Olympic Color"
-        nonisolated static let bullseyeGlass = "Bullseye Glass Co"
-        nonisolated static let glassAlchemy = "Glass Alchemy"
-        nonisolated static let northstarGlassworks = "Northstar Glassworks"
-        nonisolated static let online = "Online"
-        nonisolated static let local = "Local"
+        static let frantzArtGlass = "Frantz Art Glass"
+        static let olympicColor = "Olympic Color"
+        static let bullseyeGlass = "Bullseye Glass Co"
+        static let glassAlchemy = "Glass Alchemy"
+        static let northstarGlassworks = "Northstar Glassworks"
+        static let online = "Online"
+        static let local = "Local"
 
-        nonisolated static let allCommonStores = [
+        static let allCommonStores = [
             frantzArtGlass,
             olympicColor,
             bullseyeGlass,

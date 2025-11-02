@@ -478,7 +478,9 @@ struct ShoppingListView: View {
                     userNotesRepository: RepositoryFactory.createUserNotesRepository(),
                     userTagsRepository: RepositoryFactory.createUserTagsRepository(),
                     shoppingListRepository: RepositoryFactory.createShoppingListRepository(),
-                    userImageRepository: RepositoryFactory.createUserImageRepository()
+                    userImageRepository: RepositoryFactory.createUserImageRepository(),
+                    kilnScheduleService: RepositoryFactory.createKilnScheduleService(),
+                    glassItemRepository: RepositoryFactory.createGlassItemRepository()
                 )
             }
         }

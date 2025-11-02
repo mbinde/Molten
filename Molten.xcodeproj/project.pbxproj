@@ -198,7 +198,6 @@
 				Tests/MoltenTests/Services/ReportingServiceTests.swift,
 				Tests/MoltenTests/Services/ServiceCoordinationTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
-				Tests/MoltenTests/Services/StoreServiceTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
 				Tests/MoltenTests/Utilities/CatalogFormattersTests.swift,
 				Tests/MoltenTests/Utilities/ErrorBoundaryTests.swift,
@@ -254,7 +253,6 @@
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
 				Tests/MoltenTests/Views/Shopping/StoreAutoCompleteFieldTests.swift,
-				Tests/MoltenTests/Views/StoreListViewModelTests.swift,
 				Tests/RepositoryTests/GlassItemRepositoryDuplicateTests.swift,
 				Tools/Documentation/check_core_data_violations.sh,
 				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
@@ -341,7 +339,6 @@
 				Tests/MoltenTests/Services/ReportingServiceTests.swift,
 				Tests/MoltenTests/Services/ServiceCoordinationTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
-				Tests/MoltenTests/Services/StoreServiceTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
 				Tests/MoltenTests/Utilities/CatalogFormattersTests.swift,
 				Tests/MoltenTests/Utilities/ErrorBoundaryTests.swift,
@@ -396,7 +393,6 @@
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
 				Tests/MoltenTests/Views/Shopping/StoreAutoCompleteFieldTests.swift,
-				Tests/MoltenTests/Views/StoreListViewModelTests.swift,
 				Tests/MoltenUITests/AppLaunchUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITestsLaunchTests.swift,
@@ -417,7 +413,6 @@
 				Tests/RepositoryTests/CoreData/CoreDataProjectRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataRecoveryUtilityTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataRepositoryTests.swift,
-				Tests/RepositoryTests/CoreData/CoreDataStoreRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataUserImageRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataUserTagsRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/GlassItemRepositoryTests.swift,
@@ -516,7 +511,6 @@
 				Tests/RepositoryTests/CoreData/CoreDataLogbookRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataRecoveryUtilityTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataRepositoryTests.swift,
-				Tests/RepositoryTests/CoreData/CoreDataStoreRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataUserImageRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataUserTagsRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/GlassItemRepositoryTests.swift,
@@ -543,8 +537,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};

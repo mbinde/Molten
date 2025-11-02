@@ -16,8 +16,7 @@ class LocationsViewModel {
 
     // MARK: - Dependencies
 
-    private let storeRepository: StoreRepository
-    private let classLocationRepository: ClassLocationRepository
+    private let locationService: UnifiedLocationService
 
     // MARK: - State
 
@@ -47,12 +46,10 @@ class LocationsViewModel {
     // MARK: - Initialization
 
     init(
-        storeRepository: StoreRepository,
-        classLocationRepository: ClassLocationRepository,
+        locationService: UnifiedLocationService,
         selectedTypes: Set<LocationType>? = nil
     ) {
-        self.storeRepository = storeRepository
-        self.classLocationRepository = classLocationRepository
+        self.locationService = locationService
         self.selectedTypes = selectedTypes ?? LocationFilterPreferences.getSelectedTypes()
     }
 
@@ -63,22 +60,19 @@ class LocationsViewModel {
         errorMessage = nil
 
         do {
+            // Load all unified locations
+            let unifiedLocations = try await locationService.getAllLocations()
+
+            // Convert to AnyLocationModel and filter by selected types
             var locations: [AnyLocationModel] = []
+            for location in unifiedLocations {
+                let anyLocation = AnyLocationModel(unified: location)
 
-            // Load stores if selected
-            if selectedTypes.contains(.store) {
-                let stores = try await storeRepository.fetchAllStores()
-                locations.append(contentsOf: stores.map { AnyLocationModel(store: $0) })
+                // Include location if its type is selected
+                if selectedTypes.contains(anyLocation.type) {
+                    locations.append(anyLocation)
+                }
             }
-
-            // Load class locations if selected
-            if selectedTypes.contains(.classLocation) {
-                let classes = try await classLocationRepository.fetchAllClassLocations()
-                locations.append(contentsOf: classes.map { AnyLocationModel(classLocation: $0) })
-            }
-
-            // TODO: Load workshops when implemented
-            // if selectedTypes.contains(.workshop) { ... }
 
             allLocations = locations
             applyFilters()
@@ -155,16 +149,18 @@ class LocationsViewModel {
         errorMessage = nil
 
         do {
+            // Get all locations that support the technique (either retail or education)
+            let unifiedLocations = try await locationService.getLocations(supportingTechnique: technique)
+
+            // Convert to AnyLocationModel and filter by selected types
             var locations: [AnyLocationModel] = []
+            for location in unifiedLocations {
+                let anyLocation = AnyLocationModel(unified: location)
 
-            if selectedTypes.contains(.store) {
-                let stores = try await storeRepository.fetchStores(supportingTechnique: technique)
-                locations.append(contentsOf: stores.map { AnyLocationModel(store: $0) })
-            }
-
-            if selectedTypes.contains(.classLocation) {
-                let classes = try await classLocationRepository.fetchClassLocations(supportingTechnique: technique)
-                locations.append(contentsOf: classes.map { AnyLocationModel(classLocation: $0) })
+                // Include location if its type is selected
+                if selectedTypes.contains(anyLocation.type) {
+                    locations.append(anyLocation)
+                }
             }
 
             allLocations = locations

@@ -13,10 +13,10 @@ import Foundation
 @MainActor
 struct RecipeModelTests {
 
-    @Test("FritIngredientModel should initialize with required properties")
-    func testFritIngredientModelInitialization() async throws {
+    @Test("RecipeIngredientModel should initialize with required properties")
+    func testRecipeIngredientModelInitialization() async throws {
         // Arrange & Act
-        let ingredient = FritIngredientModel(
+        let ingredient = RecipeIngredientModel(
             id: UUID(),
             stableId: "bullseye-clear-001",
             amount: 2.5
@@ -27,21 +27,21 @@ struct RecipeModelTests {
         #expect(ingredient.amount == 2.5)
     }
 
-    @Test("FritIngredientModel should be equatable")
-    func testFritIngredientModelEquatable() async throws {
+    @Test("RecipeIngredientModel should be equatable")
+    func testRecipeIngredientModelEquatable() async throws {
         // Arrange
         let id = UUID()
-        let ingredient1 = FritIngredientModel(
+        let ingredient1 = RecipeIngredientModel(
             id: id,
             stableId: "bullseye-clear-001",
             amount: 2.5
         )
-        let ingredient2 = FritIngredientModel(
+        let ingredient2 = RecipeIngredientModel(
             id: id,
             stableId: "bullseye-clear-001",
             amount: 2.5
         )
-        let ingredient3 = FritIngredientModel(
+        let ingredient3 = RecipeIngredientModel(
             id: UUID(),
             stableId: "bullseye-clear-001",
             amount: 2.5
@@ -52,14 +52,14 @@ struct RecipeModelTests {
         #expect(ingredient1 != ingredient3)
     }
 
-    @Test("FritRecipeModel should initialize with required properties")
-    func testFritRecipeModelInitialization() async throws {
+    @Test("RecipeModel should initialize with required properties")
+    func testRecipeModelInitialization() async throws {
         // Arrange & Act
         let id = UUID()
         let now = Date()
-        let recipe = FritRecipeModel(
+        let recipe = RecipeModel(
             id: id,
-            title: "Test Frit Recipe",
+            title: "Test Recipe",
             descriptionText: "A test recipe",
             measurementType: .byWeight,
             ingredients: [],
@@ -69,7 +69,7 @@ struct RecipeModelTests {
 
         // Assert
         #expect(recipe.id == id)
-        #expect(recipe.title == "Test Frit Recipe")
+        #expect(recipe.title == "Test Recipe")
         #expect(recipe.descriptionText == "A test recipe")
         #expect(recipe.measurementType == .byWeight)
         #expect(recipe.ingredients.isEmpty)
@@ -77,10 +77,10 @@ struct RecipeModelTests {
         #expect(recipe.dateModified == now)
     }
 
-    @Test("FritRecipeModel should support byRatio measurement type")
-    func testFritRecipeModelByRatio() async throws {
+    @Test("RecipeModel should support byRatio measurement type")
+    func testRecipeModelByRatio() async throws {
         // Arrange & Act
-        let recipe = FritRecipeModel(
+        let recipe = RecipeModel(
             id: UUID(),
             title: "Ratio Recipe",
             descriptionText: "Uses ratios",
@@ -94,24 +94,24 @@ struct RecipeModelTests {
         #expect(recipe.measurementType == .byRatio)
     }
 
-    @Test("FritRecipeModel should store multiple ingredients")
-    func testFritRecipeModelWithIngredients() async throws {
+    @Test("RecipeModel should store multiple ingredients")
+    func testRecipeModelWithIngredients() async throws {
         // Arrange
-        let ingredient1 = FritIngredientModel(
+        let ingredient1 = RecipeIngredientModel(
             id: UUID(),
             stableId: "bullseye-clear-001",
             amount: 2.0
         )
-        let ingredient2 = FritIngredientModel(
+        let ingredient2 = RecipeIngredientModel(
             id: UUID(),
             stableId: "bullseye-black-001",
             amount: 1.0
         )
 
         // Act
-        let recipe = FritRecipeModel(
+        let recipe = RecipeModel(
             id: UUID(),
-            title: "Two Color Frit",
+            title: "Two Color Mix",
             descriptionText: "Clear and black",
             measurementType: .byRatio,
             ingredients: [ingredient1, ingredient2],
@@ -125,12 +125,12 @@ struct RecipeModelTests {
         #expect(recipe.ingredients[1].stableId == "bullseye-black-001")
     }
 
-    @Test("FritRecipeModel should validate title is not empty")
-    func testFritRecipeModelValidation() async throws {
+    @Test("RecipeModel should validate title is not empty")
+    func testRecipeModelValidation() async throws {
         // This test validates that business rules exist for recipe creation
         // The model should enforce non-empty titles
 
-        let emptyTitleRecipe = FritRecipeModel(
+        let emptyTitleRecipe = RecipeModel(
             id: UUID(),
             title: "",
             descriptionText: "Test",
@@ -140,27 +140,27 @@ struct RecipeModelTests {
             dateModified: Date()
         )
 
-        #expect(!FritRecipeModel.isValidTitle(emptyTitleRecipe.title))
+        #expect(!RecipeModel.isValidTitle(emptyTitleRecipe.title))
     }
 
-    @Test("FritRecipeModel should validate title length")
-    func testFritRecipeModelTitleLength() async throws {
+    @Test("RecipeModel should validate title length")
+    func testRecipeModelTitleLength() async throws {
         let tooLongTitle = String(repeating: "a", count: 101)
         let validTitle = "Valid Recipe Title"
 
-        #expect(!FritRecipeModel.isValidTitle(tooLongTitle))
-        #expect(FritRecipeModel.isValidTitle(validTitle))
+        #expect(!RecipeModel.isValidTitle(tooLongTitle))
+        #expect(RecipeModel.isValidTitle(validTitle))
     }
 
-    @Test("FritMeasurementType should have correct raw values")
-    func testFritMeasurementTypeRawValues() async throws {
-        #expect(FritMeasurementType.byWeight.rawValue == "weight")
-        #expect(FritMeasurementType.byRatio.rawValue == "ratio")
+    @Test("MeasurementType should have correct raw values")
+    func testMeasurementTypeRawValues() async throws {
+        #expect(MeasurementType.byWeight.rawValue == "weight")
+        #expect(MeasurementType.byRatio.rawValue == "ratio")
     }
 
-    @Test("FritMeasurementType should have display names")
-    func testFritMeasurementTypeDisplayNames() async throws {
-        #expect(FritMeasurementType.byWeight.displayName == "By Weight")
-        #expect(FritMeasurementType.byRatio.displayName == "By Ratio")
+    @Test("MeasurementType should have display names")
+    func testMeasurementTypeDisplayNames() async throws {
+        #expect(MeasurementType.byWeight.displayName == "By Weight")
+        #expect(MeasurementType.byRatio.displayName == "By Ratio")
     }
 }

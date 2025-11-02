@@ -11,45 +11,45 @@ import Foundation
 /// Handles CRUD operations for recipes and their ingredients
 nonisolated protocol RecipeRepository: Sendable {
 
-    // MARK: - Frit Recipe Operations
+    // MARK: - Recipe Operations
 
-    /// Fetch all frit recipes
-    /// - Returns: Array of FritRecipeModel instances
-    func fetchAllFritRecipes() async throws -> [FritRecipeModel]
+    /// Fetch all recipes
+    /// - Returns: Array of RecipeModel instances
+    func fetchAllRecipes() async throws -> [RecipeModel]
 
-    /// Fetch a single frit recipe by its ID
+    /// Fetch a single recipe by its ID
     /// - Parameter id: The UUID of the recipe
-    /// - Returns: FritRecipeModel if found, nil otherwise
-    func fetchFritRecipe(byId id: UUID) async throws -> FritRecipeModel?
+    /// - Returns: RecipeModel if found, nil otherwise
+    func fetchRecipe(byId id: UUID) async throws -> RecipeModel?
 
-    /// Create a new frit recipe
-    /// - Parameter recipe: The FritRecipeModel to create
-    /// - Returns: The created FritRecipeModel
-    func createFritRecipe(_ recipe: FritRecipeModel) async throws -> FritRecipeModel
+    /// Create a new recipe
+    /// - Parameter recipe: The RecipeModel to create
+    /// - Returns: The created RecipeModel
+    func createRecipe(_ recipe: RecipeModel) async throws -> RecipeModel
 
-    /// Update an existing frit recipe
-    /// - Parameter recipe: The FritRecipeModel with updated values
-    /// - Returns: The updated FritRecipeModel
-    func updateFritRecipe(_ recipe: FritRecipeModel) async throws -> FritRecipeModel
+    /// Update an existing recipe
+    /// - Parameter recipe: The RecipeModel with updated values
+    /// - Returns: The updated RecipeModel
+    func updateRecipe(_ recipe: RecipeModel) async throws -> RecipeModel
 
-    /// Delete a frit recipe by ID
+    /// Delete a recipe by ID
     /// - Parameter id: The UUID of the recipe to delete
-    func deleteFritRecipe(id: UUID) async throws
+    func deleteRecipe(id: UUID) async throws
 
     // MARK: - Search Operations
 
-    /// Search frit recipes by title (case-insensitive)
+    /// Search recipes by title (case-insensitive)
     /// - Parameter query: The search query
-    /// - Returns: Array of matching FritRecipeModel instances
-    func searchFritRecipes(byTitle query: String) async throws -> [FritRecipeModel]
+    /// - Returns: Array of matching RecipeModel instances
+    func searchRecipes(byTitle query: String) async throws -> [RecipeModel]
 
-    /// Fetch frit recipes that contain a specific glass item ingredient
+    /// Fetch recipes that contain a specific glass item ingredient
     /// - Parameter stableId: The stable_id of the glass item
-    /// - Returns: Array of FritRecipeModel instances containing this ingredient
-    func fetchFritRecipes(containingIngredient stableId: String) async throws -> [FritRecipeModel]
+    /// - Returns: Array of RecipeModel instances containing this ingredient
+    func fetchRecipes(containingIngredient stableId: String) async throws -> [RecipeModel]
 
-    /// Fetch frit recipes by measurement type
+    /// Fetch recipes by measurement type
     /// - Parameter measurementType: The measurement type to filter by
-    /// - Returns: Array of FritRecipeModel instances with this measurement type
-    func fetchFritRecipes(byMeasurementType measurementType: FritMeasurementType) async throws -> [FritRecipeModel]
+    /// - Returns: Array of RecipeModel instances with this measurement type
+    func fetchRecipes(byMeasurementType measurementType: MeasurementType) async throws -> [RecipeModel]
 }

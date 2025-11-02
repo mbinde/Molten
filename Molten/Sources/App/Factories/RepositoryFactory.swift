@@ -49,6 +49,7 @@ nonisolated struct RepositoryFactory {
     nonisolated(unsafe) private static var mockUnifiedLocationRepo: MockUnifiedLocationRepository? = nil
     nonisolated(unsafe) private static var mockKilnScheduleRepo: MockKilnScheduleRepository? = nil
     nonisolated(unsafe) private static var mockRecipeRepo: MockRecipeRepository? = nil
+    nonisolated(unsafe) private static var mockToolItemRepo: MockToolItemRepository? = nil
     #if canImport(UIKit)
     nonisolated(unsafe) private static var mockUserImageRepo: MockUserImageRepository? = nil
     #endif
@@ -104,7 +105,37 @@ nonisolated struct RepositoryFactory {
             return CoreDataGlassItemRepository(context: context)
         }
     }
-    
+
+    /// Creates a ToolItemRepository based on current mode
+    nonisolated static func createToolItemRepository() -> ToolItemRepository {
+        switch mode {
+        case .mock:
+            // Return cached instance to ensure consistency across service creation
+            if let cached = mockToolItemRepo {
+                return cached
+            }
+            let repo = MockToolItemRepository()
+            mockToolItemRepo = repo
+            return repo
+
+        case .coreData:
+            // ToolItem is catalog data → use localContext (same as GlassItem)
+            let controller = getSharedController()
+            guard let context = controller.localContext else {
+                fatalError("localContext not initialized - call PersistenceController.shared.initialize() first")
+            }
+            return CoreDataToolItemRepository(context: context)
+
+        case .hybrid:
+            // ToolItem is catalog data → use localContext
+            let controller = getSharedController()
+            guard let context = controller.localContext else {
+                fatalError("localContext not initialized - call PersistenceController.shared.initialize() first")
+            }
+            return CoreDataToolItemRepository(context: context)
+        }
+    }
+
     /// Creates an InventoryRepository based on current mode
     nonisolated static func createInventoryRepository() -> InventoryRepository {
         switch mode {

@@ -12,14 +12,34 @@ import SwiftUI
 struct StoreAutoCompleteField: View {
     @Binding var store: String
     let shoppingListRepository: ShoppingListRepository
+    let storeRepository: StoreRepository
 
     @State private var showingSuggestions = false
-    @State private var storeSuggestions: [String] = []
+    @State private var storeSuggestions: [StoreSuggestion] = []
     @FocusState private var isTextFieldFocused: Bool
 
-    init(store: Binding<String>, shoppingListRepository: ShoppingListRepository) {
+    init(store: Binding<String>,
+         shoppingListRepository: ShoppingListRepository,
+         storeRepository: StoreRepository) {
         self._store = store
         self.shoppingListRepository = shoppingListRepository
+        self.storeRepository = storeRepository
+    }
+
+    /// Represents a store suggestion with metadata about its source
+    private struct StoreSuggestion: Identifiable, Hashable {
+        let id = UUID()
+        let name: String
+        let isStoreEntity: Bool // true if from Store entities, false if from shopping list
+
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(name)
+            hasher.combine(isStoreEntity)
+        }
+
+        static func == (lhs: StoreSuggestion, rhs: StoreSuggestion) -> Bool {
+            lhs.name == rhs.name && lhs.isStoreEntity == rhs.isStoreEntity
+        }
     }
 
     var body: some View {
@@ -49,18 +69,21 @@ struct StoreAutoCompleteField: View {
             // Auto-complete suggestions dropdown
             if showingSuggestions && !storeSuggestions.isEmpty {
                 VStack(spacing: 0) {
-                    ForEach(storeSuggestions.prefix(5), id: \.self) { suggestion in
+                    ForEach(storeSuggestions.prefix(5)) { suggestion in
                         Button(action: {
-                            store = suggestion
+                            store = suggestion.name
                             showingSuggestions = false
                             isTextFieldFocused = false
                         }) {
                             HStack {
-                                Image(systemName: "storefront")
-                                    .foregroundColor(.secondary)
-                                    .font(.caption)
+                                // Show storefront icon for Store entities
+                                if suggestion.isStoreEntity {
+                                    Image(systemName: "storefront")
+                                        .foregroundColor(.secondary)
+                                        .font(.caption)
+                                }
 
-                                Text(suggestion)
+                                Text(suggestion.name)
                                     .foregroundColor(.primary)
                                     .multilineTextAlignment(.leading)
 
@@ -106,11 +129,33 @@ struct StoreAutoCompleteField: View {
 
     // MARK: - Store Service Methods (Repository Pattern)
 
-    private func getDistinctStores() async -> [String] {
+    private func getDistinctStores() async -> [StoreSuggestion] {
         do {
-            // Get all distinct store names from the shopping list repository
-            let storeNames = try await shoppingListRepository.getDistinctStores()
-            return storeNames
+            // Get store names from both sources
+            let shoppingListStores = try await shoppingListRepository.getDistinctStores()
+            let storeEntities = try await storeRepository.fetchAllStores()
+
+            // Create suggestions from Store entities (with icon)
+            let storeEntitySuggestions = storeEntities.map { store in
+                StoreSuggestion(name: store.name, isStoreEntity: true)
+            }
+
+            // Create suggestions from shopping list stores (without icon)
+            let shoppingListSuggestions = shoppingListStores.map { storeName in
+                StoreSuggestion(name: storeName, isStoreEntity: false)
+            }
+
+            // Combine and deduplicate (prefer Store entities over shopping list entries)
+            var uniqueStores: [String: StoreSuggestion] = [:]
+            for suggestion in shoppingListSuggestions {
+                uniqueStores[suggestion.name] = suggestion
+            }
+            for suggestion in storeEntitySuggestions {
+                uniqueStores[suggestion.name] = suggestion // Overwrites if duplicate
+            }
+
+            // Sort alphabetically by name
+            return uniqueStores.values.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 
         } catch {
             print("❌ Failed to fetch store suggestions: \(error)")
@@ -118,18 +163,22 @@ struct StoreAutoCompleteField: View {
         }
     }
 
-    private func getStoreSuggestions(matching searchText: String) async -> [String] {
+    private func getStoreSuggestions(matching searchText: String) async -> [StoreSuggestion] {
         do {
             let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
 
+            // Get all stores from both sources
+            let allStoreSuggestions = await getDistinctStores()
+
             guard !trimmedSearchText.isEmpty else {
-                return try await shoppingListRepository.getDistinctStores()
+                return allStoreSuggestions
             }
 
             // Filter stores that start with search text (case-insensitive)
-            let allStores = try await shoppingListRepository.getDistinctStores()
             let lowercaseSearch = trimmedSearchText.lowercased()
-            let suggestions = allStores.filter { $0.lowercased().hasPrefix(lowercaseSearch) }
+            let suggestions = allStoreSuggestions.filter {
+                $0.name.lowercased().hasPrefix(lowercaseSearch)
+            }
             return suggestions
 
         } catch {
@@ -146,7 +195,8 @@ struct StoreAutoCompleteField: View {
     VStack {
         StoreAutoCompleteField(
             store: $store,
-            shoppingListRepository: RepositoryFactory.createShoppingListRepository()
+            shoppingListRepository: RepositoryFactory.createShoppingListRepository(),
+            storeRepository: RepositoryFactory.createStoreRepository()
         )
         Spacer()
     }

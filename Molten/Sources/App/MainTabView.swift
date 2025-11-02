@@ -25,6 +25,8 @@ extension Notification.Name {
     static let inventoryItemAdded = Notification.Name("inventoryItemAdded")
     static let shoppingListItemAdded = Notification.Name("shoppingListItemAdded")
     static let showSettings = Notification.Name("showSettings")
+    static let navigateToShoppingListForStore = Notification.Name("navigateToShoppingListForStore")
+    static let filterShoppingListByStore = Notification.Name("filterShoppingListByStore")
 }
 
 /// Main tab view that provides navigation between the app's primary sections
@@ -228,6 +230,22 @@ struct MainTabView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .showSettings)) { _ in
             showingSettings = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToShoppingListForStore)) { notification in
+            // Switch to shopping tab and filter by store
+            if let storeName = notification.userInfo?["storeName"] as? String {
+                selectedTab = .shopping
+                markTabAsViewed(.shopping)
+
+                // Post notification to filter shopping list by store
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    NotificationCenter.default.post(
+                        name: .filterShoppingListByStore,
+                        object: nil,
+                        userInfo: ["storeName": storeName]
+                    )
+                }
+            }
         }
         .onChange(of: selectedTab) { oldTab, newTab in
             print("📱 MainTabView: onChange(selectedTab) - from \(oldTab) to \(newTab)")

@@ -15,7 +15,7 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
     // MARK: - Test Data Storage
 
     nonisolated(unsafe) private var classLocations: [String: ClassLocationModel] = [:]  // Keyed by stable_id
-    private let queue = DispatchQueue(label: "mock.store.repository", attributes: .concurrent)
+    private let queue = DispatchQueue(label: "mock.classLocation.repository", attributes: .concurrent)
 
     nonisolated init() {}
 
@@ -297,9 +297,17 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
 
     func loadClassLocationsFromJSON(_ data: Data) async throws -> Int {
         return try await simulateOperation {
-            // TODO: Implement ClassLocationData JSON structure
-            // Currently using mock data instead of JSON deserialization
-            return 0
+            let decoder = JSONDecoder()
+            let wrappedData = try decoder.decode(WrappedStoresData.self, from: data)
+
+            var loadedCount = 0
+            for classLocationData in wrappedData.stores {
+                let classLocation = classLocationData.toClassLocationModel()
+                classLocations[classLocation.stable_id] = classLocation
+                loadedCount += 1
+            }
+
+            return loadedCount
         }
     }
 
@@ -312,12 +320,20 @@ class MockClassLocationRepository: @unchecked Sendable, ClassLocationRepository 
 
     func exportClassLocationsToJSON() async throws -> Data {
         return try await simulateOperation {
-            // TODO: Implement ClassLocationData JSON structure
-            // Currently returning empty JSON
+            let allStores = Array(classLocations.values).sorted { $0.name < $1.name }
+            let classLocationDataArray = allStores.map { $0.toData() }
+
+            let metadata = StoreMetadata(
+                version: "1.0",
+                generated: ISO8601DateFormatter().string(from: Date()),
+                storeCount: classLocationDataArray.count
+            )
+
+            let wrapper = WrappedStoresData(metadata: metadata, stores: classLocationDataArray)
+
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            let emptyArray: [String] = []
-            return try encoder.encode(["classLocations": emptyArray])
+            return try encoder.encode(wrapper)
         }
     }
 

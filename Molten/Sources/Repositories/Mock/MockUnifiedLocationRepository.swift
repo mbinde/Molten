@@ -104,31 +104,79 @@ class MockUnifiedLocationRepository: @unchecked Sendable, UnifiedLocationReposit
 
     // MARK: - Private Helpers
 
-    /// Convert old StoreData format to new UnifiedLocationModel with retail capabilities
+    /// Convert StoreData format to UnifiedLocationModel with retail, education, and service capabilities
     private nonisolated func convertStoreDataToUnifiedLocation(_ storeData: StoreData) -> UnifiedLocationModel {
         var retailCapabilities: [RetailCapability] = []
+        var educationCapabilities: [EducationCapability] = []
+        var servicesCapabilities: [ServiceCapability] = []
 
-        // Convert boolean flags to retail capabilities
-        if storeData.supports_casting == true {
+        // Convert retail capability flags (prefer new format, fall back to legacy)
+        if (storeData.retail_supports_casting ?? storeData.supports_casting) == true {
             retailCapabilities.append(RetailCapability(technique: .casting))
         }
-        if storeData.supports_flameworking_hard == true {
+        if (storeData.retail_supports_flameworking_hard ?? storeData.supports_flameworking_hard) == true {
             retailCapabilities.append(RetailCapability(technique: .flameworkinghard))
         }
-        if storeData.supports_flameworking_soft == true {
+        if (storeData.retail_supports_flameworking_soft ?? storeData.supports_flameworking_soft) == true {
             retailCapabilities.append(RetailCapability(technique: .flameworkingsoft))
         }
-        if storeData.supports_fusing == true {
+        if (storeData.retail_supports_fusing ?? storeData.supports_fusing) == true {
             retailCapabilities.append(RetailCapability(technique: .fusing))
         }
-        if storeData.supports_glass_blowing == true {
+        if (storeData.retail_supports_glass_blowing ?? storeData.supports_glass_blowing) == true {
             retailCapabilities.append(RetailCapability(technique: .glassBlowing))
         }
-        if storeData.supports_stained_glass == true {
+        if (storeData.retail_supports_stained_glass ?? storeData.supports_stained_glass) == true {
             retailCapabilities.append(RetailCapability(technique: .stainedGlass))
         }
-        if storeData.supports_other == true {
+        if (storeData.retail_supports_other ?? storeData.supports_other) == true {
             retailCapabilities.append(RetailCapability(technique: .other))
+        }
+
+        // Convert education capability flags (new format)
+        if storeData.classes_supports_casting == true {
+            educationCapabilities.append(EducationCapability(technique: .casting))
+        }
+        if storeData.classes_supports_flameworking_hard == true {
+            educationCapabilities.append(EducationCapability(technique: .flameworkinghard))
+        }
+        if storeData.classes_supports_flameworking_soft == true {
+            educationCapabilities.append(EducationCapability(technique: .flameworkingsoft))
+        }
+        if storeData.classes_supports_fusing == true {
+            educationCapabilities.append(EducationCapability(technique: .fusing))
+        }
+        if storeData.classes_supports_glass_blowing == true {
+            educationCapabilities.append(EducationCapability(technique: .glassBlowing))
+        }
+        if storeData.classes_supports_stained_glass == true {
+            educationCapabilities.append(EducationCapability(technique: .stainedGlass))
+        }
+        if storeData.classes_supports_other == true {
+            educationCapabilities.append(EducationCapability(technique: .other))
+        }
+
+        // Convert service capability flags (new format)
+        if storeData.rentals_supports_casting == true {
+            servicesCapabilities.append(ServiceCapability(serviceType: .kilnRental, technique: .casting))
+        }
+        if storeData.rentals_supports_flameworking_hard == true {
+            servicesCapabilities.append(ServiceCapability(serviceType: .kilnRental, technique: .flameworkinghard))
+        }
+        if storeData.rentals_supports_flameworking_soft == true {
+            servicesCapabilities.append(ServiceCapability(serviceType: .kilnRental, technique: .flameworkingsoft))
+        }
+        if storeData.rentals_supports_fusing == true {
+            servicesCapabilities.append(ServiceCapability(serviceType: .kilnRental, technique: .fusing))
+        }
+        if storeData.rentals_supports_glass_blowing == true {
+            servicesCapabilities.append(ServiceCapability(serviceType: .kilnRental, technique: .glassBlowing))
+        }
+        if storeData.rentals_supports_stained_glass == true {
+            servicesCapabilities.append(ServiceCapability(serviceType: .kilnRental, technique: .stainedGlass))
+        }
+        if storeData.rentals_supports_other == true {
+            servicesCapabilities.append(ServiceCapability(serviceType: .kilnRental, technique: .other))
         }
 
         return UnifiedLocationModel(
@@ -148,8 +196,8 @@ class MockUnifiedLocationRepository: @unchecked Sendable, UnifiedLocationReposit
             notes: storeData.notes,
             isVerified: storeData.is_verified ?? false,
             retailCapabilities: retailCapabilities,
-            educationCapabilities: [],  // No education data in stores.json
-            servicesCapabilities: []    // No services data in stores.json
+            educationCapabilities: educationCapabilities,
+            servicesCapabilities: servicesCapabilities
         )
     }
 }

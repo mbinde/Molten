@@ -288,10 +288,10 @@ class UnifiedLocationService: @unchecked Sendable {
 
     // MARK: - Data Loading
 
-    /// Load locations from bundle resource (stores.json)
-    func loadLocationsFromBundleResource(filename: String = "stores") async throws -> Int {
+    /// Load locations from bundle resource (locations.json)
+    func loadLocationsFromBundleResource(filename: String = "locations") async throws -> Int {
         guard let url = Bundle.main.url(forResource: filename, withExtension: "json") else {
-            throw UnifiedLocationServiceError.missingRequiredField("stores.json not found in bundle")
+            throw UnifiedLocationServiceError.missingRequiredField("locations.json not found in bundle")
         }
         return try await repository.loadLocationsFromJSONFile(at: url)
     }
@@ -302,9 +302,9 @@ class UnifiedLocationService: @unchecked Sendable {
     }
 
     /// Fetch locations from web URL and merge with existing data (web takes precedence)
-    /// - Parameter url: URL to fetch stores.json from (default: https://moltenglass.app/stores.json)
+    /// - Parameter url: URL to fetch locations.json from (default: https://moltenglass.app/locations.json)
     /// - Returns: Number of locations loaded from web
-    func fetchLocationsFromWeb(url: URL = URL(string: "https://moltenglass.app/stores.json")!) async throws -> Int {
+    func fetchLocationsFromWeb(url: URL = URL(string: "https://moltenglass.app/locations.json")!) async throws -> Int {
         // Fetch JSON from web
         let (data, response) = try await URLSession.shared.data(from: url)
 
@@ -324,12 +324,12 @@ class UnifiedLocationService: @unchecked Sendable {
     /// Load locations with hybrid approach: bundle first, then fetch from web (web wins)
     /// This provides instant offline data while ensuring web is source of truth
     /// - Parameters:
-    ///   - bundleFilename: Bundle resource filename (default: "stores")
-    ///   - webURL: Web URL to fetch from (default: https://moltenglass.app/stores.json)
+    ///   - bundleFilename: Bundle resource filename (default: "locations")
+    ///   - webURL: Web URL to fetch from (default: https://moltenglass.app/locations.json)
     /// - Returns: Tuple of (bundledCount, webCount, totalCount)
     func loadLocationsHybrid(
-        bundleFilename: String = "stores",
-        webURL: URL = URL(string: "https://moltenglass.app/stores.json")!
+        bundleFilename: String = "locations",
+        webURL: URL = URL(string: "https://moltenglass.app/locations.json")!
     ) async throws -> (bundled: Int, web: Int, total: Int) {
         var bundledCount = 0
         var webCount = 0
@@ -345,7 +345,7 @@ class UnifiedLocationService: @unchecked Sendable {
                 // Continue - we'll try web next
             }
         } else {
-            print("ℹ️  No bundled stores.json found (this is OK)")
+            print("ℹ️  No bundled locations.json found (this is OK)")
         }
 
         // Step 2: Fetch from web (source of truth)

@@ -46,7 +46,7 @@ class TestDataBuilder {
     private var glassItems: [GlassItemModel] = []
     private var inventoryItems: [InventoryModel] = []
     private var tagAssignments: [(itemKey: String, tags: [String])] = []
-    private var locations: [LocationModel] = []
+    private var locations: [StorageLocationModel] = []
     private var itemMinimums: [(stableId: String, minimum: Double)] = []
 
     // MARK: - Initialization

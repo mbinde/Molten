@@ -47,9 +47,6 @@ public class ItemShopping: NSManagedObject {}
 @preconcurrency @objc(ItemTags)
 public class ItemTags: NSManagedObject {}
 
-@preconcurrency @objc(Location)
-public class Location: NSManagedObject {}
-
 @preconcurrency @objc(ProjectImage)
 public class ProjectImage: NSManagedObject {}
 
@@ -85,9 +82,6 @@ public class PurchaseRecord: NSManagedObject {}
 
 @preconcurrency @objc(PurchaseRecordItem)
 public class PurchaseRecordItem: NSManagedObject {}
-
-@preconcurrency @objc(Store)
-public class Store: NSManagedObject {}
 
 @preconcurrency @objc(ToolItem)
 public class ToolItem: Item {}

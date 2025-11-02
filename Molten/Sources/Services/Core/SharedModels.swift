@@ -6,7 +6,7 @@
 //  Models shared across multiple services and repositories
 //
 
-import Foundation
+@preconcurrency import Foundation
 
 // MARK: - Core Domain Models
 

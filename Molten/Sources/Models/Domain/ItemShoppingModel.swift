@@ -5,7 +5,7 @@
 //  Created by Assistant on 10/16/25.
 //
 
-import Foundation
+@preconcurrency import Foundation
 
 /// Business model for shopping list items with validation and business logic
 /// Maps to ItemShopping Core Data entity

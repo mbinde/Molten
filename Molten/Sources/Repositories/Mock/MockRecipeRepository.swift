@@ -5,89 +5,107 @@
 //  Mock implementation of RecipeRepository for testing
 //
 
-import Foundation
+@preconcurrency import Foundation
 
 /// Mock implementation of RecipeRepository for testing
-final class MockRecipeRepository: RecipeRepository {
-    private var fritRecipes: [UUID: FritRecipeModel] = [:]
-    private let lock = NSLock()
+final class MockRecipeRepository: @unchecked Sendable, RecipeRepository {
+    nonisolated(unsafe) private var fritRecipes: [UUID: FritRecipeModel] = [:]
+    private let queue = DispatchQueue(label: "mock.recipe.repository", attributes: .concurrent)
 
     nonisolated init() {}
 
     // MARK: - Frit Recipe Operations
 
     nonisolated func fetchAllFritRecipes() async throws -> [FritRecipeModel] {
-        lock.lock()
-        defer { lock.unlock() }
-        return Array(fritRecipes.values).sorted { $0.dateCreated > $1.dateCreated }
+        return await withCheckedContinuation { continuation in
+            queue.async {
+                let sorted = Array(self.fritRecipes.values).sorted { $0.dateCreated > $1.dateCreated }
+                continuation.resume(returning: sorted)
+            }
+        }
     }
 
     nonisolated func fetchFritRecipe(byId id: UUID) async throws -> FritRecipeModel? {
-        lock.lock()
-        defer { lock.unlock() }
-        return fritRecipes[id]
+        return await withCheckedContinuation { continuation in
+            queue.async {
+                continuation.resume(returning: self.fritRecipes[id])
+            }
+        }
     }
 
     nonisolated func createFritRecipe(_ recipe: FritRecipeModel) async throws -> FritRecipeModel {
-        lock.lock()
-        defer { lock.unlock() }
-        fritRecipes[recipe.id] = recipe
-        return recipe
+        return await withCheckedContinuation { continuation in
+            queue.async(flags: .barrier) {
+                self.fritRecipes[recipe.id] = recipe
+                continuation.resume(returning: recipe)
+            }
+        }
     }
 
     nonisolated func updateFritRecipe(_ recipe: FritRecipeModel) async throws -> FritRecipeModel {
-        lock.lock()
-        defer { lock.unlock() }
+        return try await withCheckedThrowingContinuation { continuation in
+            queue.async(flags: .barrier) {
+                guard self.fritRecipes[recipe.id] != nil else {
+                    continuation.resume(throwing: RecipeRepositoryError.recipeNotFound)
+                    return
+                }
 
-        guard fritRecipes[recipe.id] != nil else {
-            throw RecipeRepositoryError.recipeNotFound
+                let updated = recipe.withUpdatedModificationDate()
+                self.fritRecipes[updated.id] = updated
+                continuation.resume(returning: updated)
+            }
         }
-
-        let updated = recipe.withUpdatedModificationDate()
-        fritRecipes[updated.id] = updated
-        return updated
     }
 
     nonisolated func deleteFritRecipe(id: UUID) async throws {
-        lock.lock()
-        defer { lock.unlock() }
+        return try await withCheckedThrowingContinuation { continuation in
+            queue.async(flags: .barrier) {
+                guard self.fritRecipes[id] != nil else {
+                    continuation.resume(throwing: RecipeRepositoryError.recipeNotFound)
+                    return
+                }
 
-        guard fritRecipes[id] != nil else {
-            throw RecipeRepositoryError.recipeNotFound
+                self.fritRecipes.removeValue(forKey: id)
+                continuation.resume()
+            }
         }
-
-        fritRecipes.removeValue(forKey: id)
     }
 
     // MARK: - Search Operations
 
     nonisolated func searchFritRecipes(byTitle query: String) async throws -> [FritRecipeModel] {
-        lock.lock()
-        defer { lock.unlock() }
-
-        let lowercasedQuery = query.lowercased()
-        return fritRecipes.values.filter {
-            $0.title.lowercased().contains(lowercasedQuery)
+        return await withCheckedContinuation { continuation in
+            queue.async {
+                let lowercasedQuery = query.lowercased()
+                let results = self.fritRecipes.values.filter {
+                    $0.title.lowercased().contains(lowercasedQuery)
+                }
+                continuation.resume(returning: results)
+            }
         }
     }
 
     nonisolated func fetchFritRecipes(containingIngredient stableId: String) async throws -> [FritRecipeModel] {
-        lock.lock()
-        defer { lock.unlock() }
-
-        return fritRecipes.values.filter { recipe in
-            recipe.ingredients.contains { ingredient in
-                ingredient.stableId == stableId
+        return await withCheckedContinuation { continuation in
+            queue.async {
+                let results = self.fritRecipes.values.filter { recipe in
+                    recipe.ingredients.contains { ingredient in
+                        ingredient.stableId == stableId
+                    }
+                }
+                continuation.resume(returning: results)
             }
         }
     }
 
     nonisolated func fetchFritRecipes(byMeasurementType measurementType: FritMeasurementType) async throws -> [FritRecipeModel] {
-        lock.lock()
-        defer { lock.unlock() }
-
-        return fritRecipes.values.filter {
-            $0.measurementType == measurementType
+        return await withCheckedContinuation { continuation in
+            queue.async {
+                let results = self.fritRecipes.values.filter {
+                    $0.measurementType == measurementType
+                }
+                continuation.resume(returning: results)
+            }
         }
     }
 
@@ -95,16 +113,18 @@ final class MockRecipeRepository: RecipeRepository {
 
     /// Clear all recipes (for test teardown)
     nonisolated func clear() {
-        lock.lock()
-        defer { lock.unlock() }
-        fritRecipes.removeAll()
+        queue.async(flags: .barrier) {
+            self.fritRecipes.removeAll()
+        }
     }
 
     /// Get count of recipes (for testing)
-    nonisolated func count() -> Int {
-        lock.lock()
-        defer { lock.unlock() }
-        return fritRecipes.count
+    nonisolated func count() async -> Int {
+        return await withCheckedContinuation { continuation in
+            queue.async {
+                continuation.resume(returning: self.fritRecipes.count)
+            }
+        }
     }
 }
 

@@ -12,7 +12,7 @@ import SwiftUI
 struct StoreAutoCompleteField: View {
     @Binding var store: String
     let shoppingListRepository: ShoppingListRepository
-    let storeRepository: StoreRepository
+    let locationService: UnifiedLocationService
 
     @State private var showingSuggestions = false
     @State private var storeSuggestions: [StoreSuggestion] = []
@@ -20,10 +20,10 @@ struct StoreAutoCompleteField: View {
 
     init(store: Binding<String>,
          shoppingListRepository: ShoppingListRepository,
-         storeRepository: StoreRepository) {
+         locationService: UnifiedLocationService) {
         self._store = store
         self.shoppingListRepository = shoppingListRepository
-        self.storeRepository = storeRepository
+        self.locationService = locationService
     }
 
     /// Represents a store suggestion with metadata about its source
@@ -133,11 +133,11 @@ struct StoreAutoCompleteField: View {
         do {
             // Get store names from both sources
             let shoppingListStores = try await shoppingListRepository.getDistinctStores()
-            let storeEntities = try await storeRepository.fetchAllStores()
+            let locationEntities = try await locationService.getRetailLocations()
 
-            // Create suggestions from Store entities (with icon)
-            let storeEntitySuggestions = storeEntities.map { store in
-                StoreSuggestion(name: store.name, isStoreEntity: true)
+            // Create suggestions from retail locations (with icon)
+            let locationSuggestions = locationEntities.map { location in
+                StoreSuggestion(name: location.name, isStoreEntity: true)
             }
 
             // Create suggestions from shopping list stores (without icon)
@@ -145,12 +145,12 @@ struct StoreAutoCompleteField: View {
                 StoreSuggestion(name: storeName, isStoreEntity: false)
             }
 
-            // Combine and deduplicate (prefer Store entities over shopping list entries)
+            // Combine and deduplicate (prefer location entities over shopping list entries)
             var uniqueStores: [String: StoreSuggestion] = [:]
             for suggestion in shoppingListSuggestions {
                 uniqueStores[suggestion.name] = suggestion
             }
-            for suggestion in storeEntitySuggestions {
+            for suggestion in locationSuggestions {
                 uniqueStores[suggestion.name] = suggestion // Overwrites if duplicate
             }
 
@@ -196,7 +196,7 @@ struct StoreAutoCompleteField: View {
         StoreAutoCompleteField(
             store: $store,
             shoppingListRepository: RepositoryFactory.createShoppingListRepository(),
-            storeRepository: RepositoryFactory.createStoreRepository()
+            locationService: RepositoryFactory.createUnifiedLocationService()
         )
         Spacer()
     }

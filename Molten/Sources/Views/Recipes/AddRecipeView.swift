@@ -17,11 +17,13 @@ struct AddRecipeView: View {
     // Form state
     @State private var title = ""
     @State private var descriptionText = ""
+    @State private var recordMeasurements = false
     @State private var measurementType: MeasurementType = .byWeight
     @State private var ingredients: [RecipeIngredientModel] = []
 
     // UI state
-    @State private var showingAddIngredient = false
+    @State private var ingredientSearchText = ""
+    @State private var showingIngredientResults = false
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var availableGlassItems: [CompleteInventoryItemModel] = []
@@ -45,48 +47,31 @@ struct AddRecipeView: View {
                     TextField("Title", text: $title)
                         .autocorrectionDisabled()
 
-                    Picker("Measurement Type", selection: $measurementType) {
-                        ForEach(MeasurementType.allCases, id: \.self) { type in
-                            Text(type.displayName).tag(type)
-                        }
-                    }
-
                     TextField("Description (optional)", text: $descriptionText, axis: .vertical)
                         .lineLimit(3...6)
                 }
 
-                // Ingredients
+                // Measurement toggle and type
                 Section {
-                    ForEach(ingredients) { ingredient in
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(ingredient.stableId)
-                                    .font(.body)
-                                Text("Glass Item ID")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                    Toggle("Record ingredient measurements", isOn: $recordMeasurements)
+
+                    if recordMeasurements {
+                        Picker("Measurement Type", selection: $measurementType) {
+                            ForEach(MeasurementType.allCases, id: \.self) { type in
+                                Text(type.displayName).tag(type)
                             }
-
-                            Spacer()
-
-                            Text("\(ingredient.amount, specifier: "%.2f")")
-                                .foregroundStyle(.secondary)
                         }
                     }
-                    .onDelete(perform: deleteIngredients)
-
-                    Button {
-                        showingAddIngredient = true
-                    } label: {
-                        Label("Add Ingredient", systemImage: "plus.circle.fill")
-                    }
-                } header: {
-                    Text("Ingredients")
                 } footer: {
-                    if ingredients.isEmpty {
-                        Text("Add frit or glass items to this recipe")
+                    if recordMeasurements {
+                        Text("Track precise amounts for each ingredient")
+                    } else {
+                        Text("Just list ingredients without measurements")
                     }
                 }
+
+                // Ingredients
+                ingredientsSection
 
                 // Validation feedback
                 if let error = errorMessage {
@@ -115,19 +100,110 @@ struct AddRecipeView: View {
                     .disabled(!isValid || isSaving)
                 }
             }
-            .sheet(isPresented: $showingAddIngredient) {
-                AddIngredientView(
-                    availableItems: availableGlassItems,
-                    measurementType: measurementType,
-                    onAdd: { ingredient in
-                        ingredients.append(ingredient)
-                        showingAddIngredient = false
-                    }
-                )
-            }
             .task {
                 await loadGlassItems()
             }
+        }
+    }
+
+    private var ingredientsSection: some View {
+        Section {
+            // Existing ingredients
+            ForEach(ingredients) { ingredient in
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        if let item = availableGlassItems.first(where: { $0.glassItem.stable_id == ingredient.stableId }) {
+                            Text(item.glassItem.name)
+                                .font(.body)
+                            Text(item.glassItem.stable_id)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text(ingredient.stableId)
+                                .font(.body)
+                        }
+                    }
+
+                    Spacer()
+
+                    if recordMeasurements {
+                        Text("\(ingredient.amount, specifier: "%.2f")")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .onDelete(perform: deleteIngredients)
+
+            // Inline search field
+            HStack {
+                TextField("Search glass items to add...", text: $ingredientSearchText)
+                    .autocorrectionDisabled()
+
+                if !ingredientSearchText.isEmpty {
+                    Button {
+                        ingredientSearchText = ""
+                        showingIngredientResults = false
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.vertical, 4)
+            .onChange(of: ingredientSearchText) { _, newValue in
+                showingIngredientResults = !newValue.isEmpty
+            }
+
+            // Show filtered results when searching
+            if showingIngredientResults && !ingredientSearchText.isEmpty {
+                ForEach(filteredGlassItems.prefix(5)) { item in
+                    Button {
+                        addIngredient(item)
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(item.glassItem.name)
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                                Text(item.glassItem.stable_id)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
+
+                            if ingredients.contains(where: { $0.stableId == item.glassItem.stable_id }) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                if filteredGlassItems.count > 5 {
+                    Text("\(filteredGlassItems.count - 5) more...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        } header: {
+            Text("Ingredients")
+        } footer: {
+            if ingredients.isEmpty {
+                Text("Add frit or glass items to this recipe")
+            }
+        }
+    }
+
+    private var filteredGlassItems: [CompleteInventoryItemModel] {
+        if ingredientSearchText.isEmpty {
+            return []
+        }
+        return availableGlassItems.filter { item in
+            item.glassItem.name.localizedCaseInsensitiveContains(ingredientSearchText) ||
+            item.glassItem.stable_id.localizedCaseInsensitiveContains(ingredientSearchText)
         }
     }
 
@@ -137,6 +213,23 @@ struct AddRecipeView: View {
 
     private func deleteIngredients(at offsets: IndexSet) {
         ingredients.remove(atOffsets: offsets)
+    }
+
+    private func addIngredient(_ item: CompleteInventoryItemModel) {
+        // Check if already added
+        guard !ingredients.contains(where: { $0.stableId == item.glassItem.stable_id }) else {
+            ingredientSearchText = ""
+            showingIngredientResults = false
+            return
+        }
+
+        let ingredient = RecipeIngredientModel(
+            stableId: item.glassItem.stable_id,
+            amount: recordMeasurements ? 1.0 : 0.0
+        )
+        ingredients.append(ingredient)
+        ingredientSearchText = ""
+        showingIngredientResults = false
     }
 
     private func loadGlassItems() async {
@@ -169,131 +262,6 @@ struct AddRecipeView: View {
         }
 
         isSaving = false
-    }
-}
-
-// MARK: - Add Ingredient View
-
-struct AddIngredientView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    let availableItems: [CompleteInventoryItemModel]
-    let measurementType: MeasurementType
-    let onAdd: (RecipeIngredientModel) -> Void
-
-    @State private var searchText = ""
-    @State private var selectedItem: CompleteInventoryItemModel?
-    @State private var amount: Double = 1.0
-
-    var filteredItems: [CompleteInventoryItemModel] {
-        if searchText.isEmpty {
-            return availableItems
-        } else {
-            return availableItems.filter { item in
-                item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||
-                item.glassItem.stable_id.localizedCaseInsensitiveContains(searchText)
-            }
-        }
-    }
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Search
-                HStack(spacing: DesignSystem.Spacing.sm) {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
-                    TextField("Search glass items", text: $searchText)
-                        .textFieldStyle(.plain)
-                    if !searchText.isEmpty {
-                        Button {
-                            searchText = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                .padding(DesignSystem.Padding.standard)
-                .background(DesignSystem.Colors.backgroundSecondary)
-
-                Divider()
-
-                // Item list
-                List(filteredItems, id: \.glassItem.stable_id) { item in
-                    Button {
-                        selectedItem = item
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(item.glassItem.name)
-                                    .foregroundStyle(.primary)
-                                Text(item.glassItem.stable_id)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-
-                            Spacer()
-
-                            if selectedItem?.glassItem.stable_id == item.glassItem.stable_id {
-                                Image(systemName: "checkmark")
-                                    .foregroundStyle(.blue)
-                            }
-                        }
-                    }
-                }
-                .listStyle(.plain)
-
-                // Amount input
-                if selectedItem != nil {
-                    VStack(spacing: DesignSystem.Spacing.md) {
-                        Divider()
-
-                        HStack {
-                            Text("Amount:")
-                                .fontWeight(.medium)
-
-                            TextField("Amount", value: $amount, format: .number)
-                                .keyboardType(.decimalPad)
-                                .textFieldStyle(.roundedBorder)
-                                .frame(width: 100)
-
-                            Text(measurementType == .byWeight ? "grams" : "parts")
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.horizontal)
-
-                        Button {
-                            if let item = selectedItem {
-                                let ingredient = RecipeIngredientModel(
-                                    stableId: item.glassItem.stable_id,
-                                    amount: amount
-                                )
-                                onAdd(ingredient)
-                            }
-                        } label: {
-                            Text("Add Ingredient")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .padding(.horizontal)
-                        .padding(.bottom)
-                        .disabled(amount <= 0)
-                    }
-                    .background(DesignSystem.Colors.backgroundSecondary)
-                }
-            }
-            .navigationTitle("Add Ingredient")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
-        }
     }
 }
 

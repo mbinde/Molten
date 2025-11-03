@@ -107,6 +107,8 @@ nonisolated struct InventorySearchSuggestions {
         return results
     }
     
+    // DEAD CODE (2025-11-02): Deprecated legacy method, always returns empty array. Safe to remove.
+    /*
     /// Legacy method for backward compatibility
     /// - Parameters:
     ///   - query: The search string input by the user.
@@ -121,5 +123,6 @@ nonisolated struct InventorySearchSuggestions {
     ) -> [Any] {
         return [] // Return empty array for deprecated method
     }
+    */
 }
 

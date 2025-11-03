@@ -9,6 +9,8 @@ import Foundation
 
 /// Extensions for Array to provide common utility methods
 extension Array {
+    // DEAD CODE (2025-11-02): Only used in tests, never in production. Safe to remove.
+    /*
     /// Split array into chunks of specified size
     /// - Parameter size: The maximum size of each chunk
     /// - Returns: An array of arrays, each containing at most `size` elements
@@ -27,6 +29,7 @@ extension Array {
 
         return result
     }
+    */
     
     /// Safely access an element at the specified index
     /// - Parameter index: The index to access
@@ -65,12 +68,15 @@ extension Array {
 
 // MARK: - Collection Extensions
 
+// DEAD CODE (2025-11-02): Simple wrapper, never used. Can use !isEmpty directly. Safe to remove.
+/*
 extension Collection {
     /// Check if the collection is not empty
     var isNotEmpty: Bool {
         return !isEmpty
     }
 }
+*/
 
 // MARK: - Sequence Extensions
 

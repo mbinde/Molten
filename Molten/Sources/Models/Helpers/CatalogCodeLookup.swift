@@ -72,6 +72,8 @@ struct CatalogCodeLookup {
         return String(format: "%06d", abs("\(manufacturer)-\(sku)".hashValue % 1000000))
     }
     
+    // DEAD CODE (2025-11-02): Legacy method never called. Safe to remove.
+    /*
     /// Legacy method for backward compatibility
     /// - Parameters:
     ///   - catalogCode: The base catalog code (treated as SKU)
@@ -83,6 +85,7 @@ struct CatalogCodeLookup {
         }
         return catalogCode
     }
+    */
     
     // MARK: - Search Strategies
     
@@ -118,25 +121,28 @@ struct CatalogCodeLookup {
         return items.first { $0.name.lowercased().contains(lowercaseCode) }
     }
     
+    // DEAD CODE (2025-11-02): Legacy search methods never called, just wrappers. Safe to remove.
+    /*
     // MARK: - Legacy Search Methods (for backward compatibility)
-    
+
     private static func searchByExactCode(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
         return searchByExactNaturalKey(code, in: items)
     }
-    
+
     private static func searchByExactId(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
         return searchByExactNaturalKey(code, in: items)
     }
-    
+
     private static func searchByBaseCode(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
         return searchByManufacturerSKU(code, in: items)
     }
-    
+
     private static func searchByCodeSuffix(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
         return items.first { $0.stable_id.hasSuffix(code) || ($0.sku?.hasSuffix(code) ?? false) }
     }
-    
+
     private static func searchByCodeContains(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
         return searchByNaturalKeyContains(code, in: items)
     }
+    */
 }

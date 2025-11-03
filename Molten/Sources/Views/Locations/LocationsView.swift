@@ -13,6 +13,7 @@ struct LocationsView: View {
     @State private var viewModel: LocationsViewModel
     @StateObject private var locationManager = LocationManager()
     @State private var showLocationPicker = false
+    @State private var mapCameraPosition: MapCameraPosition = .automatic
 
     // Default parameter evaluated once per view instance
     init(viewModel: LocationsViewModel = LocationsViewModel(
@@ -75,6 +76,11 @@ struct LocationsView: View {
             .sheet(isPresented: $showLocationPicker) {
                 LocationPickerSheet(onLocationSelected: { coordinate in
                     viewModel.updateUserLocation(coordinate)
+                    // Center map on selected location with reasonable zoom
+                    mapCameraPosition = .region(MKCoordinateRegion(
+                        center: coordinate,
+                        span: MKCoordinateSpan(latitudeDelta: 1.0, longitudeDelta: 1.0)
+                    ))
                     showLocationPicker = false
                 })
             }
@@ -165,7 +171,7 @@ struct LocationsView: View {
     // MARK: - Map View
 
     private var mapView: some View {
-        Map {
+        Map(position: $mapCameraPosition) {
             ForEach(viewModel.filteredLocations) { location in
                 if location.hasValidLocation {
                     Annotation(location.name, coordinate: location.coordinate) {
@@ -208,9 +214,48 @@ struct LocationsView: View {
         .mapControls {
             MapCompass()
         }
+        .onMapCameraChange { context in
+            // Save the camera position as user pans/zooms
+            saveMapRegion(context.region)
+        }
+        .onAppear {
+            // Restore saved map region on first appear
+            restoreMapRegion()
+        }
     }
 
     // MARK: - Helper Methods
+
+    /// Save map region to UserDefaults
+    private func saveMapRegion(_ region: MKCoordinateRegion) {
+        let defaults = UserDefaults.standard
+        defaults.set(region.center.latitude, forKey: "LocationsMap.latitude")
+        defaults.set(region.center.longitude, forKey: "LocationsMap.longitude")
+        defaults.set(region.span.latitudeDelta, forKey: "LocationsMap.latitudeDelta")
+        defaults.set(region.span.longitudeDelta, forKey: "LocationsMap.longitudeDelta")
+    }
+
+    /// Restore map region from UserDefaults
+    private func restoreMapRegion() {
+        let defaults = UserDefaults.standard
+
+        // Only restore if we have saved values
+        guard defaults.object(forKey: "LocationsMap.latitude") != nil else {
+            return
+        }
+
+        let latitude = defaults.double(forKey: "LocationsMap.latitude")
+        let longitude = defaults.double(forKey: "LocationsMap.longitude")
+        let latitudeDelta = defaults.double(forKey: "LocationsMap.latitudeDelta")
+        let longitudeDelta = defaults.double(forKey: "LocationsMap.longitudeDelta")
+
+        let region = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: latitude, longitude: longitude),
+            span: MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
+        )
+
+        mapCameraPosition = .region(region)
+    }
 
     /// Determine ring color based on location capabilities
     private func ringColor(for location: AnyLocationModel) -> Color {

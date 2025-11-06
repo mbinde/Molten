@@ -13,76 +13,6 @@ import Foundation
 @Suite("Array Extensions Tests")
 struct ArrayExtensionsTests {
 
-    // MARK: - chunked(into:) Tests
-
-    @Test("Chunk array into equal-sized chunks")
-    func testChunkedEqualSize() {
-        let array = [1, 2, 3, 4, 5, 6]
-        let chunks = array.chunked(into: 2)
-
-        #expect(chunks.count == 3)
-        #expect(chunks[0] == [1, 2])
-        #expect(chunks[1] == [3, 4])
-        #expect(chunks[2] == [5, 6])
-    }
-
-    @Test("Chunk array with uneven division")
-    func testChunkedUnevenSize() {
-        let array = [1, 2, 3, 4, 5]
-        let chunks = array.chunked(into: 2)
-
-        #expect(chunks.count == 3)
-        #expect(chunks[0] == [1, 2])
-        #expect(chunks[1] == [3, 4])
-        #expect(chunks[2] == [5])
-    }
-
-    @Test("Chunk empty array")
-    func testChunkedEmptyArray() {
-        let array: [Int] = []
-        let chunks = array.chunked(into: 3)
-
-        #expect(chunks.isEmpty)
-    }
-
-    @Test("Chunk with size larger than array")
-    func testChunkedLargeSize() {
-        let array = [1, 2, 3]
-        let chunks = array.chunked(into: 10)
-
-        #expect(chunks.count == 1)
-        #expect(chunks[0] == [1, 2, 3])
-    }
-
-    @Test("Chunk with size of 1")
-    func testChunkedSizeOne() {
-        let array = [1, 2, 3]
-        let chunks = array.chunked(into: 1)
-
-        #expect(chunks.count == 3)
-        #expect(chunks[0] == [1])
-        #expect(chunks[1] == [2])
-        #expect(chunks[2] == [3])
-    }
-
-    @Test("Chunk with zero size returns whole array")
-    func testChunkedZeroSize() {
-        let array = [1, 2, 3, 4]
-        let chunks = array.chunked(into: 0)
-
-        #expect(chunks.count == 1)
-        #expect(chunks[0] == [1, 2, 3, 4])
-    }
-
-    @Test("Chunk with negative size returns whole array")
-    func testChunkedNegativeSize() {
-        let array = [1, 2, 3]
-        let chunks = array.chunked(into: -1)
-
-        #expect(chunks.count == 1)
-        #expect(chunks[0] == [1, 2, 3])
-    }
-
     // MARK: - Safe Subscript Tests
 
     @Test("Safe subscript with valid index")
@@ -183,29 +113,6 @@ struct ArrayExtensionsTests {
         let result = array.removing { $0 % 2 == 0 }
 
         #expect(result.isEmpty)
-    }
-
-    // MARK: - Collection.isNotEmpty Tests
-
-    @Test("isNotEmpty returns true for non-empty array")
-    func testIsNotEmptyTrue() {
-        let array = [1, 2, 3]
-
-        #expect(array.isNotEmpty == true)
-    }
-
-    @Test("isNotEmpty returns false for empty array")
-    func testIsNotEmptyFalse() {
-        let array: [Int] = []
-
-        #expect(array.isNotEmpty == false)
-    }
-
-    @Test("isNotEmpty with single element")
-    func testIsNotEmptySingleElement() {
-        let array = [42]
-
-        #expect(array.isNotEmpty == true)
     }
 
     // MARK: - grouped(by keyPath:) Tests

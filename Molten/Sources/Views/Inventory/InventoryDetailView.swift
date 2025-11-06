@@ -25,7 +25,7 @@ struct InventoryDetailView: View {
     let userNotesRepository: UserNotesRepository
     let userTagsRepository: UserTagsRepository
     let shoppingListRepository: ShoppingListRepository
-    let storeRepository: StoreRepository
+    let locationService: UnifiedLocationService
     let userImageRepository: UserImageRepository
     let kilnScheduleService: KilnScheduleService
     let glassItemRepository: GlassItemRepository
@@ -88,7 +88,7 @@ struct InventoryDetailView: View {
         userNotesRepository: UserNotesRepository,
         userTagsRepository: UserTagsRepository,
         shoppingListRepository: ShoppingListRepository,
-        storeRepository: StoreRepository = RepositoryFactory.createStoreRepository(),
+        locationService: UnifiedLocationService = RepositoryFactory.createUnifiedLocationService(),
         userImageRepository: UserImageRepository,
         kilnScheduleService: KilnScheduleService,
         glassItemRepository: GlassItemRepository
@@ -99,7 +99,7 @@ struct InventoryDetailView: View {
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
-        self.storeRepository = storeRepository
+        self.locationService = locationService
         self.userImageRepository = userImageRepository
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
@@ -215,7 +215,7 @@ struct InventoryDetailView: View {
             ShoppingListOptionsView(
                 item: item,
                 shoppingListRepository: shoppingListRepository,
-                storeRepository: storeRepository
+                locationService: locationService
             )
         }
         .sheet(item: $selectedInventoryType) { selection in
@@ -223,9 +223,6 @@ struct InventoryDetailView: View {
                 item: currentItem,
                 inventoryType: selection.type
             )
-            .onAppear {
-                print("🔍 Sheet: Showing LocationDetailView for type: \(selection.type)")
-            }
             .onDisappear {
                 // Refresh item data after location details might have changed
                 refreshItemData()
@@ -683,9 +680,7 @@ struct InventoryDetailView: View {
                             quantity: quantity,
                             inventoryRecords: typeInventory,
                             onTap: {
-                                print("🔍 Type row tapped: \(type)")
                                 selectedInventoryType = InventoryTypeSelection(type: type)
-                                print("🔍 Set selectedInventoryType to: \(selectedInventoryType?.type ?? "nil")")
                             }
                         )
                     }
@@ -1135,7 +1130,7 @@ struct InventoryDetailTypeRow: View {
 struct ShoppingListOptionsView: View {
     let item: CompleteInventoryItemModel
     let shoppingListRepository: ShoppingListRepository
-    let storeRepository: StoreRepository
+    let locationService: UnifiedLocationService
     @Environment(\.dismiss) private var dismiss
 
     @State private var quantity: String = ""
@@ -1148,11 +1143,11 @@ struct ShoppingListOptionsView: View {
     init(
         item: CompleteInventoryItemModel,
         shoppingListRepository: ShoppingListRepository,
-        storeRepository: StoreRepository = RepositoryFactory.createStoreRepository()
+        locationService: UnifiedLocationService = RepositoryFactory.createUnifiedLocationService()
     ) {
         self.item = item
         self.shoppingListRepository = shoppingListRepository
-        self.storeRepository = storeRepository
+        self.locationService = locationService
     }
 
     var body: some View {
@@ -1188,7 +1183,7 @@ struct ShoppingListOptionsView: View {
                             StoreAutoCompleteField(
                                 store: $store,
                                 shoppingListRepository: shoppingListRepository,
-                                storeRepository: storeRepository
+                                locationService: locationService
                             )
                         }
                     }
@@ -1360,10 +1355,6 @@ struct InventoryStorageDetailView: View {
                         Image(systemName: "ellipsis.circle")
                     }
                 }
-            }
-            .onAppear {
-                print("🔍 LocationDetailView onAppear - item: \(item.glassItem.name)")
-                print("🔍 Total inventory records: \(item.inventory.count)")
             }
             .sheet(item: $editingRecord) { record in
                 InventoryEditView(

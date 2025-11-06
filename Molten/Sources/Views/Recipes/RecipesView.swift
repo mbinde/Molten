@@ -50,7 +50,11 @@ struct RecipesView: View {
                 } else if let error = errorMessage {
                     errorView(error)
                 } else if filteredRecipes.isEmpty {
-                    emptyStateView
+                    if recipes.isEmpty {
+                        emptyStateView
+                    } else {
+                        searchEmptyStateView
+                    }
                 } else {
                     recipeList
                 }
@@ -104,34 +108,26 @@ struct RecipesView: View {
     }
 
     private var emptyStateView: some View {
-        VStack(spacing: 0) {
-            Spacer()
+        CustomEmptyStateView(
+            icon: "book.closed",
+            title: "No Recipes Yet",
+            description: "Create recipes to blend frit colors and track your favorite combinations",
+            actionButton: .init(
+                title: "Create Your First Recipe",
+                action: { showingAddRecipe = true },
+                style: .prominent
+            )
+        )
+    }
 
-            VStack(spacing: 20) {
-                Image(systemName: "book.closed")
-                    .font(.system(size: 70))
-                    .foregroundColor(.blue)
-
-                Text("No Recipes Yet")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-
-                Text("Create recipes to blend frit colors and track your favorite combinations")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-
-                Button("Create Your First Recipe") {
-                    showingAddRecipe = true
-                }
-                .buttonStyle(.borderedProminent)
-                .padding(.top, 8)
+    private var searchEmptyStateView: some View {
+        CustomEmptyStateView.searchResults(
+            searchTerm: searchText.isEmpty ? nil : searchText,
+            filters: [],
+            onClearFilters: {
+                searchText = ""
             }
-
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        )
     }
 
     private func errorView(_ message: String) -> some View {
@@ -223,11 +219,21 @@ struct RecipeDetailView: View {
     let recipe: RecipeModel
     let recipeService: RecipeService
 
+    private let catalogService: CatalogService
+
+    @State private var availableGlassItems: [CompleteInventoryItemModel] = []
+    @State private var isLoadingGlassItems = false
+
+    init(recipe: RecipeModel, recipeService: RecipeService, catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
+        self.recipe = recipe
+        self.recipeService = recipeService
+        self.catalogService = catalogService
+    }
+
     var body: some View {
         List {
             Section("Details") {
                 LabeledContent("Title", value: recipe.title)
-                LabeledContent("Measurement Type", value: recipe.measurementType.displayName)
 
                 if !recipe.descriptionText.isEmpty {
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
@@ -242,11 +248,38 @@ struct RecipeDetailView: View {
             if !recipe.ingredients.isEmpty {
                 Section("Ingredients") {
                     ForEach(recipe.ingredients) { ingredient in
-                        HStack {
-                            Text(ingredient.stableId)
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            // Thumbnail
+                            if let item = availableGlassItems.first(where: { $0.glassItem.stable_id == ingredient.stableId }) {
+                                AsyncImage(url: URL(string: item.glassItem.image_url ?? "")) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                } placeholder: {
+                                    Rectangle()
+                                        .fill(Color.gray.opacity(0.2))
+                                }
+                                .frame(width: 40, height: 40)
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                                Text(item.glassItem.name)
+                                    .font(.body)
+                            } else {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.2))
+                                    .frame(width: 40, height: 40)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                                Text(ingredient.stableId)
+                                    .font(.body)
+                            }
+
                             Spacer()
-                            Text("\(ingredient.amount, specifier: "%.2f")")
-                                .foregroundStyle(.secondary)
+
+                            if ingredient.amount > 0 {
+                                Text("\(ingredient.amount, specifier: "%.2f")")
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
@@ -259,6 +292,19 @@ struct RecipeDetailView: View {
         }
         .navigationTitle(recipe.title)
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await loadGlassItems()
+        }
+    }
+
+    private func loadGlassItems() async {
+        isLoadingGlassItems = true
+        do {
+            availableGlassItems = try await catalogService.getAllGlassItems()
+        } catch {
+            // Silently fail - just won't show thumbnails
+        }
+        isLoadingGlassItems = false
     }
 }
 

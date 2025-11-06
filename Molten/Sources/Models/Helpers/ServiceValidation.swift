@@ -67,6 +67,8 @@ class ServiceValidation {
         }
     }
     
+    // DEAD CODE (2025-11-02): Deprecated legacy method, never called. Safe to remove.
+    /*
     /// Legacy method for backward compatibility
     /// - Parameter model: The legacy CatalogItemModel to validate (if still exists)
     /// - Returns: ValidationResult indicating success or failure with error details
@@ -75,6 +77,7 @@ class ServiceValidation {
         // This is kept for backward compatibility but should not be used
         return ValidationResult.failure(errors: ["Legacy CatalogItemModel validation is deprecated. Use GlassItem validation instead."])
     }
+    */
     
     /// Validates a PurchaseRecordModel before saving
     /// - Parameter model: The PurchaseRecordModel to validate
@@ -151,6 +154,8 @@ class ServiceValidation {
         }
     }
     
+    // DEAD CODE (2025-11-02): Deprecated legacy method, never called. Safe to remove.
+    /*
     /// Legacy method for backward compatibility
     /// - Parameter model: The legacy InventoryItemModel to validate (if still exists)
     /// - Returns: ValidationResult indicating success or failure with error details
@@ -159,4 +164,5 @@ class ServiceValidation {
         // This is kept for backward compatibility but should not be used
         return ValidationResult.failure(errors: ["Legacy InventoryItemModel validation is deprecated. Use InventoryModel validation instead."])
     }
+    */
 }

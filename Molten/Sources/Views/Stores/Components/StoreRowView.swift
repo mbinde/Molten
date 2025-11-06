@@ -9,7 +9,7 @@ import SwiftUI
 import CoreLocation
 
 struct StoreRowView: View {
-    let store: StoreModel
+    let store: UnifiedLocationModel
     let userLocation: CLLocationCoordinate2D?
     var showDistance: Bool = true
 
@@ -77,7 +77,7 @@ struct StoreRowView: View {
 #Preview("Basic Store") {
     List {
         StoreRowView(
-            store: StoreModel(
+            store: UnifiedLocationModel(
                 stable_id: "preview-1",
                 name: "Glass Art Supply",
                 addressLine1: "123 Main St",
@@ -87,7 +87,8 @@ struct StoreRowView: View {
                 latitude: 47.6062,
                 longitude: -122.3321,
                 phone: "(206) 555-1234",
-                isVerified: false
+                isVerified: false,
+                retailCapabilities: []
             ),
             userLocation: nil,
             showDistance: false
@@ -98,7 +99,7 @@ struct StoreRowView: View {
 #Preview("Verified Store with Distance") {
     List {
         StoreRowView(
-            store: StoreModel(
+            store: UnifiedLocationModel(
                 stable_id: "preview-2",
                 name: "Frantz Art Glass",
                 addressLine1: "1222 1st Ave W",
@@ -108,7 +109,8 @@ struct StoreRowView: View {
                 latitude: 47.6362,
                 longitude: -122.3598,
                 phone: "(206) 284-5600",
-                isVerified: true
+                isVerified: true,
+                retailCapabilities: [RetailCapability(technique: .glassBlowing)]
             ),
             userLocation: CLLocationCoordinate2D(latitude: 47.6062, longitude: -122.3321),
             showDistance: true

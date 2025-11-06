@@ -71,6 +71,14 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
     var selectedManufacturer: String? = nil
 
+    var selectedProductTypes: Set<String> = [] {
+        didSet {
+            if selectedProductTypes != oldValue {
+                applyFilters()
+            }
+        }
+    }
+
     // MARK: - Sort State
 
     var sortOption: SortOption = .name {
@@ -141,20 +149,19 @@ class CatalogViewModel: CatalogViewModelProtocol {
         !selectedTags.isEmpty ||
         !selectedCOEs.isEmpty ||
         !selectedManufacturers.isEmpty ||
+        !selectedProductTypes.isEmpty ||
         selectedManufacturer != nil
     }
 
     // MARK: - Actions
 
     func loadData() async {
-        print("🚨 CatalogViewModel.loadData: CALLED")
         isLoading = true
         errorMessage = nil
 
         do {
             // Load all glass items from catalog service
             items = try await catalogService.getAllGlassItems()
-            print("🚨 CatalogViewModel.loadData: Received \(items.count) items from service")
 
             // Update caches
             updateCaches()
@@ -162,8 +169,6 @@ class CatalogViewModel: CatalogViewModelProtocol {
             // Apply initial filters and sorting
             applyFilters()
             applySorting()
-
-            print("🚨 CatalogViewModel.loadData: After filtering/sorting: \(sortedFilteredItems.count) items")
 
         } catch {
             errorMessage = "Failed to load catalog: \(error.localizedDescription)"
@@ -173,7 +178,6 @@ class CatalogViewModel: CatalogViewModelProtocol {
         }
 
         isLoading = false
-        print("🚨 CatalogViewModel.loadData: COMPLETE")
     }
 
     func refreshData() async {
@@ -185,6 +189,7 @@ class CatalogViewModel: CatalogViewModelProtocol {
         selectedTags.removeAll()
         selectedCOEs.removeAll()
         selectedManufacturers.removeAll()
+        selectedProductTypes.removeAll()
         selectedManufacturer = nil
         searchClearedFeedback = true
 
@@ -203,17 +208,24 @@ class CatalogViewModel: CatalogViewModelProtocol {
     func applyFilters() {
         var filtered = items
 
+        // Apply product type filter
+        if !selectedProductTypes.isEmpty {
+            filtered = filtered.filter { item in
+                selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
         // Apply manufacturer filter
         if !selectedManufacturers.isEmpty {
             filtered = filtered.filter { item in
-                selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
             }
         }
 
         // Apply legacy single manufacturer filter
         if let selectedManufacturer = selectedManufacturer {
             filtered = filtered.filter { item in
-                item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer
+                item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer
             }
         }
 
@@ -224,10 +236,13 @@ class CatalogViewModel: CatalogViewModelProtocol {
             }
         }
 
-        // Apply COE filter
+        // Apply COE filter (only for glass items)
         if !selectedCOEs.isEmpty {
             filtered = filtered.filter { item in
-                selectedCOEs.contains(item.glassItem.coe)
+                if let coe = item.catalogItem.coe {
+                    return selectedCOEs.contains(coe)
+                }
+                return false  // Non-glass items don't match COE filter
             }
         }
 
@@ -236,15 +251,15 @@ class CatalogViewModel: CatalogViewModelProtocol {
             let searchMode = SearchTextParser.parseSearchText(searchText)
             filtered = filtered.filter { item in
                 if searchTitlesOnly {
-                    return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
+                    return SearchTextParser.matchesName(name: item.catalogItem.name, mode: searchMode)
                 } else {
                     let allFields = [
-                        item.glassItem.name,
-                        item.glassItem.stable_id,
-                        item.glassItem.manufacturer,
-                        item.glassItem.sku,
-                        item.glassItem.mfr_notes
-                    ]
+                        item.catalogItem.name,
+                        item.catalogItem.stable_id,
+                        item.catalogItem.manufacturer,
+                        item.catalogItem.sku,
+                        item.catalogItem.mfr_notes
+                    ].compactMap { $0 }
                     return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
                 }
             }
@@ -260,11 +275,11 @@ class CatalogViewModel: CatalogViewModelProtocol {
         sortedFilteredItems = filteredItems.sorted { (item1, item2) in
             switch sortOption {
             case .name:
-                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
+                return item1.catalogItem.name.localizedCaseInsensitiveCompare(item2.catalogItem.name) == .orderedAscending
             case .manufacturer:
-                return item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer) == .orderedAscending
+                return item1.catalogItem.manufacturer.localizedCaseInsensitiveCompare(item2.catalogItem.manufacturer) == .orderedAscending
             case .code:
-                return item1.glassItem.stable_id.localizedCaseInsensitiveCompare(item2.glassItem.stable_id) == .orderedAscending
+                return item1.catalogItem.stable_id.localizedCaseInsensitiveCompare(item2.catalogItem.stable_id) == .orderedAscending
             }
         }
     }
@@ -278,9 +293,13 @@ class CatalogViewModel: CatalogViewModelProtocol {
         for item in items {
             allTagsSet.formUnion(item.allTags)
             userTagsSet.formUnion(item.userTags)
-            allCOEsSet.insert(item.glassItem.coe)
 
-            let mfr = item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            // Only add COE if it exists (glass items only)
+            if let coe = item.catalogItem.coe {
+                allCOEsSet.insert(coe)
+            }
+
+            let mfr = item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
             if !mfr.isEmpty {
                 manufacturersSet.insert(mfr)
             }
@@ -304,7 +323,10 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
         if !selectedCOEs.isEmpty {
             filtered = filtered.filter { item in
-                selectedCOEs.contains(item.glassItem.coe)
+                if let coe = item.catalogItem.coe {
+                    return selectedCOEs.contains(coe)
+                }
+                return false
             }
         }
 
@@ -312,15 +334,15 @@ class CatalogViewModel: CatalogViewModelProtocol {
             let searchMode = SearchTextParser.parseSearchText(searchText)
             filtered = filtered.filter { item in
                 if searchTitlesOnly {
-                    return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
+                    return SearchTextParser.matchesName(name: item.catalogItem.name, mode: searchMode)
                 } else {
                     let allFields = [
-                        item.glassItem.name,
-                        item.glassItem.stable_id,
-                        item.glassItem.manufacturer,
-                        item.glassItem.sku,
-                        item.glassItem.mfr_notes
-                    ]
+                        item.catalogItem.name,
+                        item.catalogItem.stable_id,
+                        item.catalogItem.manufacturer,
+                        item.catalogItem.sku,
+                        item.catalogItem.mfr_notes
+                    ].compactMap { $0 }
                     return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
                 }
             }
@@ -328,7 +350,7 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
         var counts: [String: Int] = [:]
         for item in filtered {
-            let mfr = item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            let mfr = item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
             counts[mfr, default: 0] += 1
         }
         return counts
@@ -340,7 +362,7 @@ class CatalogViewModel: CatalogViewModelProtocol {
         // Apply all filters EXCEPT COE
         if !selectedManufacturers.isEmpty {
             filtered = filtered.filter { item in
-                selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
             }
         }
 
@@ -354,15 +376,15 @@ class CatalogViewModel: CatalogViewModelProtocol {
             let searchMode = SearchTextParser.parseSearchText(searchText)
             filtered = filtered.filter { item in
                 if searchTitlesOnly {
-                    return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
+                    return SearchTextParser.matchesName(name: item.catalogItem.name, mode: searchMode)
                 } else {
                     let allFields = [
-                        item.glassItem.name,
-                        item.glassItem.stable_id,
-                        item.glassItem.manufacturer,
-                        item.glassItem.sku,
-                        item.glassItem.mfr_notes
-                    ]
+                        item.catalogItem.name,
+                        item.catalogItem.stable_id,
+                        item.catalogItem.manufacturer,
+                        item.catalogItem.sku,
+                        item.catalogItem.mfr_notes
+                    ].compactMap { $0 }
                     return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
                 }
             }
@@ -370,7 +392,10 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
         var counts: [Int32: Int] = [:]
         for item in filtered {
-            counts[item.glassItem.coe, default: 0] += 1
+            // Only count COE for glass items
+            if let coe = item.catalogItem.coe {
+                counts[coe, default: 0] += 1
+            }
         }
         return counts
     }
@@ -381,13 +406,16 @@ class CatalogViewModel: CatalogViewModelProtocol {
         // Apply all filters EXCEPT tags
         if !selectedManufacturers.isEmpty {
             filtered = filtered.filter { item in
-                selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
             }
         }
 
         if !selectedCOEs.isEmpty {
             filtered = filtered.filter { item in
-                selectedCOEs.contains(item.glassItem.coe)
+                if let coe = item.catalogItem.coe {
+                    return selectedCOEs.contains(coe)
+                }
+                return false
             }
         }
 
@@ -395,15 +423,15 @@ class CatalogViewModel: CatalogViewModelProtocol {
             let searchMode = SearchTextParser.parseSearchText(searchText)
             filtered = filtered.filter { item in
                 if searchTitlesOnly {
-                    return SearchTextParser.matchesName(name: item.glassItem.name, mode: searchMode)
+                    return SearchTextParser.matchesName(name: item.catalogItem.name, mode: searchMode)
                 } else {
                     let allFields = [
-                        item.glassItem.name,
-                        item.glassItem.stable_id,
-                        item.glassItem.manufacturer,
-                        item.glassItem.sku,
-                        item.glassItem.mfr_notes
-                    ]
+                        item.catalogItem.name,
+                        item.catalogItem.stable_id,
+                        item.catalogItem.manufacturer,
+                        item.catalogItem.sku,
+                        item.catalogItem.mfr_notes
+                    ].compactMap { $0 }
                     return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
                 }
             }

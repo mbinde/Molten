@@ -50,7 +50,11 @@ struct RecipesView: View {
                 } else if let error = errorMessage {
                     errorView(error)
                 } else if filteredRecipes.isEmpty {
-                    emptyStateView
+                    if recipes.isEmpty {
+                        emptyStateView
+                    } else {
+                        searchEmptyStateView
+                    }
                 } else {
                     recipeList
                 }
@@ -104,34 +108,26 @@ struct RecipesView: View {
     }
 
     private var emptyStateView: some View {
-        VStack(spacing: 0) {
-            Spacer()
+        CustomEmptyStateView(
+            icon: "book.closed",
+            title: "No Recipes Yet",
+            description: "Create recipes to blend frit colors and track your favorite combinations",
+            actionButton: .init(
+                title: "Create Your First Recipe",
+                action: { showingAddRecipe = true },
+                style: .prominent
+            )
+        )
+    }
 
-            VStack(spacing: 20) {
-                Image(systemName: "book.closed")
-                    .font(.system(size: 70))
-                    .foregroundColor(.blue)
-
-                Text("No Recipes Yet")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-
-                Text("Create recipes to blend frit colors and track your favorite combinations")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-
-                Button("Create Your First Recipe") {
-                    showingAddRecipe = true
-                }
-                .buttonStyle(.borderedProminent)
-                .padding(.top, 8)
+    private var searchEmptyStateView: some View {
+        CustomEmptyStateView.searchResults(
+            searchTerm: searchText.isEmpty ? nil : searchText,
+            filters: [],
+            onClearFilters: {
+                searchText = ""
             }
-
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        )
     }
 
     private func errorView(_ message: String) -> some View {

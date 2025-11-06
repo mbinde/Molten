@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		01C8A78294F8BD99B16599EE /* TagColorMappingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADF1A55444B9781567411BEF /* TagColorMappingTests.swift */; };
 		16BF12B5F311E273B6CC9843 /* SubscriptionConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 205F322AF6DE711B34440044 /* SubscriptionConfigTests.swift */; };
+		2963D296680C0DECC3190050 /* WeightUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7417A7D1262F96254623B1D5 /* WeightUnitTests.swift */; };
 		326E6C0727A5816EF1C31CA0 /* ProjectRepositoryErrorsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC8490F9F3C13B944452CB7 /* ProjectRepositoryErrorsTests.swift */; };
 		347DB0095BEC3B97737F5342 /* UnifiedLocationModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B804734B7F93E94936AE55DE /* UnifiedLocationModelTests.swift */; };
 		35860FE27853FCCC7A87AFA3 /* DefaultUnitsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07D52B85490521F63EF2B302 /* DefaultUnitsTests.swift */; };
@@ -17,6 +18,7 @@
 		581BC3503A1D5C6D379DA8A7 /* CatalogSortOptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD05F659B3926D74632E3518 /* CatalogSortOptionTests.swift */; };
 		5A4ECEB1C12109301EB8EE9D /* LocationTypeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67D01816273C45FF316DA4E1 /* LocationTypeTests.swift */; };
 		60413EDC4499C47B99AF446D /* CatalogUnitsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAB080555712DF2FFA1A43B /* CatalogUnitsTests.swift */; };
+		818109D6CEE1CF3BC330E077 /* DefaultTabTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F11E07549E3E586CAB2FFB2 /* DefaultTabTests.swift */; };
 		897857C1A1A793B9E31AB40D /* KilnScheduleRepositoryErrorsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 973681CFAEBE8EF07A6FF633 /* KilnScheduleRepositoryErrorsTests.swift */; };
 		8C3454AF61198352E76136C3 /* ServiceValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F422A55CC6A4F183BA2DE1F /* ServiceValidationTests.swift */; };
 		A7B288F91ABCB00FB1032B01 /* CatalogCodeLookupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4669030827A13B41FC71362C /* CatalogCodeLookupTests.swift */; };
@@ -114,11 +116,13 @@
 		12754BD0BC89C1DC6185EE2E /* ServiceTypeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceTypeTests.swift; sourceTree = "<group>"; };
 		205F322AF6DE711B34440044 /* SubscriptionConfigTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SubscriptionConfigTests.swift; path = Molten/Tests/MoltenTests/App/SubscriptionConfigTests.swift; sourceTree = "<group>"; };
 		212005B583143820DD038378 /* AuthorModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AuthorModelTests.swift; path = Molten/Tests/MoltenTests/Models/AuthorModelTests.swift; sourceTree = "<group>"; };
+		2F11E07549E3E586CAB2FFB2 /* DefaultTabTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DefaultTabTests.swift; path = Molten/Tests/MoltenTests/App/DefaultTabTests.swift; sourceTree = "<group>"; };
 		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
 		4669030827A13B41FC71362C /* CatalogCodeLookupTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CatalogCodeLookupTests.swift; path = Molten/Tests/MoltenTests/Models/CatalogCodeLookupTests.swift; sourceTree = "<group>"; };
 		67D01816273C45FF316DA4E1 /* LocationTypeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LocationTypeTests.swift; path = Molten/Tests/MoltenTests/Models/LocationTypeTests.swift; sourceTree = "<group>"; };
 		6EC8490F9F3C13B944452CB7 /* ProjectRepositoryErrorsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectRepositoryErrorsTests.swift; sourceTree = "<group>"; };
 		6F422A55CC6A4F183BA2DE1F /* ServiceValidationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceValidationTests.swift; sourceTree = "<group>"; };
+		7417A7D1262F96254623B1D5 /* WeightUnitTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WeightUnitTests.swift; path = Molten/Tests/MoltenTests/Models/WeightUnitTests.swift; sourceTree = "<group>"; };
 		8281B293DD39FA9AAD352537 /* DecimalFormattingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DecimalFormattingTests.swift; sourceTree = "<group>"; };
 		878F664543088F1B86740DD2 /* UnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationRepository.swift; sourceTree = "<group>"; };
 		95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemDataLoadingServiceTests.swift; sourceTree = "<group>"; };
@@ -870,6 +874,8 @@
 				D259F469DCAAF4F58AE020F2 /* SimpleErrorHandlingTests.swift */,
 				205F322AF6DE711B34440044 /* SubscriptionConfigTests.swift */,
 				EAAB080555712DF2FFA1A43B /* CatalogUnitsTests.swift */,
+				7417A7D1262F96254623B1D5 /* WeightUnitTests.swift */,
+				2F11E07549E3E586CAB2FFB2 /* DefaultTabTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1240,6 +1246,8 @@
 				E7061562F506788B70909025 /* SimpleErrorHandlingTests.swift in Sources */,
 				16BF12B5F311E273B6CC9843 /* SubscriptionConfigTests.swift in Sources */,
 				60413EDC4499C47B99AF446D /* CatalogUnitsTests.swift in Sources */,
+				2963D296680C0DECC3190050 /* WeightUnitTests.swift in Sources */,
+				818109D6CEE1CF3BC330E077 /* DefaultTabTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

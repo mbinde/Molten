@@ -37,6 +37,26 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `PDFPreviewView.swift` - SwiftUI view
 - `LabeledFormComponents.swift` - SwiftUI form components
 
+**Batch 3:**
+- `CoatingTestView.swift` - SwiftUI view (likely debug/test view)
+- `AddPurchaseRecordViewModel.swift` - SwiftUI ViewModel
+- `MockCatalogViewModel.swift` - Mock for testing (not production code)
+- `SettingsToolbarButton.swift` - SwiftUI toolbar component
+- `AddLogbookEntryView.swift` - SwiftUI view
+- `DeepLinkedItemView.swift` - SwiftUI view
+- `ImportScheduleView.swift` - SwiftUI view
+- `FirstRunDataLoadingView.swift` - SwiftUI view
+- `CatalogViewFactory.swift` - Factory for view creation (SwiftUI infrastructure)
+- `PurchaseRowView.swift` - SwiftUI view
+- `AboutView.swift` - SwiftUI view
+- `InventoryItemRowView.swift` - SwiftUI view
+- `CatalogViewIntegration.swift` - Integration code (likely SwiftUI)
+- `LocationDetailView.swift` - SwiftUI view
+- `PurchaseRecordDetailView.swift` - SwiftUI view
+- `UsageBanner.swift` - SwiftUI view
+- `StoreAutoCompleteField.swift` - SwiftUI view component
+- `KilnSegmentInput.swift` - SwiftUI view component
+
 ### Configuration & Settings (Static configuration, no logic to test)
 - `DebugConfig.swift` - Static configuration flags and AppStorage properties (requires UI/integration testing)
 
@@ -46,6 +66,9 @@ This document tracks files that were identified as 0% coverage but are not appro
 
 ### Repository Implementations (Integration/Repository tests exist)
 - `CoreDataKilnScheduleRepository.swift` - Core Data implementation (belongs in RepositoryTests)
+- `CoreDataLocationRepository.swift` - Core Data implementation (belongs in RepositoryTests)
+- `CoreDataUserTagsRepository.swift` - Core Data implementation (belongs in RepositoryTests)
+- `CoreDataCatalogRepository.swift` - Core Data implementation (belongs in RepositoryTests)
 
 ### Example/Tool Files (Not production code)
 - `GlassItemDataLoadingExample.swift` - Development/debugging tool
@@ -53,6 +76,10 @@ This document tracks files that were identified as 0% coverage but are not appro
 ### Infrastructure/Helpers (May need specialized testing)
 - `FileSystemUserImageRepository.swift` - File I/O operations (requires filesystem mocking/integration tests)
 - `TransformableMigrationHelper.swift` - Core Data migration utility (requires Core Data context, belongs in RepositoryTests)
+- `Persistence.swift` - Core Data stack setup (integration-level testing)
+- `CoreDataEntityHelpers.swift` - Core Data helper utilities (requires Core Data context)
+- `CloudKitSyncMonitor.swift` - CloudKit monitoring service (requires CloudKit integration testing)
+- `DesignSystem+Accessibility.swift` - Static accessibility identifiers (UI tests verify these work)
 
 ### ViewModels (Likely require protocol/integration tests)
 - `StoreListViewModel.swift` - SwiftUI ViewModel (probably has @Published properties)
@@ -73,6 +100,7 @@ This document tracks files that were identified as 0% coverage but are not appro
 
 ### Error Enums (Tested)
 - `KilnScheduleRepositoryErrors.swift` - ✅ **Tests Created**: KilnScheduleRepositoryErrorsTests.swift
+- `ProjectRepositoryErrors.swift` - ✅ **Tests Created**: ProjectRepositoryErrorsTests.swift
 
 ### Formatting/Extensions (Tested)
 - `Decimal+Formatting.swift` - ✅ **Tests Created**: DecimalFormattingTests.swift
@@ -104,10 +132,15 @@ This document tracks files that were identified as 0% coverage but are not appro
 - Tests created: 3 (ServiceType, ServiceValidation, TagColorMapping)
 - Skipped: 22 (SwiftUI views, ViewModels, Services requiring integration tests)
 
+**Batch 3 (Third Review):**
+- Total files reviewed: 26
+- Tests created: 1 (ProjectRepositoryErrors)
+- Skipped: 25 (SwiftUI views, ViewModels, Core Data infrastructure, mocks)
+
 **Grand Total:**
-- Total files reviewed: 49
-- Tests created: 5
-- Skipped: 44
+- Total files reviewed: 75
+- Tests created: 6
+- Skipped: 69
 
 ## Future Considerations
 

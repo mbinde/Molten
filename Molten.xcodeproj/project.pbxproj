@@ -583,6 +583,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};

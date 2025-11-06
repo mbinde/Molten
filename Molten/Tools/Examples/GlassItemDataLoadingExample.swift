@@ -145,7 +145,7 @@ class GlassItemDataLoadingExample {
         log.info("Total processed: \(result.totalProcessed, privacy: .public)")
         
         // Show detailed information for debugging
-        if result.failedItems.isNotEmpty {
+        if !result.failedItems.isEmpty {
             log.warning("Failed items for debugging:")
             for (index, failed) in result.failedItems.prefix(3).enumerated() {
                 log.warning("Failed item \(index + 1, privacy: .public): \(failed.originalData.name, privacy: .public)")
@@ -194,7 +194,7 @@ class GlassItemDataLoadingExample {
         
         // Show specific validation issues
         let problematicItems = validationResult.validationDetails.filter { !$0.isValid }
-        if problematicItems.isNotEmpty {
+        if !problematicItems.isEmpty {
             log.warning("Items with validation errors:")
             for (index, item) in problematicItems.prefix(5).enumerated() {
                 log.warning("Problem item \(index + 1, privacy: .public): \(item.itemName, privacy: .public) (\(item.itemCode, privacy: .public))")

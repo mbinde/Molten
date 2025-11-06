@@ -239,8 +239,13 @@ struct FixedBasicTests {
             userTagsRepository: userTagsRepo
         )
         
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
+        
         let catalogService = CatalogService(
             glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
             itemTagsRepository: itemTagsRepo,

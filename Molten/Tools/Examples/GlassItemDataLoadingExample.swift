@@ -45,8 +45,12 @@ class GlassItemDataLoadingExample {
         )
 
         // 3. Create enhanced catalog service
+        let coatingItemRepository = MockCoatingItemRepository()
+        let toolItemRepository = MockToolItemRepository()
         let catalogService = CatalogService(
             glassItemRepository: glassItemRepository,
+            coatingItemRepository: coatingItemRepository,
+            toolItemRepository: toolItemRepository,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
             itemTagsRepository: itemTagsRepository,

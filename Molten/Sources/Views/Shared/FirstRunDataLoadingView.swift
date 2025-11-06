@@ -196,21 +196,57 @@ struct FirstRunDataLoadingView: View {
 
             if needsDataLoad {
                 print("🎯 First run detected - loading catalog from JSON")
-                let result = try await glassItemLoadingService.loadGlassItemsFromJSONIfEmpty()
-                if let loadingResult = result {
-                    itemsLoaded = loadingResult.itemsCreated
-                    print("✅ Loaded \(itemsLoaded) items from JSON")
 
-                    // DO NOT purge persistent history when using CloudKit!
-                    // Purging causes CloudKit to lose sync state and re-import everything, creating duplicates.
-                    // See: https://stackoverflow.com/questions/72557060/
-                    print("🐛✅ Loaded \(itemsLoaded) items - letting CloudKit manage persistent history")
+                // Load glass items
+                let glassResult = try await glassItemLoadingService.loadGlassItemsFromJSONIfEmpty()
+                if let loadingResult = glassResult {
+                    itemsLoaded = loadingResult.itemsCreated
+                    print("✅ Loaded \(itemsLoaded) glass items from JSON")
                 }
+
+                // Load coatings
+                let coatingRepository = RepositoryFactory.createCoatingItemRepository()
+                let coatingLoadingService = CoatingItemDataLoadingService(coatingRepository: coatingRepository)
+                let coatingResult = try await coatingLoadingService.loadCoatingsFromJSON()
+                itemsLoaded += coatingResult.itemsCreated
+                print("✅ Loaded \(coatingResult.itemsCreated) coatings from JSON")
+
+                // Load tools
+                let toolRepository = RepositoryFactory.createToolItemRepository()
+                let toolLoadingService = ToolItemDataLoadingService(toolRepository: toolRepository)
+                let toolResult = try await toolLoadingService.loadAllToolsFromJSON()
+                itemsLoaded += toolResult.itemsCreated
+                print("✅ Loaded \(toolResult.itemsCreated) tools from JSON")
+
+                print("✅ Total items loaded: \(itemsLoaded) (glass + coatings + tools)")
+
+                // DO NOT purge persistent history when using CloudKit!
+                // Purging causes CloudKit to lose sync state and re-import everything, creating duplicates.
+                // See: https://stackoverflow.com/questions/72557060/
+                print("🐛✅ Loaded \(itemsLoaded) items - letting CloudKit manage persistent history")
             } else if needsDataUpdate {
                 print("🔄 JSON file changed - updating existing catalog data")
-                let result = try await glassItemLoadingService.loadGlassItemsAndUpdateExisting(options: .appUpdate)
-                itemsLoaded = result.itemsUpdated + result.itemsCreated
-                print("✅ Updated catalog: \(result.itemsUpdated) updated, \(result.itemsCreated) new, \(result.itemsSkipped) unchanged")
+
+                // Update glass items
+                let glassResult = try await glassItemLoadingService.loadGlassItemsAndUpdateExisting(options: .appUpdate)
+                itemsLoaded = glassResult.itemsUpdated + glassResult.itemsCreated
+                print("✅ Updated glass catalog: \(glassResult.itemsUpdated) updated, \(glassResult.itemsCreated) new, \(glassResult.itemsSkipped) unchanged")
+
+                // Check and update coatings if needed
+                let coatingRepository = RepositoryFactory.createCoatingItemRepository()
+                let coatingLoadingService = CoatingItemDataLoadingService(coatingRepository: coatingRepository)
+                if (try? coatingLoadingService.hasJSONFileChanged()) == true {
+                    let coatingResult = try await coatingLoadingService.loadCoatingsFromJSON(options: .appUpdate)
+                    itemsLoaded += coatingResult.itemsUpdated + coatingResult.itemsCreated
+                    print("✅ Updated coatings: \(coatingResult.itemsUpdated) updated, \(coatingResult.itemsCreated) new")
+                }
+
+                // Check and update tools if needed (check each manufacturer)
+                let toolRepository = RepositoryFactory.createToolItemRepository()
+                let toolLoadingService = ToolItemDataLoadingService(toolRepository: toolRepository)
+                let toolResult = try await toolLoadingService.loadAllToolsFromJSON(options: .appUpdate)
+                itemsLoaded += toolResult.itemsUpdated + toolResult.itemsCreated
+                print("✅ Updated tools: \(toolResult.itemsUpdated) updated, \(toolResult.itemsCreated) new")
             } else {
                 print("✅ Catalog data already exists and up-to-date (\(existingItems.count) items)")
                 itemsLoaded = existingItems.count

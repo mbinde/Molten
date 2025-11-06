@@ -50,6 +50,7 @@ nonisolated struct RepositoryFactory {
     nonisolated(unsafe) private static var mockKilnScheduleRepo: MockKilnScheduleRepository? = nil
     nonisolated(unsafe) private static var mockRecipeRepo: MockRecipeRepository? = nil
     nonisolated(unsafe) private static var mockToolItemRepo: MockToolItemRepository? = nil
+    nonisolated(unsafe) private static var mockCoatingItemRepo: MockCoatingItemRepository? = nil
     #if canImport(UIKit)
     nonisolated(unsafe) private static var mockUserImageRepo: MockUserImageRepository? = nil
     #endif
@@ -133,6 +134,36 @@ nonisolated struct RepositoryFactory {
                 fatalError("localContext not initialized - call PersistenceController.shared.initialize() first")
             }
             return CoreDataToolItemRepository(context: context)
+        }
+    }
+
+    /// Creates a CoatingItemRepository based on current mode
+    nonisolated static func createCoatingItemRepository() -> CoatingItemRepository {
+        switch mode {
+        case .mock:
+            // Return cached instance to ensure consistency across service creation
+            if let cached = mockCoatingItemRepo {
+                return cached
+            }
+            let repo = MockCoatingItemRepository()
+            mockCoatingItemRepo = repo
+            return repo
+
+        case .coreData:
+            // CoatingItem is catalog data → use localContext (same as GlassItem)
+            let controller = getSharedController()
+            guard let context = controller.localContext else {
+                fatalError("localContext not initialized - call PersistenceController.shared.initialize() first")
+            }
+            return CoreDataCoatingItemRepository(persistentContainer: controller.container)
+
+        case .hybrid:
+            // CoatingItem is catalog data → use localContext
+            let controller = getSharedController()
+            guard let context = controller.localContext else {
+                fatalError("localContext not initialized - call PersistenceController.shared.initialize() first")
+            }
+            return CoreDataCoatingItemRepository(persistentContainer: controller.container)
         }
     }
 
@@ -631,6 +662,8 @@ nonisolated struct RepositoryFactory {
 
         return CatalogService(
             glassItemRepository: createGlassItemRepository(),
+            coatingItemRepository: createCoatingItemRepository(),
+            toolItemRepository: createToolItemRepository(),
             inventoryTrackingService: createInventoryTrackingService(),
             shoppingListService: tempShoppingListService,
             itemTagsRepository: createItemTagsRepository(),
@@ -741,6 +774,8 @@ nonisolated struct RepositoryFactory {
         mockUnifiedLocationRepo = nil
         mockKilnScheduleRepo = nil
         mockRecipeRepo = nil
+        mockToolItemRepo = nil
+        mockCoatingItemRepo = nil
         #if canImport(UIKit)
         mockUserImageRepo = nil
         #endif

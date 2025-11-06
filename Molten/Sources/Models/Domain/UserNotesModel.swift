@@ -23,7 +23,7 @@ struct UserNotesModel: Identifiable, Equatable, Codable {
     // MARK: - Business Logic
 
     /// Check if notes match search text
-    func matchesSearchText(_ searchText: String) -> Bool {
+    nonisolated func matchesSearchText(_ searchText: String) -> Bool {
         let lowercaseSearch = searchText.lowercased()
         return notes.lowercased().contains(lowercaseSearch) ||
                item_stable_id.contains(searchText)

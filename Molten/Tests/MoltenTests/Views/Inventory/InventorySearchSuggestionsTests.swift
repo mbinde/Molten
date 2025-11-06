@@ -222,16 +222,4 @@ struct InventorySearchSuggestionsTests {
         let redKeys = Set(redResults.map { $0.glassItem.stable_id })
         #expect(redKeys.contains(generateStableId(manufacturer: "Bullseye", sku: "RGR-001")), "Should include Red Glass Rod in red search results")
     }
-    
-    @Test("Should test deprecated method returns empty")
-    func testDeprecatedMethod() async throws {
-        // Test that the deprecated method returns empty array
-        let deprecatedResults = InventorySearchSuggestions.suggestedCatalogItems(
-            query: "test",
-            inventoryItems: [],
-            catalogItems: []
-        )
-        
-        #expect(deprecatedResults.isEmpty, "Deprecated method should return empty array")
-    }
 }

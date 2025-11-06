@@ -5,7 +5,7 @@
 //  Core Data implementation of ToolItemRepository protocol
 //
 
-import Foundation
+@preconcurrency import Foundation
 @preconcurrency import CoreData
 
 /// Core Data implementation of ToolItemRepository protocol

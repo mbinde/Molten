@@ -91,6 +91,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1EBBA2FE62D61E7E84F497A1 /* ToolItemRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToolItemRepositoryTests.swift; path = Molten/Tests/MoltenTests/Repositories/ToolItemRepositoryTests.swift; sourceTree = "<group>"; };
+		3D707EAA5661D94DD9001137 /* StoreAutoCompleteFieldCombinedSourcesTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreAutoCompleteFieldCombinedSourcesTests.swift; path = Molten/Tests/MoltenTests/Views/Shared/StoreAutoCompleteFieldCombinedSourcesTests.swift; sourceTree = "<group>"; };
+		48DC47118CA389C9327EA882 /* StoreToShoppingListNavigationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreToShoppingListNavigationTests.swift; path = Molten/Tests/MoltenTests/Integration/StoreToShoppingListNavigationTests.swift; sourceTree = "<group>"; };
+		7681335E816429286D9673D5 /* MockCatalogViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MockCatalogViewModel.swift; path = Molten/Tests/MoltenTests/Views/Catalog/MockCatalogViewModel.swift; sourceTree = "<group>"; };
+		97E7D0EB21864E300989C358 /* ShoppingListStoreFilteringTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ShoppingListStoreFilteringTests.swift; path = Molten/Tests/MoltenTests/Views/Shopping/ShoppingListStoreFilteringTests.swift; sourceTree = "<group>"; };
+		DC55AD91AA7821CDA76214F1 /* StoreDetailViewShoppingListTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreDetailViewShoppingListTests.swift; path = Molten/Tests/MoltenTests/Views/Stores/StoreDetailViewShoppingListTests.swift; sourceTree = "<group>"; };
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
 		F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = ViewModelTests.xctestplan; sourceTree = "<group>"; };
@@ -237,6 +243,7 @@
 				Tests/MoltenTests/Views/Shared/MainTabViewTests.swift,
 				Tests/MoltenTests/Views/Shared/ShareExtensionImageTests.swift,
 				Tests/MoltenTests/Views/Shared/ShareExtensionTests.swift,
+				Tests/MoltenTests/Views/Shared/StoreAutoCompleteFieldCombinedSourcesTests.swift,
 				Tests/MoltenTests/Views/Shared/TabConfigurationTests.swift,
 				Tests/MoltenTests/Views/Shared/TabNavigationTests.swift,
 				Tests/MoltenTests/Views/Shared/UIStateManagementTests.swift,
@@ -246,7 +253,9 @@
 				Tests/MoltenTests/Views/Shopping/ShoppingListViewTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
+				Tests/MoltenTests/Views/Shopping/ShoppingListStoreFilteringTests.swift,
 				Tests/MoltenTests/Views/Shopping/StoreAutoCompleteFieldTests.swift,
+				Tests/MoltenTests/Views/Stores/StoreDetailViewShoppingListTests.swift,
 				Tests/MoltenTests/Views/StoreListViewModelTests.swift,
 				Tests/RepositoryTests/GlassItemRepositoryDuplicateTests.swift,
 				Tools/Documentation/check_core_data_violations.sh,
@@ -297,6 +306,7 @@
 				Tests/MoltenTests/Integration/MultiUserScenarioTests.swift,
 				Tests/MoltenTests/Integration/UserTagsIntegrationTests.swift,
 				Tests/MoltenTests/Integration/ViewRepositoryIntegrationTests.swift,
+				Tests/MoltenTests/Integration/StoreToShoppingListNavigationTests.swift,
 				Tests/MoltenTests/Models/CatalogBuildModelTests.swift,
 				Tests/MoltenTests/Models/CatalogItemEntityTests.swift,
 				Tests/MoltenTests/Models/CatalogItemHelpersTests.swift,
@@ -317,6 +327,7 @@
 				Tests/MoltenTests/Repositories/MockLogbookRepositoryTests.swift,
 				Tests/MoltenTests/Repositories/MockUserImageRepositoryTests.swift,
 				Tests/MoltenTests/Repositories/ShoppingListRepositoryTests.swift,
+				Tests/MoltenTests/Repositories/ToolItemRepositoryTests.swift,
 				Tests/MoltenTests/Repositories/UserImageRepositoryTests.swift,
 				Tests/MoltenTests/Services/CatalogServiceAdvancedTests.swift,
 				Tests/MoltenTests/Services/DataExportServiceTests.swift,
@@ -359,6 +370,7 @@
 				Tests/MoltenTests/Views/Catalog/CatalogBundleDebugViewTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogViewDataInitializationTests.swift,
 				Tests/MoltenTests/Views/Catalog/GlassItemSearchSelectorTests.swift,
+				Tests/MoltenTests/Views/Catalog/MockCatalogViewModel.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailViewUserNotesTests.swift,
@@ -383,6 +395,7 @@
 				Tests/MoltenTests/Views/Shared/MainTabViewTests.swift,
 				Tests/MoltenTests/Views/Shared/ShareExtensionImageTests.swift,
 				Tests/MoltenTests/Views/Shared/ShareExtensionTests.swift,
+				Tests/MoltenTests/Views/Shared/StoreAutoCompleteFieldCombinedSourcesTests.swift,
 				Tests/MoltenTests/Views/Shared/TabConfigurationTests.swift,
 				Tests/MoltenTests/Views/Shared/TabNavigationTests.swift,
 				Tests/MoltenTests/Views/Shared/UIStateManagementTests.swift,
@@ -392,7 +405,9 @@
 				Tests/MoltenTests/Views/Shopping/ShoppingListViewTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
+				Tests/MoltenTests/Views/Shopping/ShoppingListStoreFilteringTests.swift,
 				Tests/MoltenTests/Views/Shopping/StoreAutoCompleteFieldTests.swift,
+				Tests/MoltenTests/Views/Stores/StoreDetailViewShoppingListTests.swift,
 				Tests/MoltenTests/Views/StoreListViewModelTests.swift,
 				Tests/MoltenUITests/AppLaunchUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITests.swift,
@@ -541,6 +556,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};
@@ -662,6 +679,12 @@
 				F59F94E52EB7C640005A6269 /* InventoryImport.xctest */,
 				F59F94E62EB7C640005A6269 /* ScreenshotAutomation.xctest */,
 				F59F94E72EB7C640005A6269 /* ViewModelTests.xctest */,
+				1EBBA2FE62D61E7E84F497A1 /* ToolItemRepositoryTests.swift */,
+				48DC47118CA389C9327EA882 /* StoreToShoppingListNavigationTests.swift */,
+				7681335E816429286D9673D5 /* MockCatalogViewModel.swift */,
+				3D707EAA5661D94DD9001137 /* StoreAutoCompleteFieldCombinedSourcesTests.swift */,
+				97E7D0EB21864E300989C358 /* ShoppingListStoreFilteringTests.swift */,
+				DC55AD91AA7821CDA76214F1 /* StoreDetailViewShoppingListTests.swift */,
 			);
 			sourceTree = "<group>";
 		};

@@ -29,18 +29,14 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
 
             do {
                 let entities = try self.context.fetch(request)
-                print("🚨 CoreDataGlassItemRepository.fetchItems: CoreData returned \(entities.count) entities")
-
                 // Check if entities have ObjectIDs from different persistent stores or are duplicates
                 if entities.count > 2000 {
                     let objectIDs = entities.map { $0.objectID }
                     let uniqueObjectIDs = Set(objectIDs)
-                    print("🔍 ObjectID analysis: \(objectIDs.count) entities, \(uniqueObjectIDs.count) unique ObjectIDs")
 
                     // Check if any are temporary/faulted
                     let temporary = entities.filter { $0.objectID.isTemporaryID }
                     let faults = entities.filter { $0.isFault }
-                    print("🔍 Temporary IDs: \(temporary.count), Faults: \(faults.count)")
                 }
 
                 // Check for duplicates by stable_id
@@ -64,7 +60,6 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                 }
 
                 let models = entities.compactMap { self.convertToGlassItemModel($0) }
-                print("🚨 CoreDataGlassItemRepository.fetchItems: Converted to \(models.count) models")
                 return models
             } catch {
                 throw CoreDataGlassItemRepositoryError.fetchFailed(error)
@@ -105,13 +100,11 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                     print("⚠️ DUPLICATE CREATION ATTEMPT: stable_id=\(item.stable_id) already exists! Found \(existing.count) copies. Updating instead of creating.")
                 }
                 if let existingEntity = existing.first {
-                    print("🚨 CoreDataGlassItemRepository.createItem: Item exists, updating")
                     self.updateEntity(existingEntity, with: item)
                     try self.context.save()
                     return self.convertToGlassItemModel(existingEntity) ?? item
                 }
 
-                print("🚨 CoreDataGlassItemRepository.createItem: Creating NEW entity")
                 // Create new GlassItem entity using NSEntityDescription
                 guard let entityDescription = NSEntityDescription.entity(forEntityName: "GlassItem", in: self.context) else {
                     throw CoreDataGlassItemRepositoryError.createFailed("Could not find GlassItem entity description")
@@ -121,10 +114,8 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                 self.updateEntity(entity, with: item)
 
                 let timestamp = Date().timeIntervalSince1970
-                print("🚨 CoreDataGlassItemRepository.createItem: About to save single entity... (timestamp: \(timestamp))")
                 try self.context.save()
                 let afterSave = Date().timeIntervalSince1970
-                print("🚨 CoreDataGlassItemRepository.createItem: Entity created and saved (took \(afterSave - timestamp)s)")
 
                 return self.convertToGlassItemModel(entity) ?? item
             } catch {
@@ -135,7 +126,6 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
     
     func createItems(_ items: [GlassItemModel]) async throws -> [GlassItemModel] {
         return try await context.perform {
-            print("🚨 CoreDataGlassItemRepository.createItems: CALLED with \(items.count) items")
             var createdItems: [GlassItemModel] = []
 
             for item in items {
@@ -147,9 +137,7 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                 }
             }
 
-            print("🚨 CoreDataGlassItemRepository.createItems: About to save \(createdItems.count) items...")
             try self.context.save()
-            print("🚨 CoreDataGlassItemRepository.createItems: Successfully saved \(createdItems.count) items to CoreData")
             return createdItems
         }
     }

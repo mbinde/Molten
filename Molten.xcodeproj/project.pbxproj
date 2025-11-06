@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		51928186A5F2750FDDAC8AD3 /* CoreDataUnifiedLocationRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873F1CD04337A746F4363629 /* CoreDataUnifiedLocationRepositoryTests.swift */; };
 		7A50B1E4990C3A8223F6BB8C /* LocationPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9363281E502F3A11BF36F9A0 /* LocationPickerSheet.swift */; };
+		9BD2427477591EA1C56AE991 /* ToolItemRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E976312E65151C77D918676C /* ToolItemRepositoryTests.swift */; };
 		9C79D27AADE9D3139EBEF6A9 /* ToolItemRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71B28ACB3DDD2787C1BC0554 /* ToolItemRepositoryTests.swift */; };
 		F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */ = {isa = PBXBuildFile; fileRef = F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */; };
 		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
@@ -94,13 +95,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
 		71B28ACB3DDD2787C1BC0554 /* ToolItemRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemRepositoryTests.swift; sourceTree = "<group>"; };
 		873F1CD04337A746F4363629 /* CoreDataUnifiedLocationRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CoreDataUnifiedLocationRepositoryTests.swift; path = Molten/Tests/RepositoryTests/CoreData/CoreDataUnifiedLocationRepositoryTests.swift; sourceTree = "<group>"; };
-		878F664543088F1B86740DD2 /* UnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationRepository.swift; sourceTree = "<group>"; };
 		9363281E502F3A11BF36F9A0 /* LocationPickerSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LocationPickerSheet.swift; path = Molten/Sources/Views/Locations/Components/LocationPickerSheet.swift; sourceTree = "<group>"; };
-		B244734885B21EAEB2AAC553 /* ServiceType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceType.swift; sourceTree = "<group>"; };
-		DB95FB5AC403E8CFD93211C5 /* CoreDataUnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataUnifiedLocationRepository.swift; sourceTree = "<group>"; };
+		E976312E65151C77D918676C /* ToolItemRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToolItemRepositoryTests.swift; path = Molten/Tests/MoltenTests/Repositories/ToolItemRepositoryTests.swift; sourceTree = "<group>"; };
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
 		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
 		F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = ViewModelTests.xctestplan; sourceTree = "<group>"; };
@@ -547,6 +545,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};
@@ -659,18 +659,9 @@
 				F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */,
 				F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */,
 				F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */,
-				05644C20A407154AE488E490 /* Molten */,
-				F5C06D232EB7A7670038084E /* Molten.app */,
-				F5C06D242EB7A7670038084E /* MoltenShareExtension.appex */,
-				F5C06D252EB7A7670038084E /* MoltenTests.xctest */,
-				F5C06D262EB7A7670038084E /* MoltenUITests.xctest */,
-				F5C06D272EB7A7670038084E /* PerformanceTests.xctest */,
-				F5C06D282EB7A7670038084E /* RepositoryTests.xctest */,
-				F5C06D292EB7A7670038084E /* InventoryImport.xctest */,
-				F5C06D2A2EB7A7670038084E /* ScreenshotAutomation.xctest */,
-				F5C06D2B2EB7A7670038084E /* ViewModelTests.xctest */,
 				873F1CD04337A746F4363629 /* CoreDataUnifiedLocationRepositoryTests.swift */,
 				9363281E502F3A11BF36F9A0 /* LocationPickerSheet.swift */,
+				E976312E65151C77D918676C /* ToolItemRepositoryTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1061,6 +1052,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				51928186A5F2750FDDAC8AD3 /* CoreDataUnifiedLocationRepositoryTests.swift in Sources */,
+				9BD2427477591EA1C56AE991 /* ToolItemRepositoryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -25,13 +25,22 @@ enum ErrorSeverity: Int, CaseIterable {
     case warning = 1
     case error = 2
     case critical = 3
-    
+
     var logLevel: OSLogType {
         switch self {
         case .info: return .info
         case .warning: return .error
         case .error: return .error
         case .critical: return .fault
+        }
+    }
+
+    var logLevelString: String {
+        switch self {
+        case .info: return "INFO"
+        case .warning: return "WARNING"
+        case .error: return "ERROR"
+        case .critical: return "CRITICAL"
         }
     }
 }

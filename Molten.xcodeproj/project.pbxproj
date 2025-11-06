@@ -100,7 +100,6 @@
 /* Begin PBXFileReference section */
 		12754BD0BC89C1DC6185EE2E /* ServiceTypeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceTypeTests.swift; sourceTree = "<group>"; };
 		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
-		5B2A026E9BCE25C852901A60 /* DecimalFormattingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DecimalFormattingTests.swift; sourceTree = "<group>"; };
 		6EC8490F9F3C13B944452CB7 /* ProjectRepositoryErrorsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectRepositoryErrorsTests.swift; sourceTree = "<group>"; };
 		6F422A55CC6A4F183BA2DE1F /* ServiceValidationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceValidationTests.swift; sourceTree = "<group>"; };
 		8281B293DD39FA9AAD352537 /* DecimalFormattingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DecimalFormattingTests.swift; sourceTree = "<group>"; };
@@ -386,7 +385,6 @@
 				Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
 				Tests/MoltenTests/Utilities/CatalogFormattersTests.swift,
-				Tests/MoltenTests/Utilities/DecimalFormattingTests.swift,
 				Tests/MoltenTests/Utilities/ErrorBoundaryTests.swift,
 				Tests/MoltenTests/Utilities/ErrorHandlingTests.swift,
 				Tests/MoltenTests/Utilities/FilterUtilitiesTests.swift,
@@ -874,7 +872,6 @@
 				F5C06D292EB7A7670038084E /* InventoryImport.xctest */,
 				F5C06D2A2EB7A7670038084E /* ScreenshotAutomation.xctest */,
 				F5C06D2B2EB7A7670038084E /* ViewModelTests.xctest */,
-				5B2A026E9BCE25C852901A60 /* DecimalFormattingTests.swift */,
 			);
 			sourceTree = "<group>";
 		};

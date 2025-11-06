@@ -52,14 +52,12 @@ struct CatalogItemHelpersTests {
         )
         
         // Act: Use helpers without any Core Data context
-        let synonyms = CatalogItemHelpers.synonymsArrayForItem(catalogItem)
-        let coe = CatalogItemHelpers.coeForItem(catalogItem)
         let color = CatalogItemHelpers.colorForManufacturer(catalogItem.manufacturer)
-        
+        let tags = CatalogItemHelpers.tagsArrayForItem(catalogItem)
+
         // Assert: Should work without Core Data environment
-        #expect(synonyms != nil, "Should work with business models without Core Data")
-        #expect(coe != nil, "Should get COE from business model")
-        #expect(color != nil, "Should get manufacturer color from business model")
+        #expect(color != .secondary, "Should get manufacturer color from business model")
+        #expect(tags.count == 2, "Should extract tags from business model")
     }
     
     @Test("CatalogItemHelpers should provide comprehensive business model operations")

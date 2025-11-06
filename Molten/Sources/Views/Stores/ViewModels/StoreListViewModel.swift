@@ -245,14 +245,6 @@ class StoreListViewModel: StoreListViewModelProtocol {
         } else {
             selectedTechniques.insert(technique)
         }
-
-        // Debug: Log filter results
-        print("🔍 Selected techniques: \(selectedTechniques.map { $0.displayName })")
-        print("🔍 Total stores: \(stores.count)")
-        print("🔍 Filtered stores: \(filteredStores.count)")
-        if filteredStores.count > 0 {
-            print("🔍 First filtered store: \(filteredStores[0].name) - techniques: \(filteredStores[0].techniques.map { $0.displayName })")
-        }
     }
 
     func clearAllFilters() {
@@ -270,10 +262,6 @@ class StoreListViewModel: StoreListViewModelProtocol {
             if let location = placemarks.first?.location {
                 manualLocation = location
                 mapRecenterTrigger += 1
-                print("✅ StoreListViewModel: Set location from zip code \(zipCode): \(location.coordinate.latitude), \(location.coordinate.longitude)")
-                print("🗺️ StoreListViewModel: Map recenter trigger = \(mapRecenterTrigger)")
-            } else {
-                print("⚠️  StoreListViewModel: No location found for zip code \(zipCode)")
             }
         } catch {
             print("❌ StoreListViewModel: Geocoding failed for zip code \(zipCode): \(error.localizedDescription)")
@@ -317,13 +305,11 @@ class StoreListViewModel: StoreListViewModelProtocol {
         // Load search text
         if let savedSearchText = UserDefaults.standard.string(forKey: Self.searchTextKey) {
             searchText = savedSearchText
-            print("🔍 StoreListViewModel: Loaded persisted search text: '\(savedSearchText)'")
         }
 
         // Load selected techniques
         if let savedTechniques = UserDefaults.standard.array(forKey: Self.selectedTechniquesKey) as? [String] {
             selectedTechniques = Set(savedTechniques.compactMap { TechniqueType(rawValue: $0) })
-            print("🏷️ StoreListViewModel: Loaded persisted techniques: \(savedTechniques)")
         }
     }
 
@@ -332,11 +318,9 @@ class StoreListViewModel: StoreListViewModelProtocol {
         if let location = manualLocation {
             UserDefaults.standard.set(location.coordinate.latitude, forKey: Self.manualLocationLatKey)
             UserDefaults.standard.set(location.coordinate.longitude, forKey: Self.manualLocationLonKey)
-            print("💾 StoreListViewModel: Saved location: \(location.coordinate.latitude), \(location.coordinate.longitude)")
         } else {
             UserDefaults.standard.removeObject(forKey: Self.manualLocationLatKey)
             UserDefaults.standard.removeObject(forKey: Self.manualLocationLonKey)
-            print("💾 StoreListViewModel: Cleared location")
         }
     }
 

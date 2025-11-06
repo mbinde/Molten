@@ -18,6 +18,7 @@ import CoreLocation
 @testable import Molten
 
 @Suite("UnifiedLocationModel Tests")
+@MainActor
 struct UnifiedLocationModelTests {
 
     // MARK: - Initialization Tests

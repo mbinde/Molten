@@ -100,7 +100,8 @@ struct DecimalFormattingTests {
         let formatted = value.formattedString()
 
         // Note: NumberFormatter with .decimal style adds grouping separators
-        #expect(formatted.contains("1") && formatted.contains("234567"))
+        // So "1234567.89" becomes "1,234,567.89"
+        #expect(formatted.contains("1") && formatted.contains("234") && formatted.contains("567"))
     }
 
     @Test("Format decimal with trailing zeros after decimal point")

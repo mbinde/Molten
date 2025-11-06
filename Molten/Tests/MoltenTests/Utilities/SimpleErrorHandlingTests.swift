@@ -77,28 +77,28 @@ struct SimpleErrorHandlingTests {
 
     @Test("ErrorSeverity.info has correct logLevel")
     func testInfoLogLevel() {
-        #expect(ErrorSeverity.info.logLevel == "INFO")
+        #expect(ErrorSeverity.info.logLevelString == "INFO")
     }
 
     @Test("ErrorSeverity.warning has correct logLevel")
     func testWarningLogLevel() {
-        #expect(ErrorSeverity.warning.logLevel == "WARNING")
+        #expect(ErrorSeverity.warning.logLevelString == "WARNING")
     }
 
     @Test("ErrorSeverity.error has correct logLevel")
     func testErrorLogLevel() {
-        #expect(ErrorSeverity.error.logLevel == "ERROR")
+        #expect(ErrorSeverity.error.logLevelString == "ERROR")
     }
 
     @Test("ErrorSeverity.critical has correct logLevel")
     func testCriticalLogLevel() {
-        #expect(ErrorSeverity.critical.logLevel == "CRITICAL")
+        #expect(ErrorSeverity.critical.logLevelString == "CRITICAL")
     }
 
     @Test("ErrorSeverity logLevel is always uppercase")
     func testLogLevelUppercase() {
         for severity in ErrorSeverity.allCases {
-            #expect(severity.logLevel == severity.logLevel.uppercased())
+            #expect(severity.logLevelString == severity.logLevelString.uppercased())
         }
     }
 
@@ -351,7 +351,7 @@ struct SimpleErrorHandlingTests {
         )
 
         #expect(error.failureReason == longDetails)
-        #expect(error.technicalDetails.count > 200)
+        #expect(error.technicalDetails?.count ?? 0 > 200)
     }
 
     @Test("AppError with empty userMessage")
@@ -379,7 +379,7 @@ struct SimpleErrorHandlingTests {
         )
 
         #expect(error.failureReason == "")
-        #expect(error.technicalDetails.isEmpty)
+        #expect(error.technicalDetails?.isEmpty == true)
     }
 
     @Test("AppError with special characters in messages")
@@ -406,10 +406,10 @@ struct SimpleErrorHandlingTests {
             AppError(category: .system, severity: .critical, userMessage: "Critical", technicalDetails: "", suggestions: [])
         ]
 
-        #expect(errors[0].severity.logLevel == "INFO")
-        #expect(errors[1].severity.logLevel == "WARNING")
-        #expect(errors[2].severity.logLevel == "ERROR")
-        #expect(errors[3].severity.logLevel == "CRITICAL")
+        #expect(errors[0].severity.logLevelString == "INFO")
+        #expect(errors[1].severity.logLevelString == "WARNING")
+        #expect(errors[2].severity.logLevelString == "ERROR")
+        #expect(errors[3].severity.logLevelString == "CRITICAL")
     }
 
     @Test("AppError categories cover all domains")

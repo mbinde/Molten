@@ -38,20 +38,24 @@ struct ValidationUtilities {
     
     /// Validate string has minimum length
     nonisolated static func validateMinimumLength(_ value: String, minLength: Int, fieldName: String = "Field") -> Result<String, AppError> {
-        switch validateNonEmptyString(value, fieldName: fieldName) {
-        case .success(let trimmed):
-            guard trimmed.count >= minLength else {
-                return .failure(AppError(
-                    category: .validation,
-                    severity: .warning,
-                    userMessage: "\(fieldName) must be at least \(minLength) characters",
-                    suggestions: ["Add more characters", "Current length: \(trimmed.count)"]
-                ))
-            }
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Special case: minLength = 0 always succeeds
+        if minLength == 0 {
             return .success(trimmed)
-        case .failure(let error):
-            return .failure(error)
         }
+
+        guard trimmed.count >= minLength else {
+            let plural = minLength == 1 ? "character" : "characters"
+            return .failure(AppError(
+                category: .validation,
+                severity: .warning,
+                userMessage: "\(fieldName) must be at least \(minLength) \(plural)",
+                suggestions: ["Add more characters", "Current length: \(trimmed.count)"]
+            ))
+        }
+
+        return .success(trimmed)
     }
     
     /// Validate and parse double value
@@ -71,17 +75,17 @@ struct ValidationUtilities {
             return .failure(AppError(
                 category: .validation,
                 severity: .warning,
-                userMessage: "Please enter a valid number for \(fieldName.lowercased())",
+                userMessage: "\(fieldName) must be a valid number",
                 suggestions: ["Use only numbers and decimal point", "Example: 25.50"]
             ))
         }
-        
+
         // Check for NaN and infinity values
         guard doubleValue.isFinite else {
             return .failure(AppError(
                 category: .validation,
                 severity: .warning,
-                userMessage: "Please enter a valid number for \(fieldName.lowercased())",
+                userMessage: "\(fieldName) must be a valid number",
                 suggestions: ["Use only numbers and decimal point", "Example: 25.50"]
             ))
         }

@@ -16,6 +16,7 @@ import XCTest
 import Foundation
 @testable import Molten
 
+@MainActor
 @Suite("ValidationUtilities Tests")
 struct ValidationUtilitiesTests {
 

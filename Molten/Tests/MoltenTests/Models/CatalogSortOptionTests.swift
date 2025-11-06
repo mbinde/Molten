@@ -16,6 +16,7 @@ import XCTest
 import Foundation
 @testable import Molten
 
+@MainActor
 @Suite("CatalogSortOption Tests")
 struct CatalogSortOptionTests {
 

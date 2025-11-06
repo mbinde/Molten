@@ -16,6 +16,7 @@ import XCTest
 import SwiftUI
 @testable import Molten
 
+@MainActor
 @Suite("TagColorMapping Tests")
 struct TagColorMappingTests {
 

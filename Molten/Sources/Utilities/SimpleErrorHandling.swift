@@ -56,6 +56,8 @@ struct AppError: Error, LocalizedError {
 
     var errorDescription: String? { userMessage }
 
+    var failureReason: String? { technicalDetails }
+
     var recoverySuggestion: String? {
         guard !suggestions.isEmpty else { return nil }
         return suggestions.joined(separator: "\n")

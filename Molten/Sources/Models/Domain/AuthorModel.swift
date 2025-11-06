@@ -45,7 +45,32 @@ nonisolated struct AuthorModel: Codable, Hashable, Sendable {
 
     /// Display name for the author (falls back to "Anonymous" if no name)
     var displayName: String {
-        return name ?? "Anonymous"
+        guard let name = name, !name.isEmpty else {
+            return "Anonymous"
+        }
+        return name
+    }
+
+    // MARK: - Hashable Conformance
+
+    /// Custom hash function that excludes dateAdded (authors are identified by their info, not when added)
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
+        hasher.combine(email)
+        hasher.combine(website)
+        hasher.combine(instagram)
+        hasher.combine(facebook)
+        hasher.combine(youtube)
+    }
+
+    /// Custom equality that excludes dateAdded
+    static func == (lhs: AuthorModel, rhs: AuthorModel) -> Bool {
+        return lhs.name == rhs.name &&
+               lhs.email == rhs.email &&
+               lhs.website == rhs.website &&
+               lhs.instagram == rhs.instagram &&
+               lhs.facebook == rhs.facebook &&
+               lhs.youtube == rhs.youtube
     }
 }
 

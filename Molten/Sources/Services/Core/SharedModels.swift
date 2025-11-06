@@ -235,7 +235,7 @@ struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
         self.subtype = subtype.map { Self.cleanType($0) }
         self.subsubtype = subsubtype.map { Self.cleanType($0) }
         self.dimensions = dimensions
-        self.quantity = max(0.0, quantity) // Ensure non-negative quantity
+        self.quantity = quantity // Validation layer checks for negative values
         self.location = location.map { StorageLocationModel.cleanLocationName($0) }
         self.date_added = date_added
         self.date_modified = date_modified

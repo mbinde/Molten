@@ -227,7 +227,6 @@
 				Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
 				Tests/MoltenTests/Utilities/CatalogFormattersTests.swift,
-				Tests/MoltenTests/Utilities/DecimalFormattingTests.swift,
 				Tests/MoltenTests/Utilities/ErrorBoundaryTests.swift,
 				Tests/MoltenTests/Utilities/ErrorHandlingTests.swift,
 				Tests/MoltenTests/Utilities/FilterUtilitiesTests.swift,

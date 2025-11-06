@@ -122,7 +122,7 @@ struct ValidationUtilitiesTests {
 
     @Test("validateMinimumLength with string meeting minimum returns success")
     func testValidateMinimumLengthSuccess() {
-        let result = ValidationUtilities.validateMinimumLength("Hello", minimum: 3)
+        let result = ValidationUtilities.validateMinimumLength("Hello", minLength: 3)
         
         switch result {
         case .success(let value):
@@ -134,7 +134,7 @@ struct ValidationUtilitiesTests {
 
     @Test("validateMinimumLength with string exactly at minimum returns success")
     func testValidateMinimumLengthExactly() {
-        let result = ValidationUtilities.validateMinimumLength("ABC", minimum: 3)
+        let result = ValidationUtilities.validateMinimumLength("ABC", minLength: 3)
         
         switch result {
         case .success(let value):
@@ -146,7 +146,7 @@ struct ValidationUtilitiesTests {
 
     @Test("validateMinimumLength with string below minimum returns failure")
     func testValidateMinimumLengthTooShort() {
-        let result = ValidationUtilities.validateMinimumLength("Hi", minimum: 3)
+        let result = ValidationUtilities.validateMinimumLength("Hi", minLength: 3)
         
         switch result {
         case .success:
@@ -158,7 +158,7 @@ struct ValidationUtilitiesTests {
 
     @Test("validateMinimumLength with empty string returns failure")
     func testValidateMinimumLengthEmpty() {
-        let result = ValidationUtilities.validateMinimumLength("", minimum: 1)
+        let result = ValidationUtilities.validateMinimumLength("", minLength: 1)
         
         switch result {
         case .success:
@@ -170,7 +170,7 @@ struct ValidationUtilitiesTests {
 
     @Test("validateMinimumLength trims whitespace before checking")
     func testValidateMinimumLengthTrimsWhitespace() {
-        let result = ValidationUtilities.validateMinimumLength("  Hi  ", minimum: 3)
+        let result = ValidationUtilities.validateMinimumLength("  Hi  ", minLength: 3)
         
         switch result {
         case .success:
@@ -182,7 +182,7 @@ struct ValidationUtilitiesTests {
 
     @Test("validateMinimumLength uses custom field name in error")
     func testValidateMinimumLengthCustomFieldName() {
-        let result = ValidationUtilities.validateMinimumLength("AB", minimum: 3, fieldName: "Password")
+        let result = ValidationUtilities.validateMinimumLength("AB", minLength: 3, fieldName: "Password")
         
         switch result {
         case .success:
@@ -194,7 +194,7 @@ struct ValidationUtilitiesTests {
 
     @Test("validateMinimumLength with minimum 0 always succeeds")
     func testValidateMinimumLengthZero() {
-        let result = ValidationUtilities.validateMinimumLength("", minimum: 0)
+        let result = ValidationUtilities.validateMinimumLength("", minLength: 0)
         
         switch result {
         case .success(let value):
@@ -206,7 +206,7 @@ struct ValidationUtilitiesTests {
 
     @Test("validateMinimumLength with emoji counts correctly")
     func testValidateMinimumLengthEmoji() {
-        let result = ValidationUtilities.validateMinimumLength("🎨🎨", minimum: 2)
+        let result = ValidationUtilities.validateMinimumLength("🎨🎨", minLength: 2)
         
         switch result {
         case .success(let value):
@@ -218,7 +218,7 @@ struct ValidationUtilitiesTests {
 
     @Test("validateMinimumLength with Unicode counts correctly")
     func testValidateMinimumLengthUnicode() {
-        let result = ValidationUtilities.validateMinimumLength("café", minimum: 4)
+        let result = ValidationUtilities.validateMinimumLength("café", minLength: 4)
         
         switch result {
         case .success(let value):
@@ -729,7 +729,7 @@ struct ValidationUtilitiesTests {
     @Test("validateMinimumLength with very long string succeeds")
     func testValidateMinimumLengthVeryLong() {
         let longString = String(repeating: "a", count: 10000)
-        let result = ValidationUtilities.validateMinimumLength(longString, minimum: 5)
+        let result = ValidationUtilities.validateMinimumLength(longString, minLength: 5)
         
         switch result {
         case .success(let value):

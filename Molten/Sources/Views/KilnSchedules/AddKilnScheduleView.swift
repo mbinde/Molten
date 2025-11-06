@@ -521,7 +521,7 @@ struct InlineSegmentRow: View {
 }
 
 // Make Int identifiable for sheet presentation
-extension Int: Identifiable {
+@retroactive extension Int: Identifiable {
     public var id: Int { self }
 }
 

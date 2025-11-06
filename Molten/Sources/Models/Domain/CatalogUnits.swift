@@ -21,16 +21,16 @@ enum CatalogUnits: Int16, CaseIterable, Identifiable, Codable {
     var displayName: String {
         switch self {
         case .pounds:
-            return "lb"  // Standard abbreviation for pounds
+            return "lbs"  // Standard abbreviation for pounds
         case .kilograms:
             return "kg"  // Standard abbreviation for kilograms
         case .shorts:
-            return "Shorts"
+            return "shorts"
         case .rods:
-            return "Rods"
+            return "rods"
         }
     }
-    
+
     /// Full name for the unit
     var fullName: String {
         switch self {
@@ -44,9 +44,16 @@ enum CatalogUnits: Int16, CaseIterable, Identifiable, Codable {
             return "Rods"
         }
     }
-    
+
     /// Initialize from Int16 value with fallback to pounds
     init(from rawValue: Int16) {
+        self = CatalogUnits(rawValue: rawValue) ?? .pounds
+    }
+
+    /// Custom decoder with fallback to pounds for invalid values
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(Int16.self)
         self = CatalogUnits(rawValue: rawValue) ?? .pounds
     }
     

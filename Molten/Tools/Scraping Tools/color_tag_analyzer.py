@@ -13,6 +13,7 @@ Usage:
     python3 color_tag_analyzer.py                # Analyze new/changed products
     python3 color_tag_analyzer.py --force        # Re-analyze all products
     python3 color_tag_analyzer.py --unapproved   # Re-analyze unapproved products (useful after bug fixes)
+    python3 color_tag_analyzer.py --mfr KUG      # Analyze only Kugler products
     python3 color_tag_analyzer.py --limit 10     # Analyze only 10 products (testing)
 """
 
@@ -37,12 +38,13 @@ COLOR_TAXONOMY = [
     "red", "blue", "green", "yellow", "orange", "purple", "pink",
     # Extended colors
     "brown", "gray", "black", "white", "clear",
-    "teal", "amber", "lavender", "aqua", "cream", "magenta",
+    "teal", "amber", "lavender", "cream", "magenta",
     # Attributes
     "transparent", "opaque", "translucent", "sparkle", "striker", "reducing", "uv", "cfl", "silver",
     # Special combinations
     "amber-purple"
 ]
+# Note: "aqua" removed - too ambiguous, use "teal" or "blue" + "green" instead
 
 # Paths
 SCRIPT_DIR = Path(__file__).parent
@@ -558,6 +560,7 @@ def main():
     parser = argparse.ArgumentParser(description='Analyze glass products for color tags')
     parser.add_argument('--force', action='store_true', help='Re-analyze all products')
     parser.add_argument('--unapproved', action='store_true', help='Re-analyze products that have not been approved yet')
+    parser.add_argument('--mfr', type=str, help='Analyze only this manufacturer (e.g., KUG, AB, BB)')
     parser.add_argument('--limit', type=int, help='Limit number of products to analyze (for testing)')
     args = parser.parse_args()
 
@@ -600,6 +603,11 @@ def main():
         and p.get('product_type', 'glass') == 'glass'  # Default to 'glass' for backward compatibility
     ]
     print(f"Filtering to available+discontinued glass products: {len(available_products)}")
+
+    # Filter by manufacturer if specified
+    if args.mfr:
+        available_products = [p for p in available_products if p.get('manufacturer') == args.mfr]
+        print(f"Filtering to manufacturer {args.mfr}: {len(available_products)} products")
 
     # Determine which products need analysis
     print()

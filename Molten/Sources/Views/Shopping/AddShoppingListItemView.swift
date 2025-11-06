@@ -75,12 +75,11 @@ struct AddShoppingListFormView: View {
         NavigationStack {
             Form {
                 // Shared glass item search/selection component
-                // Only pass items if user is searching OR we have a prefilled key
                 GlassItemSearchSelector(
                     selectedGlassItem: $selectedGlassItem,
                     searchText: $searchText,
                     prefilledNaturalKey: prefilledNaturalKey,
-                    glassItems: (searchText.isEmpty && prefilledNaturalKey == nil) ? [] : glassItems,
+                    glassItems: glassItems,
                     onSelect: { item in
                         selectGlassItem(item)
                     },
@@ -225,7 +224,7 @@ struct AddShoppingListFormView: View {
     private func selectGlassItem(_ item: GlassItemModel) {
         selectedGlassItem = item
         stableId = item.stable_id
-        searchText = ""
+        // Keep search text for refinement
     }
 
     private func clearSelection() {

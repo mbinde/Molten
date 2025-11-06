@@ -30,7 +30,7 @@ struct CustomEmptyStateView: View {
 
     init(
         icon: String,
-        iconSize: CGFloat = 60,
+        iconSize: CGFloat = 80,  // Standardized to 80
         title: String,
         description: String,
         actionButton: ActionButton? = nil
@@ -43,76 +43,55 @@ struct CustomEmptyStateView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
+        VStack(spacing: DesignSystem.Spacing.xl) {
+            // Icon
+            Image(systemName: icon)
+                .font(.system(size: 80))
+                .foregroundStyle(DesignSystem.Colors.textSecondary)
 
-            VStack(spacing: 20) {
-                // Icon
-                Image(systemName: icon)
-                    .font(.system(size: iconSize))
-                    .foregroundColor(.secondary)
+            // Title
+            Text(title)
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundStyle(DesignSystem.Colors.textPrimary)
 
-                // Title
-                Text(title)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
+            // Description
+            Text(description)
+                .font(.subheadline)
+                .foregroundStyle(DesignSystem.Colors.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, DesignSystem.Padding.generous)
 
-                // Description
-                Text(description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-
-                // Optional action button
-                if let button = actionButton {
-                    Button(action: button.action) {
-                        Text(button.title)
-                            .font(.headline)
-                            .foregroundColor(buttonForegroundColor(for: button.style))
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 12)
-                            .background(buttonBackground(for: button.style))
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                    }
-                    .padding(.top, 8)
+            // Optional action button
+            if let button = actionButton {
+                Button(action: button.action) {
+                    Text(button.title)
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 12)
+                        .background(DesignSystem.Colors.accentSecondary)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
             }
-
-            Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // MARK: - Helper Methods
-
-    private func buttonForegroundColor(for style: ActionButton.ButtonStyle) -> Color {
-        switch style {
-        case .prominent:
-            return .white
-        case .secondary:
-            return .primary
-        }
-    }
-
-    private func buttonBackground(for style: ActionButton.ButtonStyle) -> Color {
-        switch style {
-        case .prominent:
-            return .accentColor
-        case .secondary:
-            return Color.gray.opacity(0.2)
-        }
-    }
 }
 
 // MARK: - Convenience Initializers
 
 extension CustomEmptyStateView {
     /// Empty state for search results with no matches
+    /// - Parameters:
+    ///   - searchTerm: The search text that found no results
+    ///   - filters: Active filter descriptions (e.g., ["COE 90", "tag 'transparent'"])
+    ///   - onClearFilters: Optional action to clear all filters and search
     static func searchResults(
         searchTerm: String? = nil,
-        filters: [String] = []
+        filters: [String] = [],
+        onClearFilters: (() -> Void)? = nil
     ) -> CustomEmptyStateView {
         var description = "No items match"
         if let term = searchTerm, !term.isEmpty {
@@ -121,12 +100,24 @@ extension CustomEmptyStateView {
         if !filters.isEmpty {
             description += " with " + filters.joined(separator: " and ")
         }
+        description += ". Try adjusting your search or filters."
+
+        let actionButton: ActionButton? = if let clearAction = onClearFilters {
+            .init(
+                title: "Clear Filters",
+                action: clearAction,
+                style: .secondary
+            )
+        } else {
+            nil
+        }
 
         return CustomEmptyStateView(
             icon: "magnifyingglass",
-            iconSize: 40,
-            title: "No Results",
-            description: description
+            iconSize: 60,
+            title: "No Results Found",
+            description: description,
+            actionButton: actionButton
         )
     }
 }

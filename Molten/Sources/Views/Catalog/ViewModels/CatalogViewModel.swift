@@ -156,14 +156,12 @@ class CatalogViewModel: CatalogViewModelProtocol {
     // MARK: - Actions
 
     func loadData() async {
-        print("🚨 CatalogViewModel.loadData: CALLED")
         isLoading = true
         errorMessage = nil
 
         do {
             // Load all glass items from catalog service
             items = try await catalogService.getAllGlassItems()
-            print("🚨 CatalogViewModel.loadData: Received \(items.count) items from service")
 
             // Update caches
             updateCaches()
@@ -171,8 +169,6 @@ class CatalogViewModel: CatalogViewModelProtocol {
             // Apply initial filters and sorting
             applyFilters()
             applySorting()
-
-            print("🚨 CatalogViewModel.loadData: After filtering/sorting: \(sortedFilteredItems.count) items")
 
         } catch {
             errorMessage = "Failed to load catalog: \(error.localizedDescription)"
@@ -182,7 +178,6 @@ class CatalogViewModel: CatalogViewModelProtocol {
         }
 
         isLoading = false
-        print("🚨 CatalogViewModel.loadData: COMPLETE")
     }
 
     func refreshData() async {

@@ -88,7 +88,6 @@ actor CatalogService {
         sortBy: GlassItemSortOption = .name,
         includeWithoutInventory: Bool = true
     ) async throws -> [CompleteInventoryItemModel] {
-        print("🚨 CatalogService.getAllGlassItems: CALLED (loading all product types)")
         let trackingService = inventoryTrackingService
 
         // Get all three types of catalog items in parallel
@@ -97,7 +96,6 @@ actor CatalogService {
         async let toolItemsTask = toolItemRepository.fetchItems(matching: nil)
 
         let (glassItems, coatingItems, toolItems) = try await (glassItemsTask, coatingItemsTask, toolItemsTask)
-        print("🚨 CatalogService.getAllGlassItems: Loaded \(glassItems.count) glass, \(coatingItems.count) coatings, \(toolItems.count) tools")
 
         // Convert all items to UnifiedCatalogItem
         var allCatalogItems: [UnifiedCatalogItem] = []
@@ -143,7 +141,6 @@ actor CatalogService {
 
         // Apply sorting
         let sortedItems = sortItems(completeItems, by: sortBy)
-        print("🚨 CatalogService.getAllGlassItems: Returning \(sortedItems.count) complete items")
         return sortedItems
     }
     

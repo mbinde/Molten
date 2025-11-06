@@ -513,8 +513,6 @@ class LabelPrintingService {
 
         // Create deep link URL with stable_id
         let deepLink = "molten://g/\(stableId)"
-        print("📱 LabelPrintingService: Generating QR code for: \(deepLink)")
-        print("📱 LabelPrintingService: stableId: '\(stableId)'")
         let data = Data(deepLink.utf8)
         filter.setValue(data, forKey: "inputMessage")
         filter.setValue("H", forKey: "inputCorrectionLevel") // High error correction

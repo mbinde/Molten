@@ -25,7 +25,7 @@ struct DecimalFormattingTests {
     @Test("Format decimal with no fractional part")
     func testFormatWholeNumber() {
         let value: Decimal = 5
-        let formatted: String = value.formatted()
+        let formatted = value.formatted() as String
 
         #expect(formatted == "5")
     }

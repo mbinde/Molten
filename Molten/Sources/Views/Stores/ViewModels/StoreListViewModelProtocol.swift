@@ -11,18 +11,18 @@ import MapKit
 import Combine
 
 /// Protocol defining the interface for store list/map presentation logic
-/// Note: StoreSortOption is defined in StoreService.swift
+/// Note: LocationSortOption is defined in UnifiedLocationService.swift
 protocol StoreListViewModelProtocol: ObservableObject {
     // MARK: - Published Properties
 
     /// Current list of stores (unfiltered)
-    var stores: [StoreModel] { get }
+    var stores: [UnifiedLocationModel] { get }
 
     /// Filtered and sorted stores based on current criteria
-    var filteredStores: [StoreModel] { get }
+    var filteredStores: [UnifiedLocationModel] { get }
 
     /// Stores visible in the current map region
-    var visibleStores: [StoreModel] { get }
+    var visibleStores: [UnifiedLocationModel] { get }
 
     /// Current search text
     var searchText: String { get set }
@@ -34,7 +34,7 @@ protocol StoreListViewModelProtocol: ObservableObject {
     var errorMessage: String? { get }
 
     /// Current sort option
-    var sortOption: StoreSortOption { get set }
+    var sortOption: LocationSortOption { get set }
 
     /// Whether to show only verified stores
     var showVerifiedOnly: Bool { get set }
@@ -52,7 +52,7 @@ protocol StoreListViewModelProtocol: ObservableObject {
     var isLocationAuthorized: Bool { get }
 
     /// Selected store for map marker callout
-    var selectedStore: StoreModel? { get set }
+    var selectedStore: UnifiedLocationModel? { get set }
 
     /// Current visible map region
     var visibleRegion: MKCoordinateRegion? { get set }

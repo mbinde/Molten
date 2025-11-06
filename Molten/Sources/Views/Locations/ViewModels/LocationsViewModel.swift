@@ -16,8 +16,7 @@ class LocationsViewModel {
 
     // MARK: - Dependencies
 
-    private let storeRepository: StoreRepository
-    private let classLocationRepository: ClassLocationRepository
+    private let locationService: UnifiedLocationService
 
     // MARK: - State
 
@@ -29,6 +28,9 @@ class LocationsViewModel {
     var errorMessage: String?
     var showMap: Bool = true
     var userLocation: CLLocationCoordinate2D?
+    var mapCenter: CLLocationCoordinate2D?
+    var mapBounds: (minLat: Double, maxLat: Double, minLon: Double, maxLon: Double)?
+    var selectedTechnique: TechniqueType?
 
     // MARK: - Computed Properties
 
@@ -37,23 +39,25 @@ class LocationsViewModel {
     }
 
     var emptyStateMessage: String {
-        if searchText.isEmpty {
-            return "No locations found. Try expanding your search radius or adjusting filters."
-        } else {
+        if !searchText.isEmpty {
             return "No locations found matching '\(searchText)'. Try different search terms or filters."
+        } else if mapBounds != nil {
+            return "No locations in this area. Zoom out or pan the map to explore more locations."
+        } else {
+            return "No locations found. Try adjusting your filters."
         }
     }
 
     // MARK: - Initialization
 
     init(
-        storeRepository: StoreRepository,
-        classLocationRepository: ClassLocationRepository,
-        selectedTypes: Set<LocationType>? = nil
+        locationService: UnifiedLocationService,
+        selectedTypes: Set<LocationType>? = nil,
+        selectedTechnique: TechniqueType? = nil
     ) {
-        self.storeRepository = storeRepository
-        self.classLocationRepository = classLocationRepository
+        self.locationService = locationService
         self.selectedTypes = selectedTypes ?? LocationFilterPreferences.getSelectedTypes()
+        self.selectedTechnique = selectedTechnique ?? LocationFilterPreferences.getSelectedTechnique()
     }
 
     // MARK: - Data Loading
@@ -63,22 +67,19 @@ class LocationsViewModel {
         errorMessage = nil
 
         do {
+            // Load all unified locations
+            let unifiedLocations = try await locationService.getAllLocations()
+
+            // Convert to AnyLocationModel and filter by selected types
             var locations: [AnyLocationModel] = []
+            for location in unifiedLocations {
+                let anyLocation = AnyLocationModel(unified: location)
 
-            // Load stores if selected
-            if selectedTypes.contains(.store) {
-                let stores = try await storeRepository.fetchAllStores()
-                locations.append(contentsOf: stores.map { AnyLocationModel(store: $0) })
+                // Include location if its type is selected
+                if selectedTypes.contains(anyLocation.type) {
+                    locations.append(anyLocation)
+                }
             }
-
-            // Load class locations if selected
-            if selectedTypes.contains(.classLocation) {
-                let classes = try await classLocationRepository.fetchAllClassLocations()
-                locations.append(contentsOf: classes.map { AnyLocationModel(classLocation: $0) })
-            }
-
-            // TODO: Load workshops when implemented
-            // if selectedTypes.contains(.workshop) { ... }
 
             allLocations = locations
             applyFilters()
@@ -95,16 +96,34 @@ class LocationsViewModel {
     func applyFilters() {
         var results = allLocations
 
+        // Filter by map bounds
+        if let bounds = mapBounds {
+            results = results.filter { location in
+                guard location.hasValidLocation else { return false }
+                return location.latitude >= bounds.minLat &&
+                       location.latitude <= bounds.maxLat &&
+                       location.longitude >= bounds.minLon &&
+                       location.longitude <= bounds.maxLon
+            }
+        }
+
         // Filter by search text
         if !searchText.isEmpty {
             results = results.filter { $0.matchesSearchText(searchText) }
         }
 
-        // Sort by distance (if available), then alphabetically
-        if let userLoc = userLocation {
+        // Filter by selected technique
+        if let technique = selectedTechnique {
+            results = results.filter { $0.supportsTechnique(technique) }
+        }
+
+        // Sort by distance from map center (or user location), then alphabetically
+        let referencePoint = mapCenter ?? userLocation
+
+        if let refPoint = referencePoint {
             results.sort { loc1, loc2 in
-                let dist1 = loc1.distance(from: userLoc) ?? Double.greatestFiniteMagnitude
-                let dist2 = loc2.distance(from: userLoc) ?? Double.greatestFiniteMagnitude
+                let dist1 = loc1.distance(from: refPoint) ?? Double.greatestFiniteMagnitude
+                let dist2 = loc2.distance(from: refPoint) ?? Double.greatestFiniteMagnitude
 
                 // If distances are significantly different, sort by distance
                 if abs(dist1 - dist2) > 1000 { // 1km threshold
@@ -114,7 +133,7 @@ class LocationsViewModel {
                 return loc1.name.localizedCaseInsensitiveCompare(loc2.name) == .orderedAscending
             }
         } else {
-            // No user location, just sort alphabetically
+            // No reference point, just sort alphabetically
             results.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         }
 
@@ -148,6 +167,22 @@ class LocationsViewModel {
         applyFilters()
     }
 
+    func updateMapCenter(_ center: CLLocationCoordinate2D?) {
+        mapCenter = center
+        applyFilters()
+    }
+
+    func updateMapBounds(minLat: Double, maxLat: Double, minLon: Double, maxLon: Double) {
+        mapBounds = (minLat: minLat, maxLat: maxLat, minLon: minLon, maxLon: maxLon)
+        applyFilters()
+    }
+
+    func updateSelectedTechnique(_ technique: TechniqueType?) {
+        selectedTechnique = technique
+        LocationFilterPreferences.saveSelectedTechnique(technique)
+        applyFilters()
+    }
+
     // MARK: - Search by Technique
 
     func filterByTechnique(_ technique: TechniqueType) async {
@@ -155,16 +190,18 @@ class LocationsViewModel {
         errorMessage = nil
 
         do {
+            // Get all locations that support the technique (either retail or education)
+            let unifiedLocations = try await locationService.getLocations(supportingTechnique: technique)
+
+            // Convert to AnyLocationModel and filter by selected types
             var locations: [AnyLocationModel] = []
+            for location in unifiedLocations {
+                let anyLocation = AnyLocationModel(unified: location)
 
-            if selectedTypes.contains(.store) {
-                let stores = try await storeRepository.fetchStores(supportingTechnique: technique)
-                locations.append(contentsOf: stores.map { AnyLocationModel(store: $0) })
-            }
-
-            if selectedTypes.contains(.classLocation) {
-                let classes = try await classLocationRepository.fetchClassLocations(supportingTechnique: technique)
-                locations.append(contentsOf: classes.map { AnyLocationModel(classLocation: $0) })
+                // Include location if its type is selected
+                if selectedTypes.contains(anyLocation.type) {
+                    locations.append(anyLocation)
+                }
             }
 
             allLocations = locations

@@ -28,6 +28,7 @@ struct FirstRunDataLoadingView: View {
         case loadingCatalog = "Loading glass catalog..."
         case buildingSearchIndex = "Building search index..."
         case loadingImages = "Preparing product images..."
+        case loadingLocations = "Loading store locations..."
         case finalizing = "Finalizing setup..."
         case complete = "Ready to go!"
 
@@ -37,6 +38,7 @@ struct FirstRunDataLoadingView: View {
             case .loadingCatalog: return "📦"
             case .buildingSearchIndex: return "🔍"
             case .loadingImages: return "🖼️"
+            case .loadingLocations: return "📍"
             case .finalizing: return "⚡"
             case .complete: return "✅"
             }
@@ -259,9 +261,7 @@ struct FirstRunDataLoadingView: View {
             currentStep = .buildingSearchIndex
             progress = 0.6
 
-            print("🔍 Building search cache...")
             await CatalogSearchCache.shared.loadIfNeeded(catalogService: catalogService)
-            print("✅ Search cache ready")
             progress = 0.75
 
             // Step 4: Load catalog cache
@@ -279,7 +279,20 @@ struct FirstRunDataLoadingView: View {
             }
             progress = 0.85
 
-            // Step 4.5: Generate demo data if in screenshot mode
+            // Step 4.5: Load location data (hybrid: bundle + web)
+            currentStep = .loadingLocations
+            progress = 0.90
+
+            let locationService = RepositoryFactory.createUnifiedLocationService()
+            do {
+                let result = try await locationService.loadLocationsHybrid()
+                print("✅ Loaded \(result.total) locations total (\(result.bundled) from bundle, \(result.web) from web)")
+            } catch {
+                print("⚠️  Failed to load locations: \(error.localizedDescription)")
+                // Continue - locations are optional
+            }
+
+            // Step 5: Generate demo data if in screenshot mode
             if isScreenshotMode {
                 print("🎬 [SCREENSHOTS] Generating demo data for screenshots...")
                 let inventoryService = RepositoryFactory.createInventoryTrackingService()

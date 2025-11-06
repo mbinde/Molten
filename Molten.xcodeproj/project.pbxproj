@@ -10,8 +10,10 @@
 		01C8A78294F8BD99B16599EE /* TagColorMappingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADF1A55444B9781567411BEF /* TagColorMappingTests.swift */; };
 		326E6C0727A5816EF1C31CA0 /* ProjectRepositoryErrorsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC8490F9F3C13B944452CB7 /* ProjectRepositoryErrorsTests.swift */; };
 		347DB0095BEC3B97737F5342 /* UnifiedLocationModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B804734B7F93E94936AE55DE /* UnifiedLocationModelTests.swift */; };
+		35860FE27853FCCC7A87AFA3 /* DefaultUnitsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07D52B85490521F63EF2B302 /* DefaultUnitsTests.swift */; };
 		36D95164C45EC4E84CF4EC68 /* ToolItemDataLoadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */; };
 		4F5AAAA29613EDF7C07B6E56 /* ToolItemDataLoadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 066416B60A11124E9A8029EA /* ToolItemDataLoadingServiceTests.swift */; };
+		581BC3503A1D5C6D379DA8A7 /* CatalogSortOptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD05F659B3926D74632E3518 /* CatalogSortOptionTests.swift */; };
 		5A4ECEB1C12109301EB8EE9D /* LocationTypeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67D01816273C45FF316DA4E1 /* LocationTypeTests.swift */; };
 		897857C1A1A793B9E31AB40D /* KilnScheduleRepositoryErrorsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 973681CFAEBE8EF07A6FF633 /* KilnScheduleRepositoryErrorsTests.swift */; };
 		8C3454AF61198352E76136C3 /* ServiceValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F422A55CC6A4F183BA2DE1F /* ServiceValidationTests.swift */; };
@@ -105,6 +107,7 @@
 
 /* Begin PBXFileReference section */
 		066416B60A11124E9A8029EA /* ToolItemDataLoadingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToolItemDataLoadingServiceTests.swift; path = Molten/Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift; sourceTree = "<group>"; };
+		07D52B85490521F63EF2B302 /* DefaultUnitsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DefaultUnitsTests.swift; path = Molten/Tests/MoltenTests/Models/DefaultUnitsTests.swift; sourceTree = "<group>"; };
 		12754BD0BC89C1DC6185EE2E /* ServiceTypeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceTypeTests.swift; sourceTree = "<group>"; };
 		212005B583143820DD038378 /* AuthorModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AuthorModelTests.swift; path = Molten/Tests/MoltenTests/Models/AuthorModelTests.swift; sourceTree = "<group>"; };
 		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
@@ -119,6 +122,7 @@
 		ADF1A55444B9781567411BEF /* TagColorMappingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TagColorMappingTests.swift; sourceTree = "<group>"; };
 		B244734885B21EAEB2AAC553 /* ServiceType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceType.swift; sourceTree = "<group>"; };
 		B804734B7F93E94936AE55DE /* UnifiedLocationModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = UnifiedLocationModelTests.swift; path = Molten/Tests/MoltenTests/Models/UnifiedLocationModelTests.swift; sourceTree = "<group>"; };
+		BD05F659B3926D74632E3518 /* CatalogSortOptionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CatalogSortOptionTests.swift; path = Molten/Tests/MoltenTests/Models/CatalogSortOptionTests.swift; sourceTree = "<group>"; };
 		DB95FB5AC403E8CFD93211C5 /* CoreDataUnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataUnifiedLocationRepository.swift; sourceTree = "<group>"; };
 		E7C7A65B94A6533A14E7AE47 /* taglia_tools.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = taglia_tools.json; sourceTree = "<group>"; };
 		F0AA0F21EF80657D274B4674 /* ToolItemDataLoadingService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemDataLoadingService.swift; sourceTree = "<group>"; };
@@ -855,6 +859,8 @@
 				67D01816273C45FF316DA4E1 /* LocationTypeTests.swift */,
 				4669030827A13B41FC71362C /* CatalogCodeLookupTests.swift */,
 				F833A2D894B771BC27E81FE6 /* JSON5ParserTests.swift */,
+				BD05F659B3926D74632E3518 /* CatalogSortOptionTests.swift */,
+				07D52B85490521F63EF2B302 /* DefaultUnitsTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1220,6 +1226,8 @@
 				5A4ECEB1C12109301EB8EE9D /* LocationTypeTests.swift in Sources */,
 				A7B288F91ABCB00FB1032B01 /* CatalogCodeLookupTests.swift in Sources */,
 				BDB3B66201B338716D520587 /* JSON5ParserTests.swift in Sources */,
+				581BC3503A1D5C6D379DA8A7 /* CatalogSortOptionTests.swift in Sources */,
+				35860FE27853FCCC7A87AFA3 /* DefaultUnitsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -9,7 +9,7 @@ import Foundation
 
 extension Decimal {
     /// Formats the decimal value for display, removing unnecessary trailing zeros
-    func formatted() -> String {
+    func formattedString() -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.minimumFractionDigits = 0
@@ -20,7 +20,7 @@ extension Decimal {
     }
 
     /// Formats the decimal with a specific number of decimal places
-    func formatted(decimalPlaces: Int) -> String {
+    func formattedString(decimalPlaces: Int) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.minimumFractionDigits = decimalPlaces

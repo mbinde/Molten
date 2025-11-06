@@ -77,6 +77,8 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
         
         let shoppingListRepository = MockShoppingListRepository()
         let userTagsRepo = MockUserTagsRepository()
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
         let shoppingService = ShoppingListService(
             itemMinimumRepository: otherMockRepos.itemMinimum,
             shoppingListRepository: shoppingListRepository,
@@ -88,6 +90,8 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
 
         let catalogService = CatalogService(
             glassItemRepository: mockRepo, // Use the SAME instance
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryService,
             shoppingListService: shoppingService,
             itemTagsRepository: otherMockRepos.itemTags,

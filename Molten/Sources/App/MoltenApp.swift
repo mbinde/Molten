@@ -70,6 +70,7 @@ struct MoltenApp: App {
             .environment(entitlementService)
             .modifier(SubscriptionEnvironmentModifier(subscriptionManager: subscriptionManager))
             .preferredColorScheme(userSettings.colorScheme)
+            .tint(DesignSystem.Colors.accentSecondary)
             .onAppear {
                 // Initialize subscription manager on first appear
                 if subscriptionManager == nil {
@@ -290,7 +291,6 @@ extension MoltenApp {
     /// WARNING: This should only be called ONCE per app launch!
     /// Multiple calls indicate a view lifecycle bug (body re-evaluation creating new instances)
     private func createMainTabView() -> MainTabView {
-        print("🔧 MoltenApp: createMainTabView() called")
 
         // Debug assertion: Detect if we're being called multiple times
         #if DEBUG
@@ -303,31 +303,23 @@ extension MoltenApp {
         // Do NOT reconfigure it here as that would reset the container and lose loaded data
 
         // Create catalog service using the new architecture
-        print("🔧 MoltenApp: Creating catalog service...")
         let catalogService = RepositoryFactory.createCatalogService()
-        print("✅ MoltenApp: Catalog service created")
 
         // Create purchase service using the factory (will use Core Data in production)
-        print("🔧 MoltenApp: Creating purchase service...")
         let purchaseService = RepositoryFactory.createPurchaseRecordService()
-        print("✅ MoltenApp: Purchase service created")
 
         // Create sync monitor if needed (only in production with CloudKit, NOT during UI tests)
         if !isRunningUITests, syncMonitor == nil, let container = RepositoryFactory.persistentContainer as? NSPersistentCloudKitContainer {
-            print("🔧 MoltenApp: Creating CloudKit sync monitor...")
             syncMonitor = CloudKitSyncMonitor(container: container)
-            print("✅ MoltenApp: CloudKit sync monitor created")
         } else if isRunningUITests {
             print("🧪 Skipping CloudKit sync monitor for UI tests")
         }
 
-        print("🔧 MoltenApp: Creating MainTabView...")
         let tabView = MainTabView(
             catalogService: catalogService,
             purchaseService: purchaseService,
             syncMonitor: syncMonitor
         )
-        print("✅ MoltenApp: MainTabView created successfully")
         return tabView
     }
     
@@ -368,14 +360,12 @@ extension MoltenApp {
     /// Configure environment for UI testing
     @MainActor
     private func configureUITestEnvironment() {
-        print("🧪 Configuring Test Environment")
 
         // Skip all onboarding screens
         UserDefaults.standard.set(true, forKey: "hasAcknowledgedAlphaDisclaimer")
 
         // Disable animations for faster, more reliable tests
         if shouldDisableAnimations {
-            print("🧪 Disabling animations")
             #if canImport(UIKit)
             UIView.setAnimationsEnabled(false)
             #endif
@@ -384,25 +374,21 @@ extension MoltenApp {
         // Configure RepositoryFactory based on test type
         if isRunningUITests {
             // UI tests need to test the full stack with real Core Data
-            print("🧪 Configuring for UI Tests (production mode)")
             RepositoryFactory.configureForProduction()
 
             // Reset database if requested
             if shouldResetDatabase {
-                print("🧪 Resetting database...")
                 resetCoreDataStore()
             }
 
             // Populate test data if requested
             if shouldUseTestData {
-                print("🧪 Populating test data...")
                 Task {
                     await populateTestData()
                 }
             }
         } else {
             // Unit tests should use mocks to avoid Core Data
-            print("🧪 Configuring for Unit Tests (mock mode)")
             RepositoryFactory.configureForTesting()
         }
 
@@ -412,20 +398,11 @@ extension MoltenApp {
     /// Handle URLs opened from outside the app (e.g., .molten files, deep links)
     @MainActor
     private func handleOpenURL(_ url: URL) {
-        print("📥 MoltenApp: Received URL: \(url)")
-        print("📥 MoltenApp: Scheme: \(url.scheme ?? "none")")
-        print("📥 MoltenApp: Host: \(url.host ?? "none")")
-        print("📥 MoltenApp: Path: \(url.path)")
-
         // Handle molten:// URL scheme (deep links from QR codes)
         if url.scheme == "molten" {
             handleDeepLink(url)
             return
         }
-
-        // Handle file URLs (.molten files)
-        print("📥 MoltenApp: Path extension: \(url.pathExtension)")
-        print("📥 MoltenApp: File exists: \(FileManager.default.fileExists(atPath: url.path))")
 
         // Check if it's a .molten file (or .json for backward compatibility)
         if url.pathExtension == "molten" || url.pathExtension == "json" {
@@ -434,16 +411,12 @@ extension MoltenApp {
 
             switch fileType {
             case .inventoryImport:
-                print("✅ MoltenApp: Detected inventory import file")
                 importInventoryURL = url
                 showingImportInventory = true
-                print("✅ MoltenApp: showingImportInventory = \(showingImportInventory)")
 
             case .projectPlan:
-                print("✅ MoltenApp: Detected project plan file")
                 importPlanURL = url
                 showingImportPlan = true
-                print("✅ MoltenApp: showingImportPlan = \(showingImportPlan)")
 
             case .unknown:
                 print("❌ MoltenApp: Could not detect file type")
@@ -456,34 +429,20 @@ extension MoltenApp {
     /// Handle deep links from QR codes (molten://g/{naturalKey})
     @MainActor
     private func handleDeepLink(_ url: URL) {
-        print("🔗 MoltenApp: Handling deep link: \(url)")
-        print("🔗 MoltenApp: URL components:")
-        print("   - scheme: \(url.scheme ?? "nil")")
-        print("   - host: \(url.host ?? "nil")")
-        print("   - path: '\(url.path)'")
-        print("   - pathComponents: \(url.pathComponents)")
-
         // Parse URL: molten://g/bullseye-clear-001
         guard url.host == "g" else {
-            print("❌ MoltenApp: Unknown deep link host: \(url.host ?? "none")")
             return
         }
 
         // Extract natural key from path
         let path = url.path
-        print("🔗 MoltenApp: Raw path: '\(path)'")
         let naturalKey = path.hasPrefix("/") ? String(path.dropFirst()) : path
-        print("🔗 MoltenApp: Extracted naturalKey: '\(naturalKey)'")
 
         guard !naturalKey.isEmpty else {
-            print("❌ MoltenApp: No natural key in deep link (path was empty)")
             return
         }
 
-        print("✅ MoltenApp: Deep link to glass item: \(naturalKey)")
-        print("🔗 MoltenApp: Setting deepLinkGlassItemStableId = '\(naturalKey)'")
         deepLinkGlassItemStableId = naturalKey
-        print("🔗 MoltenApp: deepLinkGlassItemStableId is now: \(deepLinkGlassItemStableId ?? "nil")")
         // Note: showingDeepLinkedItem is now managed by .onChange(of: deepLinkGlassItemStableId)
         // This ensures proper handling when scanning multiple QR codes in succession
     }
@@ -562,8 +521,6 @@ extension MoltenApp {
     /// Populate database with known test data
     @MainActor
     private func populateTestData() async {
-        print("🧪 Starting test data population...")
-
         do {
             let glassItemRepo = RepositoryFactory.createGlassItemRepository()
             let inventoryRepo = RepositoryFactory.createInventoryRepository()
@@ -599,7 +556,6 @@ extension MoltenApp {
             // Add items to database
             for item in testItems {
                 try await glassItemRepo.createItem(item)
-                print("✅ Created test item: \(item.name)")
             }
 
             // Add some inventory for the first item
@@ -612,9 +568,6 @@ extension MoltenApp {
                 quantity: 10.0
             )
             _ = try await inventoryRepo.createInventory(inventory)
-            print("✅ Created test inventory for Clear")
-
-            print("✅ Test data population complete")
         } catch {
             print("❌ Failed to populate test data: \(error)")
         }

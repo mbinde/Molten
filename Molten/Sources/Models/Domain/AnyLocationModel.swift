@@ -54,6 +54,28 @@ struct AnyLocationModel: Identifiable, Equatable, Hashable {
     var validationErrors: [String] { _model.validationErrors }
     var hasMinimumInfo: Bool { _model.hasMinimumInfo }
 
+    // Capability properties (must cast to UnifiedLocationModel to get correct capability checks)
+    var hasRetail: Bool {
+        if let unified = _model as? UnifiedLocationModel {
+            return !unified.retailCapabilities.isEmpty
+        }
+        return _model.hasRetail
+    }
+
+    var hasEducation: Bool {
+        if let unified = _model as? UnifiedLocationModel {
+            return !unified.educationCapabilities.isEmpty
+        }
+        return _model.hasEducation
+    }
+
+    var hasServices: Bool {
+        if let unified = _model as? UnifiedLocationModel {
+            return !unified.servicesCapabilities.isEmpty
+        }
+        return _model.hasServices
+    }
+
     // Forward methods
     func matchesSearchText(_ searchText: String) -> Bool {
         _model.matchesSearchText(searchText)
@@ -72,14 +94,18 @@ struct AnyLocationModel: Identifiable, Equatable, Hashable {
     }
 
     // Initializers for each concrete type
-    init(store: StoreModel) {
-        self.type = .store
-        self._model = store
-    }
-
-    init(classLocation: ClassLocationModel) {
-        self.type = .classLocation
-        self._model = classLocation
+    init(unified: UnifiedLocationModel) {
+        // Determine primary type based on capabilities
+        // Priority: retail > education > services
+        if unified.hasRetail {
+            self.type = .store
+        } else if unified.hasEducation {
+            self.type = .classLocation
+        } else {
+            // Default to store if only services or nothing
+            self.type = .store
+        }
+        self._model = unified
     }
 
     // Equatable conformance

@@ -26,7 +26,7 @@ struct InventoryView: View {
     @State private var showingAddFromCatalog = false
     @State private var showingAllTags = false
     @State private var showingCOESelection = false
-    @State private var selectedProductType = "glass"  // Not used in inventory, but required by SearchAndFilterHeader
+    @State private var selectedProductTypes: Set<String> = []  // Not used in inventory, but required by SearchAndFilterHeader
     @State private var showingProductTypeSelection = false
     @State private var showingManufacturerSelection = false
     @State private var showingSuccessToast = false
@@ -139,6 +139,10 @@ struct InventoryView: View {
     
     private var isEmpty: Bool {
         filteredItems.isEmpty
+    }
+
+    private var shouldShowSearchEmptyState: Bool {
+        !viewModel.completeItems.isEmpty && (!viewModel.searchText.isEmpty || !viewModel.selectedTags.isEmpty || !viewModel.selectedCOEs.isEmpty || !viewModel.selectedManufacturers.isEmpty)
     }
 
     // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
@@ -315,8 +319,9 @@ struct InventoryView: View {
                     selectedCOEs: $viewModel.selectedCOEs,
                     showingCOESelection: $showingCOESelection,
                     allAvailableCOEs: allAvailableCOEs,
-                    selectedProductType: $selectedProductType,
+                    selectedProductTypes: $selectedProductTypes,
                     showingProductTypeSelection: $showingProductTypeSelection,
+                    allAvailableProductTypes: ["glass", "coating", "tool"],
                     selectedManufacturers: $viewModel.selectedManufacturers,
                     showingManufacturerSelection: $showingManufacturerSelection,
                     allAvailableManufacturers: allAvailableManufacturers,
@@ -360,7 +365,11 @@ struct InventoryView: View {
                 // Main content
                 Group {
                     if isEmpty {
-                        inventoryEmptyState
+                        if shouldShowSearchEmptyState {
+                            searchEmptyStateView
+                        } else {
+                            inventoryEmptyState
+                        }
                     } else {
                         inventoryListView
                     }
@@ -439,33 +448,40 @@ struct InventoryView: View {
     // MARK: - Views
     
     private var inventoryEmptyState: some View {
-        VStack(spacing: 0) {
-            Spacer()
+        CustomEmptyStateView(
+            icon: "archivebox",
+            title: "No Inventory Yet",
+            description: "Start tracking your glass inventory by adding your first item",
+            actionButton: .init(
+                title: "Add Item",
+                action: { showingAddItem = true },
+                style: .prominent
+            )
+        )
+    }
 
-            VStack(spacing: 20) {
-                Image(systemName: "archivebox")
-                    .font(.system(size: 60))
-                    .foregroundColor(.secondary)
-
-                Text("No Inventory Yet")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-
-                Text("Start tracking your glass inventory by adding your first item")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-
-                Button("Add Item") {
-                    showingAddItem = true
-                }
-                .buttonStyle(.borderedProminent)
-            }
-
-            Spacer()
+    private var searchEmptyStateView: some View {
+        var activeFilters: [String] = []
+        if !viewModel.selectedTags.isEmpty {
+            activeFilters.append("\(viewModel.selectedTags.count) tag\(viewModel.selectedTags.count == 1 ? "" : "s")")
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        if !viewModel.selectedCOEs.isEmpty {
+            activeFilters.append("COE \(viewModel.selectedCOEs.map { String($0) }.joined(separator: ", "))")
+        }
+        if !viewModel.selectedManufacturers.isEmpty {
+            activeFilters.append("\(viewModel.selectedManufacturers.count) manufacturer\(viewModel.selectedManufacturers.count == 1 ? "" : "s")")
+        }
+
+        return CustomEmptyStateView.searchResults(
+            searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
+            filters: activeFilters,
+            onClearFilters: {
+                viewModel.searchText = ""
+                viewModel.selectedTags.removeAll()
+                viewModel.selectedCOEs.removeAll()
+                viewModel.selectedManufacturers.removeAll()
+            }
+        )
     }
     
     private var inventoryListView: some View {

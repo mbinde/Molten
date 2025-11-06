@@ -170,7 +170,6 @@ class CoreDataMigrationService {
             print("ℹ️ All catalog items have initialized units - no migration needed")
             return false
         } else {
-            print("🔍 Found \(uninitializedItems.count) catalog items with uninitialized units - migration needed")
             for item in uninitializedItems {
                 print("  - \(item.name ?? item.id ?? "unknown"): units = \(item.units)")
             }
@@ -437,10 +436,8 @@ class CoreDataMigrationService {
             let validItems = backupData.filter { !$0.id.isEmpty }
             let isValid = validItems.count == backupData.count
             
-            print("🔍 Backup integrity check: \(backupData.count) items, valid: \(isValid)")
             return isValid
         } catch {
-            print("❌ Backup integrity check failed: \(error)")
             return false
         }
     }

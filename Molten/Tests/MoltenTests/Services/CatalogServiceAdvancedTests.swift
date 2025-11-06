@@ -47,8 +47,13 @@ struct CatalogServiceAdvancedTests {
             userTagsRepository: userTagsRepo
         )
         
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
+        
         return CatalogService(
             glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
             itemTagsRepository: itemTagsRepo,

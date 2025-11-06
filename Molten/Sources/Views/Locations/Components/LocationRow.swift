@@ -15,10 +15,9 @@ struct LocationRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {
-            // Type icon
-            location.type.icon
+            // Type icon(s) based on capabilities
+            iconView
                 .font(.title2)
-                .foregroundStyle(DesignSystem.Colors.accentPrimary)
                 .frame(width: 32)
 
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
@@ -60,19 +59,68 @@ struct LocationRow: View {
         }
         .padding(.vertical, DesignSystem.Padding.rowVertical)
     }
+
+    // MARK: - Icon View
+
+    @ViewBuilder
+    private var iconView: some View {
+        ZStack {
+            // Outer colored ring
+            Circle()
+                .stroke(ringColor, lineWidth: 2.5)
+                .frame(width: 32, height: 32)
+
+            // Blue background circle
+            Circle()
+                .fill(DesignSystem.Colors.accentPrimary)
+                .frame(width: 26, height: 26)
+
+            // White icon(s)
+            iconImage
+                .font(.system(size: 12))
+                .foregroundStyle(.white)
+        }
+    }
+
+    /// Ring color - black outline for all locations
+    private var ringColor: Color {
+        return .black
+    }
+
+    /// Icon image based on capabilities
+    @ViewBuilder
+    private var iconImage: some View {
+        if location.hasRetail && location.hasEducation {
+            // Both icons for mixed locations
+            HStack(spacing: 1) {
+                Image(systemName: "storefront.fill")
+                    .font(.system(size: 8))
+                Image(systemName: "graduationcap.fill")
+                    .font(.system(size: 8))
+            }
+        } else if location.hasEducation {
+            Image(systemName: "graduationcap.fill")
+        } else {
+            Image(systemName: "storefront.fill")
+        }
+    }
 }
 
 #Preview("Store") {
     List {
         LocationRow(
-            location: AnyLocationModel(store: StoreModel.create(
+            location: AnyLocationModel(unified: UnifiedLocationModel(
+                stable_id: "frantz-art-glass",
                 name: "Frantz Art Glass",
                 city: "Shelton",
                 state: "WA",
                 latitude: 47.2,
                 longitude: -123.1,
                 isVerified: true,
-                techniques: [.fusing, .casting]
+                retailCapabilities: [
+                    RetailCapability(technique: .fusing),
+                    RetailCapability(technique: .casting)
+                ]
             )),
             userLocation: CLLocationCoordinate2D(latitude: 47.6, longitude: -122.3)
         )
@@ -82,14 +130,19 @@ struct LocationRow: View {
 #Preview("Class") {
     List {
         LocationRow(
-            location: AnyLocationModel(classLocation: ClassLocationModel.create(
+            location: AnyLocationModel(unified: UnifiedLocationModel(
+                stable_id: "pilchuck-glass-school",
                 name: "Pilchuck Glass School",
                 city: "Stanwood",
                 state: "WA",
                 latitude: 48.2,
                 longitude: -122.4,
                 isVerified: true,
-                techniques: [.glassBlowing, .fusing, .casting]
+                educationCapabilities: [
+                    EducationCapability(technique: .glassBlowing),
+                    EducationCapability(technique: .fusing),
+                    EducationCapability(technique: .casting)
+                ]
             )),
             userLocation: nil
         )

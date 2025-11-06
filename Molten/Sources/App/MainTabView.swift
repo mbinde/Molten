@@ -50,18 +50,13 @@ struct MainTabView: View {
 
     /// Initialize MainTabView with dependency injection
     init(catalogService: CatalogService, purchaseService: PurchaseRecordService? = nil, syncMonitor: CloudKitSyncMonitor? = nil) {
-        print("📱 MainTabView: init() called")
         self.catalogService = catalogService
         self.purchaseService = purchaseService
         self.syncMonitor = syncMonitor
 
-        print("📱 MainTabView: Creating inventory tracking service...")
         self.inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
-        print("📱 MainTabView: Creating shopping list service...")
         self.shoppingListService = RepositoryFactory.createShoppingListService()
-        print("📱 MainTabView: Creating kiln schedule service...")
         self.kilnScheduleService = RepositoryFactory.createKilnScheduleService()
-        print("✅ MainTabView: init() completed")
     }
     
     private var lastActiveTab: DefaultTab {
@@ -72,7 +67,6 @@ struct MainTabView: View {
     }
     
     var body: some View {
-        print("📱 MainTabView: body evaluation started")
         return VStack(spacing: 0) {
             // Main content area - use ZStack with opacity to preserve view state
             ZStack {
@@ -209,23 +203,15 @@ struct MainTabView: View {
             }
         }
         .onAppear {
-            print("📱 MainTabView: onAppear called")
-
             // Initialize tab configuration (only once, on MainActor)
             if tabConfig == nil {
-                print("📱 MainTabView: Initializing TabConfiguration on MainActor...")
                 tabConfig = TabConfiguration.shared
-                print("✅ MainTabView: TabConfiguration initialized")
             }
 
             // Restore the last active tab on app launch (only once)
             if !hasRestoredTab {
-                print("📱 MainTabView: Restoring last active tab: \(lastActiveTab)")
                 hasRestoredTab = true
                 selectedTab = lastActiveTab
-                print("✅ MainTabView: Tab restored to \(selectedTab)")
-            } else {
-                print("📱 MainTabView: Tab already restored, skipping")
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .showSettings)) { _ in
@@ -248,10 +234,8 @@ struct MainTabView: View {
             }
         }
         .onChange(of: selectedTab) { oldTab, newTab in
-            print("📱 MainTabView: onChange(selectedTab) - from \(oldTab) to \(newTab)")
             // Save the selected tab whenever it changes (but only if it actually changed)
             if oldTab != newTab {
-                print("📱 MainTabView: Saving tab change to AppStorage")
                 lastActiveTabRawValue = newTab.rawValue
             }
 
@@ -266,7 +250,6 @@ struct MainTabView: View {
             case .recipes: recipesHasBeenViewed = true
             default: break
             }
-            print("📱 MainTabView: onChange(selectedTab) completed")
         }
     }
 

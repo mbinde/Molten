@@ -16,6 +16,7 @@ import XCTest
 import Foundation
 @testable import Molten
 
+@MainActor
 @Suite("JSON5Parser Tests")
 struct JSON5ParserTests {
 

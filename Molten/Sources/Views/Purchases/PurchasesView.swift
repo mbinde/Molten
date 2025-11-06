@@ -32,25 +32,23 @@ struct PurchasesView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Search bar
-                if !viewModel.purchases.isEmpty {
-                    HStack {
-                        TextField("Search purchases...", text: $viewModel.searchText)
-                            .textFieldStyle(.roundedBorder)
-                            .autocorrectionDisabled()
-                            #if os(iOS)
-                            .textInputAutocapitalization(.never)
-                            #endif
+                HStack {
+                    TextField("Search purchases...", text: $viewModel.searchText)
+                        .textFieldStyle(.roundedBorder)
+                        .autocorrectionDisabled()
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never)
+                        #endif
 
-                        if !viewModel.searchText.isEmpty {
-                            Button("Clear") {
-                                viewModel.clearSearch()
-                            }
-                            .foregroundColor(.secondary)
+                    if !viewModel.searchText.isEmpty {
+                        Button("Clear") {
+                            viewModel.clearSearch()
                         }
+                        .foregroundColor(.secondary)
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 8)
                 }
+                .padding(.horizontal)
+                .padding(.top, 8)
 
                 if viewModel.isLoading {
                     // Loading state
@@ -62,14 +60,10 @@ struct PurchasesView: View {
                 } else if filteredPurchases.isEmpty {
                     if viewModel.purchases.isEmpty {
                         // Empty state when no purchases exist
-                        ContentUnavailableView(
-                            "No Purchases Yet",
-                            systemImage: "creditcard",
-                            description: Text("Track your purchase records here")
-                        )
+                        emptyStateView
                     } else {
                         // Empty search results
-                        ContentUnavailableView.search(text: viewModel.searchText)
+                        searchEmptyStateView
                     }
                 } else {
                     // Purchase list
@@ -132,6 +126,31 @@ struct PurchasesView: View {
             let idsToDelete = offsets.map { filteredPurchases[$0].id }
             await viewModel.deletePurchases(ids: idsToDelete)
         }
+    }
+
+    // MARK: - Empty States
+
+    private var emptyStateView: some View {
+        CustomEmptyStateView(
+            icon: "creditcard",
+            title: "No Purchases Yet",
+            description: "Track your purchase records here",
+            actionButton: .init(
+                title: "Add Purchase",
+                action: { showingAddPurchase = true },
+                style: .prominent
+            )
+        )
+    }
+
+    private var searchEmptyStateView: some View {
+        CustomEmptyStateView.searchResults(
+            searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
+            filters: [],
+            onClearFilters: {
+                viewModel.clearSearch()
+            }
+        )
     }
 }
 

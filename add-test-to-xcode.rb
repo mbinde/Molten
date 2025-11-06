@@ -69,6 +69,7 @@ else
   # Determine the group based on path
   group = project.main_group
   path_components = relative_path.split('/')
+  filename = path_components.last
 
   # Navigate/create group hierarchy (handling different group types)
   path_components[0...-1].each do |component|
@@ -91,8 +92,9 @@ else
     end
   end
 
-  # Add file reference
-  file_ref = group.new_file(relative_path)
+  # Add file reference (use just filename, not full path)
+  # The group already has the correct path context
+  file_ref = group.new_file(filename)
   puts "Added file to project: #{relative_path}"
 end
 

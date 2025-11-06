@@ -352,6 +352,7 @@
 				Tests/MoltenTests/Models/ServiceTypeTests.swift,
 				Tests/MoltenTests/Models/ServiceValidationTests.swift,
 				Tests/MoltenTests/Models/TechniqueTypeTests.swift,
+				Tests/MoltenTests/Models/UnifiedLocationModelTests.swift.disabled,
 				Tests/MoltenTests/Models/WeightUnitTests.swift,
 				Tests/MoltenTests/Repositories/InventoryRepositoryLocationTests.swift,
 				Tests/MoltenTests/Repositories/KilnScheduleRepositoryErrorsTests.swift,

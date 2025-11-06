@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		01C8A78294F8BD99B16599EE /* TagColorMappingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADF1A55444B9781567411BEF /* TagColorMappingTests.swift */; };
+		326E6C0727A5816EF1C31CA0 /* ProjectRepositoryErrorsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC8490F9F3C13B944452CB7 /* ProjectRepositoryErrorsTests.swift */; };
 		36D95164C45EC4E84CF4EC68 /* ToolItemDataLoadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */; };
 		4F5AAAA29613EDF7C07B6E56 /* ToolItemDataLoadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 066416B60A11124E9A8029EA /* ToolItemDataLoadingServiceTests.swift */; };
 		897857C1A1A793B9E31AB40D /* KilnScheduleRepositoryErrorsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 973681CFAEBE8EF07A6FF633 /* KilnScheduleRepositoryErrorsTests.swift */; };
@@ -101,12 +102,13 @@
 		066416B60A11124E9A8029EA /* ToolItemDataLoadingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToolItemDataLoadingServiceTests.swift; path = Molten/Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift; sourceTree = "<group>"; };
 		12754BD0BC89C1DC6185EE2E /* ServiceTypeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceTypeTests.swift; sourceTree = "<group>"; };
 		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
+		6EC8490F9F3C13B944452CB7 /* ProjectRepositoryErrorsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProjectRepositoryErrorsTests.swift; path = ProjectRepositoryErrorsTests.swift; sourceTree = "<group>"; };
 		6F422A55CC6A4F183BA2DE1F /* ServiceValidationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceValidationTests.swift; sourceTree = "<group>"; };
 		8281B293DD39FA9AAD352537 /* DecimalFormattingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DecimalFormattingTests.swift; sourceTree = "<group>"; };
 		878F664543088F1B86740DD2 /* UnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationRepository.swift; sourceTree = "<group>"; };
 		95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemDataLoadingServiceTests.swift; sourceTree = "<group>"; };
 		973681CFAEBE8EF07A6FF633 /* KilnScheduleRepositoryErrorsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KilnScheduleRepositoryErrorsTests.swift; sourceTree = "<group>"; };
-		ADF1A55444B9781567411BEF /* TagColorMappingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TagColorMappingTests.swift; path = TagColorMappingTests.swift; sourceTree = "<group>"; };
+		ADF1A55444B9781567411BEF /* TagColorMappingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TagColorMappingTests.swift; sourceTree = "<group>"; };
 		B244734885B21EAEB2AAC553 /* ServiceType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceType.swift; sourceTree = "<group>"; };
 		DB95FB5AC403E8CFD93211C5 /* CoreDataUnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataUnifiedLocationRepository.swift; sourceTree = "<group>"; };
 		E7C7A65B94A6533A14E7AE47 /* taglia_tools.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = taglia_tools.json; sourceTree = "<group>"; };
@@ -759,6 +761,7 @@
 			isa = PBXGroup;
 			children = (
 				973681CFAEBE8EF07A6FF633 /* KilnScheduleRepositoryErrorsTests.swift */,
+				6EC8490F9F3C13B944452CB7 /* ProjectRepositoryErrorsTests.swift */,
 			);
 			path = Repositories;
 			sourceTree = "<group>";
@@ -1196,6 +1199,7 @@
 				DD1F409BCB56582634850CEF /* ServiceTypeTests.swift in Sources */,
 				8C3454AF61198352E76136C3 /* ServiceValidationTests.swift in Sources */,
 				01C8A78294F8BD99B16599EE /* TagColorMappingTests.swift in Sources */,
+				326E6C0727A5816EF1C31CA0 /* ProjectRepositoryErrorsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

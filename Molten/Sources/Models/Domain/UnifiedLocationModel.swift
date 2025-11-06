@@ -11,7 +11,6 @@ import CoreLocation
 /// Capability models for what a location offers
 
 /// What a location sells (retail capability)
-@MainActor
 struct RetailCapability: Codable, Hashable, Sendable, Identifiable {
     let id: UUID
     let technique: TechniqueType
@@ -25,7 +24,6 @@ struct RetailCapability: Codable, Hashable, Sendable, Identifiable {
 }
 
 /// What a location teaches (education capability)
-@MainActor
 struct EducationCapability: Codable, Hashable, Sendable, Identifiable {
     let id: UUID
     let technique: TechniqueType
@@ -41,7 +39,6 @@ struct EducationCapability: Codable, Hashable, Sendable, Identifiable {
 }
 
 /// What services a location offers (facilities)
-@MainActor
 struct ServicesCapability: Codable, Hashable, Sendable, Identifiable {
     let id: UUID
     let serviceType: ServiceType

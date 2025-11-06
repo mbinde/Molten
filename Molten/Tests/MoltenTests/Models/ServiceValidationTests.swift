@@ -318,7 +318,8 @@ struct ServiceValidationTests {
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
             inventory: [inventory1, inventory2],
-            tags: []
+            tags: [],
+            userTags: []
         )
 
         let result = ServiceValidation.validateCompleteInventoryItem(completeItem)
@@ -347,7 +348,7 @@ struct ServiceValidationTests {
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
             inventory: [inventory],
-            tags: []
+            tags: [], userTags: []
         )
 
         let result = ServiceValidation.validateCompleteInventoryItem(completeItem)
@@ -376,7 +377,7 @@ struct ServiceValidationTests {
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
             inventory: [inventory],
-            tags: []
+            tags: [], userTags: []
         )
 
         let result = ServiceValidation.validateCompleteInventoryItem(completeItem)
@@ -399,7 +400,7 @@ struct ServiceValidationTests {
         let completeItem = CompleteInventoryItemModel(
             glassItem: glassItem,
             inventory: [],
-            tags: []
+            tags: [], userTags: []
         )
 
         let result = ServiceValidation.validateCompleteInventoryItem(completeItem)
@@ -412,9 +413,7 @@ struct ServiceValidationTests {
     @Test("Valid PurchaseRecord passes validation")
     func testValidPurchaseRecord() {
         let purchaseRecord = PurchaseRecordModel(
-            date: Date(),
-            storeName: "Test Store",
-            items: []
+            supplier: "Test Store"
         )
 
         let result = ServiceValidation.validatePurchaseRecord(purchaseRecord)
@@ -425,9 +424,7 @@ struct ServiceValidationTests {
     @Test("Invalid PurchaseRecord fails validation")
     func testInvalidPurchaseRecord() {
         let purchaseRecord = PurchaseRecordModel(
-            date: Date(),
-            storeName: "",  // Invalid empty store name
-            items: []
+            supplier: ""  // Invalid empty store name
         )
 
         let result = ServiceValidation.validatePurchaseRecord(purchaseRecord)

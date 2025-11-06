@@ -54,10 +54,27 @@ struct AnyLocationModel: Identifiable, Equatable, Hashable {
     var validationErrors: [String] { _model.validationErrors }
     var hasMinimumInfo: Bool { _model.hasMinimumInfo }
 
-    // Capability properties
-    var hasRetail: Bool { _model.hasRetail }
-    var hasEducation: Bool { _model.hasEducation }
-    var hasServices: Bool { _model.hasServices }
+    // Capability properties (must cast to UnifiedLocationModel to get correct capability checks)
+    var hasRetail: Bool {
+        if let unified = _model as? UnifiedLocationModel {
+            return !unified.retailCapabilities.isEmpty
+        }
+        return _model.hasRetail
+    }
+
+    var hasEducation: Bool {
+        if let unified = _model as? UnifiedLocationModel {
+            return !unified.educationCapabilities.isEmpty
+        }
+        return _model.hasEducation
+    }
+
+    var hasServices: Bool {
+        if let unified = _model as? UnifiedLocationModel {
+            return !unified.servicesCapabilities.isEmpty
+        }
+        return _model.hasServices
+    }
 
     // Forward methods
     func matchesSearchText(_ searchText: String) -> Bool {

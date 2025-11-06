@@ -26,8 +26,8 @@ from scraper_config import get_page_delay, is_bot_protection_error
 
 
 # Constants
-MANUFACTURER_CODE = 'CHB'  # Keeping original code for compatibility
-MANUFACTURER_NAME = 'Asian Glass'  # Updated name
+MANUFACTURER_CODE = 'AB'
+MANUFACTURER_NAME = 'Asian Boro'
 COE = '33'
 BASE_URL = 'https://abrimagery.com'
 
@@ -60,22 +60,39 @@ def remove_brand_from_title(title):
     # Remove "Asian" prefix
     cleaned_title = re.sub(r'^Asian\s+', '', cleaned_title, flags=re.IGNORECASE)
 
-    # Remove size specifications (e.g., "7-8mm", "12mm", "16mm", "25mm")
-    cleaned_title = re.sub(r'\b\d+(-\d+)?mm\b', '', cleaned_title)
+    # Remove size prefixes at beginning (e.g., "16"", "38MM", "25mm")
+    cleaned_title = re.sub(r'^\d+"\s*', '', cleaned_title)  # Sizes with inch marks like "16" "
+    cleaned_title = re.sub(r'^\d+MM\s+', '', cleaned_title, flags=re.IGNORECASE)  # "38MM "
 
-    # Remove product type terms
+    # Remove size specifications anywhere (e.g., "7-8mm", "12mm", "16mm", "25mm")
+    cleaned_title = re.sub(r'\d+(-\d+)?mm\s*', '', cleaned_title, flags=re.IGNORECASE)
+
+    # Preserve "Profile Tubing" but remove other product type terms
+    # First, protect "Profile Tubing" by replacing with placeholder
+    has_profile_tubing = 'profile tubing' in cleaned_title.lower()
+    if has_profile_tubing:
+        cleaned_title = re.sub(r'\bProfile\s+Tubing\b', '__PROFILE_TUBE__', cleaned_title, flags=re.IGNORECASE)
+
+    # Remove product type terms (but keep "Tube" and protected "Profile Tube")
     type_patterns = [r'\bRods?\b', r'\bFrit\b', r'\bPowder\b', r'\bSheet\b',
-                    r'\bStringers?\b', r'\bTubes?\b', r'\bTubing\b', r'\bFatboy\b',
-                    r'\bFlat\b', r'\bProfile\b']
+                    r'\bStringers?\b', r'\bTubing\b', r'\bFatboy\b', r'\bFlat\b']
 
     for pattern in type_patterns:
         cleaned_title = re.sub(pattern, '', cleaned_title, flags=re.IGNORECASE)
+
+    # Restore "Profile Tube"
+    if has_profile_tubing:
+        cleaned_title = cleaned_title.replace('__PROFILE_TUBE__', 'Profile Tube')
 
     # Remove frit size designations
     cleaned_title = re.sub(r'\(Fine\)', '', cleaned_title, flags=re.IGNORECASE)
 
     # Remove COE references
     cleaned_title = re.sub(r'\bCOE\s*33\b', '', cleaned_title, flags=re.IGNORECASE)
+
+    # Remove length specifications (e.g., "long", "1350-1500mm long")
+    cleaned_title = re.sub(r'\b\d+-?\d*mm\s+long\b', '', cleaned_title, flags=re.IGNORECASE)
+    cleaned_title = re.sub(r'\blong\b', '', cleaned_title, flags=re.IGNORECASE)
 
     # Clean up extra whitespace and dashes
     cleaned_title = re.sub(r'\s*[-–]\s*', ' ', cleaned_title)
@@ -102,6 +119,7 @@ def scrape(test_mode=False, max_items=None):
     collection_handle = 'color-glass'
     all_products = []
     seen_skus = {}
+    seen_base_skus = {}  # Track base SKUs to skip size variants
     duplicates = []
     page = 1
 
@@ -136,17 +154,45 @@ def scrape(test_mode=False, max_items=None):
                 asian_count += 1
                 product_name = product_data.get('title', '')
 
-                # Skip unwanted products
-                skip_terms = ['sample pack', 'sampler', 'bundle', 'set', 'gift card',
-                             'sticker', 'shirt', 't-shirt', 'hoodie', 'hat', 'cap',
-                             'budget tubes']  # Skip damaged/broken glass bundles
-                if any(term in product_name.lower() for term in skip_terms):
-                    print(f"    Skipping: {product_name}")
+                # Skip unwanted products (use word boundaries to avoid false matches like "sunset")
+                product_name_lower = product_name.lower()
+                skip_patterns = [
+                    r'\bsample\s+pack\b', r'\bsampler\b', r'\bbundle\b', r'\bset\b',
+                    r'\bgift\s+card\b', r'\bsticker\b', r'\bshirt\b', r'\bt-shirt\b',
+                    r'\bhoodie\b', r'\bhat\b', r'\bcap\b',
+                    r'\bbudget\s+tubes\b',  # Skip damaged/broken glass bundles
+                    r'\bfrit\b'  # Skip frit - we don't track frit for other manufacturers
+                ]
+                should_skip = False
+                for pattern in skip_patterns:
+                    if re.search(pattern, product_name_lower):
+                        print(f"    Skipping: {product_name}")
+                        should_skip = True
+                        break
+                if should_skip:
                     continue
 
                 # Get first variant for SKU
                 variants = product_data.get('variants', [])
                 sku = variants[0].get('sku', '') if variants else ''
+
+                # Skip size variants - keep only base SKU
+                # Example: Keep "AR-AMBER", skip "AR-AMBER12", "AR-AMBER25"
+                # Example: Keep "ACT-YTC9", skip "ACT-YTC12", "ACT-YTC16"
+                # Example: Keep "ACT-YTC25PROFILE", skip "ACT-YTC30PROFILE", "ACT-YTC40PROFILE"
+
+                # Remove size suffixes to get base SKU
+                base_sku = re.sub(r'\d+$', '', sku)  # Remove trailing digits (AR-AMBER12 → AR-AMBER)
+                base_sku = re.sub(r'\d+(PROFILE)$', r'\1', base_sku, flags=re.IGNORECASE)  # ACT-YTC25PROFILE → ACT-YTCPROFILE
+
+                if base_sku in seen_base_skus:
+                    # This is a size variant of a product we already have
+                    print(f"    Skipping size variant: {product_name} (SKU: {sku}, base: {base_sku})")
+                    continue
+
+                # Track this base SKU
+                if base_sku:
+                    seen_base_skus[base_sku] = {'name': product_name, 'sku': sku}
 
                 # Get images
                 images = product_data.get('images', [])

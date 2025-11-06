@@ -248,7 +248,7 @@ struct AddGlassToStepView: View {
 
     private func selectCatalogGlass(_ item: GlassItemModel) {
         selectedGlassItem = item
-        searchText = item.name
+        // Keep search text for refinement
         // Don't pre-fill quantity - let user enter it fresh
     }
 

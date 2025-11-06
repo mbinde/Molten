@@ -100,6 +100,8 @@
 /* Begin PBXFileReference section */
 		12754BD0BC89C1DC6185EE2E /* ServiceTypeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceTypeTests.swift; sourceTree = "<group>"; };
 		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
+		55F491EBB36A430809B4B5C8 /* DecimalFormattingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DecimalFormattingTests.swift; sourceTree = "<group>"; };
+		6EAC4B729EDEDC9E77A2B8F4 /* DecimalFormattingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DecimalFormattingTests.swift; sourceTree = "<group>"; };
 		6EC8490F9F3C13B944452CB7 /* ProjectRepositoryErrorsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectRepositoryErrorsTests.swift; sourceTree = "<group>"; };
 		6F422A55CC6A4F183BA2DE1F /* ServiceValidationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceValidationTests.swift; sourceTree = "<group>"; };
 		8281B293DD39FA9AAD352537 /* DecimalFormattingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DecimalFormattingTests.swift; sourceTree = "<group>"; };
@@ -583,6 +585,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};
@@ -871,6 +875,8 @@
 				F5C06D292EB7A7670038084E /* InventoryImport.xctest */,
 				F5C06D2A2EB7A7670038084E /* ScreenshotAutomation.xctest */,
 				F5C06D2B2EB7A7670038084E /* ViewModelTests.xctest */,
+				6EAC4B729EDEDC9E77A2B8F4 /* DecimalFormattingTests.swift */,
+				55F491EBB36A430809B4B5C8 /* DecimalFormattingTests.swift */,
 			);
 			sourceTree = "<group>";
 		};

@@ -28,6 +28,9 @@ class LocationsViewModel {
     var errorMessage: String?
     var showMap: Bool = true
     var userLocation: CLLocationCoordinate2D?
+    var mapCenter: CLLocationCoordinate2D?
+    var mapBounds: (minLat: Double, maxLat: Double, minLon: Double, maxLon: Double)?
+    var selectedTechnique: TechniqueType?
 
     // MARK: - Computed Properties
 
@@ -36,10 +39,12 @@ class LocationsViewModel {
     }
 
     var emptyStateMessage: String {
-        if searchText.isEmpty {
-            return "No locations found. Try expanding your search radius or adjusting filters."
-        } else {
+        if !searchText.isEmpty {
             return "No locations found matching '\(searchText)'. Try different search terms or filters."
+        } else if mapBounds != nil {
+            return "No locations in this area. Zoom out or pan the map to explore more locations."
+        } else {
+            return "No locations found. Try adjusting your filters."
         }
     }
 
@@ -47,10 +52,12 @@ class LocationsViewModel {
 
     init(
         locationService: UnifiedLocationService,
-        selectedTypes: Set<LocationType>? = nil
+        selectedTypes: Set<LocationType>? = nil,
+        selectedTechnique: TechniqueType? = nil
     ) {
         self.locationService = locationService
         self.selectedTypes = selectedTypes ?? LocationFilterPreferences.getSelectedTypes()
+        self.selectedTechnique = selectedTechnique ?? LocationFilterPreferences.getSelectedTechnique()
     }
 
     // MARK: - Data Loading
@@ -89,16 +96,34 @@ class LocationsViewModel {
     func applyFilters() {
         var results = allLocations
 
+        // Filter by map bounds
+        if let bounds = mapBounds {
+            results = results.filter { location in
+                guard location.hasValidLocation else { return false }
+                return location.latitude >= bounds.minLat &&
+                       location.latitude <= bounds.maxLat &&
+                       location.longitude >= bounds.minLon &&
+                       location.longitude <= bounds.maxLon
+            }
+        }
+
         // Filter by search text
         if !searchText.isEmpty {
             results = results.filter { $0.matchesSearchText(searchText) }
         }
 
-        // Sort by distance (if available), then alphabetically
-        if let userLoc = userLocation {
+        // Filter by selected technique
+        if let technique = selectedTechnique {
+            results = results.filter { $0.supportsTechnique(technique) }
+        }
+
+        // Sort by distance from map center (or user location), then alphabetically
+        let referencePoint = mapCenter ?? userLocation
+
+        if let refPoint = referencePoint {
             results.sort { loc1, loc2 in
-                let dist1 = loc1.distance(from: userLoc) ?? Double.greatestFiniteMagnitude
-                let dist2 = loc2.distance(from: userLoc) ?? Double.greatestFiniteMagnitude
+                let dist1 = loc1.distance(from: refPoint) ?? Double.greatestFiniteMagnitude
+                let dist2 = loc2.distance(from: refPoint) ?? Double.greatestFiniteMagnitude
 
                 // If distances are significantly different, sort by distance
                 if abs(dist1 - dist2) > 1000 { // 1km threshold
@@ -108,7 +133,7 @@ class LocationsViewModel {
                 return loc1.name.localizedCaseInsensitiveCompare(loc2.name) == .orderedAscending
             }
         } else {
-            // No user location, just sort alphabetically
+            // No reference point, just sort alphabetically
             results.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         }
 
@@ -139,6 +164,22 @@ class LocationsViewModel {
 
     func updateUserLocation(_ location: CLLocationCoordinate2D?) {
         userLocation = location
+        applyFilters()
+    }
+
+    func updateMapCenter(_ center: CLLocationCoordinate2D?) {
+        mapCenter = center
+        applyFilters()
+    }
+
+    func updateMapBounds(minLat: Double, maxLat: Double, minLon: Double, maxLon: Double) {
+        mapBounds = (minLat: minLat, maxLat: maxLat, minLon: minLon, maxLon: maxLon)
+        applyFilters()
+    }
+
+    func updateSelectedTechnique(_ technique: TechniqueType?) {
+        selectedTechnique = technique
+        LocationFilterPreferences.saveSelectedTechnique(technique)
         applyFilters()
     }
 

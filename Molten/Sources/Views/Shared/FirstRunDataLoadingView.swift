@@ -225,9 +225,7 @@ struct FirstRunDataLoadingView: View {
             currentStep = .buildingSearchIndex
             progress = 0.6
 
-            print("🔍 Building search cache...")
             await CatalogSearchCache.shared.loadIfNeeded(catalogService: catalogService)
-            print("✅ Search cache ready")
             progress = 0.75
 
             // Step 4: Load catalog cache

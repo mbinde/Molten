@@ -17,6 +17,7 @@ import Foundation
 @testable import Molten
 
 @Suite("DefaultTab Tests")
+@MainActor
 struct DefaultTabTests {
 
     // MARK: - Raw Value Tests
@@ -347,6 +348,7 @@ struct DefaultTabTests {
 // MARK: - ProjectViewType Tests
 
 @Suite("ProjectViewType Tests")
+@MainActor
 struct ProjectViewTypeTests {
 
     // MARK: - Display Name Tests

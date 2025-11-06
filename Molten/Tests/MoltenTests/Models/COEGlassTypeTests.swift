@@ -16,6 +16,7 @@ import XCTest
 import Foundation
 @testable import Molten
 
+@MainActor
 @Suite("COEGlassType Tests")
 struct COEGlassTypeTests {
 

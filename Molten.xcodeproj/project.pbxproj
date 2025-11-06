@@ -227,6 +227,7 @@
 				Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
 				Tests/MoltenTests/Utilities/CatalogFormattersTests.swift,
+				Tests/MoltenTests/Utilities/DecimalFormattingTests.swift,
 				Tests/MoltenTests/Utilities/ErrorBoundaryTests.swift,
 				Tests/MoltenTests/Utilities/ErrorHandlingTests.swift,
 				Tests/MoltenTests/Utilities/FilterUtilitiesTests.swift,
@@ -384,6 +385,7 @@
 				Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
 				Tests/MoltenTests/Utilities/CatalogFormattersTests.swift,
+				Tests/MoltenTests/Utilities/DecimalFormattingTests.swift,
 				Tests/MoltenTests/Utilities/ErrorBoundaryTests.swift,
 				Tests/MoltenTests/Utilities/ErrorHandlingTests.swift,
 				Tests/MoltenTests/Utilities/FilterUtilitiesTests.swift,
@@ -581,8 +583,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};

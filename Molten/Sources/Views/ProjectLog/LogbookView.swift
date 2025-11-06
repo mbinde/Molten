@@ -39,43 +39,43 @@ struct LogbookView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Search bar at top (only show when we have entries)
-                if !viewModel.logEntries.isEmpty {
-                    SearchAndFilterHeader(
-                        searchText: $viewModel.searchText,
-                        searchTitlesOnly: $viewModel.searchTitlesOnly,
-                        selectedTags: $selectedTags,
-                        showingAllTags: $showingAllTags,
-                        allAvailableTags: [],  // No tags for now
-                        selectedCOEs: $selectedCOEs,
-                        showingCOESelection: $showingCOESelection,
-                        allAvailableCOEs: [],  // No COE filter for now
-                        selectedProductType: $selectedProductType,
-                        showingProductTypeSelection: $showingProductTypeSelection,
-                        selectedManufacturers: $selectedManufacturers,
-                        showingManufacturerSelection: $showingManufacturerSelection,
-                        allAvailableManufacturers: [],  // No manufacturer filter for now
-                        sortMenuContent: {
-                            AnyView(
-                                Group {
-                                    Button("Date (Newest First)") { }
-                                    Button("Date (Oldest First)") { }
-                                    Button("Title (A-Z)") { }
-                                    Button("Title (Z-A)") { }
-                                }
-                            )
-                        },
-                        searchPlaceholder: "Search logbook entries..."
-                    )
-                }
+                // Search bar at top
+                SearchAndFilterHeader(
+                    searchText: $viewModel.searchText,
+                    searchTitlesOnly: $viewModel.searchTitlesOnly,
+                    selectedTags: $selectedTags,
+                    showingAllTags: $showingAllTags,
+                    allAvailableTags: [],  // No tags for now
+                    selectedCOEs: $selectedCOEs,
+                    showingCOESelection: $showingCOESelection,
+                    allAvailableCOEs: [],  // No COE filter for now
+                    selectedProductType: $selectedProductType,
+                    showingProductTypeSelection: $showingProductTypeSelection,
+                    selectedManufacturers: $selectedManufacturers,
+                    showingManufacturerSelection: $showingManufacturerSelection,
+                    allAvailableManufacturers: [],  // No manufacturer filter for now
+                    sortMenuContent: {
+                        AnyView(
+                            Group {
+                                Button("Date (Newest First)") { }
+                                Button("Date (Oldest First)") { }
+                                Button("Title (A-Z)") { }
+                                Button("Title (Z-A)") { }
+                            }
+                        )
+                    },
+                    searchPlaceholder: "Search logbook entries..."
+                )
 
                 // Main content
                 if viewModel.isLoading {
                     ProgressView()
                         .scaleEffect(1.5)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if viewModel.logEntries.isEmpty && viewModel.searchText.isEmpty {
+                } else if viewModel.logEntries.isEmpty {
                     emptyStateView
+                } else if viewModel.filteredEntries.isEmpty {
+                    searchEmptyStateView
                 } else {
                     logEntriesListView
                 }
@@ -105,34 +105,26 @@ struct LogbookView: View {
     // MARK: - Empty State
 
     private var emptyStateView: some View {
-        VStack(spacing: 0) {
-            Spacer()
+        CustomEmptyStateView(
+            icon: "book.pages",
+            title: "No Logbook Entries Yet",
+            description: "Document your completed glass projects, record techniques, and track your creative journey",
+            actionButton: .init(
+                title: "Create Your First Entry",
+                action: { showingAddEntry = true },
+                style: .prominent
+            )
+        )
+    }
 
-            VStack(spacing: 20) {
-                Image(systemName: "book.pages")
-                    .font(.system(size: 70))
-                    .foregroundColor(.blue)
-
-                Text("No Logbook Entries Yet")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-
-                Text("Document your completed glass projects, record techniques, and track your creative journey")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-
-                Button("Create Your First Entry") {
-                    showingAddEntry = true
-                }
-                .buttonStyle(.borderedProminent)
-                .padding(.top, 8)
+    private var searchEmptyStateView: some View {
+        CustomEmptyStateView.searchResults(
+            searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
+            filters: [],
+            onClearFilters: {
+                viewModel.clearSearch()
             }
-
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        )
     }
 
     // MARK: - List View

@@ -18,7 +18,6 @@ struct AddRecipeView: View {
     @State private var title = ""
     @State private var descriptionText = ""
     @State private var recordMeasurements = false
-    @State private var measurementType: MeasurementType = .byWeight
     @State private var ingredients: [RecipeIngredientModel] = []
 
     // UI state
@@ -51,17 +50,9 @@ struct AddRecipeView: View {
                         .lineLimit(3...6)
                 }
 
-                // Measurement toggle and type
+                // Measurement toggle
                 Section {
                     Toggle("Record ingredient measurements", isOn: $recordMeasurements)
-
-                    if recordMeasurements {
-                        Picker("Measurement Type", selection: $measurementType) {
-                            ForEach(MeasurementType.allCases, id: \.self) { type in
-                                Text(type.displayName).tag(type)
-                            }
-                        }
-                    }
                 } footer: {
                     if recordMeasurements {
                         Text("Track precise amounts for each ingredient")
@@ -110,18 +101,30 @@ struct AddRecipeView: View {
         Section {
             // Existing ingredients
             ForEach(ingredients) { ingredient in
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        if let item = availableGlassItems.first(where: { $0.glassItem.stable_id == ingredient.stableId }) {
-                            Text(item.glassItem.name)
-                                .font(.body)
-                            Text(item.glassItem.stable_id)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        } else {
-                            Text(ingredient.stableId)
-                                .font(.body)
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    // Thumbnail
+                    if let item = availableGlassItems.first(where: { $0.glassItem.stable_id == ingredient.stableId }) {
+                        AsyncImage(url: URL(string: item.glassItem.image_url ?? "")) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.2))
                         }
+                        .frame(width: 40, height: 40)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                        Text(item.glassItem.name)
+                            .font(.body)
+                    } else {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(width: 40, height: 40)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                        Text(ingredient.stableId)
+                            .font(.body)
                     }
 
                     Spacer()
@@ -161,15 +164,22 @@ struct AddRecipeView: View {
                     Button {
                         addIngredient(item)
                     } label: {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(item.glassItem.name)
-                                    .font(.body)
-                                    .foregroundColor(.primary)
-                                Text(item.glassItem.stable_id)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            // Thumbnail
+                            AsyncImage(url: URL(string: item.glassItem.image_url ?? "")) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            } placeholder: {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.2))
                             }
+                            .frame(width: 40, height: 40)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                            Text(item.glassItem.name)
+                                .font(.body)
+                                .foregroundColor(.primary)
 
                             Spacer()
 
@@ -250,7 +260,7 @@ struct AddRecipeView: View {
             let recipe = RecipeModel(
                 title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                 descriptionText: descriptionText.trimmingCharacters(in: .whitespacesAndNewlines),
-                measurementType: measurementType,
+                measurementType: recordMeasurements ? .byRatio : .byRatio,
                 ingredients: ingredients
             )
 

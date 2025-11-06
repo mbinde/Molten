@@ -93,6 +93,8 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
             inventoryRepository: mockInventoryRepo,
             itemTagsRepository: mockItemTagsRepo
         )
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
 
         let shoppingListRepository = MockShoppingListRepository()
         let shoppingService = ShoppingListService(
@@ -106,6 +108,8 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
 
         let catalogService = CatalogService(
             glassItemRepository: mockGlassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryService,
             shoppingListService: shoppingService,
             itemTagsRepository: mockItemTagsRepo,

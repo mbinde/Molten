@@ -89,10 +89,13 @@ struct ValidationUtilities {
         return .success(doubleValue)
     }
     
+    // DEAD CODE (2025-11-02): Simple wrapper around validateDouble, never used. Safe to remove.
+    /*
     /// Safe numeric validation that ensures finite, non-NaN values
     nonisolated static func safeValidateDouble(_ value: String, fieldName: String = "Amount") -> Result<Double, AppError> {
         return validateDouble(value, fieldName: fieldName)
     }
+    */
     
     /// Validate positive double value
     nonisolated static func validatePositiveDouble(_ value: String, fieldName: String = "Amount") -> Result<Double, AppError> {

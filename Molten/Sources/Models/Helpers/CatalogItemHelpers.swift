@@ -36,7 +36,10 @@ struct CatalogItemHelpers {
     }
     
     // MARK: - Synonyms Helper Functions
-    
+
+    // DEAD CODE (2025-11-02): These functions always return empty values and are never used.
+    // Business models don't have synonyms field. Safe to remove.
+    /*
     /// Gets synonyms as a single string for a CatalogItemModel
     nonisolated static func synonymsForItem(_ item: CatalogItemModel) -> String {
         // Business models don't have synonyms field yet, return empty for now
@@ -48,9 +51,13 @@ struct CatalogItemHelpers {
         // Business models don't have synonyms field yet, return empty for now
         return []
     }
+    */
     
     // MARK: - COE Helper Functions
-    
+
+    // DEAD CODE (2025-11-02): These functions always return empty/nil and are never used.
+    // Business models don't have COE field. Safe to remove.
+    /*
     /// Gets COE as a string for a CatalogItemModel
     nonisolated static func coeForItem(_ item: CatalogItemModel) -> String {
         // Business models don't have COE field yet, return empty for now
@@ -62,6 +69,7 @@ struct CatalogItemHelpers {
         // Business models don't have COE field yet, return nil for now
         return nil
     }
+    */
     
     // MARK: - Color Helper Functions
     
@@ -130,13 +138,17 @@ struct CatalogItemHelpers {
     }
     
     // MARK: - Status Helper Functions
-    
+
+    // DEAD CODE (2025-11-02): This function always returns false and is never used.
+    // Business models don't have start_date field. Safe to remove.
+    /*
     /// Determines if a catalog item is not yet available (future release)
     /// Check if item is a future release (business model version)
     nonisolated static func isFutureRelease(_ item: CatalogItemModel) -> Bool {
         // Business models don't have start_date field, always return false
         return false
     }
+    */
     
     // MARK: - Enhanced Data Access
     
@@ -147,10 +159,10 @@ struct CatalogItemHelpers {
             code: item.code,
             manufacturer: item.manufacturer,
             manufacturerFullName: GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer,
-            coe: getCOEDisplayValue(from: item),
+            coe: nil, // DEAD CODE: getCOEDisplayValue(from: item) - always returned nil
             stockType: getStockType(from: item),
             tags: tagsArrayForItem(item),
-            synonyms: synonymsArrayForItem(item),
+            synonyms: [], // DEAD CODE: synonymsArrayForItem(item) - always returned []
             color: colorForManufacturer(item.manufacturer),
             manufacturerURL: getManufacturerURL(from: item),
             imagePath: nil, // Business models don't have image_path field yet
@@ -177,38 +189,39 @@ struct CatalogItemHelpers {
 enum AvailabilityStatus {
     case available
     case discontinued
-    case futureRelease // Added for compatibility - will not be used since start_date was removed
-    
+    // DEAD CODE (2025-11-02): futureRelease case never used (start_date field removed)
+    // case futureRelease
+
     var displayText: String {
         switch self {
         case .available:
             return "Available"
         case .discontinued:
             return "Discontinued"
-        case .futureRelease:
-            return "Future Release"
+        // case .futureRelease:
+        //     return "Future Release"
         }
     }
-    
+
     var color: Color {
         switch self {
         case .available:
             return .green
         case .discontinued:
             return .orange
-        case .futureRelease:
-            return .blue
+        // case .futureRelease:
+        //     return .blue
         }
     }
-    
+
     var shortDisplayText: String {
         switch self {
         case .available:
             return "Avail."
         case .discontinued:
             return "Disc."
-        case .futureRelease:
-            return "Future"
+        // case .futureRelease:
+        //     return "Future"
         }
     }
 }

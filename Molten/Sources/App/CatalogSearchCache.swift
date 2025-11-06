@@ -31,13 +31,11 @@ class CatalogSearchCache: ObservableObject {
     func loadIfNeeded(catalogService: CatalogService) async {
         // If already loaded or currently loading, return immediately
         guard !isLoaded && !isLoading else {
-            print("🔍 Search Cache: Data already loaded or loading, skipping")
             return
         }
 
         // If there's an existing load task, wait for it
         if let existingTask = loadTask {
-            print("🔍 Search Cache: Waiting for existing load task...")
             await existingTask.value
             return
         }
@@ -53,14 +51,12 @@ class CatalogSearchCache: ObservableObject {
 
     /// Force reload of catalog search data
     func reload(catalogService: CatalogService) async {
-        print("🔍 Search Cache: Force reload requested")
         isLoaded = false
         await loadIfNeeded(catalogService: catalogService)
     }
 
     /// Clear the cache (for testing or logout scenarios)
     func clear() {
-        print("🔍 Search Cache: Clearing cache")
         items = []
         isLoaded = false
         isLoading = false
@@ -69,17 +65,14 @@ class CatalogSearchCache: ObservableObject {
     }
 
     private func performLoad(catalogService: CatalogService) async {
-        print("🔍 Search Cache: Starting lightweight load...")
         isLoading = true
 
         do {
             let loadedItems = try await catalogService.getGlassItemsLightweight()
-            print("🔍 Search Cache: Loaded \(loadedItems.count) items (lightweight)")
 
             items = loadedItems
             isLoaded = true
         } catch {
-            print("🔍 Search Cache: Load failed: \(error)")
             // Keep cache in "not loaded" state so it will retry
             items = []
             isLoaded = false

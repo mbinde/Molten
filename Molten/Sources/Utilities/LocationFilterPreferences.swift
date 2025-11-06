@@ -10,6 +10,7 @@ import Foundation
 /// Manages persistence of location filter preferences
 struct LocationFilterPreferences {
     private static let filterKey = "molten.locations.selectedTypes"
+    private static let techniqueKey = "molten.locations.selectedTechnique"
 
     /// Get the user's saved location type filters
     /// - Returns: Set of selected LocationTypes, or all types if never set
@@ -33,5 +34,26 @@ struct LocationFilterPreferences {
     /// Reset to default (all types visible)
     static func reset() {
         UserDefaults.standard.removeObject(forKey: filterKey)
+        UserDefaults.standard.removeObject(forKey: techniqueKey)
+    }
+
+    /// Get the user's saved technique filter
+    /// - Returns: Selected TechniqueType, or nil if showing all techniques
+    static func getSelectedTechnique() -> TechniqueType? {
+        guard let savedString = UserDefaults.standard.string(forKey: techniqueKey),
+              let technique = TechniqueType(rawValue: savedString) else {
+            return nil  // Default: show all techniques
+        }
+        return technique
+    }
+
+    /// Save the user's technique filter selection
+    /// - Parameter technique: TechniqueType to filter by, or nil to show all
+    static func saveSelectedTechnique(_ technique: TechniqueType?) {
+        if let technique = technique {
+            UserDefaults.standard.set(technique.rawValue, forKey: techniqueKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: techniqueKey)
+        }
     }
 }

@@ -29,7 +29,7 @@ struct CatalogView: View {
     // Use manual UserDefaults handling instead of @AppStorage to prevent test crashes
     @State private var defaultSortOptionRawValue = SortOption.name.rawValue
     @State private var enabledManufacturersData: Data = Data()
-    @State private var selectedProductType: String = "glass"  // Product type filter: "glass" or "coating"
+    @State private var selectedProductTypes: Set<String> = []  // Product type filter: empty = show all, non-empty = filter
     @State private var showingProductTypeSelection = false
 
     private var userDefaults: UserDefaults {
@@ -158,8 +158,9 @@ struct CatalogView: View {
             selectedCOEs: $viewModel.selectedCOEs,
             showingCOESelection: $showingCOESelection,
             allAvailableCOEs: allAvailableCOEs,
-            selectedProductType: $selectedProductType,
+            selectedProductTypes: $viewModel.selectedProductTypes,
             showingProductTypeSelection: $showingProductTypeSelection,
+            allAvailableProductTypes: ["glass", "coating", "tool"],
             selectedManufacturers: $viewModel.selectedManufacturers,
             showingManufacturerSelection: $showingManufacturerFilterSelection,
             allAvailableManufacturers: availableManufacturers,
@@ -251,7 +252,7 @@ struct CatalogView: View {
                 defaultSortOptionRawValue: $defaultSortOptionRawValue,
                 enabledManufacturersData: $enabledManufacturersData,
                 searchTitlesOnly: $viewModel.searchTitlesOnly,
-                selectedProductType: $selectedProductType,
+                selectedProductTypes: $selectedProductTypes,
                 sortOption: $viewModel.sortOption,
                 viewModel: viewModel,
                 clearSearch: clearSearch,
@@ -652,7 +653,7 @@ struct LifecycleModifiers: ViewModifier {
     @Binding var defaultSortOptionRawValue: String
     @Binding var enabledManufacturersData: Data
     @Binding var searchTitlesOnly: Bool
-    @Binding var selectedProductType: String
+    @Binding var selectedProductTypes: Set<String>
     @Binding var sortOption: SortOption
     let viewModel: CatalogViewModel
     let clearSearch: () -> Void
@@ -674,25 +675,19 @@ struct LifecycleModifiers: ViewModifier {
                 // Load search titles only setting (default: true)
                 searchTitlesOnly = userDefaults.bool(forKey: "searchTitlesOnly") != false  // Default to true if not set
 
-                // Load product type filter setting (default: "glass")
-                selectedProductType = userDefaults.string(forKey: "selectedProductType") ?? "glass"
+                // Product types: empty set = show all (new behavior, no need to persist)
 
                 // Initialize sort option from user settings
                 sortOption = SortOption(rawValue: defaultSortOptionRawValue) ?? .name
             }
             .task {
                 // MIGRATION: Load data from ViewModel
-                print("📱 CatalogView: .task starting")
                 let taskStart = CFAbsoluteTimeGetCurrent()
 
                 await viewModel.loadData()
 
                 let dataLoadTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
-                print("⏱️  CatalogView: Data load completed in \(String(format: "%.1f", dataLoadTime))ms")
-                print("✅ CatalogView: Loaded \(viewModel.sortedFilteredItems.count) items")
-
                 let totalTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
-                print("✅ CatalogView: .task completed in \(String(format: "%.1f", totalTime))ms")
             }
     }
 }

@@ -15,7 +15,7 @@ struct ShoppingListView: View {
     // UI-only state (not in ViewModel)
     @State private var showingAllTags = false
     @State private var showingCOESelection = false
-    @State private var selectedProductType = "glass"  // Not used in shopping list, but required by SearchAndFilterHeader
+    @State private var selectedProductTypes: Set<String> = []  // Not used in shopping list, but required by SearchAndFilterHeader
     @State private var showingProductTypeSelection = false
     @State private var showingManufacturerSelection = false
     @State private var showingStoreSelection = false
@@ -293,8 +293,9 @@ struct ShoppingListView: View {
                     selectedCOEs: $viewModel.selectedCOEs,
                     showingCOESelection: $showingCOESelection,
                     allAvailableCOEs: allAvailableCOEs,
-                    selectedProductType: $selectedProductType,
+                    selectedProductTypes: $selectedProductTypes,
                     showingProductTypeSelection: $showingProductTypeSelection,
+                    allAvailableProductTypes: ["glass", "coating", "tool"],
                     selectedManufacturers: $viewModel.selectedManufacturers,
                     showingManufacturerSelection: $showingManufacturerSelection,
                     allAvailableManufacturers: allAvailableManufacturers,
@@ -328,7 +329,7 @@ struct ShoppingListView: View {
                     if shouldShowSearchEmptyState {
                         searchEmptyStateView
                     } else {
-                        emptyStateView
+                        standardizedEmptyStateView
                     }
                 } else {
                     shoppingListContent
@@ -524,23 +525,42 @@ struct ShoppingListView: View {
         .padding()
     }
 
+    private var standardizedEmptyStateView: some View {
+        CustomEmptyStateView(
+            icon: "cart",
+            title: "No items on your shopping list yet",
+            description: "Set minimum quantities in the catalog to automatically generate shopping lists",
+            actionButton: .init(
+                title: "Add to Shopping List",
+                action: { showingAddItem = true },
+                style: .prominent
+            )
+        )
+    }
+
     private var searchEmptyStateView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 40))
-                .foregroundColor(.secondary)
-
-            Text("No Results")
-                .font(.title2)
-                .fontWeight(.bold)
-
-            Text("No items match your search or filter criteria")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
+        var activeFilters: [String] = []
+        if !viewModel.selectedTags.isEmpty {
+            activeFilters.append("\(viewModel.selectedTags.count) tag\(viewModel.selectedTags.count == 1 ? "" : "s")")
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        if !viewModel.selectedCOEs.isEmpty {
+            activeFilters.append("COE \(viewModel.selectedCOEs.map { String($0) }.joined(separator: ", "))")
+        }
+        if !viewModel.selectedManufacturers.isEmpty {
+            activeFilters.append("\(viewModel.selectedManufacturers.count) manufacturer\(viewModel.selectedManufacturers.count == 1 ? "" : "s")")
+        }
+        if let store = viewModel.selectedStore {
+            activeFilters.append("store '\(store)'")
+        }
+
+        return CustomEmptyStateView.searchResults(
+            searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
+            filters: activeFilters,
+            onClearFilters: {
+                viewModel.searchText = ""
+                viewModel.clearFilters()
+            }
+        )
     }
 
     private var shoppingListContent: some View {

@@ -52,7 +52,7 @@ struct ServicesCapability: Codable, Hashable, Sendable, Identifiable {
 }
 
 /// Unified location model with capability-based architecture
-struct UnifiedLocationModel: Codable, Identifiable, Equatable, Hashable, Sendable {
+struct UnifiedLocationModel: @preconcurrency LocationModel, Codable {
     let stable_id: String
     let name: String
     let addressLine1: String?
@@ -332,6 +332,63 @@ struct UnifiedLocationModel: Codable, Identifiable, Equatable, Hashable, Sendabl
     /// Check if location has enough info to be useful
     nonisolated var hasMinimumInfo: Bool {
         return isValid && (hasAnyAddress || hasValidLocation || websiteUrl != nil)
+    }
+}
+
+// MARK: - LocationModel Conformance
+
+extension UnifiedLocationModel {
+    /// Check if location sells casting glass
+    nonisolated var supportsCasting: Bool {
+        sells(.casting) || teaches(.casting)
+    }
+
+    /// Check if location sells hard glass flameworking supplies
+    nonisolated var supportsFlameworkingHard: Bool {
+        sells(.flameworkinghard) || teaches(.flameworkinghard)
+    }
+
+    /// Check if location sells soft glass flameworking supplies
+    nonisolated var supportsFlameworkingSoft: Bool {
+        sells(.flameworkingsoft) || teaches(.flameworkingsoft)
+    }
+
+    /// Check if location sells fusing glass
+    nonisolated var supportsFusing: Bool {
+        sells(.fusing) || teaches(.fusing)
+    }
+
+    /// Check if location sells glass blowing supplies
+    nonisolated var supportsGlassBlowing: Bool {
+        sells(.glassBlowing) || teaches(.glassBlowing)
+    }
+
+    /// Check if location sells stained glass supplies
+    nonisolated var supportsStainedGlass: Bool {
+        sells(.stainedGlass) || teaches(.stainedGlass)
+    }
+
+    /// Check if location sells other glass supplies
+    nonisolated var supportsOther: Bool {
+        sells(.other) || teaches(.other)
+    }
+
+    /// Get array of supported techniques (combination of retail and education)
+    nonisolated var techniques: [TechniqueType] {
+        let allTechniques = Set(retailTechniques + educationTechniques)
+        return Array(allTechniques).sorted { $0.displayName < $1.displayName }
+    }
+
+    /// Formatted list of technique names for display
+    nonisolated var techniquesDisplay: String {
+        let supportedTechniques = techniques
+        guard !supportedTechniques.isEmpty else { return "No techniques listed" }
+        return supportedTechniques.map { $0.displayName }.joined(separator: ", ")
+    }
+
+    /// Check if location supports a specific technique (either retail or education)
+    nonisolated func supportsTechnique(_ technique: TechniqueType) -> Bool {
+        return sells(technique) || teaches(technique)
     }
 }
 

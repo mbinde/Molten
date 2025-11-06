@@ -32,7 +32,9 @@ struct MultiUserScenarioTests {
         let itemTagsRepo = MockItemTagsRepository()
         let userTagsRepo = MockUserTagsRepository()
         let itemMinimumRepo = MockItemMinimumRepository()
-        
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
+
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
             inventoryRepository: inventoryRepo,
@@ -51,6 +53,8 @@ struct MultiUserScenarioTests {
         
         let catalogService = CatalogService(
             glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
             itemTagsRepository: itemTagsRepo,

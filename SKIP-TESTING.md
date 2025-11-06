@@ -57,6 +57,23 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `StoreAutoCompleteField.swift` - SwiftUI view component
 - `KilnSegmentInput.swift` - SwiftUI view component
 
+**Batch 4:**
+- `AddRecipeView.swift` - SwiftUI view
+- `SuccessToast.swift` - SwiftUI view component
+- `UserNotesEditor.swift` - SwiftUI view
+- `ConsolidatedInventoryDetailView.swift` - SwiftUI view
+- `EditReferenceURLView.swift` - SwiftUI view
+- `KilnScheduleDetailView.swift` - SwiftUI view
+- `QuantityInputField.swift` - SwiftUI view component
+- `AuthorSettingsView.swift` - SwiftUI view
+- `GlassItemCard.swift` - SwiftUI view component
+- `ConfirmationDialog.swift` - SwiftUI view component
+- `AddShoppingListItemView.swift` - SwiftUI view
+- `PurchasesView.swift` - SwiftUI view
+- `KilnSchedulePickerListView.swift` - SwiftUI view
+- `StoreMapView.swift` - SwiftUI view with MapKit integration
+- `AnyLocationModel.swift` - Type-erased wrapper (no testable logic, just forwarding)
+
 ### Configuration & Settings (Static configuration, no logic to test)
 - `DebugConfig.swift` - Static configuration flags and AppStorage properties (requires UI/integration testing)
 
@@ -69,6 +86,10 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `CoreDataLocationRepository.swift` - Core Data implementation (belongs in RepositoryTests)
 - `CoreDataUserTagsRepository.swift` - Core Data implementation (belongs in RepositoryTests)
 - `CoreDataCatalogRepository.swift` - Core Data implementation (belongs in RepositoryTests)
+- `CoreDataUserImageRepository.swift` - Core Data implementation (belongs in RepositoryTests)
+- `CoreDataInventoryRepository.swift` - Core Data implementation (belongs in RepositoryTests)
+- `CoreDataProjectImageRepository.swift` - Core Data implementation (belongs in RepositoryTests)
+- `CatalogItemRepository.swift` - Protocol or Core Data repository (belongs in RepositoryTests)
 
 ### Example/Tool Files (Not production code)
 - `GlassItemDataLoadingExample.swift` - Development/debugging tool
@@ -84,11 +105,14 @@ This document tracks files that were identified as 0% coverage but are not appro
 ### ViewModels (Likely require protocol/integration tests)
 - `StoreListViewModel.swift` - SwiftUI ViewModel (probably has @Published properties)
 - `PurchasesViewModel.swift` - SwiftUI ViewModel (probably has @Published properties)
+- `AddLogbookEntryViewModel.swift` - SwiftUI ViewModel (probably has @Published properties)
 
 ### Services (Require integration/repository tests)
 - `KilnScheduleExportService.swift` - File export service (requires file I/O mocking)
 - `RecipeService.swift` - Service layer (requires repository mocks, belongs in integration tests)
 - `CoreDataMigrationService.swift` - Migration service (requires Core Data context)
+- `GlassItemDataLoadingService.swift` - Data loading service (requires repository mocks, belongs in integration tests)
+- `ProjectPDFService.swift` - PDF generation service (requires file I/O mocking)
 
 ### Model Classes (Need to check if they have testable logic)
 - `UserNotesModel.swift` - May have validation logic (TODO: investigate)
@@ -97,6 +121,8 @@ This document tracks files that were identified as 0% coverage but are not appro
 
 ### Mock/Test Infrastructure
 - `MockJSONDataLoader.swift` - Test helper (not production code)
+- `MockProjectImageRepository.swift` - Mock for testing (not production code)
+- `StoreToShoppingListNavigationTests.swift` - Already a test file (not source code)
 
 ### Error Enums (Tested)
 - `KilnScheduleRepositoryErrors.swift` - ✅ **Tests Created**: KilnScheduleRepositoryErrorsTests.swift
@@ -113,6 +139,10 @@ This document tracks files that were identified as 0% coverage but are not appro
 
 ### Utilities (Tested)
 - `TagColorMapping.swift` - ✅ **Tests Created**: TagColorMappingTests.swift
+
+### Domain Models (Tested)
+- `UnifiedLocationModel.swift` - ✅ **Tests Created**: UnifiedLocationModelTests.swift (130+ tests for location model, capabilities, address formatting, distance calculations)
+- `AuthorModel.swift` - ✅ **Tests Created**: AuthorModelTests.swift (30+ tests for author attribution model)
 
 ### ViewModels with Protocols (Should have protocol tests)
 - `InventoryViewModelProtocol.swift` - Protocol-based ViewModel pattern (create mock tests)
@@ -137,10 +167,15 @@ This document tracks files that were identified as 0% coverage but are not appro
 - Tests created: 1 (ProjectRepositoryErrors)
 - Skipped: 25 (SwiftUI views, ViewModels, Core Data infrastructure, mocks)
 
+**Batch 4 (Fourth Review):**
+- Total files reviewed: 25
+- Tests created: 2 (UnifiedLocationModel with 130+ tests, AuthorModel with 30+ tests)
+- Skipped: 23 (SwiftUI views, Core Data repositories, services, ViewModels, mocks, type-erased wrapper)
+
 **Grand Total:**
-- Total files reviewed: 75
-- Tests created: 6
-- Skipped: 69
+- Total files reviewed: 100
+- Tests created: 8
+- Skipped: 92
 
 ## Future Considerations
 

@@ -223,11 +223,21 @@ struct RecipeDetailView: View {
     let recipe: RecipeModel
     let recipeService: RecipeService
 
+    private let catalogService: CatalogService
+
+    @State private var availableGlassItems: [CompleteInventoryItemModel] = []
+    @State private var isLoadingGlassItems = false
+
+    init(recipe: RecipeModel, recipeService: RecipeService, catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
+        self.recipe = recipe
+        self.recipeService = recipeService
+        self.catalogService = catalogService
+    }
+
     var body: some View {
         List {
             Section("Details") {
                 LabeledContent("Title", value: recipe.title)
-                LabeledContent("Measurement Type", value: recipe.measurementType.displayName)
 
                 if !recipe.descriptionText.isEmpty {
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
@@ -242,11 +252,38 @@ struct RecipeDetailView: View {
             if !recipe.ingredients.isEmpty {
                 Section("Ingredients") {
                     ForEach(recipe.ingredients) { ingredient in
-                        HStack {
-                            Text(ingredient.stableId)
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            // Thumbnail
+                            if let item = availableGlassItems.first(where: { $0.glassItem.stable_id == ingredient.stableId }) {
+                                AsyncImage(url: URL(string: item.glassItem.image_url ?? "")) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                } placeholder: {
+                                    Rectangle()
+                                        .fill(Color.gray.opacity(0.2))
+                                }
+                                .frame(width: 40, height: 40)
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                                Text(item.glassItem.name)
+                                    .font(.body)
+                            } else {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.2))
+                                    .frame(width: 40, height: 40)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                                Text(ingredient.stableId)
+                                    .font(.body)
+                            }
+
                             Spacer()
-                            Text("\(ingredient.amount, specifier: "%.2f")")
-                                .foregroundStyle(.secondary)
+
+                            if ingredient.amount > 0 {
+                                Text("\(ingredient.amount, specifier: "%.2f")")
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
@@ -259,6 +296,19 @@ struct RecipeDetailView: View {
         }
         .navigationTitle(recipe.title)
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await loadGlassItems()
+        }
+    }
+
+    private func loadGlassItems() async {
+        isLoadingGlassItems = true
+        do {
+            availableGlassItems = try await catalogService.getAllGlassItems()
+        } catch {
+            // Silently fail - just won't show thumbnails
+        }
+        isLoadingGlassItems = false
     }
 }
 

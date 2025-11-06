@@ -16,8 +16,12 @@ actor CatalogService {
 
     // MARK: - Dependencies
 
-    // New GlassItem system dependencies
+    // Catalog item repositories
     private let glassItemRepository: GlassItemRepository
+    private let coatingItemRepository: CoatingItemRepository
+    private let toolItemRepository: ToolItemRepository
+
+    // Supporting services
     private let inventoryTrackingService: InventoryTrackingService
     private let shoppingListService: ShoppingListService
     private let itemTagsRepository: ItemTagsRepository
@@ -25,15 +29,19 @@ actor CatalogService {
 
     // MARK: - Initialization
 
-    /// Initialize with new GlassItem system
+    /// Initialize with all catalog repositories
     init(
         glassItemRepository: GlassItemRepository,
+        coatingItemRepository: CoatingItemRepository,
+        toolItemRepository: ToolItemRepository,
         inventoryTrackingService: InventoryTrackingService,
         shoppingListService: ShoppingListService,
         itemTagsRepository: ItemTagsRepository,
         userTagsRepository: UserTagsRepository
     ) {
         self.glassItemRepository = glassItemRepository
+        self.coatingItemRepository = coatingItemRepository
+        self.toolItemRepository = toolItemRepository
         self.inventoryTrackingService = inventoryTrackingService
         self.shoppingListService = shoppingListService
         self.itemTagsRepository = itemTagsRepository
@@ -75,25 +83,35 @@ actor CatalogService {
         }
     }
 
-    /// Get all glass items with complete information and flexible sorting
+    /// Get all catalog items (glass, coatings, and tools) with complete information and flexible sorting
     func getAllGlassItems(
         sortBy: GlassItemSortOption = .name,
         includeWithoutInventory: Bool = true
     ) async throws -> [CompleteInventoryItemModel] {
-        print("🚨 CatalogService.getAllGlassItems: CALLED")
+        print("🚨 CatalogService.getAllGlassItems: CALLED (loading all product types)")
         let trackingService = inventoryTrackingService
 
-        // Get all glass items
-        let glassItems = try await glassItemRepository.fetchItems(matching: nil)
-        print("🚨 CatalogService.getAllGlassItems: Repository returned \(glassItems.count) glass items")
+        // Get all three types of catalog items in parallel
+        async let glassItemsTask = glassItemRepository.fetchItems(matching: nil)
+        async let coatingItemsTask = coatingItemRepository.fetchItems(matching: nil)
+        async let toolItemsTask = toolItemRepository.fetchItems(matching: nil)
+
+        let (glassItems, coatingItems, toolItems) = try await (glassItemsTask, coatingItemsTask, toolItemsTask)
+        print("🚨 CatalogService.getAllGlassItems: Loaded \(glassItems.count) glass, \(coatingItems.count) coatings, \(toolItems.count) tools")
+
+        // Convert all items to UnifiedCatalogItem
+        var allCatalogItems: [UnifiedCatalogItem] = []
+        allCatalogItems += glassItems.map { UnifiedCatalogItem(glassItem: $0) }
+        allCatalogItems += coatingItems.map { UnifiedCatalogItem(coatingItem: $0) }
+        allCatalogItems += toolItems.map { UnifiedCatalogItem(toolItem: $0) }
 
         // Filter by inventory if requested
-        let filteredItems: [GlassItemModel]
+        let filteredItems: [UnifiedCatalogItem]
         if includeWithoutInventory {
-            filteredItems = glassItems
+            filteredItems = allCatalogItems
         } else {
             let itemsWithInventory = Set(try await trackingService.inventoryRepository.getItemsWithInventory())
-            filteredItems = glassItems.filter { itemsWithInventory.contains($0.stable_id) }
+            filteredItems = allCatalogItems.filter { itemsWithInventory.contains($0.stable_id) }
         }
 
         // OPTIMIZED: Batch fetch inventory for all items instead of individual calls
@@ -109,13 +127,13 @@ actor CatalogService {
 
         // Convert to complete models using batch-fetched data
         var completeItems: [CompleteInventoryItemModel] = []
-        for glassItem in filteredItems {
-            let inventory = inventoryByItem[glassItem.stable_id] ?? []
-            let tags = tagsByItem[glassItem.stable_id] ?? []
-            let userTags = userTagsByItem[glassItem.stable_id] ?? []
+        for catalogItem in filteredItems {
+            let inventory = inventoryByItem[catalogItem.stable_id] ?? []
+            let tags = tagsByItem[catalogItem.stable_id] ?? []
+            let userTags = userTagsByItem[catalogItem.stable_id] ?? []
 
             let completeItem = CompleteInventoryItemModel(
-                glassItem: glassItem,
+                catalogItem: catalogItem,
                 inventory: inventory,
                 tags: tags,
                 userTags: userTags

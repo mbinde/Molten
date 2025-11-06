@@ -53,9 +53,14 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepo
         )
+        
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
 
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryService,
             shoppingListService: shoppingService,
             itemTagsRepository: repos.itemTags,

@@ -91,6 +91,8 @@ struct DiagnosticTests: MockOnlyTestSuite {
         
         // Create services with TestConfiguration repositories
         let userTagsRepo = MockUserTagsRepository()
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
 
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
@@ -110,6 +112,8 @@ struct DiagnosticTests: MockOnlyTestSuite {
 
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
             itemTagsRepository: repos.itemTags,

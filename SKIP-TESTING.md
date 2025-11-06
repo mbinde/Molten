@@ -139,6 +139,21 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `PurchaseRecordModel.swift` - Model (may have validation logic - TODO: investigate)
 - `UserSettings.swift` - UserDefaults wrapper (requires integration tests)
 
+**Batch 9:**
+- `CatalogView.swift` - SwiftUI view
+- `CatalogViewModel.swift` - ViewModel (tested via integration/UI tests)
+- `CatalogItemHelpers.swift` - Helper utilities (some pure functions mixed with integration code)
+- `SearchAndFilterHeader.swift` - SwiftUI view component
+- `ImageTextExtractor.swift` - Image processing utility (requires ML/Vision framework integration tests)
+- `COEGlassSettingsHelpers.swift` - Settings helper (UserDefaults wrapper)
+- `ViewUtilities.swift` - SwiftUI view utilities (tested via integration)
+- `DesignSystem.swift` - Design constants (static values, no testable logic)
+- `ItemMinimumRepository.swift` - Repository protocol
+- `GlassManufacturers.swift` - Complex utility with static data (contains testable pure functions but also SwiftUI Color dependencies)
+- `SubscriptionManager.swift` - Subscription service (requires StoreKit integration tests)
+- `SearchUtilities.swift` - Complex search utility (contains testable algorithms but also protocol extensions)
+- `GlassItemTypeSystem.swift` - Type system with @MainActor methods (contains testable pure functions)
+
 ### Configuration & Settings
 - `DebugConfig.swift` - Static configuration flags and AppStorage properties (requires UI/integration testing)
 - `SubscriptionConfig.swift` - ✅ **Tests Created**: SubscriptionConfigTests.swift (80+ tests for SubscriptionTier enum, tier limits, feature flags)
@@ -212,12 +227,19 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `UnifiedLocationService.swift` - Service layer (requires repository mocks, belongs in integration tests) - Batch 8
 - `ToolItemDataLoadingService.swift` - Data loading service (requires repository mocks) - Batch 8
 - `EntitlementService.swift` - Service layer (requires integration tests) - Batch 8
+- `CatalogService.swift` - Service layer (36.7% coverage, requires repository mocks) - Batch 9
+- `ShoppingListService.swift` - Service layer (45.6% coverage, requires repository mocks) - Batch 9
+- `DataLoadingService.swift` - Data loading service (46.9% coverage, requires repository mocks) - Batch 9
+- `KilnScheduleService.swift` - Service layer (53.1% coverage, requires repository mocks) - Batch 9
 
 ### Model Classes (Need to check if they have testable logic)
 - `UserNotesModel.swift` - May have validation logic (TODO: investigate)
 - `RecipeModel.swift` - May have validation logic (TODO: investigate)
 - `StoreDataModels.swift` - May have validation logic (TODO: investigate)
 - `PurchaseRecordModel.swift` - May have validation logic (TODO: investigate) - Batch 8
+- `SharedModels.swift` - Core domain models (contains testable logic but mixed with complex service models) - Batch 9
+- `KilnScheduleModels.swift` - Domain models (46.2% coverage, may have testable validation) - Batch 9
+- `CatalogDataModels.swift` - Data models (55.1% coverage, likely just data containers) - Batch 9
 
 ### App Infrastructure
 - `MoltenApp.swift` - App entry point (not testable via unit tests) - Batch 8
@@ -234,6 +256,9 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `MockItemMinimumRepository.swift` - Mock for testing (not production code) - Batch 8
 - `MockCatalogRepository.swift` - Mock for testing (not production code) - Batch 8
 - `MockToolItemRepository.swift` - Mock for testing (not production code) - Batch 8
+- `MockItemTagsRepository.swift` - Mock for testing (not production code) - Batch 9
+- `MockLocationRepository.swift` - Mock for testing (not production code) - Batch 9
+- `MockInventoryRepository.swift` - Mock for testing (not production code) - Batch 9
 
 ### Error Enums (Tested)
 - `KilnScheduleRepositoryErrors.swift` - ✅ **Tests Created**: KilnScheduleRepositoryErrorsTests.swift
@@ -260,6 +285,8 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `CatalogSortOption.swift` (SortOption enum) - ✅ **Tests Created**: CatalogSortOptionTests.swift (50+ tests for sorting logic, keypaths, icon names, architecture bridge)
 - `DefaultUnits.swift` - ✅ **Tests Created**: DefaultUnitsTests.swift (40+ tests for unit enum with display names, symbols, system images)
 - `CatalogUnits.swift` - ✅ **Tests Created**: CatalogUnitsTests.swift (60+ tests for catalog unit enum with display names, full names, weight unit checking)
+- `WeightUnit.swift` - ✅ **Tests Created**: WeightUnitTests.swift (70+ tests for weight enum with conversion logic, display names, symbols)
+- `DefaultTab.swift` - ✅ **Tests Created**: DefaultTabTests.swift (60+ tests for tab enum and ProjectViewType with display names, icons)
 
 ### Model Helpers (Tested)
 - `CatalogCodeLookup.swift` - ✅ **Tests Created**: CatalogCodeLookupTests.swift (40+ tests for natural key generation, hash distribution, edge cases)
@@ -316,10 +343,15 @@ This document tracks files that were identified as 0% coverage but are not appro
 - Tests created: 3 (SimpleErrorHandling with 60+ tests, SubscriptionConfig with 80+ tests, CatalogUnits with 60+ tests)
 - Skipped: 22 (10 SwiftUI views, 5 ViewModels, 4 Mock repositories, 2 Services, 1 Protocol)
 
+**Batch 9 (Ninth Review):**
+- Total files reviewed: 25
+- Tests created: 2 (WeightUnit with 70+ tests, DefaultTab with 60+ tests)
+- Skipped: 23 (13 SwiftUI views, 2 Services, 2 ViewModels, 5 Complex utilities requiring integration tests, 1 Mock repository)
+
 **Grand Total:**
-- Total files reviewed: 200
-- Tests created: 16
-- Skipped: 184
+- Total files reviewed: 225
+- Tests created: 18
+- Skipped: 207
 
 ## Future Considerations
 

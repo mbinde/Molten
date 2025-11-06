@@ -223,9 +223,6 @@ struct InventoryDetailView: View {
                 item: currentItem,
                 inventoryType: selection.type
             )
-            .onAppear {
-                print("🔍 Sheet: Showing LocationDetailView for type: \(selection.type)")
-            }
             .onDisappear {
                 // Refresh item data after location details might have changed
                 refreshItemData()
@@ -683,9 +680,7 @@ struct InventoryDetailView: View {
                             quantity: quantity,
                             inventoryRecords: typeInventory,
                             onTap: {
-                                print("🔍 Type row tapped: \(type)")
                                 selectedInventoryType = InventoryTypeSelection(type: type)
-                                print("🔍 Set selectedInventoryType to: \(selectedInventoryType?.type ?? "nil")")
                             }
                         )
                     }
@@ -1360,10 +1355,6 @@ struct InventoryStorageDetailView: View {
                         Image(systemName: "ellipsis.circle")
                     }
                 }
-            }
-            .onAppear {
-                print("🔍 LocationDetailView onAppear - item: \(item.glassItem.name)")
-                print("🔍 Total inventory records: \(item.inventory.count)")
             }
             .sheet(item: $editingRecord) { record in
                 InventoryEditView(

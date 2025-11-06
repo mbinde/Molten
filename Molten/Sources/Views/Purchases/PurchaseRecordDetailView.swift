@@ -91,20 +91,24 @@ struct PurchaseRecordDetailView: View {
                     HStack {
                         Text("Items")
                             .font(.headline)
-                        
+
                         Spacer()
-                        
+
                         Button("Add Item") {
                             showingAddItem = true
                         }
                         .font(.caption)
                         .buttonStyle(.bordered)
                     }
-                    
-                    Text("No items added yet")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .italic()
+
+                    CustomEmptyStateView(
+                        icon: "cart",
+                        iconSize: 40,
+                        title: "No Items Added",
+                        description: "Add items to track what you purchased"
+                    )
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 150)
                 }
                 .padding()
                 .background(Color.gray.opacity(0.05))

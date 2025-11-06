@@ -56,8 +56,10 @@ struct ServiceValidationTests {
         let glassItem = GlassItemModel(
             stable_id: "test-001",
             name: "Clear Glass",
+            sku: "001",
             manufacturer: "Bullseye",
-            coe: 90
+            coe: 90,
+            mfr_status: "available"
         )
 
         let result = ServiceValidation.validateGlassItem(glassItem)
@@ -71,8 +73,10 @@ struct ServiceValidationTests {
         let glassItem = GlassItemModel(
             stable_id: "test-001",
             name: "",
+            sku: "001",
             manufacturer: "Bullseye",
-            coe: 90
+            coe: 90,
+            mfr_status: "available"
         )
 
         let result = ServiceValidation.validateGlassItem(glassItem)
@@ -86,8 +90,10 @@ struct ServiceValidationTests {
         let glassItem = GlassItemModel(
             stable_id: "test-001",
             name: "   \n  ",
+            sku: "001",
             manufacturer: "Bullseye",
-            coe: 90
+            coe: 90,
+            mfr_status: "available"
         )
 
         let result = ServiceValidation.validateGlassItem(glassItem)
@@ -101,8 +107,10 @@ struct ServiceValidationTests {
         let glassItem = GlassItemModel(
             stable_id: "",
             name: "Clear Glass",
+            sku: "TEST-SKU",
             manufacturer: "Bullseye",
-            coe: 90
+            coe: 90,
+            mfr_status: "available"
         )
 
         let result = ServiceValidation.validateGlassItem(glassItem)
@@ -116,8 +124,10 @@ struct ServiceValidationTests {
         let glassItem = GlassItemModel(
             stable_id: "test-001",
             name: "Clear Glass",
+            sku: "001",
             manufacturer: "",
-            coe: 90
+            coe: 90,
+            mfr_status: "available"
         )
 
         let result = ServiceValidation.validateGlassItem(glassItem)
@@ -131,8 +141,10 @@ struct ServiceValidationTests {
         let glassItem = GlassItemModel(
             stable_id: "test-001",
             name: "Clear Glass",
+            sku: "001",
             manufacturer: "Bullseye",
-            coe: 79
+            coe: 79,
+            mfr_status: "available"
         )
 
         let result = ServiceValidation.validateGlassItem(glassItem)
@@ -146,8 +158,10 @@ struct ServiceValidationTests {
         let glassItem = GlassItemModel(
             stable_id: "test-001",
             name: "Clear Glass",
+            sku: "001",
             manufacturer: "Bullseye",
-            coe: 121
+            coe: 121,
+            mfr_status: "available"
         )
 
         let result = ServiceValidation.validateGlassItem(glassItem)
@@ -161,8 +175,10 @@ struct ServiceValidationTests {
         let glassItem = GlassItemModel(
             stable_id: "test-001",
             name: "Clear Glass",
+            sku: "001",
             manufacturer: "Bullseye",
-            coe: 80
+            coe: 80,
+            mfr_status: "available"
         )
 
         let result = ServiceValidation.validateGlassItem(glassItem)
@@ -175,8 +191,10 @@ struct ServiceValidationTests {
         let glassItem = GlassItemModel(
             stable_id: "test-001",
             name: "Clear Glass",
+            sku: "001",
             manufacturer: "Bullseye",
-            coe: 120
+            coe: 120,
+            mfr_status: "available"
         )
 
         let result = ServiceValidation.validateGlassItem(glassItem)
@@ -189,8 +207,10 @@ struct ServiceValidationTests {
         let glassItem = GlassItemModel(
             stable_id: "",
             name: "",
+            sku: "TEST-SKU",
             manufacturer: "",
-            coe: 50
+            coe: 50,
+            mfr_status: "available"
         )
 
         let result = ServiceValidation.validateGlassItem(glassItem)
@@ -277,8 +297,10 @@ struct ServiceValidationTests {
         let glassItem = GlassItemModel(
             stable_id: "test-001",
             name: "Clear Glass",
+            sku: "001",
             manufacturer: "Bullseye",
-            coe: 90
+            coe: 90,
+            mfr_status: "available"
         )
 
         let inventory1 = InventoryModel(
@@ -310,8 +332,10 @@ struct ServiceValidationTests {
         let glassItem = GlassItemModel(
             stable_id: "",
             name: "",
+            sku: "TEST-SKU",
             manufacturer: "Bullseye",
-            coe: 90
+            coe: 90,
+            mfr_status: "available"
         )
 
         let inventory = InventoryModel(
@@ -337,8 +361,10 @@ struct ServiceValidationTests {
         let glassItem = GlassItemModel(
             stable_id: "test-001",
             name: "Clear Glass",
+            sku: "001",
             manufacturer: "Bullseye",
-            coe: 90
+            coe: 90,
+            mfr_status: "available"
         )
 
         let inventory = InventoryModel(
@@ -364,8 +390,10 @@ struct ServiceValidationTests {
         let glassItem = GlassItemModel(
             stable_id: "test-001",
             name: "Clear Glass",
+            sku: "001",
             manufacturer: "Bullseye",
-            coe: 90
+            coe: 90,
+            mfr_status: "available"
         )
 
         let completeItem = CompleteInventoryItemModel(

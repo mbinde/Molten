@@ -118,6 +118,18 @@ struct LocationDetailView: View {
                         .frame(height: 200)
                         .cornerRadius(DesignSystem.CornerRadius.medium)
                         .padding(.horizontal, DesignSystem.Padding.standard)
+
+                        // Get Directions button
+                        Button(action: openDirections) {
+                            Label("Get Directions", systemImage: "arrow.triangle.turn.up.right.circle.fill")
+                                .font(.headline)
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(DesignSystem.Colors.accentSecondary)
+                                .cornerRadius(DesignSystem.CornerRadius.large)
+                        }
+                        .padding(.horizontal, DesignSystem.Padding.standard)
                     }
                 }
 
@@ -139,6 +151,22 @@ struct LocationDetailView: View {
         }
         .navigationTitle(location.type.singularName)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: - Actions
+
+    private func openDirections() {
+        guard location.hasValidLocation else { return }
+
+        let coordinate = location.coordinate
+        let placemark = MKPlacemark(coordinate: coordinate)
+        let mapItem = MKMapItem(placemark: placemark)
+        mapItem.name = location.name
+
+        // Open in Apple Maps with directions
+        mapItem.openInMaps(launchOptions: [
+            MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving
+        ])
     }
 
     // MARK: - Subviews

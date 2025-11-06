@@ -111,6 +111,22 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `MoreTabView.swift` - SwiftUI view
 - `LocationPickerSheet.swift` - SwiftUI view component
 
+**Batch 7:**
+- `UnifiedButtonComponents.swift` - SwiftUI button components
+- `LabelPreviewView.swift` - SwiftUI view
+- `KilnSchedulePickerView.swift` - SwiftUI view component
+- `AppLaunchView.swift` - SwiftUI view
+- `SearchStoresView.swift` - SwiftUI view
+- `DemoDataGenerator.swift` - Development/debugging tool (demo data generation)
+- `AddReferenceURLView.swift` - SwiftUI view
+- `ImportInventoryTriggerView.swift` - SwiftUI view
+- `ShareSheet.swift` - SwiftUI view (UIKit bridge)
+- `AddKilnScheduleView.swift` - SwiftUI view
+- `DataExportView.swift` - SwiftUI view
+- `SettingsView.swift` - SwiftUI view (0.5% coverage, mostly UI)
+- `ImagePickerView.swift` - SwiftUI view (UIKit bridge)
+- `LocationFilterPreferences.swift` - UserDefaults wrapper (requires integration tests)
+
 ### Configuration & Settings (Static configuration, no logic to test)
 - `DebugConfig.swift` - Static configuration flags and AppStorage properties (requires UI/integration testing)
 
@@ -138,6 +154,9 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `CoreDataToolItemRepository.swift` - Core Data implementation (belongs in RepositoryTests)
 - `CoreDataCoatingItemRepository.swift` - Core Data implementation (belongs in RepositoryTests)
 - `CoreDataGlassItemRepository.swift` - Core Data implementation (belongs in RepositoryTests)
+- `CoreDataUserNotesRepository.swift` - Core Data implementation (belongs in RepositoryTests)
+- `CoreDataUnifiedLocationRepository.swift` - Core Data implementation (belongs in RepositoryTests)
+- `CoreDataLogbookRepository.swift` - Core Data implementation (belongs in RepositoryTests)
 
 ### Example/Tool Files (Not production code)
 - `GlassItemDataLoadingExample.swift` - Development/debugging tool
@@ -151,12 +170,20 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `DesignSystem+Accessibility.swift` - Static accessibility identifiers (UI tests verify these work)
 - `CatalogSearchCache.swift` - @MainActor singleton cache with async methods (requires integration tests with mock CatalogService)
 - `CatalogViewHelpers.swift` - View filtering utilities with external dependencies (FilterUtilities, DebugConfig)
+- `CoreDataRecoveryUtility.swift` - Core Data recovery utility (requires Core Data context, belongs in RepositoryTests)
+- `CoreDataHelpers.swift` - Core Data helper utilities (requires Core Data context)
+- `CoreDataVersionInfo.swift` - Core Data version information (infrastructure, minimal logic)
+- `Logger+Categories.swift` - Logger extension with static category definitions (no testable logic)
+- `InventoryImportService.swift` - Import service (requires repository mocks, belongs in integration tests)
 
 ### ViewModels (Likely require protocol/integration tests)
 - `StoreListViewModel.swift` - SwiftUI ViewModel (probably has @Published properties)
 - `PurchasesViewModel.swift` - SwiftUI ViewModel (probably has @Published properties)
 - `AddLogbookEntryViewModel.swift` - SwiftUI ViewModel (probably has @Published properties)
 - `KilnSchedulesViewModel.swift` - SwiftUI ViewModel (probably has @Published properties)
+
+### ViewModel Protocols (Should have protocol tests)
+- `KilnSchedulesViewModelProtocol.swift` - ViewModel protocol (create mock tests if needed)
 
 ### Services (Require integration/repository tests)
 - `KilnScheduleExportService.swift` - File export service (requires file I/O mocking)
@@ -175,6 +202,7 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `MockProjectImageRepository.swift` - Mock for testing (not production code)
 - `StoreToShoppingListNavigationTests.swift` - Already a test file (not source code)
 - `MockRecipeRepository.swift` - Mock for testing (not production code)
+- `MockUserNotesRepository.swift` - Mock for testing (not production code)
 
 ### Error Enums (Tested)
 - `KilnScheduleRepositoryErrors.swift` - ✅ **Tests Created**: KilnScheduleRepositoryErrorsTests.swift
@@ -198,6 +226,8 @@ This document tracks files that were identified as 0% coverage but are not appro
 
 ### Domain Enums (Tested)
 - `LocationType.swift` - ✅ **Tests Created**: LocationTypeTests.swift (30+ tests for location type enum with display names, icons)
+- `CatalogSortOption.swift` (SortOption enum) - ✅ **Tests Created**: CatalogSortOptionTests.swift (50+ tests for sorting logic, keypaths, icon names, architecture bridge)
+- `DefaultUnits.swift` - ✅ **Tests Created**: DefaultUnitsTests.swift (40+ tests for unit enum with display names, symbols, system images)
 
 ### Model Helpers (Tested)
 - `CatalogCodeLookup.swift` - ✅ **Tests Created**: CatalogCodeLookupTests.swift (40+ tests for natural key generation, hash distribution, edge cases)
@@ -243,10 +273,15 @@ This document tracks files that were identified as 0% coverage but are not appro
 - Tests created: 0
 - Skipped: 25 (19 SwiftUI views, 3 Core Data repositories, 1 protocol, 1 @MainActor cache, 1 view helper with dependencies)
 
+**Batch 7 (Seventh Review):**
+- Total files reviewed: 25
+- Tests created: 2 (CatalogSortOption with 50+ tests, DefaultUnits with 40+ tests)
+- Skipped: 23 (13 SwiftUI views, 3 Core Data repositories, 1 ViewModel protocol, 1 service, 1 UserDefaults wrapper, 1 logger extension, 3 Core Data infrastructure files, 1 debug tool)
+
 **Grand Total:**
-- Total files reviewed: 150
-- Tests created: 11
-- Skipped: 139
+- Total files reviewed: 175
+- Tests created: 13
+- Skipped: 162
 
 ## Future Considerations
 

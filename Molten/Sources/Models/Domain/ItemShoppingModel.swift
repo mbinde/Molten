@@ -95,6 +95,17 @@ struct ItemShoppingModel: ItemQuantityModel, @unchecked Sendable {
     // Note: hasValidQuantity, formattedQuantity, isValid, and validationErrors
     // are provided by the ItemQuantityModel protocol's default implementations
 
+    // MARK: - Equatable/Hashable Conformance (Swift 6 requires nonisolated)
+
+    /// Equality comparison (nonisolated for protocol conformance)
+    nonisolated static func == (lhs: ItemShoppingModel, rhs: ItemShoppingModel) -> Bool {
+        return lhs.id == rhs.id
+    }
+
+    /// Hash implementation (nonisolated for protocol conformance)
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
 
 // MARK: - Helper Extensions

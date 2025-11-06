@@ -682,17 +682,12 @@ struct LifecycleModifiers: ViewModifier {
             }
             .task {
                 // MIGRATION: Load data from ViewModel
-                print("📱 CatalogView: .task starting")
                 let taskStart = CFAbsoluteTimeGetCurrent()
 
                 await viewModel.loadData()
 
                 let dataLoadTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
-                print("⏱️  CatalogView: Data load completed in \(String(format: "%.1f", dataLoadTime))ms")
-                print("✅ CatalogView: Loaded \(viewModel.sortedFilteredItems.count) items")
-
                 let totalTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
-                print("✅ CatalogView: .task completed in \(String(format: "%.1f", totalTime))ms")
             }
     }
 }

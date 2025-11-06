@@ -13,16 +13,16 @@ struct AddShoppingListItemView: View {
     let prefilledNaturalKey: String?
     let shoppingListService: ShoppingListService
     let catalogService: CatalogService
-    let storeRepository: StoreRepository
+    let locationService: UnifiedLocationService
 
     init(prefilledNaturalKey: String? = nil,
          shoppingListService: ShoppingListService,
          catalogService: CatalogService,
-         storeRepository: StoreRepository = RepositoryFactory.createStoreRepository()) {
+         locationService: UnifiedLocationService = RepositoryFactory.createUnifiedLocationService()) {
         self.prefilledNaturalKey = prefilledNaturalKey
         self.shoppingListService = shoppingListService
         self.catalogService = catalogService
-        self.storeRepository = storeRepository
+        self.locationService = locationService
     }
 
     var body: some View {
@@ -30,7 +30,7 @@ struct AddShoppingListItemView: View {
             prefilledNaturalKey: prefilledNaturalKey,
             shoppingListService: shoppingListService,
             catalogService: catalogService,
-            storeRepository: storeRepository
+            locationService: locationService
         )
     }
 }
@@ -42,7 +42,7 @@ struct AddShoppingListFormView: View {
     let prefilledNaturalKey: String?
     private let shoppingListService: ShoppingListService
     private let catalogService: CatalogService
-    private let storeRepository: StoreRepository
+    private let locationService: UnifiedLocationService
 
     @State private var stableId: String = ""
     @State private var selectedGlassItem: GlassItemModel?
@@ -64,11 +64,11 @@ struct AddShoppingListFormView: View {
     init(prefilledNaturalKey: String? = nil,
          shoppingListService: ShoppingListService,
          catalogService: CatalogService,
-         storeRepository: StoreRepository) {
+         locationService: UnifiedLocationService) {
         self.prefilledNaturalKey = prefilledNaturalKey
         self.shoppingListService = shoppingListService
         self.catalogService = catalogService
-        self.storeRepository = storeRepository
+        self.locationService = locationService
     }
 
     var body: some View {
@@ -146,7 +146,7 @@ struct AddShoppingListFormView: View {
             StoreAutoCompleteField(
                 store: $store,
                 shoppingListRepository: shoppingListService.shoppingListRepository,
-                storeRepository: storeRepository
+                locationService: locationService
             )
         }
     }
@@ -345,7 +345,7 @@ struct AddShoppingListFormView: View {
         AddShoppingListItemView(
             shoppingListService: RepositoryFactory.createShoppingListService(),
             catalogService: RepositoryFactory.createCatalogService(),
-            storeRepository: RepositoryFactory.createStoreRepository()
+            locationService: RepositoryFactory.createUnifiedLocationService()
         )
     }
 }

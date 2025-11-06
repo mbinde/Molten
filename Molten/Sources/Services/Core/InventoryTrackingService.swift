@@ -229,69 +229,44 @@ actor InventoryTrackingService {
         // 1. Search glass items by text - this should always work
         var candidateItems = try await glassItemRepository.searchItems(text: searchText)
         
-        print("🔍 SEARCH DEBUG: Initial search for '\(searchText)' found \(candidateItems.count) items")
-        for item in candidateItems {
-            print("  - '\(item.name)' (key: \(item.stable_id))")
-        }
-        
         // 2. Filter by tags if specified
         if !tags.isEmpty {
-            print("🔍 SEARCH DEBUG: Filtering by tags: \(tags)")
             let itemsWithTags = try await _itemTagsRepository.fetchItems(withAllTags: tags)
-            print("🔍 SEARCH DEBUG: Items with all required tags: \(itemsWithTags)")
             candidateItems = candidateItems.filter { item in
                 itemsWithTags.contains(item.stable_id)
             }
-            print("🔍 SEARCH DEBUG: After tag filtering: \(candidateItems.count) items")
         }
         
         // 3. Filter by inventory requirements if specified
         // FIXED: hasInventory: false now means "no filtering" for backward compatibility
         if let requiresInventory = hasInventory, requiresInventory == true {
-            print("🔍 SEARCH DEBUG: Filtering to only items WITH inventory")
             let itemsWithInventory = Set(try await self.inventoryRepository.getItemsWithInventory())
-            print("🔍 SEARCH DEBUG: Items with inventory: \(itemsWithInventory)")
             candidateItems = candidateItems.filter { item in
                 let hasInv = itemsWithInventory.contains(item.stable_id)
-                print("🔍 SEARCH DEBUG: Item '\(item.name)' hasInventory=\(hasInv), keeping=\(hasInv)")
                 return hasInv
             }
-            print("🔍 SEARCH DEBUG: After inventory filtering: \(candidateItems.count) items")
-        } else {
-            print("🔍 SEARCH DEBUG: No inventory filtering (hasInventory = \(hasInventory?.description ?? "nil"))")
         }
         
         // 4. Filter by inventory types if specified
         if !inventoryTypes.isEmpty {
-            print("🔍 SEARCH DEBUG: Filtering by inventory types: \(inventoryTypes)")
             var itemsWithTypes: Set<String> = []
             for type in inventoryTypes {
                 let itemsOfType = try await self.inventoryRepository.getItemsWithInventory(ofType: type)
                 itemsWithTypes.formUnion(itemsOfType)
             }
-            print("🔍 SEARCH DEBUG: Items with specified inventory types: \(itemsWithTypes)")
             candidateItems = candidateItems.filter { item in
                 itemsWithTypes.contains(item.stable_id)
             }
-            print("🔍 SEARCH DEBUG: After inventory type filtering: \(candidateItems.count) items")
-        } else {
-            print("🔍 SEARCH DEBUG: No inventory type filtering")
         }
-        
-        print("🔍 SEARCH DEBUG: Final candidate items: \(candidateItems.count)")
         
         // 5. Build complete models for results
         var results: [CompleteInventoryItemModel] = []
         for glassItem in candidateItems {
             if let completeItem = try await getCompleteItem(stableId: glassItem.stable_id) {
                 results.append(completeItem)
-                print("🔍 SEARCH DEBUG: Added complete item: '\(completeItem.glassItem.name)'")
-            } else {
-                print("🔍 SEARCH DEBUG: Failed to get complete item for: '\(glassItem.name)'")
             }
         }
         
-        print("🔍 SEARCH DEBUG: Final results: \(results.count) complete items")
         return results
     }
     

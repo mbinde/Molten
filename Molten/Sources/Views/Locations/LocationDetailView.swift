@@ -100,7 +100,10 @@ struct LocationDetailView: View {
                             .fontWeight(.semibold)
                             .padding(.horizontal, DesignSystem.Padding.standard)
 
-                        Map {
+                        Map(position: .constant(.region(MKCoordinateRegion(
+                            center: location.coordinate,
+                            span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+                        )))) {
                             Annotation(location.name, coordinate: location.coordinate) {
                                 ZStack {
                                     Circle()
@@ -114,6 +117,18 @@ struct LocationDetailView: View {
                         }
                         .frame(height: 200)
                         .cornerRadius(DesignSystem.CornerRadius.medium)
+                        .padding(.horizontal, DesignSystem.Padding.standard)
+
+                        // Get Directions button
+                        Button(action: openDirections) {
+                            Label("Get Directions", systemImage: "arrow.triangle.turn.up.right.circle.fill")
+                                .font(.headline)
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(DesignSystem.Colors.accentSecondary)
+                                .cornerRadius(DesignSystem.CornerRadius.large)
+                        }
                         .padding(.horizontal, DesignSystem.Padding.standard)
                     }
                 }
@@ -136,6 +151,22 @@ struct LocationDetailView: View {
         }
         .navigationTitle(location.type.singularName)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: - Actions
+
+    private func openDirections() {
+        guard location.hasValidLocation else { return }
+
+        let coordinate = location.coordinate
+        let placemark = MKPlacemark(coordinate: coordinate)
+        let mapItem = MKMapItem(placemark: placemark)
+        mapItem.name = location.name
+
+        // Open in Apple Maps with directions
+        mapItem.openInMaps(launchOptions: [
+            MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving
+        ])
     }
 
     // MARK: - Subviews
@@ -244,7 +275,8 @@ struct FlowLayout: Layout {
 #Preview {
     NavigationStack {
         LocationDetailView(
-            location: AnyLocationModel(store: StoreModel.create(
+            location: AnyLocationModel(unified: UnifiedLocationModel(
+                stable_id: "frantz-art-glass",
                 name: "Frantz Art Glass",
                 addressLine1: "123 Main St",
                 city: "Shelton",
@@ -256,7 +288,11 @@ struct FlowLayout: Layout {
                 phone: "3605551234",
                 notes: "Family-owned glass supply shop with over 40 years of experience.",
                 isVerified: true,
-                techniques: [.fusing, .casting, .stainedGlass]
+                retailCapabilities: [
+                    RetailCapability(technique: .fusing),
+                    RetailCapability(technique: .casting),
+                    RetailCapability(technique: .stainedGlass)
+                ]
             ))
         )
     }

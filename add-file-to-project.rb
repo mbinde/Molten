@@ -1,24 +1,30 @@
 #!/usr/bin/env ruby
-# Usage: ruby add-file-to-project.rb path/to/file.swift [target_name]
-# Adds a file to the Xcode project in the correct group structure matching the file path
+# Usage: ruby add-file-to-project.rb [--remove] path/to/file.swift [target_name]
+# Adds or removes a file from the Xcode project
 # Optionally adds to specified target (e.g., MoltenTests, PerformanceTests)
 # If no target specified, auto-detects based on path
 
 require 'xcodeproj'
 
-if ARGV.length < 1 || ARGV.length > 2
-  puts "Usage: ruby add-file-to-project.rb path/to/file.swift [target_name]"
+# Parse arguments
+remove_mode = ARGV[0] == '--remove'
+args = remove_mode ? ARGV[1..-1] : ARGV
+
+if args.length < 1 || args.length > 2
+  puts "Usage: ruby add-file-to-project.rb [--remove] path/to/file.swift [target_name]"
+  puts "  --remove: Remove file from project instead of adding"
   puts "  target_name: Optional. If omitted, auto-detects from path"
   puts "  Examples:"
   puts "    ruby add-file-to-project.rb Molten/Tests/MoltenTests/MyTest.swift"
   puts "    ruby add-file-to-project.rb Molten/Tests/PerformanceTests/MyPerfTest.swift PerformanceTests"
+  puts "    ruby add-file-to-project.rb --remove Molten/Tests/MoltenTests/MyTest.swift"
   exit 1
 end
 
-file_path = ARGV[0]
-target_name = ARGV[1]
+file_path = args[0]
+target_name = args[1]
 
-unless File.exist?(file_path)
+unless remove_mode || File.exist?(file_path)
   puts "Error: File not found: #{file_path}"
   exit 1
 end
@@ -31,6 +37,42 @@ project = Xcodeproj::Project.open('Molten.xcodeproj')
 path_parts = file_path.split('/')
 filename = path_parts.pop
 group_names = path_parts
+
+# REMOVE MODE: Remove file from project
+if remove_mode
+  puts "🗑️  Removing #{filename} from project..."
+
+  # Find the file reference by searching all file references
+  file_ref = project.files.find { |f| f.path == filename && f.real_path.to_s.include?(file_path) }
+
+  # Also try finding by full path
+  unless file_ref
+    file_ref = project.files.find { |f| f.real_path.to_s.end_with?(file_path) }
+  end
+
+  unless file_ref
+    puts "⚠️  File not found in project: #{filename}"
+    puts "   Searched for: #{file_path}"
+    exit 1
+  end
+
+  # Remove from all targets
+  project.targets.each do |target|
+    build_file = target.source_build_phase.files.find { |bf| bf.file_ref == file_ref }
+    if build_file
+      target.source_build_phase.files.delete(build_file)
+      puts "   Removed from target: #{target.name}"
+    end
+  end
+
+  # Remove the file reference itself
+  file_ref.remove_from_project
+  puts "✅ Removed #{filename} from project"
+
+  project.save
+  puts "✅ Project saved"
+  exit 0
+end
 
 # Helper to find or create a group
 def find_or_create_group(parent, name)

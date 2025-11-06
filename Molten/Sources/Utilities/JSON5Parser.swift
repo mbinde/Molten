@@ -229,16 +229,27 @@ class JSON5Parser {
 
 // MARK: - JSON5 Specific Errors
 
-enum JSON5Error: Error, LocalizedError {
+enum JSON5Error: Error, LocalizedError, Equatable {
     case invalidEncoding
     case parsingFailed(String)
-    
+
     var errorDescription: String? {
         switch self {
         case .invalidEncoding:
             return "Failed to encode/decode JSON5 string"
         case .parsingFailed(let message):
             return "JSON5 parsing failed: \(message)"
+        }
+    }
+
+    static func == (lhs: JSON5Error, rhs: JSON5Error) -> Bool {
+        switch (lhs, rhs) {
+        case (.invalidEncoding, .invalidEncoding):
+            return true
+        case (.parsingFailed(let lhsMessage), .parsingFailed(let rhsMessage)):
+            return lhsMessage == rhsMessage
+        default:
+            return false
         }
     }
 }

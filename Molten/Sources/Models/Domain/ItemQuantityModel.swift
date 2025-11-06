@@ -17,7 +17,10 @@ import Foundation
 ///
 /// The semantic difference (have vs want) is captured by domain-specific fields
 /// and the context in which the model is used.
-protocol ItemQuantityModel: Equatable, Hashable, Sendable {
+///
+/// Note: Equatable and Hashable are implemented directly on conforming types
+/// to avoid MainActor isolation issues with protocol conformance.
+protocol ItemQuantityModel: Sendable {
     // MARK: - Core Fields (100% shared)
 
     /// Unique identifier for this quantity record

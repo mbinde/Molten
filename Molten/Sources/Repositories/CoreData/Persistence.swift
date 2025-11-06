@@ -215,13 +215,9 @@ class PersistenceController {
                     let contextName = context.name ?? "unnamed"
                     let parentContext = context.parent != nil ? "HAS PARENT" : "NO PARENT"
 
-                    print("🚨 [\(contextType) \(contextID)] SAVE: inserted=\(inserted), updated=\(updated), deleted=\(deleted)")
-                    print("🚨   Context name: '\(contextName)', \(parentContext)")
-
                     // Log what entity types are being saved
                     if let insertedObjects = notification.userInfo?[NSInsertedObjectsKey] as? Set<NSManagedObject> {
                         let entityNames = Set(insertedObjects.map { $0.entity.name ?? "unknown" })
-                        print("🚨   Inserted entities: \(entityNames.joined(separator: ", "))")
                     }
                 }
             }
@@ -613,7 +609,6 @@ class PersistenceController {
         log.info("🔄 Rebuilding Core Data entity caches using shared model...")
 
         // Create a new context to force entity cache refresh
-        print("🚨 Creating background context in rebuildEntityCaches()")
         let testContext = container.newBackgroundContext()
         testContext.mergePolicy = container.viewContext.mergePolicy
         

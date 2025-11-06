@@ -98,6 +98,8 @@ struct CoreDataLeakDiagnostic {
         #expect(initialInventoryCount == 0, "Inventory repo should start empty")
 
         // Create services with explicit dependency injection
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: mockGlassItemRepo,
             inventoryRepository: mockInventoryRepo,
@@ -116,6 +118,8 @@ struct CoreDataLeakDiagnostic {
 
         let catalogService = CatalogService(
             glassItemRepository: mockGlassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryTrackingService,
             shoppingListService: shoppingListService,
             itemTagsRepository: mockItemTagsRepo,

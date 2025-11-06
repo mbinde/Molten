@@ -313,24 +313,129 @@ extension StorageLocationModel: Hashable {
 
 // MARK: - Service Models
 
+/// Catalog item type discriminator for CompleteInventoryItemModel
+enum CatalogItemType: String, Sendable {
+    case glass
+    case coating
+    case tool
+}
+
+/// Unified catalog item that can represent glass, coatings, or tools
+struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
+    let stable_id: String
+    let name: String
+    let sku: String?
+    let manufacturer: String
+    let mfr_notes: String?
+    let url: String?
+    let uri: String
+    let mfr_status: String
+    let image_url: String?
+    let image_path: String?
+    let itemType: CatalogItemType
+    let coe: Int32?  // Only for glass items
+
+    nonisolated var id: String { stable_id }
+
+    /// Initialize from GlassItemModel
+    nonisolated init(glassItem: GlassItemModel) {
+        self.stable_id = glassItem.stable_id
+        self.name = glassItem.name
+        self.sku = glassItem.sku
+        self.manufacturer = glassItem.manufacturer
+        self.mfr_notes = glassItem.mfr_notes
+        self.url = glassItem.url
+        self.uri = glassItem.uri
+        self.mfr_status = glassItem.mfr_status
+        self.image_url = glassItem.image_url
+        self.image_path = glassItem.image_path
+        self.itemType = .glass
+        self.coe = glassItem.coe
+    }
+
+    /// Initialize from CoatingItemModel
+    nonisolated init(coatingItem: CoatingItemModel) {
+        self.stable_id = coatingItem.stable_id
+        self.name = coatingItem.name
+        self.sku = coatingItem.sku
+        self.manufacturer = coatingItem.manufacturer
+        self.mfr_notes = coatingItem.mfr_notes
+        self.url = coatingItem.url
+        self.uri = coatingItem.uri
+        self.mfr_status = coatingItem.mfr_status
+        self.image_url = coatingItem.image_url
+        self.image_path = coatingItem.image_path
+        self.itemType = .coating
+        self.coe = nil  // Coatings don't have COE
+    }
+
+    /// Initialize from ToolItemModel
+    nonisolated init(toolItem: ToolItemModel) {
+        self.stable_id = toolItem.stable_id
+        self.name = toolItem.name
+        self.sku = toolItem.sku
+        self.manufacturer = toolItem.manufacturer
+        self.mfr_notes = toolItem.mfr_notes
+        self.url = toolItem.url
+        self.uri = toolItem.uri
+        self.mfr_status = toolItem.mfr_status
+        self.image_url = toolItem.image_url
+        self.image_path = toolItem.image_path
+        self.itemType = .tool
+        self.coe = nil  // Tools don't have COE
+    }
+
+    // Equatable conformance - based on stable_id
+    nonisolated static func == (lhs: UnifiedCatalogItem, rhs: UnifiedCatalogItem) -> Bool {
+        return lhs.stable_id == rhs.stable_id
+    }
+
+    // Hashable conformance - based on stable_id
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(stable_id)
+    }
+}
+
 /// Complete inventory item model combining all related data
 struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
-    let glassItem: GlassItemModel
+    let catalogItem: UnifiedCatalogItem
     let inventory: [InventoryModel]
     let tags: [String]  // Manufacturer/system tags
     let userTags: [String]  // User-created tags
     let allTags: [String]  // Pre-computed combined tags for performance
 
-    nonisolated var id: String { glassItem.stable_id }
+    nonisolated var id: String { catalogItem.stable_id }
 
     /// Initialize with automatic allTags computation
-    nonisolated init(glassItem: GlassItemModel, inventory: [InventoryModel], tags: [String], userTags: [String]) {
-        self.glassItem = glassItem
+    nonisolated init(catalogItem: UnifiedCatalogItem, inventory: [InventoryModel], tags: [String], userTags: [String]) {
+        self.catalogItem = catalogItem
         self.inventory = inventory
         self.tags = tags
         self.userTags = userTags
         // Pre-compute allTags for performance (avoid repeated computation in views)
         self.allTags = Array(Set(tags + userTags)).sorted()
+    }
+
+    /// Convenience initializer from GlassItemModel (for backward compatibility)
+    nonisolated init(glassItem: GlassItemModel, inventory: [InventoryModel], tags: [String], userTags: [String]) {
+        self.init(catalogItem: UnifiedCatalogItem(glassItem: glassItem), inventory: inventory, tags: tags, userTags: userTags)
+    }
+
+    /// Convenience property for accessing as GlassItemModel (for backward compatibility)
+    /// ⚠️ WARNING: Only use for glass items! Check catalogItem.itemType first
+    nonisolated var glassItem: GlassItemModel {
+        GlassItemModel(
+            stable_id: catalogItem.stable_id,
+            name: catalogItem.name,
+            sku: catalogItem.sku,
+            manufacturer: catalogItem.manufacturer,
+            mfr_notes: catalogItem.mfr_notes,
+            coe: catalogItem.coe ?? 0,  // Default to 0 if nil (shouldn't happen for glass items)
+            url: catalogItem.url,
+            mfr_status: catalogItem.mfr_status,
+            image_url: catalogItem.image_url,
+            image_path: catalogItem.image_path
+        )
     }
 
     /// Total quantity across all inventory records
@@ -359,13 +464,18 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
             }
     }
 
+    /// Product type as string for UI display
+    nonisolated var productType: String {
+        catalogItem.itemType.rawValue
+    }
+
     nonisolated static func == (lhs: CompleteInventoryItemModel, rhs: CompleteInventoryItemModel) -> Bool {
-        return lhs.glassItem.stable_id == rhs.glassItem.stable_id
+        return lhs.catalogItem.stable_id == rhs.catalogItem.stable_id
     }
 
     // Hashable conformance for navigation
     nonisolated func hash(into hasher: inout Hasher) {
-        hasher.combine(glassItem.stable_id)
+        hasher.combine(catalogItem.stable_id)
     }
 }
 

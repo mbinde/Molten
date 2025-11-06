@@ -31,9 +31,14 @@ struct AddInventoryItemViewTests {
             itemTagsRepository: MockItemTagsRepository(),
             userTagsRepository: MockUserTagsRepository()
         )
+        
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
 
         let catalogService = CatalogService(
             glassItemRepository: MockGlassItemRepository(),
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryService,
             shoppingListService: shoppingListService,
             itemTagsRepository: MockItemTagsRepository(),

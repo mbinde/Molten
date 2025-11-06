@@ -311,9 +311,13 @@ class TestDataBuilder {
 
         let inventoryService = inventoryTrackingService
         let shoppingService = shoppingListService
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
 
         let service = CatalogService(
             glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryService,
             shoppingListService: shoppingService,
             itemTagsRepository: itemTagsRepo,

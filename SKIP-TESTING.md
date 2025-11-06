@@ -90,6 +90,27 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `CoreDataDiagnosticView.swift` - SwiftUI debug view
 - `ExportPlanView.swift` - SwiftUI view
 
+**Batch 6:**
+- `LaunchScreenView.swift` - SwiftUI view
+- `KeyboardDismissal.swift` - SwiftUI view modifier/utility
+- `StoreDetailView.swift` - SwiftUI view
+- `CloudKitSyncStatusView.swift` - SwiftUI view
+- `AuthorCardView.swift` - SwiftUI view component
+- `StoreListView.swift` - SwiftUI view
+- `AddFormScaffold.swift` - SwiftUI view component/scaffold
+- `AlphaDisclaimerView.swift` - SwiftUI view
+- `AddSegmentView.swift` - SwiftUI view
+- `LabelDesignerView.swift` - SwiftUI view
+- `FormComponents.swift` - SwiftUI form components
+- `TestDataGeneratorView.swift` - SwiftUI debug view (development tool)
+- `GlassItemSearchSelector.swift` - SwiftUI view component
+- `ColorListView.swift` - SwiftUI view
+- `PDFExportOptionsView.swift` - SwiftUI view
+- `KilnSchedulesView.swift` - SwiftUI view
+- `ExportScheduleView.swift` - SwiftUI view
+- `MoreTabView.swift` - SwiftUI view
+- `LocationPickerSheet.swift` - SwiftUI view component
+
 ### Configuration & Settings (Static configuration, no logic to test)
 - `DebugConfig.swift` - Static configuration flags and AppStorage properties (requires UI/integration testing)
 
@@ -98,6 +119,7 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `CatalogItemParentRepository.swift` - Protocol
 - `InventoryRepository.swift` - Protocol (Mock/CoreData implementations already have tests)
 - `ShoppingListViewModelProtocol.swift` - ViewModel protocol (create mock tests if needed)
+- `LocationModel.swift` - Protocol with default implementations (tested via UnifiedLocationModel)
 
 ### Repository Implementations (Integration/Repository tests exist)
 - `CoreDataKilnScheduleRepository.swift` - Core Data implementation (belongs in RepositoryTests)
@@ -113,6 +135,9 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `CoreDataItemTagsRepository.swift` - Core Data implementation (belongs in RepositoryTests)
 - `CoreDataPurchaseRecordRepository.swift` - Core Data implementation (belongs in RepositoryTests)
 - `CoreDataShoppingListRepository.swift` - Core Data implementation (belongs in RepositoryTests)
+- `CoreDataToolItemRepository.swift` - Core Data implementation (belongs in RepositoryTests)
+- `CoreDataCoatingItemRepository.swift` - Core Data implementation (belongs in RepositoryTests)
+- `CoreDataGlassItemRepository.swift` - Core Data implementation (belongs in RepositoryTests)
 
 ### Example/Tool Files (Not production code)
 - `GlassItemDataLoadingExample.swift` - Development/debugging tool
@@ -124,11 +149,14 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `CoreDataEntityHelpers.swift` - Core Data helper utilities (requires Core Data context)
 - `CloudKitSyncMonitor.swift` - CloudKit monitoring service (requires CloudKit integration testing)
 - `DesignSystem+Accessibility.swift` - Static accessibility identifiers (UI tests verify these work)
+- `CatalogSearchCache.swift` - @MainActor singleton cache with async methods (requires integration tests with mock CatalogService)
+- `CatalogViewHelpers.swift` - View filtering utilities with external dependencies (FilterUtilities, DebugConfig)
 
 ### ViewModels (Likely require protocol/integration tests)
 - `StoreListViewModel.swift` - SwiftUI ViewModel (probably has @Published properties)
 - `PurchasesViewModel.swift` - SwiftUI ViewModel (probably has @Published properties)
 - `AddLogbookEntryViewModel.swift` - SwiftUI ViewModel (probably has @Published properties)
+- `KilnSchedulesViewModel.swift` - SwiftUI ViewModel (probably has @Published properties)
 
 ### Services (Require integration/repository tests)
 - `KilnScheduleExportService.swift` - File export service (requires file I/O mocking)
@@ -210,10 +238,15 @@ This document tracks files that were identified as 0% coverage but are not appro
 - Tests created: 3 (LocationType enum with 30+ tests, CatalogCodeLookup with 40+ tests, JSON5Parser with 50+ tests)
 - Skipped: 22 (SwiftUI views, Core Data repositories, services, protocols, mocks)
 
+**Batch 6 (Sixth Review):**
+- Total files reviewed: 25
+- Tests created: 0
+- Skipped: 25 (19 SwiftUI views, 3 Core Data repositories, 1 protocol, 1 @MainActor cache, 1 view helper with dependencies)
+
 **Grand Total:**
-- Total files reviewed: 125
+- Total files reviewed: 150
 - Tests created: 11
-- Skipped: 114
+- Skipped: 139
 
 ## Future Considerations
 

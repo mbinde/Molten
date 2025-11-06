@@ -9,7 +9,7 @@
 import Foundation
 
 /// Enumeration representing the units for inventory items
-enum CatalogUnits: Int16, CaseIterable, Identifiable {
+enum CatalogUnits: Int16, CaseIterable, Identifiable, Codable {
     case pounds = 0
     case kilograms = 1
     case shorts = 2

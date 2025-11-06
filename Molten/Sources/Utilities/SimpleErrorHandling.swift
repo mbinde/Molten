@@ -53,9 +53,14 @@ struct AppError: Error, LocalizedError {
     let userMessage: String
     let technicalDetails: String?
     let suggestions: [String]
-    
+
     var errorDescription: String? { userMessage }
-    
+
+    var recoverySuggestion: String? {
+        guard !suggestions.isEmpty else { return nil }
+        return suggestions.joined(separator: "\n")
+    }
+
     init(
         category: ErrorCategory = .system,
         severity: ErrorSeverity = .error,

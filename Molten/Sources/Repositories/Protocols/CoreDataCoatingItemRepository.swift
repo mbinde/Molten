@@ -6,7 +6,7 @@
 //  Core Data implementation of the new CoatingItemRepository protocol
 //
 
-import Foundation
+@preconcurrency import Foundation
 @preconcurrency import CoreData
 
 /// Core Data implementation of CoatingItemRepository protocol

@@ -14,6 +14,15 @@ import RevenueCat
 struct MoltenApp: App {
 
     init() {
+        // Configure RepositoryFactory for production (unless running tests)
+        let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        if !isRunningTests {
+            RepositoryFactory.configureForProduction()
+            print("✅ RepositoryFactory configured for PRODUCTION mode")
+        } else {
+            print("⚠️ RepositoryFactory using MOCK mode (tests detected)")
+        }
+
         // Configure RevenueCat SDK
         configureRevenueCat()
     }

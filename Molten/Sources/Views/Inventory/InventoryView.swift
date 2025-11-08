@@ -34,6 +34,7 @@ struct InventoryView: View {
     @State private var searchClearedFeedback = false
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
     @State private var showingLabelDesigner = false
+    @State private var showingSharing = false
 
     // Performance optimization: Cache computed values to avoid recomputation on every view refresh
     @State private var cachedAllTags: [String] = []
@@ -423,6 +424,11 @@ struct InventoryView: View {
                     limit: entitlementService.getInventoryLimit() ?? 0
                 )
             }
+            .sheet(isPresented: $showingSharing) {
+                NavigationStack {
+                    InventorySharingView()
+                }
+            }
             .task {
                 await loadData()
             }
@@ -536,6 +542,14 @@ struct InventoryView: View {
                     Label("Print Labels", systemImage: "qrcode")
                 }
                 .disabled(sortedFilteredItems.isEmpty)
+
+                Divider()
+
+                Button {
+                    showingSharing = true
+                } label: {
+                    Label("Share Inventory", systemImage: "person.2")
+                }
             } label: {
                 Label("Add", systemImage: "plus")
             }

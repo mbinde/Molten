@@ -5,7 +5,13 @@
 //  Tests for InventorySharingViewModel - presentation logic for sharing UI
 //
 
+#if canImport(Testing)
 import Testing
+#else
+#if canImport(XCTest)
+import XCTest
+#endif
+#endif
 import Foundation
 @testable import Molten
 

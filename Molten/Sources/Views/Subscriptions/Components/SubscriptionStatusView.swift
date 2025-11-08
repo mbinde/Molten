@@ -46,6 +46,7 @@ struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
                     }
 
                     if viewModel.hasProAccess {
+                        // RevenueCat Customer Center
                         Button {
                             Task {
                                 await viewModel.showCustomerCenter()
@@ -62,6 +63,20 @@ struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
                             .cornerRadius(DesignSystem.CornerRadius.medium)
                         }
                         .accessibilityIdentifier("subscription.manageButton")
+
+                        // Direct link to Apple subscription management (always works)
+                        Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
+                            HStack {
+                                Image(systemName: "arrow.up.forward.app.fill")
+                                Text("Manage in App Store")
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.gray.opacity(0.2))
+                            .foregroundStyle(.primary)
+                            .cornerRadius(DesignSystem.CornerRadius.medium)
+                        }
+                        .accessibilityIdentifier("subscription.appStoreButton")
                     }
 
                     Button {

@@ -37,13 +37,17 @@ class SubscriptionManager {
     /// Reference to EntitlementService to update tier
     private let entitlementService: EntitlementService
 
+    /// RevenueCat subscription service for checking Pro access
+    private let subscriptionService: SubscriptionServiceProtocol
+
     /// Task handle for monitoring subscription changes
     private var subscriptionTask: Task<Void, Never>?
 
     // MARK: - Initialization
 
-    init(entitlementService: EntitlementService) {
+    init(entitlementService: EntitlementService, subscriptionService: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService()) {
         self.entitlementService = entitlementService
+        self.subscriptionService = subscriptionService
 
         // Start monitoring subscription status
         subscriptionTask = Task {
@@ -149,51 +153,34 @@ class SubscriptionManager {
 
     /// Check current subscription status and update EntitlementService
     func checkSubscriptionStatus() async {
-        var hasActiveSubscription = false
+        print("🔍 [SubscriptionManager] Checking subscription status via RevenueCat...")
 
-        // Check for any active subscription
-        for await result in Transaction.currentEntitlements {
-            do {
-                let transaction = try checkVerified(result)
+        // Check RevenueCat for Pro access
+        let hasProAccess = await subscriptionService.hasProAccess()
 
-                // Check if this is one of our subscription products
-                if SubscriptionProduct.allCases.map({ $0.rawValue }).contains(transaction.productID) {
-                    hasActiveSubscription = true
-                    print("✅ Active subscription found: \(transaction.productID)")
-                    break
-                }
-            } catch {
-                print("❌ Transaction verification failed: \(error)")
-            }
-        }
-
-        // Update status
-        if hasActiveSubscription {
+        // Update status based on RevenueCat entitlements
+        if hasProAccess {
             subscriptionStatus = .subscribed
             entitlementService.updateTier(.premium)
+            print("✅ [SubscriptionManager] Pro access confirmed - tier set to PREMIUM")
         } else {
             subscriptionStatus = .notSubscribed
             entitlementService.updateTier(.free)
+            print("📊 [SubscriptionManager] No Pro access - tier set to FREE")
         }
 
-        print("📊 Subscription status: \(subscriptionStatus)")
+        print("📊 [SubscriptionManager] Final subscription status: \(subscriptionStatus)")
     }
 
     /// Monitor subscription status changes in real-time
     private func monitorSubscriptionChanges() async {
-        for await result in Transaction.updates {
-            do {
-                let transaction = try checkVerified(result)
-                print("🔄 Subscription updated: \(transaction.productID)")
+        // Listen for RevenueCat subscription changes via notification
+        let center = NotificationCenter.default
+        let notifications = center.notifications(named: .subscriptionStatusChanged)
 
-                // Update subscription status
-                await checkSubscriptionStatus()
-
-                // Finish the transaction
-                await transaction.finish()
-            } catch {
-                print("❌ Transaction update verification failed: \(error)")
-            }
+        for await _ in notifications {
+            print("🔄 [SubscriptionManager] Subscription status changed notification received")
+            await checkSubscriptionStatus()
         }
     }
 

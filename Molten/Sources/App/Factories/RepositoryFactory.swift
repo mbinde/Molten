@@ -688,13 +688,16 @@ nonisolated struct RepositoryFactory {
     /// Creates a SubscriptionService based on current mode
     @MainActor
     static func createSubscriptionService() -> SubscriptionServiceProtocol {
+        print("🏭 [RepositoryFactory] createSubscriptionService() called with mode: \(mode)")
         switch mode {
         case .mock, .hybrid:
             // Testing/development: Use mock with no Pro access by default
+            print("🏭 [RepositoryFactory] Creating MockSubscriptionService")
             return MockSubscriptionService(hasProAccess: false)
 
         case .coreData:
             // Production: Use RevenueCat
+            print("🏭 [RepositoryFactory] Creating RevenueCatSubscriptionService")
             return RevenueCatSubscriptionService()
         }
     }

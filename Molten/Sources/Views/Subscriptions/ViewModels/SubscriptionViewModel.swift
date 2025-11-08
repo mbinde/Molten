@@ -20,18 +20,35 @@ public final class SubscriptionViewModel: SubscriptionViewModelProtocol {
 
     public init(subscriptionService: SubscriptionServiceProtocol) {
         self.subscriptionService = subscriptionService
+
+        // Listen for subscription status changes (e.g., after purchase)
+        NotificationCenter.default.addObserver(
+            forName: .subscriptionStatusChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                print("🔔 [ViewModel] Subscription status changed notification received")
+                await self?.loadSubscriptionStatus()
+            }
+        }
     }
 
     public func loadSubscriptionStatus() async {
+        print("📥 [ViewModel] Loading subscription status...")
         isLoading = true
         errorMessage = nil
 
         do {
             hasProAccess = await subscriptionService.hasProAccess()
             subscriptionStatus = await subscriptionService.getSubscriptionStatus()
+
+            print("📥 [ViewModel] Status loaded - hasProAccess: \(hasProAccess)")
+            print("📥 [ViewModel] Status loaded - isActive: \(subscriptionStatus.isActive)")
+            print("📥 [ViewModel] Status loaded - productId: \(subscriptionStatus.productIdentifier ?? "nil")")
         } catch {
             errorMessage = "Failed to load subscription status"
-            print("Error loading subscription status: \(error)")
+            print("❌ [ViewModel] Error loading subscription status: \(error)")
         }
 
         isLoading = false

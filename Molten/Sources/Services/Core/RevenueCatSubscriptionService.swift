@@ -7,16 +7,26 @@ import RevenueCatUI
 @MainActor
 public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, Sendable {
 
-    private let proEntitlementIdentifier = "molten_glass_pro"
+    private let proEntitlementIdentifier = "Molten Glass Pro"
 
     public init() {}
 
     public func hasProAccess() async -> Bool {
         do {
             let customerInfo = try await Purchases.shared.customerInfo()
-            return customerInfo.entitlements[proEntitlementIdentifier]?.isActive == true
+            print("🔍 [RevenueCat] Checking Pro access for entitlement: '\(proEntitlementIdentifier)'")
+            print("🔍 [RevenueCat] Available entitlements: \(customerInfo.entitlements.all.keys.sorted())")
+            print("🔍 [RevenueCat] Active entitlements: \(customerInfo.entitlements.all.filter { $0.value.isActive }.keys.sorted())")
+
+            if let proEntitlement = customerInfo.entitlements[proEntitlementIdentifier] {
+                print("🔍 [RevenueCat] Pro entitlement found - isActive: \(proEntitlement.isActive)")
+                return proEntitlement.isActive
+            } else {
+                print("⚠️ [RevenueCat] Pro entitlement '\(proEntitlementIdentifier)' not found in customer entitlements")
+                return false
+            }
         } catch {
-            print("Error checking Pro access: \(error)")
+            print("❌ [RevenueCat] Error checking Pro access: \(error)")
             return false
         }
     }
@@ -86,14 +96,20 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
             throw SubscriptionServiceError.configurationError
         }
 
-        print("✅ [RevenueCat] Found rootViewController, creating PaywallViewController")
+        // Find the topmost presented view controller (important for sheets/modals)
+        var topViewController = rootViewController
+        while let presented = topViewController.presentedViewController {
+            topViewController = presented
+        }
+
+        print("✅ [RevenueCat] Found topmost view controller: \(type(of: topViewController))")
         let paywallViewController = PaywallViewController()
 
         // Handle purchase completion
         paywallViewController.delegate = PaywallViewControllerDelegateHandler.shared
 
-        print("🎬 [RevenueCat] Presenting paywall...")
-        await rootViewController.present(paywallViewController, animated: true)
+        print("🎬 [RevenueCat] Presenting paywall from topmost view controller...")
+        await topViewController.present(paywallViewController, animated: true)
         print("✅ [RevenueCat] Paywall presented")
     }
 
@@ -103,8 +119,14 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
             throw SubscriptionServiceError.configurationError
         }
 
+        // Find the topmost presented view controller (important for sheets/modals)
+        var topViewController = rootViewController
+        while let presented = topViewController.presentedViewController {
+            topViewController = presented
+        }
+
         let customerCenterViewController = CustomerCenterViewController()
-        await rootViewController.present(customerCenterViewController, animated: true)
+        await topViewController.present(customerCenterViewController, animated: true)
     }
 
     public func restorePurchases() async throws -> CustomerInfo {
@@ -144,12 +166,23 @@ private class PaywallViewControllerDelegateHandler: NSObject, PaywallViewControl
 
     func paywallViewController(_ controller: PaywallViewController,
                               didFinishPurchasingWith customerInfo: RevenueCat.CustomerInfo) {
+        print("✅ [RevenueCat] Purchase completed successfully!")
+        print("✅ [RevenueCat] Customer has entitlements: \(customerInfo.entitlements.all.keys.sorted())")
+        print("✅ [RevenueCat] Active entitlements: \(customerInfo.entitlements.all.filter { $0.value.isActive }.keys.sorted())")
+
         controller.dismiss(animated: true)
-        print("✅ Purchase completed successfully")
+
+        // Post notification to reload subscription status
+        NotificationCenter.default.post(name: .subscriptionStatusChanged, object: nil)
     }
 
     func paywallViewController(_ controller: PaywallViewController,
                               didFailPurchasingWith error: Error) {
-        print("❌ Purchase failed: \(error)")
+        print("❌ [RevenueCat] Purchase failed: \(error)")
     }
+}
+
+// Notification for subscription status changes
+extension Notification.Name {
+    static let subscriptionStatusChanged = Notification.Name("subscriptionStatusChanged")
 }

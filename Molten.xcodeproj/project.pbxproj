@@ -7,11 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1EF3F9D80A7F6FD19CC99D21 /* Molten/Tests/MoltenTests/Services/SubscriptionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E669066B918E140175E0A7BD /* Molten/Tests/MoltenTests/Services/SubscriptionServiceTests.swift */; };
+		1EF3F9D80A7F6FD19CC99D21 /* SubscriptionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E669066B918E140175E0A7BD /* SubscriptionServiceTests.swift */; };
 		36D95164C45EC4E84CF4EC68 /* ToolItemDataLoadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */; };
 		4F5AAAA29613EDF7C07B6E56 /* ToolItemDataLoadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 066416B60A11124E9A8029EA /* ToolItemDataLoadingServiceTests.swift */; };
-		85174B9BFFFAE7F23E9254D6 /* Molten/Tests/MoltenTests/Models/SubscriptionModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8060792A9E38C50292942304 /* Molten/Tests/MoltenTests/Models/SubscriptionModelsTests.swift */; };
-		8F3161DA118B25F8E0599FFC /* Molten/Tests/MoltenTests/Views/SubscriptionViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702DF2EF5203D1F96764FA58 /* Molten/Tests/MoltenTests/Views/SubscriptionViewModelTests.swift */; };
+		85174B9BFFFAE7F23E9254D6 /* SubscriptionModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8060792A9E38C50292942304 /* SubscriptionModelsTests.swift */; };
+		8F3161DA118B25F8E0599FFC /* SubscriptionViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702DF2EF5203D1F96764FA58 /* SubscriptionViewModelTests.swift */; };
+		A790F0F747C42BE86639AB25 /* SubscriptionManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CDF9EE45CC5AF5CF35F7476 /* SubscriptionManagerTests.swift */; };
 		F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */ = {isa = PBXBuildFile; fileRef = F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */; };
 		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
 		F53C0BD32EA81F980020E1AB /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */; };
@@ -102,14 +103,15 @@
 /* Begin PBXFileReference section */
 		066416B60A11124E9A8029EA /* ToolItemDataLoadingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToolItemDataLoadingServiceTests.swift; path = Molten/Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift; sourceTree = "<group>"; };
 		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
-		702DF2EF5203D1F96764FA58 /* Molten/Tests/MoltenTests/Views/SubscriptionViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Molten/Tests/MoltenTests/Views/SubscriptionViewModelTests.swift; sourceTree = SOURCE_ROOT; };
-		8060792A9E38C50292942304 /* Molten/Tests/MoltenTests/Models/SubscriptionModelsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Molten/Tests/MoltenTests/Models/SubscriptionModelsTests.swift; sourceTree = SOURCE_ROOT; };
+		5CDF9EE45CC5AF5CF35F7476 /* SubscriptionManagerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Molten/Tests/MoltenTests/Services/SubscriptionManagerTests.swift"; sourceTree = SOURCE_ROOT; };
+		702DF2EF5203D1F96764FA58 /* SubscriptionViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Molten/Tests/MoltenTests/Views/SubscriptionViewModelTests.swift; sourceTree = SOURCE_ROOT; };
+		8060792A9E38C50292942304 /* SubscriptionModelsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Molten/Tests/MoltenTests/Models/SubscriptionModelsTests.swift; sourceTree = SOURCE_ROOT; };
 		878F664543088F1B86740DD2 /* UnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationRepository.swift; sourceTree = "<group>"; };
 		95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemDataLoadingServiceTests.swift; sourceTree = "<group>"; };
 		99E546D81C385D5ED6AE447C /* ShareCodeGeneratorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ShareCodeGeneratorTests.swift; path = Tests/MoltenTests/Utilities/ShareCodeGeneratorTests.swift; sourceTree = "<group>"; };
 		B244734885B21EAEB2AAC553 /* ServiceType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceType.swift; sourceTree = "<group>"; };
 		DB95FB5AC403E8CFD93211C5 /* CoreDataUnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataUnifiedLocationRepository.swift; sourceTree = "<group>"; };
-		E669066B918E140175E0A7BD /* Molten/Tests/MoltenTests/Services/SubscriptionServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Molten/Tests/MoltenTests/Services/SubscriptionServiceTests.swift; sourceTree = SOURCE_ROOT; };
+		E669066B918E140175E0A7BD /* SubscriptionServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Molten/Tests/MoltenTests/Services/SubscriptionServiceTests.swift; sourceTree = SOURCE_ROOT; };
 		E7C7A65B94A6533A14E7AE47 /* taglia_tools.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = taglia_tools.json; sourceTree = "<group>"; };
 		F0AA0F21EF80657D274B4674 /* ToolItemDataLoadingService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemDataLoadingService.swift; sourceTree = "<group>"; };
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
@@ -385,6 +387,7 @@
 				Tests/MoltenTests/Services/ServiceCoordinationTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
 				Tests/MoltenTests/Services/SubscriptionServiceTests.swift,
+				Tests/MoltenTests/Services/SubscriptionManagerTests.swift,
 				Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
 				Tests/MoltenTests/Utilities/CatalogFormattersTests.swift,
@@ -592,6 +595,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};
@@ -745,7 +750,7 @@
 		56969BB0863D0990240F1261 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				702DF2EF5203D1F96764FA58 /* Molten/Tests/MoltenTests/Views/SubscriptionViewModelTests.swift */,
+				702DF2EF5203D1F96764FA58 /* SubscriptionViewModelTests.swift */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -855,7 +860,7 @@
 		D000788C7E1FA48F1E9A28C9 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				8060792A9E38C50292942304 /* Molten/Tests/MoltenTests/Models/SubscriptionModelsTests.swift */,
+				8060792A9E38C50292942304 /* SubscriptionModelsTests.swift */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -863,7 +868,7 @@
 		D4457884BAC329550F2091D5 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				E669066B918E140175E0A7BD /* Molten/Tests/MoltenTests/Services/SubscriptionServiceTests.swift */,
+				E669066B918E140175E0A7BD /* SubscriptionServiceTests.swift */,
 			);
 			name = Services;
 			sourceTree = "<group>";
@@ -907,6 +912,7 @@
 				066416B60A11124E9A8029EA /* ToolItemDataLoadingServiceTests.swift */,
 				99E546D81C385D5ED6AE447C /* ShareCodeGeneratorTests.swift */,
 				A6EEA501E9C48072BB6CC1D3 /* Tests */,
+				5CDF9EE45CC5AF5CF35F7476 /* SubscriptionManagerTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1264,9 +1270,10 @@
 			files = (
 				36D95164C45EC4E84CF4EC68 /* ToolItemDataLoadingServiceTests.swift in Sources */,
 				4F5AAAA29613EDF7C07B6E56 /* ToolItemDataLoadingServiceTests.swift in Sources */,
-				85174B9BFFFAE7F23E9254D6 /* Molten/Tests/MoltenTests/Models/SubscriptionModelsTests.swift in Sources */,
-				1EF3F9D80A7F6FD19CC99D21 /* Molten/Tests/MoltenTests/Services/SubscriptionServiceTests.swift in Sources */,
-				8F3161DA118B25F8E0599FFC /* Molten/Tests/MoltenTests/Views/SubscriptionViewModelTests.swift in Sources */,
+				85174B9BFFFAE7F23E9254D6 /* SubscriptionModelsTests.swift in Sources */,
+				1EF3F9D80A7F6FD19CC99D21 /* SubscriptionServiceTests.swift in Sources */,
+				8F3161DA118B25F8E0599FFC /* SubscriptionViewModelTests.swift in Sources */,
+				A790F0F747C42BE86639AB25 /* SubscriptionManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

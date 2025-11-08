@@ -282,6 +282,8 @@
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
 				Tests/MoltenTests/Views/Shopping/StoreAutoCompleteFieldTests.swift,
 				Tests/RepositoryTests/GlassItemRepositoryDuplicateTests.swift,
+				Tests/RepositoryTests/Integration/CatalogServiceIntegrationTests.swift,
+				Tests/RepositoryTests/Integration/ShoppingListServiceIntegrationTests.swift,
 				Tools/Documentation/check_core_data_violations.sh,
 				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
 				Tools/Documentation/CORE_DATA_PREVENTION_GUIDE.md,
@@ -474,11 +476,13 @@
 				Tests/RepositoryTests/CoreData/UserNotesRepositoryTests.swift,
 				Tests/RepositoryTests/FileSystem/FileSystemUserImageRepositoryTests.swift,
 				Tests/RepositoryTests/GlassItemRepositoryDuplicateTests.swift,
+				Tests/RepositoryTests/Integration/CatalogServiceIntegrationTests.swift,
 				Tests/RepositoryTests/Integration/CatalogViewDataLoadingTests.swift,
 				Tests/RepositoryTests/Integration/GlassItemDataLoadingServiceCoreDataTests.swift,
 				Tests/RepositoryTests/Integration/JSONDataLoaderCoreDataTests.swift,
 				Tests/RepositoryTests/Integration/RepositoryFactoryDataLoadingTests.swift,
 				Tests/RepositoryTests/Integration/RepositoryFactoryTests.swift,
+				Tests/RepositoryTests/Integration/ShoppingListServiceIntegrationTests.swift,
 				Tools/Documentation/check_core_data_violations.sh,
 				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
 				Tools/Documentation/CORE_DATA_PREVENTION_GUIDE.md,
@@ -1260,6 +1264,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CD730C07266BAEF2F502834B /* CatalogServiceIntegrationTests.swift in Sources */,
+				288DF4A54F14D229E16F126C /* ShoppingListServiceIntegrationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

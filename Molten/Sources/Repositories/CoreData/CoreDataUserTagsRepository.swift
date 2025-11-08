@@ -163,7 +163,6 @@ class CoreDataUserTagsRepository: @unchecked Sendable, UserTagsRepository {
                     let unmigrated = try context.fetch(fetchRequest)
 
                     guard !unmigrated.isEmpty else {
-                        log.info("No UserTags records need migration")
                         continuation.resume()
                         return
                     }

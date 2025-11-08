@@ -93,18 +93,11 @@ else
   end
 
   # Add file reference
-  # If we couldn't navigate to the proper group (FileSystemSynchronizedGroup issue),
-  # create the file reference with the full path and SOURCE_ROOT
-  if group == project.main_group && path_components.length > 1
-    # Couldn't navigate - use full path with SOURCE_ROOT
-    file_ref = group.new_reference(relative_path)
-    file_ref.source_tree = 'SOURCE_ROOT'
-    puts "Added file to project (with full path): #{relative_path}"
-  else
-    # Successfully navigated - use just filename
-    file_ref = group.new_file(filename)
-    puts "Added file to project: #{relative_path}"
-  end
+  # ALWAYS use full path with SOURCE_ROOT to avoid file placement issues
+  # This prevents Xcode from looking for files in the project root
+  file_ref = project.main_group.new_reference(relative_path)
+  file_ref.source_tree = 'SOURCE_ROOT'
+  puts "Added file to project (with full path): #{relative_path}"
 end
 
 # Add to target if not already there

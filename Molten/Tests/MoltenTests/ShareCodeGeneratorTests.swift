@@ -6,7 +6,13 @@
 //  Share code format: GLASS-XXXX-XXXX (8 chars of alphanumeric entropy)
 //
 
+#if canImport(Testing)
 import Testing
+#else
+#if canImport(XCTest)
+import XCTest
+#endif
+#endif
 import Foundation
 @testable import Molten
 

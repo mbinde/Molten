@@ -6,7 +6,13 @@
 //  Coordinates share code generation, snapshot creation, encryption, and API calls
 //
 
+#if canImport(Testing)
 import Testing
+#else
+#if canImport(XCTest)
+import XCTest
+#endif
+#endif
 import Foundation
 @testable import Molten
 
@@ -32,7 +38,8 @@ struct InventorySharingServiceTests {
             InventoryItemSnapshot(stableId: "bullseye-001-0", manufacturer: "be", sku: "001", quantity: 5.0, unit: "rod", location: "Studio A")
         ]
 
-        let shareCode = try await service.createShare(items: items)
+        let metadata = MyShareMetadata(displayName: "Test User")
+        let shareCode = try await service.createShare(items: items, metadata: metadata)
 
         #expect(!shareCode.isEmpty)
         #expect(shareCode.count == 6)
@@ -48,8 +55,9 @@ struct InventorySharingServiceTests {
             InventoryItemSnapshot(stableId: "bullseye-001-0", manufacturer: "be", sku: "001", quantity: 5.0, unit: "rod", location: nil)
         ]
 
-        let code1 = try await service.createShare(items: items)
-        let code2 = try await service.createShare(items: items)
+        let metadata = MyShareMetadata(displayName: "Test User")
+        let code1 = try await service.createShare(items: items, metadata: metadata)
+        let code2 = try await service.createShare(items: items, metadata: metadata)
 
         // Should generate different codes (very high probability with 31^6 combinations)
         #expect(code1 != code2)
@@ -64,7 +72,8 @@ struct InventorySharingServiceTests {
             InventoryItemSnapshot(stableId: "bullseye-001-0", manufacturer: "be", sku: "001", quantity: 5.0, unit: "rod", location: nil)
         ]
 
-        _ = try await service.createShare(items: items)
+        let metadata = MyShareMetadata(displayName: "Test User")
+        _ = try await service.createShare(items: items, metadata: metadata)
 
         // Verify public key was included in upload
         #expect(mockAPIClient.lastPublicKey != nil)
@@ -83,7 +92,8 @@ struct InventorySharingServiceTests {
             InventoryItemSnapshot(stableId: "bullseye-001-0", manufacturer: "be", sku: "001", quantity: 5.0, unit: "rod", location: nil)
         ]
 
-        let shareCode = try await service.createShare(items: items)
+        let metadata = MyShareMetadata(displayName: "Test User")
+        let shareCode = try await service.createShare(items: items, metadata: metadata)
 
         #expect(!shareCode.isEmpty)
         #expect(mockAPIClient.uploadCallCount >= 2, "Should retry after conflict")
@@ -150,7 +160,8 @@ struct InventorySharingServiceTests {
             InventoryItemSnapshot(stableId: "bullseye-001-0", manufacturer: "be", sku: "001", quantity: 10.0, unit: "rod", location: "Studio A")
         ]
 
-        try await service.updateShare(shareCode: "A7B2X9", items: items)
+        let metadata = MyShareMetadata(displayName: "Test User")
+        try await service.updateShare(shareCode: "A7B2X9", items: items, metadata: metadata)
 
         #expect(mockAPIClient.updateCalled)
         #expect(mockAPIClient.lastShareCode == "A7B2X9")
@@ -196,7 +207,8 @@ struct InventorySharingServiceTests {
         ]
 
         await #expect(throws: SharingAPIError.self) {
-            _ = try await service.createShare(items: items)
+            let metadata = MyShareMetadata(displayName: "Test User")
+            _ = try await service.createShare(items: items, metadata: metadata)
         }
     }
 }

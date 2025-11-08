@@ -519,22 +519,20 @@ struct InventoryView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
+            Button {
+                showingAddItem = true
+            } label: {
+                Image(systemName: "plus")
+            }
+        }
+
+        ToolbarItem(placement: .confirmationAction) {
             Menu {
                 Button {
-                    showingAddItem = true
+                    showingSharing = true
                 } label: {
-                    Label("Add Item", systemImage: "plus")
+                    Label("Share Inventory", systemImage: "person.2")
                 }
-
-                ImportInventoryTriggerView {
-                    // Refresh inventory after import completes
-                    Task {
-                        await CatalogDataCache.shared.reload(catalogService: catalogService)
-                        await loadData()
-                    }
-                }
-
-                Divider()
 
                 Button {
                     showingLabelDesigner = true
@@ -543,15 +541,15 @@ struct InventoryView: View {
                 }
                 .disabled(sortedFilteredItems.isEmpty)
 
-                Divider()
-
-                Button {
-                    showingSharing = true
-                } label: {
-                    Label("Share Inventory", systemImage: "person.2")
+                ImportInventoryTriggerView {
+                    // Refresh inventory after import completes
+                    Task {
+                        await CatalogDataCache.shared.reload(catalogService: catalogService)
+                        await loadData()
+                    }
                 }
             } label: {
-                Label("Add", systemImage: "plus")
+                Image(systemName: "ellipsis.circle")
             }
         }
     }

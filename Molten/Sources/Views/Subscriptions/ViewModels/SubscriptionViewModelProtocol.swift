@@ -2,7 +2,7 @@ import Foundation
 
 /// Protocol for SubscriptionViewModel to enable testability
 @MainActor
-public protocol SubscriptionViewModelProtocol: ObservableObject {
+public protocol SubscriptionViewModelProtocol {
     var hasProAccess: Bool { get }
     var subscriptionStatus: SubscriptionInfo { get }
     var isLoading: Bool { get }

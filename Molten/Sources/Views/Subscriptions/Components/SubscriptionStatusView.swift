@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// View displaying subscription status and actions
-struct SubscriptionInfoView<ViewModel: SubscriptionViewModelProtocol>: View {
-    @ObservedObject var viewModel: ViewModel
+struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
+    var viewModel: ViewModel
 
     var body: some View {
         ScrollView {
@@ -107,7 +107,7 @@ struct SubscriptionInfoView<ViewModel: SubscriptionViewModelProtocol>: View {
         .navigationTitle("Subscription")
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            await viewModel.loadSubscriptionInfo()
+            await viewModel.loadSubscriptionStatus()
         }
     }
 }
@@ -116,13 +116,13 @@ struct SubscriptionInfoView<ViewModel: SubscriptionViewModelProtocol>: View {
 
 #Preview("Free User") {
     NavigationStack {
-        SubscriptionInfoView(viewModel: MockSubscriptionViewModel(hasProAccess: false))
+        SubscriptionStatusView(viewModel: MockSubscriptionViewModel(hasProAccess: false))
     }
 }
 
 #Preview("Pro User - Monthly") {
     NavigationStack {
-        SubscriptionInfoView(
+        SubscriptionStatusView(
             viewModel: MockSubscriptionViewModel(
                 hasProAccess: true,
                 subscriptionStatus: SubscriptionInfo(
@@ -138,7 +138,7 @@ struct SubscriptionInfoView<ViewModel: SubscriptionViewModelProtocol>: View {
 
 #Preview("Pro User - Yearly") {
     NavigationStack {
-        SubscriptionInfoView(
+        SubscriptionStatusView(
             viewModel: MockSubscriptionViewModel(
                 hasProAccess: true,
                 subscriptionStatus: SubscriptionInfo(
@@ -154,7 +154,7 @@ struct SubscriptionInfoView<ViewModel: SubscriptionViewModelProtocol>: View {
 
 #Preview("Pro User - Lifetime") {
     NavigationStack {
-        SubscriptionInfoView(
+        SubscriptionStatusView(
             viewModel: MockSubscriptionViewModel(
                 hasProAccess: true,
                 subscriptionStatus: SubscriptionInfo(
@@ -170,7 +170,7 @@ struct SubscriptionInfoView<ViewModel: SubscriptionViewModelProtocol>: View {
 
 #Preview("Loading State") {
     NavigationStack {
-        SubscriptionInfoView(
+        SubscriptionStatusView(
             viewModel: MockSubscriptionViewModel(isLoading: true)
         )
     }
@@ -178,7 +178,7 @@ struct SubscriptionInfoView<ViewModel: SubscriptionViewModelProtocol>: View {
 
 #Preview("Error State") {
     NavigationStack {
-        SubscriptionInfoView(
+        SubscriptionStatusView(
             viewModel: MockSubscriptionViewModel(
                 hasProAccess: false,
                 errorMessage: "Network connection failed. Please try again."

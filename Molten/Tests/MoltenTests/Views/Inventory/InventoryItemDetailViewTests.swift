@@ -20,6 +20,7 @@ import CryptoKit
 @testable import Molten
 
 @Suite("InventoryDetailView Repository Pattern Tests", .serialized)
+@MainActor
 struct InventoryItemDetailViewTests {
 
     @Test("InventoryDetailView should accept CompleteInventoryItemModel instead of Core Data entity")

@@ -19,6 +19,7 @@ import CryptoKit
 @testable import Molten
 
 @Suite("Shopping List Repository Tests")
+@MainActor
 struct ShoppingListRepositoryTests {
 
     // MARK: - Setup Helper

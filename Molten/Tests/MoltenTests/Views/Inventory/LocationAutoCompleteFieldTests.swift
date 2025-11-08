@@ -18,6 +18,7 @@ import SwiftUI
 @testable import Molten
 
 @Suite("LocationAutoCompleteField Repository Pattern Tests", .serialized)
+@MainActor
 struct LocationAutoCompleteFieldTests {
     
     @Test("LocationAutoCompleteField should accept LocationRepository via dependency injection")

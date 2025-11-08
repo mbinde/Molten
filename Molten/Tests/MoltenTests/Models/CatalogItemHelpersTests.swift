@@ -18,6 +18,7 @@ import SwiftUI
 @testable import Molten
 
 @Suite("CatalogItemHelpers Repository Pattern Tests")
+@MainActor
 struct CatalogItemHelpersTests {
     
     @Test("CatalogItemHelpers should work with CatalogItemModel instead of Core Data entity")

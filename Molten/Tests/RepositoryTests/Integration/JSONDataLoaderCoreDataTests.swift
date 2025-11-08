@@ -28,8 +28,7 @@ struct JSONDataLoaderCoreDataTests {
     /// Create test environment with Core Data
     private func createTestEnvironment() -> PersistenceController {
         let testController = PersistenceController.createTestController()
-        RepositoryFactory.configure(persistentContainer: testController.container)
-        RepositoryFactory.mode = .coreData
+        RepositoryFactory.configureForTestingWithCoreData(controller: testController)
         return testController
     }
     

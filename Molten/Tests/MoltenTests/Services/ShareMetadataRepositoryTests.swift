@@ -18,6 +18,7 @@ struct ShareMetadataRepositoryTests {
     init() {
         // Clean up any existing test data
         UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.myShareCode")
+        UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.myShareMetadata")
         UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.friendShares")
     }
 
@@ -61,6 +62,81 @@ struct ShareMetadataRepositoryTests {
 
         let retrieved = repository.getMyShareCode()
         #expect(retrieved == nil)
+    }
+
+    // MARK: - My Share Metadata Tests
+
+    @Test("Should save my share metadata")
+    func testSaveMyShareMetadata() async throws {
+        let repository = ShareMetadataRepository()
+
+        let metadata = MyShareMetadata(displayName: "Alice", shareNotes: "My glass collection")
+        try repository.saveMyShareMetadata(metadata)
+
+        let retrieved = repository.getMyShareMetadata()
+        #expect(retrieved?.displayName == "Alice")
+        #expect(retrieved?.shareNotes == "My glass collection")
+    }
+
+    @Test("Should return nil when no metadata saved")
+    func testGetMyShareMetadataWhenNone() async throws {
+        let repository = ShareMetadataRepository()
+
+        let retrieved = repository.getMyShareMetadata()
+        #expect(retrieved == nil)
+    }
+
+    @Test("Should save metadata without notes")
+    func testSaveMetadataWithoutNotes() async throws {
+        let repository = ShareMetadataRepository()
+
+        let metadata = MyShareMetadata(displayName: "Alice", shareNotes: nil)
+        try repository.saveMyShareMetadata(metadata)
+
+        let retrieved = repository.getMyShareMetadata()
+        #expect(retrieved?.displayName == "Alice")
+        #expect(retrieved?.shareNotes == nil)
+    }
+
+    @Test("Should update existing metadata")
+    func testUpdateMyShareMetadata() async throws {
+        let repository = ShareMetadataRepository()
+
+        let metadata1 = MyShareMetadata(displayName: "Alice", shareNotes: "Old notes")
+        try repository.saveMyShareMetadata(metadata1)
+
+        let metadata2 = MyShareMetadata(displayName: "Alice Smith", shareNotes: "New notes")
+        try repository.saveMyShareMetadata(metadata2)
+
+        let retrieved = repository.getMyShareMetadata()
+        #expect(retrieved?.displayName == "Alice Smith")
+        #expect(retrieved?.shareNotes == "New notes")
+    }
+
+    @Test("Should handle empty display name")
+    func testSaveMetadataWithEmptyDisplayName() async throws {
+        let repository = ShareMetadataRepository()
+
+        let metadata = MyShareMetadata(displayName: "", shareNotes: nil)
+        try repository.saveMyShareMetadata(metadata)
+
+        let retrieved = repository.getMyShareMetadata()
+        #expect(retrieved?.displayName == "")
+    }
+
+    @Test("Should handle special characters in metadata")
+    func testSaveMetadataWithSpecialCharacters() async throws {
+        let repository = ShareMetadataRepository()
+
+        let metadata = MyShareMetadata(
+            displayName: "Alice's Glass Shop™",
+            shareNotes: "Collection of émaux & boro 🔥"
+        )
+        try repository.saveMyShareMetadata(metadata)
+
+        let retrieved = repository.getMyShareMetadata()
+        #expect(retrieved?.displayName == "Alice's Glass Shop™")
+        #expect(retrieved?.shareNotes == "Collection of émaux & boro 🔥")
     }
 
     // MARK: - Friend Shares Tests

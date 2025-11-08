@@ -7,8 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1F765843AD4E451B7BF25F36 /* CoreDataSharedInventoryRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08D3866CEA49A15D3144CA9E /* CoreDataSharedInventoryRepositoryTests.swift */; };
 		36D95164C45EC4E84CF4EC68 /* ToolItemDataLoadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */; };
 		4F5AAAA29613EDF7C07B6E56 /* ToolItemDataLoadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 066416B60A11124E9A8029EA /* ToolItemDataLoadingServiceTests.swift */; };
+		7D9EB3F9DC2C7AF699FFC438 /* CoreDataShareRecordRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF728F1BB1F568B03E0D1F0A /* CoreDataShareRecordRepositoryTests.swift */; };
+		83B740F9C4102D179551C86E /* InventorySharingViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 870EEDAD1E5A013BFC886CF1 /* InventorySharingViewModelTests.swift */; };
 		F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */ = {isa = PBXBuildFile; fileRef = F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */; };
 		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
 		F53C0BD32EA81F980020E1AB /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */; };
@@ -94,7 +97,10 @@
 
 /* Begin PBXFileReference section */
 		066416B60A11124E9A8029EA /* ToolItemDataLoadingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToolItemDataLoadingServiceTests.swift; path = Molten/Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift; sourceTree = "<group>"; };
+		08D3866CEA49A15D3144CA9E /* CoreDataSharedInventoryRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataSharedInventoryRepositoryTests.swift; sourceTree = "<group>"; };
 		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
+		666F7134FD62BAC5937D87D1 /* InventorySharingViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventorySharingViewModelTests.swift; sourceTree = "<group>"; };
+		870EEDAD1E5A013BFC886CF1 /* InventorySharingViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventorySharingViewModelTests.swift; sourceTree = "<group>"; };
 		878F664543088F1B86740DD2 /* UnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationRepository.swift; sourceTree = "<group>"; };
 		95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemDataLoadingServiceTests.swift; sourceTree = "<group>"; };
 		B244734885B21EAEB2AAC553 /* ServiceType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceType.swift; sourceTree = "<group>"; };
@@ -124,6 +130,7 @@
 		F5FACB512EA0C9590084A6D0 /* RepositoryTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = RepositoryTests.xctestplan; sourceTree = "<group>"; };
 		F887709B0F20E4BA442FDEF0 /* UnifiedLocationModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationModel.swift; sourceTree = "<group>"; };
 		FB705A027A7FAEC05529AC2E /* MockUnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockUnifiedLocationRepository.swift; sourceTree = "<group>"; };
+		FF728F1BB1F568B03E0D1F0A /* CoreDataShareRecordRepositoryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataShareRecordRepositoryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -275,6 +282,7 @@
 				Tests/MoltenTests/Views/Shared/TabConfigurationTests.swift,
 				Tests/MoltenTests/Views/Shared/TabNavigationTests.swift,
 				Tests/MoltenTests/Views/Shared/UIStateManagementTests.swift,
+				Tests/MoltenTests/Views/Sharing/InventorySharingViewModelTests.swift,
 				Tests/MoltenTests/Views/Shopping/MockShoppingListViewModel.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListItemCreationTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListOptionsViewTests.swift,
@@ -282,6 +290,8 @@
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
 				Tests/MoltenTests/Views/Shopping/StoreAutoCompleteFieldTests.swift,
+				Tests/RepositoryTests/CoreData/CoreDataSharedInventoryRepositoryTests.swift,
+				Tests/RepositoryTests/CoreData/CoreDataShareRecordRepositoryTests.swift,
 				Tests/RepositoryTests/GlassItemRepositoryDuplicateTests.swift,
 				Tools/Documentation/check_core_data_violations.sh,
 				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
@@ -441,6 +451,7 @@
 				Tests/MoltenTests/Views/Shared/TabConfigurationTests.swift,
 				Tests/MoltenTests/Views/Shared/TabNavigationTests.swift,
 				Tests/MoltenTests/Views/Shared/UIStateManagementTests.swift,
+				Tests/MoltenTests/Views/Sharing/InventorySharingViewModelTests.swift,
 				Tests/MoltenTests/Views/Shopping/MockShoppingListViewModel.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListItemCreationTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListOptionsViewTests.swift,
@@ -468,6 +479,8 @@
 				Tests/RepositoryTests/CoreData/CoreDataProjectRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataRecoveryUtilityTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataRepositoryTests.swift,
+				Tests/RepositoryTests/CoreData/CoreDataSharedInventoryRepositoryTests.swift,
+				Tests/RepositoryTests/CoreData/CoreDataShareRecordRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataUserImageRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataUserTagsRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/GlassItemRepositoryTests.swift,
@@ -595,6 +608,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};
@@ -862,6 +877,10 @@
 				F5C06D2A2EB7A7670038084E /* ScreenshotAutomation.xctest */,
 				F5C06D2B2EB7A7670038084E /* ViewModelTests.xctest */,
 				066416B60A11124E9A8029EA /* ToolItemDataLoadingServiceTests.swift */,
+				FF728F1BB1F568B03E0D1F0A /* CoreDataShareRecordRepositoryTests.swift */,
+				08D3866CEA49A15D3144CA9E /* CoreDataSharedInventoryRepositoryTests.swift */,
+				666F7134FD62BAC5937D87D1 /* InventorySharingViewModelTests.swift */,
+				870EEDAD1E5A013BFC886CF1 /* InventorySharingViewModelTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1216,6 +1235,7 @@
 			files = (
 				36D95164C45EC4E84CF4EC68 /* ToolItemDataLoadingServiceTests.swift in Sources */,
 				4F5AAAA29613EDF7C07B6E56 /* ToolItemDataLoadingServiceTests.swift in Sources */,
+				83B740F9C4102D179551C86E /* InventorySharingViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1251,6 +1271,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7D9EB3F9DC2C7AF699FFC438 /* CoreDataShareRecordRepositoryTests.swift in Sources */,
+				1F765843AD4E451B7BF25F36 /* CoreDataSharedInventoryRepositoryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

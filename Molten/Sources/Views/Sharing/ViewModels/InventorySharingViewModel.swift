@@ -19,17 +19,23 @@ class InventorySharingViewModel {
 
     // State
     var myShareCode: String?
+    var myShareMetadata: MyShareMetadata?
     var friendShares: [FriendShare] = []
     var isLoading = false
     var errorMessage: String?
 
-    // Share creation
+    // Share creation/editing
     var isCreatingShare = false
+    var showingCreateShare = false
+    var showingEditMetadata = false
+    var displayName = ""
+    var shareNotes = ""
 
     // Friend management
     var showingAddFriend = false
     var friendShareCode = ""
     var friendName = ""
+    var friendNickname = ""
     var isAddingFriend = false
 
     // Friend inventory
@@ -55,7 +61,14 @@ class InventorySharingViewModel {
 
     func loadShareData() async {
         myShareCode = sharingManager.getMyShareCode()
+        myShareMetadata = sharingManager.getMyShareMetadata()
         friendShares = sharingManager.getFriendShares()
+
+        // Populate form fields with existing metadata
+        if let metadata = myShareMetadata {
+            displayName = metadata.displayName
+            shareNotes = metadata.shareNotes ?? ""
+        }
     }
 
     // MARK: - My Share
@@ -65,12 +78,26 @@ class InventorySharingViewModel {
         errorMessage = nil
 
         do {
+            // Validate display name
+            guard !displayName.trimmingCharacters(in: .whitespaces).isEmpty else {
+                errorMessage = "Please enter a display name"
+                isCreatingShare = false
+                return
+            }
+
             // Get all inventory items (only items with inventory, no zero quantities)
             let items = try await catalogService.getAllGlassItems(includeWithoutInventory: false)
 
+            // Create metadata
+            let metadata = MyShareMetadata(
+                displayName: displayName.trimmingCharacters(in: .whitespaces),
+                shareNotes: shareNotes.trimmingCharacters(in: .whitespaces).isEmpty ? nil : shareNotes.trimmingCharacters(in: .whitespaces)
+            )
+
             // Create share
-            let code = try await sharingManager.createMyShare(items: items)
+            let code = try await sharingManager.createMyShare(items: items, metadata: metadata)
             myShareCode = code
+            myShareMetadata = metadata
 
         } catch SharingManagerError.shareAlreadyExists {
             errorMessage = "You already have a share. Delete it first to create a new one."
@@ -89,13 +116,48 @@ class InventorySharingViewModel {
             // Get all inventory items (only items with inventory, no zero quantities)
             let items = try await catalogService.getAllGlassItems(includeWithoutInventory: false)
 
-            // Refresh share
+            // Refresh share (keeps existing metadata)
             try await sharingManager.refreshMyShare(items: items)
 
         } catch SharingManagerError.noShareExists {
             errorMessage = "No share exists. Create one first."
         } catch {
             errorMessage = "Failed to refresh share: \(error.localizedDescription)"
+        }
+
+        isLoading = false
+    }
+
+    func updateMyShareMetadata() async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            // Validate display name
+            guard !displayName.trimmingCharacters(in: .whitespaces).isEmpty else {
+                errorMessage = "Please enter a display name"
+                isLoading = false
+                return
+            }
+
+            // Get all inventory items (only items with inventory, no zero quantities)
+            let items = try await catalogService.getAllGlassItems(includeWithoutInventory: false)
+
+            // Create updated metadata
+            let metadata = MyShareMetadata(
+                displayName: displayName.trimmingCharacters(in: .whitespaces),
+                shareNotes: shareNotes.trimmingCharacters(in: .whitespaces).isEmpty ? nil : shareNotes.trimmingCharacters(in: .whitespaces)
+            )
+
+            // Refresh share with new metadata
+            try await sharingManager.refreshMyShare(items: items, metadata: metadata)
+            myShareMetadata = metadata
+            showingEditMetadata = false
+
+        } catch SharingManagerError.noShareExists {
+            errorMessage = "No share exists. Create one first."
+        } catch {
+            errorMessage = "Failed to update metadata: \(error.localizedDescription)"
         }
 
         isLoading = false
@@ -121,8 +183,8 @@ class InventorySharingViewModel {
     // MARK: - Friend Shares
 
     func addFriend() async {
-        guard !friendShareCode.isEmpty, !friendName.isEmpty else {
-            errorMessage = "Please enter both share code and friend name"
+        guard !friendShareCode.isEmpty else {
+            errorMessage = "Please enter a share code"
             return
         }
 
@@ -132,7 +194,8 @@ class InventorySharingViewModel {
         do {
             let result = try await sharingManager.addFriendShare(
                 shareCode: friendShareCode.uppercased(),
-                friendName: friendName
+                friendName: friendName.isEmpty ? nil : friendName,
+                nickname: friendNickname.isEmpty ? nil : friendNickname
             )
 
             if !result.isValid {
@@ -145,6 +208,7 @@ class InventorySharingViewModel {
             // Clear form
             friendShareCode = ""
             friendName = ""
+            friendNickname = ""
             showingAddFriend = false
 
         } catch SharingAPIError.notFound {
@@ -193,6 +257,40 @@ class InventorySharingViewModel {
         }
 
         isLoadingFriendInventory = false
+    }
+
+    // MARK: - Friend Customization
+
+    func updateFriendNickname(_ friend: FriendShare, nickname: String?) {
+        do {
+            try sharingManager.updateFriendNickname(shareCode: friend.shareCode, nickname: nickname)
+            friendShares = sharingManager.getFriendShares()
+        } catch {
+            errorMessage = "Failed to update nickname: \(error.localizedDescription)"
+        }
+    }
+
+    func updateFriendNotes(_ friend: FriendShare, notes: String?) {
+        do {
+            try sharingManager.updateFriendNotes(shareCode: friend.shareCode, notes: notes)
+            friendShares = sharingManager.getFriendShares()
+        } catch {
+            errorMessage = "Failed to update notes: \(error.localizedDescription)"
+        }
+    }
+
+    func updateFriendIcon(_ friend: FriendShare, symbol: String?, backgroundHex: String?, foregroundHex: String?) {
+        do {
+            try sharingManager.updateFriendIcon(
+                shareCode: friend.shareCode,
+                symbol: symbol,
+                backgroundHex: backgroundHex,
+                foregroundHex: foregroundHex
+            )
+            friendShares = sharingManager.getFriendShares()
+        } catch {
+            errorMessage = "Failed to update icon: \(error.localizedDescription)"
+        }
     }
 
     // MARK: - Helpers

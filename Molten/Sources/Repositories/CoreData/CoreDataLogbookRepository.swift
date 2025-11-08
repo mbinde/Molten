@@ -171,12 +171,16 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
         entity.setValue(model.hoursSpent as NSDecimalNumber?, forKey: "hours_spent")
         entity.setValue(model.inventoryDeductionRecorded, forKey: "inventory_deduction_recorded")
 
-        // Set kiln schedule relationship
+        // Set kiln schedule relationship (optional, may not be available in test contexts)
+        // NOTE: This is a cross-store reference - KilnSchedule may be in different store
         if let kilnScheduleId = model.kilnScheduleId {
             let scheduleFetchRequest = NSFetchRequest<KilnScheduleEntity>(entityName: "KilnScheduleEntity")
             scheduleFetchRequest.predicate = NSPredicate(format: "id == %@", kilnScheduleId as CVarArg)
             if let scheduleEntity = try? self.context.fetch(scheduleFetchRequest).first {
                 entity.setValue(scheduleEntity, forKey: "kilnSchedule")
+            } else {
+                // Schedule not found - this is OK in test environments or if schedule is in different store
+                entity.setValue(nil, forKey: "kilnSchedule")
             }
         } else {
             entity.setValue(nil, forKey: "kilnSchedule")
@@ -321,7 +325,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             return TechniqueType(rawValue: typeString)
         }()
 
-        // Extract kiln schedule ID from relationship
+        // Extract kiln schedule ID from relationship (if available)
         let kilnScheduleId: UUID? = {
             guard let scheduleEntity = entity.value(forKey: "kilnSchedule") as? KilnScheduleEntity else {
                 return nil

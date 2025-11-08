@@ -7,11 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1EF3F9D80A7F6FD19CC99D21 /* SubscriptionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E669066B918E140175E0A7BD /* SubscriptionServiceTests.swift */; };
 		36D95164C45EC4E84CF4EC68 /* ToolItemDataLoadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */; };
 		4F5AAAA29613EDF7C07B6E56 /* ToolItemDataLoadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 066416B60A11124E9A8029EA /* ToolItemDataLoadingServiceTests.swift */; };
+		85174B9BFFFAE7F23E9254D6 /* SubscriptionModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8060792A9E38C50292942304 /* SubscriptionModelsTests.swift */; };
+		8F3161DA118B25F8E0599FFC /* SubscriptionViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702DF2EF5203D1F96764FA58 /* SubscriptionViewModelTests.swift */; };
+		A790F0F747C42BE86639AB25 /* SubscriptionManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CDF9EE45CC5AF5CF35F7476 /* SubscriptionManagerTests.swift */; };
 		F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */ = {isa = PBXBuildFile; fileRef = F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */; };
 		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
 		F53C0BD32EA81F980020E1AB /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */; };
+		F59F21B92EBF2CDE005A6269 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = F59F21B82EBF2CDE005A6269 /* RevenueCat */; };
+		F59F21BB2EBF2CDE005A6269 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = F59F21BA2EBF2CDE005A6269 /* RevenueCatUI */; };
+		F59F3AD62EBF1A2C005A6269 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = F59F3AD52EBF1A2C005A6269 /* RevenueCat */; };
+		F59F3AD82EBF1A2C005A6269 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = F59F3AD72EBF1A2C005A6269 /* RevenueCatUI */; };
 		F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */; };
 		F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */; };
 		F5D3E3522E9EAB2000DAA195 /* core-data-verification.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */; };
@@ -95,11 +103,15 @@
 /* Begin PBXFileReference section */
 		066416B60A11124E9A8029EA /* ToolItemDataLoadingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToolItemDataLoadingServiceTests.swift; path = Molten/Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift; sourceTree = "<group>"; };
 		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
+		5CDF9EE45CC5AF5CF35F7476 /* SubscriptionManagerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Molten/Tests/MoltenTests/Services/SubscriptionManagerTests.swift"; sourceTree = SOURCE_ROOT; };
+		702DF2EF5203D1F96764FA58 /* SubscriptionViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Molten/Tests/MoltenTests/Views/SubscriptionViewModelTests.swift; sourceTree = SOURCE_ROOT; };
+		8060792A9E38C50292942304 /* SubscriptionModelsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Molten/Tests/MoltenTests/Models/SubscriptionModelsTests.swift; sourceTree = SOURCE_ROOT; };
 		878F664543088F1B86740DD2 /* UnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationRepository.swift; sourceTree = "<group>"; };
 		95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemDataLoadingServiceTests.swift; sourceTree = "<group>"; };
 		99E546D81C385D5ED6AE447C /* ShareCodeGeneratorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ShareCodeGeneratorTests.swift; path = Tests/MoltenTests/Utilities/ShareCodeGeneratorTests.swift; sourceTree = "<group>"; };
 		B244734885B21EAEB2AAC553 /* ServiceType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceType.swift; sourceTree = "<group>"; };
 		DB95FB5AC403E8CFD93211C5 /* CoreDataUnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataUnifiedLocationRepository.swift; sourceTree = "<group>"; };
+		E669066B918E140175E0A7BD /* SubscriptionServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Molten/Tests/MoltenTests/Services/SubscriptionServiceTests.swift; sourceTree = SOURCE_ROOT; };
 		E7C7A65B94A6533A14E7AE47 /* taglia_tools.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = taglia_tools.json; sourceTree = "<group>"; };
 		F0AA0F21EF80657D274B4674 /* ToolItemDataLoadingService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemDataLoadingService.swift; sourceTree = "<group>"; };
 		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
@@ -185,6 +197,7 @@
 				Tests/MoltenTests/Models/ProjectReferenceUrlTests.swift,
 				Tests/MoltenTests/Models/ServiceTypeTests.swift,
 				Tests/MoltenTests/Models/ServiceValidationTests.swift,
+				Tests/MoltenTests/Models/SubscriptionModelsTests.swift,
 				Tests/MoltenTests/Models/TechniqueTypeTests.swift,
 				Tests/MoltenTests/Models/WeightUnitTests.swift,
 				Tests/MoltenTests/Repositories/InventoryRepositoryLocationTests.swift,
@@ -213,6 +226,7 @@
 				Tests/MoltenTests/Services/ReportingServiceTests.swift,
 				Tests/MoltenTests/Services/ServiceCoordinationTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
+				Tests/MoltenTests/Services/SubscriptionServiceTests.swift,
 				Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
 				Tests/MoltenTests/Utilities/CatalogFormattersTests.swift,
@@ -273,6 +287,7 @@
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
 				Tests/MoltenTests/Views/Shopping/StoreAutoCompleteFieldTests.swift,
+				Tests/MoltenTests/Views/SubscriptionViewModelTests.swift,
 				Tests/RepositoryTests/GlassItemRepositoryDuplicateTests.swift,
 				Tools/Documentation/check_core_data_violations.sh,
 				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
@@ -341,6 +356,7 @@
 				Tests/MoltenTests/Models/ProjectReferenceUrlTests.swift,
 				Tests/MoltenTests/Models/ServiceTypeTests.swift,
 				Tests/MoltenTests/Models/ServiceValidationTests.swift,
+				Tests/MoltenTests/Models/SubscriptionModelsTests.swift,
 				Tests/MoltenTests/Models/TechniqueTypeTests.swift,
 				Tests/MoltenTests/Models/WeightUnitTests.swift,
 				Tests/MoltenTests/Repositories/InventoryRepositoryLocationTests.swift,
@@ -370,6 +386,8 @@
 				Tests/MoltenTests/Services/ReportingServiceTests.swift,
 				Tests/MoltenTests/Services/ServiceCoordinationTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
+				Tests/MoltenTests/Services/SubscriptionServiceTests.swift,
+				Tests/MoltenTests/Services/SubscriptionManagerTests.swift,
 				Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
 				Tests/MoltenTests/Utilities/CatalogFormattersTests.swift,
@@ -429,6 +447,7 @@
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
 				Tests/MoltenTests/Views/Shopping/StoreAutoCompleteFieldTests.swift,
+				Tests/MoltenTests/Views/SubscriptionViewModelTests.swift,
 				Tests/MoltenUITests/AppLaunchUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITestsLaunchTests.swift,
@@ -576,6 +595,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};
@@ -629,6 +650,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F59F21BB2EBF2CDE005A6269 /* RevenueCatUI in Frameworks */,
+				F59F21B92EBF2CDE005A6269 /* RevenueCat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -636,6 +659,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F59F3AD82EBF1A2C005A6269 /* RevenueCatUI in Frameworks */,
+				F59F3AD62EBF1A2C005A6269 /* RevenueCat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -680,6 +705,16 @@
 			path = Molten;
 			sourceTree = "<group>";
 		};
+		0DD28FE690931D99A8CD95FC /* MoltenTests */ = {
+			isa = PBXGroup;
+			children = (
+				D000788C7E1FA48F1E9A28C9 /* Models */,
+				D4457884BAC329550F2091D5 /* Services */,
+				56969BB0863D0990240F1261 /* Views */,
+			);
+			name = MoltenTests;
+			sourceTree = "<group>";
+		};
 		160E2B3414703E0C705D824A /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -710,6 +745,14 @@
 				32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */,
 			);
 			path = Core;
+			sourceTree = "<group>";
+		};
+		56969BB0863D0990240F1261 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				702DF2EF5203D1F96764FA58 /* SubscriptionViewModelTests.swift */,
+			);
+			name = Views;
 			sourceTree = "<group>";
 		};
 		594EB86C56E6C4B279430E7B /* Data */ = {
@@ -773,6 +816,14 @@
 			path = Tools;
 			sourceTree = "<group>";
 		};
+		A6EEA501E9C48072BB6CC1D3 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				0DD28FE690931D99A8CD95FC /* MoltenTests */,
+			);
+			name = Tests;
+			sourceTree = "<group>";
+		};
 		AA64CC0D40B6CD107FD59D77 /* Repositories */ = {
 			isa = PBXGroup;
 			children = (
@@ -804,6 +855,22 @@
 				F887709B0F20E4BA442FDEF0 /* UnifiedLocationModel.swift */,
 			);
 			path = Domain;
+			sourceTree = "<group>";
+		};
+		D000788C7E1FA48F1E9A28C9 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				8060792A9E38C50292942304 /* SubscriptionModelsTests.swift */,
+			);
+			name = Models;
+			sourceTree = "<group>";
+		};
+		D4457884BAC329550F2091D5 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				E669066B918E140175E0A7BD /* SubscriptionServiceTests.swift */,
+			);
+			name = Services;
 			sourceTree = "<group>";
 		};
 		E3AF640BE0097D12B5FB61B9 /* Tests */ = {
@@ -844,6 +911,8 @@
 				F5C06D2B2EB7A7670038084E /* ViewModelTests.xctest */,
 				066416B60A11124E9A8029EA /* ToolItemDataLoadingServiceTests.swift */,
 				99E546D81C385D5ED6AE447C /* ShareCodeGeneratorTests.swift */,
+				A6EEA501E9C48072BB6CC1D3 /* Tests */,
+				5CDF9EE45CC5AF5CF35F7476 /* SubscriptionManagerTests.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1077,6 +1146,9 @@
 			);
 			mainGroup = F5A13C422E890146002C0F7A;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F59F3AD42EBF1A2C005A6269 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F5A13C422E890146002C0F7A;
 			projectDirPath = "";
@@ -1198,6 +1270,10 @@
 			files = (
 				36D95164C45EC4E84CF4EC68 /* ToolItemDataLoadingServiceTests.swift in Sources */,
 				4F5AAAA29613EDF7C07B6E56 /* ToolItemDataLoadingServiceTests.swift in Sources */,
+				85174B9BFFFAE7F23E9254D6 /* SubscriptionModelsTests.swift in Sources */,
+				1EF3F9D80A7F6FD19CC99D21 /* SubscriptionServiceTests.swift in Sources */,
+				8F3161DA118B25F8E0599FFC /* SubscriptionViewModelTests.swift in Sources */,
+				A790F0F747C42BE86639AB25 /* SubscriptionManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1998,6 +2074,40 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F59F3AD42EBF1A2C005A6269 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.47.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F59F21B82EBF2CDE005A6269 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F59F3AD42EBF1A2C005A6269 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
+		F59F21BA2EBF2CDE005A6269 /* RevenueCatUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F59F3AD42EBF1A2C005A6269 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCatUI;
+		};
+		F59F3AD52EBF1A2C005A6269 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F59F3AD42EBF1A2C005A6269 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
+		F59F3AD72EBF1A2C005A6269 /* RevenueCatUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F59F3AD42EBF1A2C005A6269 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCatUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F5A13C432E890146002C0F7A /* Project object */;
 }

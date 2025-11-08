@@ -42,6 +42,16 @@ struct GlassItemRowView: View {
             self.tags = detailedShoppingItem.allTags
         }
 
+        init(from enrichedItem: EnrichedFriendInventoryItem) {
+            // Use catalog data if available, otherwise use snapshot data with fallbacks
+            self.name = enrichedItem.catalogData?.name ?? enrichedItem.snapshot.sku
+            self.manufacturer = enrichedItem.snapshot.manufacturer
+            self.sku = enrichedItem.snapshot.sku
+            self.stableId = enrichedItem.snapshot.stableId
+            self.imagePath = enrichedItem.catalogData?.imagePath
+            self.tags = enrichedItem.catalogData?.tags ?? []
+        }
+
         init(name: String, manufacturer: String, sku: String?, stableId: String, imagePath: String? = nil, tags: [String]) {
             self.name = name
             self.manufacturer = manufacturer
@@ -180,6 +190,41 @@ extension GlassItemRowView {
                     Text("\(item.inventoryByType.count) type\(item.inventoryByType.count == 1 ? "" : "s")")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                }
+            }
+        )
+
+        return GlassItemRowView(
+            item: .init(from: item),
+            badgeContent: badge,
+            showFullCode: false
+        )
+    }
+
+    /// Friend inventory-style row with quantity and location
+    static func friendInventory(item: EnrichedFriendInventoryItem) -> GlassItemRowView {
+        let badge = AnyView(
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text("\(item.snapshot.quantity, specifier: "%.1f")")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.blue)
+
+                    Text(item.snapshot.unit)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                if let location = item.snapshot.location {
+                    HStack(spacing: 4) {
+                        Image(systemName: "location.fill")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text(location)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
         )

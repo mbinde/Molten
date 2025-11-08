@@ -41,8 +41,7 @@ struct CatalogViewDataLoadingTests {
         }
         try? context.save()
 
-        RepositoryFactory.configure(persistentContainer: testController.container)
-        RepositoryFactory.mode = .coreData
+        RepositoryFactory.configureForTestingWithCoreData(controller: testController)
 
         let catalogService = RepositoryFactory.createCatalogService()
         return (testController, catalogService)

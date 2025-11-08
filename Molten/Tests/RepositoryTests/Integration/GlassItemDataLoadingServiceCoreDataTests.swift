@@ -26,21 +26,21 @@ struct GlassItemDataLoadingServiceCoreDataTests {
     // MARK: - Test Helper Methods
     
     /// Create isolated test environment with Core Data
-    private func createTestEnvironment() async throws -> (PersistenceController, CatalogService, GlassItemDataLoadingService) {
-        let testController = PersistenceController.createTestController()
-        RepositoryFactory.configure(persistentContainer: testController.container)
-        RepositoryFactory.mode = .coreData
-        
+    private func createTestEnvironment() async throws -> (CatalogService, GlassItemDataLoadingService) {
+        // Use the proper Core Data test configuration
+        // This creates an isolated test controller internally
+        RepositoryFactory.configureForTestingWithCoreData()
+
         let catalogService = RepositoryFactory.createCatalogService()
         let mockJsonLoader = MockJSONDataLoader()
         mockJsonLoader.testDataMode = .small
-        
+
         let loadingService = GlassItemDataLoadingService(
             catalogService: catalogService,
             jsonLoader: mockJsonLoader
         )
-        
-        return (testController, catalogService, loadingService)
+
+        return (catalogService, loadingService)
     }
     
     /// Create test catalog item data
@@ -81,7 +81,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
     
     @Test("Should load initial glass items into empty Core Data store")
     func testInitialDataLoading() async throws {
-        let (_, catalogService, loadingService) = try await createTestEnvironment()
+        let (catalogService, loadingService) = try await createTestEnvironment()
         
         // Verify empty state
         let initialItems = try await catalogService.getAllGlassItems()
@@ -102,7 +102,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
     
     @Test("Should skip existing items when configured to skip")
     func testSkipExistingItems() async throws {
-        let (_, catalogService, loadingService) = try await createTestEnvironment()
+        let (catalogService, loadingService) = try await createTestEnvironment()
         
         // First load
         let initialResult = try await loadingService.loadGlassItemsFromJSON(options: .default)
@@ -129,7 +129,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
     
     @Test("Should detect and update changed items")
     func testUpdateChangedItems() async throws {
-        let (_, catalogService, _) = try await createTestEnvironment()
+        let (catalogService, _) = try await createTestEnvironment()
 
         // Create initial item with natural key format that matches code extraction
         let originalItem = GlassItemModel(
@@ -188,7 +188,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
     
     @Test("Should not update items that haven't changed")
     func testSkipUnchangedItems() async throws {
-        let (_, catalogService, _) = try await createTestEnvironment()
+        let (catalogService, _) = try await createTestEnvironment()
 
         // Create initial item with natural key format that matches code extraction
         let originalItem = GlassItemModel(
@@ -240,7 +240,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
     
     @Test("Should handle mixed create and update scenarios")
     func testMixedCreateAndUpdate() async throws {
-        let (_, catalogService, _) = try await createTestEnvironment()
+        let (catalogService, _) = try await createTestEnvironment()
         
         // Create one existing item - use natural key format that matches code extraction
         // NOTE: manufacturer is lowercased, but SKU preserves case from extraction
@@ -323,7 +323,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
     
     @Test("Should use app update options correctly")
     func testAppUpdateOptions() async throws {
-        let (_, _, loadingService) = try await createTestEnvironment()
+        let (_, loadingService) = try await createTestEnvironment()
         
         // Test that appUpdate options are configured correctly
         let options = GlassItemDataLoadingService.LoadingOptions.appUpdate
@@ -344,7 +344,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
     
     @Test("Should handle update failures gracefully")
     func testUpdateFailureHandling() async throws {
-        let (_, catalogService, _) = try await createTestEnvironment()
+        let (catalogService, _) = try await createTestEnvironment()
         
         // Create mock loader that will cause update failures
         let mockJsonLoader = MockJSONDataLoader()
@@ -385,7 +385,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
     
     @Test("Should handle large datasets efficiently")
     func testLargeDatasetPerformance() async throws {
-        let (_, _, loadingService) = try await createTestEnvironment()
+        let (_, loadingService) = try await createTestEnvironment()
         
         // Use medium dataset to test performance without overwhelming the test
         let mockJsonLoader = MockJSONDataLoader()

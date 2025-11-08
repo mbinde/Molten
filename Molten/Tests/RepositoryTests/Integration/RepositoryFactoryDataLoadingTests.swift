@@ -52,8 +52,7 @@ struct RepositoryFactoryDataLoadingTests {
 
         try? context.save()
 
-        RepositoryFactory.configure(persistentContainer: testController.container)
-        RepositoryFactory.mode = .coreData
+        RepositoryFactory.configureForTestingWithCoreData(controller: testController)
         return testController
     }
     
@@ -102,8 +101,7 @@ struct RepositoryFactoryDataLoadingTests {
         let testController = createTestEnvironment()
 
         // Configure factory to use test container (not production)
-        RepositoryFactory.configure(persistentContainer: testController.container)
-        RepositoryFactory.mode = .coreData
+        RepositoryFactory.configureForTestingWithCoreData(controller: testController)
 
         let catalogService = RepositoryFactory.createCatalogService()
 

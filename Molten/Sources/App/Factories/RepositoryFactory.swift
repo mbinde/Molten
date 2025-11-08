@@ -721,7 +721,15 @@ nonisolated struct RepositoryFactory {
         testController = controller
         persistentContainer = controller.container
     }
-    
+
+    /// Configure factory for testing with a specific Core Data test controller
+    /// Use this when you need to set up or clear data in the controller before using it
+    nonisolated static func configureForTestingWithCoreData(controller: PersistenceController) {
+        mode = .coreData
+        testController = controller
+        persistentContainer = controller.container
+    }
+
     /// Configure factory for production with Core Data
     nonisolated static func configureForProduction() {
         mode = .coreData

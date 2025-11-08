@@ -8,11 +8,11 @@
 import Foundation
 
 /// Result of downloading an inventory snapshot
-struct DownloadedSnapshot {
-    let snapshotData: Data
-    let publicKey: Data
+public struct DownloadedSnapshot {
+    public let snapshotData: Data
+    public let publicKey: Data
 
-    init(snapshotData: Data, publicKey: Data) {
+    public init(snapshotData: Data, publicKey: Data) {
         self.snapshotData = snapshotData
         self.publicKey = publicKey
     }

@@ -8,13 +8,13 @@
 import Foundation
 
 /// Result of deserializing an inventory snapshot
-struct SnapshotResult {
-    let items: [InventoryItemSnapshot]
-    let timestamp: Date
-    let version: String
-    let isValid: Bool
+public struct SnapshotResult {
+    public let items: [InventoryItemSnapshot]
+    public let timestamp: Date
+    public let version: String
+    public let isValid: Bool
 
-    init(items: [InventoryItemSnapshot], timestamp: Date, version: String, isValid: Bool) {
+    public init(items: [InventoryItemSnapshot], timestamp: Date, version: String, isValid: Bool) {
         self.items = items
         self.timestamp = timestamp
         self.version = version

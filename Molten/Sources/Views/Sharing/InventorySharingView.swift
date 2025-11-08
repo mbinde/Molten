@@ -17,7 +17,7 @@ struct InventorySharingView: View {
                 myShareSection
                 friendsSection
             }
-            .navigationTitle("Share Inventory")
+            .navigationTitle("Inventory Sharing")
             .task {
                 await viewModel.onAppear()
             }

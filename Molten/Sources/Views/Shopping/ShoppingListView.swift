@@ -284,27 +284,24 @@ struct ShoppingListView: View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
                 // Search and filter controls
-                SearchAndFilterHeader(
+                StandardSearchAndFilterHeader(
                     searchText: $viewModel.searchText,
                     searchTitlesOnly: $viewModel.searchTitlesOnly,
                     selectedTags: $viewModel.selectedTags,
-                    showingAllTags: $showingAllTags,
-                    allAvailableTags: allAvailableTags,
                     selectedCOEs: $viewModel.selectedCOEs,
-                    showingCOESelection: $showingCOESelection,
-                    allAvailableCOEs: allAvailableCOEs,
-                    selectedProductTypes: $selectedProductTypes,
-                    showingProductTypeSelection: $showingProductTypeSelection,
-                    allAvailableProductTypes: ["glass", "coating", "tool"],
                     selectedManufacturers: $viewModel.selectedManufacturers,
+                    selectedProductTypes: $selectedProductTypes,
+                    showingAllTags: $showingAllTags,
+                    showingCOESelection: $showingCOESelection,
                     showingManufacturerSelection: $showingManufacturerSelection,
+                    showingProductTypeSelection: $showingProductTypeSelection,
+                    allAvailableTags: allAvailableTags,
+                    allAvailableCOEs: allAvailableCOEs,
                     allAvailableManufacturers: allAvailableManufacturers,
-                    manufacturerDisplayName: { code in
-                        GlassManufacturers.fullName(for: code) ?? code
-                    },
+                    allAvailableProductTypes: ["glass", "coating", "tool"],
                     sortMenuContent: { sortMenuView },
-                    searchClearedFeedback: $searchClearedFeedback,
-                    searchPlaceholder: "Search shopping list..."
+                    searchPlaceholder: "Search shopping list...",
+                    searchClearedFeedback: $searchClearedFeedback
                 )
 
                 // Store filter (if multiple stores available)

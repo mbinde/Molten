@@ -19,6 +19,7 @@ import CryptoKit
 @testable import Molten
 
 @Suite("InventoryDetailView User Notes Tests")
+@MainActor
 struct InventoryDetailViewUserNotesTests {
 
     @Test("InventoryDetailView should accept UserNotesRepository for managing notes")

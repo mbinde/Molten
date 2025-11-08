@@ -38,13 +38,16 @@ public final class SubscriptionViewModel: SubscriptionViewModelProtocol {
     }
 
     public func showPaywall() async {
+        print("🟢 [ViewModel] showPaywall() called")
         do {
+            print("🟢 [ViewModel] Calling subscriptionService.presentPaywall()")
             try await subscriptionService.presentPaywall()
+            print("🟢 [ViewModel] presentPaywall() completed, reloading status")
             // Reload status after paywall dismisses
             await loadSubscriptionStatus()
         } catch {
             errorMessage = "Failed to show subscription options"
-            print("Error presenting paywall: \(error)")
+            print("❌ [ViewModel] Error presenting paywall: \(error)")
         }
     }
 

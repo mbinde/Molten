@@ -73,18 +73,28 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
     }
 
     public func presentPaywall() async throws {
+        print("🔵 [RevenueCat] presentPaywall() called")
+
         // RevenueCat Paywalls (modern approach with default offering)
-        guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootViewController = await windowScene.windows.first?.rootViewController else {
+        guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+            print("❌ [RevenueCat] Could not find windowScene")
             throw SubscriptionServiceError.configurationError
         }
 
+        guard let rootViewController = await windowScene.windows.first?.rootViewController else {
+            print("❌ [RevenueCat] Could not find rootViewController")
+            throw SubscriptionServiceError.configurationError
+        }
+
+        print("✅ [RevenueCat] Found rootViewController, creating PaywallViewController")
         let paywallViewController = PaywallViewController()
 
         // Handle purchase completion
         paywallViewController.delegate = PaywallViewControllerDelegateHandler.shared
 
+        print("🎬 [RevenueCat] Presenting paywall...")
         await rootViewController.present(paywallViewController, animated: true)
+        print("✅ [RevenueCat] Paywall presented")
     }
 
     public func presentCustomerCenter() async throws {

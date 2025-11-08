@@ -685,6 +685,12 @@ nonisolated struct RepositoryFactory {
         )
     }
 
+    /// Creates an InventorySharingManager for sharing inventory with friends
+    @MainActor
+    static func createInventorySharingManager() -> InventorySharingManager {
+        return InventorySharingManager()
+    }
+
     // MARK: - Configuration Helpers
     
     /// Configure factory for testing with all mocks

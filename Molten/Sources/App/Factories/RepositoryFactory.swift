@@ -758,6 +758,12 @@ nonisolated struct RepositoryFactory {
         mode = .hybrid
     }
     
+    /// Configure with custom persistence controller (for testing)
+    nonisolated static func configure(testController controller: PersistenceController) {
+        testController = controller
+        persistentContainer = controller.container
+    }
+
     /// Configure with custom persistent container
     nonisolated static func configure(persistentContainer: NSPersistentContainer) {
         self.persistentContainer = persistentContainer

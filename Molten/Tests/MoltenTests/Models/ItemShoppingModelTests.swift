@@ -377,7 +377,7 @@ struct ItemShoppingModelTests {
         )
 
         #expect(item.validationErrors.count == 1)
-        #expect(item.validationErrors.contains("Item natural key is required"))
+        #expect(item.validationErrors.contains("Item stable ID is required"))
     }
 
     @Test("validationErrors - zero quantity")
@@ -399,7 +399,7 @@ struct ItemShoppingModelTests {
         )
 
         #expect(item.validationErrors.count == 2)
-        #expect(item.validationErrors.contains("Item natural key is required"))
+        #expect(item.validationErrors.contains("Item stable ID is required"))
         #expect(item.validationErrors.contains("Quantity must be greater than 0"))
     }
 

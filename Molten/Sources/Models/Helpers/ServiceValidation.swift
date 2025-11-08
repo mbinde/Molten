@@ -103,7 +103,7 @@ class ServiceValidation {
         }
         
         // Check required type
-        if model.inventoryType.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty {
+        if model.type.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty {
             errors.append("Inventory type is required and cannot be empty")
         }
         

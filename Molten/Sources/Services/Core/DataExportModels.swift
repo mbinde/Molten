@@ -112,7 +112,7 @@ struct ExportInventory: Codable, Sendable {
         ExportInventory(
             id: model.id.uuidString,
             itemStableId: model.item_stable_id,
-            type: model.inventoryType,  // Use non-optional accessor
+            type: model.type,
             subtype: model.subtype,
             subsubtype: model.subsubtype,
             dimensions: model.dimensions,

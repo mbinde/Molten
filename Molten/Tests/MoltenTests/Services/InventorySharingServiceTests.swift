@@ -245,13 +245,13 @@ class MockSharingAPIClient: InventorySharingAPIClient {
         return result
     }
 
-    override func updateSnapshot(shareCode: String, snapshotData: Data, publicKey: Data) async throws {
+    override func updateSnapshot(shareCode: String, snapshotData: Data, publicKey: Data, ownershipSignature: Data) async throws {
         updateCalled = true
         lastShareCode = shareCode
         lastPublicKey = publicKey
     }
 
-    override func deleteShare(shareCode: String) async throws {
+    override func deleteShare(shareCode: String, ownershipSignature: Data) async throws {
         deleteCalled = true
         lastShareCode = shareCode
     }

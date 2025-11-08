@@ -241,7 +241,9 @@ struct InventorySharingAPIClientTests {
         )
         mockSession.nextData = Data()
 
-        try await client.deleteShare(shareCode: shareCode)
+        let ownershipSignature = Data(count: 64) // Mock signature
+
+        try await client.deleteShare(shareCode: shareCode, ownershipSignature: ownershipSignature)
 
         #expect(mockSession.lastRequest?.httpMethod == "DELETE")
     }
@@ -261,8 +263,10 @@ struct InventorySharingAPIClientTests {
         )
         mockSession.nextData = Data()
 
+        let ownershipSignature = Data(count: 64) // Mock signature
+
         await #expect(throws: SharingAPIError.self) {
-            try await client.deleteShare(shareCode: shareCode)
+            try await client.deleteShare(shareCode: shareCode, ownershipSignature: ownershipSignature)
         }
     }
 
@@ -285,10 +289,13 @@ struct InventorySharingAPIClientTests {
         )
         mockSession.nextData = Data()
 
+        let ownershipSignature = Data(count: 64) // Mock signature
+
         try await client.updateSnapshot(
             shareCode: shareCode,
             snapshotData: snapshotData,
-            publicKey: publicKey
+            publicKey: publicKey,
+            ownershipSignature: ownershipSignature
         )
 
         #expect(mockSession.lastRequest?.httpMethod == "PUT")
@@ -311,11 +318,14 @@ struct InventorySharingAPIClientTests {
         )
         mockSession.nextData = Data()
 
+        let ownershipSignature = Data(count: 64) // Mock signature
+
         await #expect(throws: SharingAPIError.self) {
             try await client.updateSnapshot(
                 shareCode: shareCode,
                 snapshotData: snapshotData,
-                publicKey: publicKey
+                publicKey: publicKey,
+                ownershipSignature: ownershipSignature
             )
         }
     }

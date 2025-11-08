@@ -19,6 +19,7 @@ import Foundation
 @testable import Molten
 
 @Suite("Advanced Testing - Performance, Memory, and Precision", .serialized)
+@MainActor
 struct AdvancedTestingTests {
     
     // MARK: - Thread Safety Tests

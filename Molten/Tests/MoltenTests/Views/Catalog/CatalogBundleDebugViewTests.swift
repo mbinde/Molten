@@ -11,6 +11,7 @@ import Testing
 @testable import Molten
 
 @Suite("CatalogBundleDebugView Tests")
+@MainActor
 struct CatalogBundleDebugViewTests {
     
     // MARK: - Bundle Path Validation Tests

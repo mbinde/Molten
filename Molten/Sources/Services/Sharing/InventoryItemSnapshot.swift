@@ -15,13 +15,15 @@ public struct InventoryItemSnapshot: Codable, Equatable {
     public let quantity: Double
     public let unit: String
     public let location: String?
+    public let tags: [String]?  // User tags for this item
 
-    public init(stableId: String, manufacturer: String, sku: String, quantity: Double, unit: String, location: String?) {
+    public init(stableId: String, manufacturer: String, sku: String, quantity: Double, unit: String, location: String?, tags: [String]? = nil) {
         self.stableId = stableId
         self.manufacturer = manufacturer
         self.sku = sku
         self.quantity = quantity
         self.unit = unit
         self.location = location
+        self.tags = tags
     }
 }

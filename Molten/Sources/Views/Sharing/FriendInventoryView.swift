@@ -9,26 +9,59 @@ import SwiftUI
 
 struct FriendInventoryView: View {
 
-    let friend: FriendShare
-    @Bindable var viewModel: InventorySharingViewModel
+    @State private var viewModel: FriendInventoryViewModel
+
+    // UI state
+    @State private var showingAllTags = false
+    @State private var showingCOESelection = false
+    @State private var showingManufacturerSelection = false
+
+    init(friend: FriendShare) {
+        self._viewModel = State(initialValue: FriendInventoryViewModel(friend: friend))
+    }
 
     var body: some View {
         Group {
-            if viewModel.isLoadingFriendInventory {
-                ProgressView("Loading inventory...")
-            } else if viewModel.friendInventory.isEmpty && viewModel.selectedFriend?.shareCode == friend.shareCode {
+            if viewModel.isLoading {
+                loadingView
+            } else if viewModel.enrichedInventory.isEmpty && !viewModel.rawInventory.isEmpty {
+                // Data loaded but couldn't enrich (catalog not available)
                 emptyState
-            } else if viewModel.selectedFriend?.shareCode == friend.shareCode {
-                inventoryList
-            } else {
+            } else if viewModel.enrichedInventory.isEmpty {
                 loadButton
+            } else {
+                inventoryList
             }
         }
-        .navigationTitle(friend.friendName)
+        .navigationTitle("\(viewModel.friend.friendName)'s Inventory")
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            // Auto-load inventory when view appears
+            // Will show cached data instantly, then refresh from server
+            await viewModel.loadInventory()
+        }
+        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button("OK") {
+                viewModel.clearError()
+            }
+        } message: {
+            if let error = viewModel.errorMessage {
+                Text(error)
+            }
+        }
     }
 
     // MARK: - Subviews
+
+    private var loadingView: some View {
+        VStack(spacing: DesignSystem.Spacing.lg) {
+            ProgressView()
+            Text("Loading inventory...")
+                .font(.headline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
 
     private var loadButton: some View {
         VStack(spacing: DesignSystem.Spacing.lg) {
@@ -36,12 +69,12 @@ struct FriendInventoryView: View {
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
 
-            Text("Load \(friend.friendName)'s Inventory")
+            Text("Load \(viewModel.friend.friendName)'s Inventory")
                 .font(.headline)
 
             Button {
                 Task {
-                    await viewModel.loadFriendInventory(friend)
+                    await viewModel.loadInventory()
                 }
             } label: {
                 Text("Load Inventory")
@@ -57,7 +90,7 @@ struct FriendInventoryView: View {
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
 
-            Text("\(friend.friendName) has no inventory")
+            Text("\(viewModel.friend.friendName) has no inventory")
                 .font(.headline)
 
             Text("They haven't added any glass to their inventory yet")
@@ -71,64 +104,74 @@ struct FriendInventoryView: View {
 
     private var inventoryList: some View {
         List {
-            ForEach(viewModel.friendInventory, id: \.stableId) { item in
-                FriendInventoryItemRow(item: item)
+            Section {
+                StandardSearchAndFilterHeader(
+                    searchText: $viewModel.searchText,
+                    searchTitlesOnly: $viewModel.searchTitlesOnly,
+                    selectedTags: $viewModel.selectedTags,
+                    selectedCOEs: $viewModel.selectedCOEs,
+                    selectedManufacturers: $viewModel.selectedManufacturers,
+                    showingAllTags: $showingAllTags,
+                    showingCOESelection: $showingCOESelection,
+                    showingManufacturerSelection: $showingManufacturerSelection,
+                    allAvailableTags: viewModel.availableTags,
+                    allAvailableCOEs: viewModel.availableCOEs,
+                    allAvailableManufacturers: viewModel.availableManufacturers,
+                    searchPlaceholder: "Search \(viewModel.friend.friendName)'s inventory..."
+                )
+            }
+
+            Section {
+                if viewModel.filteredInventory.isEmpty {
+                    VStack(spacing: DesignSystem.Spacing.lg) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+
+                        Text("No items match your search")
+                            .font(.headline)
+
+                        Button("Clear Filters") {
+                            viewModel.clearAllFilters()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DesignSystem.Spacing.xl)
+                } else {
+                    ForEach(viewModel.filteredInventory) { item in
+                        GlassItemRowView.friendInventory(item: item)
+                    }
+                }
+            } header: {
+                Text("\(viewModel.filteredInventory.count) item\(viewModel.filteredInventory.count == 1 ? "" : "s")")
             }
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     Task {
-                        await viewModel.loadFriendInventory(friend)
+                        await viewModel.loadInventory(forceRefresh: true)
                     }
                 } label: {
                     Image(systemName: "arrow.clockwise")
                 }
-                .disabled(viewModel.isLoadingFriendInventory)
+                .disabled(viewModel.isLoading)
             }
         }
     }
 }
 
-// MARK: - Friend Inventory Item Row
-
-struct FriendInventoryItemRow: View {
-    let item: InventoryItemSnapshot
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-            HStack {
-                Text(item.manufacturer.uppercased())
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                Text("•")
-                    .foregroundColor(.secondary)
-
-                Text(item.sku)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            HStack(alignment: .firstTextBaseline) {
-                Text("\(item.quantity, specifier: "%.1f")")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-
-                Text(item.unit)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-
-                if let location = item.location {
-                    Spacer()
-
-                    Label(location, systemImage: "location")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-        }
-        .padding(.vertical, DesignSystem.Spacing.xs)
+#Preview("Loading") {
+    NavigationStack {
+        FriendInventoryView(
+            friend: FriendShare(
+                shareCode: "ABC123",
+                friendName: "Alice",
+                dateAdded: Date(),
+                lastRefreshed: Date()
+            )
+        )
     }
 }
 
@@ -140,57 +183,7 @@ struct FriendInventoryItemRow: View {
                 friendName: "Alice",
                 dateAdded: Date(),
                 lastRefreshed: Date()
-            ),
-            viewModel: {
-                let vm = InventorySharingViewModel()
-                vm.selectedFriend = FriendShare(
-                    shareCode: "ABC123",
-                    friendName: "Alice",
-                    dateAdded: Date(),
-                    lastRefreshed: Date()
-                )
-                vm.friendInventory = [
-                    InventoryItemSnapshot(
-                        stableId: "abc123",
-                        manufacturer: "bullseye",
-                        sku: "001",
-                        quantity: 5.0,
-                        unit: "rod",
-                        location: "Studio A"
-                    ),
-                    InventoryItemSnapshot(
-                        stableId: "def456",
-                        manufacturer: "cim",
-                        sku: "023",
-                        quantity: 3.5,
-                        unit: "tube",
-                        location: nil
-                    )
-                ]
-                return vm
-            }()
-        )
-    }
-}
-
-#Preview("Empty") {
-    NavigationStack {
-        FriendInventoryView(
-            friend: FriendShare(
-                shareCode: "ABC123",
-                friendName: "Bob",
-                dateAdded: Date()
-            ),
-            viewModel: {
-                let vm = InventorySharingViewModel()
-                vm.selectedFriend = FriendShare(
-                    shareCode: "ABC123",
-                    friendName: "Bob",
-                    dateAdded: Date()
-                )
-                vm.friendInventory = []
-                return vm
-            }()
+            )
         )
     }
 }

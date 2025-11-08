@@ -34,6 +34,7 @@ import XCTest
 #if canImport(Testing)
 
 @Suite("ShoppingListOptionsView Tests")
+@MainActor
 struct ShoppingListOptionsViewTests {
 
     // MARK: - Validation Tests

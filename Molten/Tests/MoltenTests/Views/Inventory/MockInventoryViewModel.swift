@@ -133,7 +133,7 @@ class MockInventoryViewModel: InventoryViewModelProtocol {
 
     var availableInventoryTypes: [String] {
         let allTypes = Set(completeItems.flatMap { item in
-            item.inventory.map { $0.type }
+            item.inventory.compactMap { $0.type }
         })
         return Array(allTypes).sorted()
     }
@@ -208,7 +208,10 @@ class MockInventoryViewModel: InventoryViewModelProtocol {
         if !selectedTypes.isEmpty {
             filtered = filtered.filter { item in
                 item.inventory.contains { inv in
-                    selectedTypes.contains(inv.type)
+                    if let type = inv.type {
+                        return selectedTypes.contains(type)
+                    }
+                    return false
                 }
             }
         }

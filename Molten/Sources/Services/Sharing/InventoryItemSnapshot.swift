@@ -8,15 +8,15 @@
 import Foundation
 
 /// Represents a single inventory item in a snapshot
-struct InventoryItemSnapshot: Codable, Equatable {
-    let stableId: String
-    let manufacturer: String
-    let sku: String
-    let quantity: Double
-    let unit: String
-    let location: String?
+public struct InventoryItemSnapshot: Codable, Equatable {
+    public let stableId: String
+    public let manufacturer: String
+    public let sku: String
+    public let quantity: Double
+    public let unit: String
+    public let location: String?
 
-    init(stableId: String, manufacturer: String, sku: String, quantity: Double, unit: String, location: String?) {
+    public init(stableId: String, manufacturer: String, sku: String, quantity: Double, unit: String, location: String?) {
         self.stableId = stableId
         self.manufacturer = manufacturer
         self.sku = sku

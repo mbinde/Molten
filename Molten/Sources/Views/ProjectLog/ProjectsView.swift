@@ -71,21 +71,21 @@ struct ProjectsView: View {
             VStack(spacing: 0) {
                 // Search bar at top (only show when we have projects)
                 if !projects.isEmpty {
-                    SearchAndFilterHeader(
+                    StandardSearchAndFilterHeader(
                         searchText: $searchText,
                         searchTitlesOnly: $searchTitlesOnly,
                         selectedTags: $selectedTags,
-                        showingAllTags: $showingAllTags,
-                        allAvailableTags: [],
                         selectedCOEs: $selectedCOEs,
-                        showingCOESelection: $showingCOESelection,
-                        allAvailableCOEs: [],
-                        selectedProductTypes: $selectedProductTypes,
-                        showingProductTypeSelection: $showingProductTypeSelection,
-                        allAvailableProductTypes: ["glass", "coating", "tool"],
                         selectedManufacturers: $selectedManufacturers,
+                        selectedProductTypes: $selectedProductTypes,
+                        showingAllTags: $showingAllTags,
+                        showingCOESelection: $showingCOESelection,
                         showingManufacturerSelection: $showingManufacturerSelection,
+                        showingProductTypeSelection: $showingProductTypeSelection,
+                        allAvailableTags: [],
+                        allAvailableCOEs: [],
                         allAvailableManufacturers: [],
+                        allAvailableProductTypes: [],
                         sortMenuContent: {
                             AnyView(
                                 Group {

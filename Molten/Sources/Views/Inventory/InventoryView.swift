@@ -34,6 +34,7 @@ struct InventoryView: View {
     @State private var searchClearedFeedback = false
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
     @State private var showingLabelDesigner = false
+    @State private var showingSharing = false
 
     // Performance optimization: Cache computed values to avoid recomputation on every view refresh
     @State private var cachedAllTags: [String] = []
@@ -310,24 +311,21 @@ struct InventoryView: View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
                 // Search and filter controls using shared component
-                SearchAndFilterHeader(
+                StandardSearchAndFilterHeader(
                     searchText: $viewModel.searchText,
                     searchTitlesOnly: $viewModel.searchTitlesOnly,
                     selectedTags: $viewModel.selectedTags,
-                    showingAllTags: $showingAllTags,
-                    allAvailableTags: allAvailableTags,
                     selectedCOEs: $viewModel.selectedCOEs,
-                    showingCOESelection: $showingCOESelection,
-                    allAvailableCOEs: allAvailableCOEs,
-                    selectedProductTypes: $selectedProductTypes,
-                    showingProductTypeSelection: $showingProductTypeSelection,
-                    allAvailableProductTypes: ["glass", "coating", "tool"],
                     selectedManufacturers: $viewModel.selectedManufacturers,
+                    selectedProductTypes: $selectedProductTypes,
+                    showingAllTags: $showingAllTags,
+                    showingCOESelection: $showingCOESelection,
                     showingManufacturerSelection: $showingManufacturerSelection,
+                    showingProductTypeSelection: $showingProductTypeSelection,
+                    allAvailableTags: allAvailableTags,
+                    allAvailableCOEs: allAvailableCOEs,
                     allAvailableManufacturers: allAvailableManufacturers,
-                    manufacturerDisplayName: { code in
-                        GlassManufacturers.fullName(for: code) ?? code
-                    },
+                    allAvailableProductTypes: ["glass", "coating", "tool"],
                     manufacturerCounts: manufacturerCounts,
                     coeCounts: coeCounts,
                     tagCounts: tagCounts,
@@ -344,8 +342,8 @@ struct InventoryView: View {
                             }
                         )
                     },
-                    searchClearedFeedback: $searchClearedFeedback,
-                    searchPlaceholder: "Search inventory by name, code, manufacturer..."
+                    searchPlaceholder: "Search inventory by name, code, manufacturer...",
+                    searchClearedFeedback: $searchClearedFeedback
                 )
 
                 // Usage banner (only show for free tier)
@@ -422,6 +420,11 @@ struct InventoryView: View {
                     currentCount: inventoryItemCount,
                     limit: entitlementService.getInventoryLimit() ?? 0
                 )
+            }
+            .sheet(isPresented: $showingSharing) {
+                NavigationStack {
+                    InventorySharingView()
+                }
             }
             .task {
                 await loadData()
@@ -513,12 +516,27 @@ struct InventoryView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
+            Button {
+                showingAddItem = true
+            } label: {
+                Image(systemName: "plus")
+            }
+        }
+
+        ToolbarItem(placement: .confirmationAction) {
             Menu {
                 Button {
-                    showingAddItem = true
+                    showingSharing = true
                 } label: {
-                    Label("Add Item", systemImage: "plus")
+                    Label("Inventory Sharing", systemImage: "person.2")
                 }
+
+                Button {
+                    showingLabelDesigner = true
+                } label: {
+                    Label("Print Labels", systemImage: "qrcode")
+                }
+                .disabled(sortedFilteredItems.isEmpty)
 
                 ImportInventoryTriggerView {
                     // Refresh inventory after import completes
@@ -527,17 +545,8 @@ struct InventoryView: View {
                         await loadData()
                     }
                 }
-
-                Divider()
-
-                Button {
-                    showingLabelDesigner = true
-                } label: {
-                    Label("Print Labels", systemImage: "qrcode")
-                }
-                .disabled(sortedFilteredItems.isEmpty)
             } label: {
-                Label("Add", systemImage: "plus")
+                Image(systemName: "ellipsis.circle")
             }
         }
     }

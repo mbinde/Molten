@@ -13,7 +13,7 @@ struct SubscriptionServiceTests {
         let service = MockSubscriptionService(hasProAccess: false)
 
         let hasAccess = await service.hasProAccess()
-        let status = await service.getSubscriptionInfo()
+        let status = await service.getSubscriptionStatus()
 
         #expect(hasAccess == false)
         #expect(status.isActive == false)
@@ -25,7 +25,7 @@ struct SubscriptionServiceTests {
         let service = MockSubscriptionService(hasProAccess: true)
 
         let hasAccess = await service.hasProAccess()
-        let status = await service.getSubscriptionInfo()
+        let status = await service.getSubscriptionStatus()
 
         #expect(hasAccess == true)
         #expect(status.isActive == true)
@@ -76,7 +76,7 @@ struct SubscriptionServiceTests {
 
         // Now Pro
         hasAccess = await service.hasProAccess()
-        let status = await service.getSubscriptionInfo()
+        let status = await service.getSubscriptionStatus()
 
         #expect(hasAccess == true)
         #expect(status.isActive == true)
@@ -95,7 +95,7 @@ struct SubscriptionServiceTests {
 
         // Now expired
         hasAccess = await service.hasProAccess()
-        let status = await service.getSubscriptionInfo()
+        let status = await service.getSubscriptionStatus()
 
         #expect(hasAccess == false)
         #expect(status.isActive == false)
@@ -115,7 +115,7 @@ struct SubscriptionServiceTests {
             subscriptionStatus: customStatus
         )
 
-        let status = await service.getSubscriptionInfo()
+        let status = await service.getSubscriptionStatus()
 
         #expect(status.productIdentifier == "lifetime")
         #expect(status.expirationDate == nil)

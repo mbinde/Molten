@@ -13,7 +13,7 @@ struct SubscriptionViewModelTests {
         let mockService = MockSubscriptionService(hasProAccess: false)
         let viewModel = SubscriptionViewModel(subscriptionService: mockService)
 
-        await viewModel.loadSubscriptionInfo()
+        await viewModel.loadSubscriptionStatus()
 
         #expect(viewModel.hasProAccess == false)
         #expect(viewModel.subscriptionStatus.isActive == false)
@@ -25,7 +25,7 @@ struct SubscriptionViewModelTests {
         let mockService = MockSubscriptionService(hasProAccess: true)
         let viewModel = SubscriptionViewModel(subscriptionService: mockService)
 
-        await viewModel.loadSubscriptionInfo()
+        await viewModel.loadSubscriptionStatus()
 
         #expect(viewModel.hasProAccess == true)
         #expect(viewModel.subscriptionStatus.isActive == true)
@@ -75,7 +75,7 @@ struct SubscriptionViewModelTests {
 
         // Start loading
         Task {
-            await viewModel.loadSubscriptionInfo()
+            await viewModel.loadSubscriptionStatus()
         }
 
         // Wait a moment then check final state

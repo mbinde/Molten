@@ -3,6 +3,7 @@ import Foundation
 @testable import Molten
 
 @Suite("Subscription Domain Models")
+@MainActor
 struct SubscriptionModelsTests {
 
     // MARK: - SubscriptionInfo Tests
@@ -121,17 +122,17 @@ struct SubscriptionModelsTests {
         #expect(entitlement.isActive == false)
     }
 
-    // MARK: - SubscriptionError Tests
+    // MARK: - SubscriptionServiceError Tests
 
-    @Test("SubscriptionError should provide proper error descriptions")
+    @Test("SubscriptionServiceError should provide proper error descriptions")
     func testErrorDescriptions() {
-        let configError = SubscriptionError.configurationError
+        let configError = SubscriptionServiceError.configurationError
         #expect(configError.errorDescription?.contains("not configured") == true)
 
-        let cancelledError = SubscriptionError.purchaseCancelled
+        let cancelledError = SubscriptionServiceError.purchaseCancelled
         #expect(cancelledError.errorDescription?.contains("cancelled") == true)
 
-        let networkError = SubscriptionError.networkError
+        let networkError = SubscriptionServiceError.networkError
         #expect(networkError.errorDescription?.contains("Network") == true)
     }
 }

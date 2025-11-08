@@ -99,6 +99,9 @@ struct InventorySharingIntegrationTests {
             publicKey: userAKeyPair.publicKey
         )
 
+        // Create test Core Data controller
+        let testController = PersistenceController.createTestController()
+
         // User B downloads User A's share
         let userBSharingService = InventorySharingService(
             apiClient: mockAPIClient,
@@ -107,7 +110,19 @@ struct InventorySharingIntegrationTests {
             snapshot: InventorySnapshot()
         )
         let userBCoordinator = InventorySharingCoordinator(sharingService: userBSharingService)
-        let userBManager = InventorySharingManager(coordinator: userBCoordinator)
+
+        // Create manager with test repositories
+        let shareRecordRepo = CoreDataShareRecordRepository(context: testController.container.viewContext)
+        let catalogRepo = RepositoryFactory.createGlassItemRepository()
+        let sharedInventoryRepo = CoreDataSharedInventoryRepository(
+            context: testController.container.viewContext,
+            catalogRepository: catalogRepo
+        )
+        let userBManager = InventorySharingManager(
+            coordinator: userBCoordinator,
+            shareRecordRepository: shareRecordRepo,
+            sharedInventoryRepository: sharedInventoryRepo
+        )
 
         // Download friend's share
         let result = try await userBManager.addFriendShare(
@@ -176,7 +191,20 @@ struct InventorySharingIntegrationTests {
             snapshot: InventorySnapshot()
         )
         let coordinator = InventorySharingCoordinator(sharingService: sharingService)
-        let manager = InventorySharingManager(coordinator: coordinator)
+
+        // Create test Core Data controller
+        let testController = PersistenceController.createTestController()
+        let shareRecordRepo = CoreDataShareRecordRepository(context: testController.container.viewContext)
+        let catalogRepo = RepositoryFactory.createGlassItemRepository()
+        let sharedInventoryRepo = CoreDataSharedInventoryRepository(
+            context: testController.container.viewContext,
+            catalogRepository: catalogRepo
+        )
+        let manager = InventorySharingManager(
+            coordinator: coordinator,
+            shareRecordRepository: shareRecordRepo,
+            sharedInventoryRepository: sharedInventoryRepo
+        )
 
         let result = try await manager.addFriendShare(
             shareCode: "TAMPER",

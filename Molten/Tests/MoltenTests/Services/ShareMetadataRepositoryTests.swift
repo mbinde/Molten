@@ -9,7 +9,7 @@ import Testing
 import Foundation
 @testable import Molten
 
-@Suite("ShareMetadataRepository Tests")
+@Suite("ShareMetadataRepository Tests", .serialized)
 @MainActor
 struct ShareMetadataRepositoryTests {
 

@@ -482,7 +482,7 @@ struct ImportInventoryView: View {
                         Text("\(Int(existing.quantity))")
                             .font(.title)
                             .fontWeight(.bold)
-                        Text(existing.type)
+                        Text(existing.type ?? "")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

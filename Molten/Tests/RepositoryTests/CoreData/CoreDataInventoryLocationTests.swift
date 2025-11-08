@@ -193,7 +193,7 @@ struct CoreDataInventoryLocationTests {
         let updated = InventoryModel(
             id: created.id,
             item_stable_id: created.item_stable_id,
-            type: created.type,
+            type: created.type ?? "",
             quantity: 10,
             location: "Shelf A",
             date_added: created.date_added,

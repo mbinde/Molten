@@ -240,7 +240,7 @@ class InventoryViewModel: InventoryViewModelProtocol {
     /// Available inventory types for filtering
     var availableInventoryTypes: [String] {
         let allTypes = Set(completeItems.flatMap { item in
-            item.inventory.map { $0.type }
+            item.inventory.compactMap { $0.type }
         })
         return Array(allTypes).sorted()
     }

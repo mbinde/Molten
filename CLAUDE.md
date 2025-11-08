@@ -638,35 +638,55 @@ Button(action: addItem) {
 
 ### Creating New Tests - Workflow
 
-**When creating test files, you MUST add them to the appropriate test target and commit the project file.**
+**Simple workflow: Create files in filesystem, user adds them to Xcode in one batch operation.**
 
-1. Create test files in final destination: `Tests/MoltenTests/` (unit) or `Tests/RepositoryTests/` (Core Data)
+**Claude's workflow:**
 
-2. **Automatically add to Xcode target** using the script:
+1. Create test files in correct filesystem location:
+   - Unit tests (mocks only): `Tests/MoltenTests/`
+   - Core Data integration tests: `Tests/RepositoryTests/`
+   - UI tests: `Tests/MoltenUITests/`
+
+2. Commit the test files:
    ```bash
-   # For MoltenTests (unit tests)
-   ruby add-test-to-xcode.rb Tests/MoltenTests/Your/TestFile.swift
-
-   # For RepositoryTests (Core Data integration tests)
-   ruby add-test-to-xcode.rb Tests/RepositoryTests/Your/TestFile.swift
+   git add Tests/MoltenTests/YourNewTests.swift
+   git commit -m "test: add YourNewTests"
    ```
 
-3. **Immediately commit BOTH the test file AND project.pbxproj**:
+3. Tell user: "Created N new test files in Tests/MoltenTests/ - ready to add to Xcode"
+
+**User's workflow (adds all new files at once):**
+
+1. In Xcode Project Navigator, right-click project root (or `Tests` folder)
+2. Choose "Add Files to Molten..."
+3. Navigate to and select the entire `Molten` folder (or `Molten/Tests` folder)
+4. In the dialog:
+   - Select "Create groups" (NOT "Create folder references")
+   - Check the correct target:
+     - **MoltenTests** for unit tests
+     - **RepositoryTests** for Core Data integration tests
+     - **MoltenUITests** for UI tests
+   - Click "Add"
+5. Xcode automatically:
+   - Skips files already in the project
+   - Adds only new files
+   - Preserves complete directory structure
+6. Commit `project.pbxproj`:
    ```bash
-   git add Tests/MoltenTests/Your/TestFile.swift
    git add Molten.xcodeproj/project.pbxproj
-   git commit -m "test: add TestFile tests"
-   git push
+   git commit -m "chore: add new test files to Xcode project"
    ```
 
-4. Inform the user that tests are ready to run
+**Why this works:**
+- No need to navigate deep folder hierarchies
+- Can add dozens of files in one operation
+- Xcode handles directory structure automatically
+- No scripts to maintain or debug
 
 **Critical Notes**:
-- ⚠️ **ALWAYS commit `Molten.xcodeproj/project.pbxproj`** - this saves the target membership
-- Once committed, anyone checking out the branch will have the file in the correct target automatically
-- The script handles everything - no need to ask user to manually add files in Xcode
-- Source files in `Molten/Sources/` are automatically included in the main app target - no script needed
-- If the script fails (gem not installed), fall back to asking user to manually add the file in Xcode
+- ⚠️ **User must commit `Molten.xcodeproj/project.pbxproj`** after adding files
+- Source files in `Molten/Sources/` are automatically included in main app target - no manual adding needed
+- Only test files need this manual step
 
 ### Core Data Migrations
 

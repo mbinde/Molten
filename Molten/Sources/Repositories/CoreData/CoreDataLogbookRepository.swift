@@ -172,19 +172,9 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
         entity.setValue(model.inventoryDeductionRecorded, forKey: "inventory_deduction_recorded")
 
         // Set kiln schedule relationship (optional, may not be available in test contexts)
-        // NOTE: This is a cross-store reference - KilnSchedule may be in different store
-        if let kilnScheduleId = model.kilnScheduleId {
-            let scheduleFetchRequest = NSFetchRequest<KilnScheduleEntity>(entityName: "KilnScheduleEntity")
-            scheduleFetchRequest.predicate = NSPredicate(format: "id == %@", kilnScheduleId as CVarArg)
-            if let scheduleEntity = try? self.context.fetch(scheduleFetchRequest).first {
-                entity.setValue(scheduleEntity, forKey: "kilnSchedule")
-            } else {
-                // Schedule not found - this is OK in test environments or if schedule is in different store
-                entity.setValue(nil, forKey: "kilnSchedule")
-            }
-        } else {
-            entity.setValue(nil, forKey: "kilnSchedule")
-        }
+        // NOTE: Logbook entity does not have a kilnSchedule relationship in Core Data model
+        // kilnScheduleId is stored as an attribute (UUID) for cross-store reference lookup
+        // The relationship was planned but never added to the model - keeping attribute-based reference
 
         // Clear existing relationships
         // NOTE: Tags use UserTags with polymorphic association (owner_id + owner_type), not relationships

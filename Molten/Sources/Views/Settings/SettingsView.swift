@@ -124,9 +124,16 @@ struct SettingsView: View {
     @Environment(SubscriptionManager.self) private var subscriptionManager
 
     private let catalogService: CatalogService
+    private let subscriptionService: SubscriptionServiceProtocol
+    @State private var subscriptionViewModel: SubscriptionViewModel
 
-    init(catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
+    init(
+        catalogService: CatalogService = RepositoryFactory.createCatalogService(),
+        subscriptionService: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService()
+    ) {
         self.catalogService = catalogService
+        self.subscriptionService = subscriptionService
+        self._subscriptionViewModel = State(initialValue: SubscriptionViewModel(subscriptionService: subscriptionService))
     }
     
     private var defaultSortOptionBinding: Binding<SortOption> {
@@ -152,19 +159,19 @@ struct SettingsView: View {
 
     // Subscription computed properties
     private var subscriptionIcon: String {
-        entitlementService.tier == .premium ? "crown.fill" : "star.circle"
+        subscriptionViewModel.hasProAccess ? "star.fill" : "star"
     }
 
     private var subscriptionBadge: String {
-        entitlementService.tier == .premium ? "Premium" : "Free"
+        subscriptionViewModel.hasProAccess ? "Pro" : "Free"
     }
 
     private var subscriptionBadgeColor: Color {
-        entitlementService.tier == .premium ? .white : .blue
+        subscriptionViewModel.hasProAccess ? .white : .blue
     }
 
     private var subscriptionBadgeBackground: Color {
-        entitlementService.tier == .premium ? .yellow : .blue.opacity(0.2)
+        subscriptionViewModel.hasProAccess ? .yellow : .blue.opacity(0.2)
     }
 
     var body: some View {
@@ -193,7 +200,7 @@ struct SettingsView: View {
                 // Subscription section
                 Section("Subscription") {
                     NavigationLink {
-                        SubscriptionManagementView()
+                        SubscriptionStatusView(viewModel: subscriptionViewModel)
                     } label: {
                         HStack {
                             Label("Manage Subscription", systemImage: subscriptionIcon)
@@ -207,6 +214,10 @@ struct SettingsView: View {
                                 .cornerRadius(6)
                         }
                     }
+                }
+                .task {
+                    // Load subscription status when settings view appears
+                    await subscriptionViewModel.loadSubscriptionStatus()
                 }
 
                 Section {

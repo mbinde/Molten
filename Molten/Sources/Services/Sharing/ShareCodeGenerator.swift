@@ -3,7 +3,8 @@
 //  Molten
 //
 //  Generates and validates share codes for inventory sharing
-//  Format: GLASS-XXXX-XXXX (8 alphanumeric characters of entropy)
+//  Format: 6 random alphanumeric characters (e.g., "A7B2X9")
+//  Excludes confusing characters: 0, O, 1, l, I
 //
 
 import Foundation
@@ -14,26 +15,20 @@ final class ShareCodeGenerator {
 
     // MARK: - Constants
 
-    private static let prefix = "GLASS"
-    private static let separator = "-"
-    private static let partLength = 4
-    private static let totalLength = 15 // GLASS-XXXX-XXXX
-    private static let alphanumerics = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    private static let codeLength = 6
+    // Alphanumerics excluding confusing characters: 0, O, 1, l, I
+    // Letters: A-Z except O, I, L = ABCDEFGHJKMNPQRSTVWXYZ (23 letters)
+    // Numbers: 2-9 (no 0 or 1) = 23456789 (8 digits)
+    // Total: 31 characters, 31^6 = ~887 million combinations
+    private static let safeCharacters = "ABCDEFGHJKMNPQRSTVWXYZ23456789"
 
     // MARK: - Generation
 
     /// Generate a new unique share code
-    /// - Returns: Share code in format GLASS-XXXX-XXXX
+    /// - Returns: Share code (e.g., "A7B2X9")
     func generate() -> String {
-        let part1 = generateRandomPart()
-        let part2 = generateRandomPart()
-        return "\(Self.prefix)\(Self.separator)\(part1)\(Self.separator)\(part2)"
-    }
-
-    /// Generate a random 4-character alphanumeric string
-    private func generateRandomPart() -> String {
-        return String((0..<Self.partLength).map { _ in
-            Self.alphanumerics.randomElement()!
+        return String((0..<Self.codeLength).map { _ in
+            Self.safeCharacters.randomElement()!
         })
     }
 
@@ -46,34 +41,16 @@ final class ShareCodeGenerator {
         // Normalize to uppercase for validation
         let uppercased = code.uppercased()
 
-        // Check total length
-        guard uppercased.count == Self.totalLength else {
+        // Check length
+        guard uppercased.count == Self.codeLength else {
             return false
         }
 
-        // Split by separator
-        let parts = uppercased.split(separator: Character(Self.separator))
-        guard parts.count == 3 else {
-            return false
-        }
+        // Check that all characters are in the safe character set
+        let safeCharacterSet = CharacterSet(charactersIn: Self.safeCharacters)
+        let codeCharacterSet = CharacterSet(charactersIn: uppercased)
 
-        // Check prefix
-        guard parts[0] == Self.prefix else {
-            return false
-        }
-
-        // Check part lengths
-        guard parts[1].count == Self.partLength,
-              parts[2].count == Self.partLength else {
-            return false
-        }
-
-        // Check that parts contain only alphanumerics
-        let codePart = String(parts[1]) + String(parts[2])
-        let alphanumericSet = CharacterSet.alphanumerics
-        let codeCharacterSet = CharacterSet(charactersIn: codePart)
-
-        return alphanumericSet.isSuperset(of: codeCharacterSet)
+        return safeCharacterSet.isSuperset(of: codeCharacterSet)
     }
 
     // MARK: - Normalization

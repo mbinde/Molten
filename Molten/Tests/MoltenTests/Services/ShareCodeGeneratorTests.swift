@@ -21,15 +21,9 @@ struct ShareCodeGeneratorTests {
         let generator = ShareCodeGenerator()
         let code = generator.generate()
 
-        // Format: GLASS-XXXX-XXXX
-        #expect(code.hasPrefix("GLASS-"))
-        #expect(code.count == 15) // GLASS-XXXX-XXXX = 15 characters
-
-        let parts = code.split(separator: "-")
-        #expect(parts.count == 3)
-        #expect(parts[0] == "GLASS")
-        #expect(parts[1].count == 4)
-        #expect(parts[2].count == 4)
+        // Format: 6 random characters (e.g., "A7B2X9")
+        #expect(code.count == 6, "Code should be 6 characters")
+        #expect(code == code.uppercased(), "Code should be uppercase")
     }
 
     @Test("Should generate unique codes")
@@ -41,19 +35,20 @@ struct ShareCodeGeneratorTests {
         #expect(codes.count == 100)
     }
 
-    @Test("Should generate codes with only alphanumeric characters")
-    func testGenerateAlphanumericOnly() {
+    @Test("Should generate codes with safe characters only")
+    func testGenerateSafeCharactersOnly() {
         let generator = ShareCodeGenerator()
-        let code = generator.generate()
 
-        // Remove prefix and dashes
-        let codeWithoutPrefix = code.replacingOccurrences(of: "GLASS-", with: "")
-        let codePart = codeWithoutPrefix.replacingOccurrences(of: "-", with: "")
+        // Generate many codes to test character distribution
+        let codes = (0..<100).map { _ in generator.generate() }
+        let allChars = codes.joined()
 
-        let alphanumericSet = CharacterSet.alphanumerics
-        let codeCharacterSet = CharacterSet(charactersIn: codePart)
-
-        #expect(alphanumericSet.isSuperset(of: codeCharacterSet))
+        // Verify no confusing characters appear
+        #expect(!allChars.contains("0"), "Should not contain zero")
+        #expect(!allChars.contains("O"), "Should not contain capital O")
+        #expect(!allChars.contains("1"), "Should not contain one")
+        #expect(!allChars.contains("l"), "Should not contain lowercase L")
+        #expect(!allChars.contains("I"), "Should not contain capital I")
     }
 
     @Test("Should generate uppercase codes")
@@ -70,26 +65,29 @@ struct ShareCodeGeneratorTests {
     func testValidateCorrectFormat() {
         let generator = ShareCodeGenerator()
 
-        #expect(generator.isValid("GLASS-ABCD-1234"))
-        #expect(generator.isValid("GLASS-XYZ9-ABC1"))
-        #expect(generator.isValid("GLASS-0000-ZZZZ"))
+        #expect(generator.isValid("A7B2X9"))
+        #expect(generator.isValid("XYZ9AB"))
+        #expect(generator.isValid("234567"))
     }
 
     @Test("Should validate case-insensitive codes")
     func testValidateCaseInsensitive() {
         let generator = ShareCodeGenerator()
 
-        #expect(generator.isValid("glass-abcd-1234"))
-        #expect(generator.isValid("Glass-ABCD-1234"))
-        #expect(generator.isValid("GLASS-abcd-1234"))
+        #expect(generator.isValid("a7b2x9"))
+        #expect(generator.isValid("A7b2X9"))
+        #expect(generator.isValid("xyz9ab"))
     }
 
-    @Test("Should reject invalid prefixes")
-    func testRejectInvalidPrefix() {
+    @Test("Should reject confusing characters")
+    func testRejectConfusingCharacters() {
         let generator = ShareCodeGenerator()
 
-        #expect(!generator.isValid("METAL-ABCD-1234"))
-        #expect(!generator.isValid("ABCD-1234-5678"))
+        #expect(!generator.isValid("A0B2X9")) // Contains 0
+        #expect(!generator.isValid("AO B2X9")) // Contains O
+        #expect(!generator.isValid("A1B2X9")) // Contains 1
+        #expect(!generator.isValid("AlB2X9")) // Contains lowercase l
+        #expect(!generator.isValid("AIB2X9")) // Contains I
         #expect(!generator.isValid(""))
     }
 
@@ -97,29 +95,22 @@ struct ShareCodeGeneratorTests {
     func testRejectInvalidLengths() {
         let generator = ShareCodeGenerator()
 
-        #expect(!generator.isValid("GLASS-ABC-1234")) // Too short
-        #expect(!generator.isValid("GLASS-ABCDE-1234")) // Too long
-        #expect(!generator.isValid("GLASS-ABCD-12345")) // Too long
-        #expect(!generator.isValid("GLASS-ABCD")) // Missing part
+        #expect(!generator.isValid("ABC23")) // Too short (5 chars)
+        #expect(!generator.isValid("ABCD")) // Too short (4 chars)
+        #expect(!generator.isValid("AB")) // Too short (2 chars)
+        #expect(!generator.isValid("ABCD234")) // Too long (7 chars)
+        #expect(!generator.isValid("ABCD2345")) // Too long (8 chars)
     }
 
     @Test("Should reject codes with special characters")
     func testRejectSpecialCharacters() {
         let generator = ShareCodeGenerator()
 
-        #expect(!generator.isValid("GLASS-AB@D-1234"))
-        #expect(!generator.isValid("GLASS-ABCD-12$4"))
-        #expect(!generator.isValid("GLASS-AB.D-1234"))
-        #expect(!generator.isValid("GLASS-ABCD-12 4"))
-    }
-
-    @Test("Should reject codes with wrong separator")
-    func testRejectWrongSeparator() {
-        let generator = ShareCodeGenerator()
-
-        #expect(!generator.isValid("GLASS_ABCD_1234"))
-        #expect(!generator.isValid("GLASS.ABCD.1234"))
-        #expect(!generator.isValid("GLASSABCD1234"))
+        #expect(!generator.isValid("AB@D23"))
+        #expect(!generator.isValid("ABCD2$"))
+        #expect(!generator.isValid("AB.D23"))
+        #expect(!generator.isValid("ABCD 3"))
+        #expect(!generator.isValid("ABC-23"))
     }
 
     // MARK: - Normalization Tests
@@ -128,39 +119,39 @@ struct ShareCodeGeneratorTests {
     func testNormalizeToUppercase() {
         let generator = ShareCodeGenerator()
 
-        #expect(generator.normalize("glass-abcd-1234") == "GLASS-ABCD-1234")
-        #expect(generator.normalize("Glass-XyZ9-AbC1") == "GLASS-XYZ9-ABC1")
+        #expect(generator.normalize("a7b2x9") == "A7B2X9")
+        #expect(generator.normalize("XyZ9Ab") == "XYZ9AB")
     }
 
     @Test("Should normalize whitespace in codes")
     func testNormalizeWhitespace() {
         let generator = ShareCodeGenerator()
 
-        #expect(generator.normalize(" GLASS-ABCD-1234 ") == "GLASS-ABCD-1234")
-        #expect(generator.normalize("GLASS-ABCD-1234\n") == "GLASS-ABCD-1234")
+        #expect(generator.normalize(" A7B2X9 ") == "A7B2X9")
+        #expect(generator.normalize("A7B2X9\n") == "A7B2X9")
     }
 
     @Test("Should return nil for invalid codes during normalization")
     func testNormalizeInvalidCodes() {
         let generator = ShareCodeGenerator()
 
-        #expect(generator.normalize("INVALID") == nil)
-        #expect(generator.normalize("GLASS-AB-1234") == nil)
-        #expect(generator.normalize("") == nil)
+        #expect(generator.normalize("INVALID") == nil) // Wrong length
+        #expect(generator.normalize("AB@D23") == nil) // Special character
+        #expect(generator.normalize("") == nil) // Empty
     }
 
     // MARK: - Entropy Tests
 
-    @Test("Should have sufficient entropy (8 alphanumeric characters)")
+    @Test("Should have sufficient entropy (6 safe characters)")
     func testSufficientEntropy() {
         let generator = ShareCodeGenerator()
         let codes = Set((0..<1000).map { _ in generator.generate() })
 
-        // With 36^8 possible combinations, 1000 codes should all be unique
+        // With 31^6 = ~887 million possible combinations, 1000 codes should all be unique
         #expect(codes.count == 1000)
 
         // Verify we're using full character set (not just numbers or just letters)
-        let allChars = codes.joined().replacingOccurrences(of: "GLASS-", with: "").replacingOccurrences(of: "-", with: "")
+        let allChars = codes.joined()
         let hasNumbers = allChars.contains(where: { $0.isNumber })
         let hasLetters = allChars.contains(where: { $0.isLetter })
 

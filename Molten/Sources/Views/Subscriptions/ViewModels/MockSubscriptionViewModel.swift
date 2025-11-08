@@ -7,18 +7,18 @@ import Observation
 public final class MockSubscriptionViewModel: SubscriptionViewModelProtocol {
 
     public var hasProAccess: Bool
-    public var subscriptionStatus: SubscriptionStatus
+    public var subscriptionStatus: SubscriptionInfo
     public var isLoading: Bool
     public var errorMessage: String?
 
     public init(
         hasProAccess: Bool = false,
-        subscriptionStatus: SubscriptionStatus? = nil,
+        subscriptionStatus: SubscriptionInfo? = nil,
         isLoading: Bool = false,
         errorMessage: String? = nil
     ) {
         self.hasProAccess = hasProAccess
-        self.subscriptionStatus = subscriptionStatus ?? SubscriptionStatus(
+        self.subscriptionStatus = subscriptionStatus ?? SubscriptionInfo(
             isActive: hasProAccess,
             productIdentifier: hasProAccess ? "monthly" : nil,
             expirationDate: hasProAccess ? Date().addingTimeInterval(86400 * 30) : nil,
@@ -35,7 +35,7 @@ public final class MockSubscriptionViewModel: SubscriptionViewModelProtocol {
     public func showPaywall() async {
         // Mock - simulate purchase
         hasProAccess = true
-        subscriptionStatus = SubscriptionStatus(
+        subscriptionStatus = SubscriptionInfo(
             isActive: true,
             productIdentifier: "monthly",
             expirationDate: Date().addingTimeInterval(86400 * 30),

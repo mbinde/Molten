@@ -7,7 +7,7 @@ public protocol SubscriptionServiceProtocol: Sendable {
     func hasProAccess() async -> Bool
 
     /// Get current subscription status
-    func getSubscriptionStatus() async -> SubscriptionStatus
+    func getSubscriptionStatus() async -> SubscriptionInfo
 
     /// Get customer info (for displaying in UI)
     func getCustomerInfo() async throws -> CustomerInfo
@@ -28,12 +28,12 @@ public protocol SubscriptionServiceProtocol: Sendable {
 /// Customer information model
 public struct CustomerInfo: Sendable {
     public let originalAppUserId: String
-    public let subscriptionStatus: SubscriptionStatus
+    public let subscriptionStatus: SubscriptionInfo
     public let activeEntitlements: [EntitlementInfo]
 
     public init(
         originalAppUserId: String,
-        subscriptionStatus: SubscriptionStatus,
+        subscriptionStatus: SubscriptionInfo,
         activeEntitlements: [EntitlementInfo]
     ) {
         self.originalAppUserId = originalAppUserId

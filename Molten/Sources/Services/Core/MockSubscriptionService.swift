@@ -5,17 +5,17 @@ import Foundation
 public final class MockSubscriptionService: SubscriptionServiceProtocol, Sendable {
 
     private var _hasProAccess: Bool
-    private var _subscriptionStatus: SubscriptionStatus
+    private var _subscriptionStatus: SubscriptionInfo
     private var _customerInfo: CustomerInfo
 
     public init(
         hasProAccess: Bool = false,
-        subscriptionStatus: SubscriptionStatus? = nil,
+        subscriptionStatus: SubscriptionInfo? = nil,
         customerInfo: CustomerInfo? = nil
     ) {
         self._hasProAccess = hasProAccess
 
-        self._subscriptionStatus = subscriptionStatus ?? SubscriptionStatus(
+        self._subscriptionStatus = subscriptionStatus ?? SubscriptionInfo(
             isActive: hasProAccess,
             productIdentifier: hasProAccess ? "monthly" : nil,
             expirationDate: hasProAccess ? Date().addingTimeInterval(86400 * 30) : nil,
@@ -35,7 +35,7 @@ public final class MockSubscriptionService: SubscriptionServiceProtocol, Sendabl
         return _hasProAccess
     }
 
-    public func getSubscriptionStatus() async -> SubscriptionStatus {
+    public func getSubscriptionStatus() async -> SubscriptionInfo {
         return _subscriptionStatus
     }
 
@@ -66,7 +66,7 @@ public final class MockSubscriptionService: SubscriptionServiceProtocol, Sendabl
     /// Simulate a Pro purchase (useful for testing upgrade flows)
     public func simulateProPurchase() {
         _hasProAccess = true
-        _subscriptionStatus = SubscriptionStatus(
+        _subscriptionStatus = SubscriptionInfo(
             isActive: true,
             productIdentifier: "monthly",
             expirationDate: Date().addingTimeInterval(86400 * 30),
@@ -84,7 +84,7 @@ public final class MockSubscriptionService: SubscriptionServiceProtocol, Sendabl
     /// Simulate subscription expiration (useful for testing expiration flows)
     public func simulateSubscriptionExpiration() {
         _hasProAccess = false
-        _subscriptionStatus = SubscriptionStatus(
+        _subscriptionStatus = SubscriptionInfo(
             isActive: false,
             productIdentifier: nil,
             expirationDate: Date().addingTimeInterval(-86400),

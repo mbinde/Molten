@@ -1,7 +1,7 @@
 import Foundation
 
 /// Represents the current subscription status for the user
-public struct SubscriptionStatus: Sendable {
+public struct SubscriptionInfo: Sendable {
     public let isActive: Bool
     public let productIdentifier: String?
     public let expirationDate: Date?
@@ -51,7 +51,7 @@ public struct EntitlementInfo: Sendable {
 }
 
 /// Error types for subscription operations
-public enum SubscriptionError: Error, LocalizedError {
+public enum SubscriptionServiceError: Error, LocalizedError {
     case configurationError
     case purchaseCancelled
     case networkError

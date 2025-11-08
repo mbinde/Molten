@@ -13,7 +13,7 @@ struct SubscriptionServiceTests {
         let service = MockSubscriptionService(hasProAccess: false)
 
         let hasAccess = await service.hasProAccess()
-        let status = await service.getSubscriptionStatus()
+        let status = await service.getSubscriptionInfo()
 
         #expect(hasAccess == false)
         #expect(status.isActive == false)
@@ -25,7 +25,7 @@ struct SubscriptionServiceTests {
         let service = MockSubscriptionService(hasProAccess: true)
 
         let hasAccess = await service.hasProAccess()
-        let status = await service.getSubscriptionStatus()
+        let status = await service.getSubscriptionInfo()
 
         #expect(hasAccess == true)
         #expect(status.isActive == true)
@@ -76,7 +76,7 @@ struct SubscriptionServiceTests {
 
         // Now Pro
         hasAccess = await service.hasProAccess()
-        let status = await service.getSubscriptionStatus()
+        let status = await service.getSubscriptionInfo()
 
         #expect(hasAccess == true)
         #expect(status.isActive == true)
@@ -95,7 +95,7 @@ struct SubscriptionServiceTests {
 
         // Now expired
         hasAccess = await service.hasProAccess()
-        let status = await service.getSubscriptionStatus()
+        let status = await service.getSubscriptionInfo()
 
         #expect(hasAccess == false)
         #expect(status.isActive == false)
@@ -103,7 +103,7 @@ struct SubscriptionServiceTests {
 
     @Test("MockSubscriptionService should support custom subscription status")
     func testMockServiceCustomStatus() async {
-        let customStatus = SubscriptionStatus(
+        let customStatus = SubscriptionInfo(
             isActive: true,
             productIdentifier: "lifetime",
             expirationDate: nil,
@@ -115,7 +115,7 @@ struct SubscriptionServiceTests {
             subscriptionStatus: customStatus
         )
 
-        let status = await service.getSubscriptionStatus()
+        let status = await service.getSubscriptionInfo()
 
         #expect(status.productIdentifier == "lifetime")
         #expect(status.expirationDate == nil)
@@ -126,7 +126,7 @@ struct SubscriptionServiceTests {
 
     @Test("CustomerInfo should contain subscription status and entitlements")
     func testCustomerInfoStructure() {
-        let status = SubscriptionStatus(
+        let status = SubscriptionInfo(
             isActive: true,
             productIdentifier: "monthly",
             expirationDate: Date().addingTimeInterval(86400 * 30),

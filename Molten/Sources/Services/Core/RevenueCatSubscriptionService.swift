@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import RevenueCat
 import RevenueCatUI
 
@@ -20,7 +21,7 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
         }
     }
 
-    public func getSubscriptionStatus() async -> SubscriptionStatus {
+    public func getSubscriptionStatus() async -> SubscriptionInfo {
         do {
             let customerInfo = try await Purchases.shared.customerInfo()
 
@@ -28,7 +29,7 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
             if let entitlement = customerInfo.entitlements[proEntitlementIdentifier],
                entitlement.isActive {
 
-                return SubscriptionStatus(
+                return SubscriptionInfo(
                     isActive: true,
                     productIdentifier: entitlement.productIdentifier,
                     expirationDate: entitlement.expirationDate,
@@ -36,7 +37,7 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
                 )
             }
 
-            return SubscriptionStatus(
+            return SubscriptionInfo(
                 isActive: false,
                 productIdentifier: nil,
                 expirationDate: nil,
@@ -44,7 +45,7 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
             )
         } catch {
             print("Error getting subscription status: \(error)")
-            return SubscriptionStatus(
+            return SubscriptionInfo(
                 isActive: false,
                 productIdentifier: nil,
                 expirationDate: nil,
@@ -75,7 +76,7 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
         // RevenueCat Paywalls (modern approach with default offering)
         guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootViewController = await windowScene.windows.first?.rootViewController else {
-            throw SubscriptionError.configurationError
+            throw SubscriptionServiceError.configurationError
         }
 
         let paywallViewController = PaywallViewController()
@@ -89,7 +90,7 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
     public func presentCustomerCenter() async throws {
         guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootViewController = await windowScene.windows.first?.rootViewController else {
-            throw SubscriptionError.configurationError
+            throw SubscriptionServiceError.configurationError
         }
 
         let customerCenterViewController = CustomerCenterViewController()

@@ -9,7 +9,7 @@ public final class SubscriptionViewModel: SubscriptionViewModelProtocol {
     private let subscriptionService: SubscriptionServiceProtocol
 
     public var hasProAccess: Bool = false
-    public var subscriptionStatus: SubscriptionStatus = SubscriptionStatus(
+    public var subscriptionStatus: SubscriptionInfo = SubscriptionInfo(
         isActive: false,
         productIdentifier: nil,
         expirationDate: nil,
@@ -18,7 +18,7 @@ public final class SubscriptionViewModel: SubscriptionViewModelProtocol {
     public var isLoading: Bool = false
     public var errorMessage: String? = nil
 
-    public init(subscriptionService: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService()) {
+    public init(subscriptionService: SubscriptionServiceProtocol) {
         self.subscriptionService = subscriptionService
     }
 

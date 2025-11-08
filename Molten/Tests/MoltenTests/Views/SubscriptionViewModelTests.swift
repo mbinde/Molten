@@ -13,7 +13,7 @@ struct SubscriptionViewModelTests {
         let mockService = MockSubscriptionService(hasProAccess: false)
         let viewModel = SubscriptionViewModel(subscriptionService: mockService)
 
-        await viewModel.loadSubscriptionStatus()
+        await viewModel.loadSubscriptionInfo()
 
         #expect(viewModel.hasProAccess == false)
         #expect(viewModel.subscriptionStatus.isActive == false)
@@ -25,7 +25,7 @@ struct SubscriptionViewModelTests {
         let mockService = MockSubscriptionService(hasProAccess: true)
         let viewModel = SubscriptionViewModel(subscriptionService: mockService)
 
-        await viewModel.loadSubscriptionStatus()
+        await viewModel.loadSubscriptionInfo()
 
         #expect(viewModel.hasProAccess == true)
         #expect(viewModel.subscriptionStatus.isActive == true)
@@ -75,7 +75,7 @@ struct SubscriptionViewModelTests {
 
         // Start loading
         Task {
-            await viewModel.loadSubscriptionStatus()
+            await viewModel.loadSubscriptionInfo()
         }
 
         // Wait a moment then check final state
@@ -106,7 +106,7 @@ struct SubscriptionViewModelTests {
 
     @Test("MockViewModel should initialize with custom subscription status")
     func testMockViewModelCustomStatus() {
-        let customStatus = SubscriptionStatus(
+        let customStatus = SubscriptionInfo(
             isActive: true,
             productIdentifier: "lifetime",
             expirationDate: nil,

@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// View displaying subscription status and actions
-struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
+struct SubscriptionInfoView<ViewModel: SubscriptionViewModelProtocol>: View {
     @ObservedObject var viewModel: ViewModel
 
     var body: some View {
@@ -107,7 +107,7 @@ struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
         .navigationTitle("Subscription")
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            await viewModel.loadSubscriptionStatus()
+            await viewModel.loadSubscriptionInfo()
         }
     }
 }
@@ -116,16 +116,16 @@ struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
 
 #Preview("Free User") {
     NavigationStack {
-        SubscriptionStatusView(viewModel: MockSubscriptionViewModel(hasProAccess: false))
+        SubscriptionInfoView(viewModel: MockSubscriptionViewModel(hasProAccess: false))
     }
 }
 
 #Preview("Pro User - Monthly") {
     NavigationStack {
-        SubscriptionStatusView(
+        SubscriptionInfoView(
             viewModel: MockSubscriptionViewModel(
                 hasProAccess: true,
-                subscriptionStatus: SubscriptionStatus(
+                subscriptionStatus: SubscriptionInfo(
                     isActive: true,
                     productIdentifier: "monthly",
                     expirationDate: Date().addingTimeInterval(86400 * 30),
@@ -138,10 +138,10 @@ struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
 
 #Preview("Pro User - Yearly") {
     NavigationStack {
-        SubscriptionStatusView(
+        SubscriptionInfoView(
             viewModel: MockSubscriptionViewModel(
                 hasProAccess: true,
-                subscriptionStatus: SubscriptionStatus(
+                subscriptionStatus: SubscriptionInfo(
                     isActive: true,
                     productIdentifier: "yearly",
                     expirationDate: Date().addingTimeInterval(86400 * 365),
@@ -154,10 +154,10 @@ struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
 
 #Preview("Pro User - Lifetime") {
     NavigationStack {
-        SubscriptionStatusView(
+        SubscriptionInfoView(
             viewModel: MockSubscriptionViewModel(
                 hasProAccess: true,
-                subscriptionStatus: SubscriptionStatus(
+                subscriptionStatus: SubscriptionInfo(
                     isActive: true,
                     productIdentifier: "lifetime",
                     expirationDate: nil,
@@ -170,7 +170,7 @@ struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
 
 #Preview("Loading State") {
     NavigationStack {
-        SubscriptionStatusView(
+        SubscriptionInfoView(
             viewModel: MockSubscriptionViewModel(isLoading: true)
         )
     }
@@ -178,7 +178,7 @@ struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
 
 #Preview("Error State") {
     NavigationStack {
-        SubscriptionStatusView(
+        SubscriptionInfoView(
             viewModel: MockSubscriptionViewModel(
                 hasProAccess: false,
                 errorMessage: "Network connection failed. Please try again."

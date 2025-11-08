@@ -5,11 +5,11 @@ import Foundation
 @Suite("Subscription Domain Models")
 struct SubscriptionModelsTests {
 
-    // MARK: - SubscriptionStatus Tests
+    // MARK: - SubscriptionInfo Tests
 
-    @Test("SubscriptionStatus should identify active subscription")
+    @Test("SubscriptionInfo should identify active subscription")
     func testActiveSubscription() {
-        let status = SubscriptionStatus(
+        let status = SubscriptionInfo(
             isActive: true,
             productIdentifier: "monthly",
             expirationDate: Date().addingTimeInterval(86400 * 30),
@@ -21,9 +21,9 @@ struct SubscriptionModelsTests {
         #expect(status.willRenew == true)
     }
 
-    @Test("SubscriptionStatus should identify expired subscription")
+    @Test("SubscriptionInfo should identify expired subscription")
     func testExpiredSubscription() {
-        let status = SubscriptionStatus(
+        let status = SubscriptionInfo(
             isActive: false,
             productIdentifier: nil,
             expirationDate: Date().addingTimeInterval(-86400),
@@ -34,9 +34,9 @@ struct SubscriptionModelsTests {
         #expect(status.productIdentifier == nil)
     }
 
-    @Test("SubscriptionStatus should identify lifetime purchase")
+    @Test("SubscriptionInfo should identify lifetime purchase")
     func testLifetimePurchase() {
-        let status = SubscriptionStatus(
+        let status = SubscriptionInfo(
             isActive: true,
             productIdentifier: "lifetime",
             expirationDate: nil, // Lifetime has no expiration
@@ -48,9 +48,9 @@ struct SubscriptionModelsTests {
         #expect(status.willRenew == false)
     }
 
-    @Test("SubscriptionStatus should show correct display status for inactive")
+    @Test("SubscriptionInfo should show correct display status for inactive")
     func testDisplayStatusInactive() {
-        let status = SubscriptionStatus(
+        let status = SubscriptionInfo(
             isActive: false,
             productIdentifier: nil,
             expirationDate: nil,
@@ -60,9 +60,9 @@ struct SubscriptionModelsTests {
         #expect(status.displayStatus == "No Active Subscription")
     }
 
-    @Test("SubscriptionStatus should show correct display status for lifetime")
+    @Test("SubscriptionInfo should show correct display status for lifetime")
     func testDisplayStatusLifetime() {
-        let status = SubscriptionStatus(
+        let status = SubscriptionInfo(
             isActive: true,
             productIdentifier: "lifetime",
             expirationDate: nil,
@@ -72,10 +72,10 @@ struct SubscriptionModelsTests {
         #expect(status.displayStatus == "Lifetime Access")
     }
 
-    @Test("SubscriptionStatus should show correct display status for renewing subscription")
+    @Test("SubscriptionInfo should show correct display status for renewing subscription")
     func testDisplayStatusRenewing() {
         let futureDate = Date().addingTimeInterval(86400 * 30)
-        let status = SubscriptionStatus(
+        let status = SubscriptionInfo(
             isActive: true,
             productIdentifier: "monthly",
             expirationDate: futureDate,
@@ -85,10 +85,10 @@ struct SubscriptionModelsTests {
         #expect(status.displayStatus.contains("Active (Renews"))
     }
 
-    @Test("SubscriptionStatus should show correct display status for expiring subscription")
+    @Test("SubscriptionInfo should show correct display status for expiring subscription")
     func testDisplayStatusExpiring() {
         let futureDate = Date().addingTimeInterval(86400 * 7)
-        let status = SubscriptionStatus(
+        let status = SubscriptionInfo(
             isActive: true,
             productIdentifier: "monthly",
             expirationDate: futureDate,

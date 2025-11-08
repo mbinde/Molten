@@ -4,7 +4,7 @@ import Foundation
 @MainActor
 public protocol SubscriptionViewModelProtocol: ObservableObject {
     var hasProAccess: Bool { get }
-    var subscriptionStatus: SubscriptionStatus { get }
+    var subscriptionStatus: SubscriptionInfo { get }
     var isLoading: Bool { get }
     var errorMessage: String? { get }
 

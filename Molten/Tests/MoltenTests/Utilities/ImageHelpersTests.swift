@@ -20,6 +20,7 @@ import Foundation
 @testable import Molten
 
 @Suite("Image Helpers Tests", .serialized)
+@MainActor
 struct ImageHelpersTests: MockOnlyTestSuite {
     
     // Prevent Core Data usage automatically

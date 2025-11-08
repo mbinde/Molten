@@ -9,7 +9,7 @@
 
 /// Business model for shopping list items with validation and business logic
 /// Maps to ItemShopping Core Data entity
-struct ItemShoppingModel: ItemQuantityModel, @unchecked Sendable {
+struct ItemShoppingModel: ItemQuantityModel, Equatable, Hashable, Codable, @unchecked Sendable {
     let id: UUID
     let item_stable_id: String
     let quantity: Double

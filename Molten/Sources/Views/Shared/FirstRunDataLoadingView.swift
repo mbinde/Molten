@@ -163,10 +163,9 @@ struct FirstRunDataLoadingView: View {
             print("✅ [SCREENSHOTS] All data deleted")
         }
 
-        // Configure repository factory
-        RepositoryFactory.configureForDevelopment()
+        // Configure repository factory (only set container, preserve mode from MoltenApp)
         RepositoryFactory.configure(persistentContainer: PersistenceController.shared.container)
-        print("✅ Repository factory configured")
+        print("✅ Repository factory container configured (mode: \(RepositoryFactory.mode))")
 
         progress = 0.1
 

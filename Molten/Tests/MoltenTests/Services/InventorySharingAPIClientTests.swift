@@ -329,6 +329,223 @@ struct InventorySharingAPIClientTests {
             )
         }
     }
+
+    // MARK: - Ownership Signature Tests
+
+    @Test("Should include ownership signature in DELETE request")
+    func testDeleteIncludesOwnershipSignature() async throws {
+        let mockSession = MockURLSession()
+        let client = InventorySharingAPIClient(session: mockSession)
+
+        let shareCode = "A7B2X9"
+        let ownershipSignature = Data(count: 64)
+
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://api.example.com/share/\(shareCode)")!,
+            statusCode: 204,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        mockSession.nextData = Data()
+
+        try await client.deleteShare(shareCode: shareCode, ownershipSignature: ownershipSignature)
+
+        // Verify ownership signature header was included
+        let headerValue = mockSession.lastRequest?.value(forHTTPHeaderField: "X-Ownership-Signature")
+        #expect(headerValue == ownershipSignature.base64EncodedString())
+    }
+
+    @Test("Should include ownership signature in PUT request")
+    func testUpdateIncludesOwnershipSignature() async throws {
+        let mockSession = MockURLSession()
+        let client = InventorySharingAPIClient(session: mockSession)
+
+        let shareCode = "A7B2X9"
+        let snapshotData = Data([0x01, 0x02, 0x03])
+        let publicKey = Data(count: 32)
+        let ownershipSignature = Data(count: 64)
+
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://api.example.com/share/\(shareCode)")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        mockSession.nextData = Data()
+
+        try await client.updateSnapshot(
+            shareCode: shareCode,
+            snapshotData: snapshotData,
+            publicKey: publicKey,
+            ownershipSignature: ownershipSignature
+        )
+
+        // Verify ownership signature header was included
+        let headerValue = mockSession.lastRequest?.value(forHTTPHeaderField: "X-Ownership-Signature")
+        #expect(headerValue == ownershipSignature.base64EncodedString())
+    }
+
+    // MARK: - Certificate Pinning Tests
+
+    @Test("Should initialize with pinned certificates")
+    func testInitializeWithPinnedCertificates() {
+        let mockSession = MockURLSession()
+        let cert1 = Data(count: 100)
+        let cert2 = Data(count: 100)
+
+        let client = InventorySharingAPIClient(
+            session: mockSession,
+            pinnedCertificates: [cert1, cert2]
+        )
+
+        // Client should be initialized successfully
+        #expect(client != nil)
+    }
+
+    @Test("Should initialize without pinned certificates")
+    func testInitializeWithoutPinnedCertificates() {
+        let mockSession = MockURLSession()
+
+        let client = InventorySharingAPIClient(
+            session: mockSession,
+            pinnedCertificates: []
+        )
+
+        // Client should be initialized successfully
+        #expect(client != nil)
+    }
+
+    // MARK: - App Attest Assertion Tests
+
+    @Test("Should include attestation assertion in POST request when supported")
+    func testUploadIncludesAttestationWhenSupported() async throws {
+        let mockSession = MockURLSession()
+        let mockAttestationManager = MockAttestationManager(isSupported: true)
+
+        let client = InventorySharingAPIClient(
+            session: mockSession,
+            attestationManager: mockAttestationManager
+        )
+
+        let shareCode = "A7B2X9"
+        let snapshotData = Data([0x01, 0x02, 0x03])
+        let publicKey = Data(count: 32)
+
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://api.example.com/share")!,
+            statusCode: 201,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        mockSession.nextData = Data()
+
+        try await client.uploadSnapshot(
+            shareCode: shareCode,
+            snapshotData: snapshotData,
+            publicKey: publicKey
+        )
+
+        // Verify assertion header was included
+        let headerValue = mockSession.lastRequest?.value(forHTTPHeaderField: "X-Apple-Assertion")
+        #expect(headerValue != nil)
+        #expect(headerValue?.isEmpty == false)
+    }
+
+    @Test("Should skip attestation when not supported")
+    func testUploadSkipsAttestationWhenNotSupported() async throws {
+        let mockSession = MockURLSession()
+        let mockAttestationManager = MockAttestationManager(isSupported: false)
+
+        let client = InventorySharingAPIClient(
+            session: mockSession,
+            attestationManager: mockAttestationManager
+        )
+
+        let shareCode = "A7B2X9"
+        let snapshotData = Data([0x01, 0x02, 0x03])
+        let publicKey = Data(count: 32)
+
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://api.example.com/share")!,
+            statusCode: 201,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        mockSession.nextData = Data()
+
+        try await client.uploadSnapshot(
+            shareCode: shareCode,
+            snapshotData: snapshotData,
+            publicKey: publicKey
+        )
+
+        // Verify assertion header was NOT included
+        let headerValue = mockSession.lastRequest?.value(forHTTPHeaderField: "X-Apple-Assertion")
+        #expect(headerValue == nil)
+    }
+
+    @Test("Should include attestation in DELETE request when supported")
+    func testDeleteIncludesAttestationWhenSupported() async throws {
+        let mockSession = MockURLSession()
+        let mockAttestationManager = MockAttestationManager(isSupported: true)
+
+        let client = InventorySharingAPIClient(
+            session: mockSession,
+            attestationManager: mockAttestationManager
+        )
+
+        let shareCode = "A7B2X9"
+        let ownershipSignature = Data(count: 64)
+
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://api.example.com/share/\(shareCode)")!,
+            statusCode: 204,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        mockSession.nextData = Data()
+
+        try await client.deleteShare(shareCode: shareCode, ownershipSignature: ownershipSignature)
+
+        // Verify assertion header was included
+        let headerValue = mockSession.lastRequest?.value(forHTTPHeaderField: "X-Apple-Assertion")
+        #expect(headerValue != nil)
+    }
+
+    @Test("Should include attestation in PUT request when supported")
+    func testUpdateIncludesAttestationWhenSupported() async throws {
+        let mockSession = MockURLSession()
+        let mockAttestationManager = MockAttestationManager(isSupported: true)
+
+        let client = InventorySharingAPIClient(
+            session: mockSession,
+            attestationManager: mockAttestationManager
+        )
+
+        let shareCode = "A7B2X9"
+        let snapshotData = Data([0x01, 0x02, 0x03])
+        let publicKey = Data(count: 32)
+        let ownershipSignature = Data(count: 64)
+
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://api.example.com/share/\(shareCode)")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        mockSession.nextData = Data()
+
+        try await client.updateSnapshot(
+            shareCode: shareCode,
+            snapshotData: snapshotData,
+            publicKey: publicKey,
+            ownershipSignature: ownershipSignature
+        )
+
+        // Verify assertion header was included
+        let headerValue = mockSession.lastRequest?.value(forHTTPHeaderField: "X-Apple-Assertion")
+        #expect(headerValue != nil)
+    }
 }
 
 // MARK: - Mock URLSession
@@ -354,5 +571,27 @@ class MockURLSession: URLSessionProtocol {
         }
 
         return (nextData ?? Data(), response)
+    }
+}
+
+// MARK: - Mock AttestationManager
+
+/// Mock AttestationManager for testing
+@MainActor
+class MockAttestationManager: AttestationManager {
+    private let _isSupported: Bool
+
+    init(isSupported: Bool) {
+        self._isSupported = isSupported
+        super.init()
+    }
+
+    override var isSupported: Bool {
+        return _isSupported
+    }
+
+    override func generateAssertion(requestData: Data) async throws -> Data {
+        // Return fake assertion data
+        return Data([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08])
     }
 }

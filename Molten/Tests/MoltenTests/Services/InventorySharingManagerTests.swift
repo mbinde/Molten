@@ -17,6 +17,10 @@ struct InventorySharingManagerTests {
 
     init() {
         KeyPairManager.deleteAllKeys()
+        cleanupUserDefaults()
+    }
+
+    private func cleanupUserDefaults() {
         UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.myShareCode")
         UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.friendShares")
     }
@@ -25,6 +29,8 @@ struct InventorySharingManagerTests {
 
     @Test("Should create share and save code locally")
     func testCreateMyShare() async throws {
+        cleanupUserDefaults()
+
         let mockCoordinator = MockInventorySharingCoordinator()
         let manager = InventorySharingManager(coordinator: mockCoordinator)
 
@@ -38,6 +44,8 @@ struct InventorySharingManagerTests {
 
     @Test("Should throw error if share already exists")
     func testCreateShareWhenAlreadyExists() async throws {
+        cleanupUserDefaults()
+
         let mockCoordinator = MockInventorySharingCoordinator()
         let manager = InventorySharingManager(coordinator: mockCoordinator)
 
@@ -53,6 +61,8 @@ struct InventorySharingManagerTests {
 
     @Test("Should update existing share")
     func testRefreshMyShare() async throws {
+        cleanupUserDefaults()
+
         let mockCoordinator = MockInventorySharingCoordinator()
         let manager = InventorySharingManager(coordinator: mockCoordinator)
 
@@ -67,6 +77,8 @@ struct InventorySharingManagerTests {
 
     @Test("Should throw error if no share exists when refreshing")
     func testRefreshShareWhenNoneExists() async throws {
+        cleanupUserDefaults()
+
         let manager = InventorySharingManager()
 
         let item = createTestItem()
@@ -80,6 +92,8 @@ struct InventorySharingManagerTests {
 
     @Test("Should delete share and remove local code")
     func testDeleteMyShare() async throws {
+        cleanupUserDefaults()
+
         let mockCoordinator = MockInventorySharingCoordinator()
         let manager = InventorySharingManager(coordinator: mockCoordinator)
 
@@ -94,6 +108,8 @@ struct InventorySharingManagerTests {
 
     @Test("Should throw error if no share exists when deleting")
     func testDeleteShareWhenNoneExists() async throws {
+        cleanupUserDefaults()
+
         let manager = InventorySharingManager()
 
         await #expect(throws: SharingManagerError.self) {
@@ -105,6 +121,8 @@ struct InventorySharingManagerTests {
 
     @Test("Should download and save friend share")
     func testAddFriendShare() async throws {
+        cleanupUserDefaults()
+
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = createValidSnapshotResult()
         let manager = InventorySharingManager(coordinator: mockCoordinator)
@@ -122,6 +140,8 @@ struct InventorySharingManagerTests {
 
     @Test("Should update friend name if share code already exists")
     func testAddFriendShareUpdateExisting() async throws {
+        cleanupUserDefaults()
+
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = createValidSnapshotResult()
         let manager = InventorySharingManager(coordinator: mockCoordinator)
@@ -138,9 +158,7 @@ struct InventorySharingManagerTests {
 
     @Test("Should refresh friend share and update timestamp")
     func testRefreshFriendShare() async throws {
-        // Clean up any previous test state
-        UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.myShareCode")
-        UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.friendShares")
+        cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = createValidSnapshotResult()
@@ -161,6 +179,8 @@ struct InventorySharingManagerTests {
 
     @Test("Should throw error if friend share not found when refreshing")
     func testRefreshFriendShareNotFound() async throws {
+        cleanupUserDefaults()
+
         let manager = InventorySharingManager()
 
         await #expect(throws: SharingManagerError.self) {
@@ -172,6 +192,8 @@ struct InventorySharingManagerTests {
 
     @Test("Should remove friend share")
     func testRemoveFriendShare() async throws {
+        cleanupUserDefaults()
+
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = createValidSnapshotResult()
         let manager = InventorySharingManager(coordinator: mockCoordinator)

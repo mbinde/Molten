@@ -299,7 +299,7 @@ struct DeepLinkedItemView: View {
         let updatedInventory = InventoryModel(
             id: inventory.id,
             item_stable_id: inventory.item_stable_id,
-            type: inventory.inventoryType,
+            type: inventory.type,
             subtype: inventory.subtype,
             subsubtype: inventory.subsubtype,
             dimensions: inventory.dimensions,
@@ -319,7 +319,7 @@ struct DeepLinkedItemView: View {
             let updatedInventory = InventoryModel(
                 id: inventory.id,
                 item_stable_id: inventory.item_stable_id,
-                type: inventory.inventoryType,
+                type: inventory.type,
                 subtype: inventory.subtype,
                 subsubtype: inventory.subsubtype,
                 dimensions: inventory.dimensions,

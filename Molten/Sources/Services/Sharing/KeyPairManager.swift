@@ -166,4 +166,36 @@ final class KeyPairManager {
 
         return data
     }
+
+    // MARK: - Signing
+
+    /// Sign data with private key
+    /// - Parameters:
+    ///   - data: Data to sign
+    ///   - privateKey: Private key to sign with
+    /// - Returns: Ed25519 signature
+    func sign(data: Data, privateKey: Data) throws -> Data {
+        do {
+            let signingKey = try Curve25519.Signing.PrivateKey(rawRepresentation: privateKey)
+            let signature = try signingKey.signature(for: data)
+            return signature
+        } catch {
+            throw KeyPairError.signingFailed
+        }
+    }
+
+    /// Verify signature
+    /// - Parameters:
+    ///   - signature: Signature to verify
+    ///   - data: Original data
+    ///   - publicKey: Public key to verify against
+    /// - Returns: True if signature is valid
+    func verify(signature: Data, data: Data, publicKey: Data) throws -> Bool {
+        do {
+            let verifyingKey = try Curve25519.Signing.PublicKey(rawRepresentation: publicKey)
+            return verifyingKey.isValidSignature(signature, for: data)
+        } catch {
+            return false
+        }
+    }
 }

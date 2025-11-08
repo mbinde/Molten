@@ -110,11 +110,18 @@ open class InventorySharingService {
             privateKey: keyPair.privateKey
         )
 
+        // Create ownership signature (sign the share code with private key)
+        let ownershipSignature = try keyPairManager.sign(
+            data: shareCode.data(using: .utf8)!,
+            privateKey: keyPair.privateKey
+        )
+
         // Update on server
         try await apiClient.updateSnapshot(
             shareCode: shareCode,
             snapshotData: snapshotData,
-            publicKey: keyPair.publicKey
+            publicKey: keyPair.publicKey,
+            ownershipSignature: ownershipSignature
         )
     }
 
@@ -123,6 +130,16 @@ open class InventorySharingService {
     /// Delete a share by code
     /// - Parameter shareCode: Share code to delete
     open func deleteShare(shareCode: String) async throws {
-        try await apiClient.deleteShare(shareCode: shareCode)
+        // Get current key pair
+        let keyPair = try keyPairManager.getCurrentKeyPair()
+
+        // Create ownership signature (sign the share code with private key)
+        let ownershipSignature = try keyPairManager.sign(
+            data: shareCode.data(using: .utf8)!,
+            privateKey: keyPair.privateKey
+        )
+
+        // Delete from server
+        try await apiClient.deleteShare(shareCode: shareCode, ownershipSignature: ownershipSignature)
     }
 }

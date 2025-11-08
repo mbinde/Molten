@@ -367,4 +367,126 @@ struct KeyPairManagerTests {
         let publicKeys = Set(keys.map { $0.publicKey })
         #expect(publicKeys.count == 10)
     }
+
+    // MARK: - Signing and Verification Tests
+
+    @Test("Should sign data with private key")
+    func testSignData() throws {
+        let manager = KeyPairManager()
+
+        let keyPair = try manager.generateKeyPair()
+        let testData = "TEST01".data(using: .utf8)!
+
+        let signature = try manager.sign(data: testData, privateKey: keyPair.privateKey)
+
+        // Ed25519 signatures are 64 bytes
+        #expect(signature.count == 64)
+    }
+
+    @Test("Should verify valid signature")
+    func testVerifyValidSignature() throws {
+        let manager = KeyPairManager()
+
+        let keyPair = try manager.generateKeyPair()
+        let testData = "TEST01".data(using: .utf8)!
+
+        // Sign data
+        let signature = try manager.sign(data: testData, privateKey: keyPair.privateKey)
+
+        // Verify signature
+        let isValid = try manager.verify(signature: signature, data: testData, publicKey: keyPair.publicKey)
+        #expect(isValid == true)
+    }
+
+    @Test("Should reject invalid signature")
+    func testRejectInvalidSignature() throws {
+        let manager = KeyPairManager()
+
+        let keyPair = try manager.generateKeyPair()
+        let testData = "TEST01".data(using: .utf8)!
+
+        // Sign data
+        let signature = try manager.sign(data: testData, privateKey: keyPair.privateKey)
+
+        // Modify signature (invalidate it)
+        var corruptedSignature = signature
+        corruptedSignature[0] ^= 0xFF
+
+        // Verify should return false
+        let isValid = try manager.verify(signature: corruptedSignature, data: testData, publicKey: keyPair.publicKey)
+        #expect(isValid == false)
+    }
+
+    @Test("Should reject signature with wrong data")
+    func testRejectSignatureWithWrongData() throws {
+        let manager = KeyPairManager()
+
+        let keyPair = try manager.generateKeyPair()
+        let originalData = "TEST01".data(using: .utf8)!
+        let differentData = "TEST02".data(using: .utf8)!
+
+        // Sign original data
+        let signature = try manager.sign(data: originalData, privateKey: keyPair.privateKey)
+
+        // Verify with different data should return false
+        let isValid = try manager.verify(signature: signature, data: differentData, publicKey: keyPair.publicKey)
+        #expect(isValid == false)
+    }
+
+    @Test("Should reject signature with wrong public key")
+    func testRejectSignatureWithWrongPublicKey() throws {
+        let manager = KeyPairManager()
+
+        let keyPair1 = try manager.generateKeyPair()
+        let keyPair2 = try manager.generateKeyPair()
+        let testData = "TEST01".data(using: .utf8)!
+
+        // Sign with first key pair
+        let signature = try manager.sign(data: testData, privateKey: keyPair1.privateKey)
+
+        // Verify with second key pair's public key should return false
+        let isValid = try manager.verify(signature: signature, data: testData, publicKey: keyPair2.publicKey)
+        #expect(isValid == false)
+    }
+
+    @Test("Should produce different signatures for different data")
+    func testDifferentSignaturesForDifferentData() throws {
+        let manager = KeyPairManager()
+
+        let keyPair = try manager.generateKeyPair()
+        let data1 = "TEST01".data(using: .utf8)!
+        let data2 = "TEST02".data(using: .utf8)!
+
+        let signature1 = try manager.sign(data: data1, privateKey: keyPair.privateKey)
+        let signature2 = try manager.sign(data: data2, privateKey: keyPair.privateKey)
+
+        #expect(signature1 != signature2)
+    }
+
+    @Test("Should throw error when signing with invalid private key")
+    func testSigningWithInvalidPrivateKey() {
+        let manager = KeyPairManager()
+
+        let testData = "TEST01".data(using: .utf8)!
+        let invalidPrivateKey = Data(count: 16) // Wrong size (should be 32)
+
+        #expect(throws: KeyPairError.self) {
+            _ = try manager.sign(data: invalidPrivateKey, privateKey: invalidPrivateKey)
+        }
+    }
+
+    @Test("Should return false when verifying with invalid public key")
+    func testVerifyWithInvalidPublicKey() throws {
+        let manager = KeyPairManager()
+
+        let keyPair = try manager.generateKeyPair()
+        let testData = "TEST01".data(using: .utf8)!
+        let signature = try manager.sign(data: testData, privateKey: keyPair.privateKey)
+
+        let invalidPublicKey = Data(count: 16) // Wrong size (should be 32)
+
+        // Should return false for invalid public key
+        let isValid = try manager.verify(signature: signature, data: testData, publicKey: invalidPublicKey)
+        #expect(isValid == false)
+    }
 }

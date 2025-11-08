@@ -6,7 +6,7 @@
 //  Models shared across multiple services and repositories
 //
 
-@preconcurrency import Foundation
+import Foundation
 
 // MARK: - Core Domain Models
 
@@ -192,10 +192,10 @@ struct ToolItemModel: Identifiable, Equatable, Hashable, Sendable {
 }
 
 /// Inventory model for tracking quantities by type with optional subtypes and dimensions
-struct InventoryModel: ItemQuantityModel, Identifiable, @unchecked Sendable {
+struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     let id: UUID
     let item_stable_id: String
-    private let _type: String  // Internal storage (always non-nil)
+    let type: String
     let subtype: String?
     let subsubtype: String?
     let dimensions: [String: Double]?
@@ -203,19 +203,6 @@ struct InventoryModel: ItemQuantityModel, Identifiable, @unchecked Sendable {
     let location: String?
     let date_added: Date
     let date_modified: Date
-
-    // MARK: - ItemQuantityModel Conformance
-
-    /// Type as optional (protocol requirement)
-    nonisolated var type: String? { _type }
-
-    /// Date added (protocol requirement)
-    nonisolated var dateAdded: Date { date_added }
-
-    // MARK: - Inventory-Specific Properties
-
-    /// Type as non-optional (inventory always has a type)
-    nonisolated var inventoryType: String { _type }
 
     nonisolated init(
         id: UUID = UUID(),
@@ -231,11 +218,11 @@ struct InventoryModel: ItemQuantityModel, Identifiable, @unchecked Sendable {
     ) {
         self.id = id
         self.item_stable_id = item_stable_id
-        self._type = Self.cleanType(type)
+        self.type = Self.cleanType(type)
         self.subtype = subtype.map { Self.cleanType($0) }
         self.subsubtype = subsubtype.map { Self.cleanType($0) }
         self.dimensions = dimensions
-        self.quantity = quantity // Validation layer checks for negative values
+        self.quantity = max(0.0, quantity) // Ensure non-negative quantity
         self.location = location.map { StorageLocationModel.cleanLocationName($0) }
         self.date_added = date_added
         self.date_modified = date_modified
@@ -248,27 +235,30 @@ struct InventoryModel: ItemQuantityModel, Identifiable, @unchecked Sendable {
 
     /// Get a display-friendly description of this inventory record
     nonisolated var typeDescription: String {
-        GlassItemTypeSystem.shortDescription(type: _type, subtype: subtype, dimensions: dimensions)
+        GlassItemTypeSystem.shortDescription(type: type, subtype: subtype, dimensions: dimensions)
     }
 
-    // MARK: - ItemQuantityModel Protocol Implementation
-
-    /// Get a copy with updated quantity
-    nonisolated func withQuantity(_ newQuantity: Double) -> InventoryModel {
-        return InventoryModel(
-            id: id,
-            item_stable_id: item_stable_id,
-            type: _type,
-            subtype: subtype,
-            subsubtype: subsubtype,
-            dimensions: dimensions,
-            quantity: newQuantity,
-            location: location,
-            date_added: date_added,
-            date_modified: Date()  // Update modification date
-        )
+    /// Get full type path (type/subtype/subsubtype)
+    nonisolated var fullTypePath: String {
+        var path = type
+        if let sub = subtype {
+            path += "/\(sub)"
+            if let subsub = subsubtype {
+                path += "/\(subsub)"
+            }
+        }
+        return path
     }
 
+    // Equatable conformance
+    nonisolated static func == (lhs: InventoryModel, rhs: InventoryModel) -> Bool {
+        return lhs.id == rhs.id
+    }
+
+    // Hashable conformance
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
 
 /// Storage location model for tracking where inventory is stored (warehouse locations, shelves, bins, etc.)
@@ -406,88 +396,7 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
     }
 }
 
-/// Complete inventory item model combining all related data
-struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
-    let catalogItem: UnifiedCatalogItem
-    let inventory: [InventoryModel]
-    let tags: [String]  // Manufacturer/system tags
-    let userTags: [String]  // User-created tags
-    let allTags: [String]  // Pre-computed combined tags for performance
-
-    nonisolated var id: String { catalogItem.stable_id }
-
-    /// Initialize with automatic allTags computation
-    nonisolated init(catalogItem: UnifiedCatalogItem, inventory: [InventoryModel], tags: [String], userTags: [String]) {
-        self.catalogItem = catalogItem
-        self.inventory = inventory
-        self.tags = tags
-        self.userTags = userTags
-        // Pre-compute allTags for performance (avoid repeated computation in views)
-        self.allTags = Array(Set(tags + userTags)).sorted()
-    }
-
-    /// Convenience initializer from GlassItemModel (for backward compatibility)
-    nonisolated init(glassItem: GlassItemModel, inventory: [InventoryModel], tags: [String], userTags: [String]) {
-        self.init(catalogItem: UnifiedCatalogItem(glassItem: glassItem), inventory: inventory, tags: tags, userTags: userTags)
-    }
-
-    /// Convenience property for accessing as GlassItemModel (for backward compatibility)
-    /// ⚠️ WARNING: Only use for glass items! Check catalogItem.itemType first
-    nonisolated var glassItem: GlassItemModel {
-        GlassItemModel(
-            stable_id: catalogItem.stable_id,
-            name: catalogItem.name,
-            sku: catalogItem.sku,
-            manufacturer: catalogItem.manufacturer,
-            mfr_notes: catalogItem.mfr_notes,
-            coe: catalogItem.coe ?? 0,  // Default to 0 if nil (shouldn't happen for glass items)
-            url: catalogItem.url,
-            mfr_status: catalogItem.mfr_status,
-            image_url: catalogItem.image_url,
-            image_path: catalogItem.image_path
-        )
-    }
-
-    /// Total quantity across all inventory records
-    nonisolated var totalQuantity: Double {
-        inventory.reduce(0.0) { $0 + $1.quantity }
-    }
-
-    /// Inventory grouped by type with total quantities
-    nonisolated var inventoryByType: [String: Double] {
-        Dictionary(grouping: inventory, by: { $0.inventoryType })
-            .mapValues { inventoryRecords in
-                inventoryRecords.reduce(0.0) { $0 + $1.quantity }
-            }
-    }
-
-    /// Unique locations across all inventory records
-    nonisolated var locations: [String] {
-        Array(Set(inventory.compactMap { $0.location })).sorted()
-    }
-
-    /// Inventory grouped by location with total quantities
-    nonisolated var inventoryByLocation: [String: Double] {
-        Dictionary(grouping: inventory.filter { $0.location != nil }, by: { $0.location! })
-            .mapValues { inventoryRecords in
-                inventoryRecords.reduce(0.0) { $0 + $1.quantity }
-            }
-    }
-
-    /// Product type as string for UI display
-    nonisolated var productType: String {
-        catalogItem.itemType.rawValue
-    }
-
-    nonisolated static func == (lhs: CompleteInventoryItemModel, rhs: CompleteInventoryItemModel) -> Bool {
-        return lhs.catalogItem.stable_id == rhs.catalogItem.stable_id
-    }
-
-    // Hashable conformance for navigation
-    nonisolated func hash(into hasher: inout Hasher) {
-        hasher.combine(catalogItem.stable_id)
-    }
-}
+/// CompleteInventoryItemModel moved to Models/Domain/CompleteInventoryItemModel.swift for proper architecture layering
 
 /// Inventory summary model for aggregated inventory information
 struct InventorySummaryModel: Identifiable, Equatable, Sendable {
@@ -503,7 +412,7 @@ struct InventorySummaryModel: Identifiable, Equatable, Sendable {
 
     /// Inventory grouped by type with total quantities
     nonisolated var inventoryByType: [String: Double] {
-        Dictionary(grouping: inventories, by: { $0.inventoryType })
+        Dictionary(grouping: inventories, by: { $0.type })
             .mapValues { inventoryRecords in
                 inventoryRecords.reduce(0.0) { $0 + $1.quantity }
             }
@@ -511,7 +420,7 @@ struct InventorySummaryModel: Identifiable, Equatable, Sendable {
 
     /// Available inventory types
     nonisolated var availableTypes: [String] {
-        Array(Set(inventories.map { $0.inventoryType })).sorted()
+        Array(Set(inventories.map { $0.type })).sorted()
     }
 
     nonisolated static func == (lhs: InventorySummaryModel, rhs: InventorySummaryModel) -> Bool {

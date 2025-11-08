@@ -6,7 +6,13 @@
 //  Uses Ed25519 for encryption, stores private keys in iOS Keychain
 //
 
+#if canImport(Testing)
 import Testing
+#else
+#if canImport(XCTest)
+import XCTest
+#endif
+#endif
 import Foundation
 import CryptoKit
 @testable import Molten

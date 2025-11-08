@@ -5,7 +5,13 @@
 //  Tests for InventorySharingManager - high-level orchestration of inventory sharing
 //
 
+#if canImport(Testing)
 import Testing
+#else
+#if canImport(XCTest)
+import XCTest
+#endif
+#endif
 import Foundation
 @testable import Molten
 

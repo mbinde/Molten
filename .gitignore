@@ -46,6 +46,8 @@ env/
 *.swo
 *~
 .tmp
+*.bak
+*.backup
 
 # Scraping tools temporary outputs
 Molten/Tools/Scraping Tools/combined_glass_products_temp.csv

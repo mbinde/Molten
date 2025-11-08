@@ -24,7 +24,7 @@ struct CatalogServiceIntegrationTests {
 
     private func createTestService() async -> (CatalogService, PersistenceController) {
         let testController = PersistenceController.createTestController()
-        RepositoryFactory.configure(persistentContainer: testController.container)
+        RepositoryFactory.configure(testController: testController)
         RepositoryFactory.mode = .coreData
 
         let service = RepositoryFactory.createCatalogService()

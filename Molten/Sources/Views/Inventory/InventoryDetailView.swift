@@ -290,7 +290,7 @@ struct InventoryDetailView: View {
     private func loadInitialData() {
         if let firstInventory = currentItem.inventory.first {
             editingQuantity = String(firstInventory.quantity)
-            selectedType = firstInventory.type
+            selectedType = firstInventory.type ?? ""
             selectedinventory_id = firstInventory.id
         }
     }
@@ -1481,7 +1481,7 @@ struct InventoryRecordRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 // Show type if requested (when grouped by location)
                 if showType {
-                    Text(record.type.capitalized)
+                    Text((record.type ?? "").capitalized)
                         .font(.subheadline)
                         .fontWeight(.semibold)
                 }
@@ -1496,7 +1496,7 @@ struct InventoryRecordRow: View {
 
                 // Show dimensions if present
                 if let dimensions = record.dimensions, !dimensions.isEmpty {
-                    Text(GlassItemTypeSystem.formatDimensions(dimensions, for: record.type))
+                    Text(GlassItemTypeSystem.formatDimensions(dimensions, for: record.type ?? ""))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -1569,12 +1569,12 @@ struct InventoryEditView: View {
         NavigationStack {
             Form {
                 Section("Details") {
-                    LabeledContent("Type", value: record.type.capitalized)
+                    LabeledContent("Type", value: (record.type ?? "").capitalized)
                     if let subtype = record.subtype {
                         LabeledContent("Subtype", value: subtype.capitalized)
                     }
                     if let dimensions = record.dimensions, !dimensions.isEmpty {
-                        LabeledContent("Dimensions", value: GlassItemTypeSystem.formatDimensions(dimensions, for: record.type))
+                        LabeledContent("Dimensions", value: GlassItemTypeSystem.formatDimensions(dimensions, for: record.type ?? ""))
                     }
                 }
 
@@ -1626,7 +1626,7 @@ struct InventoryEditView: View {
                 let updatedRecord = InventoryModel(
                     id: record.id,
                     item_stable_id: record.item_stable_id,
-                    type: record.type,
+                    type: record.type ?? "",
                     subtype: record.subtype,
                     subsubtype: record.subsubtype,
                     dimensions: record.dimensions,

@@ -116,10 +116,10 @@ struct InventoryItemRowView: View {
         
         // Show inventory types if multiple
         if completeItem.inventory.count > 1 {
-            let types = completeItem.inventory.map { $0.type }.joined(separator: ", ")
+            let types = completeItem.inventory.map { $0.type ?? "" }.joined(separator: ", ")
             return "\(quantityText) (\(types))"
         } else if let firstInventory = completeItem.inventory.first {
-            return "\(quantityText) \(firstInventory.type)"
+            return "\(quantityText) \(firstInventory.type ?? "")"
         } else {
             return "\(quantityText) items"
         }

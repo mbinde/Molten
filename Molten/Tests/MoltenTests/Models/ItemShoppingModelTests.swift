@@ -12,6 +12,7 @@ import CryptoKit
 @testable import Molten
 
 @Suite("ItemShoppingModel Tests")
+@MainActor
 struct ItemShoppingModelTests {
 
     // MARK: - Model Creation Tests

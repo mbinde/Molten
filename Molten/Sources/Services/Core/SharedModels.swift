@@ -192,7 +192,7 @@ struct ToolItemModel: Identifiable, Equatable, Hashable, Sendable {
 }
 
 /// Inventory model for tracking quantities by type with optional subtypes and dimensions
-struct InventoryModel: ItemQuantityModel, @unchecked Sendable {
+struct InventoryModel: ItemQuantityModel, Identifiable, @unchecked Sendable {
     let id: UUID
     let item_stable_id: String
     private let _type: String  // Internal storage (always non-nil)

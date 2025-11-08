@@ -138,6 +138,10 @@ struct InventorySharingManagerTests {
 
     @Test("Should refresh friend share and update timestamp")
     func testRefreshFriendShare() async throws {
+        // Clean up any previous test state
+        UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.myShareCode")
+        UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.friendShares")
+
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = createValidSnapshotResult()
         let manager = InventorySharingManager(coordinator: mockCoordinator)

@@ -696,7 +696,7 @@ nonisolated struct RepositoryFactory {
 
         // Create API client with production URL and certificate pinning
         let apiClient = InventorySharingAPIClient(
-            baseURL: URL(string: "https://moltenglass.app")!,
+            baseURL: URL(string: "https://moltenglass.app/api")!,
             pinnedCertificates: [certData]
         )
 

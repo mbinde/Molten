@@ -28,13 +28,21 @@ final class InventorySnapshot {
     ///   - items: Inventory items to serialize
     ///   - publicKey: Public key (stored in snapshot for verification)
     ///   - privateKey: Private key (used to sign)
+    ///   - metadata: Optional share owner metadata (display name and notes)
     /// - Returns: Serialized data blob
-    func serialize(items: [InventoryItemSnapshot], publicKey: Data, privateKey: Data) throws -> Data {
+    func serialize(
+        items: [InventoryItemSnapshot],
+        publicKey: Data,
+        privateKey: Data,
+        metadata: MyShareMetadata? = nil
+    ) throws -> Data {
         // Create snapshot payload
         let payload = SnapshotPayload(
             version: Self.version,
             timestamp: Date(),
-            items: items
+            items: items,
+            ownerName: metadata?.displayName,
+            ownerShareNotes: metadata?.shareNotes
         )
 
         // Serialize to JSON
@@ -122,7 +130,9 @@ final class InventorySnapshot {
             items: payload.items,
             timestamp: payload.timestamp,
             version: payload.version,
-            isValid: isValid
+            isValid: isValid,
+            ownerName: payload.ownerName,
+            ownerShareNotes: payload.ownerShareNotes
         )
     }
 }
@@ -134,4 +144,6 @@ private struct SnapshotPayload: Codable {
     let version: String
     let timestamp: Date
     let items: [InventoryItemSnapshot]
+    let ownerName: String?
+    let ownerShareNotes: String?
 }

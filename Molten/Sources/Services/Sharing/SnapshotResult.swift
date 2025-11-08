@@ -13,11 +13,22 @@ public struct SnapshotResult {
     public let timestamp: Date
     public let version: String
     public let isValid: Bool
+    public let ownerName: String?  // Share owner's display name
+    public let ownerShareNotes: String?  // Share owner's public notes
 
-    public init(items: [InventoryItemSnapshot], timestamp: Date, version: String, isValid: Bool) {
+    public init(
+        items: [InventoryItemSnapshot],
+        timestamp: Date,
+        version: String,
+        isValid: Bool,
+        ownerName: String? = nil,
+        ownerShareNotes: String? = nil
+    ) {
         self.items = items
         self.timestamp = timestamp
         self.version = version
         self.isValid = isValid
+        self.ownerName = ownerName
+        self.ownerShareNotes = ownerShareNotes
     }
 }

@@ -54,9 +54,11 @@ class InventorySharingCoordinator {
     // MARK: - Share My Inventory
 
     /// Create a share of my inventory
-    /// - Parameter items: Inventory items to share
+    /// - Parameters:
+    ///   - items: Inventory items to share
+    ///   - metadata: Display name and notes to share publicly
     /// - Returns: Generated share code
-    func shareMyInventory(items: [CompleteInventoryItemModel]) async throws -> String {
+    func shareMyInventory(items: [CompleteInventoryItemModel], metadata: MyShareMetadata) async throws -> String {
         // Filter out items with zero quantity
         let nonZeroItems = items.filter { $0.totalQuantity > 0 }
 
@@ -64,7 +66,7 @@ class InventorySharingCoordinator {
         let snapshots = convertToSnapshots(items: nonZeroItems)
 
         // Create share
-        return try await sharingService.createShare(items: snapshots)
+        return try await sharingService.createShare(items: snapshots, metadata: metadata)
     }
 
     // MARK: - Download Friend's Inventory
@@ -78,11 +80,12 @@ class InventorySharingCoordinator {
 
     // MARK: - Update My Share
 
-    /// Update my existing share with new inventory data
+    /// Update my existing share with new inventory data and/or metadata
     /// - Parameters:
     ///   - shareCode: My share code
     ///   - items: Updated inventory items
-    func updateMyShare(shareCode: String, items: [CompleteInventoryItemModel]) async throws {
+    ///   - metadata: Updated display name and notes
+    func updateMyShare(shareCode: String, items: [CompleteInventoryItemModel], metadata: MyShareMetadata) async throws {
         // Filter out items with zero quantity
         let nonZeroItems = items.filter { $0.totalQuantity > 0 }
 
@@ -90,7 +93,7 @@ class InventorySharingCoordinator {
         let snapshots = convertToSnapshots(items: nonZeroItems)
 
         // Update share
-        try await sharingService.updateShare(shareCode: shareCode, items: snapshots)
+        try await sharingService.updateShare(shareCode: shareCode, items: snapshots, metadata: metadata)
     }
 
     // MARK: - Delete My Share

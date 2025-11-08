@@ -685,6 +685,26 @@ nonisolated struct RepositoryFactory {
         )
     }
 
+    /// Creates a SubscriptionService based on current mode
+    @MainActor
+    static func createSubscriptionService() -> SubscriptionServiceProtocol {
+        switch mode {
+        case .mock, .hybrid:
+            // Testing/development: Use mock with no Pro access by default
+            return MockSubscriptionService(hasProAccess: false)
+
+        case .coreData:
+            // Production: Use RevenueCat
+            return RevenueCatSubscriptionService()
+        }
+    }
+
+    /// Creates a SubscriptionService with Pro access enabled (for testing Pro features)
+    @MainActor
+    static func createSubscriptionServiceWithProAccess() -> SubscriptionServiceProtocol {
+        return MockSubscriptionService(hasProAccess: true)
+    }
+
     // MARK: - Configuration Helpers
     
     /// Configure factory for testing with all mocks

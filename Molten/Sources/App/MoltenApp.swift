@@ -8,9 +8,16 @@
 import SwiftUI
 import CoreData
 import CryptoKit
+import RevenueCat
 
 @main
 struct MoltenApp: App {
+
+    init() {
+        // Configure RevenueCat SDK
+        configureRevenueCat()
+    }
+
     // DO NOT initialize PersistenceController here!
     // It will be initialized lazily during the loading screen
     @State private var isLaunching = true
@@ -593,6 +600,21 @@ extension MoltenApp {
         }
 
         return stableId
+    }
+
+    /// Configure RevenueCat SDK with API key and settings
+    private func configureRevenueCat() {
+        #if DEBUG
+        Purchases.logLevel = .debug
+        #endif
+
+        Purchases.configure(
+            with: Configuration.Builder(withAPIKey: "test_oIPjDwQxUqwuGvJpuCZEuaWmQTL")
+                .with(entitlementVerificationMode: .informational) // Recommended for production
+                .build()
+        )
+
+        print("✅ RevenueCat configured successfully")
     }
 }
 

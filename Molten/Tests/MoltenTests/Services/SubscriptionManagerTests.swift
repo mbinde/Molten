@@ -57,16 +57,21 @@ struct SubscriptionManagerTests {
         let mockSubscriptionService = MockSubscriptionService(hasProAccess: true)
 
         // Act
-        _ = SubscriptionManager(
+        let manager = SubscriptionManager(
             entitlementService: entitlementService,
             subscriptionService: mockSubscriptionService
         )
 
-        // Wait for async initialization
-        try await Task.sleep(for: .milliseconds(200))
+        // Wait for async initialization with longer timeout and polling
+        var attempts = 0
+        while entitlementService.currentTier != .premium && attempts < 20 {
+            try await Task.sleep(for: .milliseconds(100))
+            attempts += 1
+        }
 
         // Assert - tier should be updated during initialization
         #expect(entitlementService.currentTier == .premium)
+        #expect(manager.subscriptionStatus == .subscribed)
     }
 
     // MARK: - Status Change Tests

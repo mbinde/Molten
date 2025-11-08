@@ -14,6 +14,7 @@ enum KeyPairError: Error, LocalizedError {
     case invalidBase64
     case invalidKeyLength
     case keyNotFound
+    case signingFailed
 
     var errorDescription: String? {
         switch self {
@@ -27,6 +28,8 @@ enum KeyPairError: Error, LocalizedError {
             return "Invalid key length (expected 32 bytes)"
         case .keyNotFound:
             return "Key not found in Keychain"
+        case .signingFailed:
+            return "Failed to sign data"
         }
     }
 }

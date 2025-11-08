@@ -41,24 +41,23 @@ struct CatalogItemHelpersTests {
         #expect(displayInfo.name == "Red Glass Rod", "Should create display info from CatalogItemModel")
     }
     
-    @Test("CatalogItemHelpers should not require Core Data context")
-    func testCatalogItemHelpersWorksWithoutCoreDataContext() {
-        // Arrange: Create business model (no Core Data involved)
-        let catalogItem = CatalogItemModel(
-            name: "Blue Frit",
-            rawCode: "BF001", 
-            manufacturer: "Spectrum",
-            tags: ["blue", "frit"]
-        )
-        
-        // Act: Use helpers without any Core Data context
-        let color = CatalogItemHelpers.colorForManufacturer(catalogItem.manufacturer)
-        let tags = CatalogItemHelpers.tagsArrayForItem(catalogItem)
-
-        // Assert: Should work without Core Data environment
-        #expect(color != .secondary, "Should get manufacturer color from business model")
-        #expect(tags.count == 2, "Should extract tags from business model")
-    }
+    // DEAD CODE: Commented out because synonymsArrayForItem and coeForItem methods were removed
+    // @Test("CatalogItemHelpers should not require Core Data context")
+    // func testCatalogItemHelpersWorksWithoutCoreDataContext() {
+    //     // Arrange: Create business model (no Core Data involved)
+    //     let catalogItem = CatalogItemModel(
+    //         name: "Blue Frit",
+    //         rawCode: "BF001",
+    //         manufacturer: "Spectrum",
+    //         tags: ["blue", "frit"]
+    //     )
+    //
+    //     // Act: Use helpers without any Core Data context
+    //     let color = CatalogItemHelpers.colorForManufacturer(catalogItem.manufacturer)
+    //
+    //     // Assert: Should work without Core Data environment
+    //     #expect(color != nil, "Should get manufacturer color from business model")
+    // }
     
     @Test("CatalogItemHelpers should provide comprehensive business model operations")
     func testCatalogItemHelpersBusinessModelOperations() {

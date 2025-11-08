@@ -208,10 +208,7 @@ class MockInventoryViewModel: InventoryViewModelProtocol {
         if !selectedTypes.isEmpty {
             filtered = filtered.filter { item in
                 item.inventory.contains { inv in
-                    if let type = inv.type {
-                        return selectedTypes.contains(type)
-                    }
-                    return false
+                    selectedTypes.contains(inv.type)
                 }
             }
         }

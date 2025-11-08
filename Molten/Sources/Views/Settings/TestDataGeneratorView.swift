@@ -108,9 +108,13 @@ struct TestDataGeneratorView: View {
             do {
                 // Get all available glass items from catalog
                 let catalogStartTime = Date()
-                let glassItems = try await catalogService.getAllGlassItems()
+                let allItems = try await catalogService.getAllGlassItems()
+
+                // Filter to only glass items (exclude coatings and tools)
+                let glassItems = allItems.filter { $0.catalogItem.itemType == .glass }
+
                 let catalogDuration = Date().timeIntervalSince(catalogStartTime)
-                print("🔧 [TestData] Loaded \(glassItems.count) catalog items in \(String(format: "%.2f", catalogDuration))s")
+                print("🔧 [TestData] Loaded \(glassItems.count) glass items (\(allItems.count) total catalog items) in \(String(format: "%.2f", catalogDuration))s")
 
                 guard !glassItems.isEmpty else {
                     throw TestDataError.noCatalogItems
@@ -183,7 +187,11 @@ struct TestDataGeneratorView: View {
         Task {
             do {
                 // Get all available glass items from catalog
-                let glassItems = try await catalogService.getAllGlassItems()
+                let allItems = try await catalogService.getAllGlassItems()
+
+                // Filter to only glass items (exclude coatings and tools)
+                let glassItems = allItems.filter { $0.catalogItem.itemType == .glass }
+
                 guard !glassItems.isEmpty else {
                     throw TestDataError.noCatalogItems
                 }

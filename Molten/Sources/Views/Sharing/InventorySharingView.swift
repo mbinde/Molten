@@ -39,6 +39,11 @@ struct InventorySharingView: View {
             .sheet(isPresented: $viewModel.showingAddFriend) {
                 AddFriendView(viewModel: viewModel)
             }
+            .sheet(isPresented: $viewModel.showingCustomizeFriend) {
+                if let friend = viewModel.selectedFriendForCustomization {
+                    CustomizeFriendView(friend: friend, viewModel: viewModel)
+                }
+            }
         }
     }
 
@@ -194,6 +199,20 @@ struct InventorySharingView: View {
                             Label("Delete", systemImage: "trash")
                         }
                     }
+                    .contextMenu {
+                        Button {
+                            viewModel.selectedFriendForCustomization = friend
+                            viewModel.showingCustomizeFriend = true
+                        } label: {
+                            Label("Customize Icon", systemImage: "paintbrush")
+                        }
+
+                        Button(role: .destructive) {
+                            viewModel.removeFriend(friend)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
 
                 Button {
@@ -216,22 +235,53 @@ struct InventorySharingView: View {
 struct FriendRowView: View {
     let friend: FriendShare
 
+    private var iconSymbol: String {
+        friend.iconSymbol ?? FriendShare.defaultIconSymbol
+    }
+
+    private var iconBackground: Color {
+        if let hex = friend.iconBackgroundHex {
+            return Color(hex: hex)
+        }
+        return Color(hex: FriendShare.defaultIconBackgroundHex)
+    }
+
+    private var iconForeground: Color {
+        if let hex = friend.iconForegroundHex {
+            return Color(hex: hex)
+        }
+        return Color(hex: FriendShare.defaultIconForegroundHex)
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-            Text(friend.friendName)
-                .font(.headline)
+        HStack(spacing: DesignSystem.Spacing.md) {
+            // Icon
+            Circle()
+                .fill(iconBackground)
+                .frame(width: 44, height: 44)
+                .overlay(
+                    Image(systemName: iconSymbol)
+                        .font(.system(size: 20))
+                        .foregroundStyle(iconForeground)
+                )
 
-            HStack {
-                Text(friend.shareCode)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            // Friend info
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                Text(friend.friendName)
+                    .font(.headline)
 
-                if let lastRefreshed = friend.lastRefreshed {
-                    Text("•")
-                        .foregroundColor(.secondary)
-                    Text("Updated \(lastRefreshed, style: .relative)")
+                HStack {
+                    Text(friend.shareCode)
                         .font(.caption)
                         .foregroundColor(.secondary)
+
+                    if let lastRefreshed = friend.lastRefreshed {
+                        Text("•")
+                            .foregroundColor(.secondary)
+                        Text("Updated \(lastRefreshed, style: .relative)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
         }

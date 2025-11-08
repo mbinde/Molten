@@ -16,12 +16,25 @@ public struct FriendShare: Codable, Equatable, Identifiable {
     public let dateAdded: Date
     public let lastRefreshed: Date?
 
-    public init(shareCode: String, friendName: String, dateAdded: Date, lastRefreshed: Date? = nil) {
+    // Icon customization
+    public let iconSymbol: String?
+    public let iconBackgroundHex: String?
+    public let iconForegroundHex: String?
+
+    // Default icon values
+    public static let defaultIconSymbol = "circle.fill"
+    public static let defaultIconBackgroundHex = "#007AFF"  // iOS blue
+    public static let defaultIconForegroundHex = "#FFFFFF"  // White
+
+    public init(shareCode: String, friendName: String, dateAdded: Date, lastRefreshed: Date? = nil, iconSymbol: String? = nil, iconBackgroundHex: String? = nil, iconForegroundHex: String? = nil) {
         self.id = shareCode
         self.shareCode = shareCode
         self.friendName = friendName
         self.dateAdded = dateAdded
         self.lastRefreshed = lastRefreshed
+        self.iconSymbol = iconSymbol
+        self.iconBackgroundHex = iconBackgroundHex
+        self.iconForegroundHex = iconForegroundHex
     }
 
     /// Create FriendShare from ShareRecord entity
@@ -37,6 +50,9 @@ public struct FriendShare: Codable, Equatable, Identifiable {
         self.friendName = ownerName
         self.dateAdded = dateAdded
         self.lastRefreshed = shareRecord.value(forKey: "last_fetched") as? Date
+        self.iconSymbol = shareRecord.value(forKey: "icon_symbol") as? String
+        self.iconBackgroundHex = shareRecord.value(forKey: "icon_background_hex") as? String
+        self.iconForegroundHex = shareRecord.value(forKey: "icon_foreground_hex") as? String
     }
 }
 

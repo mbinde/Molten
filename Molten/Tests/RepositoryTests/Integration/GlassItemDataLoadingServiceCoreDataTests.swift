@@ -28,7 +28,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
     /// Create isolated test environment with Core Data
     private func createTestEnvironment() async throws -> (PersistenceController, CatalogService, GlassItemDataLoadingService) {
         let testController = PersistenceController.createTestController()
-        RepositoryFactory.configure(persistentContainer: testController.container)
+        RepositoryFactory.configure(testController: testController)
         RepositoryFactory.mode = .coreData
         
         let catalogService = RepositoryFactory.createCatalogService()

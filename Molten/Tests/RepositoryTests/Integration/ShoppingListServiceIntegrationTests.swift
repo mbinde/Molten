@@ -25,7 +25,7 @@ struct ShoppingListServiceIntegrationTests {
 
     private func createTestEnvironment() async -> (ShoppingListService, CatalogService, InventoryTrackingService, PersistenceController) {
         let testController = PersistenceController.createTestController()
-        RepositoryFactory.configure(persistentContainer: testController.container)
+        RepositoryFactory.configure(testController: testController)
         RepositoryFactory.mode = .coreData
 
         let shoppingService = RepositoryFactory.createShoppingListService()

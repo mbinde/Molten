@@ -37,9 +37,11 @@ open class InventorySharingService {
     // MARK: - Share Creation
 
     /// Create a new share with generated code
-    /// - Parameter items: Inventory items to share
+    /// - Parameters:
+    ///   - items: Inventory items to share
+    ///   - metadata: Share owner metadata (display name and notes)
     /// - Returns: Generated share code
-    open func createShare(items: [InventoryItemSnapshot]) async throws -> String {
+    open func createShare(items: [InventoryItemSnapshot], metadata: MyShareMetadata) async throws -> String {
         // Get or generate key pair
         let keyPair = try keyPairManager.getCurrentKeyPair()
 
@@ -48,11 +50,12 @@ open class InventorySharingService {
             // Generate share code
             let shareCode = shareCodeGenerator.generate()
 
-            // Create snapshot
+            // Create snapshot with metadata
             let snapshotData = try snapshot.serialize(
                 items: items,
                 publicKey: keyPair.publicKey,
-                privateKey: keyPair.privateKey
+                privateKey: keyPair.privateKey,
+                metadata: metadata
             )
 
             // Try to upload
@@ -95,19 +98,21 @@ open class InventorySharingService {
 
     // MARK: - Update
 
-    /// Update an existing share with new inventory data
+    /// Update an existing share with new inventory data and/or metadata
     /// - Parameters:
     ///   - shareCode: Share code to update
     ///   - items: New inventory items
-    open func updateShare(shareCode: String, items: [InventoryItemSnapshot]) async throws {
+    ///   - metadata: Updated share owner metadata (display name and notes)
+    open func updateShare(shareCode: String, items: [InventoryItemSnapshot], metadata: MyShareMetadata) async throws {
         // Get current key pair
         let keyPair = try keyPairManager.getCurrentKeyPair()
 
-        // Create new snapshot
+        // Create new snapshot with metadata
         let snapshotData = try snapshot.serialize(
             items: items,
             publicKey: keyPair.publicKey,
-            privateKey: keyPair.privateKey
+            privateKey: keyPair.privateKey,
+            metadata: metadata
         )
 
         // Create ownership signature (sign the share code with private key)

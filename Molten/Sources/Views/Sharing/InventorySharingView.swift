@@ -30,6 +30,12 @@ struct InventorySharingView: View {
                     Text(error)
                 }
             }
+            .sheet(isPresented: $viewModel.showingCreateShare) {
+                CreateShareView(viewModel: viewModel)
+            }
+            .sheet(isPresented: $viewModel.showingEditMetadata) {
+                EditShareMetadataView(viewModel: viewModel)
+            }
             .sheet(isPresented: $viewModel.showingAddFriend) {
                 AddFriendView(viewModel: viewModel)
             }
@@ -67,17 +73,51 @@ struct InventorySharingView: View {
                 }
                 .padding(.vertical, DesignSystem.Spacing.xs)
 
-                Button {
-                    Task {
-                        await viewModel.refreshMyShare()
+                if let metadata = viewModel.myShareMetadata {
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                                Text("Display Name: \(metadata.displayName)")
+                                    .font(.subheadline)
+
+                                if let notes = metadata.shareNotes {
+                                    Text("Notes: \(notes)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+
+                            Spacer()
+
+                            Button {
+                                viewModel.showingEditMetadata = true
+                            } label: {
+                                Image(systemName: "pencil")
+                            }
+                            .buttonStyle(.borderless)
+                        }
                     }
-                } label: {
-                    HStack {
-                        Image(systemName: "arrow.clockwise")
-                        Text("Refresh Share")
-                    }
+                    .padding(.vertical, DesignSystem.Spacing.xs)
                 }
-                .disabled(viewModel.isLoading)
+
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                    Button {
+                        Task {
+                            await viewModel.refreshMyShare()
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.clockwise")
+                            Text("Update Inventory on Server")
+                        }
+                    }
+                    .disabled(viewModel.isLoading)
+
+                    Text("Re-uploads your current inventory to update what friends see")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.leading, DesignSystem.Spacing.md)
+                }
 
                 Button(role: .destructive) {
                     Task {
@@ -101,16 +141,13 @@ struct InventorySharingView: View {
                         .foregroundColor(.secondary)
 
                     Button {
-                        Task {
-                            await viewModel.createMyShare()
-                        }
+                        viewModel.showingCreateShare = true
                     } label: {
                         HStack {
                             Image(systemName: "square.and.arrow.up")
                             Text("Create Share")
                         }
                     }
-                    .disabled(viewModel.isCreatingShare)
                 }
                 .padding(.vertical, DesignSystem.Spacing.xs)
             }
@@ -146,7 +183,7 @@ struct InventorySharingView: View {
             } else {
                 ForEach(viewModel.friendShares) { friend in
                     NavigationLink {
-                        FriendInventoryView(friend: friend, viewModel: viewModel)
+                        FriendInventoryView(friend: friend)
                     } label: {
                         FriendRowView(friend: friend)
                     }

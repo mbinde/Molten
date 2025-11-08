@@ -15,6 +15,7 @@ class ShareMetadataRepository {
 
     private let userDefaults: UserDefaults
     private let myShareCodeKey = "molten.shareMetadata.myShareCode"
+    private let myShareMetadataKey = "molten.shareMetadata.myShareMetadata"
     private let friendSharesKey = "molten.shareMetadata.friendShares"
 
     // MARK: - Initialization
@@ -38,6 +39,26 @@ class ShareMetadataRepository {
     /// Delete user's share code
     func deleteMyShareCode() throws {
         userDefaults.removeObject(forKey: myShareCodeKey)
+        userDefaults.removeObject(forKey: myShareMetadataKey)
+    }
+
+    // MARK: - My Share Metadata
+
+    /// Save user's share metadata (display name and notes)
+    func saveMyShareMetadata(_ metadata: MyShareMetadata) throws {
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(metadata)
+        userDefaults.set(data, forKey: myShareMetadataKey)
+    }
+
+    /// Get user's share metadata
+    func getMyShareMetadata() -> MyShareMetadata? {
+        guard let data = userDefaults.data(forKey: myShareMetadataKey) else {
+            return nil
+        }
+
+        let decoder = JSONDecoder()
+        return try? decoder.decode(MyShareMetadata.self, from: data)
     }
 
     // MARK: - Friend Shares

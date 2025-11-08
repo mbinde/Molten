@@ -16,17 +16,26 @@ struct AddFriendView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Friend's Name", text: $viewModel.friendName)
-                        .textContentType(.name)
-
                     TextField("Share Code", text: $viewModel.friendShareCode)
                         .textContentType(.oneTimeCode)
                         .autocapitalization(.allCharacters)
                         .disableAutocorrection(true)
                 } header: {
-                    Text("Friend Information")
+                    Text("Share Code")
                 } footer: {
                     Text("Ask your friend for their 6-character share code")
+                }
+
+                Section {
+                    TextField("Friend's Name (Optional)", text: $viewModel.friendName)
+                        .textContentType(.name)
+
+                    TextField("Nickname (Optional)", text: $viewModel.friendNickname)
+                        .textContentType(.nickname)
+                } header: {
+                    Text("Customization")
+                } footer: {
+                    Text("If left blank, their display name from the share will be used. Add a nickname to remember how you know them.")
                 }
 
                 if let error = viewModel.errorMessage {
@@ -55,7 +64,7 @@ struct AddFriendView: View {
                             }
                         }
                     }
-                    .disabled(viewModel.friendName.isEmpty || viewModel.friendShareCode.isEmpty || viewModel.isAddingFriend)
+                    .disabled(viewModel.friendShareCode.isEmpty || viewModel.isAddingFriend)
                 }
             }
         }

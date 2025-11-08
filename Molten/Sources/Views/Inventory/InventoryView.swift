@@ -311,24 +311,21 @@ struct InventoryView: View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
                 // Search and filter controls using shared component
-                SearchAndFilterHeader(
+                StandardSearchAndFilterHeader(
                     searchText: $viewModel.searchText,
                     searchTitlesOnly: $viewModel.searchTitlesOnly,
                     selectedTags: $viewModel.selectedTags,
-                    showingAllTags: $showingAllTags,
-                    allAvailableTags: allAvailableTags,
                     selectedCOEs: $viewModel.selectedCOEs,
-                    showingCOESelection: $showingCOESelection,
-                    allAvailableCOEs: allAvailableCOEs,
-                    selectedProductTypes: $selectedProductTypes,
-                    showingProductTypeSelection: $showingProductTypeSelection,
-                    allAvailableProductTypes: ["glass", "coating", "tool"],
                     selectedManufacturers: $viewModel.selectedManufacturers,
+                    selectedProductTypes: $selectedProductTypes,
+                    showingAllTags: $showingAllTags,
+                    showingCOESelection: $showingCOESelection,
                     showingManufacturerSelection: $showingManufacturerSelection,
+                    showingProductTypeSelection: $showingProductTypeSelection,
+                    allAvailableTags: allAvailableTags,
+                    allAvailableCOEs: allAvailableCOEs,
                     allAvailableManufacturers: allAvailableManufacturers,
-                    manufacturerDisplayName: { code in
-                        GlassManufacturers.fullName(for: code) ?? code
-                    },
+                    allAvailableProductTypes: ["glass", "coating", "tool"],
                     manufacturerCounts: manufacturerCounts,
                     coeCounts: coeCounts,
                     tagCounts: tagCounts,
@@ -345,8 +342,8 @@ struct InventoryView: View {
                             }
                         )
                     },
-                    searchClearedFeedback: $searchClearedFeedback,
-                    searchPlaceholder: "Search inventory by name, code, manufacturer..."
+                    searchPlaceholder: "Search inventory by name, code, manufacturer...",
+                    searchClearedFeedback: $searchClearedFeedback
                 )
 
                 // Usage banner (only show for free tier)

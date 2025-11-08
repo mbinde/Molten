@@ -41,21 +41,21 @@ struct LogbookView: View {
             VStack(spacing: 0) {
                 // Search bar at top (only show when we have entries)
                 if !viewModel.logEntries.isEmpty {
-                    SearchAndFilterHeader(
+                    StandardSearchAndFilterHeader(
                         searchText: $viewModel.searchText,
                         searchTitlesOnly: $viewModel.searchTitlesOnly,
                         selectedTags: $selectedTags,
-                        showingAllTags: $showingAllTags,
-                        allAvailableTags: [],  // No tags for now
                         selectedCOEs: $selectedCOEs,
-                        showingCOESelection: $showingCOESelection,
-                        allAvailableCOEs: [],  // No COE filter for now
-                        selectedProductTypes: $selectedProductTypes,
-                        showingProductTypeSelection: $showingProductTypeSelection,
-                        allAvailableProductTypes: ["glass", "coating", "tool"],
                         selectedManufacturers: $selectedManufacturers,
+                        selectedProductTypes: $selectedProductTypes,
+                        showingAllTags: $showingAllTags,
+                        showingCOESelection: $showingCOESelection,
                         showingManufacturerSelection: $showingManufacturerSelection,
-                        allAvailableManufacturers: [],  // No manufacturer filter for now
+                        showingProductTypeSelection: $showingProductTypeSelection,
+                        allAvailableTags: [],
+                        allAvailableCOEs: [],
+                        allAvailableManufacturers: [],
+                        allAvailableProductTypes: [],
                         sortMenuContent: {
                             AnyView(
                                 Group {

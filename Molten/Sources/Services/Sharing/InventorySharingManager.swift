@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreData
 
 /// High-level manager for inventory sharing operations
 @MainActor
@@ -15,50 +16,79 @@ class InventorySharingManager {
     // MARK: - Properties
 
     private let coordinator: InventorySharingCoordinator
-    private let metadataRepository: ShareMetadataRepository
+    private let metadataRepository: ShareMetadataRepository  // For "my share code" only
+    private let shareRecordRepository: CoreDataShareRecordRepository  // For friend shares (Cloud)
+    private let sharedInventoryRepository: CoreDataSharedInventoryRepository  // For friend inventory cache (Local)
 
     // MARK: - Initialization
 
     init(
         coordinator: InventorySharingCoordinator = InventorySharingCoordinator(),
-        metadataRepository: ShareMetadataRepository = ShareMetadataRepository()
+        metadataRepository: ShareMetadataRepository = ShareMetadataRepository(),
+        shareRecordRepository: CoreDataShareRecordRepository = CoreDataShareRecordRepository(
+            context: PersistenceController.shared.container.viewContext
+        ),
+        sharedInventoryRepository: CoreDataSharedInventoryRepository = CoreDataSharedInventoryRepository(
+            context: PersistenceController.shared.container.viewContext,
+            catalogRepository: RepositoryFactory.createGlassItemRepository()
+        )
     ) {
         self.coordinator = coordinator
         self.metadataRepository = metadataRepository
+        self.shareRecordRepository = shareRecordRepository
+        self.sharedInventoryRepository = sharedInventoryRepository
     }
 
     // MARK: - My Share
 
     /// Create a new share of my inventory
-    /// - Parameter items: Inventory items to share
+    /// - Parameters:
+    ///   - items: Inventory items to share
+    ///   - metadata: Display name and notes to share publicly
     /// - Returns: Generated share code
     /// - Throws: SharingManagerError.shareAlreadyExists if share already exists
-    func createMyShare(items: [CompleteInventoryItemModel]) async throws -> String {
+    func createMyShare(items: [CompleteInventoryItemModel], metadata: MyShareMetadata) async throws -> String {
         // Check if share already exists
         if metadataRepository.getMyShareCode() != nil {
             throw SharingManagerError.shareAlreadyExists
         }
 
         // Create share
-        let shareCode = try await coordinator.shareMyInventory(items: items)
+        let shareCode = try await coordinator.shareMyInventory(items: items, metadata: metadata)
 
-        // Save share code locally
+        // Save share code and metadata locally
         try metadataRepository.saveMyShareCode(shareCode)
+        try metadataRepository.saveMyShareMetadata(metadata)
 
         return shareCode
     }
 
-    /// Refresh my existing share with updated inventory
-    /// - Parameter items: Updated inventory items
+    /// Refresh my existing share with updated inventory and/or metadata
+    /// - Parameters:
+    ///   - items: Updated inventory items
+    ///   - metadata: Optional updated metadata (if nil, keeps existing)
     /// - Throws: SharingManagerError.noShareExists if no share exists
-    func refreshMyShare(items: [CompleteInventoryItemModel]) async throws {
+    func refreshMyShare(items: [CompleteInventoryItemModel], metadata: MyShareMetadata? = nil) async throws {
         // Get existing share code
         guard let shareCode = metadataRepository.getMyShareCode() else {
             throw SharingManagerError.noShareExists
         }
 
+        // Use provided metadata or fall back to existing
+        let shareMetadata = metadata ?? metadataRepository.getMyShareMetadata() ?? MyShareMetadata(displayName: "")
+
         // Update share
-        try await coordinator.updateMyShare(shareCode: shareCode, items: items)
+        try await coordinator.updateMyShare(shareCode: shareCode, items: items, metadata: shareMetadata)
+
+        // Save metadata if provided
+        if let newMetadata = metadata {
+            try metadataRepository.saveMyShareMetadata(newMetadata)
+        }
+    }
+
+    /// Get my share metadata
+    func getMyShareMetadata() -> MyShareMetadata? {
+        return metadataRepository.getMyShareMetadata()
     }
 
     /// Delete my share
@@ -87,20 +117,31 @@ class InventorySharingManager {
     /// Add a friend's share by downloading it
     /// - Parameters:
     ///   - shareCode: Friend's share code
-    ///   - friendName: Display name for this friend
+    ///   - friendName: Optional display name override (if nil, uses name from server)
+    ///   - nickname: Optional nickname
     /// - Returns: Snapshot result with validity flag
-    func addFriendShare(shareCode: String, friendName: String) async throws -> SnapshotResult {
+    func addFriendShare(
+        shareCode: String,
+        friendName: String? = nil,
+        nickname: String? = nil
+    ) async throws -> SnapshotResult {
         // Download friend's inventory
         let result = try await coordinator.downloadFriendInventory(shareCode: shareCode)
 
-        // Save friend share metadata
-        let friendShare = FriendShare(
+        // Use name from server if not provided
+        let ownerName = friendName ?? result.ownerName ?? "Unknown"
+
+        // Save share record to Core Data (Cloud - syncs across devices)
+        // Includes owner's metadata from server (owner_name, owner_share_notes)
+        try shareRecordRepository.saveShareRecord(
             shareCode: shareCode,
-            friendName: friendName,
-            dateAdded: Date(),
-            lastRefreshed: Date()
+            ownerName: ownerName,
+            ownerNickname: nickname,
+            ownerShareNotes: result.ownerShareNotes
         )
-        try metadataRepository.saveFriendShare(friendShare)
+
+        // Save inventory snapshot to Core Data (Local - cached for offline access)
+        try sharedInventoryRepository.saveSnapshot(shareCode: shareCode, items: result.items)
 
         return result
     }
@@ -110,42 +151,108 @@ class InventorySharingManager {
     /// - Returns: Updated snapshot result
     /// - Throws: SharingManagerError.friendShareNotFound if friend share doesn't exist
     func refreshFriendShare(shareCode: String) async throws -> SnapshotResult {
-        // Check if friend share exists
-        guard let existingShare = metadataRepository.getFriendShare(shareCode: shareCode) else {
+        // Check if share record exists and is active
+        guard let shareRecord = try shareRecordRepository.getShareRecord(shareCode: shareCode),
+              shareRecord.value(forKey: "status") as? String == "active" else {
             throw SharingManagerError.friendShareNotFound
         }
 
         // Download updated inventory
         let result = try await coordinator.downloadFriendInventory(shareCode: shareCode)
 
-        // Update last refreshed timestamp
-        let updatedShare = FriendShare(
-            shareCode: existingShare.shareCode,
-            friendName: existingShare.friendName,
-            dateAdded: existingShare.dateAdded,
-            lastRefreshed: Date()
-        )
-        try metadataRepository.saveFriendShare(updatedShare)
+        // Update last fetched timestamp
+        try shareRecordRepository.updateLastFetched(shareCode: shareCode)
+
+        // Update inventory snapshot in Core Data (Local)
+        try sharedInventoryRepository.saveSnapshot(shareCode: shareCode, items: result.items)
 
         return result
     }
 
-    /// Remove a friend's share
+    /// Remove a friend's share (marks as inactive, preserves history)
     /// - Parameter shareCode: Friend's share code to remove
     func removeFriendShare(shareCode: String) throws {
-        try metadataRepository.deleteFriendShare(shareCode: shareCode)
+        // Mark share record as inactive (soft delete - preserves history for CloudKit sync)
+        try shareRecordRepository.deactivateShareRecord(shareCode: shareCode)
+
+        // Delete cached inventory snapshot from Local store
+        try sharedInventoryRepository.deleteSnapshot(shareCode: shareCode)
     }
 
-    /// Get all friend shares
-    /// - Returns: Array of friend shares
+    /// Get all active friend shares
+    /// - Returns: Array of active FriendShare structs
     func getFriendShares() -> [FriendShare] {
-        return metadataRepository.getFriendShares()
+        do {
+            let shareRecords = try shareRecordRepository.getActiveShareRecords()
+            return shareRecords.compactMap { $0.toFriendShare() }
+        } catch {
+            return []
+        }
     }
 
     /// Get a specific friend share
     /// - Parameter shareCode: Friend's share code
-    /// - Returns: Friend share if found, nil otherwise
+    /// - Returns: FriendShare if found, nil otherwise
     func getFriendShare(shareCode: String) -> FriendShare? {
-        return metadataRepository.getFriendShare(shareCode: shareCode)
+        do {
+            guard let shareRecord = try shareRecordRepository.getShareRecord(shareCode: shareCode),
+                  shareRecord.value(forKey: "status") as? String == "active" else {
+                return nil
+            }
+            return shareRecord.toFriendShare()
+        } catch {
+            return nil
+        }
+    }
+
+    /// Get all active friend share records (Core Data entities)
+    /// - Returns: Array of active ShareRecord entities
+    func getActiveShareRecords() throws -> [ShareRecord] {
+        return try shareRecordRepository.getActiveShareRecords()
+    }
+
+    /// Get a specific share record (Core Data entity)
+    /// - Parameter shareCode: Friend's share code
+    /// - Returns: ShareRecord if found, nil otherwise
+    func getShareRecord(shareCode: String) throws -> ShareRecord? {
+        return try shareRecordRepository.getShareRecord(shareCode: shareCode)
+    }
+
+    // MARK: - Friend Share Customization
+
+    /// Update your personal nickname for a friend
+    /// - Parameters:
+    ///   - shareCode: Friend's share code
+    ///   - nickname: Personal nickname (e.g., "Alice from GAS 2025")
+    func updateFriendNickname(shareCode: String, nickname: String?) throws {
+        try shareRecordRepository.updateOwnerNickname(shareCode: shareCode, nickname: nickname)
+    }
+
+    /// Update your personal notes about a friend's share
+    /// - Parameters:
+    ///   - shareCode: Friend's share code
+    ///   - notes: Personal notes (e.g., "Met at GAS 2025, specializes in boro")
+    func updateFriendNotes(shareCode: String, notes: String?) throws {
+        try shareRecordRepository.updateUserShareNotes(shareCode: shareCode, notes: notes)
+    }
+
+    /// Update custom icon for a friend's share
+    /// - Parameters:
+    ///   - shareCode: Friend's share code
+    ///   - symbol: SF Symbol name
+    ///   - backgroundHex: Background color hex
+    ///   - foregroundHex: Foreground color hex
+    func updateFriendIcon(
+        shareCode: String,
+        symbol: String?,
+        backgroundHex: String?,
+        foregroundHex: String?
+    ) throws {
+        try shareRecordRepository.updateIcon(
+            shareCode: shareCode,
+            symbol: symbol,
+            backgroundHex: backgroundHex,
+            foregroundHex: foregroundHex
+        )
     }
 }

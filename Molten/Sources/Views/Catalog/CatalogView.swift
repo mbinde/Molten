@@ -149,24 +149,21 @@ struct CatalogView: View {
     // MARK: - View Components
 
     private var searchAndFilterHeader: some View {
-        SearchAndFilterHeader(
+        StandardSearchAndFilterHeader(
             searchText: $viewModel.searchText,
             searchTitlesOnly: $viewModel.searchTitlesOnly,
             selectedTags: $viewModel.selectedTags,
-            showingAllTags: $showingAllTags,
-            allAvailableTags: allAvailableTags,
             selectedCOEs: $viewModel.selectedCOEs,
-            showingCOESelection: $showingCOESelection,
-            allAvailableCOEs: allAvailableCOEs,
-            selectedProductTypes: $viewModel.selectedProductTypes,
-            showingProductTypeSelection: $showingProductTypeSelection,
-            allAvailableProductTypes: ["glass", "coating", "tool"],
             selectedManufacturers: $viewModel.selectedManufacturers,
+            selectedProductTypes: $viewModel.selectedProductTypes,
+            showingAllTags: $showingAllTags,
+            showingCOESelection: $showingCOESelection,
             showingManufacturerSelection: $showingManufacturerFilterSelection,
+            showingProductTypeSelection: $showingProductTypeSelection,
+            allAvailableTags: allAvailableTags,
+            allAvailableCOEs: allAvailableCOEs,
             allAvailableManufacturers: availableManufacturers,
-            manufacturerDisplayName: { code in
-                GlassManufacturers.fullName(for: code) ?? code
-            },
+            allAvailableProductTypes: ["glass", "coating", "tool"],
             manufacturerCounts: manufacturerCounts,
             coeCounts: coeCounts,
             tagCounts: tagCounts,
@@ -184,9 +181,8 @@ struct CatalogView: View {
                     }
                 )
             },
-            searchClearedFeedback: $viewModel.searchClearedFeedback,
             searchPlaceholder: "Search colors, codes, manufacturers...",
-            userDefaults: userDefaults
+            searchClearedFeedback: $viewModel.searchClearedFeedback
         )
     }
 

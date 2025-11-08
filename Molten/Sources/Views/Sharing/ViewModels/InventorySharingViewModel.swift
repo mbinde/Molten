@@ -43,6 +43,10 @@ class InventorySharingViewModel {
     var friendInventory: [InventoryItemSnapshot] = []
     var isLoadingFriendInventory = false
 
+    // Friend customization
+    var showingCustomizeFriend = false
+    var selectedFriendForCustomization: FriendShare?
+
     // MARK: - Initialization
 
     init(

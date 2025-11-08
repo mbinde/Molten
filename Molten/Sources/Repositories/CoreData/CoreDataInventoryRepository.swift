@@ -107,7 +107,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     let newInventory = InventoryModel(
                         id: UUID(), // Always generate new ID for Core Data persistence
                         item_stable_id: inventory.item_stable_id,
-                        type: inventory.inventoryType,  // Use non-optional accessor
+                        type: inventory.type,  // Use non-optional accessor
                         subtype: inventory.subtype,
                         subsubtype: inventory.subsubtype,
                         dimensions: inventory.dimensions,
@@ -123,7 +123,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     // Save context
                     try self.context.save()
                     
-                    self.log.info("Created inventory record: \(newInventory.item_stable_id) - \(newInventory.inventoryType)")
+                    self.log.info("Created inventory record: \(newInventory.item_stable_id) - \(newInventory.type)")
                     continuation.resume(returning: newInventory)
                     
                 } catch {
@@ -151,7 +151,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                         let newInventory = InventoryModel(
                             id: UUID(), // Always generate new ID for Core Data persistence
                             item_stable_id: inventory.item_stable_id,
-                            type: inventory.inventoryType,  // Use non-optional accessor
+                            type: inventory.type,  // Use non-optional accessor
                             subtype: inventory.subtype,
                             subsubtype: inventory.subsubtype,
                             dimensions: inventory.dimensions,
@@ -320,7 +320,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                         let updatedRecord = InventoryModel(
                             id: existingRecord.id,
                             item_stable_id: existingRecord.item_stable_id,
-                            type: existingRecord.inventoryType,  // Use non-optional accessor
+                            type: existingRecord.type,  // Use non-optional accessor
                             quantity: existingRecord.quantity + quantity,
                             date_added: existingRecord.date_added,
                             date_modified: Date() // Set to current time on update
@@ -390,7 +390,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                         let updatedRecord = InventoryModel(
                             id: existingRecord.id,
                             item_stable_id: existingRecord.item_stable_id,
-                            type: existingRecord.inventoryType,  // Use non-optional accessor
+                            type: existingRecord.type,  // Use non-optional accessor
                             quantity: newQuantity,
                             date_added: existingRecord.date_added,
                             date_modified: Date() // Set to current time on update
@@ -425,7 +425,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                 let updatedRecord = InventoryModel(
                     id: existingRecord.id,
                     item_stable_id: existingRecord.item_stable_id,
-                    type: existingRecord.inventoryType,  // Use non-optional accessor
+                    type: existingRecord.type,  // Use non-optional accessor
                     quantity: quantity,
                     date_added: existingRecord.date_added,
                     date_modified: Date() // Set to current time on update
@@ -503,7 +503,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
         let inventoryRecords = try await fetchInventory(matching: predicate)
         
         return inventoryRecords.map { record in
-            (item_stable_id: record.item_stable_id, type: record.inventoryType, quantity: record.quantity)
+            (item_stable_id: record.item_stable_id, type: record.type, quantity: record.quantity)
         }.sorted { $0.quantity < $1.quantity }
     }
     
@@ -681,7 +681,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     private nonisolated func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with inventory: InventoryModel) {
         coreDataItem.setValue(inventory.id, forKey: "id")
         coreDataItem.setValue(inventory.item_stable_id, forKey: "item_stable_id")
-        coreDataItem.setValue(inventory.inventoryType, forKey: "type")  // Use non-optional accessor
+        coreDataItem.setValue(inventory.type, forKey: "type")  // Use non-optional accessor
         coreDataItem.setValue(inventory.subtype, forKey: "subtype")
         coreDataItem.setValue(inventory.subsubtype, forKey: "subsubtype")
 

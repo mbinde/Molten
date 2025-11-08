@@ -22,6 +22,7 @@ struct InventorySharingManagerTests {
 
     private func cleanupUserDefaults() {
         UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.myShareCode")
+        UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.myShareMetadata")
         UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.friendShares")
     }
 
@@ -35,7 +36,8 @@ struct InventorySharingManagerTests {
         let manager = InventorySharingManager(coordinator: mockCoordinator)
 
         let item = createTestItem()
-        let shareCode = try await manager.createMyShare(items: [item])
+        let metadata = MyShareMetadata(displayName: "Test User")
+        let shareCode = try await manager.createMyShare(items: [item], metadata: metadata)
 
         #expect(!shareCode.isEmpty)
         #expect(manager.getMyShareCode() == shareCode)
@@ -50,10 +52,11 @@ struct InventorySharingManagerTests {
         let manager = InventorySharingManager(coordinator: mockCoordinator)
 
         let item = createTestItem()
-        _ = try await manager.createMyShare(items: [item])
+        let metadata = MyShareMetadata(displayName: "Test User")
+        _ = try await manager.createMyShare(items: [item], metadata: metadata)
 
         await #expect(throws: SharingManagerError.self) {
-            _ = try await manager.createMyShare(items: [item])
+            _ = try await manager.createMyShare(items: [item], metadata: metadata)
         }
     }
 
@@ -67,7 +70,8 @@ struct InventorySharingManagerTests {
         let manager = InventorySharingManager(coordinator: mockCoordinator)
 
         let item = createTestItem()
-        let shareCode = try await manager.createMyShare(items: [item])
+        let metadata = MyShareMetadata(displayName: "Test User")
+        let shareCode = try await manager.createMyShare(items: [item], metadata: metadata)
 
         try await manager.refreshMyShare(items: [item])
 
@@ -88,6 +92,114 @@ struct InventorySharingManagerTests {
         }
     }
 
+    // MARK: - Metadata Tests
+
+    @Test("Should save metadata when creating share")
+    func testCreateShareWithMetadata() async throws {
+        cleanupUserDefaults()
+
+        let mockCoordinator = MockInventorySharingCoordinator()
+        let manager = InventorySharingManager(coordinator: mockCoordinator)
+
+        let item = createTestItem()
+        let metadata = MyShareMetadata(displayName: "Alice", shareNotes: "My collection")
+
+        let shareCode = try await manager.createMyShare(items: [item], metadata: metadata)
+
+        #expect(!shareCode.isEmpty)
+        #expect(manager.getMyShareCode() == shareCode)
+
+        let savedMetadata = manager.getMyShareMetadata()
+        #expect(savedMetadata?.displayName == "Alice")
+        #expect(savedMetadata?.shareNotes == "My collection")
+        #expect(mockCoordinator.lastMetadata?.displayName == "Alice")
+    }
+
+    @Test("Should save metadata without notes")
+    func testCreateShareWithMetadataWithoutNotes() async throws {
+        cleanupUserDefaults()
+
+        let mockCoordinator = MockInventorySharingCoordinator()
+        let manager = InventorySharingManager(coordinator: mockCoordinator)
+
+        let item = createTestItem()
+        let metadata = MyShareMetadata(displayName: "Alice", shareNotes: nil)
+
+        _ = try await manager.createMyShare(items: [item], metadata: metadata)
+
+        let savedMetadata = manager.getMyShareMetadata()
+        #expect(savedMetadata?.displayName == "Alice")
+        #expect(savedMetadata?.shareNotes == nil)
+    }
+
+    @Test("Should update metadata when refreshing share")
+    func testRefreshShareWithUpdatedMetadata() async throws {
+        cleanupUserDefaults()
+
+        let mockCoordinator = MockInventorySharingCoordinator()
+        let manager = InventorySharingManager(coordinator: mockCoordinator)
+
+        let item = createTestItem()
+        let metadata1 = MyShareMetadata(displayName: "Alice", shareNotes: "Old notes")
+        _ = try await manager.createMyShare(items: [item], metadata: metadata1)
+
+        let metadata2 = MyShareMetadata(displayName: "Alice Smith", shareNotes: "New notes")
+        try await manager.refreshMyShare(items: [item], metadata: metadata2)
+
+        let savedMetadata = manager.getMyShareMetadata()
+        #expect(savedMetadata?.displayName == "Alice Smith")
+        #expect(savedMetadata?.shareNotes == "New notes")
+        #expect(mockCoordinator.lastMetadata?.displayName == "Alice Smith")
+    }
+
+    @Test("Should keep existing metadata when refreshing without new metadata")
+    func testRefreshShareKeepsExistingMetadata() async throws {
+        cleanupUserDefaults()
+
+        let mockCoordinator = MockInventorySharingCoordinator()
+        let manager = InventorySharingManager(coordinator: mockCoordinator)
+
+        let item = createTestItem()
+        let metadata = MyShareMetadata(displayName: "Alice", shareNotes: "My notes")
+        _ = try await manager.createMyShare(items: [item], metadata: metadata)
+
+        try await manager.refreshMyShare(items: [item])
+
+        let savedMetadata = manager.getMyShareMetadata()
+        #expect(savedMetadata?.displayName == "Alice")
+        #expect(savedMetadata?.shareNotes == "My notes")
+    }
+
+    @Test("Should include owner metadata in downloaded friend share")
+    func testAddFriendShareIncludesOwnerMetadata() async throws {
+        cleanupUserDefaults()
+
+        let mockCoordinator = MockInventorySharingCoordinator()
+        mockCoordinator.mockDownloadResult = SnapshotResult(
+            items: [
+                InventoryItemSnapshot(
+                    stableId: "abc123",
+                    manufacturer: "test",
+                    sku: "001",
+                    quantity: 5.0,
+                    unit: "rod",
+                    location: nil
+                )
+            ],
+            timestamp: Date(),
+            version: "1.0",
+            isValid: true,
+            ownerName: "Bob's Glass Shop",
+            ownerShareNotes: "Boro specialist"
+        )
+        let manager = InventorySharingManager(coordinator: mockCoordinator)
+
+        let result = try await manager.addFriendShare(shareCode: "FRIEND", friendName: nil)
+
+        #expect(result.ownerName == "Bob's Glass Shop")
+        #expect(result.ownerShareNotes == "Boro specialist")
+    }
+
     // MARK: - Delete My Share Tests
 
     @Test("Should delete share and remove local code")
@@ -98,7 +210,8 @@ struct InventorySharingManagerTests {
         let manager = InventorySharingManager(coordinator: mockCoordinator)
 
         let item = createTestItem()
-        _ = try await manager.createMyShare(items: [item])
+        let metadata = MyShareMetadata(displayName: "Test User")
+        _ = try await manager.createMyShare(items: [item], metadata: metadata)
 
         try await manager.deleteMyShare()
 
@@ -247,7 +360,9 @@ struct InventorySharingManagerTests {
             ],
             timestamp: Date(),
             version: "1.0",
-            isValid: true
+            isValid: true,
+            ownerName: nil,
+            ownerShareNotes: nil
         )
     }
 }
@@ -260,16 +375,19 @@ class MockInventorySharingCoordinator: InventorySharingCoordinator {
     var deleteMyShareCalled = false
     var downloadFriendInventoryCalled = false
     var lastShareCode: String?
+    var lastMetadata: MyShareMetadata?
     var mockDownloadResult: SnapshotResult?
 
-    override func shareMyInventory(items: [CompleteInventoryItemModel]) async throws -> String {
+    override func shareMyInventory(items: [CompleteInventoryItemModel], metadata: MyShareMetadata) async throws -> String {
         shareMyInventoryCalled = true
+        lastMetadata = metadata
         return "MOCK12"
     }
 
-    override func updateMyShare(shareCode: String, items: [CompleteInventoryItemModel]) async throws {
+    override func updateMyShare(shareCode: String, items: [CompleteInventoryItemModel], metadata: MyShareMetadata) async throws {
         updateMyShareCalled = true
         lastShareCode = shareCode
+        lastMetadata = metadata
     }
 
     override func deleteMyShare(shareCode: String) async throws {

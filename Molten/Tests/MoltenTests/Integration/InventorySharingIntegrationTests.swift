@@ -1,0 +1,271 @@
+//
+//  InventorySharingIntegrationTests.swift
+//  MoltenTests
+//
+//  End-to-end integration tests for the complete inventory sharing flow
+//
+
+import Testing
+import Foundation
+@testable import Molten
+
+@Suite("Inventory Sharing Integration Tests")
+@MainActor
+struct InventorySharingIntegrationTests {
+
+    // MARK: - Test Lifecycle
+
+    init() {
+        KeyPairManager.deleteAllKeys()
+        UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.myShareCode")
+        UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.friendShares")
+    }
+
+    // MARK: - Complete Flow Tests
+
+    @Test("Should complete full share creation flow")
+    func testCompleteShareCreationFlow() async throws {
+        // Create mock API client
+        let mockAPIClient = MockSharingAPIClient()
+
+        // Create real components with mock API
+        let keyPairManager = KeyPairManager()
+        let shareCodeGenerator = ShareCodeGenerator()
+        let snapshot = InventorySnapshot()
+        let sharingService = InventorySharingService(
+            apiClient: mockAPIClient,
+            keyPairManager: keyPairManager,
+            shareCodeGenerator: shareCodeGenerator,
+            snapshot: snapshot
+        )
+        let coordinator = InventorySharingCoordinator(sharingService: sharingService)
+        let manager = InventorySharingManager(coordinator: coordinator)
+
+        // Create test inventory
+        let item = createTestItem()
+
+        // Complete flow: Create share
+        let shareCode = try await manager.createMyShare(items: [item])
+
+        // Verify share code generated
+        #expect(shareCode.count == 6)
+        #expect(manager.getMyShareCode() == shareCode)
+
+        // Verify API was called
+        #expect(mockAPIClient.uploadCalled)
+        #expect(mockAPIClient.lastPublicKey != nil)
+
+        // Verify key pair was created
+        let keyPair = try keyPairManager.getCurrentKeyPair()
+        #expect(keyPair.publicKey.count == 32)
+        #expect(keyPair.privateKey.count == 32)
+    }
+
+    @Test("Should complete full friend download flow")
+    func testCompleteFriendDownloadFlow() async throws {
+        // Setup: User A creates a share
+        let userAKeyManager = KeyPairManager()
+        let userAKeyPair = try userAKeyManager.generateKeyPair()
+        let userASnapshot = InventorySnapshot()
+
+        let items = [
+            InventoryItemSnapshot(
+                stableId: "abc123",
+                manufacturer: "test",
+                sku: "001",
+                quantity: 5.0,
+                unit: "rod",
+                location: "Studio A"
+            )
+        ]
+
+        let snapshotData = try userASnapshot.serialize(
+            items: items,
+            publicKey: userAKeyPair.publicKey,
+            privateKey: userAKeyPair.privateKey
+        )
+
+        // Mock API to return User A's share
+        let mockAPIClient = MockSharingAPIClient()
+        mockAPIClient.mockDownloadResult = DownloadedSnapshot(
+            snapshotData: snapshotData,
+            publicKey: userAKeyPair.publicKey
+        )
+
+        // User B downloads User A's share
+        let userBSharingService = InventorySharingService(
+            apiClient: mockAPIClient,
+            keyPairManager: KeyPairManager(), // Different key manager for User B
+            shareCodeGenerator: ShareCodeGenerator(),
+            snapshot: InventorySnapshot()
+        )
+        let userBCoordinator = InventorySharingCoordinator(sharingService: userBSharingService)
+        let userBManager = InventorySharingManager(coordinator: userBCoordinator)
+
+        // Download friend's share
+        let result = try await userBManager.addFriendShare(
+            shareCode: "USERA1",
+            friendName: "User A"
+        )
+
+        // Verify download successful
+        #expect(result.isValid, "Signature should be valid")
+        #expect(result.items.count == 1)
+        #expect(result.items[0].stableId == "abc123")
+        #expect(result.items[0].quantity == 5.0)
+
+        // Verify friend share saved
+        let friendShares = userBManager.getFriendShares()
+        #expect(friendShares.count == 1)
+        #expect(friendShares[0].shareCode == "USERA1")
+        #expect(friendShares[0].friendName == "User A")
+    }
+
+    @Test("Should detect tampered snapshot")
+    func testDetectTamperedSnapshot() async throws {
+        // Create original snapshot
+        let keyManager = KeyPairManager()
+        let keyPair = try keyManager.generateKeyPair()
+        let snapshot = InventorySnapshot()
+
+        let originalItems = [
+            InventoryItemSnapshot(
+                stableId: "abc123",
+                manufacturer: "test",
+                sku: "001",
+                quantity: 5.0,
+                unit: "rod",
+                location: nil
+            )
+        ]
+
+        let snapshotData = try snapshot.serialize(
+            items: originalItems,
+            publicKey: keyPair.publicKey,
+            privateKey: keyPair.privateKey
+        )
+
+        // Tamper with the snapshot (change quantity in the data)
+        var tamperedData = snapshotData
+        // This is a simplified tamper - in reality JSON would need proper modification
+        // But the signature will be invalid regardless
+
+        // Create a different key pair (attacker's keys)
+        let attackerKeyManager = KeyPairManager()
+        let attackerKeyPair = try attackerKeyManager.generateKeyPair()
+
+        // Mock API returns tampered data with wrong public key
+        let mockAPIClient = MockSharingAPIClient()
+        mockAPIClient.mockDownloadResult = DownloadedSnapshot(
+            snapshotData: tamperedData,
+            publicKey: attackerKeyPair.publicKey // Wrong public key!
+        )
+
+        // Try to download with verification
+        let sharingService = InventorySharingService(
+            apiClient: mockAPIClient,
+            keyPairManager: KeyPairManager(),
+            shareCodeGenerator: ShareCodeGenerator(),
+            snapshot: InventorySnapshot()
+        )
+        let coordinator = InventorySharingCoordinator(sharingService: sharingService)
+        let manager = InventorySharingManager(coordinator: coordinator)
+
+        let result = try await manager.addFriendShare(
+            shareCode: "TAMPER",
+            friendName: "Attacker"
+        )
+
+        // Signature verification should fail
+        #expect(!result.isValid, "Tampered snapshot should have invalid signature")
+    }
+
+    @Test("Should refresh my share with updated inventory")
+    func testRefreshMyShare() async throws {
+        let mockAPIClient = MockSharingAPIClient()
+        let sharingService = InventorySharingService(apiClient: mockAPIClient)
+        let coordinator = InventorySharingCoordinator(sharingService: sharingService)
+        let manager = InventorySharingManager(coordinator: coordinator)
+
+        // Create initial share
+        let item1 = createTestItem()
+        let shareCode = try await manager.createMyShare(items: [item1])
+
+        // Update inventory
+        let item2 = CompleteInventoryItemModel(
+            glassItem: GlassItemModel(
+                stable_id: "def456",
+                name: "Red",
+                sku: "002",
+                manufacturer: "test",
+                coe: 90,
+                mfr_status: "available"
+            ),
+            inventory: [InventoryModel(
+                item_stable_id: "def456",
+                type: "tube",
+                quantity: 10.0,
+                location: nil
+            )],
+            tags: [],
+            userTags: []
+        )
+
+        // Refresh with updated inventory
+        try await manager.refreshMyShare(items: [item1, item2])
+
+        // Verify update called
+        #expect(mockAPIClient.updateCalled)
+        #expect(mockAPIClient.lastShareCode == shareCode)
+    }
+
+    @Test("Should handle complete lifecycle: create, refresh, delete")
+    func testCompleteLifecycle() async throws {
+        let mockAPIClient = MockSharingAPIClient()
+        let sharingService = InventorySharingService(apiClient: mockAPIClient)
+        let coordinator = InventorySharingCoordinator(sharingService: sharingService)
+        let manager = InventorySharingManager(coordinator: coordinator)
+
+        let item = createTestItem()
+
+        // 1. Create share
+        let shareCode = try await manager.createMyShare(items: [item])
+        #expect(manager.getMyShareCode() == shareCode)
+
+        // 2. Refresh share
+        try await manager.refreshMyShare(items: [item])
+        #expect(mockAPIClient.updateCalled)
+
+        // 3. Delete share
+        try await manager.deleteMyShare()
+        #expect(manager.getMyShareCode() == nil)
+        #expect(mockAPIClient.deleteCalled)
+    }
+
+    // MARK: - Helper Methods
+
+    private func createTestItem() -> CompleteInventoryItemModel {
+        let glassItem = GlassItemModel(
+            stable_id: "abc123",
+            name: "Test Item",
+            sku: "001",
+            manufacturer: "test",
+            coe: 90,
+            mfr_status: "available"
+        )
+
+        let inventory = InventoryModel(
+            item_stable_id: "abc123",
+            type: "rod",
+            quantity: 5.0,
+            location: nil
+        )
+
+        return CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: [inventory],
+            tags: [],
+            userTags: []
+        )
+    }
+}

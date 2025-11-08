@@ -10,7 +10,7 @@ import Foundation
 
 /// High-level service for inventory sharing operations
 @MainActor
-class InventorySharingService {
+open class InventorySharingService {
 
     // MARK: - Properties
 
@@ -39,7 +39,7 @@ class InventorySharingService {
     /// Create a new share with generated code
     /// - Parameter items: Inventory items to share
     /// - Returns: Generated share code
-    func createShare(items: [InventoryItemSnapshot]) async throws -> String {
+    open func createShare(items: [InventoryItemSnapshot]) async throws -> String {
         // Get or generate key pair
         let keyPair = try keyPairManager.getCurrentKeyPair()
 
@@ -80,7 +80,7 @@ class InventorySharingService {
     /// Download friend's inventory by share code
     /// - Parameter shareCode: Share code to download
     /// - Returns: Snapshot result with validity flag
-    func downloadFriendInventory(shareCode: String) async throws -> SnapshotResult {
+    open func downloadFriendInventory(shareCode: String) async throws -> SnapshotResult {
         // Download from server
         let downloaded = try await apiClient.downloadSnapshot(shareCode: shareCode)
 
@@ -99,7 +99,7 @@ class InventorySharingService {
     /// - Parameters:
     ///   - shareCode: Share code to update
     ///   - items: New inventory items
-    func updateShare(shareCode: String, items: [InventoryItemSnapshot]) async throws {
+    open func updateShare(shareCode: String, items: [InventoryItemSnapshot]) async throws {
         // Get current key pair
         let keyPair = try keyPairManager.getCurrentKeyPair()
 
@@ -122,7 +122,7 @@ class InventorySharingService {
 
     /// Delete a share by code
     /// - Parameter shareCode: Share code to delete
-    func deleteShare(shareCode: String) async throws {
+    open func deleteShare(shareCode: String) async throws {
         try await apiClient.deleteShare(shareCode: shareCode)
     }
 }

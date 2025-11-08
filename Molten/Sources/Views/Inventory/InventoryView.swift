@@ -528,7 +528,7 @@ struct InventoryView: View {
                 Button {
                     showingSharing = true
                 } label: {
-                    Label("Share Inventory", systemImage: "person.2")
+                    Label("Inventory Sharing", systemImage: "person.2")
                 }
 
                 Button {

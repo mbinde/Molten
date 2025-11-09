@@ -57,6 +57,12 @@ xcodebuild test -project Molten.xcodeproj -scheme Molten -destination 'platform=
   - **Tests Core Data implementations directly**
   - Uses `RepositoryFactory.configureForTestingWithCoreData()` with isolated test controllers
   - Tests persistence, migrations, and Core Data-specific behavior
+  - **🚨 CRITICAL: ALWAYS verify Core Data schema before writing tests**
+    - Check current model version: `cat Molten/Molten.xcdatamodeld/.xccurrentversion`
+    - Verify entity names: `grep "entity name=" Molten/Molten.xcdatamodeld/Molten\ XX.xcdatamodel/contents`
+    - Verify attributes/relationships: `grep -A 20 "entity name=\"EntityName\"" Molten/Molten.xcdatamodeld/Molten\ XX.xcdatamodel/contents`
+    - **DO NOT assume entity names, fields, or relationships exist - verify against actual schema**
+    - Common mistakes: using old entity names (ProjectTag, ProjectPlanGlassItem), accessing removed fields (item_stable_id, kilnSchedule)
 - **ViewModelTests**: ViewModel presentation logic tests (part of MoltenTests)
   - **Protocol-based ViewModels** for dependency injection
   - Use mock services for fast, isolated testing

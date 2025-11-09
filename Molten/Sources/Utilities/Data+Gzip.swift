@@ -18,7 +18,6 @@ extension Data {
         }
 
         var decompressed = Data()
-        var index = 0
 
         let bufferSize = 512
         let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
@@ -29,37 +28,37 @@ extension Data {
                 throw CompressionError.invalidInput
             }
 
-            guard let stream = compression_stream_init(
-                COMPRESSION_STREAM_DECODE,
-                COMPRESSION_ZLIB
-            ) else {
+            var stream = compression_stream()
+            let status = compression_stream_init(&stream, COMPRESSION_STREAM_DECODE, COMPRESSION_ZLIB)
+
+            guard status == COMPRESSION_STATUS_OK else {
                 throw CompressionError.streamInitializationFailed
             }
 
             defer {
-                compression_stream_destroy(stream)
+                compression_stream_destroy(&stream)
             }
 
-            stream.pointee.src_ptr = inputBaseAddress.assumingMemoryBound(to: UInt8.self)
-            stream.pointee.src_size = self.count
-            stream.pointee.dst_ptr = buffer
-            stream.pointee.dst_size = bufferSize
+            stream.src_ptr = inputBaseAddress.assumingMemoryBound(to: UInt8.self)
+            stream.src_size = self.count
+            stream.dst_ptr = buffer
+            stream.dst_size = bufferSize
 
             while true {
-                let status = compression_stream_process(stream, 0)
+                let processStatus = compression_stream_process(&stream, 0)
 
-                switch status {
+                switch processStatus {
                 case COMPRESSION_STATUS_OK:
                     // More data to decompress
-                    let count = bufferSize - stream.pointee.dst_size
+                    let count = bufferSize - stream.dst_size
                     decompressed.append(buffer, count: count)
 
-                    stream.pointee.dst_ptr = buffer
-                    stream.pointee.dst_size = bufferSize
+                    stream.dst_ptr = buffer
+                    stream.dst_size = bufferSize
 
                 case COMPRESSION_STATUS_END:
                     // Decompression complete
-                    let count = bufferSize - stream.pointee.dst_size
+                    let count = bufferSize - stream.dst_size
                     decompressed.append(buffer, count: count)
                     return
 
@@ -97,37 +96,37 @@ extension Data {
                 throw CompressionError.invalidInput
             }
 
-            guard let stream = compression_stream_init(
-                COMPRESSION_STREAM_ENCODE,
-                COMPRESSION_ZLIB
-            ) else {
+            var stream = compression_stream()
+            let status = compression_stream_init(&stream, COMPRESSION_STREAM_ENCODE, COMPRESSION_ZLIB)
+
+            guard status == COMPRESSION_STATUS_OK else {
                 throw CompressionError.streamInitializationFailed
             }
 
             defer {
-                compression_stream_destroy(stream)
+                compression_stream_destroy(&stream)
             }
 
-            stream.pointee.src_ptr = inputBaseAddress.assumingMemoryBound(to: UInt8.self)
-            stream.pointee.src_size = self.count
-            stream.pointee.dst_ptr = buffer
-            stream.pointee.dst_size = bufferSize
+            stream.src_ptr = inputBaseAddress.assumingMemoryBound(to: UInt8.self)
+            stream.src_size = self.count
+            stream.dst_ptr = buffer
+            stream.dst_size = bufferSize
 
             while true {
-                let status = compression_stream_process(stream, Int32(COMPRESSION_STREAM_FINALIZE.rawValue))
+                let processStatus = compression_stream_process(&stream, Int32(COMPRESSION_STREAM_FINALIZE.rawValue))
 
-                switch status {
+                switch processStatus {
                 case COMPRESSION_STATUS_OK:
                     // More data to compress
-                    let count = bufferSize - stream.pointee.dst_size
+                    let count = bufferSize - stream.dst_size
                     compressed.append(buffer, count: count)
 
-                    stream.pointee.dst_ptr = buffer
-                    stream.pointee.dst_size = bufferSize
+                    stream.dst_ptr = buffer
+                    stream.dst_size = bufferSize
 
                 case COMPRESSION_STATUS_END:
                     // Compression complete
-                    let count = bufferSize - stream.pointee.dst_size
+                    let count = bufferSize - stream.dst_size
                     compressed.append(buffer, count: count)
                     return
 

@@ -217,6 +217,10 @@ extension MoltenApp {
             .onAppear {
                 checkAlphaDisclaimer()
             }
+            .task {
+                // Perform background catalog update check
+                await performBackgroundCatalogUpdate()
+            }
     }
 
     @ViewBuilder
@@ -370,6 +374,28 @@ extension MoltenApp {
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(0.3))
             showAlphaDisclaimer = true
+        }
+    }
+
+    /// Perform background catalog update check on app startup
+    @MainActor
+    private func performBackgroundCatalogUpdate() async {
+        // Skip if running tests
+        guard !isRunningTests && !isRunningUITests else {
+            print("🧪 Skipping catalog update check for tests")
+            return
+        }
+
+        // Small delay to avoid competing with initial data load
+        try? await Task.sleep(for: .seconds(2))
+
+        do {
+            print("📦 Checking for catalog updates in background...")
+            let catalogUpdateService = RepositoryFactory.createCatalogUpdateService()
+            await catalogUpdateService.performBackgroundUpdateCheck()
+        } catch {
+            print("⚠️ Background catalog update check failed: \(error.localizedDescription)")
+            // Silent failure - don't disrupt user experience
         }
     }
 

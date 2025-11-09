@@ -118,7 +118,7 @@ struct InventorySharingView: View {
                     }
                     .disabled(viewModel.isLoading)
 
-                    Text("Re-uploads your current inventory to update what friends see")
+                    Text("Re-uploads your current inventory to update what friends see. Also resets the 90-day auto-deletion timer.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.leading, DesignSystem.Spacing.md)

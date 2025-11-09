@@ -5,6 +5,13 @@
 //  High-level manager for inventory sharing
 //  Orchestrates coordinator and metadata repository
 //
+//  AUTOMATIC DELETION POLICY:
+//  Shares are automatically deleted from the server 90 days after your last inventory update.
+//  - Creating a share: Starts 90-day countdown from creation timestamp
+//  - Updating inventory: Resets countdown to 90 days from update timestamp
+//  - Friend downloads: Do NOT reset the countdown
+//  To keep your share active, update your inventory at least once every 90 days.
+//
 
 import Foundation
 import CoreData

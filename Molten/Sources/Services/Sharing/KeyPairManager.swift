@@ -66,10 +66,8 @@ final class KeyPairManager {
     }
 
     /// Retrieve a private key from the Keychain
-    /// - Note: Tries to retrieve synchronizable key first, falls back to non-synchronizable for migration
     func retrievePrivateKey(identifier: String) throws -> Data {
-        // Try to retrieve synchronizable key first (new format)
-        var query: [String: Any] = [
+        let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.keychainService,
             kSecAttrAccount as String: identifier,
@@ -79,19 +77,7 @@ final class KeyPairManager {
         ]
 
         var result: AnyObject?
-        var status = SecItemCopyMatching(query as CFDictionary, &result)
-
-        // If not found, try non-synchronizable (old format for migration)
-        if status == errSecItemNotFound {
-            query[kSecAttrSynchronizable as String] = kSecAttrSynchronizableAny
-            status = SecItemCopyMatching(query as CFDictionary, &result)
-
-            // If we found an old key, migrate it to synchronizable
-            if status == errSecSuccess, let data = result as? Data {
-                try migrateKeyToSynchronizable(data: data, identifier: identifier)
-                return data
-            }
-        }
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
 
         guard status == errSecSuccess else {
             if status == errSecItemNotFound {
@@ -107,24 +93,13 @@ final class KeyPairManager {
         return data
     }
 
-    /// Migrate an existing non-synchronizable key to synchronizable format
-    private func migrateKeyToSynchronizable(data: Data, identifier: String) throws {
-        // Delete old non-synchronizable key
-        try deletePrivateKey(identifier: identifier)
-
-        // Re-store with synchronizable flag
-        try storePrivateKey(data, identifier: identifier)
-    }
-
     /// Delete a private key from the Keychain
-    /// - Note: Handles both synchronizable and non-synchronizable keys
     func deletePrivateKey(identifier: String) throws {
-        // Try to delete synchronizable keys and non-synchronizable keys
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.keychainService,
             kSecAttrAccount as String: identifier,
-            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny  // Matches both types
+            kSecAttrSynchronizable as String: true
         ]
 
         let status = SecItemDelete(query as CFDictionary)
@@ -135,12 +110,11 @@ final class KeyPairManager {
     }
 
     /// Delete all keys from the Keychain
-    /// - Note: Handles both synchronizable and non-synchronizable keys
     nonisolated static func deleteAllKeys() {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
-            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny  // Matches both types
+            kSecAttrSynchronizable as String: true
         ]
 
         SecItemDelete(query as CFDictionary)

@@ -136,6 +136,9 @@ class CoreDataSharedInventoryRepository {
         try context.execute(tagDeleteRequest)
 
         try context.save()
+
+        // Refresh context to clear stale in-memory cache after batch delete
+        context.refreshAllObjects()
     }
 
     /// Get all items with a specific tag from any shared inventory

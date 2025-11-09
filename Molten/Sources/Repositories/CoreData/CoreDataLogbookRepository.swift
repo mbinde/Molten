@@ -101,16 +101,16 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
     func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
         return try await context.perform {
             let fetchRequest = Logbook.fetchRequest()
-            // Check if either date_started or date_completed falls within the range, or if date_created does (when both are nil)
+            // Check if either date_started or project_date falls within the range, or if date_created does (when both are nil)
             fetchRequest.predicate = NSPredicate(
-                format: "(date_started >= %@ AND date_started <= %@) OR (date_completed >= %@ AND date_completed <= %@) OR (date_started == nil AND date_completed == nil AND date_created >= %@ AND date_created <= %@)",
+                format: "(date_started >= %@ AND date_started <= %@) OR (project_date >= %@ AND project_date <= %@) OR (date_started == nil AND project_date == nil AND date_created >= %@ AND date_created <= %@)",
                 start as CVarArg, end as CVarArg,
                 start as CVarArg, end as CVarArg,
                 start as CVarArg, end as CVarArg
             )
-            // Sort by completion date, then start date, then created date
+            // Sort by completion date (project_date), then start date, then created date
             fetchRequest.sortDescriptors = [
-                NSSortDescriptor(key: "date_completed", ascending: false),
+                NSSortDescriptor(key: "project_date", ascending: false),
                 NSSortDescriptor(key: "date_started", ascending: false),
                 NSSortDescriptor(key: "date_created", ascending: false)
             ]

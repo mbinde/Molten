@@ -780,7 +780,18 @@ nonisolated struct RepositoryFactory {
     nonisolated static func configureForProduction() {
         mode = .coreData
         // Always use the shared production container
-        persistentContainer = getSharedController().container
+        let controller = getSharedController()
+
+        // Ensure the controller is initialized before accessing its contexts
+        // Production controllers load asynchronously, so we need to wait
+        let semaphore = DispatchSemaphore(value: 0)
+        Task.detached {
+            await controller.initialize()
+            semaphore.signal()
+        }
+        semaphore.wait()
+
+        persistentContainer = controller.container
     }
     
     /// Configure for production and ensure initial data is loaded

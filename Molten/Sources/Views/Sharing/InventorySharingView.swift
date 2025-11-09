@@ -10,6 +10,8 @@ import SwiftUI
 struct InventorySharingView: View {
 
     @State private var viewModel = InventorySharingViewModel()
+    @State private var friendToDelete: FriendShare?
+    @State private var showingDeleteConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -42,6 +44,22 @@ struct InventorySharingView: View {
             .sheet(isPresented: $viewModel.showingCustomizeFriend) {
                 if let friend = viewModel.selectedFriendForCustomization {
                     CustomizeFriendView(friend: friend, viewModel: viewModel)
+                }
+            }
+            .alert("Delete Friend?", isPresented: $showingDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {
+                    friendToDelete = nil
+                }
+                Button("Delete", role: .destructive) {
+                    if let friend = friendToDelete {
+                        viewModel.removeFriend(friend)
+                    }
+                    friendToDelete = nil
+                }
+            } message: {
+                if let friend = friendToDelete {
+                    let name = friend.nickname?.isEmpty == false ? friend.nickname! : friend.friendName
+                    Text("Are you sure you want to remove \(name) from your friends list?")
                 }
             }
         }
@@ -192,9 +210,10 @@ struct InventorySharingView: View {
                     } label: {
                         FriendRowView(friend: friend)
                     }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) {
-                            viewModel.removeFriend(friend)
+                            friendToDelete = friend
+                            showingDeleteConfirmation = true
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
@@ -208,7 +227,8 @@ struct InventorySharingView: View {
                         }
 
                         Button(role: .destructive) {
-                            viewModel.removeFriend(friend)
+                            friendToDelete = friend
+                            showingDeleteConfirmation = true
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
@@ -235,6 +255,11 @@ struct InventorySharingView: View {
 struct FriendRowView: View {
     let friend: FriendShare
 
+    // Update timestamp every minute instead of every second
+    @State private var currentTime = Date()
+
+    private let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
+
     private var iconSymbol: String {
         friend.iconSymbol ?? FriendShare.defaultIconSymbol
     }
@@ -251,6 +276,37 @@ struct FriendRowView: View {
             return Color(hex: hex)
         }
         return Color(hex: FriendShare.defaultIconForegroundHex)
+    }
+
+    private var relativeTimeString: String {
+        guard let lastRefreshed = friend.lastRefreshed else { return "" }
+        let seconds = currentTime.timeIntervalSince(lastRefreshed)
+
+        // Less than a minute
+        if seconds < 60 {
+            return "< 1 minute"
+        }
+
+        // Less than an hour
+        if seconds < 3600 {
+            return "< 1 hour"
+        }
+
+        // Hours (1-23)
+        if seconds < 86400 {
+            let hours = Int(seconds / 3600)
+            return hours == 1 ? "1 hour" : "\(hours) hours"
+        }
+
+        // Days (1-6)
+        if seconds < 604800 {
+            let days = Int(seconds / 86400)
+            return days == 1 ? "1 day" : "\(days) days"
+        }
+
+        // Weeks
+        let weeks = Int(seconds / 604800)
+        return weeks == 1 ? "1 week" : "\(weeks) weeks"
     }
 
     var body: some View {
@@ -283,10 +339,10 @@ struct FriendRowView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
 
-                    if let lastRefreshed = friend.lastRefreshed {
+                    if friend.lastRefreshed != nil {
                         Text("•")
                             .foregroundColor(.secondary)
-                        Text("Updated \(lastRefreshed.roundedRelativeString()) ago")
+                        Text("Updated \(relativeTimeString) ago")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -294,6 +350,12 @@ struct FriendRowView: View {
             }
         }
         .padding(.vertical, DesignSystem.Spacing.xs)
+        .onReceive(timer) { _ in
+            currentTime = Date()
+        }
+        .onAppear {
+            currentTime = Date()
+        }
     }
 }
 

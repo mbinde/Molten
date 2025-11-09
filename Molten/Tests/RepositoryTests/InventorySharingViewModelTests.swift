@@ -404,6 +404,18 @@ struct InventorySharingViewModelTests {
     // MARK: - Helper Methods
 
     private func createMockSharingManager() -> InventorySharingManager {
+        // Create isolated test controller
+        let testController = PersistenceController.createTestController()
+        RepositoryFactory.configureForTestingWithCoreData(controller: testController)
+
+        let testContext = testController.container.viewContext
+        let catalogRepo = RepositoryFactory.createGlassItemRepository()
+        let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
+        let sharedInventoryRepo = CoreDataSharedInventoryRepository(
+            context: testContext,
+            catalogRepository: catalogRepo
+        )
+
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = SnapshotResult(
             items: [],
@@ -413,10 +425,26 @@ struct InventorySharingViewModelTests {
             ownerName: "Test User",
             ownerShareNotes: nil
         )
-        return InventorySharingManager(coordinator: mockCoordinator)
+        return InventorySharingManager(
+            coordinator: mockCoordinator,
+            shareRecordRepository: shareRecordRepo,
+            sharedInventoryRepository: sharedInventoryRepo
+        )
     }
 
     private func createMockSharingManagerWithInvalidSignature() -> InventorySharingManager {
+        // Create isolated test controller
+        let testController = PersistenceController.createTestController()
+        RepositoryFactory.configureForTestingWithCoreData(controller: testController)
+
+        let testContext = testController.container.viewContext
+        let catalogRepo = RepositoryFactory.createGlassItemRepository()
+        let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
+        let sharedInventoryRepo = CoreDataSharedInventoryRepository(
+            context: testContext,
+            catalogRepository: catalogRepo
+        )
+
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = SnapshotResult(
             items: [],
@@ -426,7 +454,11 @@ struct InventorySharingViewModelTests {
             ownerName: "Test User",
             ownerShareNotes: nil
         )
-        return InventorySharingManager(coordinator: mockCoordinator)
+        return InventorySharingManager(
+            coordinator: mockCoordinator,
+            shareRecordRepository: shareRecordRepo,
+            sharedInventoryRepository: sharedInventoryRepo
+        )
     }
 
     private func createMockCatalogService() -> CatalogService {

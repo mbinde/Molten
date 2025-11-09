@@ -27,6 +27,21 @@ struct CreateShareView: View {
                     Text("Your display name and notes will be visible to anyone who adds your share code.")
                 }
 
+                Section {
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        Label("Automatic Deletion", systemImage: "clock.arrow.circlepath")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+
+                        Text("Your share will be automatically deleted from the server 90 days after your last inventory update. Update your inventory at least once every 90 days to keep your share active.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, DesignSystem.Spacing.xs)
+                } header: {
+                    Text("Privacy & Data Retention")
+                }
+
                 if let error = viewModel.errorMessage {
                     Section {
                         Text(error)

@@ -122,6 +122,9 @@ struct FriendInventoryView: View {
             // Search and filter controls - OUTSIDE the List for full width
             searchAndFilterHeader
 
+            // Comparison filter buttons
+            comparisonButtons
+
             // Inventory list
             if viewModel.filteredInventory.isEmpty {
                 searchEmptyState
@@ -141,6 +144,43 @@ struct FriendInventoryView: View {
                 .disabled(viewModel.isLoading)
             }
         }
+    }
+
+    private var comparisonButtons: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: DesignSystem.Spacing.md) {
+                ComparisonButton(
+                    title: "All Items",
+                    isSelected: viewModel.comparisonMode == .all
+                ) {
+                    viewModel.comparisonMode = .all
+                }
+
+                ComparisonButton(
+                    title: "They Have, I Don't",
+                    isSelected: viewModel.comparisonMode == .theyHaveIDoNot
+                ) {
+                    viewModel.comparisonMode = .theyHaveIDoNot
+                }
+
+                ComparisonButton(
+                    title: "I Have, They Don't",
+                    isSelected: viewModel.comparisonMode == .iHaveTheyDoNot
+                ) {
+                    viewModel.comparisonMode = .iHaveTheyDoNot
+                }
+
+                ComparisonButton(
+                    title: "We Both Have",
+                    isSelected: viewModel.comparisonMode == .weBothHave
+                ) {
+                    viewModel.comparisonMode = .weBothHave
+                }
+            }
+            .padding(.horizontal, DesignSystem.Spacing.md)
+        }
+        .padding(.vertical, DesignSystem.Spacing.sm)
+        .background(Color(.systemBackground))
     }
 
     private var searchAndFilterHeader: some View {
@@ -188,6 +228,30 @@ struct FriendInventoryView: View {
                 Text("\(viewModel.filteredInventory.count) item\(viewModel.filteredInventory.count == 1 ? "" : "s")")
             }
         }
+    }
+}
+
+// MARK: - Comparison Button Component
+
+private struct ComparisonButton: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(isSelected ? .semibold : .regular)
+                .foregroundColor(isSelected ? .white : .primary)
+                .padding(.horizontal, DesignSystem.Spacing.md)
+                .padding(.vertical, DesignSystem.Spacing.sm)
+                .background(
+                    RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                        .fill(isSelected ? Color.accentColor : Color(.secondarySystemBackground))
+                )
+        }
+        .buttonStyle(.plain)
     }
 }
 

@@ -679,6 +679,11 @@ Button(action: addItem) {
    git commit -m "chore: add new test files to Xcode project"
    ```
 
+7. **Clean build required**: After adding test files to the Xcode project, perform a clean build:
+   - In Xcode: Product → Clean Build Folder (⇧⌘K)
+   - Or via command line: `xcodebuild clean -project Molten.xcodeproj -scheme Molten`
+   - This ensures Swift's incremental compilation picks up the new test files correctly
+
 **Why this works:**
 - No need to navigate deep folder hierarchies
 - Can add dozens of files in one operation

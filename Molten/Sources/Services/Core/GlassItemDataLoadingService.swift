@@ -303,7 +303,76 @@ class GlassItemDataLoadingService {
 
         return results
     }
-    
+
+    /// Load glass items from raw JSON data (for OTA updates)
+    /// - Parameters:
+    ///   - data: Raw JSON data
+    ///   - options: Configuration options for loading behavior
+    /// - Returns: Results of the loading operation
+    func loadGlassItemsFromData(_ data: Data, options: LoadingOptions = .default) async throws -> GlassItemLoadingResult {
+        log.info("Starting GlassItem data loading from provided data with options: \(String(describing: options))")
+
+        // Decode JSON data
+        let catalogItems = try jsonLoader.decodeCatalogItems(from: data)
+
+        log.info("Loaded \(catalogItems.count) items from data, beginning comparison and transformation")
+
+        // Get existing items for comparison
+        let existingItems = try await catalogService.getAllGlassItems()
+        log.info("Found \(existingItems.count) existing GlassItems in database")
+
+        // Compare and categorize items
+        let comparisonResult = await compareAndCategorizeItems(
+            jsonItems: catalogItems,
+            existingItems: existingItems.map { $0.glassItem },
+            options: options
+        )
+
+        log.info("Comparison complete: \(comparisonResult.toCreate.count) to create, \(comparisonResult.toUpdate.count) to update, \(comparisonResult.unchanged.count) unchanged")
+
+        // Process creates and updates
+        var results = GlassItemLoadingResult(
+            itemsCreated: 0,
+            itemsFailed: 0,
+            itemsSkipped: 0,
+            itemsUpdated: 0,
+            successfulItems: [],
+            failedItems: [],
+            batchErrors: []
+        )
+
+        // Process new items (creates)
+        if !comparisonResult.toCreate.isEmpty {
+            log.info("Creating \(comparisonResult.toCreate.count) new items")
+            let createResults = try await processCreates(comparisonResult.toCreate, options: options)
+            results.merge(createResults)
+        }
+
+        // Process updated items
+        if !comparisonResult.toUpdate.isEmpty {
+            log.info("Updating \(comparisonResult.toUpdate.count) changed items")
+            let updateResults = try await processUpdates(comparisonResult.toUpdate, options: options)
+            results.itemsUpdated = updateResults.itemsUpdated
+            results.itemsFailed += updateResults.itemsFailed
+        }
+
+        // Sync tags for unchanged items
+        if !comparisonResult.unchanged.isEmpty {
+            log.info("Syncing tags for \(comparisonResult.unchanged.count) unchanged items")
+            let tagSyncResults = try await syncTagsForUnchangedItems(comparisonResult.unchanged, jsonItems: catalogItems, options: options)
+            results.itemsUpdated += tagSyncResults.itemsUpdated
+            results.itemsFailed += tagSyncResults.itemsFailed
+        }
+
+        // Count unchanged items as skipped
+        results.itemsSkipped = comparisonResult.unchanged.count
+
+        // Log final results
+        logLoadingResults(results)
+
+        return results
+    }
+
     /// Load glass items and update existing items with any changes from JSON
     /// - Parameter options: Configuration options for loading behavior
     /// - Returns: Results of the loading operation, including updates to existing items

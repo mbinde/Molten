@@ -643,17 +643,19 @@ Button(action: addItem) {
 **Claude's workflow:**
 
 1. Create test files in correct filesystem location:
-   - Unit tests (mocks only): `Tests/MoltenTests/`
-   - Core Data integration tests: `Tests/RepositoryTests/`
-   - UI tests: `Tests/MoltenUITests/`
+   - **CRITICAL**: All test files MUST be under `Molten/Tests/` from project root
+   - Unit tests (mocks only): `Molten/Tests/MoltenTests/`
+   - Core Data integration tests: `Molten/Tests/RepositoryTests/`
+   - UI tests: `Molten/Tests/MoltenUITests/`
+   - **Example full path**: `/Users/binde/projects/tests/Molten/Tests/RepositoryTests/CoreData/YourNewTests.swift`
 
 2. Commit the test files:
    ```bash
-   git add Tests/MoltenTests/YourNewTests.swift
+   git add Molten/Tests/MoltenTests/YourNewTests.swift
    git commit -m "test: add YourNewTests"
    ```
 
-3. Tell user: "Created N new test files in Tests/MoltenTests/ - ready to add to Xcode"
+3. Tell user: "Created N new test files in Molten/Tests/MoltenTests/ - ready to add to Xcode"
 
 **User's workflow (adds all new files at once):**
 
@@ -777,8 +779,12 @@ struct MyView: View {
 
 ## File Organization
 
+**⚠️ CRITICAL: Test File Paths**
+- All tests MUST be under `Molten/Tests/` directory from project root
+- Full example: `/Users/binde/projects/tests/Molten/Tests/RepositoryTests/CoreData/YourTests.swift`
+
 ```
-Molten/
+Molten/                        # ← PROJECT ROOT (where Molten.xcodeproj lives)
 ├── Sources/
 │   ├── App/          # Factories, Configuration
 │   ├── Models/       # Domain, Helpers
@@ -790,7 +796,7 @@ Molten/
 │   │       ├── Components/    # Reusable components
 │   │       └── Helpers/       # View-specific utilities
 │   └── Utilities/    # Cross-cutting utilities
-├── Tests/
+├── Tests/            # ← ALL TEST FILES GO HERE (Molten/Tests/)
 │   ├── MoltenTests/
 │   │   ├── Infrastructure/    # TestConfiguration, TestDataSetup, TestDataBuilder
 │   │   ├── Models/            # Model unit tests
@@ -798,6 +804,7 @@ Molten/
 │   │   ├── Views/             # ViewModel tests
 │   │   └── Utilities/         # Utility tests
 │   ├── RepositoryTests/       # Core Data integration tests
+│   │   └── CoreData/          # ← CoreData repository tests go here
 │   ├── ViewModelTests/        # (Empty - use MoltenTests/Views/)
 │   ├── PerformanceTests/      # Performance tests
 │   └── MoltenUITests/         # UI automation tests

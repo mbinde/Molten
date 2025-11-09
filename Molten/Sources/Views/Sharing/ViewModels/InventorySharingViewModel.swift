@@ -178,12 +178,13 @@ class InventorySharingViewModel {
         } catch SharingManagerError.noShareExists {
             errorMessage = "No share exists."
         } catch SharingAPIError.unauthorized {
-            // Key pair mismatch - delete local share anyway
+            // Key pair mismatch - this should be extremely rare with iCloud Keychain sync
+            // Only happens if: iCloud Keychain disabled, or manual key deletion during testing
             do {
                 try sharingManager.deleteLocalShareOnly()
                 myShareCode = nil
                 myShareMetadata = nil
-                errorMessage = "Local share deleted. Server deletion failed because the encryption keys changed. The share may still exist on the server but you can create a new one."
+                errorMessage = "Local share deleted. Server deletion failed - your encryption keys are not available. This can happen if iCloud Keychain is disabled. Enable iCloud Keychain in Settings to prevent this issue. You can create a new share now."
             } catch {
                 errorMessage = "Failed to delete local share: \(error.localizedDescription)"
             }

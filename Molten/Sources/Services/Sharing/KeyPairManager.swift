@@ -38,17 +38,23 @@ final class KeyPairManager {
     // MARK: - Keychain Storage
 
     /// Store a private key in the Keychain
+    /// - Note: Uses kSecAttrAccessibleWhenUnlocked to enable iCloud Keychain sync
+    ///         This ensures keys transfer to new devices, allowing users to delete their data
     func storePrivateKey(_ privateKey: Data, identifier: String) throws {
         // Delete existing key if present
         try? deletePrivateKey(identifier: identifier)
 
         // Prepare Keychain query
+        // CRITICAL: kSecAttrAccessibleWhenUnlocked enables iCloud Keychain sync
+        // This ensures keys transfer when user upgrades phones, which is REQUIRED
+        // for GDPR/privacy compliance - users must be able to delete their server data
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.keychainService,
             kSecAttrAccount as String: identifier,
             kSecValueData as String: privateKey,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked,
+            kSecAttrSynchronizable as String: true  // Explicitly enable iCloud sync
         ]
 
         // Add to Keychain
@@ -60,17 +66,32 @@ final class KeyPairManager {
     }
 
     /// Retrieve a private key from the Keychain
+    /// - Note: Tries to retrieve synchronizable key first, falls back to non-synchronizable for migration
     func retrievePrivateKey(identifier: String) throws -> Data {
-        let query: [String: Any] = [
+        // Try to retrieve synchronizable key first (new format)
+        var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.keychainService,
             kSecAttrAccount as String: identifier,
+            kSecAttrSynchronizable as String: true,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
 
         var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        var status = SecItemCopyMatching(query as CFDictionary, &result)
+
+        // If not found, try non-synchronizable (old format for migration)
+        if status == errSecItemNotFound {
+            query[kSecAttrSynchronizable as String] = kSecAttrSynchronizableAny
+            status = SecItemCopyMatching(query as CFDictionary, &result)
+
+            // If we found an old key, migrate it to synchronizable
+            if status == errSecSuccess, let data = result as? Data {
+                try migrateKeyToSynchronizable(data: data, identifier: identifier)
+                return data
+            }
+        }
 
         guard status == errSecSuccess else {
             if status == errSecItemNotFound {
@@ -86,12 +107,24 @@ final class KeyPairManager {
         return data
     }
 
+    /// Migrate an existing non-synchronizable key to synchronizable format
+    private func migrateKeyToSynchronizable(data: Data, identifier: String) throws {
+        // Delete old non-synchronizable key
+        try deletePrivateKey(identifier: identifier)
+
+        // Re-store with synchronizable flag
+        try storePrivateKey(data, identifier: identifier)
+    }
+
     /// Delete a private key from the Keychain
+    /// - Note: Handles both synchronizable and non-synchronizable keys
     func deletePrivateKey(identifier: String) throws {
+        // Try to delete synchronizable keys and non-synchronizable keys
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.keychainService,
-            kSecAttrAccount as String: identifier
+            kSecAttrAccount as String: identifier,
+            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny  // Matches both types
         ]
 
         let status = SecItemDelete(query as CFDictionary)
@@ -102,10 +135,12 @@ final class KeyPairManager {
     }
 
     /// Delete all keys from the Keychain
+    /// - Note: Handles both synchronizable and non-synchronizable keys
     nonisolated static func deleteAllKeys() {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService
+            kSecAttrService as String: keychainService,
+            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny  // Matches both types
         ]
 
         SecItemDelete(query as CFDictionary)

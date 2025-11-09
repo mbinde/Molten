@@ -2636,4 +2636,413 @@ catalog_anomalies      - Abuse detection
 
 ---
 
+## Addendum: Image Download Strategy
+
+### Revised Architecture (Based on User Requirements)
+
+**What ships in the app bundle (v1.5):**
+- ✅ Full catalog JSON metadata (~3.1 MB)
+- ✅ App UI assets only
+- ❌ Product images (CDN URLs only)
+
+**What happens on app startup:**
+```swift
+func application(_ application: UIApplication, didFinishLaunchingWithOptions...) {
+    // 1. Load bundled catalog into Core Data (if empty)
+    await loadBundledCatalogIfNeeded()
+
+    // 2. Background: Check for catalog updates
+    Task.detached {
+        await catalogUpdateService.performBackgroundUpdateCheck()
+    }
+
+    // 3. Background: Download missing images (based on user preferences)
+    Task.detached {
+        await imageDownloadService.downloadMissingImages()
+    }
+}
+```
+
+**Image Download Modes (User Preference):**
+
+1. **On-Demand Only** (Default)
+   - No pre-downloading
+   - Fetch images as user scrolls/views
+   - Cache after first load
+   - Smallest storage footprint
+
+2. **Thumbnails Only**
+   - Pre-download small thumbnails (~50 KB each × 3,198 = ~160 MB)
+   - Fast offline browsing
+   - Full-res on-demand when viewing detail
+   - Medium storage footprint
+
+3. **All Images**
+   - Pre-download thumbnails + full-res (~200 KB each × 3,198 = ~640 MB)
+   - Full offline experience
+   - Largest storage footprint
+
+**User Preference Controls:**
+
+```swift
+// In SettingsView - new section
+Section {
+    Picker("Image Download Mode", selection: $imageDownloadMode) {
+        Text("On-Demand Only").tag(ImageDownloadMode.onDemand)
+        Text("Thumbnails Only").tag(ImageDownloadMode.thumbnails)
+        Text("All Images").tag(ImageDownloadMode.allImages)
+    }
+
+    Toggle("Download Over Cellular", isOn: $allowCellularImageDownload)
+
+    Picker("Download Timing", selection: $downloadTiming) {
+        Text("Immediately").tag(DownloadTiming.immediate)
+        Text("When Idle").tag(DownloadTiming.idle)
+        Text("Manually").tag(DownloadTiming.manual)
+    }
+
+    // Storage info
+    HStack {
+        Text("Images Cached")
+        Spacer()
+        Text("\(cachedImageCount) / \(totalImageCount)")
+            .foregroundColor(.secondary)
+    }
+
+    HStack {
+        Text("Storage Used")
+        Spacer()
+        Text(storageUsedFormatted)
+            .foregroundColor(.secondary)
+    }
+
+    Button("Clear Image Cache") {
+        viewModel.clearImageCache()
+    }
+    .foregroundColor(.red)
+
+} header: {
+    Text("Product Images")
+} footer: {
+    Text(imageDownloadMode.footerText)
+}
+```
+
+**Footer Text Examples:**
+- On-Demand: "Images load as you browse. Requires internet connection."
+- Thumbnails: "Small preview images for offline browsing. ~160 MB total."
+- All Images: "Full-resolution images for offline use. ~640 MB total."
+
+### New Service: ImageDownloadService
+
+**File:** `Molten/Sources/Services/Core/ImageDownloadService.swift`
+
+```swift
+import Foundation
+import UIKit
+import OSLog
+
+/// Service for downloading and caching product images
+@MainActor
+class ImageDownloadService: ObservableObject {
+
+    // MARK: - Properties
+
+    private let catalogService: CatalogService
+    private let storageService: ImageStorageService
+    private let networkMonitor: NetworkMonitor
+    private let log = Logger(subsystem: "Molten", category: "ImageDownload")
+
+    @Published private(set) var isDownloading: Bool = false
+    @Published private(set) var downloadProgress: Double = 0.0
+    @Published private(set) var cachedImageCount: Int = 0
+
+    // MARK: - User Preferences
+
+    enum ImageDownloadMode: String, Codable, CaseIterable {
+        case onDemand = "On-Demand Only"
+        case thumbnails = "Thumbnails Only"
+        case allImages = "All Images"
+
+        var footerText: String {
+            switch self {
+            case .onDemand:
+                return "Images load as you browse. Requires internet connection."
+            case .thumbnails:
+                return "Small preview images for offline browsing. Estimated ~160 MB total."
+            case .allImages:
+                return "Full-resolution images for offline use. Estimated ~640 MB total."
+            }
+        }
+    }
+
+    enum DownloadTiming: String, Codable {
+        case immediate = "Immediately"
+        case idle = "When Idle"
+        case manual = "Manually"
+    }
+
+    // MARK: - Public API
+
+    /// Download missing images based on user preferences
+    func downloadMissingImages() async {
+        let mode = ImageDownloadPreferences.shared.downloadMode
+        let allowCellular = ImageDownloadPreferences.shared.allowCellular
+
+        guard mode != .onDemand else {
+            log.debug("Image download mode is on-demand, skipping pre-download")
+            return
+        }
+
+        // Check network policy
+        guard networkMonitor.isConnected else {
+            log.warning("No network connection, skipping image download")
+            return
+        }
+
+        if !allowCellular && !networkMonitor.isOnWiFi {
+            log.info("Waiting for WiFi to download images")
+            return
+        }
+
+        isDownloading = true
+        downloadProgress = 0.0
+        defer { isDownloading = false }
+
+        do {
+            // Get all catalog items
+            let allItems = try await catalogService.getAllGlassItems()
+            let totalItems = allItems.count
+
+            log.info("Starting image download for \(totalItems) items (mode: \(mode.rawValue))")
+
+            var downloadedCount = 0
+
+            for (index, item) in allItems.enumerated() {
+                // Download thumbnail
+                if let thumbnailURL = item.glassItem.image_url,
+                   !storageService.hasCachedImage(url: thumbnailURL, type: .thumbnail) {
+
+                    do {
+                        let imageData = try await downloadImage(url: thumbnailURL)
+                        let thumbnail = generateThumbnail(from: imageData)
+                        try storageService.cacheImage(thumbnail, url: thumbnailURL, type: .thumbnail)
+                        downloadedCount += 1
+                    } catch {
+                        log.warning("Failed to download thumbnail for \(item.glassItem.stable_id): \(error)")
+                    }
+                }
+
+                // Download full-res if mode is allImages
+                if mode == .allImages,
+                   let imageURL = item.glassItem.image_url,
+                   !storageService.hasCachedImage(url: imageURL, type: .fullResolution) {
+
+                    do {
+                        let imageData = try await downloadImage(url: imageURL)
+                        try storageService.cacheImage(imageData, url: imageURL, type: .fullResolution)
+                    } catch {
+                        log.warning("Failed to download full-res for \(item.glassItem.stable_id): \(error)")
+                    }
+                }
+
+                // Update progress
+                downloadProgress = Double(index + 1) / Double(totalItems)
+
+                // Yield to allow UI updates
+                if index % 10 == 0 {
+                    await Task.yield()
+                }
+            }
+
+            cachedImageCount = storageService.getCachedImageCount()
+
+            log.info("✅ Downloaded \(downloadedCount) images")
+
+        } catch {
+            log.error("Image download failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Download images for specific items (after catalog update)
+    func downloadImagesForNewItems(_ items: [CompleteInventoryItemModel]) async {
+        // Similar to downloadMissingImages but only for new items
+    }
+
+    /// Clear all cached images
+    func clearImageCache() async {
+        do {
+            try await storageService.clearCache()
+            cachedImageCount = 0
+            log.info("Cleared image cache")
+        } catch {
+            log.error("Failed to clear image cache: \(error)")
+        }
+    }
+
+    // MARK: - Private Helpers
+
+    private func downloadImage(url: String) async throws -> Data {
+        guard let imageURL = URL(string: url) else {
+            throw ImageDownloadError.invalidURL
+        }
+
+        let (data, response) = try await URLSession.shared.data(from: imageURL)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            throw ImageDownloadError.downloadFailed
+        }
+
+        return data
+    }
+
+    private func generateThumbnail(from imageData: Data, maxSize: CGFloat = 200) -> Data {
+        guard let image = UIImage(data: imageData) else {
+            return imageData
+        }
+
+        let size = image.size
+        let aspectRatio = size.width / size.height
+
+        let thumbnailSize: CGSize
+        if aspectRatio > 1 {
+            thumbnailSize = CGSize(width: maxSize, height: maxSize / aspectRatio)
+        } else {
+            thumbnailSize = CGSize(width: maxSize * aspectRatio, height: maxSize)
+        }
+
+        UIGraphicsBeginImageContextWithOptions(thumbnailSize, false, 1.0)
+        image.draw(in: CGRect(origin: .zero, size: thumbnailSize))
+        let thumbnail = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        return thumbnail?.jpegData(compressionQuality: 0.8) ?? imageData
+    }
+}
+
+enum ImageDownloadError: LocalizedError {
+    case invalidURL
+    case downloadFailed
+    case storageFailed
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidURL:
+            return "Invalid image URL"
+        case .downloadFailed:
+            return "Failed to download image"
+        case .storageFailed:
+            return "Failed to save image"
+        }
+    }
+}
+```
+
+### Modified Startup Flow
+
+**MoltenApp.swift changes:**
+
+```swift
+@main
+struct MoltenApp: App {
+
+    @StateObject private var catalogUpdateService = RepositoryFactory.createCatalogUpdateService()
+    @StateObject private var imageDownloadService = RepositoryFactory.createImageDownloadService()
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .task {
+                    // Background tasks on app startup
+                    await performStartupTasks()
+                }
+        }
+    }
+
+    private func performStartupTasks() async {
+        // 1. Load bundled catalog if Core Data is empty
+        await loadBundledCatalogIfNeeded()
+
+        // 2. Check for catalog updates in background
+        Task.detached(priority: .background) {
+            await catalogUpdateService.performBackgroundUpdateCheck()
+        }
+
+        // 3. Download missing images in background
+        Task.detached(priority: .background) {
+            await imageDownloadService.downloadMissingImages()
+        }
+    }
+
+    private func loadBundledCatalogIfNeeded() async {
+        // Check if catalog is empty
+        let catalogService = RepositoryFactory.createCatalogService()
+        let existingItems = try? await catalogService.getAllGlassItems()
+
+        if existingItems?.isEmpty ?? true {
+            // Load bundled catalog
+            let loadingService = RepositoryFactory.createGlassItemDataLoadingService()
+            _ = try? await loadingService.loadGlassItemsFromJSON(options: .default)
+
+            // Mark as bundled source
+            CatalogUpdatePreferences.shared.catalogSource = .bundled
+            CatalogUpdatePreferences.shared.currentCatalogVersion = 1
+        }
+    }
+}
+```
+
+### Benefits of This Approach
+
+**Immediate:**
+- ✅ App works offline immediately (has catalog metadata)
+- ✅ No "loading" screen on first launch
+- ✅ User can browse catalog while images download in background
+- ✅ Respects user data preferences
+
+**Long-term:**
+- ✅ Catalog updates propagate instantly (no App Store delay)
+- ✅ Users control storage usage (on-demand vs full cache)
+- ✅ Smaller initial download from App Store
+- ✅ Fresh images always available
+
+**User Experience Flow:**
+
+```
+App Launch
+    ↓
+Load bundled catalog → Show catalog immediately
+    ↓                      ↓
+Background:          User can browse
+- Check updates      (sees placeholders for images)
+- Download images         ↓
+                    Images appear as they download
+                          ↓
+                    Catalog fully loaded + cached
+```
+
+### Storage Estimates
+
+**Catalog JSON:** ~3.1 MB (bundled)
+
+**Images:**
+- On-Demand: 0 MB initial, grows with usage
+- Thumbnails: ~160 MB (50 KB × 3,198 items)
+- All Images: ~640 MB (200 KB × 3,198 items)
+
+**Total App Bundle:**
+- v1.5: ~15 MB (with bundled JSON, no images)
+- v2.0: ~10 MB (OTA JSON, no images)
+
+### Future Enhancements (v2.5+)
+
+1. **Smart caching** - Download images for user's preferred manufacturers first
+2. **Progressive loading** - Load visible images first, background load rest
+3. **Image CDN** - Host images on our own CDN instead of Shopify
+4. **WebP format** - Smaller file sizes (~30% reduction)
+5. **Lazy image loading** - Only download when user scrolls to item
+
+---
+
 **End of Implementation Plan**

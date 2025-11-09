@@ -307,3 +307,59 @@ struct InventorySharingIntegrationTests {
         )
     }
 }
+
+// MARK: - Mock API Client
+
+/// Mock API client for testing
+class MockSharingAPIClient: InventorySharingAPIClient {
+    var uploadCalled = false
+    var uploadCallCount = 0
+    var updateCalled = false
+    var deleteCalled = false
+    var uploadWillConflict = false
+    var alwaysConflict = false
+    var downloadWillFail = false
+    var lastShareCode: String?
+    var lastPublicKey: Data?
+    var mockDownloadResult: DownloadedSnapshot?
+
+    override func uploadSnapshot(shareCode: String, snapshotData: Data, publicKey: Data) async throws {
+        uploadCalled = true
+        uploadCallCount += 1
+        lastShareCode = shareCode
+        lastPublicKey = publicKey
+
+        if alwaysConflict {
+            throw SharingAPIError.conflict
+        }
+
+        if uploadWillConflict && uploadCallCount == 1 {
+            throw SharingAPIError.conflict
+        }
+    }
+
+    override func downloadSnapshot(shareCode: String) async throws -> DownloadedSnapshot {
+        lastShareCode = shareCode
+
+        if downloadWillFail {
+            throw SharingAPIError.notFound
+        }
+
+        guard let result = mockDownloadResult else {
+            throw SharingAPIError.notFound
+        }
+
+        return result
+    }
+
+    override func updateSnapshot(shareCode: String, snapshotData: Data, publicKey: Data, ownershipSignature: Data) async throws {
+        updateCalled = true
+        lastShareCode = shareCode
+        lastPublicKey = publicKey
+    }
+
+    override func deleteShare(shareCode: String, ownershipSignature: Data) async throws {
+        deleteCalled = true
+        lastShareCode = shareCode
+    }
+}

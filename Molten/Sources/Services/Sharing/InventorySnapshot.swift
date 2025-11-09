@@ -7,6 +7,14 @@
 //
 //  Format: [JSON length (4 bytes)][JSON data (N bytes)][Signature (64 bytes)]
 //
+//  DELETION POLICY:
+//  Server automatically deletes shares 90 days after the owner's last inventory update.
+//  The timestamp field in the snapshot JSON is used by the server to enforce this policy.
+//  - When you create/update your share, the 90-day timer starts from the snapshot timestamp
+//  - When friends download your share, the expiration date is NOT reset
+//  - If you don't update your inventory for 90 days, your share is automatically deleted
+//  This ensures compliance with privacy regulations and storage limits.
+//
 
 import Foundation
 import CryptoKit

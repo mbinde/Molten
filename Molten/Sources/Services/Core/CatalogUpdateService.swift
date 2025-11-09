@@ -8,6 +8,7 @@
 
 import Foundation
 import OSLog
+import Combine
 
 /// Service for managing catalog updates
 @MainActor

@@ -152,7 +152,7 @@ actor CatalogStorageService {
 
     // MARK: - Private Helpers
 
-    private func createDirectoriesIfNeeded() throws {
+    nonisolated private func createDirectoriesIfNeeded() throws {
         for directory in [storageDirectory, tempDirectory] {
             if !fileManager.fileExists(atPath: directory.path) {
                 try fileManager.createDirectory(at: directory,

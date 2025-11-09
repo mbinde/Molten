@@ -286,7 +286,7 @@ struct FriendRowView: View {
                     if let lastRefreshed = friend.lastRefreshed {
                         Text("•")
                             .foregroundColor(.secondary)
-                        Text("Updated \(lastRefreshed, style: .relative)")
+                        Text("Updated \(lastRefreshed.roundedRelativeString()) ago")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

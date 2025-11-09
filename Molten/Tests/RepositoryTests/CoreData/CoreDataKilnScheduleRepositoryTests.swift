@@ -309,9 +309,9 @@ struct CoreDataKilnScheduleRepositoryTests {
         let controller = PersistenceController.createTestController()
         let repository = createTestRepository(controller: controller)
 
-        let schedule1 = createTestSchedule(name: "Fast Fusing Schedule")
-        let schedule2 = createTestSchedule(name: "Slow Casting")
-        let schedule3 = createTestSchedule(name: "Quick Fusing")
+        let schedule1 = createTestSchedule(name: "Fast Fusing Schedule", technique: .fusing)
+        let schedule2 = createTestSchedule(name: "Slow Casting", technique: .casting)
+        let schedule3 = createTestSchedule(name: "Quick Fusing", technique: .fusing)
 
         _ = try await repository.createSchedule(schedule1)
         _ = try await repository.createSchedule(schedule2)

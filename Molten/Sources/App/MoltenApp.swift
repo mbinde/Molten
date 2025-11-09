@@ -14,9 +14,9 @@ import RevenueCat
 struct MoltenApp: App {
 
     init() {
-        print("=" * 80)
+        print(String(repeating: "=", count: 80))
         print("🚀 MoltenApp.init() STARTING")
-        print("=" * 80)
+        print(String(repeating: "=", count: 80))
 
         // Configure RepositoryFactory for production (unless running tests)
         let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
@@ -35,9 +35,9 @@ struct MoltenApp: App {
         // Configure RevenueCat SDK
         configureRevenueCat()
 
-        print("=" * 80)
+        print(String(repeating: "=", count: 80))
         print("🏁 MoltenApp.init() COMPLETE")
-        print("=" * 80)
+        print(String(repeating: "=", count: 80))
     }
 
     // DO NOT initialize PersistenceController here!

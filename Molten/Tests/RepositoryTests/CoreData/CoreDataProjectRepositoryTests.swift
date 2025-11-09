@@ -275,14 +275,14 @@ struct CoreDataProjectRepositoryTests {
         _ = try await repository.createProject(plan)
 
         // Verify relationships were created
-        let glassItemsFetch = ProjectGlassItem.fetchRequest()
+        let glassItemsFetch = NSFetchRequest<ProjectGlassItemEntity>(entityName: "ProjectGlassItem")
         glassItemsFetch.predicate = NSPredicate(format: "plan.id == %@", plan.id as CVarArg)
         let glassItemsBeforeDelete = try await context.perform {
             try context.fetch(glassItemsFetch)
         }
         #expect(glassItemsBeforeDelete.count == 1)
 
-        let urlsFetch = ProjectReferenceUrl.fetchRequest()
+        let urlsFetch = NSFetchRequest<ProjectReferenceUrlEntity>(entityName: "ProjectReferenceUrl")
         urlsFetch.predicate = NSPredicate(format: "plan.id == %@", plan.id as CVarArg)
         let urlsBeforeDelete = try await context.perform {
             try context.fetch(urlsFetch)

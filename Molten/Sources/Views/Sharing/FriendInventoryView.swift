@@ -10,6 +10,7 @@ import SwiftUI
 struct FriendInventoryView: View {
 
     @State private var viewModel: FriendInventoryViewModel
+    @Environment(\.dismiss) private var dismiss
 
     // UI state
     @State private var showingAllTags = false
@@ -40,7 +41,17 @@ struct FriendInventoryView: View {
             // Will show cached data instantly, then refresh from server
             await viewModel.loadInventory()
         }
-        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+        .alert("Share No Longer Available", isPresented: .constant(viewModel.errorMessage?.contains("no longer available") == true)) {
+            Button("OK") {
+                viewModel.clearError()
+                dismiss() // Navigate back to friend list
+            }
+        } message: {
+            if let error = viewModel.errorMessage {
+                Text(error)
+            }
+        }
+        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil && viewModel.errorMessage?.contains("no longer available") == false)) {
             Button("OK") {
                 viewModel.clearError()
             }

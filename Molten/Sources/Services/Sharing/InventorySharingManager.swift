@@ -167,6 +167,7 @@ class InventorySharingManager {
     /// - Parameter shareCode: Friend's share code
     /// - Returns: Updated snapshot result
     /// - Throws: SharingManagerError.friendShareNotFound if friend share doesn't exist
+    /// - Throws: SharingManagerError.shareDeletedByOwner if share was deleted by owner (404)
     func refreshFriendShare(shareCode: String) async throws -> SnapshotResult {
         // Check if share record exists and is active
         guard let shareRecord = try shareRecordRepository.getShareRecord(shareCode: shareCode),
@@ -174,16 +175,33 @@ class InventorySharingManager {
             throw SharingManagerError.friendShareNotFound
         }
 
-        // Download updated inventory
-        let result = try await coordinator.downloadFriendInventory(shareCode: shareCode)
+        do {
+            // Download updated inventory
+            print("🔐 [REFRESH] Downloading friend inventory for share code: \(shareCode)")
+            let result = try await coordinator.downloadFriendInventory(shareCode: shareCode)
 
-        // Update last fetched timestamp
-        try shareRecordRepository.updateLastFetched(shareCode: shareCode)
+            // Update last fetched timestamp
+            try shareRecordRepository.updateLastFetched(shareCode: shareCode)
 
-        // Update inventory snapshot in Core Data (Local)
-        try sharedInventoryRepository.saveSnapshot(shareCode: shareCode, items: result.items)
+            // Update inventory snapshot in Core Data (Local)
+            try sharedInventoryRepository.saveSnapshot(shareCode: shareCode, items: result.items)
 
-        return result
+            print("🔐 [REFRESH] Successfully refreshed friend share")
+            return result
+
+        } catch SharingAPIError.notFound {
+            // Share was deleted by owner - clean up cached data
+            print("🔐 [REFRESH] Share not found (404) - owner deleted it. Cleaning up cached data...")
+
+            // Mark share record as inactive
+            try shareRecordRepository.deactivateShareRecord(shareCode: shareCode)
+
+            // Delete cached inventory snapshot
+            try sharedInventoryRepository.deleteSnapshot(shareCode: shareCode)
+
+            print("🔐 [REFRESH] Cached data cleaned up")
+            throw SharingManagerError.shareDeletedByOwner
+        }
     }
 
     /// Remove a friend's share (marks as inactive, preserves history)

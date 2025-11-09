@@ -109,6 +109,12 @@ class FriendInventoryViewModel {
             // Enrich with catalog data
             await enrichInventoryData()
 
+        } catch SharingManagerError.shareDeletedByOwner {
+            // Share was deleted by owner - clear cached data and show message
+            print("🔐 [VIEW] Share was deleted by owner, clearing UI")
+            rawInventory = []
+            enrichedInventory = []
+            errorMessage = "This share is no longer available. The owner has deleted it."
         } catch {
             // Only show error if we don't have cached data
             if rawInventory.isEmpty {

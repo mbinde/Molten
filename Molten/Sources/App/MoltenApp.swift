@@ -50,12 +50,24 @@ struct MoltenApp: App {
 
     // Detect if we're running in test environment
     private var isRunningTests: Bool {
-        return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        let isTest = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        #if DEBUG
+        if isTest {
+            print("🧪 Detected test environment via XCTestConfigurationFilePath")
+        }
+        #endif
+        return isTest
     }
 
     // Detect if we're running UI tests specifically
     private var isRunningUITests: Bool {
-        return ProcessInfo.processInfo.arguments.contains("UI-Testing")
+        let isUITest = ProcessInfo.processInfo.arguments.contains("UI-Testing")
+        #if DEBUG
+        if isUITest {
+            print("🧪 Detected UI test via UI-Testing argument")
+        }
+        #endif
+        return isUITest
     }
 
     // UI Test configuration flags
@@ -376,6 +388,7 @@ extension MoltenApp {
     /// Configure environment for UI testing
     @MainActor
     private func configureUITestEnvironment() {
+        print("🧪 configureUITestEnvironment() called - isRunningUITests: \(isRunningUITests)")
 
         // Skip all onboarding screens
         UserDefaults.standard.set(true, forKey: "hasAcknowledgedAlphaDisclaimer")
@@ -390,6 +403,7 @@ extension MoltenApp {
         // Configure RepositoryFactory based on test type
         if isRunningUITests {
             // UI tests need to test the full stack with real Core Data
+            print("🧪 Configuring for UI tests with Core Data")
             RepositoryFactory.configureForProduction()
 
             // Reset database if requested
@@ -405,6 +419,8 @@ extension MoltenApp {
             }
         } else {
             // Unit tests should use mocks to avoid Core Data
+            // NOTE: This should ONLY run during XCTest unit test execution
+            print("🧪 Configuring for unit tests with mocks")
             RepositoryFactory.configureForTesting()
         }
 

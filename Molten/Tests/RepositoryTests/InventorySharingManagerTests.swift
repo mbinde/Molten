@@ -201,7 +201,7 @@ struct InventorySharingManagerTests {
         )
         let manager = InventorySharingManager(coordinator: mockCoordinator)
 
-        let result = try await manager.addFriendShare(shareCode: "FRIEND", friendName: nil)
+        let result = try await manager.addFriendShare(shareCode: "FRIEND")
 
         #expect(result.ownerName == "Bob's Glass Shop")
         #expect(result.ownerShareNotes == "Boro specialist")
@@ -239,15 +239,15 @@ struct InventorySharingManagerTests {
 
     // MARK: - Add Friend Share Tests
 
-    @Test("Should download and save friend share")
+    @Test("Should download and save friend share with display name from server")
     func testAddFriendShare() async throws {
         cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
-        mockCoordinator.mockDownloadResult = createValidSnapshotResult()
+        mockCoordinator.mockDownloadResult = createSnapshotResult(ownerName: "Bob's Glass Shop")
         let manager = InventorySharingManager(coordinator: mockCoordinator)
 
-        let result = try await manager.addFriendShare(shareCode: "FRIEND", friendName: "Alice")
+        let result = try await manager.addFriendShare(shareCode: "FRIEND")
 
         #expect(result.isValid)
         #expect(mockCoordinator.downloadFriendInventoryCalled)
@@ -255,23 +255,26 @@ struct InventorySharingManagerTests {
         let friendShares = manager.getFriendShares()
         #expect(friendShares.count == 1)
         #expect(friendShares[0].shareCode == "FRIEND")
-        #expect(friendShares[0].friendName == "Alice")
+        // Display name should come from server, not user input
+        #expect(friendShares[0].friendName == "Bob's Glass Shop")
     }
 
-    @Test("Should update friend name if share code already exists")
-    func testAddFriendShareUpdateExisting() async throws {
+    @Test("Should save friend share with personal nickname")
+    func testAddFriendShareWithNickname() async throws {
         cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
-        mockCoordinator.mockDownloadResult = createValidSnapshotResult()
+        mockCoordinator.mockDownloadResult = createSnapshotResult(ownerName: "Bob's Glass Shop")
         let manager = InventorySharingManager(coordinator: mockCoordinator)
 
-        _ = try await manager.addFriendShare(shareCode: "FRIEND", friendName: "Alice")
-        _ = try await manager.addFriendShare(shareCode: "FRIEND", friendName: "Alice Updated")
+        _ = try await manager.addFriendShare(shareCode: "FRIEND", nickname: "Bob from GAS 2025")
 
         let friendShares = manager.getFriendShares()
         #expect(friendShares.count == 1)
-        #expect(friendShares[0].friendName == "Alice Updated")
+        // Display name comes from server
+        #expect(friendShares[0].friendName == "Bob's Glass Shop")
+        // Nickname is our personal label
+        #expect(friendShares[0].nickname == "Bob from GAS 2025")
     }
 
     // MARK: - Refresh Friend Share Tests
@@ -281,10 +284,10 @@ struct InventorySharingManagerTests {
         cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
-        mockCoordinator.mockDownloadResult = createValidSnapshotResult()
+        mockCoordinator.mockDownloadResult = createSnapshotResult(ownerName: "Bob's Glass Shop")
         let manager = InventorySharingManager(coordinator: mockCoordinator)
 
-        _ = try await manager.addFriendShare(shareCode: "FRIEND", friendName: "Alice")
+        _ = try await manager.addFriendShare(shareCode: "FRIEND")
 
         // Wait a moment so timestamp is different
         try await Task.sleep(nanoseconds: 10_000_000) // 10ms
@@ -315,10 +318,10 @@ struct InventorySharingManagerTests {
         cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
-        mockCoordinator.mockDownloadResult = createValidSnapshotResult()
+        mockCoordinator.mockDownloadResult = createSnapshotResult(ownerName: "Bob's Glass Shop")
         let manager = InventorySharingManager(coordinator: mockCoordinator)
 
-        _ = try await manager.addFriendShare(shareCode: "FRIEND", friendName: "Alice")
+        _ = try await manager.addFriendShare(shareCode: "FRIEND")
 
         try manager.removeFriendShare(shareCode: "FRIEND")
 
@@ -354,6 +357,10 @@ struct InventorySharingManagerTests {
     }
 
     private func createValidSnapshotResult() -> SnapshotResult {
+        return createSnapshotResult()
+    }
+
+    private func createSnapshotResult(ownerName: String? = nil, ownerShareNotes: String? = nil) -> SnapshotResult {
         return SnapshotResult(
             items: [
                 InventoryItemSnapshot(
@@ -368,8 +375,8 @@ struct InventorySharingManagerTests {
             timestamp: Date(),
             version: "1.0",
             isValid: true,
-            ownerName: nil,
-            ownerShareNotes: nil
+            ownerName: ownerName,
+            ownerShareNotes: ownerShareNotes
         )
     }
 }

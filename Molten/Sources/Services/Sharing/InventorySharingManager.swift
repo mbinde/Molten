@@ -117,19 +117,17 @@ class InventorySharingManager {
     /// Add a friend's share by downloading it
     /// - Parameters:
     ///   - shareCode: Friend's share code
-    ///   - friendName: Optional display name override (if nil, uses name from server)
-    ///   - nickname: Optional nickname
+    ///   - nickname: Optional personal nickname for this friend
     /// - Returns: Snapshot result with validity flag
     func addFriendShare(
         shareCode: String,
-        friendName: String? = nil,
         nickname: String? = nil
     ) async throws -> SnapshotResult {
         // Download friend's inventory
         let result = try await coordinator.downloadFriendInventory(shareCode: shareCode)
 
-        // Use name from server if not provided
-        let ownerName = friendName ?? result.ownerName ?? "Unknown"
+        // Always use display name from server
+        let ownerName = result.ownerName ?? "Unknown"
 
         // Save share record to Core Data (Cloud - syncs across devices)
         // Includes owner's metadata from server (owner_name, owner_share_notes)

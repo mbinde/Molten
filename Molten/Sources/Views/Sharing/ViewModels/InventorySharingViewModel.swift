@@ -34,7 +34,6 @@ class InventorySharingViewModel {
     // Friend management
     var showingAddFriend = false
     var friendShareCode = ""
-    var friendName = ""
     var friendNickname = ""
     var isAddingFriend = false
 
@@ -198,7 +197,6 @@ class InventorySharingViewModel {
         do {
             let result = try await sharingManager.addFriendShare(
                 shareCode: friendShareCode.uppercased(),
-                friendName: friendName.isEmpty ? nil : friendName,
                 nickname: friendNickname.isEmpty ? nil : friendNickname
             )
 
@@ -211,7 +209,6 @@ class InventorySharingViewModel {
 
             // Clear form
             friendShareCode = ""
-            friendName = ""
             friendNickname = ""
             showingAddFriend = false
 

@@ -27,15 +27,12 @@ struct AddFriendView: View {
                 }
 
                 Section {
-                    TextField("Friend's Name (Optional)", text: $viewModel.friendName)
-                        .textContentType(.name)
-
                     TextField("Nickname (Optional)", text: $viewModel.friendNickname)
                         .textContentType(.nickname)
                 } header: {
                     Text("Customization")
                 } footer: {
-                    Text("If left blank, their display name from the share will be used. Add a nickname to remember how you know them.")
+                    Text("Their display name will come from their share. Add a personal nickname to remember how you know them (e.g., \"Bob from GAS 2025\").")
                 }
 
                 if let error = viewModel.errorMessage {

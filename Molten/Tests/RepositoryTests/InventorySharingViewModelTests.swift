@@ -248,7 +248,6 @@ struct InventorySharingViewModelTests {
         )
 
         viewModel.friendShareCode = "ABC123"
-        viewModel.friendName = "Bob"
         viewModel.friendNickname = "Bob from GAS 2025"
 
         // Test
@@ -261,7 +260,6 @@ struct InventorySharingViewModelTests {
 
         // Form should be cleared
         #expect(viewModel.friendShareCode == "")
-        #expect(viewModel.friendName == "")
         #expect(viewModel.friendNickname == "")
     }
 
@@ -278,7 +276,6 @@ struct InventorySharingViewModelTests {
         )
 
         viewModel.friendShareCode = "ABC123"
-        viewModel.friendName = ""  // Empty (should be nil)
         viewModel.friendNickname = ""  // Empty (should be nil)
 
         // Test

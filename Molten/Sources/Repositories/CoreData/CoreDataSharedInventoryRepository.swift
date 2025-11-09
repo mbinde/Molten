@@ -123,30 +123,26 @@ class CoreDataSharedInventoryRepository {
     /// Delete inventory snapshot for a share
     /// - Parameter shareCode: Share code
     func deleteSnapshot(shareCode: String) throws {
-        // Delete inventory items
-        let itemFetchRequest: NSFetchRequest<NSFetchRequestResult> = SharedInventoryItem.fetchRequest()
-        itemFetchRequest.predicate = NSPredicate(format: "share_code == %@", shareCode)
-        let itemDeleteRequest = NSBatchDeleteRequest(fetchRequest: itemFetchRequest)
-        itemDeleteRequest.resultType = .resultTypeObjectIDs
+        // Use regular delete instead of batch delete since we're operating on the same context
+        // that will immediately create new objects (batch delete causes cache issues)
 
-        let itemResult = try context.execute(itemDeleteRequest) as? NSBatchDeleteResult
-        let itemObjectIDs = itemResult?.result as? [NSManagedObjectID] ?? []
+        // Delete inventory items
+        let itemFetchRequest: NSFetchRequest<SharedInventoryItem> = SharedInventoryItem.fetchRequest()
+        itemFetchRequest.predicate = NSPredicate(format: "share_code == %@", shareCode)
+        let items = try context.fetch(itemFetchRequest)
+        for item in items {
+            context.delete(item)
+        }
 
         // Delete tags
-        let tagFetchRequest: NSFetchRequest<NSFetchRequestResult> = SharedUserTags.fetchRequest()
+        let tagFetchRequest: NSFetchRequest<SharedUserTags> = SharedUserTags.fetchRequest()
         tagFetchRequest.predicate = NSPredicate(format: "share_code == %@", shareCode)
-        let tagDeleteRequest = NSBatchDeleteRequest(fetchRequest: tagFetchRequest)
-        tagDeleteRequest.resultType = .resultTypeObjectIDs
-
-        let tagResult = try context.execute(tagDeleteRequest) as? NSBatchDeleteResult
-        let tagObjectIDs = tagResult?.result as? [NSManagedObjectID] ?? []
-
-        // Merge the batch delete changes into the context so it knows objects were deleted
-        let allDeletedIDs = itemObjectIDs + tagObjectIDs
-        if !allDeletedIDs.isEmpty {
-            let changes = [NSDeletedObjectsKey: allDeletedIDs]
-            NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [context])
+        let tags = try context.fetch(tagFetchRequest)
+        for tag in tags {
+            context.delete(tag)
         }
+
+        // Note: saveSnapshot will call context.save() after creating new objects
     }
 
     /// Get all items with a specific tag from any shared inventory

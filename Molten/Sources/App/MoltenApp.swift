@@ -363,14 +363,14 @@ extension MoltenApp {
     }
 
     /// Check if user needs to acknowledge the alpha disclaimer
-    /// NOTE: Currently set to show on EVERY launch during alpha testing
+    /// NOTE: Currently HIDDEN - uncomment to show on every launch during alpha testing
     private func checkAlphaDisclaimer() {
-        // Always show alpha disclaimer during alpha testing (ignoring UserDefaults)
+        // Temporarily hidden - uncomment to show alpha disclaimer on every launch
         // Use Task instead of DispatchQueue to avoid update loops
-        Task { @MainActor in
-            try? await Task.sleep(for: .seconds(0.3))
-            showAlphaDisclaimer = true
-        }
+        // Task { @MainActor in
+        //     try? await Task.sleep(for: .seconds(0.3))
+        //     showAlphaDisclaimer = true
+        // }
     }
 
     /// Configure environment for UI testing

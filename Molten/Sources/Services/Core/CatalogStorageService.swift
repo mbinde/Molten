@@ -25,8 +25,10 @@ actor CatalogStorageService {
     // MARK: - Initialization
 
     init() throws {
+        let fm = FileManager.default
+
         // Get app support directory
-        guard let appSupport = fileManager.urls(
+        guard let appSupport = fm.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
         ).first else {
@@ -42,7 +44,13 @@ actor CatalogStorageService {
         currentCatalogFile = storageDirectory.appendingPathComponent("current_catalog.json")
 
         // Create directories if needed
-        try createDirectoriesIfNeeded()
+        for directory in [storageDirectory, tempDirectory] {
+            if !fm.fileExists(atPath: directory.path) {
+                try fm.createDirectory(at: directory,
+                                      withIntermediateDirectories: true,
+                                      attributes: nil)
+            }
+        }
 
         log.info("Catalog storage initialized at: \(self.storageDirectory.path)")
     }
@@ -150,16 +158,4 @@ actor CatalogStorageService {
         return totalSize
     }
 
-    // MARK: - Private Helpers
-
-    nonisolated private func createDirectoriesIfNeeded() throws {
-        for directory in [storageDirectory, tempDirectory] {
-            if !fileManager.fileExists(atPath: directory.path) {
-                try fileManager.createDirectory(at: directory,
-                                              withIntermediateDirectories: true,
-                                              attributes: nil)
-                log.debug("Created directory: \(directory.path)")
-            }
-        }
-    }
 }

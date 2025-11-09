@@ -748,18 +748,29 @@ nonisolated struct RepositoryFactory {
         for bundle in Bundle.allBundles {
             if let bundleId = bundle.bundleIdentifier,
                testBundleIdentifiers.contains(where: { bundleId.contains($0) }) {
+                print("🧪 isRunningInTestBundle: Found test bundle: \(bundleId)")
                 return true
             }
         }
 
         // Also check if the main bundle is a test bundle
-        if let mainBundleId = Bundle.main.bundleIdentifier,
-           mainBundleId.contains("Tests") {
-            return true
+        if let mainBundleId = Bundle.main.bundleIdentifier {
+            print("🧪 isRunningInTestBundle: Main bundle ID: \(mainBundleId)")
+            if mainBundleId.contains("Tests") {
+                print("🧪 isRunningInTestBundle: Main bundle contains 'Tests'")
+                return true
+            }
         }
 
         // Check for XCTest framework presence
-        return NSClassFromString("XCTestCase") != nil
+        let hasXCTest = NSClassFromString("XCTestCase") != nil
+        print("🧪 isRunningInTestBundle: XCTestCase present: \(hasXCTest)")
+
+        if !hasXCTest {
+            print("🧪 isRunningInTestBundle: NOT in test bundle - will crash if configureForTesting() called")
+        }
+
+        return hasXCTest
     }
 
     /// Configure factory for testing with all mocks

@@ -22,6 +22,36 @@ struct FriendInventoryView: View {
     }
 
     var body: some View {
+        mainContent
+            .navigationTitle("\(viewModel.friend.friendName)'s Inventory")
+            .navigationBarTitleDisplayMode(.inline)
+            .task {
+                // Auto-load inventory when view appears
+                // Will show cached data instantly, then refresh from server
+                await viewModel.loadInventory()
+            }
+            .alert("Share No Longer Available", isPresented: .constant(viewModel.errorMessage?.contains("no longer available") == true)) {
+                Button("OK") {
+                    viewModel.clearError()
+                    dismiss() // Navigate back to friend list
+                }
+            } message: {
+                if let error = viewModel.errorMessage {
+                    Text(error)
+                }
+            }
+            .alert("Error", isPresented: .constant(viewModel.errorMessage != nil && viewModel.errorMessage?.contains("no longer available") == false)) {
+                Button("OK") {
+                    viewModel.clearError()
+                }
+            } message: {
+                if let error = viewModel.errorMessage {
+                    Text(error)
+                }
+            }
+    }
+
+    private var mainContent: some View {
         Group {
             if viewModel.isLoading {
                 loadingView
@@ -31,33 +61,7 @@ struct FriendInventoryView: View {
             } else if viewModel.enrichedInventory.isEmpty {
                 loadButton
             } else {
-                inventoryList
-            }
-        }
-        .navigationTitle("\(viewModel.friend.friendName)'s Inventory")
-        .navigationBarTitleDisplayMode(.inline)
-        .task {
-            // Auto-load inventory when view appears
-            // Will show cached data instantly, then refresh from server
-            await viewModel.loadInventory()
-        }
-        .alert("Share No Longer Available", isPresented: .constant(viewModel.errorMessage?.contains("no longer available") == true)) {
-            Button("OK") {
-                viewModel.clearError()
-                dismiss() // Navigate back to friend list
-            }
-        } message: {
-            if let error = viewModel.errorMessage {
-                Text(error)
-            }
-        }
-        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil && viewModel.errorMessage?.contains("no longer available") == false)) {
-            Button("OK") {
-                viewModel.clearError()
-            }
-        } message: {
-            if let error = viewModel.errorMessage {
-                Text(error)
+                inventoryListWithFilters
             }
         }
     }
@@ -113,49 +117,16 @@ struct FriendInventoryView: View {
         .padding()
     }
 
-    private var inventoryList: some View {
-        List {
-            Section {
-                StandardSearchAndFilterHeader(
-                    searchText: $viewModel.searchText,
-                    searchTitlesOnly: $viewModel.searchTitlesOnly,
-                    selectedTags: $viewModel.selectedTags,
-                    selectedCOEs: $viewModel.selectedCOEs,
-                    selectedManufacturers: $viewModel.selectedManufacturers,
-                    showingAllTags: $showingAllTags,
-                    showingCOESelection: $showingCOESelection,
-                    showingManufacturerSelection: $showingManufacturerSelection,
-                    allAvailableTags: viewModel.availableTags,
-                    allAvailableCOEs: viewModel.availableCOEs,
-                    allAvailableManufacturers: viewModel.availableManufacturers,
-                    searchPlaceholder: "Search \(viewModel.friend.friendName)'s inventory..."
-                )
-            }
+    private var inventoryListWithFilters: some View {
+        VStack(spacing: 0) {
+            // Search and filter controls - OUTSIDE the List for full width
+            searchAndFilterHeader
 
-            Section {
-                if viewModel.filteredInventory.isEmpty {
-                    VStack(spacing: DesignSystem.Spacing.lg) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 48))
-                            .foregroundColor(.secondary)
-
-                        Text("No items match your search")
-                            .font(.headline)
-
-                        Button("Clear Filters") {
-                            viewModel.clearAllFilters()
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, DesignSystem.Spacing.xl)
-                } else {
-                    ForEach(viewModel.filteredInventory) { item in
-                        GlassItemRowView.friendInventory(item: item)
-                    }
-                }
-            } header: {
-                Text("\(viewModel.filteredInventory.count) item\(viewModel.filteredInventory.count == 1 ? "" : "s")")
+            // Inventory list
+            if viewModel.filteredInventory.isEmpty {
+                searchEmptyState
+            } else {
+                inventoryList
             }
         }
         .toolbar {
@@ -168,6 +139,53 @@ struct FriendInventoryView: View {
                     Image(systemName: "arrow.clockwise")
                 }
                 .disabled(viewModel.isLoading)
+            }
+        }
+    }
+
+    private var searchAndFilterHeader: some View {
+        StandardSearchAndFilterHeader(
+            searchText: $viewModel.searchText,
+            searchTitlesOnly: $viewModel.searchTitlesOnly,
+            selectedTags: $viewModel.selectedTags,
+            selectedCOEs: $viewModel.selectedCOEs,
+            selectedManufacturers: $viewModel.selectedManufacturers,
+            showingAllTags: $showingAllTags,
+            showingCOESelection: $showingCOESelection,
+            showingManufacturerSelection: $showingManufacturerSelection,
+            allAvailableTags: viewModel.availableTags,
+            allAvailableCOEs: viewModel.availableCOEs,
+            allAvailableManufacturers: viewModel.availableManufacturers,
+            searchPlaceholder: "Search \(viewModel.friend.friendName)'s inventory..."
+        )
+    }
+
+    private var searchEmptyState: some View {
+        VStack(spacing: DesignSystem.Spacing.lg) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 48))
+                .foregroundColor(.secondary)
+
+            Text("No items match your search")
+                .font(.headline)
+
+            Button("Clear Filters") {
+                viewModel.clearAllFilters()
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.vertical, DesignSystem.Spacing.xl)
+    }
+
+    private var inventoryList: some View {
+        List {
+            Section {
+                ForEach(viewModel.filteredInventory) { item in
+                    GlassItemRowView.friendInventory(item: item)
+                }
+            } header: {
+                Text("\(viewModel.filteredInventory.count) item\(viewModel.filteredInventory.count == 1 ? "" : "s")")
             }
         }
     }

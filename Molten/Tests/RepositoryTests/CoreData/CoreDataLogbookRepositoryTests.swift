@@ -453,21 +453,26 @@ struct CoreDataLogbookRepositoryTests {
         _ = try await repository.createLog(log)
 
         // Verify relationships were created
-        let tagsFetch = ProjectTag.fetchRequest()
-        tagsFetch.predicate = NSPredicate(format: "log.id == %@", log.id as CVarArg)
+        // Tags are stored in UserTags table (polymorphic association)
+        let tagsFetch = NSFetchRequest<UserTags>(entityName: "UserTags")
+        tagsFetch.predicate = NSPredicate(
+            format: "owner_id == %@ AND owner_type == %@",
+            log.id.uuidString,
+            TagOwnerType.logbook.rawValue
+        )
         let tagsBeforeDelete = try await context.perform {
             try context.fetch(tagsFetch)
         }
         #expect(tagsBeforeDelete.count == 2)
 
-        let techniquesFetch = ProjectTechnique.fetchRequest()
+        let techniquesFetch = NSFetchRequest<ProjectTechnique>(entityName: "ProjectTechnique")
         techniquesFetch.predicate = NSPredicate(format: "log.id == %@", log.id as CVarArg)
         let techniquesBeforeDelete = try await context.perform {
             try context.fetch(techniquesFetch)
         }
         #expect(techniquesBeforeDelete.count == 1)
 
-        let glassItemsFetch = LogbookGlassItem.fetchRequest()
+        let glassItemsFetch = NSFetchRequest<LogbookGlassItem>(entityName: "LogbookGlassItem")
         glassItemsFetch.predicate = NSPredicate(format: "log.id == %@", log.id as CVarArg)
         let glassItemsBeforeDelete = try await context.perform {
             try context.fetch(glassItemsFetch)

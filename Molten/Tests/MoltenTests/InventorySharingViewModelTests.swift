@@ -433,3 +433,43 @@ struct InventorySharingViewModelTests {
         return RepositoryFactory.createCatalogService()
     }
 }
+
+// MARK: - Mock Coordinator
+
+class MockInventorySharingCoordinator: InventorySharingCoordinator {
+    var shareMyInventoryCalled = false
+    var updateMyShareCalled = false
+    var deleteMyShareCalled = false
+    var downloadFriendInventoryCalled = false
+    var lastShareCode: String?
+    var lastMetadata: MyShareMetadata?
+    var mockDownloadResult: SnapshotResult?
+
+    override func shareMyInventory(items: [CompleteInventoryItemModel], metadata: MyShareMetadata) async throws -> String {
+        shareMyInventoryCalled = true
+        lastMetadata = metadata
+        return "MOCK12"
+    }
+
+    override func updateMyShare(shareCode: String, items: [CompleteInventoryItemModel], metadata: MyShareMetadata) async throws {
+        updateMyShareCalled = true
+        lastShareCode = shareCode
+        lastMetadata = metadata
+    }
+
+    override func deleteMyShare(shareCode: String) async throws {
+        deleteMyShareCalled = true
+        lastShareCode = shareCode
+    }
+
+    override func downloadFriendInventory(shareCode: String) async throws -> SnapshotResult {
+        downloadFriendInventoryCalled = true
+        lastShareCode = shareCode
+
+        guard let result = mockDownloadResult else {
+            throw SharingAPIError.notFound
+        }
+
+        return result
+    }
+}

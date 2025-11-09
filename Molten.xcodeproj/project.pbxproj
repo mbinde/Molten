@@ -494,6 +494,7 @@
 				Tests/RepositoryTests/Integration/RepositoryFactoryTests.swift,
 				Tests/RepositoryTests/Integration/ShoppingListServiceIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingIntegrationTests.swift,
+				Tests/RepositoryTests/InventorySharingManagerTests.swift,
 				Tests/RepositoryTests/ShareMetadataRepositoryTests.swift,
 				Tools/Documentation/check_core_data_violations.sh,
 				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
@@ -597,6 +598,7 @@
 				Tests/RepositoryTests/Integration/RepositoryFactoryTests.swift,
 				Tests/RepositoryTests/Integration/ShoppingListServiceIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingIntegrationTests.swift,
+				Tests/RepositoryTests/InventorySharingManagerTests.swift,
 				Tests/RepositoryTests/ShareMetadataRepositoryTests.swift,
 			);
 			target = F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */;

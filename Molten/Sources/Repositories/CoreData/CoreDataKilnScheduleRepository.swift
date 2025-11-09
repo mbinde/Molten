@@ -108,13 +108,14 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
         return try await context.perform {
             let fetchRequest = KilnScheduleEntity.fetchRequest()
 
-            // Search in name, notes, and technique
+            // Search in name, description, and technique
+            // Handle optional fields (description, technique) by checking for nil
             let namePredicate = NSPredicate(format: "name CONTAINS[cd] %@", query)
-            let notesPredicate = NSPredicate(format: "notes CONTAINS[cd] %@", query)
-            let techniquePredicate = NSPredicate(format: "technique CONTAINS[cd] %@", query)
+            let descriptionPredicate = NSPredicate(format: "schedule_description != nil AND schedule_description CONTAINS[cd] %@", query)
+            let techniquePredicate = NSPredicate(format: "technique != nil AND technique CONTAINS[cd] %@", query)
 
             fetchRequest.predicate = NSCompoundPredicate(
-                orPredicateWithSubpredicates: [namePredicate, notesPredicate, techniquePredicate]
+                orPredicateWithSubpredicates: [namePredicate, descriptionPredicate, techniquePredicate]
             )
             fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
 

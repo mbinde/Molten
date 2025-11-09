@@ -43,15 +43,15 @@ open class InventorySharingService {
     /// - Returns: Generated share code
     open func createShare(items: [InventoryItemSnapshot], metadata: MyShareMetadata) async throws -> String {
         // Get or generate key pair
-        print("🔑 [CREATE] Retrieving/generating key pair...")
+        print("🔐 [CREATE] Retrieving/generating key pair...")
         let keyPair = try keyPairManager.getCurrentKeyPair()
-        print("✅ [CREATE] Got key pair - public key: \(keyPair.publicKey.base64EncodedString().prefix(20))...")
+        print("🔐 [CREATE] Got key pair - public key: \(keyPair.publicKey.base64EncodedString().prefix(20))...")
 
         // Try to upload with retries on conflict
         for attempt in 0..<maxConflictRetries {
             // Generate share code
             let shareCode = shareCodeGenerator.generate()
-            print("🎲 [CREATE] Generated share code: \(shareCode)")
+            print("🔐 [CREATE] Generated share code: \(shareCode)")
 
             // Create snapshot with metadata
             let snapshotData = try snapshot.serialize(
@@ -60,17 +60,17 @@ open class InventorySharingService {
                 privateKey: keyPair.privateKey,
                 metadata: metadata
             )
-            print("📦 [CREATE] Serialized snapshot (\(items.count) items)")
+            print("🔐 [CREATE] Serialized snapshot (\(items.count) items)")
 
             // Try to upload
             do {
-                print("📡 [CREATE] Uploading to server...")
+                print("🔐 [CREATE] Uploading to server...")
                 try await apiClient.uploadSnapshot(
                     shareCode: shareCode,
                     snapshotData: snapshotData,
                     publicKey: keyPair.publicKey
                 )
-                print("✅ [CREATE] Share created successfully with code: \(shareCode)")
+                print("🔐 [CREATE] Share created successfully with code: \(shareCode)")
                 return shareCode
             } catch SharingAPIError.conflict {
                 // Code already exists, retry with new code
@@ -141,31 +141,31 @@ open class InventorySharingService {
     /// Delete a share by code
     /// - Parameter shareCode: Share code to delete
     open func deleteShare(shareCode: String) async throws {
-        print("🗑️ [DELETE] Starting deletion for share code: \(shareCode)")
+        print("🔐 [DELETE] Starting deletion for share code: \(shareCode)")
 
         // Get current key pair
-        print("🔑 [DELETE] Retrieving current key pair...")
+        print("🔐 [DELETE] Retrieving current key pair...")
         let keyPair = try keyPairManager.getCurrentKeyPair()
-        print("✅ [DELETE] Got key pair - public key: \(keyPair.publicKey.base64EncodedString().prefix(20))...")
+        print("🔐 [DELETE] Got key pair - public key: \(keyPair.publicKey.base64EncodedString().prefix(20))...")
 
         // Create ownership signature (sign the share code with private key)
-        print("✍️ [DELETE] Signing share code with private key...")
+        print("🔐 [DELETE] Signing share code with private key...")
         let ownershipSignature = try keyPairManager.sign(
             data: shareCode.data(using: .utf8)!,
             privateKey: keyPair.privateKey
         )
-        print("✅ [DELETE] Created signature: \(ownershipSignature.base64EncodedString().prefix(20))...")
+        print("🔐 [DELETE] Created signature: \(ownershipSignature.base64EncodedString().prefix(20))...")
 
         // Delete from server
-        print("📡 [DELETE] Sending DELETE request to server...")
+        print("🔐 [DELETE] Sending DELETE request to server...")
         do {
             try await apiClient.deleteShare(shareCode: shareCode, ownershipSignature: ownershipSignature)
-            print("✅ [DELETE] Server deletion successful")
+            print("🔐 [DELETE] Server deletion successful")
         } catch {
-            print("❌ [DELETE] Server deletion failed: \(error)")
-            print("❌ [DELETE] Error type: \(type(of: error))")
+            print("🔐 [DELETE] Server deletion failed: \(error)")
+            print("🔐 [DELETE] Error type: \(type(of: error))")
             if let apiError = error as? SharingAPIError {
-                print("❌ [DELETE] SharingAPIError: \(apiError)")
+                print("🔐 [DELETE] SharingAPIError: \(apiError)")
             }
             throw error
         }

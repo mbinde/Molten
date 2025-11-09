@@ -41,6 +41,8 @@ final class KeyPairManager {
     /// - Note: Uses kSecAttrAccessibleWhenUnlocked to enable iCloud Keychain sync
     ///         This ensures keys transfer to new devices, allowing users to delete their data
     func storePrivateKey(_ privateKey: Data, identifier: String) throws {
+        print("💾 [KEYCHAIN] Storing private key with identifier: \(identifier)")
+
         // Delete existing key if present
         try? deletePrivateKey(identifier: identifier)
 
@@ -61,8 +63,11 @@ final class KeyPairManager {
         let status = SecItemAdd(query as CFDictionary, nil)
 
         guard status == errSecSuccess else {
+            print("❌ [KEYCHAIN] Failed to store key '\(identifier)': \(status)")
             throw KeyPairError.keychainError("Failed to store key: \(status)")
         }
+
+        print("✅ [KEYCHAIN] Successfully stored key '\(identifier)'")
     }
 
     /// Retrieve a private key from the Keychain

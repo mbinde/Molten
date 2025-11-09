@@ -127,18 +127,26 @@ class CoreDataSharedInventoryRepository {
         let itemFetchRequest: NSFetchRequest<NSFetchRequestResult> = SharedInventoryItem.fetchRequest()
         itemFetchRequest.predicate = NSPredicate(format: "share_code == %@", shareCode)
         let itemDeleteRequest = NSBatchDeleteRequest(fetchRequest: itemFetchRequest)
-        try context.execute(itemDeleteRequest)
+        itemDeleteRequest.resultType = .resultTypeObjectIDs
+
+        let itemResult = try context.execute(itemDeleteRequest) as? NSBatchDeleteResult
+        let itemObjectIDs = itemResult?.result as? [NSManagedObjectID] ?? []
 
         // Delete tags
         let tagFetchRequest: NSFetchRequest<NSFetchRequestResult> = SharedUserTags.fetchRequest()
         tagFetchRequest.predicate = NSPredicate(format: "share_code == %@", shareCode)
         let tagDeleteRequest = NSBatchDeleteRequest(fetchRequest: tagFetchRequest)
-        try context.execute(tagDeleteRequest)
+        tagDeleteRequest.resultType = .resultTypeObjectIDs
 
-        try context.save()
+        let tagResult = try context.execute(tagDeleteRequest) as? NSBatchDeleteResult
+        let tagObjectIDs = tagResult?.result as? [NSManagedObjectID] ?? []
 
-        // Refresh context to clear stale in-memory cache after batch delete
-        context.refreshAllObjects()
+        // Merge the batch delete changes into the context so it knows objects were deleted
+        let allDeletedIDs = itemObjectIDs + tagObjectIDs
+        if !allDeletedIDs.isEmpty {
+            let changes = [NSDeletedObjectsKey: allDeletedIDs]
+            NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [context])
+        }
     }
 
     /// Get all items with a specific tag from any shared inventory

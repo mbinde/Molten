@@ -9,6 +9,14 @@ import Foundation
 import SwiftUI
 import CoreData
 
+/// Comparison mode for filtering friend inventory
+enum InventoryComparisonMode {
+    case all                // Show all items
+    case theyHaveIDoNot     // Items friend has but I don't
+    case iHaveTheyDoNot     // Items I have but friend doesn't
+    case weBothHave         // Items we both have
+}
+
 @MainActor
 @Observable
 class FriendInventoryViewModel {
@@ -24,6 +32,7 @@ class FriendInventoryViewModel {
     var isLoading = false
     var errorMessage: String?
     var rawInventory: [InventoryItemSnapshot] = []
+    private var myInventory: [CompleteInventoryItemModel] = []
 
     // Enriched inventory (with catalog data)
     var enrichedInventory: [EnrichedFriendInventoryItem] = []
@@ -34,6 +43,7 @@ class FriendInventoryViewModel {
     var selectedManufacturers: Set<String> = []
     var selectedCOEs: Set<Int32> = []
     var selectedTags: Set<String> = []
+    var comparisonMode: InventoryComparisonMode = .all
 
     // Computed filter options
     var availableManufacturers: [String] {
@@ -69,6 +79,9 @@ class FriendInventoryViewModel {
 
     /// Load inventory from cache first, then optionally refresh from server
     func loadInventory(forceRefresh: Bool = false) async {
+        // Load my inventory for comparison
+        await loadMyInventory()
+
         // Try to load from Core Data cache first
         if !forceRefresh {
             do {
@@ -91,6 +104,19 @@ class FriendInventoryViewModel {
 
         // Always refresh from server to get latest data
         await refreshFromServer()
+    }
+
+    /// Load user's own inventory for comparison
+    private func loadMyInventory() async {
+        do {
+            myInventory = try await catalogService.getAllGlassItems()
+            // Only keep items with inventory quantity
+            myInventory = myInventory.filter { $0.totalQuantity > 0 }
+        } catch {
+            // If we can't load user's inventory, comparison filters won't work
+            // But we can still show friend's inventory
+            myInventory = []
+        }
     }
 
     /// Refresh inventory from server
@@ -210,7 +236,59 @@ class FriendInventoryViewModel {
             }
         }
 
+        // Apply comparison filter
+        switch comparisonMode {
+        case .all:
+            break // Show all items (no additional filtering)
+
+        case .theyHaveIDoNot:
+            // Show items friend has but I don't
+            items = items.filter { friendItem in
+                !iHaveItem(stableId: friendItem.snapshot.stableId)
+            }
+
+        case .iHaveTheyDoNot:
+            // Show items I have but friend doesn't
+            // Need to show my items that aren't in their list
+            let friendStableIds = Set(items.map { $0.snapshot.stableId })
+            let myItemsTheyDontHave = myInventory.filter { myItem in
+                !friendStableIds.contains(myItem.catalogItem.stable_id)
+            }
+            // Convert my items to enriched format
+            items = myItemsTheyDontHave.compactMap { myItem in
+                EnrichedFriendInventoryItem(
+                    snapshot: InventoryItemSnapshot(
+                        stableId: myItem.catalogItem.stable_id,
+                        manufacturer: myItem.catalogItem.manufacturer,
+                        sku: myItem.catalogItem.sku ?? "",
+                        quantity: myItem.totalQuantity,
+                        unit: myItem.inventory.first?.type ?? "unknown",
+                        location: myItem.inventory.first?.location
+                    ),
+                    catalogData: CatalogData(
+                        name: myItem.catalogItem.name,
+                        imagePath: myItem.catalogItem.image_path,
+                        tags: myItem.allTags,
+                        coe: myItem.catalogItem.coe ?? 0
+                    )
+                )
+            }
+
+        case .weBothHave:
+            // Show items we both have
+            items = items.filter { friendItem in
+                iHaveItem(stableId: friendItem.snapshot.stableId)
+            }
+        }
+
         return items
+    }
+
+    // MARK: - Helper Methods
+
+    /// Check if I have an item in my inventory
+    private func iHaveItem(stableId: String) -> Bool {
+        return myInventory.contains { $0.catalogItem.stable_id == stableId }
     }
 
     // MARK: - Filter Management

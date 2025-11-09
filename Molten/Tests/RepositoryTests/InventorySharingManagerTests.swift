@@ -181,13 +181,13 @@ struct InventorySharingManagerTests {
     func testAddFriendShareIncludesOwnerMetadata() async throws {
         cleanupUserDefaults()
 
-        // Create isolated test context
+        // Create isolated test controller and configure factory
         let testController = PersistenceController.createTestController()
-        let testContext = testController.container.viewContext
+        RepositoryFactory.configureForTestingWithCoreData(controller: testController)
 
-        // Create test repositories with isolated context
+        let testContext = testController.container.viewContext
+        let catalogRepo = RepositoryFactory.createGlassItemRepository()
         let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
-        let catalogRepo = CoreDataGlassItemRepository(context: testContext)
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
             context: testContext,
             catalogRepository: catalogRepo

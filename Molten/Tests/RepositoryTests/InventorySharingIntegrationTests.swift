@@ -87,10 +87,12 @@ struct InventorySharingIntegrationTests {
             )
         ]
 
+        let userAMetadata = MyShareMetadata(displayName: "User A's Glass Shop")
         let snapshotData = try userASnapshot.serialize(
             items: items,
             publicKey: userAKeyPair.publicKey,
-            privateKey: userAKeyPair.privateKey
+            privateKey: userAKeyPair.privateKey,
+            metadata: userAMetadata
         )
 
         // Mock API to return User A's share
@@ -127,8 +129,7 @@ struct InventorySharingIntegrationTests {
 
         // Download friend's share
         let result = try await userBManager.addFriendShare(
-            shareCode: "USERA1",
-            friendName: "User A"
+            shareCode: "USERA1"
         )
 
         // Verify download successful
@@ -137,11 +138,11 @@ struct InventorySharingIntegrationTests {
         #expect(result.items[0].stableId == "abc123")
         #expect(result.items[0].quantity == 5.0)
 
-        // Verify friend share saved
+        // Verify friend share saved with display name from server
         let friendShares = userBManager.getFriendShares()
         #expect(friendShares.count == 1)
         #expect(friendShares[0].shareCode == "USERA1")
-        #expect(friendShares[0].friendName == "User A")
+        #expect(friendShares[0].friendName == "User A's Glass Shop")
     }
 
     @Test("Should detect tampered snapshot")
@@ -208,8 +209,7 @@ struct InventorySharingIntegrationTests {
         )
 
         let result = try await manager.addFriendShare(
-            shareCode: "TAMPER",
-            friendName: "Attacker"
+            shareCode: "TAMPER"
         )
 
         // Signature verification should fail

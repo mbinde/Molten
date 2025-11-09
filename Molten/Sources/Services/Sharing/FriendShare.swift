@@ -12,7 +12,8 @@ import Foundation
 public struct FriendShare: Codable, Equatable, Identifiable {
     public let id: String  // Same as shareCode
     public let shareCode: String
-    public let friendName: String
+    public let friendName: String  // Display name from their share
+    public let nickname: String?  // Personal nickname we've set
     public let dateAdded: Date
     public let lastRefreshed: Date?
 
@@ -26,10 +27,11 @@ public struct FriendShare: Codable, Equatable, Identifiable {
     public static let defaultIconBackgroundHex = "#007AFF"  // iOS blue
     public static let defaultIconForegroundHex = "#FFFFFF"  // White
 
-    public init(shareCode: String, friendName: String, dateAdded: Date, lastRefreshed: Date? = nil, iconSymbol: String? = nil, iconBackgroundHex: String? = nil, iconForegroundHex: String? = nil) {
+    public init(shareCode: String, friendName: String, nickname: String? = nil, dateAdded: Date, lastRefreshed: Date? = nil, iconSymbol: String? = nil, iconBackgroundHex: String? = nil, iconForegroundHex: String? = nil) {
         self.id = shareCode
         self.shareCode = shareCode
         self.friendName = friendName
+        self.nickname = nickname
         self.dateAdded = dateAdded
         self.lastRefreshed = lastRefreshed
         self.iconSymbol = iconSymbol
@@ -48,6 +50,7 @@ public struct FriendShare: Codable, Equatable, Identifiable {
         self.id = shareCode
         self.shareCode = shareCode
         self.friendName = ownerName
+        self.nickname = shareRecord.value(forKey: "owner_nickname") as? String
         self.dateAdded = dateAdded
         self.lastRefreshed = shareRecord.value(forKey: "last_fetched") as? Date
         self.iconSymbol = shareRecord.value(forKey: "icon_symbol") as? String

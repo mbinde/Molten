@@ -106,6 +106,18 @@ class InventorySharingManager {
         try metadataRepository.deleteMyShareCode()
     }
 
+    /// Delete only the local share metadata without contacting the server
+    /// Use this when server deletion fails (e.g., due to key pair mismatch)
+    /// - Throws: SharingManagerError.noShareExists if no share exists
+    func deleteLocalShareOnly() throws {
+        guard metadataRepository.getMyShareCode() != nil else {
+            throw SharingManagerError.noShareExists
+        }
+
+        // Remove local code only
+        try metadataRepository.deleteMyShareCode()
+    }
+
     /// Get my current share code
     /// - Returns: Share code if exists, nil otherwise
     func getMyShareCode() -> String? {

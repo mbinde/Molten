@@ -173,9 +173,20 @@ class InventorySharingViewModel {
         do {
             try await sharingManager.deleteMyShare()
             myShareCode = nil
+            myShareMetadata = nil
 
         } catch SharingManagerError.noShareExists {
             errorMessage = "No share exists."
+        } catch SharingAPIError.unauthorized {
+            // Key pair mismatch - delete local share anyway
+            do {
+                try sharingManager.deleteLocalShareOnly()
+                myShareCode = nil
+                myShareMetadata = nil
+                errorMessage = "Local share deleted. Server deletion failed because the encryption keys changed. The share may still exist on the server but you can create a new one."
+            } catch {
+                errorMessage = "Failed to delete local share: \(error.localizedDescription)"
+            }
         } catch {
             errorMessage = "Failed to delete share: \(error.localizedDescription)"
         }

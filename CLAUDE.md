@@ -647,7 +647,7 @@ Button(action: addItem) {
    - Unit tests (mocks only): `Molten/Tests/MoltenTests/`
    - Core Data integration tests: `Molten/Tests/RepositoryTests/`
    - UI tests: `Molten/Tests/MoltenUITests/`
-   - **Example full path**: `/Users/binde/projects/tests/Molten/Tests/RepositoryTests/CoreData/YourNewTests.swift`
+   - **Example full path**: `/Users/binde/projects/$branch/Molten/Tests/RepositoryTests/CoreData/YourNewTests.swift`
 
 2. Commit the test files:
    ```bash
@@ -781,7 +781,7 @@ struct MyView: View {
 
 **⚠️ CRITICAL: Test File Paths**
 - All tests MUST be under `Molten/Tests/` directory from project root
-- Full example: `/Users/binde/projects/tests/Molten/Tests/RepositoryTests/CoreData/YourTests.swift`
+- Full example: `/Users/binde/projects/$branch/Molten/Tests/RepositoryTests/CoreData/YourTests.swift`
 
 ```
 Molten/                        # ← PROJECT ROOT (where Molten.xcodeproj lives)

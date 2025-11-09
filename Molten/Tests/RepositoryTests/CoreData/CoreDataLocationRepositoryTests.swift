@@ -37,18 +37,18 @@ struct CoreDataLocationRepositoryTests {
 
     // MARK: - Core Data Entity Structure Tests
 
-    @Test("StorageStorageLocation entity does not have 'id' attribute")
+    @Test("StorageLocation entity does not have 'id' attribute")
     func testLocationEntityHasNoIdAttribute() async throws {
         let context = testController.container.viewContext
 
-        guard let entity = NSEntityDescription.entity(forEntityName: "Location", in: context) else {
-            Issue.record("StorageStorageLocation entity not found")
+        guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: context) else {
+            Issue.record("StorageLocation entity not found")
             return
         }
 
         // Verify the entity does NOT have an 'id' attribute
         let hasIdAttribute = entity.attributesByName.keys.contains("id")
-        #expect(!hasIdAttribute, "StorageStorageLocation entity should NOT have an 'id' attribute")
+        #expect(!hasIdAttribute, "StorageLocation entity should NOT have an 'id' attribute")
 
         // Verify it has the expected attributes
         #expect(entity.attributesByName.keys.contains("inventory_id"))

@@ -181,6 +181,18 @@ struct InventorySharingManagerTests {
     func testAddFriendShareIncludesOwnerMetadata() async throws {
         cleanupUserDefaults()
 
+        // Create isolated test context
+        let testController = PersistenceController.createTestController()
+        let testContext = testController.container.viewContext
+
+        // Create test repositories with isolated context
+        let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
+        let catalogRepo = CoreDataGlassItemRepository(context: testContext)
+        let sharedInventoryRepo = CoreDataSharedInventoryRepository(
+            context: testContext,
+            catalogRepository: catalogRepo
+        )
+
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = SnapshotResult(
             items: [
@@ -199,7 +211,11 @@ struct InventorySharingManagerTests {
             ownerName: "Bob's Glass Shop",
             ownerShareNotes: "Boro specialist"
         )
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = InventorySharingManager(
+            coordinator: mockCoordinator,
+            shareRecordRepository: shareRecordRepo,
+            sharedInventoryRepository: sharedInventoryRepo
+        )
 
         let result = try await manager.addFriendShare(shareCode: "FRIEND", friendName: nil)
 

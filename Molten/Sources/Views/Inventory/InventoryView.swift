@@ -421,9 +421,16 @@ struct InventoryView: View {
                     limit: entitlementService.getInventoryLimit() ?? 0
                 )
             }
-            .sheet(isPresented: $showingSharing) {
+            .fullScreenCover(isPresented: $showingSharing) {
                 NavigationStack {
                     InventorySharingView()
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Done") {
+                                    showingSharing = false
+                                }
+                            }
+                        }
                 }
             }
             .task {

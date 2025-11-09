@@ -204,7 +204,7 @@ struct InventorySharingView: View {
                             viewModel.selectedFriendForCustomization = friend
                             viewModel.showingCustomizeFriend = true
                         } label: {
-                            Label("Customize Icon", systemImage: "paintbrush")
+                            Label("Customize", systemImage: "slider.horizontal.3")
                         }
 
                         Button(role: .destructive) {
@@ -267,8 +267,16 @@ struct FriendRowView: View {
 
             // Friend info
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                Text(friend.friendName)
-                    .font(.headline)
+                if let nickname = friend.nickname, !nickname.isEmpty {
+                    Text(nickname)
+                        .font(.headline)
+                    Text(friend.friendName)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text(friend.friendName)
+                        .font(.headline)
+                }
 
                 HStack {
                     Text(friend.shareCode)

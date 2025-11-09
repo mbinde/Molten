@@ -14,17 +14,30 @@ import RevenueCat
 struct MoltenApp: App {
 
     init() {
+        print("=" * 80)
+        print("🚀 MoltenApp.init() STARTING")
+        print("=" * 80)
+
         // Configure RepositoryFactory for production (unless running tests)
         let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        print("🔍 isRunningTests check: \(isRunningTests)")
+        print("🔍 XCTestConfigurationFilePath: \(ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] ?? "nil")")
+
         if !isRunningTests {
+            print("🎯 Calling RepositoryFactory.configureForProduction()")
             RepositoryFactory.configureForProduction()
             print("✅ RepositoryFactory configured for PRODUCTION mode")
+            print("✅ Current mode: \(RepositoryFactory.mode)")
         } else {
             print("⚠️ RepositoryFactory using MOCK mode (tests detected)")
         }
 
         // Configure RevenueCat SDK
         configureRevenueCat()
+
+        print("=" * 80)
+        print("🏁 MoltenApp.init() COMPLETE")
+        print("=" * 80)
     }
 
     // DO NOT initialize PersistenceController here!

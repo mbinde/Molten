@@ -24,7 +24,7 @@ struct ProjectPlanBackgroundSaveTests {
 
     func createTestRepository() -> CoreDataProjectRepository {
         let controller = createTestController()
-        return CoreDataProjectRepository(persistenceController: controller)
+        return CoreDataProjectRepository(context: controller.container.viewContext)
     }
 
     // MARK: - Background Save Tests
@@ -149,7 +149,7 @@ struct ProjectPlanBackgroundSaveTests {
         // Verify glass item was added successfully
         let fetched = try await repository.getProject(id: newPlan.id)
         #expect(fetched?.glassItems.count == 1)
-        #expect(fetched?.glassItems.first?.naturalKey == "bullseye-clear-001")
+        #expect(fetched?.glassItems.first?.stableId == "bullseye-clear-001")
         #expect(fetched?.glassItems.first?.quantity == 5)
     }
 

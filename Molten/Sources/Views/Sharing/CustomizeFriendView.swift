@@ -16,25 +16,68 @@ struct CustomizeFriendView: View {
     @State private var selectedSymbol: String
     @State private var selectedBackgroundColor: Color
     @State private var selectedForegroundColor: Color
+    @State private var nickname: String
 
     // Common SF Symbols for friend icons
     private let commonSymbols = [
+        // Basic shapes
         "circle.fill",
+        "square.fill",
+        "triangle.fill",
+        "diamond.fill",
+        "hexagon.fill",
+
+        // People & animals
         "person.circle.fill",
+        "person.2.fill",
+        "pawprint.fill",
+        "tortoise.fill",
+        "hare.fill",
+        "bird.fill",
+
+        // Nature & weather
         "star.fill",
-        "heart.fill",
-        "flame.fill",
-        "sparkles",
         "moon.fill",
         "sun.max.fill",
-        "bolt.fill",
+        "cloud.fill",
+        "snowflake",
         "leaf.fill",
         "drop.fill",
-        "snowflake"
+        "flame.fill",
+        "sparkles",
+
+        // Objects & symbols
+        "heart.fill",
+        "bolt.fill",
+        "crown.fill",
+        "gift.fill",
+        "balloon.fill",
+        "music.note",
+        "pencil",
+        "paintbrush.fill",
+        "wrench.fill",
+        "hammer.fill"
     ]
 
     // Common background colors with good contrast
     private let backgroundColors: [(name: String, color: Color, hex: String)] = [
+        ("Blue", .blue, "#007AFF"),
+        ("Purple", .purple, "#AF52DE"),
+        ("Pink", .pink, "#FF2D55"),
+        ("Red", .red, "#FF3B30"),
+        ("Orange", .orange, "#FF9500"),
+        ("Yellow", .yellow, "#FFCC00"),
+        ("Green", .green, "#34C759"),
+        ("Teal", .teal, "#5AC8FA"),
+        ("Indigo", .indigo, "#5856D6"),
+        ("Brown", .brown, "#A2845E"),
+        ("Gray", .gray, "#8E8E93"),
+        ("Black", .black, "#000000")
+    ]
+
+    // Foreground/icon colors
+    private let foregroundColors: [(name: String, color: Color, hex: String)] = [
+        ("White", .white, "#FFFFFF"),
         ("Blue", .blue, "#007AFF"),
         ("Purple", .purple, "#AF52DE"),
         ("Pink", .pink, "#FF2D55"),
@@ -67,6 +110,7 @@ struct CustomizeFriendView: View {
             }
             return Color(hex: FriendShare.defaultIconForegroundHex)
         }())
+        _nickname = State(initialValue: friend.nickname ?? "")
     }
 
     var body: some View {
@@ -94,6 +138,16 @@ struct CustomizeFriendView: View {
                     .padding(.vertical, DesignSystem.Spacing.lg)
                 } header: {
                     Text("Preview")
+                }
+
+                // Nickname section
+                Section {
+                    TextField("Nickname (Optional)", text: $nickname)
+                        .textContentType(.nickname)
+                } header: {
+                    Text("Nickname")
+                } footer: {
+                    Text("Add a personal nickname to remember how you know them (e.g., \"Bob from GAS 2025\")")
                 }
 
                 // Symbol selection
@@ -153,38 +207,34 @@ struct CustomizeFriendView: View {
 
                 // Foreground color selection
                 Section {
-                    HStack(spacing: DesignSystem.Spacing.lg) {
-                        Button {
-                            selectedForegroundColor = .white
-                        } label: {
-                            Circle()
-                                .fill(.white)
-                                .frame(width: 50, height: 50)
-                                .overlay(
-                                    Circle()
-                                        .stroke(selectedForegroundColor == .white ? .blue : .black.opacity(0.1), lineWidth: selectedForegroundColor == .white ? 4 : 1)
-                                )
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 50))], spacing: DesignSystem.Spacing.sm) {
+                        ForEach(foregroundColors, id: \.hex) { item in
+                            Button {
+                                selectedForegroundColor = item.color
+                            } label: {
+                                Circle()
+                                    .fill(item.color)
+                                    .frame(width: 50, height: 50)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(
+                                                selectedForegroundColor.toHex() == item.hex ? .blue : .clear,
+                                                lineWidth: 4
+                                            )
+                                    )
+                                    .overlay(
+                                        Circle()
+                                            .stroke(.black.opacity(0.1), lineWidth: 1)
+                                    )
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
-
-                        Button {
-                            selectedForegroundColor = .black
-                        } label: {
-                            Circle()
-                                .fill(.black)
-                                .frame(width: 50, height: 50)
-                                .overlay(
-                                    Circle()
-                                        .stroke(selectedForegroundColor == .black ? .blue : .black.opacity(0.1), lineWidth: selectedForegroundColor == .black ? 4 : 1)
-                                )
-                        }
-                        .buttonStyle(.plain)
                     }
                     .padding(.vertical, DesignSystem.Spacing.xs)
                 } header: {
                     Text("Icon Color")
                 } footer: {
-                    Text("Choose white or black for best contrast")
+                    Text("Choose a color that contrasts well with your background")
                 }
 
                 // Reset button
@@ -199,7 +249,7 @@ struct CustomizeFriendView: View {
                     }
                 }
             }
-            .navigationTitle("Customize Icon")
+            .navigationTitle("Customize")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -218,6 +268,7 @@ struct CustomizeFriendView: View {
     }
 
     private func resetToDefaults() {
+        nickname = ""
         selectedSymbol = FriendShare.defaultIconSymbol
         selectedBackgroundColor = Color(hex: FriendShare.defaultIconBackgroundHex)
         selectedForegroundColor = Color(hex: FriendShare.defaultIconForegroundHex)
@@ -227,6 +278,14 @@ struct CustomizeFriendView: View {
         let backgroundHex = selectedBackgroundColor.toHex()
         let foregroundHex = selectedForegroundColor.toHex()
 
+        // Update nickname
+        let trimmedNickname = nickname.trimmingCharacters(in: .whitespaces)
+        viewModel.updateFriendNickname(
+            friend,
+            nickname: trimmedNickname.isEmpty ? nil : trimmedNickname
+        )
+
+        // Update icon
         viewModel.updateFriendIcon(
             friend,
             symbol: selectedSymbol,

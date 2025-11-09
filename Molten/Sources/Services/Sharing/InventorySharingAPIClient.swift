@@ -150,11 +150,18 @@ class InventorySharingAPIClient: NSObject {
         print("🔐 [API] Request headers: \(request.allHTTPHeaderFields ?? [:])")
 
         // Execute request
-        let (_, response) = try await executeRequest(request)
+        let (data, response) = try await executeRequest(request)
 
         // Check status code
         guard let httpResponse = response as? HTTPURLResponse else {
             throw SharingAPIError.invalidResponse
+        }
+
+        print("🔐 [API] Response status: \(httpResponse.statusCode)")
+
+        // Log response body for debugging
+        if let responseBody = String(data: data, encoding: .utf8) {
+            print("🔐 [API] Response body: \(responseBody)")
         }
 
         switch httpResponse.statusCode {

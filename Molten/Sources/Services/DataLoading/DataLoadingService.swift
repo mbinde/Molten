@@ -29,8 +29,8 @@ class DataLoadingService {
     private let catalogService: CatalogService
     
     private init() {
-        // Use RepositoryFactory for shared instance
-        RepositoryFactory.configureForTesting()
+        // Use RepositoryFactory for shared instance (production mode for real data)
+        RepositoryFactory.configureForProduction()
         self.catalogService = RepositoryFactory.createCatalogService()
     }
     
@@ -182,11 +182,11 @@ enum DataLoadingServiceError: Error, LocalizedError {
 // MARK: - Factory Methods
 
 extension DataLoadingService {
-    /// Create DataLoadingService with RepositoryFactory
+    /// Create DataLoadingService with RepositoryFactory (for testing with mocks)
     static func createWithRepositoryFactory() -> DataLoadingService {
-        RepositoryFactory.configureForTesting()
+        RepositoryFactory.configureForTesting()  // Only for tests
         let catalogService = RepositoryFactory.createCatalogService()
-        
+
         return DataLoadingService(catalogService: catalogService)
     }
     

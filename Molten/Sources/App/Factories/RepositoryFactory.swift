@@ -732,9 +732,71 @@ nonisolated struct RepositoryFactory {
     }
 
     // MARK: - Configuration Helpers
-    
+
+    /// Detect if we're running in a test bundle (not production code)
+    private nonisolated static func isRunningInTestBundle() -> Bool {
+        // Check if XCTest bundle is loaded
+        let testBundleIdentifiers = [
+            "MoltenTests",
+            "RepositoryTests",
+            "ViewModelTests",
+            "PerformanceTests",
+            "MoltenUITests"
+        ]
+
+        // Check if any test bundle is in the loaded bundles
+        for bundle in Bundle.allBundles {
+            if let bundleId = bundle.bundleIdentifier,
+               testBundleIdentifiers.contains(where: { bundleId.contains($0) }) {
+                return true
+            }
+        }
+
+        // Also check if the main bundle is a test bundle
+        if let mainBundleId = Bundle.main.bundleIdentifier,
+           mainBundleId.contains("Tests") {
+            return true
+        }
+
+        // Check for XCTest framework presence
+        return NSClassFromString("XCTestCase") != nil
+    }
+
     /// Configure factory for testing with all mocks
+    /// ⚠️ CRITICAL: This should ONLY be called from test code!
+    /// Runtime assertion will fail if called from production code.
     nonisolated static func configureForTesting() {
+        // CRITICAL SAFETY CHECK: Prevent accidental use in production code
+        guard isRunningInTestBundle() else {
+            let errorMessage = """
+            🚨 CRITICAL ERROR: configureForTesting() called outside of test context!
+
+            This will put the ENTIRE app in mock mode and prevent real data from being saved.
+
+            If you're seeing this in production code:
+            - Replace with: RepositoryFactory.configureForProduction()
+
+            If you're seeing this in test code:
+            - Make sure your test file is added to the correct test target
+            - Check that the test bundle identifier contains 'Tests'
+
+            Call stack:
+            """
+
+            // Print detailed error with call stack
+            print(errorMessage)
+            Thread.callStackSymbols.forEach { print($0) }
+
+            // Crash in debug builds, log error in release
+            #if DEBUG
+            fatalError(errorMessage)
+            #else
+            print("⚠️ WARNING: Ignoring configureForTesting() call in production - using production mode instead")
+            configureForProduction()
+            return
+            #endif
+        }
+
         mode = .mock
         // Clear all cached mock repositories to ensure clean state for each test
         // Setting to nil causes new instances to be created on next access

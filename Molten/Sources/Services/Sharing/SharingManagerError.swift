@@ -12,6 +12,7 @@ public enum SharingManagerError: Error, LocalizedError {
     case shareAlreadyExists
     case noShareExists
     case friendShareNotFound
+    case shareDeletedByOwner
 
     public var errorDescription: String? {
         switch self {
@@ -21,6 +22,8 @@ public enum SharingManagerError: Error, LocalizedError {
             return "No share exists. Create a share first."
         case .friendShareNotFound:
             return "Friend share not found."
+        case .shareDeletedByOwner:
+            return "This share is no longer available. The owner may have deleted it."
         }
     }
 }

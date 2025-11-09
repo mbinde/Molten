@@ -280,7 +280,7 @@ struct CoreDataProjectImageRepositoryTests {
         try await controller.container.viewContext.perform {
             let project = Project(context: controller.container.viewContext)
             project.id = projectId
-            project.name = "Test Project"
+            project.title = "Test Project"
             project.date_created = Date()
             project.date_modified = Date()
 
@@ -294,7 +294,7 @@ struct CoreDataProjectImageRepositoryTests {
         try await controller.container.viewContext.perform {
             let logbook = Logbook(context: controller.container.viewContext)
             logbook.id = logId
-            logbook.name = "Test Log"
+            logbook.title = "Test Log"
             logbook.date_created = Date()
             logbook.date_modified = Date()
 

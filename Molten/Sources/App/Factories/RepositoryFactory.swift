@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreData
+import OSLog
 
 /// Factory for creating repository implementations
 /// Allows switching between mock and Core Data implementations
@@ -789,7 +790,14 @@ nonisolated struct RepositoryFactory {
             await controller.initialize()
             semaphore.signal()
         }
-        semaphore.wait()
+
+        // Wait up to 10 seconds for initialization
+        // CloudKit might fail in simulator (no iCloud account), but Core Data still works
+        let timeout = DispatchTime.now() + .seconds(10)
+        if semaphore.wait(timeout: timeout) == .timedOut {
+            Logger(subsystem: "com.MotleyWoods.Molten", category: "RepositoryFactory")
+                .warning("Timed out waiting for PersistenceController initialization - CloudKit may not be available")
+        }
 
         persistentContainer = controller.container
     }

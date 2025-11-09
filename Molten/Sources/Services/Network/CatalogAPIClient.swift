@@ -216,7 +216,7 @@ class CatalogAPIClient: NSObject {
 
 // MARK: - Download Progress Delegate
 
-private class DownloadProgressDelegate: NSObject, URLSessionDownloadDelegate {
+private final class DownloadProgressDelegate: NSObject, URLSessionDownloadDelegate {
 
     let progressHandler: ((Double) -> Void)?
 

@@ -311,6 +311,33 @@ struct InventorySharingManagerTests {
         }
     }
 
+    @Test("Should clean up cached data when share is deleted by owner (404)")
+    func testRefreshFriendShareDeletedByOwner() async throws {
+        cleanupUserDefaults()
+
+        let mockCoordinator = MockInventorySharingCoordinator()
+        mockCoordinator.mockDownloadResult = createSnapshotResult(ownerName: "Bob's Glass Shop")
+        let manager = InventorySharingManager(coordinator: mockCoordinator)
+
+        // Add friend share (creates local record and cached data)
+        _ = try await manager.addFriendShare(shareCode: "FRIEND")
+
+        let friendSharesBefore = manager.getFriendShares()
+        #expect(friendSharesBefore.count == 1)
+
+        // Simulate owner deleting share (mock will return 404)
+        mockCoordinator.mockDownloadResult = nil
+
+        // Try to refresh - should throw shareDeletedByOwner error
+        await #expect(throws: SharingManagerError.shareDeletedByOwner) {
+            _ = try await manager.refreshFriendShare(shareCode: "FRIEND")
+        }
+
+        // Verify share record was deactivated (no longer in active list)
+        let friendSharesAfter = manager.getFriendShares()
+        #expect(friendSharesAfter.isEmpty)
+    }
+
     // MARK: - Remove Friend Share Tests
 
     @Test("Should remove friend share")

@@ -33,7 +33,7 @@ struct CoreDataProjectRepositoryTests {
         return ProjectModel(
             id: id,
             title: title,
-            type: planType,
+            type: type,
             isArchived: isArchived,
             summary: summary,
             glassItems: glassItems,
@@ -46,7 +46,7 @@ struct CoreDataProjectRepositoryTests {
     @Test("Core Data: Relationship-based storage for tags, glass items, and reference URLs")
     func testRelationshipBasedStorage() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let plan = ProjectModel(
             title: "Test Relationships",
@@ -75,9 +75,9 @@ struct CoreDataProjectRepositoryTests {
 
         // Verify glass items are stored as relationships (ordered by orderIndex)
         #expect(fetched?.glassItems.count == 2)
-        #expect(fetched?.glassItems[0].naturalKey == "item1")
+        #expect(fetched?.glassItems[0].stableId == "item1")
         #expect(fetched?.glassItems[0].quantity == 1.0)
-        #expect(fetched?.glassItems[1].naturalKey == "item2")
+        #expect(fetched?.glassItems[1].stableId == "item2")
         #expect(fetched?.glassItems[1].quantity == 2.5)
 
         // Verify reference URLs are stored as relationships (ordered by orderIndex)
@@ -90,7 +90,7 @@ struct CoreDataProjectRepositoryTests {
     @Test("Core Data: Update replaces relationships correctly")
     func testUpdateReplacesRelationships() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         // Create plan with initial relationships
         let plan = ProjectModel(
@@ -126,9 +126,9 @@ struct CoreDataProjectRepositoryTests {
 
 
         #expect(fetched?.glassItems.count == 2)
-        #expect(fetched?.glassItems[0].naturalKey == "new-item1")
-        #expect(fetched?.glassItems[1].naturalKey == "new-item2")
-        #expect(!fetched!.glassItems.contains(where: { $0.naturalKey == "old-item" }))
+        #expect(fetched?.glassItems[0].stableId == "new-item1")
+        #expect(fetched?.glassItems[1].stableId == "new-item2")
+        #expect(!fetched!.glassItems.contains(where: { $0.stableId == "old-item" }))
 
         #expect(fetched?.referenceUrls.count == 2)
         #expect(fetched?.referenceUrls[0].url == "https://example.com/new1")
@@ -139,7 +139,7 @@ struct CoreDataProjectRepositoryTests {
     @Test("Core Data: Add reference URL creates proper relationship")
     func testAddReferenceUrl() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let plan = createTestPlan(referenceUrls: [])
         _ = try await repository.createProject(plan)
@@ -161,7 +161,7 @@ struct CoreDataProjectRepositoryTests {
     @Test("Core Data: Update reference URL modifies existing relationship")
     func testUpdateReferenceUrl() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let originalUrl = ProjectReferenceUrl(
             url: "https://example.com/original",
@@ -190,7 +190,7 @@ struct CoreDataProjectRepositoryTests {
     @Test("Core Data: Delete reference URL removes relationship")
     func testDeleteReferenceUrl() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let url1 = ProjectReferenceUrl(url: "https://example.com/url1", title: "URL 1")
         let url2 = ProjectReferenceUrl(url: "https://example.com/url2", title: "URL 2")
@@ -207,7 +207,7 @@ struct CoreDataProjectRepositoryTests {
     @Test("Core Data: Empty relationships are handled correctly")
     func testEmptyRelationships() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let plan = ProjectModel(
             title: "Empty Plan",
@@ -226,7 +226,7 @@ struct CoreDataProjectRepositoryTests {
     @Test("Core Data: Complex plan with all relationship types")
     func testComplexPlanWithAllRelationships() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let plan = ProjectModel(
             title: "Complex Plan",
@@ -258,7 +258,7 @@ struct CoreDataProjectRepositoryTests {
     @Test("Core Data: Cascade delete removes all plan relationships")
     func testCascadeDeleteRemovesPlanRelationships() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
         let context = controller.container.viewContext
 
         // Create plan with tags, glass items, and reference URLs
@@ -319,7 +319,7 @@ struct CoreDataProjectRepositoryTests {
     @Test("Core Data: Multiple plans can have same tag strings")
     func testMultiplePlansCanShareTagStrings() async throws {
         let controller = createTestController()
-        let repository = CoreDataProjectRepository(persistenceController: controller)
+        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         // Create two plans with overlapping tags
         let plan1 = ProjectModel(

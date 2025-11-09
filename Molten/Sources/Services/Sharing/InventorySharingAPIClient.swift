@@ -134,6 +134,9 @@ class InventorySharingAPIClient: NSObject {
     open func deleteShare(shareCode: String, ownershipSignature: Data) async throws {
         let url = baseURL.appendingPathComponent("share").appendingPathComponent(shareCode)
 
+        print("🔐 [API] DELETE URL: \(url)")
+        print("🔐 [API] Ownership signature (base64): \(ownershipSignature.base64EncodedString())")
+
         // Create request
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
@@ -143,6 +146,8 @@ class InventorySharingAPIClient: NSObject {
 
         // Add App Attest assertion
         try await addAttestation(to: &request)
+
+        print("🔐 [API] Request headers: \(request.allHTTPHeaderFields ?? [:])")
 
         // Execute request
         let (_, response) = try await executeRequest(request)

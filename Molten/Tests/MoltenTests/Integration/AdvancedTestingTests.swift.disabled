@@ -5,15 +5,7 @@
 //  Cleaned up and migrated during repository pattern completion on 10/13/25
 //
 
-// Standard test framework imports pattern - use in all test files
-#if canImport(Testing)
 import Testing
-#else
-#if canImport(XCTest)
-import XCTest
-#endif
-#endif
-
 import SwiftUI
 import Foundation
 @testable import Molten

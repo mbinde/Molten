@@ -83,7 +83,7 @@ struct CatalogInfoView: View {
                 Text("Updates")
             } footer: {
                 if let lastCheck = viewModel.lastUpdateCheck {
-                    Text("Last checked \(lastCheck, format: .relative) ago")
+                    Text("Last checked \(lastCheck, format: Date.RelativeFormatStyle()) ago")
                 }
             }
 

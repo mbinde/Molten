@@ -13,6 +13,7 @@ import XCTest
 #endif
 #endif
 import Foundation
+import CoreData
 @testable import Molten
 
 @Suite("InventorySharingManager Tests", .serialized)

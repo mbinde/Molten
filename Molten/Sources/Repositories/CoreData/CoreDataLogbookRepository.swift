@@ -315,14 +315,6 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             return TechniqueType(rawValue: typeString)
         }()
 
-        // Extract kiln schedule ID from relationship (if available)
-        let kilnScheduleId: UUID? = {
-            guard let scheduleEntity = entity.value(forKey: "kilnSchedule") as? KilnScheduleEntity else {
-                return nil
-            }
-            return scheduleEntity.value(forKey: "id") as? UUID
-        }()
-
         return LogbookModel(
             id: id,
             title: title,
@@ -340,7 +332,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             images: images,
             heroImageId: entity.value(forKey: "hero_image_id") as? UUID,
             glassItems: glassItems,
-            kilnScheduleId: kilnScheduleId,
+            kilnScheduleId: nil,  // Logbook entity has no kilnSchedule relationship
             pricePoint: entity.value(forKey: "price_point") as? Decimal,
             saleDate: entity.value(forKey: "sale_date") as? Date,
             buyerInfo: entity.value(forKey: "buyer_info") as? String,

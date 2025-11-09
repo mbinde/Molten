@@ -38,19 +38,16 @@ final class KeyPairManager {
     // MARK: - Keychain Storage
 
     /// Store a private key in the Keychain
-    /// - Note: Uses kSecAttrAccessibleWhenUnlocked to enable iCloud Keychain sync
-    ///         This ensures keys transfer to new devices, allowing users to delete their data
+    /// - Note: Tries to use iCloud Keychain sync if available, falls back to local-only storage
     func storePrivateKey(_ privateKey: Data, identifier: String) throws {
         print("💾 [KEYCHAIN] Storing private key with identifier: \(identifier)")
 
         // Delete existing key if present
         try? deletePrivateKey(identifier: identifier)
 
-        // Prepare Keychain query
-        // CRITICAL: kSecAttrAccessibleWhenUnlocked enables iCloud Keychain sync
-        // This ensures keys transfer when user upgrades phones, which is REQUIRED
-        // for GDPR/privacy compliance - users must be able to delete their server data
-        let query: [String: Any] = [
+        // Try with iCloud Keychain sync first (preferred for GDPR compliance)
+        // This ensures keys transfer to new devices, allowing users to delete their server data
+        let syncQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.keychainService,
             kSecAttrAccount as String: identifier,
@@ -59,8 +56,21 @@ final class KeyPairManager {
             kSecAttrSynchronizable as String: true  // Explicitly enable iCloud sync
         ]
 
-        // Add to Keychain
-        let status = SecItemAdd(query as CFDictionary, nil)
+        var status = SecItemAdd(syncQuery as CFDictionary, nil)
+
+        // If sync storage fails (e.g., iCloud Keychain disabled), try local-only storage
+        if status != errSecSuccess {
+            print("⚠️ [KEYCHAIN] Failed to store with sync (\(status)), trying local-only...")
+            let localQuery: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: Self.keychainService,
+                kSecAttrAccount as String: identifier,
+                kSecValueData as String: privateKey,
+                kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked
+                // NO kSecAttrSynchronizable - local device only
+            ]
+            status = SecItemAdd(localQuery as CFDictionary, nil)
+        }
 
         guard status == errSecSuccess else {
             print("❌ [KEYCHAIN] Failed to store key '\(identifier)': \(status)")

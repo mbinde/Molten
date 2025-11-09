@@ -67,6 +67,7 @@ final class KeyPairManager {
 
     /// Retrieve a private key from the Keychain
     func retrievePrivateKey(identifier: String) throws -> Data {
+        // Try with synchronizable first (for iCloud Keychain)
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.keychainService,
@@ -77,12 +78,27 @@ final class KeyPairManager {
         ]
 
         var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        var status = SecItemCopyMatching(query as CFDictionary, &result)
+
+        // If not found with synchronizable, try without (fallback for simulator issues)
+        if status == errSecItemNotFound {
+            print("⚠️ Key not found with kSecAttrSynchronizable=true, trying without...")
+            let nonSyncQuery: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: Self.keychainService,
+                kSecAttrAccount as String: identifier,
+                kSecReturnData as String: true,
+                kSecMatchLimit as String: kSecMatchLimitOne
+            ]
+            status = SecItemCopyMatching(nonSyncQuery as CFDictionary, &result)
+        }
 
         guard status == errSecSuccess else {
             if status == errSecItemNotFound {
+                print("❌ Key '\(identifier)' not found in keychain")
                 throw KeyPairError.keyNotFound
             }
+            print("❌ Keychain error retrieving key '\(identifier)': \(status)")
             throw KeyPairError.keychainError("Failed to retrieve key: \(status)")
         }
 
@@ -90,19 +106,31 @@ final class KeyPairManager {
             throw KeyPairError.keychainError("Invalid data format")
         }
 
+        print("✅ Successfully retrieved key '\(identifier)' from keychain")
         return data
     }
 
     /// Delete a private key from the Keychain
     func deletePrivateKey(identifier: String) throws {
-        let query: [String: Any] = [
+        // Try deleting synchronizable first
+        let syncQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.keychainService,
             kSecAttrAccount as String: identifier,
             kSecAttrSynchronizable as String: true
         ]
 
-        let status = SecItemDelete(query as CFDictionary)
+        var status = SecItemDelete(syncQuery as CFDictionary)
+
+        // If not found, try deleting non-synchronizable (fallback for simulator)
+        if status == errSecItemNotFound {
+            let nonSyncQuery: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: Self.keychainService,
+                kSecAttrAccount as String: identifier
+            ]
+            status = SecItemDelete(nonSyncQuery as CFDictionary)
+        }
 
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw KeyPairError.keychainError("Failed to delete key: \(status)")

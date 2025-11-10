@@ -181,7 +181,7 @@ struct AnyCodable: Codable {
 
 // MARK: - Errors
 
-enum CatalogUpdateError: LocalizedError {
+enum CatalogUpdateError: LocalizedError, Equatable {
     case networkPolicyRestricted
     case updateNotAvailable
     case downloadFailed(underlying: Error)
@@ -212,6 +212,34 @@ enum CatalogUpdateError: LocalizedError {
             return "Server error (\(code)). Please try again later."
         case .invalidResponse:
             return "Invalid response from server."
+        }
+    }
+
+    // MARK: - Equatable
+
+    static func == (lhs: CatalogUpdateError, rhs: CatalogUpdateError) -> Bool {
+        switch (lhs, rhs) {
+        case (.networkPolicyRestricted, .networkPolicyRestricted),
+             (.updateNotAvailable, .updateNotAvailable),
+             (.checksumMismatch, .checksumMismatch),
+             (.invalidResponse, .invalidResponse):
+            return true
+
+        case (.downloadFailed, .downloadFailed),
+             (.storageError, .storageError),
+             (.parseError, .parseError):
+            // Compare only the case, not the underlying error
+            return true
+
+        case (.incompatibleVersion(let lhsRequired, let lhsCurrent),
+              .incompatibleVersion(let rhsRequired, let rhsCurrent)):
+            return lhsRequired == rhsRequired && lhsCurrent == rhsCurrent
+
+        case (.serverError(let lhsCode), .serverError(let rhsCode)):
+            return lhsCode == rhsCode
+
+        default:
+            return false
         }
     }
 }

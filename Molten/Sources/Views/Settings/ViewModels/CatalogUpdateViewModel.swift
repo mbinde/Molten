@@ -17,7 +17,7 @@ class CatalogUpdateViewModel {
 
     // MARK: - Properties
 
-    private let updateService: CatalogUpdateService
+    private let updateService: any CatalogUpdateServiceProtocol
     private let preferences = CatalogUpdatePreferences.shared
     private let networkMonitor = NetworkMonitor.shared
     private let log = Logger(subsystem: "Molten", category: "CatalogUpdateVM")
@@ -79,7 +79,7 @@ class CatalogUpdateViewModel {
 
     // MARK: - Initialization
 
-    init(updateService: CatalogUpdateService) {
+    init(updateService: any CatalogUpdateServiceProtocol) {
         self.updateService = updateService
     }
 

@@ -675,7 +675,7 @@ nonisolated struct RepositoryFactory {
     static func createBackgroundUpdateService() -> BackgroundUpdateService {
         return BackgroundUpdateService(
             updateService: createCatalogUpdateService(),
-            networkMonitor: NetworkMonitor()
+            networkMonitor: NetworkMonitor.shared
         )
     }
 

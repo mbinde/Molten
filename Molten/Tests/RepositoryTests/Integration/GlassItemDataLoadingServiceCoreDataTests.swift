@@ -146,13 +146,14 @@ struct GlassItemDataLoadingServiceCoreDataTests {
         let createdItem = try await catalogService.createGlassItem(originalItem, initialInventory: [], tags: [])
         #expect(createdItem.glassItem.name == "Original Name", "Should create original item")
 
-        // Create mock loader with updated data - code must generate natural key "testmfg-001-0"
+        // Create mock loader with updated data - must have matching stable_id
         let mockJsonLoader = MockJSONDataLoader()
         mockJsonLoader.testDataMode = .custom
         mockJsonLoader.customTestData = [
             CatalogItemData(
                 id: "test-1",
                 code: "TESTMFG-001", // Extracts to manufacturer="testmfg", sku="001"
+                stable_id: "testmfg-001-0", // CRITICAL: Must match existing item's stable_id
                 manufacturer: "TestManufacturer",
                 name: "Updated Name", // Changed name
                 manufacturer_description: "Updated description", // Changed description
@@ -204,13 +205,14 @@ struct GlassItemDataLoadingServiceCoreDataTests {
 
         _ = try await catalogService.createGlassItem(originalItem, initialInventory: [], tags: [])
 
-        // Create mock loader with identical data - code must generate natural key "testmfg-001-0"
+        // Create mock loader with identical data - must have matching stable_id
         let mockJsonLoader = MockJSONDataLoader()
         mockJsonLoader.testDataMode = .custom
         mockJsonLoader.customTestData = [
             CatalogItemData(
                 id: "test-1",
                 code: "TESTMFG-001", // Extracts to manufacturer="testmfg", sku="001"
+                stable_id: "testmfg-001-0", // CRITICAL: Must match existing item's stable_id
                 manufacturer: "TestManufacturer",
                 name: "Unchanged Name", // Same data
                 manufacturer_description: "Unchanged description",
@@ -261,10 +263,11 @@ struct GlassItemDataLoadingServiceCoreDataTests {
         let mockJsonLoader = MockJSONDataLoader()
         mockJsonLoader.testDataMode = .custom
         mockJsonLoader.customTestData = [
-            // Updated existing item - code must generate natural key "existing-ex-0"
+            // Updated existing item - must have matching stable_id
             CatalogItemData(
                 id: "existing",
                 code: "EXISTING-EX", // Extracts to manufacturer="existing", sku="ex"
+                stable_id: "existing-EX-0", // CRITICAL: Must match existing item's stable_id
                 manufacturer: "TestManufacturer",
                 name: "Updated Existing Item", // Changed name
                 manufacturer_description: "Updated description",
@@ -276,10 +279,11 @@ struct GlassItemDataLoadingServiceCoreDataTests {
                 image_url: nil,
                 manufacturer_url: "https://updated.com"
             ),
-            // New item - code generates natural key "new-nw-0"
+            // New item - natural key will be generated
             CatalogItemData(
                 id: "new",
                 code: "NEW-NW", // Extracts to manufacturer="new", sku="nw"
+                stable_id: "new-NW-0", // Natural key for new item
                 manufacturer: "TestManufacturer",
                 name: "New Item",
                 manufacturer_description: "New description",

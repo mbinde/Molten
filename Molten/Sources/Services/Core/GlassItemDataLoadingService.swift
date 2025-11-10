@@ -978,7 +978,7 @@ extension GlassItemDataLoadingService {
         // Fallback: generate a stable_id for very old data without one
         // stable_id is a 6-char hash, not a sequential key
         let manufacturer = extractManufacturer(from: item)
-        let sku = extractSKU(from: item)
+        let sku = extractSKU(from: item) ?? "NO_SKU"
         return String(format: "%06d", abs("\(manufacturer)-\(sku)".hashValue % 1000000))
     }
     

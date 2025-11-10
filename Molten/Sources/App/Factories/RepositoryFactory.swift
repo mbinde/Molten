@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreData
+import OSLog
 
 /// Factory for creating repository implementations
 /// Allows switching between mock and Core Data implementations
@@ -853,7 +854,25 @@ nonisolated struct RepositoryFactory {
     nonisolated static func configureForProduction() {
         mode = .coreData
         // Always use the shared production container
-        persistentContainer = getSharedController().container
+        let controller = getSharedController()
+
+        // Ensure the controller is initialized before accessing its contexts
+        // Production controllers load asynchronously, so we need to wait
+        let semaphore = DispatchSemaphore(value: 0)
+        Task.detached {
+            await controller.initialize()
+            semaphore.signal()
+        }
+
+        // Wait up to 10 seconds for initialization
+        // CloudKit might fail in simulator (no iCloud account), but Core Data still works
+        let timeout = DispatchTime.now() + .seconds(10)
+        if semaphore.wait(timeout: timeout) == .timedOut {
+            Logger(subsystem: "com.MotleyWoods.Molten", category: "RepositoryFactory")
+                .warning("Timed out waiting for PersistenceController initialization - CloudKit may not be available")
+        }
+
+        persistentContainer = controller.container
     }
     
     /// Configure for production and ensure initial data is loaded

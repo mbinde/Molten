@@ -95,6 +95,29 @@
 		};
 /* End PBXCopyFilesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		5AD4D62AFCC1421CA59DBA1A /* Set Build Number from Git */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Scripts/set-build-number.sh",
+			);
+			name = "Set Build Number from Git";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PROJECT_DIR}/Scripts/set-build-number.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+
 /* Begin PBXFileReference section */
 		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
 		878F664543088F1B86740DD2 /* UnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationRepository.swift; sourceTree = "<group>"; };
@@ -983,7 +1006,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = F5A13C722E890147002C0F7A /* Build configuration list for PBXNativeTarget "Molten" */;
 			buildPhases = (
-				F5A13C472E890146002C0F7A /* Sources */,
+								5AD4D62AFCC1421CA59DBA1A /* Set Build Number from Git */,
+F5A13C472E890146002C0F7A /* Sources */,
 				F5A13C482E890146002C0F7A /* Frameworks */,
 				F5A13C492E890146002C0F7A /* Resources */,
 				F5DB4DB82EAB159C00F6E879 /* Embed Foundation Extensions */,

@@ -25,7 +25,7 @@ nonisolated struct CatalogMetadata: Codable, Sendable {
 // MARK: - JSON Wrapper Structures
 
 /// Expected JSON format: { "version": "1.0", "generated": "...", "item_count": 3, "glassitems": [...] }
-nonisolated struct WrappedGlassItemsData: Decodable, Sendable {
+nonisolated struct WrappedGlassItemsData: Codable, Sendable {
     let metadata: CatalogMetadata
     let glassitems: [CatalogItemData]
 
@@ -39,6 +39,14 @@ nonisolated struct WrappedGlassItemsData: Decodable, Sendable {
 
         self.metadata = CatalogMetadata(version: version, generated: generated, itemCount: itemCount)
         self.glassitems = try container.decode([CatalogItemData].self, forKey: .glassitems)
+    }
+
+    nonisolated func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(metadata.version, forKey: .version)
+        try container.encode(metadata.generated, forKey: .generated)
+        try container.encodeIfPresent(metadata.itemCount, forKey: .itemCount)
+        try container.encode(glassitems, forKey: .glassitems)
     }
 
     enum CodingKeys: String, CodingKey {
@@ -77,7 +85,7 @@ nonisolated struct WrappedCoatingsData: Decodable, Sendable {
 // MARK: - Catalog Item Data Model
 
 /// Data transfer object for decoding glass items from JSON
-nonisolated struct CatalogItemData: Decodable, Sendable {
+nonisolated struct CatalogItemData: Codable, Sendable {
     let id: String?
     let code: String?  // Optional - some manufacturers don't use SKUs
     let stable_id: String?  // Short 6-char hash-based ID for QR codes
@@ -175,7 +183,28 @@ nonisolated struct CatalogItemData: Decodable, Sendable {
         self.image_url = try? container.decode(String.self, forKey: .image_url)
         self.manufacturer_url = try? container.decode(String.self, forKey: .manufacturer_url)
     }
-    
+
+    // Custom encoder to match decoding structure
+    nonisolated func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        try container.encodeIfPresent(id, forKey: .id)
+        try container.encodeIfPresent(code, forKey: .code)
+        try container.encodeIfPresent(stable_id, forKey: .stable_id)
+        try container.encode(name, forKey: .name)
+        try container.encodeIfPresent(full_name, forKey: .full_name)
+        try container.encodeIfPresent(manufacturer, forKey: .manufacturer)
+        try container.encodeIfPresent(manufacturer_description, forKey: .manufacturer_description)
+        try container.encodeIfPresent(tags, forKey: .tags)
+        try container.encodeIfPresent(image_path, forKey: .image_path)
+        try container.encodeIfPresent(synonyms, forKey: .synonyms)
+        try container.encodeIfPresent(coe, forKey: .coe)
+        try container.encode(product_type, forKey: .product_type)
+        try container.encodeIfPresent(stock_type, forKey: .stock_type)
+        try container.encodeIfPresent(image_url, forKey: .image_url)
+        try container.encodeIfPresent(manufacturer_url, forKey: .manufacturer_url)
+    }
+
     // Regular initializer for programmatic creation
     nonisolated init(id: String?, code: String?, stable_id: String? = nil, manufacturer: String?, name: String, manufacturer_description: String?, synonyms: [String]?, tags: [String]?, image_path: String?, coe: String?, product_type: String = "glass", stock_type: String? = nil, image_url: String? = nil, manufacturer_url: String? = nil) {
         self.id = id

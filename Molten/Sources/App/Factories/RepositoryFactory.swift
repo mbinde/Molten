@@ -648,6 +648,38 @@ nonisolated struct RepositoryFactory {
         )
     }
 
+    /// Creates a GlassItemDataLoadingService with all dependencies
+    /// Includes CatalogStorageService for OTA catalog support
+    nonisolated static func createGlassItemDataLoadingService() -> GlassItemDataLoadingService {
+        return GlassItemDataLoadingService(
+            catalogService: createCatalogService(),
+            jsonLoader: JSONDataLoader(),
+            catalogStorageService: try? CatalogStorageService()
+        )
+    }
+
+    /// Creates a CatalogUpdateService with all dependencies
+    /// Note: This is a @MainActor class, so must be called from main thread
+    @MainActor
+    static func createCatalogUpdateService() -> CatalogUpdateService {
+        return CatalogUpdateService(
+            apiClient: CatalogAPIClient(),
+            storageService: try! CatalogStorageService(),
+            dataLoadingService: createGlassItemDataLoadingService(),
+            networkMonitor: NetworkMonitor.shared
+        )
+    }
+
+    /// Creates a BackgroundUpdateService for automatic update checks
+    /// Note: This is a @MainActor class, so must be called from main thread
+    @MainActor
+    static func createBackgroundUpdateService() -> BackgroundUpdateService {
+        return BackgroundUpdateService(
+            updateService: createCatalogUpdateService(),
+            networkMonitor: NetworkMonitor.shared
+        )
+    }
+
     /// Creates a RecipeService with all dependencies
     nonisolated static func createRecipeService() -> RecipeService {
         return RecipeService(

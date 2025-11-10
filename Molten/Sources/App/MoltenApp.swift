@@ -242,6 +242,10 @@ extension MoltenApp {
             .onAppear {
                 checkAlphaDisclaimer()
             }
+            .task {
+                // Perform background catalog update check
+                await performBackgroundCatalogUpdate()
+            }
     }
 
     @ViewBuilder
@@ -396,6 +400,24 @@ extension MoltenApp {
         //     try? await Task.sleep(for: .seconds(0.3))
         //     showAlphaDisclaimer = true
         // }
+    }
+
+    /// Perform background catalog update check on app startup
+    @MainActor
+    private func performBackgroundCatalogUpdate() async {
+        // Skip if running tests
+        guard !isRunningTests && !isRunningUITests else {
+            print("🧪 Skipping catalog update check for tests")
+            return
+        }
+
+        // Small delay to avoid competing with initial data load
+        try? await Task.sleep(for: .seconds(2))
+
+        print("📦 Starting background catalog update check...")
+        let backgroundUpdateService = RepositoryFactory.createBackgroundUpdateService()
+        await backgroundUpdateService.checkForUpdatesIfNeeded()
+        print("✅ Background catalog update check completed")
     }
 
     /// Configure environment for UI testing

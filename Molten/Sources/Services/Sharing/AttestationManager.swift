@@ -67,9 +67,17 @@ public class AppAttestServiceAdapter: AppAttestServiceProtocol {
     }
 }
 
+/// Protocol for attestation management (for dependency injection)
+@MainActor
+public protocol AttestationManagerProtocol {
+    var isSupported: Bool { get }
+    func generateAssertion(requestData: Data) async throws -> Data
+    func createRequestData(method: String, path: String, body: Data?) -> Data
+}
+
 /// Manages App Attest attestation and assertion generation
 @MainActor
-public class AttestationManager {
+public class AttestationManager: AttestationManagerProtocol {
 
     // MARK: - Properties
 

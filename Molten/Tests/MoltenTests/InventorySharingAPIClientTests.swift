@@ -578,6 +578,25 @@ class MockURLSession: URLSessionProtocol {
 
         return (nextData ?? Data(), response)
     }
+
+    func download(for request: URLRequest, delegate: URLSessionTaskDelegate?) async throws -> (URL, URLResponse) {
+        lastRequest = request
+        lastRequestBody = request.httpBody
+
+        if let error = nextError {
+            throw error
+        }
+
+        guard let response = nextResponse else {
+            throw URLError(.badServerResponse)
+        }
+
+        // Create a temp file with the mock data
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try (nextData ?? Data()).write(to: tempURL)
+
+        return (tempURL, response)
+    }
 }
 
 // MARK: - Mock AttestationManager

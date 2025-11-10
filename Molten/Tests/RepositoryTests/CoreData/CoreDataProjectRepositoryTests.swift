@@ -261,7 +261,7 @@ struct CoreDataProjectRepositoryTests {
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
         let context = controller.container.viewContext
 
-        // Create plan with tags, glass items, and reference URLs
+        // Create plan with glass items and reference URLs
         let plan = ProjectModel(
             title: "Plan to Delete",
             type: .recipe,
@@ -275,21 +275,14 @@ struct CoreDataProjectRepositoryTests {
         _ = try await repository.createProject(plan)
 
         // Verify relationships were created
-        let tagsFetch = ProjectTag.fetchRequest()
-        tagsFetch.predicate = NSPredicate(format: "plan.id == %@", plan.id as CVarArg)
-        let tagsBeforeDelete = try await context.perform {
-            try context.fetch(tagsFetch)
-        }
-        #expect(tagsBeforeDelete.count == 2)
-
-        let glassItemsFetch = ProjectPlanGlassItem.fetchRequest()
+        let glassItemsFetch = NSFetchRequest<ProjectGlassItemEntity>(entityName: "ProjectGlassItem")
         glassItemsFetch.predicate = NSPredicate(format: "plan.id == %@", plan.id as CVarArg)
         let glassItemsBeforeDelete = try await context.perform {
             try context.fetch(glassItemsFetch)
         }
         #expect(glassItemsBeforeDelete.count == 1)
 
-        let urlsFetch = ProjectPlanReferenceUrl.fetchRequest()
+        let urlsFetch = NSFetchRequest<ProjectReferenceUrlEntity>(entityName: "ProjectReferenceUrl")
         urlsFetch.predicate = NSPredicate(format: "plan.id == %@", plan.id as CVarArg)
         let urlsBeforeDelete = try await context.perform {
             try context.fetch(urlsFetch)
@@ -300,11 +293,6 @@ struct CoreDataProjectRepositoryTests {
         try await repository.deleteProject(id: plan.id)
 
         // Verify all relationships were cascade deleted
-        let tagsAfterDelete = try await context.perform {
-            try context.fetch(tagsFetch)
-        }
-        #expect(tagsAfterDelete.isEmpty)
-
         let glassItemsAfterDelete = try await context.perform {
             try context.fetch(glassItemsFetch)
         }

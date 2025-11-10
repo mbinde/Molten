@@ -57,6 +57,12 @@ xcodebuild test -project Molten.xcodeproj -scheme Molten -destination 'platform=
   - **Tests Core Data implementations directly**
   - Uses `RepositoryFactory.configureForTestingWithCoreData()` with isolated test controllers
   - Tests persistence, migrations, and Core Data-specific behavior
+  - **🚨 CRITICAL: ALWAYS verify Core Data schema before writing tests**
+    - Check current model version: `cat Molten/Molten.xcdatamodeld/.xccurrentversion`
+    - Verify entity names: `grep "entity name=" Molten/Molten.xcdatamodeld/Molten\ XX.xcdatamodel/contents`
+    - Verify attributes/relationships: `grep -A 20 "entity name=\"EntityName\"" Molten/Molten.xcdatamodeld/Molten\ XX.xcdatamodel/contents`
+    - **DO NOT assume entity names, fields, or relationships exist - verify against actual schema**
+    - Common mistakes: using old entity names (ProjectTag, ProjectPlanGlassItem), accessing removed fields (item_stable_id, kilnSchedule)
 - **ViewModelTests**: ViewModel presentation logic tests (part of MoltenTests)
   - **Protocol-based ViewModels** for dependency injection
   - Use mock services for fast, isolated testing
@@ -643,17 +649,19 @@ Button(action: addItem) {
 **Claude's workflow:**
 
 1. Create test files in correct filesystem location:
-   - Unit tests (mocks only): `Tests/MoltenTests/`
-   - Core Data integration tests: `Tests/RepositoryTests/`
-   - UI tests: `Tests/MoltenUITests/`
+   - **CRITICAL**: All test files MUST be under `Molten/Tests/` from project root
+   - Unit tests (mocks only): `Molten/Tests/MoltenTests/`
+   - Core Data integration tests: `Molten/Tests/RepositoryTests/`
+   - UI tests: `Molten/Tests/MoltenUITests/`
+   - **Example full path**: `/Users/binde/projects/$branch/Molten/Tests/RepositoryTests/CoreData/YourNewTests.swift`
 
 2. Commit the test files:
    ```bash
-   git add Tests/MoltenTests/YourNewTests.swift
+   git add Molten/Tests/MoltenTests/YourNewTests.swift
    git commit -m "test: add YourNewTests"
    ```
 
-3. Tell user: "Created N new test files in Tests/MoltenTests/ - ready to add to Xcode"
+3. Tell user: "Created N new test files in Molten/Tests/MoltenTests/ - ready to add to Xcode"
 
 **User's workflow (adds all new files at once):**
 
@@ -676,6 +684,11 @@ Button(action: addItem) {
    git add Molten.xcodeproj/project.pbxproj
    git commit -m "chore: add new test files to Xcode project"
    ```
+
+7. **Clean build required**: After adding test files to the Xcode project, perform a clean build:
+   - In Xcode: Product → Clean Build Folder (⇧⌘K)
+   - Or via command line: `xcodebuild clean -project Molten.xcodeproj -scheme Molten`
+   - This ensures Swift's incremental compilation picks up the new test files correctly
 
 **Why this works:**
 - No need to navigate deep folder hierarchies
@@ -777,8 +790,12 @@ struct MyView: View {
 
 ## File Organization
 
+**⚠️ CRITICAL: Test File Paths**
+- All tests MUST be under `Molten/Tests/` directory from project root
+- Full example: `/Users/binde/projects/$branch/Molten/Tests/RepositoryTests/CoreData/YourTests.swift`
+
 ```
-Molten/
+Molten/                        # ← PROJECT ROOT (where Molten.xcodeproj lives)
 ├── Sources/
 │   ├── App/          # Factories, Configuration
 │   ├── Models/       # Domain, Helpers
@@ -790,7 +807,7 @@ Molten/
 │   │       ├── Components/    # Reusable components
 │   │       └── Helpers/       # View-specific utilities
 │   └── Utilities/    # Cross-cutting utilities
-├── Tests/
+├── Tests/            # ← ALL TEST FILES GO HERE (Molten/Tests/)
 │   ├── MoltenTests/
 │   │   ├── Infrastructure/    # TestConfiguration, TestDataSetup, TestDataBuilder
 │   │   ├── Models/            # Model unit tests
@@ -798,6 +815,7 @@ Molten/
 │   │   ├── Views/             # ViewModel tests
 │   │   └── Utilities/         # Utility tests
 │   ├── RepositoryTests/       # Core Data integration tests
+│   │   └── CoreData/          # ← CoreData repository tests go here
 │   ├── ViewModelTests/        # (Empty - use MoltenTests/Views/)
 │   ├── PerformanceTests/      # Performance tests
 │   └── MoltenUITests/         # UI automation tests

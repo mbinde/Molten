@@ -9,8 +9,16 @@
 import Foundation
 import OSLog
 
+/// Protocol for catalog storage operations (for dependency injection)
+protocol CatalogStorageServiceProtocol: Actor {
+    func saveTempCatalog(_ data: Data, version: Int) throws -> URL
+    func promoteTempToCurrent(tempFile: URL) throws
+    func loadCurrentCatalog() -> Data?
+    func cleanupTempFiles()
+}
+
 /// Manages local storage of catalog data
-actor CatalogStorageService {
+actor CatalogStorageService: CatalogStorageServiceProtocol {
 
     // MARK: - Properties
 

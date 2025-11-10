@@ -662,7 +662,8 @@ nonisolated struct RepositoryFactory {
         return CatalogUpdateService(
             apiClient: CatalogAPIClient(),
             storageService: try! CatalogStorageService(),
-            dataLoadingService: createGlassItemDataLoadingService()
+            dataLoadingService: createGlassItemDataLoadingService(),
+            networkMonitor: NetworkMonitor.shared
         )
     }
 

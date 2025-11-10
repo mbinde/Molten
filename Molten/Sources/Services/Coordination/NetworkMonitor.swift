@@ -10,9 +10,20 @@ import Foundation
 import Network
 import Combine
 
+/// Protocol for network monitoring (for dependency injection)
+@MainActor
+protocol NetworkMonitorProtocol: ObservableObject {
+    var isConnected: Bool { get }
+    var isOnWiFi: Bool { get }
+    var isExpensive: Bool { get }
+    var isConstrained: Bool { get }
+    var connectionDescription: String { get }
+    func canDownloadCatalog() -> Bool
+}
+
 /// Monitors network connectivity and type
 @MainActor
-class NetworkMonitor: ObservableObject {
+class NetworkMonitor: NetworkMonitorProtocol {
 
     static let shared = NetworkMonitor()
 

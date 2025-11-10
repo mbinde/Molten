@@ -298,10 +298,14 @@ class GlassItemDataLoadingService {
                 let tagSyncResults = try await syncTagsForUnchangedItems(comparisonResult.unchanged, jsonItems: catalogItems, options: options)
                 results.itemsUpdated += tagSyncResults.itemsUpdated
                 results.itemsFailed += tagSyncResults.itemsFailed
-            }
 
-            // Count unchanged items as skipped (only if not in skip mode, as they were processed)
-            results.itemsSkipped = 0
+                // Count truly unchanged items (no glass item changes AND no tag changes) as skipped
+                let unchangedCount = comparisonResult.unchanged.count
+                let tagsChangedCount = tagSyncResults.itemsUpdated
+                results.itemsSkipped = unchangedCount - tagsChangedCount - tagSyncResults.itemsFailed
+            } else {
+                results.itemsSkipped = 0
+            }
         }
         
         // Log final results

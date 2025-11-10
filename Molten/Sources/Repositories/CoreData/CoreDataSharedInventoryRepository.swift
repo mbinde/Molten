@@ -123,19 +123,26 @@ class CoreDataSharedInventoryRepository {
     /// Delete inventory snapshot for a share
     /// - Parameter shareCode: Share code
     func deleteSnapshot(shareCode: String) throws {
+        // Use regular delete instead of batch delete since we're operating on the same context
+        // that will immediately create new objects (batch delete causes cache issues)
+
         // Delete inventory items
-        let itemFetchRequest: NSFetchRequest<NSFetchRequestResult> = SharedInventoryItem.fetchRequest()
+        let itemFetchRequest: NSFetchRequest<SharedInventoryItem> = SharedInventoryItem.fetchRequest()
         itemFetchRequest.predicate = NSPredicate(format: "share_code == %@", shareCode)
-        let itemDeleteRequest = NSBatchDeleteRequest(fetchRequest: itemFetchRequest)
-        try context.execute(itemDeleteRequest)
+        let items = try context.fetch(itemFetchRequest)
+        for item in items {
+            context.delete(item)
+        }
 
         // Delete tags
-        let tagFetchRequest: NSFetchRequest<NSFetchRequestResult> = SharedUserTags.fetchRequest()
+        let tagFetchRequest: NSFetchRequest<SharedUserTags> = SharedUserTags.fetchRequest()
         tagFetchRequest.predicate = NSPredicate(format: "share_code == %@", shareCode)
-        let tagDeleteRequest = NSBatchDeleteRequest(fetchRequest: tagFetchRequest)
-        try context.execute(tagDeleteRequest)
+        let tags = try context.fetch(tagFetchRequest)
+        for tag in tags {
+            context.delete(tag)
+        }
 
-        try context.save()
+        // Note: saveSnapshot will call context.save() after creating new objects
     }
 
     /// Get all items with a specific tag from any shared inventory

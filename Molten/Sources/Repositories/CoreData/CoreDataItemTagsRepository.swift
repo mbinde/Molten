@@ -35,11 +35,6 @@ class CoreDataItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
         ) { notification in
             if let inserted = notification.userInfo?[NSInsertedObjectsKey] as? Set<NSManagedObject>, !inserted.isEmpty {
                 let entityNames = Set(inserted.map { $0.entity.name ?? "unknown" })
-                if entityNames.contains("GlassItem") {
-                    print("🐛🔴 BACKGROUND CONTEXT: GlassItem objects were INSERTED into context!")
-                    print("🐛🔴   Entities: \(entityNames.joined(separator: ", "))")
-                    print("🐛🔴   Call stack: \(Thread.callStackSymbols.prefix(10).joined(separator: "\n"))")
-                }
             }
         }
     }

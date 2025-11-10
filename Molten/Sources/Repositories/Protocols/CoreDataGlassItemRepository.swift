@@ -85,9 +85,6 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
     
     func createItem(_ item: GlassItemModel) async throws -> GlassItemModel {
         return try await context.perform {
-            print("🔴🔴🔴 CoreDataGlassItemRepository.createItem: CALLED for stable_id=\(item.stable_id)")
-            print("🔴🔴🔴 CALL STACK (first 15 frames):")
-            Thread.callStackSymbols.prefix(15).forEach { print("    \($0)") }
 
             // Check if item already exists
             let existingRequest = NSFetchRequest<NSManagedObject>(entityName: "GlassItem")

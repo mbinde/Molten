@@ -126,14 +126,25 @@ struct SettingsView: View {
     private let catalogService: CatalogService
     private let subscriptionService: SubscriptionServiceProtocol
     @State private var subscriptionViewModel: SubscriptionViewModel
+    @State private var catalogUpdateViewModel: CatalogUpdateViewModel
 
     init(
         catalogService: CatalogService = RepositoryFactory.createCatalogService(),
-        subscriptionService: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService()
+        subscriptionService: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService(),
+        catalogUpdateService: CatalogUpdateService? = nil
     ) {
         self.catalogService = catalogService
         self.subscriptionService = subscriptionService
         self._subscriptionViewModel = State(initialValue: SubscriptionViewModel(subscriptionService: subscriptionService))
+
+        // Initialize catalog update view model
+        let updateService = catalogUpdateService ?? CatalogUpdateService(
+            apiClient: CatalogAPIClient(),
+            storageService: try! CatalogStorageService(),
+            dataLoadingService: RepositoryFactory.createGlassItemDataLoadingService(),
+            networkMonitor: NetworkMonitor.shared
+        )
+        self._catalogUpdateViewModel = State(initialValue: CatalogUpdateViewModel(updateService: updateService))
     }
     
     private var defaultSortOptionBinding: Binding<SortOption> {
@@ -218,6 +229,29 @@ struct SettingsView: View {
                 .task {
                     // Load subscription status when settings view appears
                     await subscriptionViewModel.loadSubscriptionStatus()
+                }
+
+                // Catalog Updates section
+                Section("Catalog") {
+                    NavigationLink {
+                        CatalogInfoView(viewModel: catalogUpdateViewModel)
+                    } label: {
+                        HStack {
+                            Label("Catalog Updates", systemImage: "arrow.down.circle")
+
+                            Spacer()
+
+                            if let updateMessage = catalogUpdateViewModel.updateAvailableMessage {
+                                Text(updateMessage)
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                            } else {
+                                Text("v\(catalogUpdateViewModel.currentVersion)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
                 }
 
                 Section {

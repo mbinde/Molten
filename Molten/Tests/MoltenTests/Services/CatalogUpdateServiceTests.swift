@@ -405,9 +405,7 @@ class MockGlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {
         // Return default result
         return GlassItemLoadingResult(
             itemsCreated: 10,
-            itemsUpdated: 5,
-            tagsCreated: 20,
-            duration: 1.0
+            itemsUpdated: 5
         )
     }
 }

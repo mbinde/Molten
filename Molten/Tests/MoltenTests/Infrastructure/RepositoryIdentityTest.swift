@@ -93,7 +93,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryService,
-            shoppingListService: shoppingService,
+            itemMinimumRepository: otherMockRepos.itemMinimum,
             itemTagsRepository: otherMockRepos.itemTags,
             userTagsRepository: userTagsRepo
         )

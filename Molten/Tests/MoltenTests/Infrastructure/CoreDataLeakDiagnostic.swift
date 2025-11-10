@@ -121,7 +121,7 @@ struct CoreDataLeakDiagnostic {
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryTrackingService,
-            shoppingListService: shoppingListService,
+            itemMinimumRepository: mockItemMinimumRepo,
             itemTagsRepository: mockItemTagsRepo,
             userTagsRepository: mockUserTagsRepo
         )

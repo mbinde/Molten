@@ -56,7 +56,7 @@ struct MultiUserScenarioTests {
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryTrackingService,
-            shoppingListService: shoppingListService,
+            itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo
         )

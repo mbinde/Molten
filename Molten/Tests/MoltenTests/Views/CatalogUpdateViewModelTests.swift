@@ -398,9 +398,20 @@ struct CatalogUpdateViewModelTests {
         let mockService = createMockUpdateService()
         let viewModel = CatalogUpdateViewModel(updateService: mockService)
 
+        // First reset to ensure we start from a clean state
+        CatalogUpdatePreferences.shared.resetToDefaults()
+
+        // Verify initial state is defaults
+        #expect(CatalogUpdatePreferences.shared.autoUpdateEnabled == true)
+        #expect(CatalogUpdatePreferences.shared.downloadPolicy == .wifiOnly)
+
         // Modify preferences
         CatalogUpdatePreferences.shared.autoUpdateEnabled = false
         CatalogUpdatePreferences.shared.downloadPolicy = .manual
+
+        // Verify modifications
+        #expect(CatalogUpdatePreferences.shared.autoUpdateEnabled == false)
+        #expect(CatalogUpdatePreferences.shared.downloadPolicy == .manual)
 
         // Reset
         viewModel.resetPreferences()

@@ -9,9 +9,16 @@
 import Foundation
 import OSLog
 
+/// Protocol for catalog API operations (for dependency injection)
+@MainActor
+protocol CatalogAPIClientProtocol {
+    func getLatestVersion() async throws -> CatalogVersionMetadata
+    func downloadFullCatalog(version: Int?, progressHandler: ((Double) -> Void)?) async throws -> Data
+}
+
 /// API client for catalog update operations
 @MainActor
-class CatalogAPIClient: NSObject {
+class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
 
     // MARK: - Properties
 

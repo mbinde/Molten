@@ -1141,7 +1141,13 @@ extension GlassItemDataLoadingService {
 
                 do {
                     // Extract tags from JSON (same as we do for creates and updates)
-                    let updatedTags = extractTags(from: jsonItem)
+                    var updatedTags: [String] = []
+                    if options.enableTagExtraction {
+                        updatedTags.append(contentsOf: extractTags(from: jsonItem))
+                    }
+                    if options.enableSynonymTags {
+                        updatedTags.append(contentsOf: extractSynonymTags(from: jsonItem))
+                    }
 
                     // Get existing tags to check if they changed
                     let completeItem = try await catalogService.getGlassItemByNaturalKey(glassItem.stable_id)

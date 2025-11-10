@@ -213,7 +213,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
                 id: "test-1",
                 code: "TESTMFG-001", // Extracts to manufacturer="testmfg", sku="001"
                 stable_id: "testmfg-001-0", // CRITICAL: Must match existing item's stable_id
-                manufacturer: "TestManufacturer",
+                manufacturer: "testmfg", // CRITICAL: Must match existing item's manufacturer field
                 name: "Unchanged Name", // Same data
                 manufacturer_description: "Unchanged description",
                 synonyms: nil, // No synonyms to match created item

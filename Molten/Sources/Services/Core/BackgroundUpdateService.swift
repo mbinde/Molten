@@ -8,6 +8,7 @@
 
 import Foundation
 import OSLog
+import UserNotifications
 
 private let log = Logger(subsystem: "com.molten", category: "BackgroundUpdateService")
 
@@ -82,8 +83,21 @@ final class BackgroundUpdateService {
             // Clear update available badge
             preferences.hasUpdateAvailable = false
 
+            // Send success notification
+            await sendNotification(
+                title: "Catalog Updated",
+                body: "Version \(result.version) installed successfully. \(result.itemsCreated) new items added."
+            )
+
         } catch {
             log.error("❌ Background update failed: \(error.localizedDescription)")
+
+            // Send error notification
+            await sendNotification(
+                title: "Catalog Update Failed",
+                body: "Unable to update catalog. Please try again later."
+            )
+
             // Don't throw - background updates should fail gracefully
         }
     }
@@ -109,5 +123,26 @@ final class BackgroundUpdateService {
     private func shouldAutoDownload() -> Bool {
         // Use the existing canDownloadCatalog() method which already checks policy
         return networkMonitor.canDownloadCatalog()
+    }
+
+    /// Send a local notification
+    private func sendNotification(title: String, body: String) async {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: UUID().uuidString,
+            content: content,
+            trigger: nil  // Deliver immediately
+        )
+
+        do {
+            try await UNUserNotificationCenter.current().add(request)
+            log.debug("📬 Notification sent: \(title)")
+        } catch {
+            log.error("Failed to send notification: \(error.localizedDescription)")
+        }
     }
 }

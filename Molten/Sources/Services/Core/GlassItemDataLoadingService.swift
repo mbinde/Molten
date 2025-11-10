@@ -11,11 +11,16 @@ import OSLog
 // Import required models and types from other modules
 // Note: In a real project, these would be proper module imports
 
+/// Protocol for glass item data loading operations (for dependency injection)
+protocol GlassItemDataLoadingServiceProtocol {
+    func loadGlassItemsFromData(_ data: Data, options: GlassItemDataLoadingService.LoadingOptions) async throws -> GlassItemLoadingResult
+}
+
 /// Service for loading data from JSON files into the new GlassItem system
 /// Handles transformation from legacy JSON format to the new normalized entity structure
 /// Supports initial loading, migration from legacy system, and bulk import operations
 @preconcurrency
-class GlassItemDataLoadingService {
+class GlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {
     
     // MARK: - Dependencies
 

@@ -17,7 +17,7 @@ class CatalogAPIClient: NSObject {
 
     private let session: URLSessionProtocol
     private let baseURL: URL
-    private let attestationManager: AttestationManager
+    private let attestationManager: AttestationManagerProtocol
     private let pinnedCertificates: [Data]
     private let log = Logger(subsystem: "Molten", category: "CatalogAPI")
 
@@ -26,7 +26,7 @@ class CatalogAPIClient: NSObject {
     init(
         session: URLSessionProtocol = URLSession.shared,
         baseURL: URL = URL(string: "https://api.example.com")!,
-        attestationManager: AttestationManager = AttestationManager(),
+        attestationManager: AttestationManagerProtocol = AttestationManager(),
         pinnedCertificates: [Data] = []
     ) {
         self.session = session

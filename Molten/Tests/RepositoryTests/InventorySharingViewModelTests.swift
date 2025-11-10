@@ -432,6 +432,12 @@ struct InventorySharingViewModelTests {
             catalogRepository: catalogRepo
         )
 
+        // CRITICAL: Use test-specific UserDefaults suite to isolate tests
+        // Create a unique suite name for this test run to avoid cross-test pollution
+        let testSuiteName = "com.molten.test.sharing.\(UUID().uuidString)"
+        let testUserDefaults = UserDefaults(suiteName: testSuiteName)!
+        let testMetadataRepo = ShareMetadataRepository(userDefaults: testUserDefaults)
+
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = SnapshotResult(
             items: [],
@@ -443,6 +449,7 @@ struct InventorySharingViewModelTests {
         )
         return InventorySharingManager(
             coordinator: mockCoordinator,
+            metadataRepository: testMetadataRepo,
             shareRecordRepository: shareRecordRepo,
             sharedInventoryRepository: sharedInventoryRepo
         )
@@ -461,6 +468,11 @@ struct InventorySharingViewModelTests {
             catalogRepository: catalogRepo
         )
 
+        // CRITICAL: Use test-specific UserDefaults suite to isolate tests
+        let testSuiteName = "com.molten.test.sharing.\(UUID().uuidString)"
+        let testUserDefaults = UserDefaults(suiteName: testSuiteName)!
+        let testMetadataRepo = ShareMetadataRepository(userDefaults: testUserDefaults)
+
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = SnapshotResult(
             items: [],
@@ -472,6 +484,7 @@ struct InventorySharingViewModelTests {
         )
         return InventorySharingManager(
             coordinator: mockCoordinator,
+            metadataRepository: testMetadataRepo,
             shareRecordRepository: shareRecordRepo,
             sharedInventoryRepository: sharedInventoryRepo
         )

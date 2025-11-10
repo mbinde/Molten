@@ -31,6 +31,7 @@ struct InventorySharingViewModelTests {
         UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.myShareCode")
         UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.myShareMetadata")
         UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.friendShares")
+        UserDefaults.standard.synchronize() // Force changes to disk immediately for .serialized tests
     }
 
     // MARK: - Lifecycle Tests

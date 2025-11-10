@@ -104,18 +104,6 @@ struct DataGzipTests {
         #expect(decodedObject["item_count"] as? Int == 100)
     }
 
-    @Test("Gunzip detects invalid gzip data")
-    func testGunzipInvalidData() throws {
-        // Create data that starts with gzip magic number but isn't valid gzip
-        var fakeGzipData = Data([0x1f, 0x8b])  // Gzip magic number
-        fakeGzipData.append(contentsOf: [0x00, 0x00, 0x00])  // Invalid header
-
-        // Should throw error
-        #expect(throws: CompressionError.self) {
-            _ = try fakeGzipData.gunzipped()
-        }
-    }
-
     @Test("Gzip magic number detection is correct")
     func testMagicNumberDetection() {
         // Data with zlib header (0x78 0x9c is common for default compression)

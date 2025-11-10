@@ -12,7 +12,7 @@ import Compression
 extension Data {
 
     /// Decompress gzipped data
-    func gunzipped() throws -> Data {
+    nonisolated func gunzipped() throws -> Data {
         guard !self.isEmpty else {
             return self
         }
@@ -76,12 +76,12 @@ extension Data {
     }
 
     /// Check if data is gzipped (starts with gzip magic number)
-    var isGzipped: Bool {
+    nonisolated var isGzipped: Bool {
         self.count >= 2 && self[0] == 0x1f && self[1] == 0x8b
     }
 
     /// Compress data using gzip
-    func gzipped() throws -> Data {
+    nonisolated func gzipped() throws -> Data {
         guard !self.isEmpty else {
             return self
         }

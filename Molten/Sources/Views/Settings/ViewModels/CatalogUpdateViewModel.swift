@@ -77,6 +77,10 @@ class CatalogUpdateViewModel {
         return "Version \(update.availableVersion) available"
     }
 
+    var hasUpdateAvailable: Bool {
+        availableUpdate != nil
+    }
+
     // MARK: - Initialization
 
     init(updateService: any CatalogUpdateServiceProtocol) {
@@ -141,6 +145,7 @@ class CatalogUpdateViewModel {
 
             // Clear available update (we're now up to date)
             availableUpdate = nil
+            CatalogUpdatePreferences.shared.hasUpdateAvailable = false
 
         } catch {
             log.error("Failed to download update: \(error.localizedDescription)")
@@ -172,6 +177,7 @@ class CatalogUpdateViewModel {
             log.info("✅ Forced update completed successfully")
 
             availableUpdate = nil
+            CatalogUpdatePreferences.shared.hasUpdateAvailable = false
 
         } catch {
             log.error("Failed to force download update: \(error.localizedDescription)")

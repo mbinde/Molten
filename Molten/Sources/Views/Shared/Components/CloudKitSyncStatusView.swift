@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreData
 
 /// Displays CloudKit sync status in the UI
 struct CloudKitSyncStatusView: View {

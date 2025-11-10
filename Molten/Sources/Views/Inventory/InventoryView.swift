@@ -168,118 +168,19 @@ struct InventoryView: View {
 
     // MARK: - Filter Counts (for display in filter selection sheets)
 
-    /// Count items per manufacturer based on current filters (excluding manufacturer filter itself)
+    // MARK: - Filter Counts
+
+    // Delegate filter counts to ViewModel for DRY approach
     private var manufacturerCounts: [String: Int] {
-        var items = viewModel.completeItems.filter { $0.totalQuantity > 0 }
-
-        // Apply all filters EXCEPT manufacturer
-        if !viewModel.selectedTags.isEmpty {
-            items = items.filter { item in
-                !viewModel.selectedTags.isDisjoint(with: Set(item.tags))
-            }
-        }
-
-        if !viewModel.selectedCOEs.isEmpty {
-            items = items.filter { item in
-                viewModel.selectedCOEs.contains(item.glassItem.coe)
-            }
-        }
-
-        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
-            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
-            items = items.filter { item in
-                let allFields = [
-                    item.glassItem.name,
-                    item.glassItem.stable_id,
-                    item.glassItem.manufacturer
-                ]
-                return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-            }
-        }
-
-        // Count items per manufacturer
-        var counts: [String: Int] = [:]
-        for item in items {
-            let mfr = item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
-            counts[mfr, default: 0] += 1
-        }
-        return counts
+        viewModel.manufacturerCounts
     }
 
-    /// Count items per COE based on current filters (excluding COE filter itself)
     private var coeCounts: [Int32: Int] {
-        var items = viewModel.completeItems.filter { $0.totalQuantity > 0 }
-
-        // Apply all filters EXCEPT COE
-        if !viewModel.selectedManufacturers.isEmpty {
-            items = items.filter { item in
-                viewModel.selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
-            }
-        }
-
-        if !viewModel.selectedTags.isEmpty {
-            items = items.filter { item in
-                !viewModel.selectedTags.isDisjoint(with: Set(item.tags))
-            }
-        }
-
-        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
-            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
-            items = items.filter { item in
-                let allFields = [
-                    item.glassItem.name,
-                    item.glassItem.stable_id,
-                    item.glassItem.manufacturer
-                ]
-                return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-            }
-        }
-
-        // Count items per COE
-        var counts: [Int32: Int] = [:]
-        for item in items {
-            counts[item.glassItem.coe, default: 0] += 1
-        }
-        return counts
+        viewModel.coeCounts
     }
 
-    /// Count items per tag based on current filters (excluding tag filter itself)
     private var tagCounts: [String: Int] {
-        var items = viewModel.completeItems.filter { $0.totalQuantity > 0 }
-
-        // Apply all filters EXCEPT tags
-        if !viewModel.selectedManufacturers.isEmpty {
-            items = items.filter { item in
-                viewModel.selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
-            }
-        }
-
-        if !viewModel.selectedCOEs.isEmpty {
-            items = items.filter { item in
-                viewModel.selectedCOEs.contains(item.glassItem.coe)
-            }
-        }
-
-        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
-            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
-            items = items.filter { item in
-                let allFields = [
-                    item.glassItem.name,
-                    item.glassItem.stable_id,
-                    item.glassItem.manufacturer
-                ]
-                return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-            }
-        }
-
-        // Count items per tag
-        var counts: [String: Int] = [:]
-        for item in items {
-            for tag in item.tags {
-                counts[tag, default: 0] += 1
-            }
-        }
-        return counts
+        viewModel.tagCounts
     }
 
     /// Recompute caches when inventory data changes

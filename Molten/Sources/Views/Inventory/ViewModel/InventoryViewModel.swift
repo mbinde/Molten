@@ -272,23 +272,167 @@ class InventoryViewModel: InventoryViewModelProtocol {
     var filteredItemsCount: Int {
         filteredItems.count
     }
+
+    // MARK: - Filter Counts
+
+    var manufacturerCounts: [String: Int] {
+        computeManufacturerCounts()
+    }
+
+    var coeCounts: [Int32: Int] {
+        computeCOECounts()
+    }
+
+    var tagCounts: [String: Int] {
+        computeTagCounts()
+    }
+
+    // MARK: - Filter Count Computation
+
+    /// Count items per manufacturer based on current filters (excluding manufacturer filter itself)
+    private func computeManufacturerCounts() -> [String: Int] {
+        var items = completeItems.filter { $0.totalQuantity > 0 }
+
+        // Apply all filters EXCEPT manufacturer
+        if !selectedTags.isEmpty {
+            items = items.filter { item in
+                !selectedTags.isDisjoint(with: Set(item.allTags))
+            }
+        }
+
+        if !selectedCOEs.isEmpty {
+            items = items.filter { item in
+                selectedCOEs.contains(item.glassItem.coe)
+            }
+        }
+
+        if !selectedTypes.isEmpty {
+            items = items.filter { item in
+                item.inventory.contains { inventory in
+                    selectedTypes.contains(inventory.type)
+                }
+            }
+        }
+
+        if !searchText.isEmpty {
+            items = items.filter { item in
+                let name = item.glassItem.name
+                let manufacturer = item.glassItem.manufacturer
+                let sku = item.glassItem.sku ?? ""
+                let stableId = item.glassItem.stable_id
+
+                return name.localizedCaseInsensitiveContains(searchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
+                       sku.localizedCaseInsensitiveContains(searchText) ||
+                       stableId.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        var counts: [String: Int] = [:]
+        for item in items {
+            counts[item.glassItem.manufacturer, default: 0] += 1
+        }
+        return counts
+    }
+
+    /// Count items per COE based on current filters (excluding COE filter itself)
+    private func computeCOECounts() -> [Int32: Int] {
+        var items = completeItems.filter { $0.totalQuantity > 0 }
+
+        // Apply all filters EXCEPT COE
+        if !selectedManufacturers.isEmpty {
+            items = items.filter { item in
+                selectedManufacturers.contains(item.glassItem.manufacturer)
+            }
+        }
+
+        if !selectedTags.isEmpty {
+            items = items.filter { item in
+                !selectedTags.isDisjoint(with: Set(item.allTags))
+            }
+        }
+
+        if !selectedTypes.isEmpty {
+            items = items.filter { item in
+                item.inventory.contains { inventory in
+                    selectedTypes.contains(inventory.type)
+                }
+            }
+        }
+
+        if !searchText.isEmpty {
+            items = items.filter { item in
+                let name = item.glassItem.name
+                let manufacturer = item.glassItem.manufacturer
+                let sku = item.glassItem.sku ?? ""
+                let stableId = item.glassItem.stable_id
+
+                return name.localizedCaseInsensitiveContains(searchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
+                       sku.localizedCaseInsensitiveContains(searchText) ||
+                       stableId.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        var counts: [Int32: Int] = [:]
+        for item in items {
+            counts[item.glassItem.coe, default: 0] += 1
+        }
+        return counts
+    }
+
+    /// Count items per tag based on current filters (excluding tag filter itself)
+    private func computeTagCounts() -> [String: Int] {
+        var items = completeItems.filter { $0.totalQuantity > 0 }
+
+        // Apply all filters EXCEPT tags
+        if !selectedManufacturers.isEmpty {
+            items = items.filter { item in
+                selectedManufacturers.contains(item.glassItem.manufacturer)
+            }
+        }
+
+        if !selectedCOEs.isEmpty {
+            items = items.filter { item in
+                selectedCOEs.contains(item.glassItem.coe)
+            }
+        }
+
+        if !selectedTypes.isEmpty {
+            items = items.filter { item in
+                item.inventory.contains { inventory in
+                    selectedTypes.contains(inventory.type)
+                }
+            }
+        }
+
+        if !searchText.isEmpty {
+            items = items.filter { item in
+                let name = item.glassItem.name
+                let manufacturer = item.glassItem.manufacturer
+                let sku = item.glassItem.sku ?? ""
+                let stableId = item.glassItem.stable_id
+
+                return name.localizedCaseInsensitiveContains(searchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
+                       sku.localizedCaseInsensitiveContains(searchText) ||
+                       stableId.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        var counts: [String: Int] = [:]
+        for item in items {
+            for tag in item.allTags {
+                counts[tag, default: 0] += 1
+            }
+        }
+        return counts
+    }
 }
 
 // MARK: - Factory Methods
 
 extension InventoryViewModel {
-    /// Create ViewModel using RepositoryFactory
-    static func createWithRepositoryFactory() -> InventoryViewModel {
-        RepositoryFactory.configureForTesting()
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
-        let catalogService = RepositoryFactory.createCatalogService()
-        
-        return InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
-        )
-    }
-    
     /// Create ViewModel with custom services
     static func create(
         inventoryTrackingService: InventoryTrackingService,

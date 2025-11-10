@@ -47,6 +47,7 @@ class CoreDataShareRecordRepository {
         fetchRequest.fetchLimit = 1
 
         let existing = try context.fetch(fetchRequest).first
+        let isNewRecord = existing == nil
 
         let record = existing ?? ShareRecord(context: context)
 
@@ -55,14 +56,14 @@ class CoreDataShareRecordRepository {
         record.setValue(ownerName, forKey: "owner_name")
         record.setValue(ownerNickname, forKey: "owner_nickname")
         record.setValue(ownerShareNotes, forKey: "user_share_notes")
-        record.setValue(iconSymbol, forKey: "icon_symbol")
-        record.setValue(iconBackgroundHex, forKey: "icon_background_hex")
-        record.setValue(iconForegroundHex, forKey: "icon_foreground_hex")
         record.setValue(Date(), forKey: "last_fetched")
         record.setValue("active", forKey: "status")
 
-        // Set date_added only for new records
-        if existing == nil {
+        // Set icon values only for new records (don't overwrite existing customizations)
+        if isNewRecord {
+            record.setValue(iconSymbol, forKey: "icon_symbol")
+            record.setValue(iconBackgroundHex, forKey: "icon_background_hex")
+            record.setValue(iconForegroundHex, forKey: "icon_foreground_hex")
             record.setValue(Date(), forKey: "date_added")
         }
 

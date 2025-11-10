@@ -40,6 +40,7 @@ struct SearchAndFilterHeader: View {
     var manufacturerCounts: [String: Int]?
     var coeCounts: [Int32: Int]?
     var tagCounts: [String: Int]?
+    var productTypeCounts: [String: Int]?
 
     // Sort menu content
     let sortMenuContent: () -> AnyView
@@ -73,6 +74,7 @@ struct SearchAndFilterHeader: View {
         manufacturerCounts: [String: Int]? = nil,
         coeCounts: [Int32: Int]? = nil,
         tagCounts: [String: Int]? = nil,
+        productTypeCounts: [String: Int]? = nil,
         sortMenuContent: @escaping () -> AnyView,
         searchClearedFeedback: Binding<Bool> = .constant(false),
         searchPlaceholder: String = "Search...",
@@ -97,6 +99,7 @@ struct SearchAndFilterHeader: View {
         self.manufacturerCounts = manufacturerCounts
         self.coeCounts = coeCounts
         self.tagCounts = tagCounts
+        self.productTypeCounts = productTypeCounts
         self.sortMenuContent = sortMenuContent
         self._searchClearedFeedback = searchClearedFeedback
         self.searchPlaceholder = searchPlaceholder
@@ -409,8 +412,11 @@ struct SearchAndFilterHeader: View {
 
             Divider()
 
-            // Individual COE options
-            ForEach(allAvailableCOEs.sorted(), id: \.self) { coe in
+            // Individual COE options (filter out zero-count items)
+            ForEach(allAvailableCOEs.sorted().filter { coe in
+                // Show all items if no counts provided, otherwise only show items with count > 0
+                coeCounts == nil || (coeCounts?[coe] ?? 0) > 0
+            }, id: \.self) { coe in
                 Button {
                     withAnimation {
                         toggleCOE(coe)
@@ -561,8 +567,11 @@ struct SearchAndFilterHeader: View {
 
             Divider()
 
-            // Individual product type options
-            ForEach(allAvailableProductTypes, id: \.self) { type in
+            // Individual product type options (filter out zero-count items and show counts)
+            ForEach(allAvailableProductTypes.filter { type in
+                // Show all items if no counts provided, otherwise only show items with count > 0
+                productTypeCounts == nil || (productTypeCounts?[type] ?? 0) > 0
+            }, id: \.self) { type in
                 Button {
                     withAnimation {
                         toggleProductType(type)
@@ -573,6 +582,10 @@ struct SearchAndFilterHeader: View {
                         Spacer()
                         if selectedProductTypes.contains(type) {
                             Image(systemName: "checkmark")
+                        }
+                        if let count = productTypeCounts?[type] {
+                            Text("(\(count))")
+                                .foregroundColor(.secondary)
                         }
                     }
                 }

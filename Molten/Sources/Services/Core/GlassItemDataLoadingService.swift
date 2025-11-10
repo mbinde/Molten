@@ -26,6 +26,7 @@ class GlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {
 
     nonisolated private let catalogService: CatalogService
     nonisolated(unsafe) private let jsonLoader: JSONDataLoading
+    nonisolated private let catalogStorageService: CatalogStorageService?
     private let log = Logger(subsystem: "Flameworker", category: "GlassItemDataLoading")
     
     // MARK: - JSON Checksum Support
@@ -219,15 +220,21 @@ class GlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {
     }
     
     // MARK: - Initialization
-    
-    nonisolated init(catalogService: CatalogService, jsonLoader: JSONDataLoading = JSONDataLoader()) {
+
+    nonisolated init(
+        catalogService: CatalogService,
+        jsonLoader: JSONDataLoading = JSONDataLoader(),
+        catalogStorageService: CatalogStorageService? = nil
+    ) {
         self.catalogService = catalogService
         self.jsonLoader = jsonLoader
+        self.catalogStorageService = catalogStorageService
     }
     
     // MARK: - Public API
     
     /// Load glass items from glassitems.json into the new GlassItem system
+    /// Checks for OTA (downloaded) catalog first, falls back to bundled JSON if not available
     /// - Parameter options: Configuration options for loading behavior
     /// - Returns: Results of the loading operation
     func loadGlassItemsFromJSON(options: LoadingOptions = .default) async throws -> GlassItemLoadingResult {
@@ -236,10 +243,26 @@ class GlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {
         // TODO: Add a more appropriate validation that allows initial loading but prevents other issues
 
         log.info("Starting GlassItem data loading from JSON with options: \(String(describing: options))")
-        
-        // Load and decode JSON data
-        let data = try jsonLoader.findCatalogJSONData()
+
+        // Check for OTA catalog first if storage service is available
+        var data: Data
+        var catalogSource: CatalogUpdatePreferences.CatalogSource = .bundled
+
+        if let storageService = catalogStorageService,
+           let otaData = await storageService.loadCurrentCatalog() {
+            log.info("📥 Loading catalog from OTA download")
+            data = otaData
+            catalogSource = .downloaded
+        } else {
+            log.info("📦 Loading catalog from bundled JSON")
+            data = try jsonLoader.findCatalogJSONData()
+            catalogSource = .bundled
+        }
+
         let catalogItems = try jsonLoader.decodeCatalogItems(from: data)
+
+        // Update catalog source preference
+        CatalogUpdatePreferences.shared.catalogSource = catalogSource
         
         log.info("Loaded \(catalogItems.count) items from JSON, beginning comparison and transformation")
         

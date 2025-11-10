@@ -413,7 +413,7 @@ struct CatalogUpdateViewModelTests {
 // MARK: - Mock Update Service
 
 @MainActor
-class MockCatalogUpdateService: ObservableObject {
+class MockCatalogUpdateService: CatalogUpdateServiceProtocol {
     @Published var isChecking: Bool = false
     @Published var isDownloading: Bool = false
     @Published var downloadProgress: Double = 0.0
@@ -474,9 +474,5 @@ class MockCatalogUpdateService: ObservableObject {
         }
 
         return result
-    }
-
-    func performBackgroundUpdateCheck() async {
-        // Not needed for ViewModel tests
     }
 }

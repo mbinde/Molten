@@ -3,7 +3,8 @@
 //  Molten
 //
 //  Created by Assistant on 11/8/25.
-//  Gzip compression/decompression utilities
+//  Zlib compression/decompression utilities
+//  Note: Despite the filename, this uses zlib format (RFC 1950), not gzip (RFC 1952)
 //
 
 import Foundation
@@ -11,7 +12,7 @@ import Compression
 
 extension Data {
 
-    /// Decompress gzipped data
+    /// Decompress zlib-compressed data
     nonisolated func gunzipped() throws -> Data {
         guard !self.isEmpty else {
             return self
@@ -75,12 +76,28 @@ extension Data {
         return decompressed
     }
 
-    /// Check if data is gzipped (starts with gzip magic number)
+    /// Check if data has zlib or gzip compression headers
+    /// Note: This detects zlib (0x78) or gzip (0x1f 0x8b) wrapped formats.
+    /// The gzipped() function produces raw deflate (no wrapper), so this will
+    /// return false for data compressed by gzipped(). Use this to detect
+    /// externally-compressed data (e.g., from HTTP responses or files).
     nonisolated var isGzipped: Bool {
-        self.count >= 2 && self[0] == 0x1f && self[1] == 0x8b
+        guard self.count >= 2 else { return false }
+
+        // Check for zlib header (RFC 1950): 0x78 0x??
+        if self[0] == 0x78 && (self[1] & 0x20) == 0 {
+            return true
+        }
+
+        // Check for gzip header (RFC 1952): 0x1f 0x8b
+        if self[0] == 0x1f && self[1] == 0x8b {
+            return true
+        }
+
+        return false
     }
 
-    /// Compress data using gzip
+    /// Compress data using zlib format
     nonisolated func gzipped() throws -> Data {
         guard !self.isEmpty else {
             return self

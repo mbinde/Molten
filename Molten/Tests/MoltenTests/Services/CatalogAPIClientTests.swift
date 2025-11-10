@@ -93,6 +93,7 @@ struct CatalogAPIClientTests {
     @Test("Get latest version handles 429 rate limit")
     func testGetLatestVersionRateLimit() async throws {
         let mockSession = MockCatalogURLSession()
+        mockSession.mockData = Data()  // Empty data is fine, we just need non-nil
         mockSession.mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.example.com/catalog/version")!,
             statusCode: 429,

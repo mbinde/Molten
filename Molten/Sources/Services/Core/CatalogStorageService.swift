@@ -32,6 +32,7 @@ actor CatalogStorageService: CatalogStorageServiceProtocol {
 
     // MARK: - Initialization
 
+    /// Initialize with default Application Support directory (production use)
     init() throws {
         let fm = FileManager.default
 
@@ -46,13 +47,22 @@ actor CatalogStorageService: CatalogStorageServiceProtocol {
             )
         }
 
+        let baseDirectory = appSupport.appendingPathComponent("CatalogData", isDirectory: true)
+        try self.init(storageDirectory: baseDirectory)
+    }
+
+    /// Initialize with custom storage directory (for testing)
+    /// - Parameter storageDirectory: Base directory for catalog storage
+    internal init(storageDirectory: URL) throws {
+        let fm = FileManager.default
+
         // Setup directories
-        storageDirectory = appSupport.appendingPathComponent("CatalogData", isDirectory: true)
-        tempDirectory = storageDirectory.appendingPathComponent("Temp", isDirectory: true)
-        currentCatalogFile = storageDirectory.appendingPathComponent("current_catalog.json")
+        self.storageDirectory = storageDirectory
+        self.tempDirectory = storageDirectory.appendingPathComponent("Temp", isDirectory: true)
+        self.currentCatalogFile = storageDirectory.appendingPathComponent("current_catalog.json")
 
         // Create directories if needed
-        for directory in [storageDirectory, tempDirectory] {
+        for directory in [self.storageDirectory, self.tempDirectory] {
             if !fm.fileExists(atPath: directory.path) {
                 try fm.createDirectory(at: directory,
                                       withIntermediateDirectories: true,

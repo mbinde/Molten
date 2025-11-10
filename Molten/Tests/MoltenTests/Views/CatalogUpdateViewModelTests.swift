@@ -73,11 +73,15 @@ struct CatalogUpdateViewModelTests {
 
     @Test("Auto update enabled reads and writes to preferences")
     func testAutoUpdateEnabled() {
+        // Start with clean state
+        CatalogUpdatePreferences.shared.resetToDefaults()
+
         let mockService = createMockUpdateService()
         let viewModel = CatalogUpdateViewModel(updateService: mockService)
 
+        // Test write-through to preferences
         viewModel.autoUpdateEnabled = true
-        #expect(CatalogUpdatePreferences.shared.autoUpdateEnabled == false)
+        #expect(CatalogUpdatePreferences.shared.autoUpdateEnabled == true)
 
         viewModel.autoUpdateEnabled = false
         #expect(CatalogUpdatePreferences.shared.autoUpdateEnabled == false)
@@ -85,6 +89,9 @@ struct CatalogUpdateViewModelTests {
 
     @Test("Download policy reads and writes to preferences")
     func testDownloadPolicy() {
+        // Start with clean state
+        CatalogUpdatePreferences.shared.resetToDefaults()
+
         let mockService = createMockUpdateService()
         let viewModel = CatalogUpdateViewModel(updateService: mockService)
 
@@ -97,6 +104,9 @@ struct CatalogUpdateViewModelTests {
 
     @Test("Update frequency reads and writes to preferences")
     func testUpdateFrequency() {
+        // Start with clean state
+        CatalogUpdatePreferences.shared.resetToDefaults()
+
         let mockService = createMockUpdateService()
         let viewModel = CatalogUpdateViewModel(updateService: mockService)
 

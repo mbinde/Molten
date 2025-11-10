@@ -16,6 +16,16 @@ struct CatalogStorageServiceTests {
 
     // MARK: - Test Helpers
 
+    /// Create isolated CatalogStorageService with unique temporary directory
+    func createIsolatedStorageService() throws -> CatalogStorageService {
+        let testID = UUID().uuidString
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("CatalogStorageTests")
+            .appendingPathComponent(testID)
+
+        return try CatalogStorageService(storageDirectory: tempDir)
+    }
+
     /// Create test catalog JSON data
     func createTestCatalogData() -> Data {
         let json: [String: Any] = [
@@ -32,7 +42,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Storage service initializes successfully")
     func testInitialization() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
 
         // Service should initialize without errors
         // Directories should be created automatically
@@ -43,7 +53,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Save temp catalog creates file")
     func testSaveTempCatalog() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
         let catalogData = createTestCatalogData()
 
         let tempURL = try await service.saveTempCatalog(catalogData, version: 2)
@@ -61,7 +71,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Save temp catalog with different versions")
     func testSaveTempCatalogMultipleVersions() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
         let catalogData = createTestCatalogData()
 
         let tempURL1 = try await service.saveTempCatalog(catalogData, version: 1)
@@ -78,7 +88,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Save temp catalog overwrites existing temp file")
     func testSaveTempCatalogOverwrites() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
         let catalogData1 = "version 1".data(using: .utf8)!
         let catalogData2 = "version 2 - much longer content".data(using: .utf8)!
 
@@ -102,7 +112,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Promote temp to current catalog")
     func testPromoteTempToCurrent() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
         let catalogData = createTestCatalogData()
 
         // Save temp catalog
@@ -121,7 +131,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Promote temp to current replaces existing catalog")
     func testPromoteTempToCurrentReplacesExisting() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
         let catalogData1 = "version 1".data(using: .utf8)!
         let catalogData2 = "version 2".data(using: .utf8)!
 
@@ -144,7 +154,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Promote temp to current with non-existent file throws error")
     func testPromoteTempToCurrentWithNonExistentFile() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
         let nonExistentURL = URL(fileURLWithPath: "/tmp/nonexistent_catalog.json")
 
         await #expect(throws: CatalogUpdateError.self) {
@@ -156,29 +166,16 @@ struct CatalogStorageServiceTests {
 
     @Test("Load current catalog returns nil when no catalog exists")
     func testLoadCurrentCatalogWhenNoneExists() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
 
-        // Clean up any existing current catalog file from previous tests
-        let fm = FileManager.default
-        guard let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            throw CatalogUpdateError.storageError(
-                underlying: NSError(domain: "Test", code: -1)
-            )
-        }
-        let catalogDir = appSupport.appendingPathComponent("CatalogData", isDirectory: true)
-        let currentFile = catalogDir.appendingPathComponent("current_catalog.json")
-
-        if fm.fileExists(atPath: currentFile.path) {
-            try fm.removeItem(at: currentFile)
-        }
-
+        // With isolated storage, this should be nil (no catalog yet)
         let loadedData = await service.loadCurrentCatalog()
         #expect(loadedData == nil)
     }
 
     @Test("Load current catalog returns data after promotion")
     func testLoadCurrentCatalogAfterPromotion() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
         let catalogData = createTestCatalogData()
 
         // Save and promote catalog
@@ -194,7 +191,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Cleanup temp files removes old files")
     func testCleanupTempFiles() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
         let catalogData = createTestCatalogData()
 
         // Create a temp file
@@ -216,7 +213,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Cleanup temp files keeps recent files")
     func testCleanupTempFilesKeepsRecentFiles() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
         let catalogData = createTestCatalogData()
 
         // Create a recent temp file
@@ -234,7 +231,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Cleanup temp files handles empty temp directory")
     func testCleanupTempFilesWithEmptyDirectory() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
 
         // Run cleanup on empty directory (should not throw)
         await service.cleanupTempFiles()
@@ -247,7 +244,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Get storage size returns zero when empty")
     func testGetStorageSizeWhenEmpty() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
 
         let size = await service.getStorageSize()
 
@@ -258,7 +255,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Get storage size calculates total size")
     func testGetStorageSize() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
         let catalogData = createTestCatalogData()
 
         // Save temp catalog
@@ -277,19 +274,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Get storage size includes multiple files")
     func testGetStorageSizeMultipleFiles() async throws {
-        let service = try CatalogStorageService()
-
-        // Clean up any existing files first
-        await service.cleanupTempFiles()
-        let fm = FileManager.default
-        if let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
-            let catalogDir = appSupport.appendingPathComponent("CatalogData", isDirectory: true)
-            let currentFile = catalogDir.appendingPathComponent("current_catalog.json")
-            if fm.fileExists(atPath: currentFile.path) {
-                try? fm.removeItem(at: currentFile)
-            }
-        }
-
+        let service = try createIsolatedStorageService()
         let catalogData = createTestCatalogData()
 
         // Create multiple temp files
@@ -318,7 +303,7 @@ struct CatalogStorageServiceTests {
         // Actual error triggering would require filesystem manipulation
         // which is complex in unit tests
 
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
         let catalogData = createTestCatalogData()
 
         // Should succeed under normal conditions
@@ -333,7 +318,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Full workflow: save, promote, load")
     func testFullWorkflow() async throws {
-        let service = try CatalogStorageService()
+        let service = try createIsolatedStorageService()
         let catalogData = createTestCatalogData()
 
         // 1. Save temp catalog
@@ -355,18 +340,7 @@ struct CatalogStorageServiceTests {
 
     @Test("Multiple updates workflow")
     func testMultipleUpdatesWorkflow() async throws {
-        let service = try CatalogStorageService()
-
-        // Clean up before test to ensure clean state
-        await service.cleanupTempFiles()
-        let fm = FileManager.default
-        if let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
-            let catalogDir = appSupport.appendingPathComponent("CatalogData", isDirectory: true)
-            let currentFile = catalogDir.appendingPathComponent("current_catalog.json")
-            if fm.fileExists(atPath: currentFile.path) {
-                try? fm.removeItem(at: currentFile)
-            }
-        }
+        let service = try createIsolatedStorageService()
 
         // Version 1
         let data1 = "version 1".data(using: .utf8)!

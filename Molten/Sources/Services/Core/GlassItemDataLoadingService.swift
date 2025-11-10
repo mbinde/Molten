@@ -250,7 +250,7 @@ class GlassItemDataLoadingService {
         )
         
         log.info("Comparison complete: \(comparisonResult.toCreate.count) to create, \(comparisonResult.toUpdate.count) to update, \(comparisonResult.unchanged.count) unchanged")
-        
+
         // Process creates and updates
         var results = GlassItemLoadingResult(
             itemsCreated: 0,
@@ -261,32 +261,48 @@ class GlassItemDataLoadingService {
             failedItems: [],
             batchErrors: []
         )
-        
-        // Process new items (creates)
-        if !comparisonResult.toCreate.isEmpty {
-            log.info("Creating \(comparisonResult.toCreate.count) new items")
-            let createResults = try await processCreates(comparisonResult.toCreate, options: options)
-            results.merge(createResults)
-        }
-        
-        // Process updated items
-        if !comparisonResult.toUpdate.isEmpty {
-            log.info("Updating \(comparisonResult.toUpdate.count) changed items")
-            let updateResults = try await processUpdates(comparisonResult.toUpdate, options: options)
-            results.itemsUpdated = updateResults.itemsUpdated
-            results.itemsFailed += updateResults.itemsFailed
-        }
 
-        // Sync tags for unchanged items (they may have tag changes even if glass item unchanged)
-        if !comparisonResult.unchanged.isEmpty {
-            log.info("Syncing tags for \(comparisonResult.unchanged.count) unchanged items")
-            let tagSyncResults = try await syncTagsForUnchangedItems(comparisonResult.unchanged, jsonItems: catalogItems, options: options)
-            results.itemsUpdated += tagSyncResults.itemsUpdated
-            results.itemsFailed += tagSyncResults.itemsFailed
-        }
+        // If skipExistingItems is true, count all existing items as skipped and only process creates
+        if options.skipExistingItems {
+            // Process new items (creates) only
+            if !comparisonResult.toCreate.isEmpty {
+                log.info("Creating \(comparisonResult.toCreate.count) new items (skip mode)")
+                let createResults = try await processCreates(comparisonResult.toCreate, options: options)
+                results.merge(createResults)
+            }
 
-        // Count unchanged items as skipped (but subtract any that had tag updates)
-        results.itemsSkipped = comparisonResult.unchanged.count
+            // Count all existing items (unchanged + toUpdate) as skipped
+            results.itemsSkipped = comparisonResult.unchanged.count + comparisonResult.toUpdate.count
+            log.info("Skipped \(results.itemsSkipped) existing items (skip mode enabled)")
+        } else {
+            // Normal processing: create new, update changed, sync tags for unchanged
+
+            // Process new items (creates)
+            if !comparisonResult.toCreate.isEmpty {
+                log.info("Creating \(comparisonResult.toCreate.count) new items")
+                let createResults = try await processCreates(comparisonResult.toCreate, options: options)
+                results.merge(createResults)
+            }
+
+            // Process updated items
+            if !comparisonResult.toUpdate.isEmpty {
+                log.info("Updating \(comparisonResult.toUpdate.count) changed items")
+                let updateResults = try await processUpdates(comparisonResult.toUpdate, options: options)
+                results.itemsUpdated = updateResults.itemsUpdated
+                results.itemsFailed += updateResults.itemsFailed
+            }
+
+            // Sync tags for unchanged items (they may have tag changes even if glass item unchanged)
+            if !comparisonResult.unchanged.isEmpty {
+                log.info("Syncing tags for \(comparisonResult.unchanged.count) unchanged items")
+                let tagSyncResults = try await syncTagsForUnchangedItems(comparisonResult.unchanged, jsonItems: catalogItems, options: options)
+                results.itemsUpdated += tagSyncResults.itemsUpdated
+                results.itemsFailed += tagSyncResults.itemsFailed
+            }
+
+            // Count unchanged items as skipped (only if not in skip mode, as they were processed)
+            results.itemsSkipped = 0
+        }
         
         // Log final results
         logLoadingResults(results)

@@ -39,6 +39,16 @@ struct FilterSelectionSheet<Item: Hashable>: View {
         self.trailingAccessory = trailingAccessory
     }
 
+    // Filter out items with zero count
+    private var filteredItems: [Item] {
+        if let counts = itemCounts {
+            return items.filter { item in
+                (counts[item] ?? 0) > 0
+            }
+        }
+        return items
+    }
+
     var body: some View {
         NavigationView {
             List {
@@ -57,8 +67,8 @@ struct FilterSelectionSheet<Item: Hashable>: View {
                     }
                 }
 
-                // Item list
-                ForEach(items, id: \.self) { item in
+                // Item list (filtered to hide zero-count items)
+                ForEach(filteredItems, id: \.self) { item in
                     Button(action: {
                         if selectedItems.contains(item) {
                             selectedItems.remove(item)

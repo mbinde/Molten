@@ -35,18 +35,12 @@ struct AddInventoryItemView: View {
 
 struct AddInventoryFormView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(EntitlementService.self) private var entitlementService
 
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
     private let prefilledNaturalKey: String?
     @State private var viewModel: AddInventoryItemViewModel
     @StateObject private var terminologySettings = GlassTerminologySettings.shared
-
-    // Subscription state
-    @State private var showingUpgradePrompt = false
-    @State private var inventoryItemCount = 0
-    @State private var inventoryItemLimit = 0
 
     init(prefilledNaturalKey: String? = nil,
          inventoryTrackingService: InventoryTrackingService = RepositoryFactory.createInventoryTrackingService(),
@@ -99,13 +93,6 @@ struct AddInventoryFormView: View {
                 Button("OK") { viewModel.showingError = false }
             } message: {
                 Text(viewModel.errorMessage ?? "")
-            }
-            .sheet(isPresented: $showingUpgradePrompt) {
-                UpgradePromptView(
-                    feature: "inventory",
-                    currentCount: inventoryItemCount,
-                    limit: inventoryItemLimit
-                )
             }
         }
     }
@@ -335,32 +322,7 @@ struct AddInventoryFormView: View {
     
     private func saveInventoryItem() {
         Task {
-            // Check subscription entitlement before adding inventory
-            do {
-                // Count unique items with inventory (not individual inventory records)
-                let allItemsWithInventory = try await inventoryTrackingService.searchItems(
-                    text: "",
-                    hasInventory: true
-                )
-                let currentInventoryCount = allItemsWithInventory.count
-                let canAdd = entitlementService.canAddInventoryItem(currentCount: currentInventoryCount)
-
-                if !canAdd {
-                    // Hit the limit - show upgrade prompt
-                    let limit = entitlementService.getInventoryLimit() ?? 0
-                    await MainActor.run {
-                        inventoryItemCount = currentInventoryCount
-                        inventoryItemLimit = limit
-                        showingUpgradePrompt = true
-                    }
-                    return
-                }
-            } catch {
-                // If we can't check the limit, allow the save to proceed
-                print("⚠️ Failed to check inventory limit: \(error)")
-            }
-
-            // Now save using ViewModel
+            // Limit check now happens BEFORE showing this form, so just save directly
             let success = await viewModel.save()
             if success, let glassItem = viewModel.selectedGlassItem, let quantityValue = viewModel.parsedQuantity {
                 // Post notification first (for views that aren't currently visible)

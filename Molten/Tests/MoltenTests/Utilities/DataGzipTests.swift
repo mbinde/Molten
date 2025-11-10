@@ -130,9 +130,9 @@ struct DataGzipTests {
         let notCompressed = Data([0x00, 0x00, 0x00, 0x00])
         #expect(notCompressed.isGzipped == false)
 
-        // Gzip magic number (not zlib)
+        // Gzip magic number (different format than zlib, but also compressed)
         let gzipMagic = Data([0x1f, 0x8b, 0x00, 0x00])
-        #expect(gzipMagic.isGzipped == false)
+        #expect(gzipMagic.isGzipped == true)
 
         // Data too small to have header
         let tooSmall = Data([0x78])

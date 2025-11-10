@@ -285,18 +285,19 @@ struct FriendRowView: View {
 
         // Less than a minute
         if seconds < 60 {
-            return "< 1 minute"
+            return "< 1 min"
         }
 
-        // Less than an hour
+        // Minutes (1-59)
         if seconds < 3600 {
-            return "< 1 hour"
+            let minutes = Int(seconds / 60)
+            return "\(minutes) min"
         }
 
         // Hours (1-23)
         if seconds < 86400 {
             let hours = Int(seconds / 3600)
-            return hours == 1 ? "1 hour" : "\(hours) hours"
+            return hours == 1 ? "1 hr" : "\(hours) hrs"
         }
 
         // Days (1-6)

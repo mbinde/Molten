@@ -9,6 +9,23 @@ import Foundation
 import SwiftUI
 import CoreData
 
+/// Sort options for friend inventory
+enum FriendInventorySortOption: String, CaseIterable {
+    case name = "Name"
+    case quantity = "Quantity"
+    case manufacturer = "Manufacturer"
+
+    var title: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .name: return "textformat.abc"
+        case .quantity: return "archivebox.fill"
+        case .manufacturer: return "building.2"
+        }
+    }
+}
+
 /// Comparison mode for filtering friend inventory
 enum InventoryComparisonMode {
     case all                // Show all items
@@ -43,7 +60,9 @@ class FriendInventoryViewModel {
     var selectedManufacturers: Set<String> = []
     var selectedCOEs: Set<Int32> = []
     var selectedTags: Set<String> = []
+    var selectedProductTypes: Set<String> = []
     var comparisonMode: InventoryComparisonMode = .all
+    var sortOption: FriendInventorySortOption = .name
 
     // Computed filter options
     var availableManufacturers: [String] {
@@ -56,6 +75,28 @@ class FriendInventoryViewModel {
 
     var availableTags: [String] {
         Array(Set(enrichedInventory.flatMap { $0.catalogData?.tags ?? [] })).sorted()
+    }
+
+    var availableProductTypes: [String] {
+        Array(Set(enrichedInventory.map { $0.snapshot.unit })).sorted()
+    }
+
+    // MARK: - Filter Counts
+
+    var manufacturerCounts: [String: Int] {
+        computeManufacturerCounts()
+    }
+
+    var coeCounts: [Int32: Int] {
+        computeCOECounts()
+    }
+
+    var tagCounts: [String: Int] {
+        computeTagCounts()
+    }
+
+    var productTypeCounts: [String: Int] {
+        computeProductTypeCounts()
     }
 
     // MARK: - Initialization
@@ -236,6 +277,11 @@ class FriendInventoryViewModel {
             }
         }
 
+        // Apply product type filter
+        if !selectedProductTypes.isEmpty {
+            items = items.filter { selectedProductTypes.contains($0.snapshot.unit) }
+        }
+
         // Apply comparison filter
         switch comparisonMode {
         case .all:
@@ -249,11 +295,57 @@ class FriendInventoryViewModel {
 
         case .iHaveTheyDoNot:
             // Show items I have but friend doesn't
-            // Need to show my items that aren't in their list
-            let friendStableIds = Set(items.map { $0.snapshot.stableId })
-            let myItemsTheyDontHave = myInventory.filter { myItem in
+            // First, apply the same filters to my inventory
+            var filteredMyInventory = myInventory
+
+            // Apply manufacturer filter
+            if !selectedManufacturers.isEmpty {
+                filteredMyInventory = filteredMyInventory.filter { selectedManufacturers.contains($0.catalogItem.manufacturer) }
+            }
+
+            // Apply COE filter
+            if !selectedCOEs.isEmpty {
+                filteredMyInventory = filteredMyInventory.filter { myItem in
+                    if let coe = myItem.catalogItem.coe {
+                        return selectedCOEs.contains(coe)
+                    }
+                    return false
+                }
+            }
+
+            // Apply tag filter
+            if !selectedTags.isEmpty {
+                filteredMyInventory = filteredMyInventory.filter { myItem in
+                    !selectedTags.isDisjoint(with: Set(myItem.allTags))
+                }
+            }
+
+            // Apply product type filter
+            if !selectedProductTypes.isEmpty {
+                filteredMyInventory = filteredMyInventory.filter { myItem in
+                    // Check if any of the item's inventory types match selected types
+                    myItem.inventory.contains { inventory in
+                        selectedProductTypes.contains(inventory.type)
+                    }
+                }
+            }
+
+            // Apply search filter
+            if !searchText.isEmpty {
+                filteredMyInventory = filteredMyInventory.filter { myItem in
+                    myItem.catalogItem.name.localizedCaseInsensitiveContains(searchText) ||
+                    myItem.catalogItem.manufacturer.localizedCaseInsensitiveContains(searchText) ||
+                    (myItem.catalogItem.sku?.localizedCaseInsensitiveContains(searchText) ?? false) ||
+                    myItem.catalogItem.stable_id.localizedCaseInsensitiveContains(searchText)
+                }
+            }
+
+            // Now find items in filtered my inventory that aren't in friend's list
+            let friendStableIds = Set(enrichedInventory.map { $0.snapshot.stableId })
+            let myItemsTheyDontHave = filteredMyInventory.filter { myItem in
                 !friendStableIds.contains(myItem.catalogItem.stable_id)
             }
+
             // Convert my items to enriched format
             items = myItemsTheyDontHave.compactMap { myItem in
                 EnrichedFriendInventoryItem(
@@ -281,6 +373,24 @@ class FriendInventoryViewModel {
             }
         }
 
+        // Apply sorting
+        switch sortOption {
+        case .name:
+            items.sort { lhs, rhs in
+                let lhsName = lhs.catalogData?.name ?? lhs.snapshot.stableId
+                let rhsName = rhs.catalogData?.name ?? rhs.snapshot.stableId
+                return lhsName.localizedCaseInsensitiveCompare(rhsName) == .orderedAscending
+            }
+        case .quantity:
+            items.sort { lhs, rhs in
+                lhs.snapshot.quantity > rhs.snapshot.quantity
+            }
+        case .manufacturer:
+            items.sort { lhs, rhs in
+                lhs.snapshot.manufacturer.localizedCaseInsensitiveCompare(rhs.snapshot.manufacturer) == .orderedAscending
+            }
+        }
+
         return items
     }
 
@@ -291,6 +401,184 @@ class FriendInventoryViewModel {
         return myInventory.contains { $0.catalogItem.stable_id == stableId }
     }
 
+    // MARK: - Filter Count Computation
+
+    /// Count items per manufacturer based on current filters (excluding manufacturer filter itself)
+    private func computeManufacturerCounts() -> [String: Int] {
+        var items = enrichedInventory
+
+        // Apply all filters EXCEPT manufacturer
+        if !selectedTags.isEmpty {
+            items = items.filter { item in
+                guard let tags = item.catalogData?.tags else { return false }
+                return !selectedTags.isDisjoint(with: Set(tags))
+            }
+        }
+
+        if !selectedCOEs.isEmpty {
+            items = items.filter { item in
+                guard let coe = item.catalogData?.coe else { return false }
+                return selectedCOEs.contains(coe)
+            }
+        }
+
+        if !selectedProductTypes.isEmpty {
+            items = items.filter { selectedProductTypes.contains($0.snapshot.unit) }
+        }
+
+        if !searchText.isEmpty {
+            items = items.filter { item in
+                let name = item.catalogData?.name ?? ""
+                let manufacturer = item.snapshot.manufacturer
+                let sku = item.snapshot.sku
+                let stableId = item.snapshot.stableId
+
+                return name.localizedCaseInsensitiveContains(searchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
+                       sku.localizedCaseInsensitiveContains(searchText) ||
+                       stableId.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        var counts: [String: Int] = [:]
+        for item in items {
+            counts[item.snapshot.manufacturer, default: 0] += 1
+        }
+        return counts
+    }
+
+    /// Count items per COE based on current filters (excluding COE filter itself)
+    private func computeCOECounts() -> [Int32: Int] {
+        var items = enrichedInventory
+
+        // Apply all filters EXCEPT COE
+        if !selectedManufacturers.isEmpty {
+            items = items.filter { selectedManufacturers.contains($0.snapshot.manufacturer) }
+        }
+
+        if !selectedTags.isEmpty {
+            items = items.filter { item in
+                guard let tags = item.catalogData?.tags else { return false }
+                return !selectedTags.isDisjoint(with: Set(tags))
+            }
+        }
+
+        if !selectedProductTypes.isEmpty {
+            items = items.filter { selectedProductTypes.contains($0.snapshot.unit) }
+        }
+
+        if !searchText.isEmpty {
+            items = items.filter { item in
+                let name = item.catalogData?.name ?? ""
+                let manufacturer = item.snapshot.manufacturer
+                let sku = item.snapshot.sku
+                let stableId = item.snapshot.stableId
+
+                return name.localizedCaseInsensitiveContains(searchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
+                       sku.localizedCaseInsensitiveContains(searchText) ||
+                       stableId.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        var counts: [Int32: Int] = [:]
+        for item in items {
+            if let coe = item.catalogData?.coe {
+                counts[coe, default: 0] += 1
+            }
+        }
+        return counts
+    }
+
+    /// Count items per tag based on current filters (excluding tag filter itself)
+    private func computeTagCounts() -> [String: Int] {
+        var items = enrichedInventory
+
+        // Apply all filters EXCEPT tags
+        if !selectedManufacturers.isEmpty {
+            items = items.filter { selectedManufacturers.contains($0.snapshot.manufacturer) }
+        }
+
+        if !selectedCOEs.isEmpty {
+            items = items.filter { item in
+                guard let coe = item.catalogData?.coe else { return false }
+                return selectedCOEs.contains(coe)
+            }
+        }
+
+        if !selectedProductTypes.isEmpty {
+            items = items.filter { selectedProductTypes.contains($0.snapshot.unit) }
+        }
+
+        if !searchText.isEmpty {
+            items = items.filter { item in
+                let name = item.catalogData?.name ?? ""
+                let manufacturer = item.snapshot.manufacturer
+                let sku = item.snapshot.sku
+                let stableId = item.snapshot.stableId
+
+                return name.localizedCaseInsensitiveContains(searchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
+                       sku.localizedCaseInsensitiveContains(searchText) ||
+                       stableId.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        var counts: [String: Int] = [:]
+        for item in items {
+            if let tags = item.catalogData?.tags {
+                for tag in tags {
+                    counts[tag, default: 0] += 1
+                }
+            }
+        }
+        return counts
+    }
+
+    /// Count items per product type based on current filters (excluding product type filter itself)
+    private func computeProductTypeCounts() -> [String: Int] {
+        var items = enrichedInventory
+
+        // Apply all filters EXCEPT product type
+        if !selectedManufacturers.isEmpty {
+            items = items.filter { selectedManufacturers.contains($0.snapshot.manufacturer) }
+        }
+
+        if !selectedCOEs.isEmpty {
+            items = items.filter { item in
+                guard let coe = item.catalogData?.coe else { return false }
+                return selectedCOEs.contains(coe)
+            }
+        }
+
+        if !selectedTags.isEmpty {
+            items = items.filter { item in
+                guard let tags = item.catalogData?.tags else { return false }
+                return !selectedTags.isDisjoint(with: Set(tags))
+            }
+        }
+
+        if !searchText.isEmpty {
+            items = items.filter { item in
+                let name = item.catalogData?.name ?? ""
+                let manufacturer = item.snapshot.manufacturer
+                let sku = item.snapshot.sku
+                let stableId = item.snapshot.stableId
+
+                return name.localizedCaseInsensitiveContains(searchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
+                       sku.localizedCaseInsensitiveContains(searchText) ||
+                       stableId.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        var counts: [String: Int] = [:]
+        for item in items {
+            counts[item.snapshot.unit, default: 0] += 1
+        }
+        return counts
+    }
+
     // MARK: - Filter Management
 
     func clearAllFilters() {
@@ -299,6 +587,7 @@ class FriendInventoryViewModel {
         selectedManufacturers.removeAll()
         selectedCOEs.removeAll()
         selectedTags.removeAll()
+        selectedProductTypes.removeAll()
     }
 
     func clearError() {

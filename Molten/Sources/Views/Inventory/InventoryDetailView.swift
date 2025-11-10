@@ -31,6 +31,7 @@ struct InventoryDetailView: View {
     let glassItemRepository: GlassItemRepository
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(EntitlementService.self) private var entitlementService
     @State private var isEditing = false
 
     // State for managing UI interactions
@@ -39,6 +40,9 @@ struct InventoryDetailView: View {
     @State private var showingUserNotesEditor = false
     @State private var showingUserTagsEditor = false
     @State private var showingAddInventory = false
+    @State private var showingUpgradePrompt = false
+    @State private var inventoryItemCount = 0
+    @State private var inventoryItemLimit = 0
     @State private var expandedSections: Set<String> = ["glass-item", "inventory"]
     @State private var isManufacturerNotesExpanded: Bool
 
@@ -191,7 +195,7 @@ struct InventoryDetailView: View {
             if !isEditing {
                 FloatingActionButton(actions: [
                     FABAction(title: "Add Inventory", icon: "archivebox.fill") {
-                        showingAddInventory = true
+                        checkLimitAndShowAddInventory()
                     },
                     FABAction(title: "Add to Shopping List", icon: "cart.fill") {
                         showingShoppingListOptions = true
@@ -258,6 +262,13 @@ struct InventoryDetailView: View {
                     catalogService: catalogService
                 )
             }
+        }
+        .sheet(isPresented: $showingUpgradePrompt) {
+            UpgradePromptView(
+                feature: "inventory",
+                currentCount: inventoryItemCount,
+                limit: inventoryItemLimit
+            )
         }
         .alert("Error", isPresented: $showingError) {
             Button("OK") { }
@@ -385,6 +396,42 @@ struct InventoryDetailView: View {
                 // No schedules is fine, just leave empty
                 print("Error loading recommended schedules: \(error)")
                 recommendedScheduleIds = []
+            }
+        }
+    }
+
+    /// Check inventory limit and show either the add form or upgrade prompt
+    private func checkLimitAndShowAddInventory() {
+        guard let inventoryTrackingService = inventoryTrackingService else { return }
+
+        Task {
+            do {
+                // Count unique items with inventory (not individual inventory records)
+                let allItemsWithInventory = try await inventoryTrackingService.searchItems(
+                    text: "",
+                    hasInventory: true
+                )
+                let currentInventoryCount = allItemsWithInventory.count
+                let canAdd = entitlementService.canAddInventoryItem(currentCount: currentInventoryCount)
+
+                await MainActor.run {
+                    if !canAdd {
+                        // Hit the limit - show upgrade prompt immediately
+                        let limit = entitlementService.getInventoryLimit() ?? 0
+                        inventoryItemCount = currentInventoryCount
+                        inventoryItemLimit = limit
+                        showingUpgradePrompt = true
+                    } else {
+                        // Under limit - show add inventory form
+                        showingAddInventory = true
+                    }
+                }
+            } catch {
+                // If we can't check the limit, allow the add to proceed
+                print("⚠️ Failed to check inventory limit: \(error)")
+                await MainActor.run {
+                    showingAddInventory = true
+                }
             }
         }
     }
@@ -660,7 +707,7 @@ struct InventoryDetailView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     Button("Add Inventory") {
-                        showingAddInventory = true
+                        checkLimitAndShowAddInventory()
                     }
                     .buttonStyle(.bordered)
                 }
@@ -687,7 +734,7 @@ struct InventoryDetailView: View {
 
                     // Add More button when inventory exists
                     Button {
-                        showingAddInventory = true
+                        checkLimitAndShowAddInventory()
                     } label: {
                         HStack {
                             Image(systemName: "plus.circle.fill")
@@ -871,7 +918,7 @@ struct InventoryDetailView: View {
             // Primary actions
             HStack(spacing: 12) {
                 Button(action: {
-                    showingAddInventory = true
+                    checkLimitAndShowAddInventory()
                 }) {
                     Label("Add Inventory", systemImage: "plus.circle.fill")
                         .frame(maxWidth: .infinity)
@@ -1279,11 +1326,16 @@ struct InventoryStorageDetailView: View {
     let inventoryType: String
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(EntitlementService.self) private var entitlementService
     @State private var groupByLocation = true  // true = group by location, false = group by type
     @State private var showingAddInventory = false
+    @State private var showingUpgradePrompt = false
+    @State private var inventoryItemCount = 0
+    @State private var inventoryItemLimit = 0
     @State private var editingRecord: InventoryModel?
 
     private let inventoryRepository = RepositoryFactory.createInventoryRepository()
+    private let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
 
     var body: some View {
         NavigationStack {
@@ -1338,7 +1390,7 @@ struct InventoryStorageDetailView: View {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
                         Button(action: {
-                            showingAddInventory = true
+                            checkLimitAndShowAddInventory()
                         }) {
                             Label("Add Inventory", systemImage: "plus.circle")
                         }
@@ -1369,6 +1421,47 @@ struct InventoryStorageDetailView: View {
                     itemName: item.glassItem.name,
                     inventoryRepository: inventoryRepository
                 )
+            }
+            .sheet(isPresented: $showingUpgradePrompt) {
+                UpgradePromptView(
+                    feature: "inventory",
+                    currentCount: inventoryItemCount,
+                    limit: inventoryItemLimit
+                )
+            }
+        }
+    }
+
+    /// Check inventory limit and show either the add form or upgrade prompt
+    private func checkLimitAndShowAddInventory() {
+        Task {
+            do {
+                // Count unique items with inventory (not individual inventory records)
+                let allItemsWithInventory = try await inventoryTrackingService.searchItems(
+                    text: "",
+                    hasInventory: true
+                )
+                let currentInventoryCount = allItemsWithInventory.count
+                let canAdd = entitlementService.canAddInventoryItem(currentCount: currentInventoryCount)
+
+                await MainActor.run {
+                    if !canAdd {
+                        // Hit the limit - show upgrade prompt immediately
+                        let limit = entitlementService.getInventoryLimit() ?? 0
+                        inventoryItemCount = currentInventoryCount
+                        inventoryItemLimit = limit
+                        showingUpgradePrompt = true
+                    } else {
+                        // Under limit - show add inventory form
+                        showingAddInventory = true
+                    }
+                }
+            } catch {
+                // If we can't check the limit, allow the add to proceed
+                print("⚠️ Failed to check inventory limit: \(error)")
+                await MainActor.run {
+                    showingAddInventory = true
+                }
             }
         }
     }

@@ -115,7 +115,7 @@ struct DiagnosticTests: MockOnlyTestSuite {
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryTrackingService,
-            shoppingListService: shoppingListService,
+            itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepo
         )

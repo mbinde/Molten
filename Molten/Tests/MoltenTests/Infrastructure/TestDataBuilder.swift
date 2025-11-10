@@ -310,7 +310,6 @@ class TestDataBuilder {
         }
 
         let inventoryService = inventoryTrackingService
-        let shoppingService = shoppingListService
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
 
@@ -319,7 +318,7 @@ class TestDataBuilder {
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryService,
-            shoppingListService: shoppingService,
+            itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo
         )

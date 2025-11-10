@@ -85,7 +85,7 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryService,
-            shoppingListService: shoppingService,
+            itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepository
         )

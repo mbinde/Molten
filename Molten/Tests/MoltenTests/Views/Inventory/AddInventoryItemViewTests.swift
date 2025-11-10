@@ -40,7 +40,7 @@ struct AddInventoryItemViewTests {
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryService,
-            shoppingListService: shoppingListService,
+            itemMinimumRepository: MockItemMinimumRepository(),
             itemTagsRepository: MockItemTagsRepository(),
             userTagsRepository: MockUserTagsRepository()
         )

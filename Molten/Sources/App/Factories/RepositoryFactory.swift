@@ -589,25 +589,14 @@ nonisolated struct RepositoryFactory {
         )
     }
     
-    /// Creates a CatalogService with core functionality (shopping list features disabled)
+    /// Creates a CatalogService with core functionality
     nonisolated static func createCatalogService() -> CatalogService {
-        // Create a temporary ShoppingListService for CatalogService dependency
-        // TODO: Refactor CatalogService to not require ShoppingListService
-        let tempShoppingListService = ShoppingListService(
-            itemMinimumRepository: MockItemMinimumRepository(),
-            shoppingListRepository: createShoppingListRepository(),
-            inventoryRepository: createInventoryRepository(),
-            glassItemRepository: createGlassItemRepository(),
-            itemTagsRepository: createItemTagsRepository(),
-            userTagsRepository: createUserTagsRepository()
-        )
-
         return CatalogService(
             glassItemRepository: createGlassItemRepository(),
             coatingItemRepository: createCoatingItemRepository(),
             toolItemRepository: createToolItemRepository(),
             inventoryTrackingService: createInventoryTrackingService(),
-            shoppingListService: tempShoppingListService,
+            itemMinimumRepository: createItemMinimumRepository(),
             itemTagsRepository: createItemTagsRepository(),
             userTagsRepository: createUserTagsRepository()
         )

@@ -90,14 +90,7 @@ struct IntegrationTests {
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryTrackingService,
-            shoppingListService: ShoppingListService(
-                itemMinimumRepository: repos.itemMinimum,
-                shoppingListRepository: shoppingListRepository,
-                inventoryRepository: repos.inventory,
-                glassItemRepository: repos.glassItem,
-                itemTagsRepository: repos.itemTags,
-                userTagsRepository: userTagsRepo
-            ),
+            itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepo
         )

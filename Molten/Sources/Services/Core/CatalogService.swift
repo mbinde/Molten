@@ -23,7 +23,7 @@ actor CatalogService {
 
     // Supporting services
     private let inventoryTrackingService: InventoryTrackingService
-    private let shoppingListService: ShoppingListService
+    private let itemMinimumRepository: ItemMinimumRepository
     private let itemTagsRepository: ItemTagsRepository
     private let userTagsRepository: UserTagsRepository
 
@@ -35,7 +35,7 @@ actor CatalogService {
         coatingItemRepository: CoatingItemRepository,
         toolItemRepository: ToolItemRepository,
         inventoryTrackingService: InventoryTrackingService,
-        shoppingListService: ShoppingListService,
+        itemMinimumRepository: ItemMinimumRepository,
         itemTagsRepository: ItemTagsRepository,
         userTagsRepository: UserTagsRepository
     ) {
@@ -43,7 +43,7 @@ actor CatalogService {
         self.coatingItemRepository = coatingItemRepository
         self.toolItemRepository = toolItemRepository
         self.inventoryTrackingService = inventoryTrackingService
-        self.shoppingListService = shoppingListService
+        self.itemMinimumRepository = itemMinimumRepository
         self.itemTagsRepository = itemTagsRepository
         self.userTagsRepository = userTagsRepository
     }
@@ -343,7 +343,7 @@ actor CatalogService {
         try await itemTagsRepository.removeAllTags(fromItem: stableId)
 
         // 3. Remove any shopping list minimums for this item
-        try await shoppingListService.itemMinimumRepository.deleteMinimums(forItem: stableId)
+        try await itemMinimumRepository.deleteMinimums(forItem: stableId)
 
         // 4. Finally, delete the glass item itself
         try await glassItemRepository.deleteItem(stableId: stableId)
@@ -360,7 +360,7 @@ actor CatalogService {
             try await itemTagsRepository.removeAllTags(fromItem: naturalKey)
 
             // 3. Remove any shopping list minimums for this item
-            try await shoppingListService.itemMinimumRepository.deleteMinimums(forItem: naturalKey)
+            try await itemMinimumRepository.deleteMinimums(forItem: naturalKey)
         }
 
         // 4. Finally, delete all glass items

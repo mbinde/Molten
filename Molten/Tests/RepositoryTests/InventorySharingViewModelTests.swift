@@ -31,6 +31,7 @@ struct InventorySharingViewModelTests {
         UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.myShareCode")
         UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.myShareMetadata")
         UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.friendShares")
+        UserDefaults.standard.synchronize() // Force changes to disk immediately for .serialized tests
     }
 
     // MARK: - Lifecycle Tests
@@ -38,6 +39,7 @@ struct InventorySharingViewModelTests {
     @Test("Should load share data on appear")
     func testLoadShareData() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         // Setup - create a share first
         let mockManager = createMockSharingManager()
@@ -63,6 +65,7 @@ struct InventorySharingViewModelTests {
     @Test("Should populate form fields from existing metadata")
     func testPopulateFormFields() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         // Setup
         let mockManager = createMockSharingManager()
@@ -87,6 +90,7 @@ struct InventorySharingViewModelTests {
     @Test("Should create share with metadata")
     func testCreateShareWithMetadata() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -112,6 +116,7 @@ struct InventorySharingViewModelTests {
     @Test("Should trim whitespace from metadata")
     func testTrimWhitespaceFromMetadata() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -135,6 +140,7 @@ struct InventorySharingViewModelTests {
     @Test("Should handle empty notes as nil")
     func testEmptyNotesAsNil() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -157,6 +163,7 @@ struct InventorySharingViewModelTests {
     @Test("Should validate display name is not empty")
     func testValidateDisplayNameNotEmpty() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -182,6 +189,7 @@ struct InventorySharingViewModelTests {
     @Test("Should update share metadata")
     func testUpdateShareMetadata() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         // Setup - create initial share
         let mockManager = createMockSharingManager()
@@ -211,6 +219,7 @@ struct InventorySharingViewModelTests {
     @Test("Should validate display name when updating")
     func testValidateDisplayNameWhenUpdating() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         // Setup
         let mockManager = createMockSharingManager()
@@ -238,6 +247,7 @@ struct InventorySharingViewModelTests {
     @Test("Should add friend with nickname")
     func testAddFriendWithNickname() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -268,6 +278,7 @@ struct InventorySharingViewModelTests {
     @Test("Should add friend without optional fields")
     func testAddFriendWithoutOptionalFields() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -292,6 +303,7 @@ struct InventorySharingViewModelTests {
     @Test("Should validate share code is not empty")
     func testValidateShareCodeNotEmpty() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -314,6 +326,7 @@ struct InventorySharingViewModelTests {
     @Test("Should show warning for invalid signature")
     func testShowWarningForInvalidSignature() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         let mockManager = createMockSharingManagerWithInvalidSignature()
         let mockCatalogService = createMockCatalogService()
@@ -337,6 +350,7 @@ struct InventorySharingViewModelTests {
     @Test("Should delete share and clear metadata")
     func testDeleteShare() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         // Setup
         let mockManager = createMockSharingManager()
@@ -365,6 +379,7 @@ struct InventorySharingViewModelTests {
         // Actual clipboard testing would require UI testing
 
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -386,6 +401,7 @@ struct InventorySharingViewModelTests {
     @Test("Should clear error message")
     func testClearError() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         let viewModel = InventorySharingViewModel(
             sharingManager: createMockSharingManager(),
@@ -404,6 +420,24 @@ struct InventorySharingViewModelTests {
     // MARK: - Helper Methods
 
     private func createMockSharingManager() -> InventorySharingManager {
+        // Create isolated test controller
+        let testController = PersistenceController.createTestController()
+        RepositoryFactory.configureForTestingWithCoreData(controller: testController)
+
+        let testContext = testController.container.viewContext
+        let catalogRepo = RepositoryFactory.createGlassItemRepository()
+        let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
+        let sharedInventoryRepo = CoreDataSharedInventoryRepository(
+            context: testContext,
+            catalogRepository: catalogRepo
+        )
+
+        // CRITICAL: Use test-specific UserDefaults suite to isolate tests
+        // Create a unique suite name for this test run to avoid cross-test pollution
+        let testSuiteName = "com.molten.test.sharing.\(UUID().uuidString)"
+        let testUserDefaults = UserDefaults(suiteName: testSuiteName)!
+        let testMetadataRepo = ShareMetadataRepository(userDefaults: testUserDefaults)
+
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = SnapshotResult(
             items: [],
@@ -413,10 +447,32 @@ struct InventorySharingViewModelTests {
             ownerName: "Test User",
             ownerShareNotes: nil
         )
-        return InventorySharingManager(coordinator: mockCoordinator)
+        return InventorySharingManager(
+            coordinator: mockCoordinator,
+            metadataRepository: testMetadataRepo,
+            shareRecordRepository: shareRecordRepo,
+            sharedInventoryRepository: sharedInventoryRepo
+        )
     }
 
     private func createMockSharingManagerWithInvalidSignature() -> InventorySharingManager {
+        // Create isolated test controller
+        let testController = PersistenceController.createTestController()
+        RepositoryFactory.configureForTestingWithCoreData(controller: testController)
+
+        let testContext = testController.container.viewContext
+        let catalogRepo = RepositoryFactory.createGlassItemRepository()
+        let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
+        let sharedInventoryRepo = CoreDataSharedInventoryRepository(
+            context: testContext,
+            catalogRepository: catalogRepo
+        )
+
+        // CRITICAL: Use test-specific UserDefaults suite to isolate tests
+        let testSuiteName = "com.molten.test.sharing.\(UUID().uuidString)"
+        let testUserDefaults = UserDefaults(suiteName: testSuiteName)!
+        let testMetadataRepo = ShareMetadataRepository(userDefaults: testUserDefaults)
+
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = SnapshotResult(
             items: [],
@@ -426,7 +482,12 @@ struct InventorySharingViewModelTests {
             ownerName: "Test User",
             ownerShareNotes: nil
         )
-        return InventorySharingManager(coordinator: mockCoordinator)
+        return InventorySharingManager(
+            coordinator: mockCoordinator,
+            metadataRepository: testMetadataRepo,
+            shareRecordRepository: shareRecordRepo,
+            sharedInventoryRepository: sharedInventoryRepo
+        )
     }
 
     private func createMockCatalogService() -> CatalogService {

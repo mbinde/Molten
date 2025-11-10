@@ -42,7 +42,7 @@ final class BackgroundUpdateService {
         }
 
         // Check network connectivity
-        guard networkMonitor.checkConnection() else {
+        guard networkMonitor.isConnected else {
             log.debug("📡 No network connection, skipping update check")
             return
         }
@@ -112,20 +112,7 @@ final class BackgroundUpdateService {
 
     /// Check if we should auto-download based on network policy
     private func shouldAutoDownload() -> Bool {
-        let preferences = CatalogUpdatePreferences.shared
-
-        switch preferences.downloadPolicy {
-        case .manual:
-            // Manual policy means user must initiate download
-            return false
-
-        case .wifiOnly:
-            // Only download on WiFi (non-expensive connection)
-            return !networkMonitor.checkIsExpensive()
-
-        case .wifiAndCellular:
-            // Download on any connection
-            return true
-        }
+        // Use the existing canDownloadCatalog() method which already checks policy
+        return networkMonitor.canDownloadCatalog()
     }
 }

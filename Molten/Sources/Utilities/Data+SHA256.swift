@@ -13,7 +13,7 @@ extension Data {
 
     /// Compute SHA256 checksum of data
     /// - Returns: Checksum in format "sha256:hexstring"
-    func sha256Checksum() -> String {
+    nonisolated func sha256Checksum() -> String {
         let hash = SHA256.hash(data: self)
         let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
         return "sha256:\(hashString)"
@@ -22,7 +22,7 @@ extension Data {
     /// Verify SHA256 checksum matches expected value
     /// - Parameter expected: Expected checksum in format "sha256:hexstring"
     /// - Returns: True if checksum matches
-    func verifySHA256Checksum(_ expected: String) -> Bool {
+    nonisolated func verifySHA256Checksum(_ expected: String) -> Bool {
         let actual = sha256Checksum()
         return actual == expected
     }

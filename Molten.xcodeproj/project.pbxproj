@@ -95,6 +95,29 @@
 		};
 /* End PBXCopyFilesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		5AD4D62AFCC1421CA59DBA1A /* Set Build Number from Git */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Scripts/set-build-number.sh",
+			);
+			name = "Set Build Number from Git";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PROJECT_DIR}/Scripts/set-build-number.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+
 /* Begin PBXFileReference section */
 		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
 		878F664543088F1B86740DD2 /* UnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationRepository.swift; sourceTree = "<group>"; };
@@ -178,6 +201,8 @@
 				Tests/MoltenTests/Models/CatalogItemParentModelTests.swift,
 				Tests/MoltenTests/Models/CatalogSortOptionTests.swift,
 				Tests/MoltenTests/Models/CatalogUnitsTests.swift,
+				Tests/MoltenTests/Models/CatalogUpdateModelsTests.swift,
+				Tests/MoltenTests/Models/CatalogUpdatePreferencesTests.swift,
 				Tests/MoltenTests/Models/COEGlassTypeTests.swift,
 				Tests/MoltenTests/Models/DataModelValidationTests.swift,
 				Tests/MoltenTests/Models/DefaultUnitsTests.swift,
@@ -201,7 +226,12 @@
 				Tests/MoltenTests/Repositories/ProjectRepositoryErrorsTests.swift,
 				Tests/MoltenTests/Repositories/ShoppingListRepositoryTests.swift,
 				Tests/MoltenTests/Repositories/UserImageRepositoryTests.swift,
+				Tests/MoltenTests/Services/BackgroundUpdateServiceTests.swift,
+				Tests/MoltenTests/Services/CatalogAPIClientTests.swift,
 				Tests/MoltenTests/Services/CatalogServiceAdvancedTests.swift,
+				Tests/MoltenTests/Services/CatalogStorageServiceTests.swift,
+				Tests/MoltenTests/Services/CatalogUpdateNotificationTests.swift,
+				Tests/MoltenTests/Services/CatalogUpdateServiceTests.swift,
 				Tests/MoltenTests/Services/DataExportServiceTests.swift,
 				Tests/MoltenTests/Services/DataInitializationServiceTests.swift,
 				Tests/MoltenTests/Services/DataLoadingServiceTests.swift,
@@ -226,6 +256,8 @@
 				Tests/MoltenTests/SubscriptionManagerTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
 				Tests/MoltenTests/Utilities/CatalogFormattersTests.swift,
+				Tests/MoltenTests/Utilities/DataGzipTests.swift,
+				Tests/MoltenTests/Utilities/DataSHA256Tests.swift,
 				Tests/MoltenTests/Utilities/DecimalFormattingTests.swift,
 				Tests/MoltenTests/Utilities/ErrorBoundaryTests.swift,
 				Tests/MoltenTests/Utilities/ErrorHandlingTests.swift,
@@ -249,6 +281,7 @@
 				Tests/MoltenTests/Views/Catalog/CatalogViewDataInitializationTests.swift,
 				Tests/MoltenTests/Views/Catalog/GlassItemSearchSelectorTests.swift,
 				Tests/MoltenTests/Views/Catalog/MockCatalogViewModel.swift,
+				Tests/MoltenTests/Views/CatalogUpdateViewModelTests.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailViewUserNotesTests.swift,
@@ -344,6 +377,8 @@
 				Tests/MoltenTests/Models/CatalogItemParentModelTests.swift,
 				Tests/MoltenTests/Models/CatalogSortOptionTests.swift,
 				Tests/MoltenTests/Models/CatalogUnitsTests.swift,
+				Tests/MoltenTests/Models/CatalogUpdateModelsTests.swift,
+				Tests/MoltenTests/Models/CatalogUpdatePreferencesTests.swift,
 				Tests/MoltenTests/Models/COEGlassTypeTests.swift,
 				Tests/MoltenTests/Models/DataModelValidationTests.swift,
 				Tests/MoltenTests/Models/DefaultUnitsTests.swift,
@@ -368,7 +403,12 @@
 				Tests/MoltenTests/Repositories/ProjectRepositoryErrorsTests.swift,
 				Tests/MoltenTests/Repositories/ShoppingListRepositoryTests.swift,
 				Tests/MoltenTests/Repositories/UserImageRepositoryTests.swift,
+				Tests/MoltenTests/Services/BackgroundUpdateServiceTests.swift,
+				Tests/MoltenTests/Services/CatalogAPIClientTests.swift,
 				Tests/MoltenTests/Services/CatalogServiceAdvancedTests.swift,
+				Tests/MoltenTests/Services/CatalogStorageServiceTests.swift,
+				Tests/MoltenTests/Services/CatalogUpdateNotificationTests.swift,
+				Tests/MoltenTests/Services/CatalogUpdateServiceTests.swift,
 				Tests/MoltenTests/Services/DataExportServiceTests.swift,
 				Tests/MoltenTests/Services/DataInitializationServiceTests.swift,
 				Tests/MoltenTests/Services/DataLoadingServiceTests.swift,
@@ -393,6 +433,8 @@
 				Tests/MoltenTests/SubscriptionManagerTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
 				Tests/MoltenTests/Utilities/CatalogFormattersTests.swift,
+				Tests/MoltenTests/Utilities/DataGzipTests.swift,
+				Tests/MoltenTests/Utilities/DataSHA256Tests.swift,
 				Tests/MoltenTests/Utilities/DecimalFormattingTests.swift,
 				Tests/MoltenTests/Utilities/ErrorBoundaryTests.swift,
 				Tests/MoltenTests/Utilities/ErrorHandlingTests.swift,
@@ -415,6 +457,7 @@
 				Tests/MoltenTests/Views/Catalog/CatalogBundleDebugViewTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogViewDataInitializationTests.swift,
 				Tests/MoltenTests/Views/Catalog/GlassItemSearchSelectorTests.swift,
+				Tests/MoltenTests/Views/CatalogUpdateViewModelTests.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailViewUserNotesTests.swift,
@@ -979,7 +1022,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = F5A13C722E890147002C0F7A /* Build configuration list for PBXNativeTarget "Molten" */;
 			buildPhases = (
-				F5A13C472E890146002C0F7A /* Sources */,
+								5AD4D62AFCC1421CA59DBA1A /* Set Build Number from Git */,
+F5A13C472E890146002C0F7A /* Sources */,
 				F5A13C482E890146002C0F7A /* Frameworks */,
 				F5A13C492E890146002C0F7A /* Resources */,
 				F5DB4DB82EAB159C00F6E879 /* Embed Foundation Extensions */,

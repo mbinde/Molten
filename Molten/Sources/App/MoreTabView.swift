@@ -14,6 +14,7 @@ struct MoreTabView: View {
     let onTabSelect: (DefaultTab) -> Void
 
     @State private var showingTabCustomization = false
+    @ObservedObject private var updatePreferences = CatalogUpdatePreferences.shared
 
     var body: some View {
         VStack(spacing: 0) {
@@ -47,6 +48,13 @@ struct MoreTabView: View {
                                 .foregroundColor(.primary)
 
                             Spacer()
+
+                            // Show update badge for Settings tab
+                            if tab == .settings && updatePreferences.hasUpdateAvailable {
+                                Circle()
+                                    .fill(Color.red)
+                                    .frame(width: 8, height: 8)
+                            }
 
                             if selectedTab == tab {
                                 Image(systemName: "checkmark")

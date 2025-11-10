@@ -88,6 +88,13 @@ class CatalogUpdatePreferences: ObservableObject {
         }
     }
 
+    @Published var hasUpdateAvailable: Bool {
+        didSet {
+            defaults.set(hasUpdateAvailable, forKey: Keys.hasUpdateAvailable)
+            notificationCenter.post(name: .catalogPreferencesChanged, object: nil)
+        }
+    }
+
     // MARK: - Non-Published Properties
 
     var lastUpdateCheck: Date? {
@@ -137,6 +144,7 @@ class CatalogUpdatePreferences: ObservableObject {
         static let autoUpdate = "catalog.autoUpdate"
         static let downloadPolicy = "catalog.downloadPolicy"
         static let updateFrequency = "catalog.updateFrequency"
+        static let hasUpdateAvailable = "catalog.hasUpdateAvailable"
         static let lastUpdateCheck = "catalog.lastUpdateCheck"
         static let currentVersion = "catalog.currentVersion"
         static let lastSuccessfulUpdate = "catalog.lastSuccessfulUpdate"
@@ -162,6 +170,8 @@ class CatalogUpdatePreferences: ObservableObject {
         } else {
             self.updateFrequency = .weekly  // Default
         }
+
+        self.hasUpdateAvailable = defaults.bool(forKey: Keys.hasUpdateAvailable)
     }
 
     // MARK: - Helpers
@@ -181,6 +191,7 @@ class CatalogUpdatePreferences: ObservableObject {
         autoUpdateEnabled = false
         downloadPolicy = .wifiOnly
         updateFrequency = .weekly
+        hasUpdateAvailable = false
         lastUpdateCheck = nil
         lastSuccessfulUpdate = nil
     }

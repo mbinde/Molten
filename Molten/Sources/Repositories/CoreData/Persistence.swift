@@ -655,22 +655,42 @@ class PersistenceController {
         // Create a completely isolated in-memory controller with its own model instance
         // This prevents ALL sharing between tests
         let controller = PersistenceController(inMemory: true)
-        
+
+        // Disable CloudKit for test stores - tests don't sync to iCloud
+        // This eliminates "CKAccountStatusNoAccount" warnings in test output
+        for description in controller.container.persistentStoreDescriptions {
+            description.cloudKitContainerOptions = nil
+        }
+
         // Configure merge policy to handle any conflicts
         controller.container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-        
+
         return controller
     }
     
     /// Forces creation of a new test controller (for when you need true isolation)
     static func createFreshTestController() -> PersistenceController {
-        return PersistenceController(inMemory: true)
+        let controller = PersistenceController(inMemory: true)
+
+        // Disable CloudKit for test stores
+        for description in controller.container.persistentStoreDescriptions {
+            description.cloudKitContainerOptions = nil
+        }
+
+        return controller
     }
-    
+
     /// Creates a completely isolated in-memory persistence controller with unique identifier
     /// Use this when you need guaranteed isolation between test contexts
     static func createUniqueTestController(identifier: String) -> PersistenceController {
-        return PersistenceController(inMemory: true)
+        let controller = PersistenceController(inMemory: true)
+
+        // Disable CloudKit for test stores
+        for description in controller.container.persistentStoreDescriptions {
+            description.cloudKitContainerOptions = nil
+        }
+
+        return controller
     }
 }
 

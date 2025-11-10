@@ -10,9 +10,20 @@ import Foundation
 import OSLog
 import Combine
 
+/// Protocol for catalog update service operations (for dependency injection)
+@MainActor
+protocol CatalogUpdateServiceProtocol: ObservableObject {
+    var isChecking: Bool { get }
+    var isDownloading: Bool { get }
+    var downloadProgress: Double { get }
+
+    func checkForUpdates() async throws -> CatalogUpdateInfo?
+    func downloadAndInstallUpdate(updateInfo: CatalogUpdateInfo, force: Bool) async throws -> CatalogUpdateResult
+}
+
 /// Service for managing catalog updates
 @MainActor
-class CatalogUpdateService: ObservableObject {
+class CatalogUpdateService: CatalogUpdateServiceProtocol {
 
     // MARK: - Properties
 

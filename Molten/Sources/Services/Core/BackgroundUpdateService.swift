@@ -19,7 +19,7 @@ final class BackgroundUpdateService {
 
     init(
         updateService: CatalogUpdateServiceProtocol,
-        networkMonitor: NetworkMonitorProtocol = NetworkMonitor()
+        networkMonitor: NetworkMonitorProtocol
     ) {
         self.updateService = updateService
         self.networkMonitor = networkMonitor
@@ -93,19 +93,8 @@ final class BackgroundUpdateService {
             return true
         }
 
-        let interval: TimeInterval
-        switch preferences.updateFrequency {
-        case .daily:
-            interval = 24 * 3600  // 24 hours
-        case .weekly:
-            interval = 7 * 24 * 3600  // 7 days
-        case .monthly:
-            interval = 30 * 24 * 3600  // 30 days
-        case .manual:
-            // Manual mode shouldn't trigger background checks
-            return false
-        }
-
+        // Use the interval from the updateFrequency preference
+        let interval = preferences.updateFrequency.checkInterval
         let timeSinceLastCheck = Date().timeIntervalSince(lastCheck)
         return timeSinceLastCheck >= interval
     }

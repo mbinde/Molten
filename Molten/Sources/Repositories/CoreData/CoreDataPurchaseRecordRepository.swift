@@ -275,7 +275,7 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
         // Add new items
         guard let context = entity.managedObjectContext else { return }
 
-        for itemModel in model.items {
+        for (index, itemModel) in model.items.enumerated() {
             let itemEntity = PurchaseRecordItem(context: context)
             itemEntity.setValue(itemModel.id, forKey: "id")
             itemEntity.setValue(itemModel.item_stable_id, forKey: "item_stable_id")
@@ -284,7 +284,8 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
             itemEntity.setValue(itemModel.subsubtype, forKey: "subsubtype")
             itemEntity.setValue(itemModel.quantity, forKey: "quantity")
             itemEntity.setValue(itemModel.totalPrice as NSDecimalNumber?, forKey: "total_price")
-            itemEntity.setValue(itemModel.orderIndex, forKey: "order_index")
+            // Preserve order by using array index
+            itemEntity.setValue(Int16(index), forKey: "order_index")
             itemEntity.setValue(entity, forKey: "purchaserecord")
         }
     }

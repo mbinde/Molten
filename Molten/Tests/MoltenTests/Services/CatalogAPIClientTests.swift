@@ -106,11 +106,14 @@ struct CatalogAPIClientTests {
             _ = try await client.getLatestVersion()
             Issue.record("Expected rate limit error")
         } catch let error as CatalogUpdateError {
-            if case .serverError(let statusCode) = error {
+            switch error {
+            case .serverError(let statusCode):
                 #expect(statusCode == 429)
-            } else {
-                Issue.record("Expected serverError with 429 status code")
+            default:
+                Issue.record("Expected serverError with 429 status code, got: \(error)")
             }
+        } catch {
+            Issue.record("Expected CatalogUpdateError, got: \(error)")
         }
     }
 

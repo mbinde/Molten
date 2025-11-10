@@ -669,6 +669,16 @@ nonisolated struct RepositoryFactory {
         )
     }
 
+    /// Creates a BackgroundUpdateService for automatic update checks
+    /// Note: This is a @MainActor class, so must be called from main thread
+    @MainActor
+    static func createBackgroundUpdateService() -> BackgroundUpdateService {
+        return BackgroundUpdateService(
+            updateService: createCatalogUpdateService(),
+            networkMonitor: NetworkMonitor()
+        )
+    }
+
     /// Creates a RecipeService with all dependencies
     nonisolated static func createRecipeService() -> RecipeService {
         return RecipeService(

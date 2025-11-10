@@ -87,6 +87,7 @@ struct InventorySharingViewModelTests {
     @Test("Should create share with metadata")
     func testCreateShareWithMetadata() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -182,6 +183,7 @@ struct InventorySharingViewModelTests {
     @Test("Should update share metadata")
     func testUpdateShareMetadata() async throws {
         cleanupUserDefaults()
+        KeyPairManager.deleteAllKeys()
 
         // Setup - create initial share
         let mockManager = createMockSharingManager()

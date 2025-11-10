@@ -241,7 +241,7 @@ struct BackgroundUpdateServiceTests {
         // Mock network monitor to report WiFi
         let mockNetworkMonitor = MockNetworkMonitor()
         mockNetworkMonitor.isConnected = true
-        mockNetworkMonitor.isExpensive = false
+        mockNetworkMonitor.isOnWiFi = true
 
         let backgroundService = BackgroundUpdateService(
             updateService: mockService,
@@ -268,7 +268,7 @@ struct BackgroundUpdateServiceTests {
         // Mock network monitor to report cellular
         let mockNetworkMonitor = MockNetworkMonitor()
         mockNetworkMonitor.isConnected = true
-        mockNetworkMonitor.isExpensive = true  // Cellular
+        mockNetworkMonitor.isOnWiFi = false  // Cellular
 
         let backgroundService = BackgroundUpdateService(
             updateService: mockService,
@@ -302,7 +302,7 @@ struct BackgroundUpdateServiceTests {
         // Mock network monitor to report cellular
         let mockNetworkMonitor = MockNetworkMonitor()
         mockNetworkMonitor.isConnected = true
-        mockNetworkMonitor.isExpensive = true  // Cellular
+        mockNetworkMonitor.isOnWiFi = false  // Cellular
 
         let backgroundService = BackgroundUpdateService(
             updateService: mockService,
@@ -394,14 +394,24 @@ struct BackgroundUpdateServiceTests {
 
 @MainActor
 class MockNetworkMonitor: NetworkMonitorProtocol {
-    var isConnected: Bool = true
-    var isExpensive: Bool = false
+    @Published var isConnected: Bool = true
+    @Published var isOnWiFi: Bool = true
+    @Published var isExpensive: Bool = false
+    @Published var isConstrained: Bool = false
 
-    func checkConnection() -> Bool {
-        return isConnected
+    var connectionDescription: String {
+        if !isConnected {
+            return "No connection"
+        }
+        return isOnWiFi ? "WiFi" : "Cellular"
     }
 
-    func checkIsExpensive() -> Bool {
-        return isExpensive
+    func canDownloadCatalog() -> Bool {
+        guard isConnected else {
+            return false
+        }
+
+        let policy = CatalogUpdatePreferences.shared.downloadPolicy
+        return policy.allowsDownload(isOnWiFi: isOnWiFi)
     }
 }

@@ -16,10 +16,10 @@ class CatalogUpdateService: ObservableObject {
 
     // MARK: - Properties
 
-    private let apiClient: CatalogAPIClient
-    private let storageService: CatalogStorageService
-    private let dataLoadingService: GlassItemDataLoadingService
-    private let networkMonitor: NetworkMonitor
+    private let apiClient: CatalogAPIClientProtocol
+    private let storageService: CatalogStorageServiceProtocol
+    private let dataLoadingService: GlassItemDataLoadingServiceProtocol
+    private let networkMonitor: NetworkMonitorProtocol
     private let log = Logger(subsystem: "Molten", category: "CatalogUpdate")
 
     @Published private(set) var isChecking: Bool = false
@@ -29,10 +29,10 @@ class CatalogUpdateService: ObservableObject {
     // MARK: - Initialization
 
     init(
-        apiClient: CatalogAPIClient,
-        storageService: CatalogStorageService,
-        dataLoadingService: GlassItemDataLoadingService,
-        networkMonitor: NetworkMonitor = .shared
+        apiClient: CatalogAPIClientProtocol,
+        storageService: CatalogStorageServiceProtocol,
+        dataLoadingService: GlassItemDataLoadingServiceProtocol,
+        networkMonitor: NetworkMonitorProtocol
     ) {
         self.apiClient = apiClient
         self.storageService = storageService

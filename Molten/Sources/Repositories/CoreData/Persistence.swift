@@ -51,20 +51,21 @@ class PersistenceController {
     @MainActor
     static let preview: PersistenceController = {
         Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Creating preview PersistenceController...")
-        let result = PersistenceController(inMemory: true)
+        // Preview uses CloudKit container for UI compatibility (CloudKitSyncStatusView needs it)
+        let result = PersistenceController(inMemory: true, forceCloudKit: true)
         let viewContext = result.container.viewContext
         viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-        
+
         // Verify that the preview controller is ready before returning
         if result.storeLoadingError != nil {
             Logger(subsystem: "com.flameworker.app", category: "persistence").error("❌ Preview controller has store loading error: \(String(describing: result.storeLoadingError))")
         } else {
             Logger(subsystem: "com.flameworker.app", category: "persistence").info("✅ Preview controller created successfully")
         }
-        
+
         // For testing, we'll create preview data lazily on first access rather than during initialization
         // This prevents model compatibility issues during test runs
-        
+
         return result
     }()
     
@@ -121,7 +122,7 @@ class PersistenceController {
         }
     }
 
-    let container: NSPersistentCloudKitContainer
+    let container: NSPersistentContainer
     nonisolated(unsafe) private(set) var storeLoadingError: Error?
 
     // Two separate contexts for two-store architecture
@@ -134,10 +135,18 @@ class PersistenceController {
     nonisolated(unsafe) private(set) var localContext: NSManagedObjectContext!
     nonisolated(unsafe) private(set) var cloudContext: NSManagedObjectContext!
 
-    nonisolated init(inMemory: Bool = false) {
+    nonisolated init(inMemory: Bool = false, forceCloudKit: Bool = false) {
         // Use the shared model instance to prevent multiple models
         Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Creating PersistenceController with shared model...")
-        container = NSPersistentCloudKitContainer(name: "Molten", managedObjectModel: Self.sharedModel)
+
+        // For tests, use NSPersistentContainer (no CloudKit) to avoid initialization warnings
+        // For production, use NSPersistentCloudKitContainer for CloudKit sync
+        // forceCloudKit: Use CloudKit even for inMemory (for UI previews that need CloudKit features)
+        if inMemory && !forceCloudKit {
+            container = NSPersistentContainer(name: "Molten", managedObjectModel: Self.sharedModel)
+        } else {
+            container = NSPersistentCloudKitContainer(name: "Molten", managedObjectModel: Self.sharedModel)
+        }
 
         if inMemory {
             // For in-memory stores (tests), use default single store
@@ -234,11 +243,10 @@ class PersistenceController {
             if let inserted = notification.userInfo?[NSInsertedObjectsKey] as? Set<NSManagedObject>, !inserted.isEmpty {
                 let glassItems = inserted.filter { $0.entity.name == "GlassItem" }
                 if !glassItems.isEmpty {
-                    print("🐛☁️ VIEW CONTEXT: \(glassItems.count) GlassItem(s) INSERTED (may be from persistent history import)")
                     if glassItems.count <= 5 {
                         glassItems.forEach { item in
                             if let stableId = item.value(forKey: "stable_id") as? String {
-                                print("🐛☁️   - \(stableId)")
+//                                print("🐛☁️   - \(stableId)")
                             }
                         }
                     }
@@ -313,8 +321,6 @@ class PersistenceController {
                         let deleteRequest = NSPersistentHistoryChangeRequest.deleteHistory(before: transaction.timestamp.addingTimeInterval(0.001))
                         try context.execute(deleteRequest)
                     }
-
-                    print("🐛✅ Purged \(transactionsToDelete.count) GlassItem/ItemTags history transactions")
                 }
             } catch {
                 print("🐛⚠️ Failed to purge GlassItem history: \(error)")
@@ -653,24 +659,26 @@ class PersistenceController {
     /// Each call creates a completely separate Core Data stack to ensure test isolation
     nonisolated static func createTestController() -> PersistenceController {
         // Create a completely isolated in-memory controller with its own model instance
-        // This prevents ALL sharing between tests
+        // Uses NSPersistentContainer (not CloudKit variant) to avoid CloudKit warnings
         let controller = PersistenceController(inMemory: true)
-        
+
         // Configure merge policy to handle any conflicts
         controller.container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-        
+
         return controller
     }
     
     /// Forces creation of a new test controller (for when you need true isolation)
     static func createFreshTestController() -> PersistenceController {
-        return PersistenceController(inMemory: true)
+        let controller = PersistenceController(inMemory: true)
+        return controller
     }
-    
+
     /// Creates a completely isolated in-memory persistence controller with unique identifier
     /// Use this when you need guaranteed isolation between test contexts
     static func createUniqueTestController(identifier: String) -> PersistenceController {
-        return PersistenceController(inMemory: true)
+        let controller = PersistenceController(inMemory: true)
+        return controller
     }
 }
 

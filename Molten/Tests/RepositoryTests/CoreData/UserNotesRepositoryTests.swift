@@ -39,13 +39,13 @@ struct UserNotesRepositoryTests {
         #expect(validNotes.isValid == true)
         #expect(validNotes.validationErrors.isEmpty)
 
-        // Invalid - empty natural key
+        // Invalid - empty stable ID
         let invalidKey = UserNotesModel(
             item_stable_id: "",
             notes: "Some notes"
         )
         #expect(invalidKey.isValid == false)
-        #expect(invalidKey.validationErrors.contains("Item natural key is required"))
+        #expect(invalidKey.validationErrors.contains("Item stable ID is required"))
 
         // Invalid - empty notes
         let invalidNotes = UserNotesModel(

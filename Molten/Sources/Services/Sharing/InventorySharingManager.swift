@@ -148,19 +148,48 @@ class InventorySharingManager {
         // Always use display name from server
         let ownerName = result.ownerName ?? "Unknown"
 
+        // Generate random icon colors for new friend
+        let randomColors = generateRandomIconColors()
+
         // Save share record to Core Data (Cloud - syncs across devices)
         // Includes owner's metadata from server (owner_name, owner_share_notes)
         try shareRecordRepository.saveShareRecord(
             shareCode: shareCode,
             ownerName: ownerName,
             ownerNickname: nickname,
-            ownerShareNotes: result.ownerShareNotes
+            ownerShareNotes: result.ownerShareNotes,
+            iconSymbol: randomColors.symbol,
+            iconBackgroundHex: randomColors.backgroundHex,
+            iconForegroundHex: randomColors.foregroundHex
         )
 
         // Save inventory snapshot to Core Data (Local - cached for offline access)
         try sharedInventoryRepository.saveSnapshot(shareCode: shareCode, items: result.items)
 
         return result
+    }
+
+    /// Generate random icon colors for a new friend
+    private func generateRandomIconColors() -> (symbol: String, backgroundHex: String, foregroundHex: String) {
+        let symbols = ["circle.fill", "square.fill", "triangle.fill", "diamond.fill", "star.fill", "heart.fill"]
+        let colors = [
+            "#FF3B30", // Red
+            "#FF9500", // Orange
+            "#FFCC00", // Yellow
+            "#34C759", // Green
+            "#00C7BE", // Teal
+            "#30B0C7", // Cyan
+            "#007AFF", // Blue
+            "#5856D6", // Purple
+            "#AF52DE", // Magenta
+            "#FF2D55"  // Pink
+        ]
+
+        let randomSymbol = symbols.randomElement() ?? "circle.fill"
+        let randomBackgroundHex = colors.randomElement() ?? "#007AFF"
+        let foregroundHex = "#FFFFFF" // Always white for good contrast
+
+        return (randomSymbol, randomBackgroundHex, foregroundHex)
     }
 
     /// Refresh a friend's share

@@ -16,6 +16,7 @@ struct FriendInventoryView: View {
     @State private var showingAllTags = false
     @State private var showingCOESelection = false
     @State private var showingManufacturerSelection = false
+    @State private var showingProductTypeSelection = false
 
     init(friend: FriendShare) {
         self._viewModel = State(initialValue: FriendInventoryViewModel(friend: friend))
@@ -48,6 +49,28 @@ struct FriendInventoryView: View {
                 if let error = viewModel.errorMessage {
                     Text(error)
                 }
+            }
+            .sheet(isPresented: $showingAllTags) {
+                FilterSelectionSheet.tags(
+                    availableTags: viewModel.availableTags,
+                    selectedTags: $viewModel.selectedTags,
+                    itemCounts: tagCounts
+                )
+            }
+            .sheet(isPresented: $showingCOESelection) {
+                FilterSelectionSheet.coes(
+                    availableCOEs: viewModel.availableCOEs,
+                    selectedCOEs: $viewModel.selectedCOEs,
+                    itemCounts: coeCounts
+                )
+            }
+            .sheet(isPresented: $showingManufacturerSelection) {
+                FilterSelectionSheet.manufacturers(
+                    availableManufacturers: viewModel.availableManufacturers,
+                    selectedManufacturers: $viewModel.selectedManufacturers,
+                    manufacturerDisplayName: { $0 },  // Just use manufacturer code as-is
+                    itemCounts: manufacturerCounts
+                )
             }
     }
 
@@ -150,28 +173,28 @@ struct FriendInventoryView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: DesignSystem.Spacing.md) {
                 ComparisonButton(
-                    title: "All Items",
+                    title: "Everything",
                     isSelected: viewModel.comparisonMode == .all
                 ) {
                     viewModel.comparisonMode = .all
                 }
 
                 ComparisonButton(
-                    title: "They Have, I Don't",
+                    title: "I Need",
                     isSelected: viewModel.comparisonMode == .theyHaveIDoNot
                 ) {
                     viewModel.comparisonMode = .theyHaveIDoNot
                 }
 
                 ComparisonButton(
-                    title: "I Have, They Don't",
+                    title: "They Need",
                     isSelected: viewModel.comparisonMode == .iHaveTheyDoNot
                 ) {
                     viewModel.comparisonMode = .iHaveTheyDoNot
                 }
 
                 ComparisonButton(
-                    title: "We Both Have",
+                    title: "In Common",
                     isSelected: viewModel.comparisonMode == .weBothHave
                 ) {
                     viewModel.comparisonMode = .weBothHave
@@ -190,14 +213,52 @@ struct FriendInventoryView: View {
             selectedTags: $viewModel.selectedTags,
             selectedCOEs: $viewModel.selectedCOEs,
             selectedManufacturers: $viewModel.selectedManufacturers,
+            selectedProductTypes: $viewModel.selectedProductTypes,
             showingAllTags: $showingAllTags,
             showingCOESelection: $showingCOESelection,
             showingManufacturerSelection: $showingManufacturerSelection,
+            showingProductTypeSelection: $showingProductTypeSelection,
             allAvailableTags: viewModel.availableTags,
             allAvailableCOEs: viewModel.availableCOEs,
             allAvailableManufacturers: viewModel.availableManufacturers,
+            allAvailableProductTypes: viewModel.availableProductTypes,
+            manufacturerCounts: manufacturerCounts,
+            coeCounts: coeCounts,
+            tagCounts: tagCounts,
+            sortMenuContent: {
+                AnyView(
+                    Group {
+                        ForEach(FriendInventorySortOption.allCases, id: \.self) { option in
+                            Button {
+                                viewModel.sortOption = option
+                            } label: {
+                                Label(option.title, systemImage: option.icon)
+                            }
+                        }
+                    }
+                )
+            },
             searchPlaceholder: "Search \(viewModel.friend.friendName)'s inventory..."
         )
+    }
+
+    // MARK: - Filter Counts
+
+    // Delegate filter counts to ViewModel for DRY approach
+    private var manufacturerCounts: [String: Int] {
+        viewModel.manufacturerCounts
+    }
+
+    private var coeCounts: [Int32: Int] {
+        viewModel.coeCounts
+    }
+
+    private var tagCounts: [String: Int] {
+        viewModel.tagCounts
+    }
+
+    private var productTypeCounts: [String: Int] {
+        viewModel.productTypeCounts
     }
 
     private var searchEmptyState: some View {

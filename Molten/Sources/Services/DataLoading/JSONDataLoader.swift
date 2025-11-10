@@ -170,6 +170,8 @@ struct JSONDataLoader {
         if let itemCount = metadata.itemCount {
             defaults.set(itemCount, forKey: "CatalogDataItemCount")
         }
+        // Force synchronization to ensure values are immediately available for tests
+        defaults.synchronize()
         debugLog("Stored \(catalogType) catalog metadata: version=\(metadata.version), generated=\(metadata.generated)")
     }
 

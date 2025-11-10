@@ -51,7 +51,7 @@ struct CatalogAPIClientTests {
         encoder.dateEncodingStrategy = .iso8601
         let responseData = try encoder.encode(metadata)
 
-        let mockSession = MockURLSession()
+        let mockSession = MockCatalogURLSession()
         mockSession.mockData = responseData
         mockSession.mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.example.com/catalog/version")!,
@@ -60,7 +60,7 @@ struct CatalogAPIClientTests {
             headerFields: ["Content-Type": "application/json"]
         )
 
-        let mockAttestation = MockAttestationManager()
+        let mockAttestation = MockCatalogAttestationManager()
         let client = CatalogAPIClient(
             session: mockSession,
             attestationManager: mockAttestation
@@ -75,7 +75,7 @@ struct CatalogAPIClientTests {
 
     @Test("Get latest version handles 401 unauthorized")
     func testGetLatestVersionUnauthorized() async throws {
-        let mockSession = MockURLSession()
+        let mockSession = MockCatalogURLSession()
         mockSession.mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.example.com/catalog/version")!,
             statusCode: 401,
@@ -92,7 +92,7 @@ struct CatalogAPIClientTests {
 
     @Test("Get latest version handles 429 rate limit")
     func testGetLatestVersionRateLimit() async throws {
-        let mockSession = MockURLSession()
+        let mockSession = MockCatalogURLSession()
         mockSession.mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.example.com/catalog/version")!,
             statusCode: 429,
@@ -121,7 +121,7 @@ struct CatalogAPIClientTests {
         encoder.dateEncodingStrategy = .iso8601
         let responseData = try encoder.encode(metadata)
 
-        let mockSession = MockURLSession()
+        let mockSession = MockCatalogURLSession()
         mockSession.mockData = responseData
         mockSession.mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.example.com/catalog/version")!,
@@ -130,7 +130,7 @@ struct CatalogAPIClientTests {
             headerFields: nil
         )
 
-        let mockAttestation = MockAttestationManager()
+        let mockAttestation = MockCatalogAttestationManager()
         mockAttestation.shouldThrowError = .noKeyExists  // Attestation fails
 
         let client = CatalogAPIClient(
@@ -149,7 +149,7 @@ struct CatalogAPIClientTests {
     func testDownloadFullCatalogSuccess() async throws {
         let catalogData = createTestCatalogData()
 
-        let mockSession = MockURLSession()
+        let mockSession = MockCatalogURLSession()
         mockSession.mockDownloadURL = URL(fileURLWithPath: "/tmp/catalog.json")
         mockSession.mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.example.com/catalog/data")!,
@@ -161,7 +161,7 @@ struct CatalogAPIClientTests {
         // Write catalog data to temp file
         try catalogData.write(to: mockSession.mockDownloadURL!)
 
-        let mockAttestation = MockAttestationManager()
+        let mockAttestation = MockCatalogAttestationManager()
         mockAttestation.shouldSucceed = true
 
         let client = CatalogAPIClient(
@@ -181,7 +181,7 @@ struct CatalogAPIClientTests {
     func testDownloadFullCatalogWithVersion() async throws {
         let catalogData = createTestCatalogData()
 
-        let mockSession = MockURLSession()
+        let mockSession = MockCatalogURLSession()
         mockSession.mockDownloadURL = URL(fileURLWithPath: "/tmp/catalog.json")
         mockSession.mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.example.com/catalog/data?version=2")!,
@@ -192,7 +192,7 @@ struct CatalogAPIClientTests {
 
         try catalogData.write(to: mockSession.mockDownloadURL!)
 
-        let mockAttestation = MockAttestationManager()
+        let mockAttestation = MockCatalogAttestationManager()
         mockAttestation.shouldSucceed = true
 
         let client = CatalogAPIClient(
@@ -212,7 +212,7 @@ struct CatalogAPIClientTests {
         let catalogData = createTestCatalogData()
         let gzippedData = try catalogData.gzipped()
 
-        let mockSession = MockURLSession()
+        let mockSession = MockCatalogURLSession()
         mockSession.mockDownloadURL = URL(fileURLWithPath: "/tmp/catalog.json.gz")
         mockSession.mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.example.com/catalog/data")!,
@@ -223,7 +223,7 @@ struct CatalogAPIClientTests {
 
         try gzippedData.write(to: mockSession.mockDownloadURL!)
 
-        let mockAttestation = MockAttestationManager()
+        let mockAttestation = MockCatalogAttestationManager()
         mockAttestation.shouldSucceed = true
 
         let client = CatalogAPIClient(
@@ -242,7 +242,7 @@ struct CatalogAPIClientTests {
     func testDownloadFullCatalogProgressTracking() async throws {
         let catalogData = createTestCatalogData()
 
-        let mockSession = MockURLSession()
+        let mockSession = MockCatalogURLSession()
         mockSession.mockDownloadURL = URL(fileURLWithPath: "/tmp/catalog.json")
         mockSession.mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.example.com/catalog/data")!,
@@ -253,7 +253,7 @@ struct CatalogAPIClientTests {
 
         try catalogData.write(to: mockSession.mockDownloadURL!)
 
-        let mockAttestation = MockAttestationManager()
+        let mockAttestation = MockCatalogAttestationManager()
         mockAttestation.shouldSucceed = true
 
         let client = CatalogAPIClient(
@@ -275,7 +275,7 @@ struct CatalogAPIClientTests {
 
     @Test("Download full catalog handles 304 not modified")
     func testDownloadFullCatalogNotModified() async throws {
-        let mockSession = MockURLSession()
+        let mockSession = MockCatalogURLSession()
         mockSession.mockDownloadURL = URL(fileURLWithPath: "/tmp/catalog.json")
         mockSession.mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.example.com/catalog/data")!,
@@ -284,7 +284,7 @@ struct CatalogAPIClientTests {
             headerFields: nil
         )
 
-        let mockAttestation = MockAttestationManager()
+        let mockAttestation = MockCatalogAttestationManager()
         mockAttestation.shouldSucceed = true
 
         let client = CatalogAPIClient(
@@ -299,7 +299,7 @@ struct CatalogAPIClientTests {
 
     @Test("Download full catalog handles 404 not found")
     func testDownloadFullCatalogNotFound() async throws {
-        let mockSession = MockURLSession()
+        let mockSession = MockCatalogURLSession()
         mockSession.mockDownloadURL = URL(fileURLWithPath: "/tmp/catalog.json")
         mockSession.mockResponse = HTTPURLResponse(
             url: URL(string: "https://api.example.com/catalog/data")!,
@@ -308,7 +308,7 @@ struct CatalogAPIClientTests {
             headerFields: nil
         )
 
-        let mockAttestation = MockAttestationManager()
+        let mockAttestation = MockCatalogAttestationManager()
         mockAttestation.shouldSucceed = true
 
         let client = CatalogAPIClient(
@@ -323,9 +323,9 @@ struct CatalogAPIClientTests {
 
     @Test("Download full catalog requires attestation")
     func testDownloadFullCatalogRequiresAttestation() async throws {
-        let mockSession = MockURLSession()
+        let mockSession = MockCatalogURLSession()
 
-        let mockAttestation = MockAttestationManager()
+        let mockAttestation = MockCatalogAttestationManager()
         mockAttestation.shouldThrowError = .assertionFailed  // Attestation fails
 
         let client = CatalogAPIClient(
@@ -343,7 +343,7 @@ struct CatalogAPIClientTests {
 
     @Test("Download delta catalog is not implemented")
     func testDownloadDeltaCatalogNotImplemented() async throws {
-        let client = CatalogAPIClient(session: MockURLSession())
+        let client = CatalogAPIClient(session: MockCatalogURLSession())
 
         await #expect(throws: CatalogUpdateError.updateNotAvailable) {
             _ = try await client.downloadDeltaCatalog(from: 1, to: 2)
@@ -354,7 +354,7 @@ struct CatalogAPIClientTests {
 // MARK: - Mock URLSession
 
 @MainActor
-class MockURLSession: URLSessionProtocol {
+class MockCatalogURLSession: URLSessionProtocol {
     var mockData: Data?
     var mockResponse: URLResponse?
     var mockError: Error?
@@ -395,7 +395,7 @@ class MockURLSession: URLSessionProtocol {
 // MARK: - Mock AttestationManager
 
 @MainActor
-class MockAttestationManager {
+class MockCatalogAttestationManager {
     var isSupported: Bool = true
     var shouldSucceed: Bool = true
     var shouldThrowError: AttestationError?

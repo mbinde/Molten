@@ -12,6 +12,7 @@ import Testing
 @testable import Molten
 
 @Suite("CatalogUpdateModels Tests")
+@MainActor
 struct CatalogUpdateModelsTests {
 
     // MARK: - CatalogVersionMetadata Tests

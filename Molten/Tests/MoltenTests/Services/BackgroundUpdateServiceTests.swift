@@ -21,6 +21,13 @@ struct BackgroundUpdateServiceTests {
         return MockCatalogUpdateService()
     }
 
+    func createMockNetworkMonitor() -> MockNetworkMonitor {
+        let monitor = MockNetworkMonitor()
+        monitor.isConnected = true
+        monitor.isOnWiFi = true
+        return monitor
+    }
+
     func createTestUpdateInfo(version: Int = 2) -> CatalogUpdateInfo {
         return CatalogUpdateInfo(
             currentVersion: 1,
@@ -42,7 +49,11 @@ struct BackgroundUpdateServiceTests {
         CatalogUpdatePreferences.shared.autoUpdateEnabled = false
 
         let mockService = createMockUpdateService()
-        let backgroundService = BackgroundUpdateService(updateService: mockService)
+        let mockNetworkMonitor = createMockNetworkMonitor()
+        let backgroundService = BackgroundUpdateService(
+            updateService: mockService,
+            networkMonitor: mockNetworkMonitor
+        )
 
         await backgroundService.checkForUpdatesIfNeeded()
 
@@ -57,7 +68,11 @@ struct BackgroundUpdateServiceTests {
         CatalogUpdatePreferences.shared.lastUpdateCheck = nil  // Force check
 
         let mockService = createMockUpdateService()
-        let backgroundService = BackgroundUpdateService(updateService: mockService)
+        let mockNetworkMonitor = createMockNetworkMonitor()
+        let backgroundService = BackgroundUpdateService(
+            updateService: mockService,
+            networkMonitor: mockNetworkMonitor
+        )
 
         await backgroundService.checkForUpdatesIfNeeded()
 
@@ -78,7 +93,11 @@ struct BackgroundUpdateServiceTests {
         CatalogUpdatePreferences.shared.lastUpdateCheck = oneHourAgo
 
         let mockService = createMockUpdateService()
-        let backgroundService = BackgroundUpdateService(updateService: mockService)
+        let mockNetworkMonitor = createMockNetworkMonitor()
+        let backgroundService = BackgroundUpdateService(
+            updateService: mockService,
+            networkMonitor: mockNetworkMonitor
+        )
 
         await backgroundService.checkForUpdatesIfNeeded()
 
@@ -97,7 +116,11 @@ struct BackgroundUpdateServiceTests {
         CatalogUpdatePreferences.shared.lastUpdateCheck = twentyFiveHoursAgo
 
         let mockService = createMockUpdateService()
-        let backgroundService = BackgroundUpdateService(updateService: mockService)
+        let mockNetworkMonitor = createMockNetworkMonitor()
+        let backgroundService = BackgroundUpdateService(
+            updateService: mockService,
+            networkMonitor: mockNetworkMonitor
+        )
 
         await backgroundService.checkForUpdatesIfNeeded()
 
@@ -116,7 +139,11 @@ struct BackgroundUpdateServiceTests {
         CatalogUpdatePreferences.shared.lastUpdateCheck = threeDaysAgo
 
         let mockService = createMockUpdateService()
-        let backgroundService = BackgroundUpdateService(updateService: mockService)
+        let mockNetworkMonitor = createMockNetworkMonitor()
+        let backgroundService = BackgroundUpdateService(
+            updateService: mockService,
+            networkMonitor: mockNetworkMonitor
+        )
 
         await backgroundService.checkForUpdatesIfNeeded()
 
@@ -135,7 +162,11 @@ struct BackgroundUpdateServiceTests {
         CatalogUpdatePreferences.shared.lastUpdateCheck = eightDaysAgo
 
         let mockService = createMockUpdateService()
-        let backgroundService = BackgroundUpdateService(updateService: mockService)
+        let mockNetworkMonitor = createMockNetworkMonitor()
+        let backgroundService = BackgroundUpdateService(
+            updateService: mockService,
+            networkMonitor: mockNetworkMonitor
+        )
 
         await backgroundService.checkForUpdatesIfNeeded()
 
@@ -154,7 +185,11 @@ struct BackgroundUpdateServiceTests {
         CatalogUpdatePreferences.shared.lastUpdateCheck = fifteenDaysAgo
 
         let mockService = createMockUpdateService()
-        let backgroundService = BackgroundUpdateService(updateService: mockService)
+        let mockNetworkMonitor = createMockNetworkMonitor()
+        let backgroundService = BackgroundUpdateService(
+            updateService: mockService,
+            networkMonitor: mockNetworkMonitor
+        )
 
         await backgroundService.checkForUpdatesIfNeeded()
 
@@ -173,7 +208,11 @@ struct BackgroundUpdateServiceTests {
         CatalogUpdatePreferences.shared.lastUpdateCheck = thirtyOneDaysAgo
 
         let mockService = createMockUpdateService()
-        let backgroundService = BackgroundUpdateService(updateService: mockService)
+        let mockNetworkMonitor = createMockNetworkMonitor()
+        let backgroundService = BackgroundUpdateService(
+            updateService: mockService,
+            networkMonitor: mockNetworkMonitor
+        )
 
         await backgroundService.checkForUpdatesIfNeeded()
 
@@ -190,7 +229,11 @@ struct BackgroundUpdateServiceTests {
         CatalogUpdatePreferences.shared.lastUpdateCheck = nil
 
         let mockService = createMockUpdateService()
-        let backgroundService = BackgroundUpdateService(updateService: mockService)
+        let mockNetworkMonitor = createMockNetworkMonitor()
+        let backgroundService = BackgroundUpdateService(
+            updateService: mockService,
+            networkMonitor: mockNetworkMonitor
+        )
 
         let beforeCheck = Date()
         await backgroundService.checkForUpdatesIfNeeded()
@@ -212,7 +255,11 @@ struct BackgroundUpdateServiceTests {
         let mockService = createMockUpdateService()
         mockService.mockUpdateInfo = nil  // No update available
 
-        let backgroundService = BackgroundUpdateService(updateService: mockService)
+        let mockNetworkMonitor = createMockNetworkMonitor()
+        let backgroundService = BackgroundUpdateService(
+            updateService: mockService,
+            networkMonitor: mockNetworkMonitor
+        )
 
         await backgroundService.checkForUpdatesIfNeeded()
 
@@ -350,7 +397,11 @@ struct BackgroundUpdateServiceTests {
         let mockService = createMockUpdateService()
         mockService.shouldThrowError = .serverError(statusCode: 500)
 
-        let backgroundService = BackgroundUpdateService(updateService: mockService)
+        let mockNetworkMonitor = createMockNetworkMonitor()
+        let backgroundService = BackgroundUpdateService(
+            updateService: mockService,
+            networkMonitor: mockNetworkMonitor
+        )
 
         // Should not crash
         await backgroundService.checkForUpdatesIfNeeded()
@@ -370,10 +421,12 @@ struct BackgroundUpdateServiceTests {
 
         let mockService = createMockUpdateService()
         mockService.mockUpdateInfo = createTestUpdateInfo()
-        mockService.shouldThrowError = .checksumMismatch  // Will fail on download
+        // Don't set mockUpdateResult - download will fail with missing result error
+        // (can't use shouldThrowError as it affects checkForUpdates too)
 
         let mockNetworkMonitor = MockNetworkMonitor()
         mockNetworkMonitor.isConnected = true
+        mockNetworkMonitor.isOnWiFi = true  // Must be on WiFi for wifiOnly policy
         mockNetworkMonitor.isExpensive = false
 
         let backgroundService = BackgroundUpdateService(
@@ -387,31 +440,5 @@ struct BackgroundUpdateServiceTests {
         // Should have attempted both check and download
         #expect(mockService.checkForUpdatesCallCount == 1)
         #expect(mockService.downloadCallCount == 1)
-    }
-}
-
-// MARK: - Mock Network Monitor
-
-@MainActor
-class MockNetworkMonitor: NetworkMonitorProtocol {
-    @Published var isConnected: Bool = true
-    @Published var isOnWiFi: Bool = true
-    @Published var isExpensive: Bool = false
-    @Published var isConstrained: Bool = false
-
-    var connectionDescription: String {
-        if !isConnected {
-            return "No connection"
-        }
-        return isOnWiFi ? "WiFi" : "Cellular"
-    }
-
-    func canDownloadCatalog() -> Bool {
-        guard isConnected else {
-            return false
-        }
-
-        let policy = CatalogUpdatePreferences.shared.downloadPolicy
-        return policy.allowsDownload(isOnWiFi: isOnWiFi)
     }
 }

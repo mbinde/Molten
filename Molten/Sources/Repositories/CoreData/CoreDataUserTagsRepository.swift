@@ -355,10 +355,6 @@ class CoreDataUserTagsRepository: @unchecked Sendable, UserTagsRepository {
                         coreDataItem.setValue(ownerType.rawValue, forKey: "owner_type")
                         coreDataItem.setValue(ownerId, forKey: "owner_id")
                         coreDataItem.setValue(tag, forKey: "tag")
-                        // Set item_stable_id for backward compatibility (if owner is glass item)
-                        if ownerType == .glassItem {
-                            coreDataItem.setValue(ownerId, forKey: "item_stable_id")
-                        }
                     }
 
                     try self.backgroundContext.save()
@@ -484,10 +480,6 @@ class CoreDataUserTagsRepository: @unchecked Sendable, UserTagsRepository {
                             coreDataItem.setValue(ownerType.rawValue, forKey: "owner_type")
                             coreDataItem.setValue(ownerId, forKey: "owner_id")
                             coreDataItem.setValue(tag, forKey: "tag")
-                            // Set item_stable_id for backward compatibility (if owner is glass item)
-                            if ownerType == .glassItem {
-                                coreDataItem.setValue(ownerId, forKey: "item_stable_id")
-                            }
                         }
                     }
 

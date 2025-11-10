@@ -81,8 +81,9 @@ class CoreDataUserImageRepository: @unchecked Sendable, UserImageRepository {
                 ownerType.rawValue, ownerId
             )
             request.sortDescriptors = [
-                NSSortDescriptor(key: "imageType", ascending: true), // Primary first
-                NSSortDescriptor(key: "dateCreated", ascending: false)
+                // "primary" > "alternate" alphabetically, so descending puts primary first
+                NSSortDescriptor(key: "imageType", ascending: false), // Primary first
+                NSSortDescriptor(key: "dateCreated", ascending: false)  // Newest first
             ]
 
             let entities = try self.context.fetch(request)
@@ -241,8 +242,11 @@ class CoreDataUserImageRepository: @unchecked Sendable, UserImageRepository {
             newSize = CGSize(width: maxDimension * aspectRatio, height: maxDimension)
         }
 
-        // Resize image
-        let renderer = UIGraphicsImageRenderer(size: newSize)
+        // Resize image - use scale=1.0 to ensure pixel dimensions match size
+        // (otherwise @3x displays would create 6144px images when resizing to 2048pt)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1.0
+        let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
         return renderer.image { _ in
             image.draw(in: CGRect(origin: .zero, size: newSize))
         }

@@ -40,7 +40,7 @@ struct InventorySharingManagerTests {
         cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = createTestManager(coordinator: mockCoordinator)
 
         let item = createTestItem()
         let metadata = MyShareMetadata(displayName: "Test User")
@@ -56,7 +56,7 @@ struct InventorySharingManagerTests {
         cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = createTestManager(coordinator: mockCoordinator)
 
         let item = createTestItem()
         let metadata = MyShareMetadata(displayName: "Test User")
@@ -74,7 +74,7 @@ struct InventorySharingManagerTests {
         cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = createTestManager(coordinator: mockCoordinator)
 
         let item = createTestItem()
         let metadata = MyShareMetadata(displayName: "Test User")
@@ -106,7 +106,7 @@ struct InventorySharingManagerTests {
         cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = createTestManager(coordinator: mockCoordinator)
 
         let item = createTestItem()
         let metadata = MyShareMetadata(displayName: "Alice", shareNotes: "My collection")
@@ -127,7 +127,7 @@ struct InventorySharingManagerTests {
         cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = createTestManager(coordinator: mockCoordinator)
 
         let item = createTestItem()
         let metadata = MyShareMetadata(displayName: "Alice", shareNotes: nil)
@@ -144,7 +144,7 @@ struct InventorySharingManagerTests {
         cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = createTestManager(coordinator: mockCoordinator)
 
         let item = createTestItem()
         let metadata1 = MyShareMetadata(displayName: "Alice", shareNotes: "Old notes")
@@ -164,7 +164,7 @@ struct InventorySharingManagerTests {
         cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = createTestManager(coordinator: mockCoordinator)
 
         let item = createTestItem()
         let metadata = MyShareMetadata(displayName: "Alice", shareNotes: "My notes")
@@ -199,7 +199,7 @@ struct InventorySharingManagerTests {
             ownerName: "Bob's Glass Shop",
             ownerShareNotes: "Boro specialist"
         )
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = createTestManager(coordinator: mockCoordinator)
 
         let result = try await manager.addFriendShare(shareCode: "FRIEND", friendName: nil)
 
@@ -214,7 +214,7 @@ struct InventorySharingManagerTests {
         cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = createTestManager(coordinator: mockCoordinator)
 
         let item = createTestItem()
         let metadata = MyShareMetadata(displayName: "Test User")
@@ -245,7 +245,7 @@ struct InventorySharingManagerTests {
 
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = createValidSnapshotResult()
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = createTestManager(coordinator: mockCoordinator)
 
         let result = try await manager.addFriendShare(shareCode: "FRIEND", friendName: "Alice")
 
@@ -264,7 +264,7 @@ struct InventorySharingManagerTests {
 
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = createValidSnapshotResult()
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = createTestManager(coordinator: mockCoordinator)
 
         _ = try await manager.addFriendShare(shareCode: "FRIEND", friendName: "Alice")
         _ = try await manager.addFriendShare(shareCode: "FRIEND", friendName: "Alice Updated")
@@ -282,7 +282,7 @@ struct InventorySharingManagerTests {
 
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = createValidSnapshotResult()
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = createTestManager(coordinator: mockCoordinator)
 
         _ = try await manager.addFriendShare(shareCode: "FRIEND", friendName: "Alice")
 
@@ -316,7 +316,7 @@ struct InventorySharingManagerTests {
 
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = createValidSnapshotResult()
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = createTestManager(coordinator: mockCoordinator)
 
         _ = try await manager.addFriendShare(shareCode: "FRIEND", friendName: "Alice")
 
@@ -327,6 +327,26 @@ struct InventorySharingManagerTests {
     }
 
     // MARK: - Helper Methods
+
+    private func createTestManager(coordinator: MockInventorySharingCoordinator) -> InventorySharingManager {
+        // Create isolated test controller
+        let testController = PersistenceController.createTestController()
+        RepositoryFactory.configureForTestingWithCoreData(controller: testController)
+
+        let testContext = testController.container.viewContext
+        let catalogRepo = RepositoryFactory.createGlassItemRepository()
+        let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
+        let sharedInventoryRepo = CoreDataSharedInventoryRepository(
+            context: testContext,
+            catalogRepository: catalogRepo
+        )
+
+        return InventorySharingManager(
+            coordinator: coordinator,
+            shareRecordRepository: shareRecordRepo,
+            sharedInventoryRepository: sharedInventoryRepo
+        )
+    }
 
     private func createTestItem() -> CompleteInventoryItemModel {
         let glassItem = GlassItemModel(

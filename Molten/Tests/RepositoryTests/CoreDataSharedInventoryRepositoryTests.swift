@@ -20,7 +20,18 @@ struct CoreDataSharedInventoryRepositoryTests {
     func testSaveInventorySnapshot() async throws {
         // Setup
         let controller = PersistenceController.createTestController()
-        let (sharedRepo, _) = try await createTestRepositories(controller: controller)
+        let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
+
+        // Create catalog item first (required for getSnapshot to work)
+        let glassItem = GlassItemModel(
+            stable_id: "test-123",
+            name: "Clear Rod",
+            sku: "001",
+            manufacturer: "bullseye",
+            coe: 90,
+            mfr_status: "available"
+        )
+        _ = try await glassRepo.createItem(glassItem)
 
         let items = [
             InventoryItemSnapshot(
@@ -49,7 +60,18 @@ struct CoreDataSharedInventoryRepositoryTests {
     func testSaveInventoryWithTags() async throws {
         // Setup
         let controller = PersistenceController.createTestController()
-        let (sharedRepo, _) = try await createTestRepositories(controller: controller)
+        let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
+
+        // Create catalog item first (required for getSnapshot to work)
+        let glassItem = GlassItemModel(
+            stable_id: "test-123",
+            name: "Clear Rod",
+            sku: "001",
+            manufacturer: "bullseye",
+            coe: 90,
+            mfr_status: "available"
+        )
+        _ = try await glassRepo.createItem(glassItem)
 
         let items = [
             InventoryItemSnapshot(
@@ -78,7 +100,28 @@ struct CoreDataSharedInventoryRepositoryTests {
     func testReplaceExistingSnapshot() async throws {
         // Setup
         let controller = PersistenceController.createTestController()
-        let (sharedRepo, _) = try await createTestRepositories(controller: controller)
+        let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
+
+        // Create catalog items first (required for getSnapshot to work)
+        let glassItem1 = GlassItemModel(
+            stable_id: "test-123",
+            name: "Clear Rod",
+            sku: "001",
+            manufacturer: "bullseye",
+            coe: 90,
+            mfr_status: "available"
+        )
+        _ = try await glassRepo.createItem(glassItem1)
+
+        let glassItem2 = GlassItemModel(
+            stable_id: "test-456",
+            name: "Clear Tube",
+            sku: "002",
+            manufacturer: "bullseye",
+            coe: 90,
+            mfr_status: "available"
+        )
+        _ = try await glassRepo.createItem(glassItem2)
 
         let items1 = [
             InventoryItemSnapshot(
@@ -117,7 +160,28 @@ struct CoreDataSharedInventoryRepositoryTests {
     func testSaveMultipleSnapshots() async throws {
         // Setup
         let controller = PersistenceController.createTestController()
-        let (sharedRepo, _) = try await createTestRepositories(controller: controller)
+        let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
+
+        // Create catalog items first (required for getSnapshot to work)
+        let glassItem1 = GlassItemModel(
+            stable_id: "test-123",
+            name: "Clear Rod",
+            sku: "001",
+            manufacturer: "bullseye",
+            coe: 90,
+            mfr_status: "available"
+        )
+        _ = try await glassRepo.createItem(glassItem1)
+
+        let glassItem2 = GlassItemModel(
+            stable_id: "test-456",
+            name: "Clear Tube",
+            sku: "002",
+            manufacturer: "bullseye",
+            coe: 90,
+            mfr_status: "available"
+        )
+        _ = try await glassRepo.createItem(glassItem2)
 
         let items1 = [
             InventoryItemSnapshot(
@@ -314,7 +378,28 @@ struct CoreDataSharedInventoryRepositoryTests {
     func testDeleteOnlySpecificSnapshot() async throws {
         // Setup
         let controller = PersistenceController.createTestController()
-        let (sharedRepo, _) = try await createTestRepositories(controller: controller)
+        let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
+
+        // Create catalog items first (required for getSnapshot to work)
+        let glassItem1 = GlassItemModel(
+            stable_id: "test-123",
+            name: "Clear Rod",
+            sku: "001",
+            manufacturer: "bullseye",
+            coe: 90,
+            mfr_status: "available"
+        )
+        _ = try await glassRepo.createItem(glassItem1)
+
+        let glassItem2 = GlassItemModel(
+            stable_id: "test-456",
+            name: "Clear Tube",
+            sku: "002",
+            manufacturer: "bullseye",
+            coe: 90,
+            mfr_status: "available"
+        )
+        _ = try await glassRepo.createItem(glassItem2)
 
         let items1 = [
             InventoryItemSnapshot(

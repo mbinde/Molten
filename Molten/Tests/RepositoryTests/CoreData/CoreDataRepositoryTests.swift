@@ -69,6 +69,30 @@ struct CoreDataRepositoryTests {
         
         // Add multiple test items
         let testItems: [GlassItemModel] = [
+            GlassItemModel(
+                stable_id: "corp1-g1-0",
+                name: "Glass One",
+                sku: "g1",
+                manufacturer: "corp1",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: "corp1-g2-0",
+                name: "Glass Two",
+                sku: "g2",
+                manufacturer: "corp1",
+                coe: 96,
+                mfr_status: "available"
+            ),
+            GlassItemModel(
+                stable_id: "corp2-g3-0",
+                name: "Glass Three",
+                sku: "g3",
+                manufacturer: "corp2",
+                coe: 104,
+                mfr_status: "discontinued"
+            )
         ]
 
         for item in testItems {

@@ -161,15 +161,17 @@ struct JSONDataLoader {
     /// Store catalog metadata in UserDefaults for bug reports
     /// - Parameters:
     ///   - metadata: The catalog metadata to store
-    ///   - catalogType: The type of catalog (used to namespace keys)
+    ///   - catalogType: The type of catalog (used for logging only; keys are not prefixed for backward compatibility)
     nonisolated private func storeMetadata(_ metadata: CatalogMetadata, catalogType: String = "glass") {
         let defaults = UserDefaults.standard
-        let prefix = catalogType.capitalized
-        defaults.set(metadata.version, forKey: "\(prefix)CatalogDataVersion")
-        defaults.set(metadata.generated, forKey: "\(prefix)CatalogDataGenerated")
+        // Store without prefix for backward compatibility with existing tests and consumers
+        defaults.set(metadata.version, forKey: "CatalogDataVersion")
+        defaults.set(metadata.generated, forKey: "CatalogDataGenerated")
         if let itemCount = metadata.itemCount {
-            defaults.set(itemCount, forKey: "\(prefix)CatalogDataItemCount")
+            defaults.set(itemCount, forKey: "CatalogDataItemCount")
         }
+        // Force synchronization to ensure values are immediately available for tests
+        defaults.synchronize()
         debugLog("Stored \(catalogType) catalog metadata: version=\(metadata.version), generated=\(metadata.generated)")
     }
 

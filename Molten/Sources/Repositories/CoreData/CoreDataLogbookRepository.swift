@@ -91,6 +91,19 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
                 throw ProjectRepositoryError.logNotFound
             }
 
+            // Delete UserTags manually (polymorphic association, not a Core Data relationship)
+            let tagFetchRequest = NSFetchRequest<UserTags>(entityName: "UserTags")
+            tagFetchRequest.predicate = NSPredicate(
+                format: "owner_id == %@ AND owner_type == %@",
+                id.uuidString,
+                TagOwnerType.logbook.rawValue
+            )
+            let tagsToDelete = try self.context.fetch(tagFetchRequest)
+            for tag in tagsToDelete {
+                self.context.delete(tag)
+            }
+
+            // Delete the logbook entity (related entities with cascade delete will be removed automatically)
             self.context.delete(entity)
             try self.context.save()
         }
@@ -101,16 +114,16 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
     func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
         return try await context.perform {
             let fetchRequest = Logbook.fetchRequest()
-            // Check if either date_started or date_completed falls within the range, or if date_created does (when both are nil)
+            // Check if either date_started or project_date falls within the range, or if date_created does (when both are nil)
             fetchRequest.predicate = NSPredicate(
-                format: "(date_started >= %@ AND date_started <= %@) OR (date_completed >= %@ AND date_completed <= %@) OR (date_started == nil AND date_completed == nil AND date_created >= %@ AND date_created <= %@)",
+                format: "(date_started >= %@ AND date_started <= %@) OR (project_date >= %@ AND project_date <= %@) OR (date_started == nil AND project_date == nil AND date_created >= %@ AND date_created <= %@)",
                 start as CVarArg, end as CVarArg,
                 start as CVarArg, end as CVarArg,
                 start as CVarArg, end as CVarArg
             )
-            // Sort by completion date, then start date, then created date
+            // Sort by completion date (project_date), then start date, then created date
             fetchRequest.sortDescriptors = [
-                NSSortDescriptor(key: "date_completed", ascending: false),
+                NSSortDescriptor(key: "project_date", ascending: false),
                 NSSortDescriptor(key: "date_started", ascending: false),
                 NSSortDescriptor(key: "date_created", ascending: false)
             ]
@@ -315,14 +328,6 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             return TechniqueType(rawValue: typeString)
         }()
 
-        // Extract kiln schedule ID from relationship (if available)
-        let kilnScheduleId: UUID? = {
-            guard let scheduleEntity = entity.value(forKey: "kilnSchedule") as? KilnScheduleEntity else {
-                return nil
-            }
-            return scheduleEntity.value(forKey: "id") as? UUID
-        }()
-
         return LogbookModel(
             id: id,
             title: title,
@@ -340,7 +345,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             images: images,
             heroImageId: entity.value(forKey: "hero_image_id") as? UUID,
             glassItems: glassItems,
-            kilnScheduleId: kilnScheduleId,
+            kilnScheduleId: nil,  // Logbook entity has no kilnSchedule relationship
             pricePoint: entity.value(forKey: "price_point") as? Decimal,
             saleDate: entity.value(forKey: "sale_date") as? Date,
             buyerInfo: entity.value(forKey: "buyer_info") as? String,

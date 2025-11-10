@@ -57,35 +57,22 @@ actor MockLogbookRepository: LogbookRepository {
 
     func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
         let filtered = Array(logs.values).filter { log in
-            // Check if log matches the date range based on priority:
-            // 1. If completionDate OR startDate is in range → include
-            // 2. If both are nil, check dateCreated
+            // Check if log matches the date range:
+            // Use completionDate, startDate, or fallback to dateCreated
+            // Same priority logic as sorting: completionDate > startDate > dateCreated
 
-            var hasRelevantDate = false
-            var dateInRange = false
-
-            // Check completionDate
+            // Determine the effective date for range checking
+            let effectiveDate: Date
             if let completionDate = log.completionDate {
-                hasRelevantDate = true
-                if completionDate >= start && completionDate <= end {
-                    dateInRange = true
-                }
+                effectiveDate = completionDate
+            } else if let startDate = log.startDate {
+                effectiveDate = startDate
+            } else {
+                effectiveDate = log.dateCreated
             }
 
-            // Check startDate (OR logic - if either is in range, include)
-            if let startDate = log.startDate {
-                hasRelevantDate = true
-                if startDate >= start && startDate <= end {
-                    dateInRange = true
-                }
-            }
-
-            // If neither startDate nor completionDate exist, fall back to dateCreated
-            if !hasRelevantDate {
-                dateInRange = log.dateCreated >= start && log.dateCreated <= end
-            }
-
-            return dateInRange
+            // Check if the effective date is within range
+            return effectiveDate >= start && effectiveDate <= end
         }.sorted { log1, log2 in
             // Sort by priority: completionDate > startDate > dateCreated
             // Most recent first (descending order)

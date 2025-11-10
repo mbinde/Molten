@@ -158,6 +158,20 @@ struct CatalogStorageServiceTests {
     func testLoadCurrentCatalogWhenNoneExists() async throws {
         let service = try CatalogStorageService()
 
+        // Clean up any existing current catalog file from previous tests
+        let fm = FileManager.default
+        guard let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            throw CatalogUpdateError.storageError(
+                underlying: NSError(domain: "Test", code: -1)
+            )
+        }
+        let catalogDir = appSupport.appendingPathComponent("CatalogData", isDirectory: true)
+        let currentFile = catalogDir.appendingPathComponent("current_catalog.json")
+
+        if fm.fileExists(atPath: currentFile.path) {
+            try fm.removeItem(at: currentFile)
+        }
+
         let loadedData = await service.loadCurrentCatalog()
         #expect(loadedData == nil)
     }

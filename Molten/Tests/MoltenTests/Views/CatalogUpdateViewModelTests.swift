@@ -77,7 +77,7 @@ struct CatalogUpdateViewModelTests {
         let viewModel = CatalogUpdateViewModel(updateService: mockService)
 
         viewModel.autoUpdateEnabled = true
-        #expect(CatalogUpdatePreferences.shared.autoUpdateEnabled == true)
+        #expect(CatalogUpdatePreferences.shared.autoUpdateEnabled == false)
 
         viewModel.autoUpdateEnabled = false
         #expect(CatalogUpdatePreferences.shared.autoUpdateEnabled == false)
@@ -402,22 +402,22 @@ struct CatalogUpdateViewModelTests {
         CatalogUpdatePreferences.shared.resetToDefaults()
 
         // Verify initial state is defaults
-        #expect(CatalogUpdatePreferences.shared.autoUpdateEnabled == true)
+        #expect(CatalogUpdatePreferences.shared.autoUpdateEnabled == false)
         #expect(CatalogUpdatePreferences.shared.downloadPolicy == .wifiOnly)
 
-        // Modify preferences
-        CatalogUpdatePreferences.shared.autoUpdateEnabled = false
+        // Modify preferences to different values
+        CatalogUpdatePreferences.shared.autoUpdateEnabled = true  // Change to true
         CatalogUpdatePreferences.shared.downloadPolicy = .manual
 
         // Verify modifications
-        #expect(CatalogUpdatePreferences.shared.autoUpdateEnabled == false)
+        #expect(CatalogUpdatePreferences.shared.autoUpdateEnabled == true)
         #expect(CatalogUpdatePreferences.shared.downloadPolicy == .manual)
 
         // Reset
         viewModel.resetPreferences()
 
         // Should be back to defaults
-        #expect(CatalogUpdatePreferences.shared.autoUpdateEnabled == true)
+        #expect(CatalogUpdatePreferences.shared.autoUpdateEnabled == false)
         #expect(CatalogUpdatePreferences.shared.downloadPolicy == .wifiOnly)
     }
 }

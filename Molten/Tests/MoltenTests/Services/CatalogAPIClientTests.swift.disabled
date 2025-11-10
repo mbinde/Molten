@@ -395,7 +395,7 @@ class MockCatalogURLSession: URLSessionProtocol {
 // MARK: - Mock AttestationManager
 
 @MainActor
-class MockCatalogAttestationManager {
+class MockCatalogAttestationManager: AttestationManagerProtocol {
     var isSupported: Bool = true
     var shouldSucceed: Bool = true
     var shouldThrowError: AttestationError?

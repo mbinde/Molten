@@ -51,20 +51,21 @@ class PersistenceController {
     @MainActor
     static let preview: PersistenceController = {
         Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Creating preview PersistenceController...")
-        let result = PersistenceController(inMemory: true)
+        // Preview uses CloudKit container for UI compatibility (CloudKitSyncStatusView needs it)
+        let result = PersistenceController(inMemory: true, forceCloudKit: true)
         let viewContext = result.container.viewContext
         viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-        
+
         // Verify that the preview controller is ready before returning
         if result.storeLoadingError != nil {
             Logger(subsystem: "com.flameworker.app", category: "persistence").error("❌ Preview controller has store loading error: \(String(describing: result.storeLoadingError))")
         } else {
             Logger(subsystem: "com.flameworker.app", category: "persistence").info("✅ Preview controller created successfully")
         }
-        
+
         // For testing, we'll create preview data lazily on first access rather than during initialization
         // This prevents model compatibility issues during test runs
-        
+
         return result
     }()
     
@@ -134,13 +135,14 @@ class PersistenceController {
     nonisolated(unsafe) private(set) var localContext: NSManagedObjectContext!
     nonisolated(unsafe) private(set) var cloudContext: NSManagedObjectContext!
 
-    nonisolated init(inMemory: Bool = false) {
+    nonisolated init(inMemory: Bool = false, forceCloudKit: Bool = false) {
         // Use the shared model instance to prevent multiple models
         Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Creating PersistenceController with shared model...")
 
         // For tests, use NSPersistentContainer (no CloudKit) to avoid initialization warnings
         // For production, use NSPersistentCloudKitContainer for CloudKit sync
-        if inMemory {
+        // forceCloudKit: Use CloudKit even for inMemory (for UI previews that need CloudKit features)
+        if inMemory && !forceCloudKit {
             container = NSPersistentContainer(name: "Molten", managedObjectModel: Self.sharedModel)
         } else {
             container = NSPersistentCloudKitContainer(name: "Molten", managedObjectModel: Self.sharedModel)

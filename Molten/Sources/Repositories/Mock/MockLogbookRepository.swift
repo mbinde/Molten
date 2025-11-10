@@ -58,26 +58,21 @@ actor MockLogbookRepository: LogbookRepository {
     func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
         let filtered = Array(logs.values).filter { log in
             // Check if log matches the date range:
-            // Include only if completionDate OR startDate is in range
-            // Exclude entries where both are nil (no fallback to dateCreated)
+            // Use completionDate, startDate, or fallback to dateCreated
+            // Same priority logic as sorting: completionDate > startDate > dateCreated
 
-            var dateInRange = false
-
-            // Check completionDate
+            // Determine the effective date for range checking
+            let effectiveDate: Date
             if let completionDate = log.completionDate {
-                if completionDate >= start && completionDate <= end {
-                    dateInRange = true
-                }
+                effectiveDate = completionDate
+            } else if let startDate = log.startDate {
+                effectiveDate = startDate
+            } else {
+                effectiveDate = log.dateCreated
             }
 
-            // Check startDate (OR logic - if either is in range, include)
-            if let startDate = log.startDate {
-                if startDate >= start && startDate <= end {
-                    dateInRange = true
-                }
-            }
-
-            return dateInRange
+            // Check if the effective date is within range
+            return effectiveDate >= start && effectiveDate <= end
         }.sorted { log1, log2 in
             // Sort by priority: completionDate > startDate > dateCreated
             // Most recent first (descending order)

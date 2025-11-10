@@ -61,6 +61,9 @@ final class BackgroundUpdateService {
 
             log.info("📦 Update available: v\(updateInfo.availableVersion)")
 
+            // Mark update as available for badge display
+            preferences.hasUpdateAvailable = true
+
             // Check if we should auto-download
             guard shouldAutoDownload() else {
                 log.info("⏸️ Auto-download conditions not met (network policy)")
@@ -75,6 +78,9 @@ final class BackgroundUpdateService {
             )
 
             log.info("✅ Background update completed: v\(result.version), +\(result.itemsCreated) items created, ~\(result.itemsUpdated) items updated")
+
+            // Clear update available badge
+            preferences.hasUpdateAvailable = false
 
         } catch {
             log.error("❌ Background update failed: \(error.localizedDescription)")

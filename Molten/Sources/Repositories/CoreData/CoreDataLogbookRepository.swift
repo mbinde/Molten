@@ -91,6 +91,19 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
                 throw ProjectRepositoryError.logNotFound
             }
 
+            // Delete UserTags manually (polymorphic association, not a Core Data relationship)
+            let tagFetchRequest = NSFetchRequest<UserTags>(entityName: "UserTags")
+            tagFetchRequest.predicate = NSPredicate(
+                format: "owner_id == %@ AND owner_type == %@",
+                id.uuidString,
+                TagOwnerType.logbook.rawValue
+            )
+            let tagsToDelete = try self.context.fetch(tagFetchRequest)
+            for tag in tagsToDelete {
+                self.context.delete(tag)
+            }
+
+            // Delete the logbook entity (related entities with cascade delete will be removed automatically)
             self.context.delete(entity)
             try self.context.save()
         }

@@ -162,8 +162,8 @@ struct RepositoryFactoryDataLoadingTests {
         // Should be able to create and retrieve items
         let createdItem = try await catalogService.createGlassItem(testItem, initialInventory: [], tags: [])
         #expect(createdItem.glassItem.name == "Factory Test Item", "Should create item through factory services")
-        
-        let retrievedItem = try await catalogService.getGlassItemByNaturalKey("FACTORY-TEST-001")
+
+        let retrievedItem = try await catalogService.getGlassItemByNaturalKey("test01")
         #expect(retrievedItem?.glassItem.name == "Factory Test Item", "Should retrieve item through factory services")
     }
     
@@ -218,7 +218,8 @@ struct RepositoryFactoryDataLoadingTests {
             CatalogItemData(
                 id: "test1",
                 code: code, // Use code that generates the same natural key
-                manufacturer: "TestManufacturer",
+                stable_id: stableIdToUpdate, // CRITICAL: Must match existing item's stable_id
+                manufacturer: manufacturer, // CRITICAL: Must match existing item's manufacturer
                 name: "Updated Test Red Glass", // Changed name
                 manufacturer_description: "Updated red glass for unit tests",
                 synonyms: ["red", "test", "updated"],

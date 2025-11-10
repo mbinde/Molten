@@ -134,14 +134,16 @@ struct CloudKitSyncStatusIconView: View {
 
 #Preview("Sync Status") {
     let controller = PersistenceController.preview
-    let monitor = CloudKitSyncMonitor(container: controller.container)
+    // Preview controller uses CloudKit variant for UI compatibility
+    let monitor = CloudKitSyncMonitor(container: controller.container as! NSPersistentCloudKitContainer)
     CloudKitSyncStatusView(monitor: monitor)
         .padding()
 }
 
 #Preview("Sync Status Icon") {
     let controller = PersistenceController.preview
-    let monitor = CloudKitSyncMonitor(container: controller.container)
+    // Preview controller uses CloudKit variant for UI compatibility
+    let monitor = CloudKitSyncMonitor(container: controller.container as! NSPersistentCloudKitContainer)
     HStack {
         CloudKitSyncStatusIconView(monitor: monitor)
         Text("Settings")

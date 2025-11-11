@@ -13,24 +13,19 @@ import RevenueCat
 @main
 struct MoltenApp: App {
 
+    // MARK: - Dependency Injection
+
+    /// Application dependencies - created once at app startup
+    /// This replaces RepositoryFactory static methods with proper DI
+    @State private var dependencies: AppDependencies?
+
     init() {
         print(String(repeating: "=", count: 80))
         print("🚀 MoltenApp.init() STARTING")
         print(String(repeating: "=", count: 80))
 
-        // Configure RepositoryFactory for production (unless running tests)
-        let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-        print("🔍 isRunningTests check: \(isRunningTests)")
-        print("🔍 XCTestConfigurationFilePath: \(ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] ?? "nil")")
-
-        if !isRunningTests {
-            print("🎯 Calling RepositoryFactory.configureForProduction()")
-            RepositoryFactory.configureForProduction()
-            print("✅ RepositoryFactory configured for PRODUCTION mode")
-            print("✅ Current mode: \(RepositoryFactory.mode)")
-        } else {
-            print("⚠️ RepositoryFactory using MOCK mode (tests detected)")
-        }
+        // Note: AppDependencies will be created in .onAppear after view hierarchy is set up
+        // This avoids blocking app launch with Core Data initialization
 
         // Configure RevenueCat SDK
         configureRevenueCat()
@@ -56,9 +51,6 @@ struct MoltenApp: App {
     @State private var showingDeepLinkedItem = false
     @State private var pendingDeepLinkStableId: String?  // Hold the new ID during refresh
     @State private var mainTabView: MainTabView?
-
-    // Subscription services
-    private let entitlementService = RepositoryFactory.createEntitlementService()
     @State private var subscriptionManager: SubscriptionManager?
 
     // Detect if we're running in test environment

@@ -35,9 +35,18 @@ This document tracks architectural feedback received and our analysis/decisions 
 - Service locator = hidden dependencies (hard to see what depends on what)
 - Makes reasoning about object lifecycle impossible
 
-**Decision:** TBD
+**Decision:** ⏳ INVESTIGATE COMPLETE - See detailed analysis
 
-**Action items:** TBD
+**Investigation complete:** See [`Dependency-Injection-Investigation.md`](./Dependency-Injection-Investigation.md)
+
+**Key findings:**
+- 141 RepositoryFactory usages in views
+- ~195 files need updating
+- 20-30 hours of mechanical changes
+- **Recommendation:** YES - migrate to dependency injection
+- **Priority:** Medium (required for Swift 6 strict mode)
+
+**Action items:** See investigation document for full migration plan
 
 ---
 
@@ -66,9 +75,21 @@ This document tracks architectural feedback received and our analysis/decisions 
 - Alternative: In-memory dictionary/array loaded from JSON (simpler, faster)
 - Consideration: ~2,659 catalog items - fits easily in memory
 
-**Decision:** TBD
+**Decision:** ⏳ INVESTIGATE COMPLETE - See detailed analysis
 
-**Action items:** TBD
+**Investigation complete:** See [`Catalog-Data-Investigation.md`](./Catalog-Data-Investigation.md)
+
+**Key findings:**
+- **ZERO Core Data relationships** from GlassItem (already string-based!)
+- Simple predicates easily replaced with Swift native filtering
+- Most queries: `fetchItems(matching: nil)` then filter (perfect for in-memory!)
+- Memory: ~1.3 MB for 2,659 items (negligible)
+- 40-60 hours for full migration
+- **Recommendation:** YES - move catalog to in-memory store
+- **Priority:** High (eliminates two-store complexity)
+- **Dependencies:** Should do AFTER Issue 1.1 (DI) for cleaner migration
+
+**Action items:** See investigation document for 6-phase migration plan
 
 ---
 
@@ -192,10 +213,75 @@ let catalogService = CatalogService(
 - Risk: High (major architectural change)
 - **Recommendation: Evaluate ROI - is this worth the effort?**
 
+## Recommended Action Plan
+
+### ✅ Phase 0: COMPLETED (2025-11-10)
+**Issue 1.3: Circular Dependency** - FIXED
+- 25 minutes of work
+- 20 files changed
+- Build verified
+- Committed to git
+
+### 📋 Phase 1: Dependency Injection (Priority: HIGH)
+**Issue 1.1: Service Locator → DI**
+- **When:** Next 2-4 weeks
+- **Effort:** 20-30 hours
+- **Why now:**
+  - Required for Swift 6 strict mode (coming soon)
+  - Reduces dependencies for Phase 2
+  - Eliminates `nonisolated(unsafe)` warnings
+- **Detailed plan:** See `Dependency-Injection-Investigation.md`
+
+### 📋 Phase 2: In-Memory Catalog (Priority: MEDIUM)
+**Issue 1.2: Move catalog out of Core Data**
+- **When:** After Phase 1 completes
+- **Effort:** 40-60 hours (6-phase plan)
+- **Why after Phase 1:**
+  - Cleaner migration with explicit DI
+  - Fewer dependencies to manage
+  - Can test DI pattern first
+- **Detailed plan:** See `Catalog-Data-Investigation.md`
+
+### Decision Matrix
+
+| Scenario | Recommendation |
+|----------|----------------|
+| **Shipping in 2 weeks** | Wait - do after release |
+| **Planning 6+ month runway** | Do both: Phase 1 → Phase 2 |
+| **Swift 6 strict mode deadline** | Phase 1 immediately (required) |
+| **Team capacity: 1 person** | Phase 1 now, Phase 2 in 3 months |
+| **Team capacity: 2+ people** | Parallel: One on Phase 1, one prepares Phase 2 |
+| **Critical bugs in pipeline** | Wait - stability first |
+
+### Benefits Summary
+
+**After Phase 1 (DI):**
+- ✅ Swift 6 concurrency-safe
+- ✅ 960 lines of code deleted
+- ✅ Explicit dependencies
+- ✅ Better testability
+- ✅ ~195 files improved
+
+**After Phase 2 (In-memory catalog):**
+- ✅ One Core Data store instead of two
+- ✅ 10-100x faster catalog queries
+- ✅ Over-the-air catalog updates possible
+- ✅ 1.3 MB memory (negligible)
+- ✅ Eliminates CloudKit duplication risk
+
+**Combined impact:**
+- **Architecture:** Clean, modern, maintainable
+- **Performance:** Faster startup, faster queries
+- **Complexity:** Massively reduced
+- **Future-proof:** Ready for Swift 6 strict mode
+
 ## Next Steps
 
-1. ✅ Investigation complete - all three issues documented
-2. **DECISION NEEDED**: Which issues should we fix?
-3. If fixing: Prioritize 1.3 → 1.1 → 1.2 (easy to hard)
-4. Create implementation plan for chosen fixes
+1. ✅ **Investigation complete** - all three issues documented with detailed migration plans
+2. **Review documents:**
+   - `Dependency-Injection-Investigation.md` (20-30 hours)
+   - `Catalog-Data-Investigation.md` (40-60 hours)
+3. **Make decision:** Which phases to implement and when?
+4. **Schedule work:** Block calendar time for focused implementation
+5. **Create feature branch** when ready to start Phase 1
 

@@ -18,7 +18,7 @@ final class ImageDownloadService: Sendable {
     // MARK: - Configuration
 
     /// Base URL for image CDN
-    private static let imageBaseURL = "https://cdn.moltenglass.app"
+    private static let imageBaseURL = "https://www.moltenglass.app/images"
 
     /// Local cache directory for downloaded images
     private static let cacheDirectory: URL? = {

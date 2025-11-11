@@ -25,11 +25,12 @@ xcodebuild -project Molten.xcodeproj -scheme Molten -destination 'platform=iOS S
 
 ---
 
-## Phase 1: MoltenApp Complete Integration
+## Phase 1: MoltenApp Complete Integration ✅ COMPLETE
 
 **Estimate:** 2-3 hours
+**Actual:** ~45 minutes
 
-### Files to Modify
+### Files Modified
 
 **1. `Molten/Sources/App/MoltenApp.swift`** - Lines to update:
 
@@ -124,17 +125,28 @@ xcodebuild -project Molten.xcodeproj -scheme Molten -destination 'platform=iOS S
 xcodebuild test -project Molten.xcodeproj -scheme Molten -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:MoltenTests/MoltenAppTests
 ```
 
-### Commit Point
+### Changes Made
+
+- ✅ Added `DependenciesEnvironmentModifier` for SwiftUI environment injection
+- ✅ `.onAppear` initializes `AppDependencies()` or `AppDependencies(forTesting: true)`
+- ✅ `createMainTabView()` uses `dependencies.catalogService` etc.
+- ✅ `performBackgroundCatalogUpdate()` uses `dependencies.backgroundUpdateService`
+- ✅ `configureUITestEnvironment()` creates appropriate dependencies
+- ✅ `resetCoreDataStore()` uses `dependencies.persistenceController`
+- ✅ `populateTestData()` uses `dependencies.glassItemRepository` etc.
+
+### Verification
 
 ```bash
-git add Molten/Sources/App/
-git commit -m "refactor(di): complete MoltenApp migration to AppDependencies
+xcodebuild -project Molten.xcodeproj -scheme Molten -destination 'platform=iOS Simulator,name=iPhone 17' build
+# Result: BUILD SUCCEEDED ✅
+```
 
-Phase 1 complete - MoltenApp now uses DI container instead of
-RepositoryFactory static methods. All view creation and test setup
-updated.
+### Commit Status: ✅ COMMITTED
 
-Remaining: Update individual views to receive dependencies"
+```bash
+git add Molten/Sources/App/ Docs/DI-Migration-Progress.md
+git commit -m "refactor(di): Phase 1 complete - MoltenApp uses AppDependencies"
 ```
 
 ---
@@ -475,8 +487,8 @@ Migration stats:
 
 | Phase | Status | Files Modified | Commit |
 |-------|--------|----------------|--------|
-| 0: Foundation | ✅ COMPLETE | 2 | NO |
-| 1: MoltenApp | ⏳ PENDING | 1 | NO |
+| 0: Foundation | ✅ COMPLETE | 2 | YES |
+| 1: MoltenApp | ✅ COMPLETE | 1 | YES |
 | 2: High-Traffic Views | ⏳ PENDING | ~60 | NO |
 | 3: Remaining Sources | ⏳ PENDING | ~40 | NO |
 | 4: Tests | ⏳ PENDING | ~100 | NO |

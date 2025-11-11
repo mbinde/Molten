@@ -100,14 +100,19 @@ struct MoltenApp: App {
                     mainContentView
                 }
             }
-            .environment(entitlementService)
+            .modifier(DependenciesEnvironmentModifier(dependencies: dependencies))
             .modifier(SubscriptionEnvironmentModifier(subscriptionManager: subscriptionManager))
             .preferredColorScheme(userSettings.colorScheme)
             .tint(DesignSystem.Colors.accentSecondary)
             .onAppear {
+                // Initialize dependencies on first appear
+                if dependencies == nil {
+                    dependencies = AppDependencies()
+                }
+
                 // Initialize subscription manager on first appear
-                if subscriptionManager == nil {
-                    subscriptionManager = SubscriptionManager(entitlementService: entitlementService)
+                if subscriptionManager == nil, let deps = dependencies {
+                    subscriptionManager = SubscriptionManager(entitlementService: deps.entitlementService)
                 }
             }
         }
@@ -115,6 +120,18 @@ struct MoltenApp: App {
 }
 
 // MARK: - Helper ViewModifier
+
+struct DependenciesEnvironmentModifier: ViewModifier {
+    let dependencies: AppDependencies?
+
+    func body(content: Content) -> some View {
+        if let deps = dependencies {
+            content.environment(\.appDependencies, deps)
+        } else {
+            content
+        }
+    }
+}
 
 struct SubscriptionEnvironmentModifier: ViewModifier {
     let subscriptionManager: SubscriptionManager?
@@ -336,17 +353,17 @@ extension MoltenApp {
         }
         #endif
 
-        // NOTE: RepositoryFactory is already configured in performInitialDataLoad()
-        // Do NOT reconfigure it here as that would reset the container and lose loaded data
+        // Get dependencies
+        guard let deps = dependencies else {
+            fatalError("Dependencies not initialized - cannot create MainTabView")
+        }
 
-        // Create catalog service using the new architecture
-        let catalogService = RepositoryFactory.createCatalogService()
-
-        // Create purchase service using the factory (will use Core Data in production)
-        let purchaseService = RepositoryFactory.createPurchaseRecordService()
+        // Get services from dependencies
+        let catalogService = deps.catalogService
+        let purchaseService = deps.purchaseRecordService
 
         // Create sync monitor if needed (only in production with CloudKit, NOT during UI tests)
-        if !isRunningUITests, syncMonitor == nil, let container = RepositoryFactory.persistentContainer as? NSPersistentCloudKitContainer {
+        if !isRunningUITests, syncMonitor == nil, let container = deps.persistenceController.container as? NSPersistentCloudKitContainer {
             syncMonitor = CloudKitSyncMonitor(container: container)
         } else if isRunningUITests {
             print("🧪 Skipping CloudKit sync monitor for UI tests")
@@ -403,11 +420,17 @@ extension MoltenApp {
             return
         }
 
+        // Skip if dependencies not initialized yet
+        guard let deps = dependencies else {
+            print("⚠️ Dependencies not initialized, skipping catalog update check")
+            return
+        }
+
         // Small delay to avoid competing with initial data load
         try? await Task.sleep(for: .seconds(2))
 
         print("📦 Starting background catalog update check...")
-        let backgroundUpdateService = RepositoryFactory.createBackgroundUpdateService()
+        let backgroundUpdateService = deps.backgroundUpdateService
         await backgroundUpdateService.checkForUpdatesIfNeeded()
         print("✅ Background catalog update check completed")
     }
@@ -427,11 +450,11 @@ extension MoltenApp {
             #endif
         }
 
-        // Configure RepositoryFactory based on test type
+        // Configure dependencies based on test type
         if isRunningUITests {
             // UI tests need to test the full stack with real Core Data
             print("🧪 Configuring for UI tests with Core Data")
-            RepositoryFactory.configureForProduction()
+            dependencies = AppDependencies()  // Production mode
 
             // Reset database if requested
             if shouldResetDatabase {
@@ -448,7 +471,7 @@ extension MoltenApp {
             // Unit tests should use mocks to avoid Core Data
             // NOTE: This should ONLY run during XCTest unit test execution
             print("🧪 Configuring for unit tests with mocks")
-            RepositoryFactory.configureForTesting()
+            dependencies = AppDependencies(forTesting: true)
         }
 
         print("✅ Test Environment configured")
@@ -554,10 +577,12 @@ extension MoltenApp {
     /// Reset Core Data store for clean test runs
     @MainActor
     private func resetCoreDataStore() {
-        guard let container = RepositoryFactory.persistentContainer else {
-            print("❌ No persistent container available")
+        guard let deps = dependencies else {
+            print("❌ Dependencies not initialized")
             return
         }
+
+        let container = deps.persistenceController.container
 
         guard let storeURL = container.persistentStoreDescriptions.first?.url else {
             print("❌ Could not get store URL")
@@ -580,9 +605,14 @@ extension MoltenApp {
     /// Populate database with known test data
     @MainActor
     private func populateTestData() async {
+        guard let deps = dependencies else {
+            print("❌ Dependencies not initialized")
+            return
+        }
+
         do {
-            let glassItemRepo = RepositoryFactory.createGlassItemRepository()
-            let inventoryRepo = RepositoryFactory.createInventoryRepository()
+            let glassItemRepo = deps.glassItemRepository
+            let inventoryRepo = deps.inventoryRepository
 
             // Create a few known glass items that tests can rely on
             let testItems = [

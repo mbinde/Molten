@@ -18,8 +18,9 @@ final class ImageDownloadService: Sendable {
     // MARK: - Configuration
 
     /// Base URL for image CDN
-    // Using GitHub raw URLs temporarily while Cloudflare deployment is set up
-    private static let imageBaseURL = "https://raw.githubusercontent.com/mbinde/molten-data/main/images/product-images"
+    // TODO: Set to production CDN URL (cdn.moltenglass.app or www.moltenglass.app/images)
+    // For now using placeholder - will show manufacturer defaults until CDN is deployed
+    private static let imageBaseURL = "https://cdn.moltenglass.app" // Not deployed yet - will fallback to manufacturer defaults
 
     /// Local cache directory for downloaded images
     private static let cacheDirectory: URL? = {

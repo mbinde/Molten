@@ -27,6 +27,12 @@ struct MoltenApp: App {
         // Note: AppDependencies will be created in .onAppear after view hierarchy is set up
         // This avoids blocking app launch with Core Data initialization
 
+        // TEMPORARY: Configure RepositoryFactory for views not yet migrated to DI
+        // This will be removed in Phase 5 after all views are migrated
+        if !isRunningTests {
+            RepositoryFactory.configureForProduction()
+        }
+
         // Configure RevenueCat SDK
         configureRevenueCat()
 
@@ -104,17 +110,6 @@ struct MoltenApp: App {
             .modifier(SubscriptionEnvironmentModifier(subscriptionManager: subscriptionManager))
             .preferredColorScheme(userSettings.colorScheme)
             .tint(DesignSystem.Colors.accentSecondary)
-            .onAppear {
-                // Initialize dependencies on first appear
-                if dependencies == nil {
-                    dependencies = AppDependencies()
-                }
-
-                // Initialize subscription manager on first appear
-                if subscriptionManager == nil, let deps = dependencies {
-                    subscriptionManager = SubscriptionManager(entitlementService: deps.entitlementService)
-                }
-            }
         }
     }
 }
@@ -152,8 +147,10 @@ extension MoltenApp {
         if mainTabView == nil {
             Color.clear
                 .onAppear {
-                    mainTabView = createMainTabView()
+                    // CRITICAL: Configure test environment FIRST (creates dependencies)
                     configureUITestEnvironment()
+                    // THEN create main view (needs dependencies)
+                    mainTabView = createMainTabView()
                 }
         } else {
             mainTabView!
@@ -166,6 +163,18 @@ extension MoltenApp {
             if mainTabView == nil {
                 Color.clear
                     .onAppear {
+                        // Initialize dependencies FIRST if not already initialized
+                        if dependencies == nil {
+                            print("🎬 MoltenApp: Initializing AppDependencies for production...")
+                            dependencies = AppDependencies()
+                        }
+
+                        // Initialize subscription manager
+                        if subscriptionManager == nil {
+                            print("🎬 MoltenApp: Initializing SubscriptionManager...")
+                            subscriptionManager = SubscriptionManager(entitlementService: dependencies!.entitlementService)
+                        }
+
                         print("🎬 MoltenApp: Creating cached MainTabView...")
                         mainTabView = createMainTabView()
                     }
@@ -282,6 +291,18 @@ extension MoltenApp {
                     if mainTabView == nil {
                         Color.clear
                             .onAppear {
+                                // Initialize dependencies FIRST if not already initialized
+                                if dependencies == nil {
+                                    print("🎬 MoltenApp: Initializing AppDependencies for production...")
+                                    dependencies = AppDependencies()
+                                }
+
+                                // Initialize subscription manager
+                                if subscriptionManager == nil {
+                                    print("🎬 MoltenApp: Initializing SubscriptionManager...")
+                                    subscriptionManager = SubscriptionManager(entitlementService: dependencies!.entitlementService)
+                                }
+
                                 print("🎬 MoltenApp: Creating cached MainTabView...")
                                 mainTabView = createMainTabView()
                             }
@@ -450,31 +471,29 @@ extension MoltenApp {
             #endif
         }
 
-        // Configure dependencies based on test type
-        if isRunningUITests {
-            // UI tests need to test the full stack with real Core Data
-            print("🧪 Configuring for UI tests with Core Data")
-            dependencies = AppDependencies()  // Production mode
+        // Configure dependencies for tests
+        // TODO: In Phase 4, UI tests may need real Core Data setup
+        // For now, all tests use mocks to avoid initialization complexity
+        print("🧪 Configuring test environment with mocks")
 
-            // Reset database if requested
-            if shouldResetDatabase {
-                resetCoreDataStore()
-            }
+        // TEMPORARY: Configure RepositoryFactory for views not yet migrated to DI
+        RepositoryFactory.configureForTesting()
 
-            // Populate test data if requested
-            if shouldUseTestData {
-                Task {
-                    await populateTestData()
-                }
-            }
-        } else {
-            // Unit tests should use mocks to avoid Core Data
-            // NOTE: This should ONLY run during XCTest unit test execution
-            print("🧪 Configuring for unit tests with mocks")
-            dependencies = AppDependencies(forTesting: true)
+        dependencies = AppDependencies(forTesting: true)
+
+        // Initialize subscription manager for tests
+        if subscriptionManager == nil, let deps = dependencies {
+            subscriptionManager = SubscriptionManager(entitlementService: deps.entitlementService)
         }
 
-        print("✅ Test Environment configured")
+        // Note: Database reset and test data population deferred to Phase 4
+        // when we properly set up Core Data for UI tests
+        if isRunningUITests && (shouldResetDatabase || shouldUseTestData) {
+            print("⚠️ Database reset/test data not yet supported with mock dependencies")
+            print("⚠️ This will be implemented in Phase 4 of DI migration")
+        }
+
+        print("✅ Test Environment configured with mocks")
     }
 
     /// Handle URLs opened from outside the app (e.g., .molten files, deep links)

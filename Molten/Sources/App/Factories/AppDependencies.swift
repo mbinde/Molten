@@ -68,16 +68,26 @@ class AppDependencies {
     // MARK: - Initialization
 
     /// Initialize with production configuration (Core Data)
-    /// NOTE: PersistenceController must be initialized before creating AppDependencies
+    /// Initializes PersistenceController if needed
     init() {
         self.mode = .coreData
         self.persistenceController = PersistenceController.shared
 
-        // Persistence controller should already be initialized
-        // If not, it will be initialized synchronously on first access
+        // Initialize persistence controller if not already initialized
+        // This blocks until Core Data is ready, but only on first init
+        if persistenceController.localContext == nil || persistenceController.cloudContext == nil {
+            // Need to initialize - use a semaphore to wait for async init
+            let semaphore = DispatchSemaphore(value: 0)
+            Task.detached {
+                await PersistenceController.shared.initialize()
+                semaphore.signal()
+            }
+            _ = semaphore.wait(timeout: .now() + .seconds(30))
+        }
+
         guard let localContext = persistenceController.localContext,
               let cloudContext = persistenceController.cloudContext else {
-            fatalError("Persistence controller not initialized properly - call PersistenceController.shared.initialize() before creating AppDependencies")
+            fatalError("Persistence controller failed to initialize after 30 seconds")
         }
 
         // Create repositories (catalog data from local store, user data from cloud store)
@@ -325,7 +335,15 @@ class AppDependencies {
 // MARK: - Environment Key
 
 struct AppDependenciesKey: EnvironmentKey {
-    static let defaultValue: AppDependencies = AppDependencies()
+    static let defaultValue: AppDependencies = {
+        // Check if running tests - if so, use test dependencies by default
+        let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        if isRunningTests {
+            return AppDependencies(forTesting: true)
+        } else {
+            return AppDependencies()
+        }
+    }()
 }
 
 extension EnvironmentValues {

@@ -51,12 +51,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -76,12 +71,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -96,12 +86,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: [])
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -140,12 +125,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -167,12 +147,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -211,12 +186,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -239,12 +209,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -264,12 +229,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -283,12 +243,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: [])
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -326,12 +281,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem()
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -375,12 +325,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -392,12 +337,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: [])
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -411,12 +351,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem()
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -435,12 +370,7 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             inventoryTrackingService: mockService,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -455,12 +385,7 @@ struct InventoryDetailViewTests {
 
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -486,12 +411,7 @@ struct InventoryDetailViewTests {
 
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -543,12 +463,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -634,12 +549,7 @@ struct InventoryDetailViewTests {
         let view = InventoryDetailView(
             item: item,
             inventoryTrackingService: nil,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -717,12 +627,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem()
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -736,12 +641,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem()
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -767,12 +667,7 @@ struct InventoryDetailViewTests {
 
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -798,12 +693,7 @@ struct InventoryDetailViewTests {
 
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -836,12 +726,7 @@ struct InventoryDetailViewTests {
 
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -854,12 +739,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem()
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -950,12 +830,7 @@ struct InventoryDetailViewTests {
         // Step 9: Create view and verify it can access the data
         let view = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)

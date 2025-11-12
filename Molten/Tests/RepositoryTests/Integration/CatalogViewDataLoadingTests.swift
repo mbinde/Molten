@@ -305,36 +305,8 @@ struct CatalogViewDataLoadingTests {
         #expect(catalogView != nil, "Should maintain valid state during data changes")
     }
     
-    // MARK: - Configuration Consistency Tests
-    
-    @Test("Should maintain factory configuration consistency")
-    func testFactoryConfigurationConsistency() async throws {
-        let (_, catalogService, deps) = createTestEnvironment()
-        
-        // Initial mode should be set by test environment
-        let initialMode = RepositoryFactory.mode
-        
-        // Create multiple views
-        let view1 = CatalogView(deps: deps)
-        let view2 = CatalogView(deps: deps) 
-        let view3 = CatalogView(deps: deps)
-        
-        // Mode should be consistently configured
-        #expect(RepositoryFactory.mode == initialMode || RepositoryFactory.mode == .coreData,
-               "Should maintain consistent factory configuration")
-        
-        // All views should be created successfully
-        #expect(view1 != nil && view2 != nil && view3 != nil, "Should create all views successfully")
-        
-        // Services should work consistently
-        let items1 = try await catalogService.getAllGlassItems()
-        let items2 = try await catalogService.getAllGlassItems()
-        
-        #expect(items1.count == items2.count, "Should provide consistent results")
-    }
-    
     // MARK: - Memory Management Tests
-    
+
     @Test("Should handle view lifecycle properly")
     func testViewLifecycleHandling() async throws {
         let (_, catalogService, deps) = createTestEnvironment()

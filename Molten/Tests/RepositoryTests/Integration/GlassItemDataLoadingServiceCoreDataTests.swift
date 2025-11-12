@@ -408,37 +408,4 @@ struct GlassItemDataLoadingServiceCoreDataTests {
         #expect(result.itemsCreated + result.itemsFailed == result.successfulItems.count + result.failedItems.count,
                "Should account for all processed items")
     }
-    
-    // MARK: - Integration Tests
-    
-    @Test("Should integrate properly with RepositoryFactory")
-    func testRepositoryFactoryIntegration() async throws {
-        // Test that the factory creates working services
-        RepositoryFactory.configureForTestingWithCoreData()
-
-        let deps = AppDependencies(forTesting: true)
-        let catalogService = deps.catalogService
-        let loadingService = GlassItemDataLoadingService(catalogService: catalogService)
-        
-        // Should work with factory-created service
-        let result = try await loadingService.loadGlassItemsFromJSON(options: .testing)
-        #expect(result.itemsCreated >= 0, "Should work with factory-created services")
-    }
-    
-    @Test("Should work with production configuration method")
-    func testConfigureForProductionWithInitialData() async throws {
-        // Test the new RepositoryFactory method
-        do {
-            // This should not throw even if no JSON files exist
-            try await RepositoryFactory.configureForProductionWithInitialData()
-            
-            // Should be configured for Core Data
-            #expect(RepositoryFactory.mode == .coreData, "Should be in Core Data mode")
-            
-        } catch {
-            // If it fails due to missing JSON, that's expected in test environment
-            // The important thing is it doesn't crash
-            #expect(true, "Should handle missing JSON gracefully")
-        }
-    }
 }

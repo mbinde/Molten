@@ -45,12 +45,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create InventoryDetailView with injected UserNotesRepository
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: mockUserNotesRepo,
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: View should be created successfully

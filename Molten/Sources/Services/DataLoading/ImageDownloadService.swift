@@ -55,8 +55,9 @@ final class ImageDownloadService: Sendable {
     ///   - itemCode: The item code (e.g., "650001" or "BB-650001")
     ///   - manufacturer: The manufacturer abbreviation (e.g., "BB", "CiM")
     ///   - exactFilename: If provided, try this exact filename first (from catalog's image_path field)
+    ///   - useThumbnail: If true, automatically try thumbnail version (_thumb.jpg) first (default: true)
     /// - Returns: UIImage if found/downloaded, nil otherwise
-    nonisolated static func loadImage(itemCode: String, manufacturer: String?, exactFilename: String? = nil) async -> UIImage? {
+    nonisolated static func loadImage(itemCode: String, manufacturer: String?, exactFilename: String? = nil, useThumbnail: Bool = true) async -> UIImage? {
         guard let manufacturer = manufacturer, !manufacturer.isEmpty else {
             return nil
         }
@@ -69,23 +70,42 @@ final class ImageDownloadService: Sendable {
 
         // PRIORITY 1: If exact filename provided (from catalog image_path), try it first
         if let filename = exactFilename, !filename.isEmpty {
-            print("📸 [ImageDownloadService] Trying exact filename: \(filename)")
+            // Convert to thumbnail version if requested
+            let targetFilename = useThumbnail ? thumbnailFilename(from: filename) : filename
+            print("📸 [ImageDownloadService] Trying exact filename: \(targetFilename)\(useThumbnail ? " (thumbnail)" : "")")
 
             // First check local cache
-            if let cachedImage = await loadFromCache(filename: filename) {
-                print("✅ [ImageDownloadService] Found in cache: \(filename)")
+            if let cachedImage = await loadFromCache(filename: targetFilename) {
+                print("✅ [ImageDownloadService] Found in cache: \(targetFilename)")
                 return cachedImage
             }
 
             // If not cached, try to download
-            if let downloadedImage = await downloadImage(filename: filename) {
-                print("✅ [ImageDownloadService] Downloaded from CDN: \(filename)")
+            if let downloadedImage = await downloadImage(filename: targetFilename) {
+                print("✅ [ImageDownloadService] Downloaded from CDN: \(targetFilename)")
                 // Save to cache for next time
-                await saveToCache(image: downloadedImage, filename: filename)
+                await saveToCache(image: downloadedImage, filename: targetFilename)
                 return downloadedImage
             }
 
-            print("❌ [ImageDownloadService] Failed to load: \(filename)")
+            print("❌ [ImageDownloadService] Failed to load: \(targetFilename)")
+
+            // If thumbnail failed and we were looking for thumbnail, try full-size as fallback
+            if useThumbnail && targetFilename != filename {
+                print("📸 [ImageDownloadService] Thumbnail failed, trying full-size: \(filename)")
+
+                if let cachedImage = await loadFromCache(filename: filename) {
+                    print("✅ [ImageDownloadService] Found full-size in cache: \(filename)")
+                    return cachedImage
+                }
+
+                if let downloadedImage = await downloadImage(filename: filename) {
+                    print("✅ [ImageDownloadService] Downloaded full-size from CDN: \(filename)")
+                    await saveToCache(image: downloadedImage, filename: filename)
+                    return downloadedImage
+                }
+            }
+
             // If exact filename failed, fall through to variation logic below
         }
 
@@ -238,7 +258,7 @@ final class ImageDownloadService: Sendable {
             return nil
         }
 
-        print("🌐 [ImageDownloadService] Fetching: \(urlString)")
+//        print("🌐 [ImageDownloadService] Fetching: \(urlString)")
 
         do {
             let (data, response) = try await urlSession.data(from: url)
@@ -298,6 +318,21 @@ final class ImageDownloadService: Sendable {
             try imageData.write(to: fileURL, options: .atomic)
         } catch {
             print("❌ [ImageDownloadService] Failed to save to cache: \(error)")
+        }
+    }
+
+    /// Converts a filename to its thumbnail version by inserting _thumb before the extension
+    /// - Parameter filename: Original filename (e.g., "1ErCJw.jpg")
+    /// - Returns: Thumbnail filename (e.g., "1ErCJw_thumb.jpg")
+    private nonisolated static func thumbnailFilename(from filename: String) -> String {
+        let nsFilename = filename as NSString
+        let ext = nsFilename.pathExtension
+        let nameWithoutExt = nsFilename.deletingPathExtension
+
+        if ext.isEmpty {
+            return "\(nameWithoutExt)_thumb"
+        } else {
+            return "\(nameWithoutExt)_thumb.\(ext)"
         }
     }
 }

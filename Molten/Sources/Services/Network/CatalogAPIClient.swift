@@ -47,7 +47,7 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
 
     /// Get latest catalog version metadata
     func getLatestVersion() async throws -> CatalogVersionMetadata {
-        let url = baseURL.appendingPathComponent("catalog/version")
+        let url = baseURL.appendingPathComponent("v1/catalog/version")
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -99,7 +99,7 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
     ) async throws -> Data {
 
         var urlComponents = URLComponents(
-            url: baseURL.appendingPathComponent("catalog/data"),
+            url: baseURL.appendingPathComponent("v1/catalog/data"),
             resolvingAgainstBaseURL: true
         )!
 

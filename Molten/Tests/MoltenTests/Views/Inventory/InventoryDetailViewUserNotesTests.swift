@@ -77,12 +77,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view (should show "Add a note" button initially)
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: View should be created and ready to show add note button
@@ -144,12 +139,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view - should support expandable long notes
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: View should handle long notes with Show More/Less functionality
@@ -176,12 +166,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: Should handle empty notes gracefully
@@ -242,12 +227,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view - notes section should be expandable
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: Should show expandable notes section
@@ -274,12 +254,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view - should use blue color scheme for notes
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: Should maintain consistent styling (blue theme for notes)
@@ -306,12 +281,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view - should reload notes on sheet dismiss
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: Should reload notes after UserNotesEditor dismisses
@@ -338,12 +308,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view - should handle notes loading errors
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: Should handle errors gracefully and show "Add note" button

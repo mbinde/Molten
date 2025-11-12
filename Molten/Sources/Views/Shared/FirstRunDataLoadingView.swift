@@ -23,6 +23,13 @@ struct FirstRunDataLoadingView: View {
     @State private var progress: Double = 0.0
     @State private var itemsLoaded: Int = 0
 
+    private let deps: AppDependencies
+
+    init(isComplete: Binding<Bool>, deps: AppDependencies = AppDependencies()) {
+        self._isComplete = isComplete
+        self.deps = deps
+    }
+
     enum LoadingStep: String, CaseIterable {
         case initializing = "Initializing app..."
         case loadingCatalog = "Loading glass catalog..."
@@ -170,7 +177,7 @@ struct FirstRunDataLoadingView: View {
         progress = 0.1
 
         do {
-            let catalogService = RepositoryFactory.createCatalogService()
+            let catalogService = deps.catalogService
             let glassItemLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
 
             // Check if we need to wipe and reload due to catalog data version change
@@ -206,14 +213,14 @@ struct FirstRunDataLoadingView: View {
                 }
 
                 // Load coatings
-                let coatingRepository = RepositoryFactory.createCoatingItemRepository()
+                let coatingRepository = deps.coatingItemRepository
                 let coatingLoadingService = CoatingItemDataLoadingService(coatingRepository: coatingRepository)
                 let coatingResult = try await coatingLoadingService.loadCoatingsFromJSON()
                 itemsLoaded += coatingResult.itemsCreated
                 print("✅ Loaded \(coatingResult.itemsCreated) coatings from JSON")
 
                 // Load tools
-                let toolRepository = RepositoryFactory.createToolItemRepository()
+                let toolRepository = deps.toolItemRepository
                 let toolLoadingService = ToolItemDataLoadingService(toolRepository: toolRepository)
                 let toolResult = try await toolLoadingService.loadAllToolsFromJSON()
                 itemsLoaded += toolResult.itemsCreated
@@ -234,7 +241,7 @@ struct FirstRunDataLoadingView: View {
                 print("✅ Updated glass catalog: \(glassResult.itemsUpdated) updated, \(glassResult.itemsCreated) new, \(glassResult.itemsSkipped) unchanged")
 
                 // Check and update coatings if needed
-                let coatingRepository = RepositoryFactory.createCoatingItemRepository()
+                let coatingRepository = deps.coatingItemRepository
                 let coatingLoadingService = CoatingItemDataLoadingService(coatingRepository: coatingRepository)
                 if (try? coatingLoadingService.hasJSONFileChanged()) == true {
                     let coatingResult = try await coatingLoadingService.loadCoatingsFromJSON(options: .appUpdate)
@@ -243,7 +250,7 @@ struct FirstRunDataLoadingView: View {
                 }
 
                 // Check and update tools if needed (check each manufacturer)
-                let toolRepository = RepositoryFactory.createToolItemRepository()
+                let toolRepository = deps.toolItemRepository
                 let toolLoadingService = ToolItemDataLoadingService(toolRepository: toolRepository)
                 let toolResult = try await toolLoadingService.loadAllToolsFromJSON(options: .appUpdate)
                 itemsLoaded += toolResult.itemsUpdated + toolResult.itemsCreated
@@ -282,7 +289,7 @@ struct FirstRunDataLoadingView: View {
             currentStep = .loadingLocations
             progress = 0.90
 
-            let locationService = RepositoryFactory.createUnifiedLocationService()
+            let locationService = deps.unifiedLocationService
             do {
                 let result = try await locationService.loadLocationsHybrid()
                 print("✅ Loaded \(result.total) locations total (\(result.bundled) from bundle, \(result.web) from web)")
@@ -294,9 +301,9 @@ struct FirstRunDataLoadingView: View {
             // Step 5: Generate demo data if in screenshot mode
             if isScreenshotMode {
                 print("🎬 [SCREENSHOTS] Generating demo data for screenshots...")
-                let inventoryService = RepositoryFactory.createInventoryTrackingService()
-                let shoppingListService = RepositoryFactory.createShoppingListService()
-                let purchaseRecordService = RepositoryFactory.createPurchaseRecordService()
+                let inventoryService = deps.inventoryTrackingService
+                let shoppingListService = deps.shoppingListService
+                let purchaseRecordService = deps.purchaseRecordService
 
                 let demoDataGenerator = DemoDataGenerator(
                     catalogService: catalogService,

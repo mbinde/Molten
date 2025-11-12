@@ -287,8 +287,7 @@ struct CatalogView: View {
                 case .addInventoryItem(let naturalKey):
                     AddInventoryItemView(
                         prefilledNaturalKey: naturalKey,
-                        inventoryTrackingService: inventoryTrackingService,
-                        catalogService: catalogService
+                        deps: AppDependencies()
                     )
                 case .catalogItemDetail(let itemModel):
                     InventoryDetailView(

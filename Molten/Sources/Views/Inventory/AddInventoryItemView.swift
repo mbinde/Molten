@@ -13,22 +13,17 @@ struct AddInventoryItemView: View {
     @Environment(\.dismiss) private var dismiss
 
     let prefilledNaturalKey: String?
-    let inventoryTrackingService: InventoryTrackingService
-    let catalogService: CatalogService
+    private let deps: AppDependencies
 
-    init(prefilledNaturalKey: String? = nil,
-         inventoryTrackingService: InventoryTrackingService,
-         catalogService: CatalogService) {
+    init(prefilledNaturalKey: String? = nil, deps: AppDependencies = AppDependencies()) {
         self.prefilledNaturalKey = prefilledNaturalKey
-        self.inventoryTrackingService = inventoryTrackingService
-        self.catalogService = catalogService
+        self.deps = deps
     }
 
     var body: some View {
         AddInventoryFormView(
             prefilledNaturalKey: prefilledNaturalKey,
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
+            deps: deps
         )
     }
 }
@@ -42,16 +37,14 @@ struct AddInventoryFormView: View {
     @State private var viewModel: AddInventoryItemViewModel
     @StateObject private var terminologySettings = GlassTerminologySettings.shared
 
-    init(prefilledNaturalKey: String? = nil,
-         inventoryTrackingService: InventoryTrackingService = RepositoryFactory.createInventoryTrackingService(),
-         catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
-        self.catalogService = catalogService
-        self.inventoryTrackingService = inventoryTrackingService
+    init(prefilledNaturalKey: String? = nil, deps: AppDependencies = AppDependencies()) {
+        self.catalogService = deps.catalogService
+        self.inventoryTrackingService = deps.inventoryTrackingService
         self.prefilledNaturalKey = prefilledNaturalKey
         self._viewModel = State(initialValue: AddInventoryItemViewModel(
             prefilledNaturalKey: prefilledNaturalKey,
-            inventoryTrackingService: inventoryTrackingService,
-            glassItemRepository: RepositoryFactory.createGlassItemRepository()
+            inventoryTrackingService: deps.inventoryTrackingService,
+            glassItemRepository: deps.glassItemRepository
         ))
     }
     
@@ -368,11 +361,7 @@ struct TypeDisplayView: View {
 // MARK: - Preview
 
 #Preview {
-    let _ = RepositoryFactory.configureForTesting()
     NavigationStack {
-        AddInventoryItemView(
-            inventoryTrackingService: RepositoryFactory.createInventoryTrackingService(),
-            catalogService: RepositoryFactory.createCatalogService()
-        )
+        AddInventoryItemView(deps: AppDependencies(forTesting: true))
     }
 }

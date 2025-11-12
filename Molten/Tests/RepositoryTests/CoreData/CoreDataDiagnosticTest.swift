@@ -25,8 +25,7 @@ struct CoreDataDiagnosticTest {
     func showAllCoreDataContent() async throws {
         print("🔍 DIAGNOSTIC TEST: Examining Core Data content...")
 
-        // Configure for Core Data mode (production uses real Core Data)
-        let deps = AppDependencies() // Production mode
+        let deps = AppDependencies(forTesting: true)
 
         // Get the Core Data repository
         let glassItemRepo = deps.glassItemRepository
@@ -65,7 +64,7 @@ struct CoreDataDiagnosticTest {
     func compareExpectedVsActualData() async throws {
         print("🔍 DIAGNOSTIC: Comparing what tests expect vs what Core Data has...")
 
-        let deps = AppDependencies() // Production mode
+        let deps = AppDependencies(forTesting: true)
         let glassItemRepo = deps.glassItemRepository
         
         // What the failing tests expect:

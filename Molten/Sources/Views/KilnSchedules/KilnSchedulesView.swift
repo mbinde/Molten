@@ -25,9 +25,16 @@ struct KilnSchedulesView: View {
     }
 
     // Convenience init for production use
-    init(kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService()) {
+    init(kilnScheduleService: KilnScheduleService) {
         let viewModel = KilnSchedulesViewModel(kilnScheduleService: kilnScheduleService)
         self.init(viewModel: viewModel, kilnScheduleService: kilnScheduleService)
+    }
+
+    /// Convenience init using AppDependencies
+    init(deps: AppDependencies = AppDependencies()) {
+        let service = deps.kilnScheduleService
+        let viewModel = KilnSchedulesViewModel(kilnScheduleService: service)
+        self.init(viewModel: viewModel, kilnScheduleService: service)
     }
 
     var body: some View {
@@ -312,12 +319,6 @@ struct KilnSchedulesView: View {
 }
 
 #Preview {
-    // Configure for testing
-    RepositoryFactory.configureForTesting()
-
-    // Create service
-    let service = RepositoryFactory.createKilnScheduleService()
-
-    // Create view
-    return KilnSchedulesView(kilnScheduleService: service)
+    let deps = AppDependencies(forTesting: true)
+    return KilnSchedulesView(deps: deps)
 }

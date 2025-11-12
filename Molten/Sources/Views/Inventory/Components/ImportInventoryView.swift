@@ -29,15 +29,21 @@ struct ImportInventoryView: View {
 
     var onImportComplete: (() -> Void)?
 
-    init(fileURL: URL, onImportComplete: (() -> Void)? = nil) {
+    init(fileURL: URL, importService: InventoryImportService, onImportComplete: (() -> Void)? = nil) {
+        self.fileURL = fileURL
+        self.importService = importService
+        self.onImportComplete = onImportComplete
+    }
+
+    /// Convenience init using AppDependencies
+    init(fileURL: URL, deps: AppDependencies = AppDependencies(), onImportComplete: (() -> Void)? = nil) {
         self.fileURL = fileURL
         self.onImportComplete = onImportComplete
-        let service = InventoryImportService(
-            catalogService: RepositoryFactory.createCatalogService(),
-            inventoryTrackingService: RepositoryFactory.createInventoryTrackingService(),
-            locationRepository: RepositoryFactory.createLocationRepository()
+        self.importService = InventoryImportService(
+            catalogService: deps.catalogService,
+            inventoryTrackingService: deps.inventoryTrackingService,
+            locationRepository: deps.locationRepository
         )
-        self.importService = service
     }
 
     var body: some View {

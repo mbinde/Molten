@@ -10,6 +10,7 @@ struct SubscriptionServiceTests {
 
     @Test("MockSubscriptionService should initialize with free user")
     func testMockServiceFreeUser() async {
+        let deps = AppDependencies(forTesting: true)
         let service = MockSubscriptionService(hasProAccess: false)
 
         let hasAccess = await service.hasProAccess()
@@ -22,6 +23,7 @@ struct SubscriptionServiceTests {
 
     @Test("MockSubscriptionService should initialize with Pro user")
     func testMockServiceProUser() async {
+        let deps = AppDependencies(forTesting: true)
         let service = MockSubscriptionService(hasProAccess: true)
 
         let hasAccess = await service.hasProAccess()
@@ -34,6 +36,7 @@ struct SubscriptionServiceTests {
 
     @Test("MockSubscriptionService should provide customer info")
     func testMockServiceCustomerInfo() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = MockSubscriptionService(hasProAccess: true)
 
         let customerInfo = try await service.getCustomerInfo()
@@ -45,6 +48,7 @@ struct SubscriptionServiceTests {
 
     @Test("MockSubscriptionService should check entitlements correctly")
     func testMockServiceCheckEntitlement() async {
+        let deps = AppDependencies(forTesting: true)
         let service = MockSubscriptionService(hasProAccess: true)
 
         let hasProEntitlement = await service.checkEntitlement("molten_glass_pro")
@@ -56,6 +60,7 @@ struct SubscriptionServiceTests {
 
     @Test("MockSubscriptionService should handle restore purchases")
     func testMockServiceRestorePurchases() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = MockSubscriptionService(hasProAccess: false)
 
         let customerInfo = try await service.restorePurchases()
@@ -65,6 +70,7 @@ struct SubscriptionServiceTests {
 
     @Test("MockSubscriptionService should simulate Pro purchase")
     func testMockServiceSimulatePurchase() async {
+        let deps = AppDependencies(forTesting: true)
         let service = MockSubscriptionService(hasProAccess: false)
 
         // Initially free
@@ -84,6 +90,7 @@ struct SubscriptionServiceTests {
 
     @Test("MockSubscriptionService should simulate subscription expiration")
     func testMockServiceSimulateExpiration() async {
+        let deps = AppDependencies(forTesting: true)
         let service = MockSubscriptionService(hasProAccess: true)
 
         // Initially Pro
@@ -103,6 +110,7 @@ struct SubscriptionServiceTests {
 
     @Test("MockSubscriptionService should support custom subscription status")
     func testMockServiceCustomStatus() async {
+        let deps = AppDependencies(forTesting: true)
         let customStatus = SubscriptionInfo(
             isActive: true,
             productIdentifier: "lifetime",
@@ -126,6 +134,7 @@ struct SubscriptionServiceTests {
 
     @Test("CustomerInfo should contain subscription status and entitlements")
     func testCustomerInfoStructure() {
+        let deps = AppDependencies(forTesting: true)
         let status = SubscriptionInfo(
             isActive: true,
             productIdentifier: "monthly",

@@ -16,10 +16,8 @@ struct LocationsView: View {
     @State private var mapCameraPosition: MapCameraPosition = .automatic
     @State private var mapUpdateTask: Task<Void, Never>?
 
-    // Default parameter evaluated once per view instance
-    init(viewModel: LocationsViewModel = LocationsViewModel(
-        locationService: RepositoryFactory.createUnifiedLocationService()
-    )) {
+    // Init accepts ViewModel directly (DI pattern)
+    init(viewModel: LocationsViewModel) {
         self.viewModel = viewModel
     }
 
@@ -451,5 +449,8 @@ struct LocationsView: View {
 }
 
 #Preview {
-    LocationsView()
+    let deps = AppDependencies(forTesting: true)
+    return LocationsView(viewModel: LocationsViewModel(
+        locationService: deps.unifiedLocationService
+    ))
 }

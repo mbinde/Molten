@@ -64,8 +64,8 @@ struct CoreDataDiagnosticTest {
     @Test("DIAGNOSTIC: Compare expected vs actual test data")
     func compareExpectedVsActualData() async throws {
         print("🔍 DIAGNOSTIC: Comparing what tests expect vs what Core Data has...")
-        
-        RepositoryFactory.configureForProduction()
+
+        let deps = AppDependencies() // Production mode
         let glassItemRepo = deps.glassItemRepository
         
         // What the failing tests expect:
@@ -111,11 +111,11 @@ struct CoreDataDiagnosticTest {
         #expect(true, "Diagnostic comparison completed")
     }
     
-    @Test("DIAGNOSTIC: Suggest test fixes") 
+    @Test("DIAGNOSTIC: Suggest test fixes")
     func suggestTestFixes() async throws {
         print("🔧 DIAGNOSTIC: Test fix suggestions...")
-        
-        RepositoryFactory.configureForProduction()
+
+        let deps = AppDependencies() // Production mode
         let glassItemRepo = deps.glassItemRepository
         
         let actualTotal = try await glassItemRepo.fetchItems(matching: nil)

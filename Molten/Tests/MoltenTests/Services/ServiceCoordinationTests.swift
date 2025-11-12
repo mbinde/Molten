@@ -123,6 +123,7 @@ class MockCatalogServiceForTests: @unchecked Sendable {
 }
 
 @Suite("Service Coordination Tests")
+@MainActor
 struct ServiceCoordinationTests {
     
     // MARK: - Test Data Factory

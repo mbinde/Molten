@@ -14,11 +14,6 @@ import Foundation
 @MainActor
 struct ReportingServiceTests {
 
-    init() async {
-        // Configure repository factory for testing (uses mocks)
-        let deps = AppDependencies(forTesting: true)
-    }
-
     // MARK: - Setup Helpers
 
     /// Create test glass items with inventory
@@ -82,6 +77,7 @@ struct ReportingServiceTests {
 
     @Test("Generate comprehensive report with data")
     func testGenerateComprehensiveReportWithData() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -102,6 +98,7 @@ struct ReportingServiceTests {
 
     @Test("Generate comprehensive report with empty data")
     func testGenerateComprehensiveReportEmpty() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let reportingService = ReportingService(
@@ -119,6 +116,7 @@ struct ReportingServiceTests {
 
     @Test("Generate comprehensive report with date range filtering")
     func testComprehensiveReportWithDateRange() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -142,6 +140,7 @@ struct ReportingServiceTests {
 
     @Test("Comprehensive report calculates totals correctly")
     func testComprehensiveReportTotals() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -161,6 +160,7 @@ struct ReportingServiceTests {
 
     @Test("Generate inventory report")
     func testGenerateInventoryReport() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -179,6 +179,7 @@ struct ReportingServiceTests {
 
     @Test("Inventory report includes inventory by type statistics")
     func testInventoryReportByType() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -196,6 +197,7 @@ struct ReportingServiceTests {
 
     @Test("Inventory report includes low stock items")
     func testInventoryReportLowStock() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -212,6 +214,7 @@ struct ReportingServiceTests {
 
     @Test("Inventory report calculates total quantity correctly")
     func testInventoryReportTotalQuantity() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -229,6 +232,7 @@ struct ReportingServiceTests {
 
     @Test("Generate manufacturer report")
     func testGenerateManufacturerReport() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -245,6 +249,7 @@ struct ReportingServiceTests {
 
     @Test("Manufacturer report includes statistics")
     func testManufacturerReportStatistics() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -263,6 +268,7 @@ struct ReportingServiceTests {
 
     @Test("Manufacturer report calculates unique COEs")
     func testManufacturerReportUniqueCOEs() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -279,6 +285,7 @@ struct ReportingServiceTests {
 
     @Test("Manufacturer statistics sorted by item count")
     func testManufacturerStatisticsSorting() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -301,6 +308,7 @@ struct ReportingServiceTests {
 
     @Test("Generate tag report")
     func testGenerateTagReport() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -317,6 +325,7 @@ struct ReportingServiceTests {
 
     @Test("Tag report calculates statistics correctly")
     func testTagReportStatistics() async throws {
+        let deps = AppDependencies(forTesting: true)
         // Add tags to test items
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
@@ -353,6 +362,7 @@ struct ReportingServiceTests {
 
     @Test("Tag statistics sorted by count")
     func testTagStatisticsSorting() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -375,6 +385,7 @@ struct ReportingServiceTests {
 
     @Test("Generate shopping list report when service available")
     func testGenerateShoppingListReportWithService() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -396,6 +407,7 @@ struct ReportingServiceTests {
 
     @Test("Generate shopping list report handles missing service")
     func testGenerateShoppingListReportMissingService() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -415,6 +427,7 @@ struct ReportingServiceTests {
 
     @Test("Calculate inventory by type statistics")
     func testInventoryByTypeStatistics() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -433,6 +446,7 @@ struct ReportingServiceTests {
 
     @Test("Calculate COE distribution statistics")
     func testCOEDistributionStatistics() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -452,6 +466,7 @@ struct ReportingServiceTests {
 
     @Test("Calculate tag analysis with averages")
     func testTagAnalysisCalculations() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -471,6 +486,7 @@ struct ReportingServiceTests {
 
     @Test("Handle reports with items without inventory")
     func testReportsWithItemsWithoutInventory() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
 
@@ -500,6 +516,7 @@ struct ReportingServiceTests {
 
     @Test("Handle reports with items without tags")
     func testReportsWithItemsWithoutTags() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -516,6 +533,7 @@ struct ReportingServiceTests {
 
     @Test("Comprehensive report with low stock items")
     func testComprehensiveReportLowStockCount() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
@@ -532,6 +550,7 @@ struct ReportingServiceTests {
 
     @Test("Report generated date is recent")
     func testReportGeneratedDate() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let reportingService = ReportingService(
@@ -550,6 +569,7 @@ struct ReportingServiceTests {
 
     @Test("Multiple report types can be generated simultaneously")
     func testMultipleReportGeneration() async throws {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)

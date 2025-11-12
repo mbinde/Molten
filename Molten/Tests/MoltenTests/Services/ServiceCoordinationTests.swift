@@ -155,6 +155,7 @@ struct ServiceCoordinationTests {
     
     @Test("Should coordinate inventory updates with catalog changes")
     func testInventoryCatalogCoordination() async throws {
+        let deps = AppDependencies(forTesting: true)
         let (catalogService, inventoryService) = createMockServices()
         
         // Create catalog item
@@ -182,6 +183,7 @@ struct ServiceCoordinationTests {
     
     @Test("Should handle catalog item updates with inventory references")
     func testCatalogUpdateWithInventoryReferences() async throws {
+        let deps = AppDependencies(forTesting: true)
         let (catalogService, inventoryService) = createMockServices()
         
         // Create catalog and inventory items
@@ -236,6 +238,7 @@ struct ServiceCoordinationTests {
     
     @Test("Should cascade delete inventory items when catalog item is deleted")
     func testCatalogDeletionCascadeInventoryItems() async throws {
+        let deps = AppDependencies(forTesting: true)
         let (catalogService, inventoryService) = createMockServices()
         
         // Create catalog item
@@ -299,6 +302,7 @@ struct ServiceCoordinationTests {
     
     @Test("Should handle catalog deletion when no inventory service is configured")
     func testCatalogDeletionWithoutInventoryService() async throws {
+        let deps = AppDependencies(forTesting: true)
         // Create catalog service without inventory service (older pattern)
         let catalogRepo = MockCatalogRepository()
         let catalogService = MockCatalogServiceForTests(repository: catalogRepo) // No inventory service
@@ -323,6 +327,7 @@ struct ServiceCoordinationTests {
     
     @Test("Should maintain consistency across multiple service operations")
     func testCrossServiceConsistency() async throws {
+        let deps = AppDependencies(forTesting: true)
         let (catalogService, inventoryService) = createMockServices()
         
         let testCatalogItems = createTestCatalogItems()
@@ -358,6 +363,7 @@ struct ServiceCoordinationTests {
     
     @Test("Should handle partial failure scenarios gracefully")
     func testPartialFailureRecovery() async throws {
+        let deps = AppDependencies(forTesting: true)
         let (catalogService, inventoryService) = createMockServices()
         
         // Create a valid catalog item
@@ -399,6 +405,7 @@ struct ServiceCoordinationTests {
     
     @Test("Should handle concurrent cross-service operations")
     func testConcurrentCrossServiceOperations() async throws {
+        let deps = AppDependencies(forTesting: true)
         let (catalogService, inventoryService) = createMockServices()
         
         // Create catalog items concurrently
@@ -467,6 +474,7 @@ struct ServiceCoordinationTests {
     
     @Test("Should handle workflow error recovery")
     func testWorkflowErrorRecovery() async throws {
+        let deps = AppDependencies(forTesting: true)
         let (catalogService, inventoryService) = createMockServices()
         
         // Step 1: Successfully create catalog item

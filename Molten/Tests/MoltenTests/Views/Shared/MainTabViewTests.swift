@@ -26,10 +26,16 @@ struct MainTabViewTests {
         // Arrange: Configure factory for testing and create catalog service
         let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
-        
-        // Act: Create MainTabView with pre-configured service
-        let tabView = MainTabView(catalogService: catalogService)
-        
+
+        // Act: Create MainTabView with pre-configured services
+        let tabView = MainTabView(
+            deps: deps,
+            catalogService: catalogService,
+            inventoryService: deps.inventoryTrackingService,
+            shoppingListService: deps.shoppingListService,
+            kilnScheduleService: deps.kilnScheduleService
+        )
+
         // Assert: MainTabView should be created successfully with injected service
         #expect(tabView != nil, "MainTabView should accept catalogService via dependency injection")
     }
@@ -41,13 +47,17 @@ struct MainTabViewTests {
         let catalogService = deps.catalogService
         let mockPurchaseRepository = MockPurchaseRecordRepository()
         let purchaseService = PurchaseRecordService(repository: mockPurchaseRepository)
-        
-        // Act: Create MainTabView with both services
+
+        // Act: Create MainTabView with all required services
         let tabView = MainTabView(
+            deps: deps,
             catalogService: catalogService,
-            purchaseService: purchaseService
+            purchaseService: purchaseService,
+            inventoryService: deps.inventoryTrackingService,
+            shoppingListService: deps.shoppingListService,
+            kilnScheduleService: deps.kilnScheduleService
         )
-        
+
         // Assert: MainTabView should be created successfully with both injected services
         #expect(tabView != nil, "MainTabView should accept both catalogService and purchaseService via dependency injection")
     }
@@ -57,13 +67,19 @@ struct MainTabViewTests {
         // Arrange: Configure factory for testing and create catalog service (no Core Data involved)
         let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
-        
-        // Act: Create MainTabView with just the service (no Core Data context)
-        let tabView = MainTabView(catalogService: catalogService)
-        
+
+        // Act: Create MainTabView with all required services (no Core Data context)
+        let tabView = MainTabView(
+            deps: deps,
+            catalogService: catalogService,
+            inventoryService: deps.inventoryTrackingService,
+            shoppingListService: deps.shoppingListService,
+            kilnScheduleService: deps.kilnScheduleService
+        )
+
         // Assert: This should work without any Core Data environment
         #expect(tabView != nil, "MainTabView should work without Core Data context when services are injected")
-        
+
         // Additional check: The view should not import CoreData at all
         // This will be verified by the compiler - if MainTabView imports CoreData
         // but we're not providing a Core Data context, it should still work
@@ -74,14 +90,20 @@ struct MainTabViewTests {
     func testMainTabViewWithRepositoryFactory() {
         // Arrange: Configure factory for testing
         let deps = AppDependencies(forTesting: true)
-        
+
         // Act: Create services using the factory pattern
         let catalogService = deps.catalogService
         let inventoryTrackingService = deps.inventoryTrackingService
-        
-        // Create MainTabView
-        let tabView = MainTabView(catalogService: catalogService)
-        
+
+        // Create MainTabView with all required services
+        let tabView = MainTabView(
+            deps: deps,
+            catalogService: catalogService,
+            inventoryService: inventoryTrackingService,
+            shoppingListService: deps.shoppingListService,
+            kilnScheduleService: deps.kilnScheduleService
+        )
+
         // Assert: All services should be created successfully
         #expect(tabView != nil, "MainTabView should work with RepositoryFactory-created services")
         #expect(catalogService != nil, "CatalogService should be created successfully")

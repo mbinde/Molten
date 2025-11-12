@@ -151,13 +151,17 @@ git commit -m "refactor(di): Phase 1 complete - MoltenApp uses AppDependencies"
 ```
 
 **Critical bug fix (environment object crashes):**
-- Issue: Views with `@Environment(SubscriptionManager.self)` crashed when subscriptionManager was nil
+- Issue: Views with `@Environment(SubscriptionManager.self)` and `@Environment(\.appDependencies)` crashed with force-unwrap failures
 - Root cause: Dependencies initialized in `.onAppear`, but views evaluated BEFORE `.onAppear` ran
-- Solution: Initialize dependencies in `body` via `ensureDependenciesInitialized()` BEFORE view tree creation
-- Affected views: SettingsView.swift (2 places), UpgradePromptView.swift
+- Initial fix attempt: Initialize SubscriptionManager in `init()` with placeholder - partial success
+- Final solution: Initialize BOTH dependencies and subscriptionManager as non-optional in `init()`
+- Key insight: ALL environment dependencies must be immediately available from app startup
+- Affected views: SettingsView.swift (2 places), UpgradePromptView.swift, all views accessing appDependencies
 - Commits:
   - `81b6b074` - Re-added RepositoryFactory configuration for unmigrated views
-  - `c7ccdf71` - Fixed environment object initialization timing
+  - `c7ccdf71` - Fixed SubscriptionManager initialization timing (partial fix)
+  - `67b144bb` - Made SubscriptionManager non-optional (partial fix)
+  - `3eaeb555` - Made dependencies non-optional, initialized in init() (final fix)
 
 ---
 

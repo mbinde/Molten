@@ -20,11 +20,27 @@ struct StoreDetailView: View {
     @Environment(\.openURL) private var openURL
 
     init(store: UnifiedLocationModel,
-         locationService: UnifiedLocationService = RepositoryFactory.createUnifiedLocationService(),
-         shoppingListService: ShoppingListService = RepositoryFactory.createShoppingListService()) {
+         locationService: UnifiedLocationService,
+         shoppingListService: ShoppingListService) {
         self.store = store
         self.locationService = locationService
         self.shoppingListService = shoppingListService
+
+        // Initialize map region centered on store
+        _region = State(initialValue: MKCoordinateRegion(
+            center: CLLocationCoordinate2D(
+                latitude: store.latitude,
+                longitude: store.longitude
+            ),
+            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        ))
+    }
+
+    /// Convenience init using AppDependencies
+    init(store: UnifiedLocationModel, deps: AppDependencies = AppDependencies()) {
+        self.store = store
+        self.locationService = deps.unifiedLocationService
+        self.shoppingListService = deps.shoppingListService
 
         // Initialize map region centered on store
         _region = State(initialValue: MKCoordinateRegion(
@@ -350,6 +366,7 @@ struct StoreDetailView: View {
 }
 
 #Preview("Store with Full Info") {
+    let deps = AppDependencies(forTesting: true)
     NavigationStack {
         StoreDetailView(
             store: UnifiedLocationModel(
@@ -373,12 +390,13 @@ struct StoreDetailView: View {
                     RetailCapability(technique: .glassBlowing)
                 ]
             ),
-            locationService: RepositoryFactory.createUnifiedLocationService()
+            deps: deps
         )
     }
 }
 
 #Preview("Store with Minimal Info") {
+    let deps = AppDependencies(forTesting: true)
     NavigationStack {
         StoreDetailView(
             store: UnifiedLocationModel(
@@ -392,7 +410,7 @@ struct StoreDetailView: View {
                     RetailCapability(technique: .stainedGlass)
                 ]
             ),
-            locationService: RepositoryFactory.createUnifiedLocationService()
+            deps: deps
         )
     }
 }

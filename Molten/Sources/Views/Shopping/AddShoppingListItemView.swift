@@ -18,11 +18,19 @@ struct AddShoppingListItemView: View {
     init(prefilledNaturalKey: String? = nil,
          shoppingListService: ShoppingListService,
          catalogService: CatalogService,
-         locationService: UnifiedLocationService = RepositoryFactory.createUnifiedLocationService()) {
+         locationService: UnifiedLocationService) {
         self.prefilledNaturalKey = prefilledNaturalKey
         self.shoppingListService = shoppingListService
         self.catalogService = catalogService
         self.locationService = locationService
+    }
+
+    /// Convenience init using AppDependencies
+    init(prefilledNaturalKey: String? = nil, deps: AppDependencies = AppDependencies()) {
+        self.prefilledNaturalKey = prefilledNaturalKey
+        self.shoppingListService = deps.shoppingListService
+        self.catalogService = deps.catalogService
+        self.locationService = deps.unifiedLocationService
     }
 
     var body: some View {
@@ -340,12 +348,8 @@ struct AddShoppingListFormView: View {
 }
 
 #Preview {
-    let _ = RepositoryFactory.configureForTesting()
+    let deps = AppDependencies(forTesting: true)
     NavigationStack {
-        AddShoppingListItemView(
-            shoppingListService: RepositoryFactory.createShoppingListService(),
-            catalogService: RepositoryFactory.createCatalogService(),
-            locationService: RepositoryFactory.createUnifiedLocationService()
-        )
+        AddShoppingListItemView(deps: deps)
     }
 }

@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct RecipesView: View {
+    private let deps: AppDependencies
     private let recipeService: RecipeService
 
     @State private var recipes: [RecipeModel] = []
@@ -16,8 +17,9 @@ struct RecipesView: View {
     @State private var searchText = ""
     @State private var showingAddRecipe = false
 
-    init(recipeService: RecipeService = RepositoryFactory.createRecipeService()) {
-        self.recipeService = recipeService
+    init(deps: AppDependencies = AppDependencies()) {
+        self.deps = deps
+        self.recipeService = deps.recipeService
     }
 
     var body: some View {
@@ -72,7 +74,7 @@ struct RecipesView: View {
             }
             .sheet(isPresented: $showingAddRecipe) {
                 AddRecipeView(
-                    recipeService: recipeService,
+                    deps: deps,
                     onSave: { newRecipe in
                         recipes.append(newRecipe)
                     }
@@ -98,7 +100,7 @@ struct RecipesView: View {
         List {
             ForEach(filteredRecipes) { recipe in
                 NavigationLink {
-                    RecipeDetailView(recipe: recipe, recipeService: recipeService)
+                    RecipeDetailView(recipe: recipe, deps: deps)
                 } label: {
                     RecipeRow(recipe: recipe)
                 }
@@ -224,10 +226,10 @@ struct RecipeDetailView: View {
     @State private var availableGlassItems: [CompleteInventoryItemModel] = []
     @State private var isLoadingGlassItems = false
 
-    init(recipe: RecipeModel, recipeService: RecipeService, catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
+    init(recipe: RecipeModel, deps: AppDependencies = AppDependencies()) {
         self.recipe = recipe
-        self.recipeService = recipeService
-        self.catalogService = catalogService
+        self.recipeService = deps.recipeService
+        self.catalogService = deps.catalogService
     }
 
     var body: some View {
@@ -309,16 +311,16 @@ struct RecipeDetailView: View {
 }
 
 #Preview("Empty State") {
-    RepositoryFactory.configureForTesting()
-    return RecipesView()
+    let deps = AppDependencies(forTesting: true)
+    return RecipesView(deps: deps)
 }
 
 #Preview("With Recipes") {
-    RepositoryFactory.configureForTesting()
+    let deps = AppDependencies(forTesting: true)
 
     // Create some test recipes
     Task {
-        let service = RepositoryFactory.createRecipeService()
+        let service = deps.recipeService
         try? await service.createRecipe(RecipeModel(
             title: "Clear Frit Mix",
             descriptionText: "A basic clear frit blend",
@@ -338,5 +340,5 @@ struct RecipeDetailView: View {
         ))
     }
 
-    return RecipesView()
+    return RecipesView(deps: deps)
 }

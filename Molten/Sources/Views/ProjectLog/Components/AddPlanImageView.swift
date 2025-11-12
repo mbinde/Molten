@@ -26,11 +26,24 @@ struct AddPlanImageView: View {
     @State private var showingError = false
     @State private var errorMessage = ""
 
-    init(plan: ProjectModel, repository: ProjectRepository) {
+    init(
+        plan: ProjectModel,
+        repository: ProjectRepository,
+        userImageRepository: UserImageRepository,
+        projectImageRepository: ProjectImageRepository
+    ) {
         self.plan = plan
         self.repository = repository
-        self.userImageRepository = RepositoryFactory.createUserImageRepository()
-        self.projectImageRepository = RepositoryFactory.createProjectImageRepository()
+        self.userImageRepository = userImageRepository
+        self.projectImageRepository = projectImageRepository
+    }
+
+    /// Convenience init using AppDependencies
+    init(plan: ProjectModel, repository: ProjectRepository, deps: AppDependencies = AppDependencies()) {
+        self.plan = plan
+        self.repository = repository
+        self.userImageRepository = deps.userImageRepository
+        self.projectImageRepository = deps.projectImageRepository
     }
 
     var body: some View {

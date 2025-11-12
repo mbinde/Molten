@@ -21,12 +21,19 @@ struct ImportPlanView: View {
 
     var onImportComplete: ((ProjectModel) -> Void)?
 
-    init(fileURL: URL, onImportComplete: ((ProjectModel) -> Void)? = nil) {
+    init(fileURL: URL, importService: ProjectImportService, onImportComplete: ((ProjectModel) -> Void)? = nil) {
+        self.fileURL = fileURL
+        self.importService = importService
+        self.onImportComplete = onImportComplete
+    }
+
+    /// Convenience init using AppDependencies
+    init(fileURL: URL, deps: AppDependencies = AppDependencies(), onImportComplete: ((ProjectModel) -> Void)? = nil) {
         self.fileURL = fileURL
         self.onImportComplete = onImportComplete
         self.importService = ProjectImportService(
-            userImageRepository: RepositoryFactory.createUserImageRepository(),
-            projectPlanRepository: RepositoryFactory.createProjectRepository()
+            userImageRepository: deps.userImageRepository,
+            projectPlanRepository: deps.projectRepository
         )
     }
 

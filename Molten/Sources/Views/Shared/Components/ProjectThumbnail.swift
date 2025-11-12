@@ -29,13 +29,28 @@ struct ProjectThumbnail: View {
         projectId: UUID,
         projectCategory: ProjectCategory,
         size: CGFloat = 60,
-        userImageRepository: UserImageRepository = RepositoryFactory.createUserImageRepository()
+        userImageRepository: UserImageRepository
     ) {
         self.heroImageId = heroImageId
         self.projectId = projectId
         self.projectCategory = projectCategory
         self.size = size
         self.userImageRepository = userImageRepository
+    }
+
+    /// Convenience init using AppDependencies
+    init(
+        heroImageId: UUID?,
+        projectId: UUID,
+        projectCategory: ProjectCategory,
+        size: CGFloat = 60,
+        deps: AppDependencies = AppDependencies()
+    ) {
+        self.heroImageId = heroImageId
+        self.projectId = projectId
+        self.projectCategory = projectCategory
+        self.size = size
+        self.userImageRepository = deps.userImageRepository
     }
 
     var body: some View {

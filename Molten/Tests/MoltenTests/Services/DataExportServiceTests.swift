@@ -17,7 +17,7 @@ struct DataExportServiceTests {
 
     private func createTestService() -> (DataExportService, AppDependencies) {
         let deps = AppDependencies(forTesting: true)
-        let service = RepositoryFactory.createDataExportService()
+        let service = deps.dataExportService
         return (service, deps)
     }
 
@@ -125,7 +125,7 @@ struct DataExportServiceTests {
 
         // Create services - they will all share the same cached mock repositories
         let catalogService = deps.catalogService
-        let service = RepositoryFactory.createDataExportService()
+        let service = deps.dataExportService
 
         // Create test glass items
         let item1 = GlassItemModel(
@@ -179,7 +179,7 @@ struct DataExportServiceTests {
         // Create services - they will all share the same cached mock repositories
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        let service = RepositoryFactory.createDataExportService()
+        let service = deps.dataExportService
 
         // Create test glass items using the catalog service
         let item1 = GlassItemModel(

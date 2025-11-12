@@ -236,13 +236,16 @@ struct NotFoundCard: View {
 }
 
 #Preview {
-    let _ = RepositoryFactory.configureForTesting()
-
     struct PreviewWrapper: View {
         @State private var selectedItem: GlassItemModel? = nil
         @State private var searchText: String = ""
         @State private var glassItems: [GlassItemModel] = []
-        private let catalogService = RepositoryFactory.createCatalogService()
+        private let catalogService: CatalogService
+
+        init() {
+            let deps = AppDependencies(forTesting: true)
+            self.catalogService = deps.catalogService
+        }
 
         var body: some View {
             Form {

@@ -156,13 +156,13 @@ struct KilnSchedulePickerView: View {
 
 #Preview {
     @Previewable @State var selectedId: UUID? = nil
-    let service = RepositoryFactory.createKilnScheduleService()
+    let deps = AppDependencies(forTesting: true)
 
     return Form {
         Section("Firing Schedule") {
             KilnSchedulePickerView(
                 selectedScheduleId: $selectedId,
-                kilnScheduleService: service
+                kilnScheduleService: deps.kilnScheduleService
             )
         }
     }

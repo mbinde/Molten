@@ -49,11 +49,19 @@ class InventorySharingViewModel {
     // MARK: - Initialization
 
     init(
-        sharingManager: InventorySharingManager = RepositoryFactory.createInventorySharingManager(),
-        catalogService: CatalogService = RepositoryFactory.createCatalogService()
+        sharingManager: InventorySharingManager,
+        catalogService: CatalogService
     ) {
         self.sharingManager = sharingManager
         self.catalogService = catalogService
+    }
+
+    /// Convenience init using AppDependencies
+    convenience init(deps: AppDependencies = AppDependencies()) {
+        self.init(
+            sharingManager: deps.inventorySharingManager,
+            catalogService: deps.catalogService
+        )
     }
 
     // MARK: - Lifecycle

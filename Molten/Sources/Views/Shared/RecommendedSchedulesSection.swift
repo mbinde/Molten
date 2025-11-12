@@ -204,13 +204,12 @@ struct RecommendedSchedulesSection: View {
 }
 
 #Preview {
-    let service = RepositoryFactory.createKilnScheduleService()
-    let repository = RepositoryFactory.createGlassItemRepository()
+    let deps = AppDependencies(forTesting: true)
     Form {
         RecommendedSchedulesSection(
             glassItemId: "bullseye-clear-0",
-            kilnScheduleService: service,
-            glassItemRepository: repository
+            kilnScheduleService: deps.kilnScheduleService,
+            glassItemRepository: deps.glassItemRepository
         )
     }
 }

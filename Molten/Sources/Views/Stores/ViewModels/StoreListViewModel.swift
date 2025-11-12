@@ -175,12 +175,20 @@ class StoreListViewModel: StoreListViewModelProtocol {
     // MARK: - Initialization
 
     init(
-        locationService: UnifiedLocationService = RepositoryFactory.createUnifiedLocationService(),
-        locationManager: LocationManager = LocationManager()
+        locationService: UnifiedLocationService,
+        locationManager: LocationManager
     ) {
         self.locationService = locationService
         self.locationManager = locationManager
         loadPersistedState()
+    }
+
+    /// Convenience init using AppDependencies
+    convenience init(deps: AppDependencies = AppDependencies(), locationManager: LocationManager = LocationManager()) {
+        self.init(
+            locationService: deps.unifiedLocationService,
+            locationManager: locationManager
+        )
     }
 
     // MARK: - Methods

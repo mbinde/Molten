@@ -61,6 +61,12 @@ final class ImageDownloadService: Sendable {
             return nil
         }
 
+        // Check if we have permission to use product-specific images for this manufacturer
+        guard GlassManufacturers.hasProductImagePermission(for: manufacturer) else {
+            print("⚠️ [ImageDownloadService] No image permission for manufacturer: \(manufacturer)")
+            return nil
+        }
+
         // PRIORITY 1: If exact filename provided (from catalog image_path), try it first
         if let filename = exactFilename, !filename.isEmpty {
             print("📸 [ImageDownloadService] Trying exact filename: \(filename)")

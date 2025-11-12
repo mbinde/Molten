@@ -53,4 +53,12 @@ env/
 Molten/Tools/Scraping Tools/combined_glass_products_temp.csv
 Molten/Tools/Scraping Tools/glassitems-new.json
 Molten/Tools/Scraping Tools/*.log
+# Product images - thumbnails are bundled, full images downloaded on-demand
+# Ignore old Resources location
 Molten/Resources/product-images/
+# For new location: ignore everything EXCEPT thumbnails
+Molten/Sources/Resources/product-images/**
+!Molten/Sources/Resources/product-images/
+!Molten/Sources/Resources/product-images/glass/
+!Molten/Sources/Resources/product-images/glass/*_thumb.jpg
+!Molten/Sources/Resources/product-images/glass/*_thumb.jpeg

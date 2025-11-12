@@ -52,28 +52,61 @@ final class ImageDownloadService: Sendable {
 
     /// Attempts to load a product image from cache or download from CDN
     /// - Parameters:
-    ///   - itemCode: The item code (e.g., "650001" or "BB-40-T-Beeswax")
-    ///   - manufacturer: The manufacturer abbreviation (e.g., "BB")
+    ///   - itemCode: The item code (e.g., "650001" or "BB-650001")
+    ///   - manufacturer: The manufacturer abbreviation (e.g., "BB", "CiM")
     /// - Returns: UIImage if found/downloaded, nil otherwise
     nonisolated static func loadImage(itemCode: String, manufacturer: String?) async -> UIImage? {
         guard let manufacturer = manufacturer, !manufacturer.isEmpty else {
             return nil
         }
 
-        // Build filename: MANUFACTURER-CODE (e.g., "BB-650001")
-        // If itemCode already has manufacturer prefix, don't duplicate it
-        let filename = if itemCode.uppercased().hasPrefix("\(manufacturer.uppercased())-") {
-            itemCode  // Already has prefix
-        } else {
-            "\(manufacturer.uppercased())-\(itemCode)"  // Add prefix
+        // Sanitize filename (replace slashes with dashes)
+        let sanitizedCode = itemCode.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: "\\", with: "-")
+        let sanitizedManufacturer = manufacturer.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: "\\", with: "-")
+
+        // Try multiple case variations (matching ImageHelpers.swift logic)
+        let manufacturerVariations = [
+            sanitizedManufacturer.uppercased(),  // Try uppercase first (most common)
+            sanitizedManufacturer.lowercased(),  // Then lowercase
+            sanitizedManufacturer.capitalized,   // Then capitalized
+            sanitizedManufacturer                // Finally original case
+        ]
+
+        // Common image extensions to try
+        let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
+
+        // Try with manufacturer prefix variations
+        for mfrVariation in manufacturerVariations {
+            for ext in extensions {
+                // Check if itemCode already starts with manufacturer prefix to avoid duplication
+                let imageName: String
+                if sanitizedCode.uppercased().hasPrefix("\(mfrVariation.uppercased())-") {
+                    // ItemCode already includes manufacturer prefix, use as-is
+                    imageName = sanitizedCode
+                } else {
+                    // Add manufacturer prefix
+                    imageName = "\(mfrVariation)-\(sanitizedCode)"
+                }
+
+                let filenameWithExt = "\(imageName).\(ext)"
+
+                // First check local cache
+                if let cachedImage = await loadFromCache(filename: filenameWithExt) {
+                    return cachedImage
+                }
+
+                // If not cached, try to download
+                if let downloadedImage = await downloadImage(filename: filenameWithExt) {
+                    // Save to cache for next time
+                    await saveToCache(image: downloadedImage, filename: filenameWithExt)
+                    return downloadedImage
+                }
+            }
         }
 
-        print("🖼️ [ImageDownloadService] Attempting to load: \(filename)")
-
-        // Try common extensions
-        let extensions = ["webp", "jpg", "jpeg", "png"]
+        // Fallback: try without manufacturer prefix (for backward compatibility)
         for ext in extensions {
-            let filenameWithExt = "\(filename).\(ext)"
+            let filenameWithExt = "\(sanitizedCode).\(ext)"
 
             // First check local cache
             if let cachedImage = await loadFromCache(filename: filenameWithExt) {

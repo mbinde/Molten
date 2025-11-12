@@ -24,8 +24,7 @@ struct CatalogServiceIntegrationTests {
 
     private func createTestService() async -> (CatalogService, PersistenceController) {
         let testController = PersistenceController.createTestController()
-        RepositoryFactory.configure(testController: testController)
-        RepositoryFactory.mode = .coreData
+        let deps = AppDependencies(forTesting: true)
 
         let service = deps.catalogService
         return (service, testController)
@@ -62,6 +61,7 @@ struct CatalogServiceIntegrationTests {
     @Test("CatalogService integrates glass items with inventory tracking")
     func testGlassItemWithInventoryIntegration() async throws {
         let (service, _) = await createTestService()
+        let deps = AppDependencies(forTesting: true)
         let inventoryService = deps.inventoryTrackingService
 
         // Create glass item with initial inventory
@@ -133,6 +133,7 @@ struct CatalogServiceIntegrationTests {
     @Test("CatalogService deletes cascade correctly")
     func testDeleteCascade() async throws {
         let (service, _) = await createTestService()
+        let deps = AppDependencies(forTesting: true)
         let inventoryService = deps.inventoryTrackingService
 
         // Create item with inventory

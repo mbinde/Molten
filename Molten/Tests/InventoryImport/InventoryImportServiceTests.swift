@@ -67,6 +67,7 @@ struct InventoryImportServiceTests {
 
     /// Setup service with mock repositories (assumes RepositoryFactory is already configured for testing)
     func createTestService() -> InventoryImportService {
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let locationRepo = deps.locationRepository
@@ -82,6 +83,7 @@ struct InventoryImportServiceTests {
     /// This ensures the items are available to all services sharing the same repository
     /// Idempotent: only creates items if they don't already exist
     func populateTestCatalog() async throws {
+        let deps = AppDependencies(forTesting: true)
         let glassItemRepo = deps.glassItemRepository
 
         // Create test glass items that match our import data

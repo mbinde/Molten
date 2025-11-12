@@ -41,7 +41,7 @@ struct CatalogViewDataLoadingTests {
         }
         try? context.save()
 
-        RepositoryFactory.configureForTestingWithCoreData(controller: testController)
+        let deps = AppDependencies(forTesting: true)
 
         let catalogService = deps.catalogService
         return (testController, catalogService)
@@ -351,8 +351,9 @@ struct CatalogViewDataLoadingTests {
         
         // Clear references
         views = Array(repeating: nil, count: 5)
-        
+
         // Factory should still work after views are released
+        let deps = AppDependencies(forTesting: true)
         let newService = deps.catalogService
         let items = try await newService.getAllGlassItems()
         #expect(items.count >= 0, "Factory should work after view cleanup")

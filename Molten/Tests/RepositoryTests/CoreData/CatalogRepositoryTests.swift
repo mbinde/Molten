@@ -171,6 +171,7 @@ struct CatalogRepositoryTests {
 
         // Arrange: Reset environment to ensure clean state
         resetTestEnvironment()
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
 
         // Act - Service should delegate to repository
@@ -187,6 +188,7 @@ struct CatalogRepositoryTests {
 
         // Arrange: Reset environment to ensure clean state
         resetTestEnvironment()
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let inventoryTrackingService = deps.inventoryTrackingService
         

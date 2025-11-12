@@ -44,6 +44,12 @@ struct InventoryView: View {
     // CRITICAL: Service instances (not optional - always provided)
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
+    private let userNotesRepository: UserNotesRepository
+    private let userTagsRepository: UserTagsRepository
+    private let shoppingListRepository: ShoppingListRepository
+    private let userImageRepository: UserImageRepository
+    private let kilnScheduleService: KilnScheduleService
+    private let glassItemRepository: GlassItemRepository
 
     private let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Flameworker", category: "InventoryView")
 
@@ -51,26 +57,41 @@ struct InventoryView: View {
     init(
         viewModel: InventoryViewModel,
         catalogService: CatalogService,
-        inventoryTrackingService: InventoryTrackingService
+        inventoryTrackingService: InventoryTrackingService,
+        userNotesRepository: UserNotesRepository,
+        userTagsRepository: UserTagsRepository,
+        shoppingListRepository: ShoppingListRepository,
+        userImageRepository: UserImageRepository,
+        kilnScheduleService: KilnScheduleService,
+        glassItemRepository: GlassItemRepository
     ) {
         self._viewModel = State(initialValue: viewModel)
         self.catalogService = catalogService
         self.inventoryTrackingService = inventoryTrackingService
+        self.userNotesRepository = userNotesRepository
+        self.userTagsRepository = userTagsRepository
+        self.shoppingListRepository = shoppingListRepository
+        self.userImageRepository = userImageRepository
+        self.kilnScheduleService = kilnScheduleService
+        self.glassItemRepository = glassItemRepository
     }
 
     // Convenience init for production use
-    init(
-        catalogService: CatalogService = RepositoryFactory.createCatalogService(),
-        inventoryTrackingService: InventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
-    ) {
+    init(deps: AppDependencies = AppDependencies()) {
         let viewModel = InventoryViewModel(
-            inventoryTrackingService: inventoryTrackingService,
-            catalogService: catalogService
+            inventoryTrackingService: deps.inventoryTrackingService,
+            catalogService: deps.catalogService
         )
         self.init(
             viewModel: viewModel,
-            catalogService: catalogService,
-            inventoryTrackingService: inventoryTrackingService
+            catalogService: deps.catalogService,
+            inventoryTrackingService: deps.inventoryTrackingService,
+            userNotesRepository: deps.userNotesRepository,
+            userTagsRepository: deps.userTagsRepository,
+            shoppingListRepository: deps.shoppingListRepository,
+            userImageRepository: deps.userImageRepository,
+            kilnScheduleService: deps.kilnScheduleService,
+            glassItemRepository: deps.glassItemRepository
         )
     }
     
@@ -411,12 +432,12 @@ struct InventoryView: View {
                 item: item,
                 inventoryTrackingService: inventoryTrackingService,
                 catalogService: catalogService,
-                userNotesRepository: RepositoryFactory.createUserNotesRepository(),
-                userTagsRepository: RepositoryFactory.createUserTagsRepository(),
-                shoppingListRepository: RepositoryFactory.createShoppingListRepository(),
-                userImageRepository: RepositoryFactory.createUserImageRepository(),
-                kilnScheduleService: RepositoryFactory.createKilnScheduleService(),
-                glassItemRepository: RepositoryFactory.createGlassItemRepository()
+                userNotesRepository: userNotesRepository,
+                userTagsRepository: userTagsRepository,
+                shoppingListRepository: shoppingListRepository,
+                userImageRepository: userImageRepository,
+                kilnScheduleService: kilnScheduleService,
+                glassItemRepository: glassItemRepository
             )
         }
     }

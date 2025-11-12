@@ -11,6 +11,15 @@ struct ShoppingListView: View {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data
     @State private var viewModel: ShoppingListViewModel
     private let shoppingListService: ShoppingListService
+    private let catalogService: CatalogService
+    private let inventoryTrackingService: InventoryTrackingService
+    private let purchaseService: PurchaseRecordService
+    private let userNotesRepository: UserNotesRepository
+    private let userTagsRepository: UserTagsRepository
+    private let shoppingListRepository: ShoppingListRepository
+    private let userImageRepository: UserImageRepository
+    private let kilnScheduleService: KilnScheduleService
+    private let glassItemRepository: GlassItemRepository
 
     // UI-only state (not in ViewModel)
     @State private var showingAllTags = false
@@ -41,15 +50,46 @@ struct ShoppingListView: View {
     @State private var cachedAllManufacturers: [String] = []
 
     // Accept ViewModel directly (protocol-based pattern)
-    init(viewModel: ShoppingListViewModel, shoppingListService: ShoppingListService) {
+    init(viewModel: ShoppingListViewModel,
+         shoppingListService: ShoppingListService,
+         catalogService: CatalogService,
+         inventoryTrackingService: InventoryTrackingService,
+         purchaseService: PurchaseRecordService,
+         userNotesRepository: UserNotesRepository,
+         userTagsRepository: UserTagsRepository,
+         shoppingListRepository: ShoppingListRepository,
+         userImageRepository: UserImageRepository,
+         kilnScheduleService: KilnScheduleService,
+         glassItemRepository: GlassItemRepository) {
         self._viewModel = State(initialValue: viewModel)
         self.shoppingListService = shoppingListService
+        self.catalogService = catalogService
+        self.inventoryTrackingService = inventoryTrackingService
+        self.purchaseService = purchaseService
+        self.userNotesRepository = userNotesRepository
+        self.userTagsRepository = userTagsRepository
+        self.shoppingListRepository = shoppingListRepository
+        self.userImageRepository = userImageRepository
+        self.kilnScheduleService = kilnScheduleService
+        self.glassItemRepository = glassItemRepository
     }
 
     // Convenience init for production use
-    init(shoppingListService: ShoppingListService = RepositoryFactory.createShoppingListService()) {
-        let viewModel = ShoppingListViewModel(shoppingListService: shoppingListService)
-        self.init(viewModel: viewModel, shoppingListService: shoppingListService)
+    init(deps: AppDependencies = AppDependencies()) {
+        let viewModel = ShoppingListViewModel(shoppingListService: deps.shoppingListService)
+        self.init(
+            viewModel: viewModel,
+            shoppingListService: deps.shoppingListService,
+            catalogService: deps.catalogService,
+            inventoryTrackingService: deps.inventoryTrackingService,
+            purchaseService: deps.purchaseRecordService,
+            userNotesRepository: deps.userNotesRepository,
+            userTagsRepository: deps.userTagsRepository,
+            shoppingListRepository: deps.shoppingListRepository,
+            userImageRepository: deps.userImageRepository,
+            kilnScheduleService: deps.kilnScheduleService,
+            glassItemRepository: deps.glassItemRepository
+        )
     }
 
     // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
@@ -417,7 +457,7 @@ struct ShoppingListView: View {
                 NavigationStack {
                     AddShoppingListItemView(
                         shoppingListService: shoppingListService,
-                        catalogService: RepositoryFactory.createCatalogService()
+                        catalogService: catalogService
                     )
                 }
             }
@@ -459,9 +499,9 @@ struct ShoppingListView: View {
                 CheckoutSheet(
                     basketItems: itemsInBasket,
                     shoppingModeState: shoppingModeState,
-                    inventoryTrackingService: RepositoryFactory.createInventoryTrackingService(),
+                    inventoryTrackingService: inventoryTrackingService,
                     shoppingListService: shoppingListService,
-                    purchaseService: RepositoryFactory.createPurchaseRecordService(),
+                    purchaseService: purchaseService,
                     onComplete: {
                         Task {
                             await loadShoppingList()
@@ -476,14 +516,14 @@ struct ShoppingListView: View {
             .navigationDestination(for: CompleteInventoryItemModel.self) { item in
                 InventoryDetailView(
                     item: item,
-                    inventoryTrackingService: RepositoryFactory.createInventoryTrackingService(),
-                    catalogService: RepositoryFactory.createCatalogService(),
-                    userNotesRepository: RepositoryFactory.createUserNotesRepository(),
-                    userTagsRepository: RepositoryFactory.createUserTagsRepository(),
-                    shoppingListRepository: RepositoryFactory.createShoppingListRepository(),
-                    userImageRepository: RepositoryFactory.createUserImageRepository(),
-                    kilnScheduleService: RepositoryFactory.createKilnScheduleService(),
-                    glassItemRepository: RepositoryFactory.createGlassItemRepository()
+                    inventoryTrackingService: inventoryTrackingService,
+                    catalogService: catalogService,
+                    userNotesRepository: userNotesRepository,
+                    userTagsRepository: userTagsRepository,
+                    shoppingListRepository: shoppingListRepository,
+                    userImageRepository: userImageRepository,
+                    kilnScheduleService: kilnScheduleService,
+                    glassItemRepository: glassItemRepository
                 )
             }
         }
@@ -1176,7 +1216,6 @@ struct CheckoutSheet: View {
 }
 
 #Preview {
-    let _ = RepositoryFactory.configureForTesting()
-    let shoppingListService = RepositoryFactory.createShoppingListService()
-    return ShoppingListView(shoppingListService: shoppingListService)
+    let deps = AppDependencies(forTesting: true)
+    return ShoppingListView(deps: deps)
 }

@@ -53,6 +53,13 @@ struct CatalogView: View {
 
     // Repository pattern - single source of truth for data
     private let catalogService: CatalogService
+    private let inventoryTrackingService: InventoryTrackingService
+    private let userNotesRepository: UserNotesRepository
+    private let userTagsRepository: UserTagsRepository
+    private let shoppingListRepository: ShoppingListRepository
+    private let userImageRepository: UserImageRepository
+    private let kilnScheduleService: KilnScheduleService
+    private let glassItemRepository: GlassItemRepository
 
     // MIGRATION: Get items from ViewModel instead of cache
     private var catalogItems: [CompleteInventoryItemModel] {
@@ -60,19 +67,40 @@ struct CatalogView: View {
     }
 
     /// Protocol-based initializer - accepts ViewModel directly (for testing)
-    init(viewModel: CatalogViewModel, catalogService: CatalogService) {
+    init(viewModel: CatalogViewModel,
+         catalogService: CatalogService,
+         inventoryTrackingService: InventoryTrackingService,
+         userNotesRepository: UserNotesRepository,
+         userTagsRepository: UserTagsRepository,
+         shoppingListRepository: ShoppingListRepository,
+         userImageRepository: UserImageRepository,
+         kilnScheduleService: KilnScheduleService,
+         glassItemRepository: GlassItemRepository) {
         self._viewModel = State(initialValue: viewModel)
         self.catalogService = catalogService
+        self.inventoryTrackingService = inventoryTrackingService
+        self.userNotesRepository = userNotesRepository
+        self.userTagsRepository = userTagsRepository
+        self.shoppingListRepository = shoppingListRepository
+        self.userImageRepository = userImageRepository
+        self.kilnScheduleService = kilnScheduleService
+        self.glassItemRepository = glassItemRepository
     }
 
-    /// Convenience initializer - creates ViewModel with service
-    init(catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
-        let viewModel = CatalogViewModel(catalogService: catalogService)
-        self.init(viewModel: viewModel, catalogService: catalogService)
-
-        // NOTE: RepositoryFactory configuration happens in FlameworkerApp, NOT here
-        // Do NOT call configureForProduction() here as it resets the container
-        // and loses any data loaded during app startup
+    /// Convenience initializer - creates ViewModel with services from AppDependencies
+    init(deps: AppDependencies = AppDependencies()) {
+        let viewModel = CatalogViewModel(catalogService: deps.catalogService)
+        self.init(
+            viewModel: viewModel,
+            catalogService: deps.catalogService,
+            inventoryTrackingService: deps.inventoryTrackingService,
+            userNotesRepository: deps.userNotesRepository,
+            userTagsRepository: deps.userTagsRepository,
+            shoppingListRepository: deps.shoppingListRepository,
+            userImageRepository: deps.userImageRepository,
+            kilnScheduleService: deps.kilnScheduleService,
+            glassItemRepository: deps.glassItemRepository
+        )
     }
     
     // Get enabled manufacturers set from settings
@@ -259,20 +287,20 @@ struct CatalogView: View {
                 case .addInventoryItem(let naturalKey):
                     AddInventoryItemView(
                         prefilledNaturalKey: naturalKey,
-                        inventoryTrackingService: RepositoryFactory.createInventoryTrackingService(),
+                        inventoryTrackingService: inventoryTrackingService,
                         catalogService: catalogService
                     )
                 case .catalogItemDetail(let itemModel):
                     InventoryDetailView(
                         item: itemModel,
-                        inventoryTrackingService: RepositoryFactory.createInventoryTrackingService(),
+                        inventoryTrackingService: inventoryTrackingService,
                         catalogService: catalogService,
-                        userNotesRepository: RepositoryFactory.createUserNotesRepository(),
-                        userTagsRepository: RepositoryFactory.createUserTagsRepository(),
-                        shoppingListRepository: RepositoryFactory.createShoppingListRepository(),
-                        userImageRepository: RepositoryFactory.createUserImageRepository(),
-                        kilnScheduleService: RepositoryFactory.createKilnScheduleService(),
-                        glassItemRepository: RepositoryFactory.createGlassItemRepository()
+                        userNotesRepository: userNotesRepository,
+                        userTagsRepository: userTagsRepository,
+                        shoppingListRepository: shoppingListRepository,
+                        userImageRepository: userImageRepository,
+                        kilnScheduleService: kilnScheduleService,
+                        glassItemRepository: glassItemRepository
                     )
                 }
             }
@@ -738,7 +766,6 @@ struct CatalogManufacturerFilterView: View {
 
 // MARK: - Preview
 #Preview {
-    // Note: CatalogView constructor will configure for production automatically
-    let catalogService = RepositoryFactory.createCatalogService()
-    return CatalogView(catalogService: catalogService)
+    let deps = AppDependencies(forTesting: true)
+    return CatalogView(deps: deps)
 }

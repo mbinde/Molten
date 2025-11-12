@@ -176,7 +176,7 @@ class CatalogUpdatePreferences: ObservableObject {
            let frequency = UpdateFrequency(rawValue: frequencyRaw) {
             self.updateFrequency = frequency
         } else {
-            self.updateFrequency = .weekly  // Default
+            self.updateFrequency = .daily  // Default - check daily during alpha
         }
 
         self.hasUpdateAvailable = defaults.bool(forKey: Keys.hasUpdateAvailable)

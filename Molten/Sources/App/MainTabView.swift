@@ -146,9 +146,11 @@ struct MainTabView: View {
 
                 // Locations tab (stores, classes, workshops)
                 if selectedTab == .locations || locationsHasBeenViewed {
-                    LocationsView()
-                        .opacity(selectedTab == .locations ? 1 : 0)
-                        .id("locations-view")
+                    LocationsView(viewModel: LocationsViewModel(
+                        locationService: dependencies.unifiedLocationService
+                    ))
+                    .opacity(selectedTab == .locations ? 1 : 0)
+                    .id("locations-view")
                 }
 
                 // Kiln Schedules tab

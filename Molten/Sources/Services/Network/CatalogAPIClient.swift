@@ -32,7 +32,7 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
 
     init(
         session: URLSessionProtocol = URLSession.shared,
-        baseURL: URL = URL(string: "https://api.example.com")!,
+        baseURL: URL = URL(string: "https://www.moltenglass.app")!,
         attestationManager: AttestationManagerProtocol = AttestationManager(),
         pinnedCertificates: [Data] = []
     ) {

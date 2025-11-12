@@ -25,6 +25,10 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
     private let catalogService: CatalogService
 
+    // MARK: - Constants
+
+    private static let productTypeFilterKey = "catalog.selectedProductTypes"
+
     // MARK: - Published State
 
     var items: [CompleteInventoryItemModel] = []
@@ -74,6 +78,8 @@ class CatalogViewModel: CatalogViewModelProtocol {
     var selectedProductTypes: Set<String> = [] {
         didSet {
             if selectedProductTypes != oldValue {
+                // Save to UserDefaults
+                saveProductTypeFilter()
                 applyFilters()
             }
         }
@@ -104,6 +110,12 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
     init(catalogService: CatalogService) {
         self.catalogService = catalogService
+
+        // Load saved product type filter from UserDefaults
+        if let savedData = UserDefaults.standard.data(forKey: Self.productTypeFilterKey),
+           let savedTypes = try? JSONDecoder().decode(Set<String>.self, from: savedData) {
+            self.selectedProductTypes = savedTypes
+        }
     }
 
     // MARK: - Computed Properties
@@ -309,6 +321,13 @@ class CatalogViewModel: CatalogViewModelProtocol {
         cachedUserTags = userTagsSet
         cachedAllCOEs = allCOEsSet.sorted()
         cachedManufacturers = manufacturersSet.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+    }
+
+    /// Save product type filter to UserDefaults for persistence across sessions
+    private func saveProductTypeFilter() {
+        if let encoded = try? JSONEncoder().encode(selectedProductTypes) {
+            UserDefaults.standard.set(encoded, forKey: Self.productTypeFilterKey)
+        }
     }
 
     private func computeManufacturerCounts() -> [String: Int] {

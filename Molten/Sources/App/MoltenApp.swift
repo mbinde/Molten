@@ -367,10 +367,16 @@ extension MoltenApp {
     }
 
     /// Check if user needs to acknowledge the alpha disclaimer
-    /// NOTE: Currently set to show on EVERY launch during alpha testing
+    /// Shows only once per install (or until UserDefaults is cleared)
     private func checkAlphaDisclaimer() {
-        // Always show alpha disclaimer during alpha testing (ignoring UserDefaults)
-        // Use Task instead of DispatchQueue to avoid update loops
+        // Check if user has already acknowledged the disclaimer
+        let hasAcknowledged = UserDefaults.standard.bool(forKey: "hasAcknowledgedAlphaDisclaimer")
+
+        guard !hasAcknowledged else {
+            return  // User has already seen and acknowledged
+        }
+
+        // Show disclaimer for first-time users
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(0.3))
             showAlphaDisclaimer = true

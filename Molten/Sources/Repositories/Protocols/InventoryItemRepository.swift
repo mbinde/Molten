@@ -57,17 +57,16 @@ struct LegacyInventoryMigrationGuide {
     6. Use CatalogService for complete glass item management
     
     EXAMPLE MIGRATION:
-    
+
     // Old:
     let legacyRepo: LegacyInventoryItemRepository = ...
     let items = try await legacyRepo.fetchItems(matching: nil)
-    
+
     // New:
-    let inventoryRepo: InventoryRepository = RepositoryFactory.createInventoryRepository()
-    let inventories = try await inventoryRepo.fetchInventory(matching: nil)
-    
+    let deps = AppDependencies.shared
+    let inventories = try await deps.inventoryRepository.fetchInventory(matching: nil)
+
     // For complete items with glass item data:
-    let catalogService = RepositoryFactory.createCatalogService()
-    let completeItems = try await catalogService.getAllGlassItems()
+    let completeItems = try await deps.catalogService.getAllGlassItems()
     """
 }

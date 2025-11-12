@@ -17,6 +17,47 @@ import SwiftUI
 @Observable
 class AppDependencies {
 
+    // MARK: - Shared Instance
+
+    /// Shared instance that automatically detects test vs production environment
+    /// - In tests: Uses mock repositories
+    /// - In production: Uses Core Data repositories
+    static let shared: AppDependencies = {
+        if isRunningInTestBundle() {
+            return AppDependencies(forTesting: true)
+        } else {
+            return AppDependencies()
+        }
+    }()
+
+    /// Detect if we're running in a test bundle (not production code)
+    private nonisolated static func isRunningInTestBundle() -> Bool {
+        // Check if XCTest bundle is loaded
+        let testBundleIdentifiers = [
+            "MoltenTests",
+            "RepositoryTests",
+            "ViewModelTests",
+            "PerformanceTests",
+            "MoltenUITests"
+        ]
+
+        // Check if any test bundle is in the loaded bundles
+        for bundle in Bundle.allBundles {
+            if let bundleId = bundle.bundleIdentifier,
+               testBundleIdentifiers.contains(where: { bundleId.contains($0) }) {
+                return true
+            }
+        }
+
+        // Also check if the main bundle is a test bundle
+        if let mainBundleId = Bundle.main.bundleIdentifier, mainBundleId.contains("Tests") {
+            return true
+        }
+
+        // Check for XCTest framework presence
+        return NSClassFromString("XCTestCase") != nil
+    }
+
     // MARK: - Core Dependencies
 
     let persistenceController: PersistenceController
@@ -312,20 +353,8 @@ class AppDependencies {
             return manager
         }
 
-        // Load pinned SSL certificate from bundle
-        guard let certURL = Bundle.main.url(forResource: "moltenglass-cert", withExtension: "der"),
-              let certData = try? Data(contentsOf: certURL) else {
-            fatalError("Missing moltenglass-cert.der - required for secure inventory sharing")
-        }
-
-        let apiClient = InventorySharingAPIClient(
-            baseURL: URL(string: "https://moltenglass.app/api")!,
-            pinnedCertificates: [certData]
-        )
-
-        let sharingService = InventorySharingService(apiClient: apiClient)
-        let coordinator = InventorySharingCoordinator(sharingService: sharingService)
-        let manager = InventorySharingManager(coordinator: coordinator)
+        // Use the convenience init which handles all the setup
+        let manager = InventorySharingManager(deps: self)
 
         _inventorySharingManager = manager
         return manager
@@ -335,15 +364,8 @@ class AppDependencies {
 // MARK: - Environment Key
 
 struct AppDependenciesKey: EnvironmentKey {
-    static let defaultValue: AppDependencies = {
-        // Check if running tests - if so, use test dependencies by default
-        let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-        if isRunningTests {
-            return AppDependencies(forTesting: true)
-        } else {
-            return AppDependencies()
-        }
-    }()
+    /// Default value uses AppDependencies.shared which auto-detects test environment
+    static let defaultValue: AppDependencies = AppDependencies.shared
 }
 
 extension EnvironmentValues {

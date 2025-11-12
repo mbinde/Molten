@@ -733,24 +733,8 @@ nonisolated struct RepositoryFactory {
     /// Creates an InventorySharingManager for sharing inventory with friends
     @MainActor
     static func createInventorySharingManager() -> InventorySharingManager {
-        // Load pinned SSL certificate from bundle
-        guard let certURL = Bundle.main.url(forResource: "moltenglass-cert", withExtension: "der"),
-              let certData = try? Data(contentsOf: certURL) else {
-            fatalError("Missing moltenglass-cert.der - required for secure inventory sharing")
-        }
-
-        // Create API client with production URL and certificate pinning
-        let apiClient = InventorySharingAPIClient(
-            baseURL: URL(string: "https://moltenglass.app/api")!,
-            pinnedCertificates: [certData]
-        )
-
-        // Create service with custom API client
-        let sharingService = InventorySharingService(apiClient: apiClient)
-
-        // Create coordinator and manager
-        let coordinator = InventorySharingCoordinator(sharingService: sharingService)
-        return InventorySharingManager(coordinator: coordinator)
+        // Use the convenience init which handles all setup with AppDependencies
+        return InventorySharingManager(deps: AppDependencies.shared)
     }
 
     // MARK: - Configuration Helpers

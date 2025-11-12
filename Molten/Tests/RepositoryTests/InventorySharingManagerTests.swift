@@ -317,7 +317,7 @@ struct InventorySharingManagerTests {
 
         let mockCoordinator = MockInventorySharingCoordinator()
         mockCoordinator.mockDownloadResult = createSnapshotResult(ownerName: "Bob's Glass Shop")
-        let manager = InventorySharingManager(coordinator: mockCoordinator)
+        let manager = createTestManager(coordinator: mockCoordinator)
 
         // Add friend share (creates local record and cached data)
         _ = try await manager.addFriendShare(shareCode: "FRIEND")
@@ -365,6 +365,7 @@ struct InventorySharingManagerTests {
 
         let testContext = testController.container.viewContext
         let catalogRepo = deps.glassItemRepository
+        let metadataRepo = ShareMetadataRepository()
         let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
             context: testContext,
@@ -373,6 +374,7 @@ struct InventorySharingManagerTests {
 
         return InventorySharingManager(
             coordinator: coordinator,
+            metadataRepository: metadataRepo,
             shareRecordRepository: shareRecordRepo,
             sharedInventoryRepository: sharedInventoryRepo
         )

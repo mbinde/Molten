@@ -46,7 +46,24 @@ struct InventorySharingIntegrationTests {
             snapshot: snapshot
         )
         let coordinator = InventorySharingCoordinator(sharingService: sharingService)
-        let manager = InventorySharingManager(coordinator: coordinator)
+
+        // Set up test dependencies
+        let deps = AppDependencies(forTesting: true)
+        let testController = PersistenceController.createTestController()
+        let testContext = testController.container.viewContext
+        let metadataRepo = ShareMetadataRepository()
+        let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
+        let sharedInventoryRepo = CoreDataSharedInventoryRepository(
+            context: testContext,
+            catalogRepository: deps.glassItemRepository
+        )
+
+        let manager = InventorySharingManager(
+            coordinator: coordinator,
+            metadataRepository: metadataRepo,
+            shareRecordRepository: shareRecordRepo,
+            sharedInventoryRepository: sharedInventoryRepo
+        )
 
         // Create test inventory
         let item = createTestItem()
@@ -122,8 +139,10 @@ struct InventorySharingIntegrationTests {
             context: testController.container.viewContext,
             catalogRepository: catalogRepo
         )
+        let metadataRepo = ShareMetadataRepository()
         let userBManager = InventorySharingManager(
             coordinator: userBCoordinator,
+            metadataRepository: metadataRepo,
             shareRecordRepository: shareRecordRepo,
             sharedInventoryRepository: sharedInventoryRepo
         )
@@ -204,8 +223,10 @@ struct InventorySharingIntegrationTests {
             context: testController.container.viewContext,
             catalogRepository: catalogRepo
         )
+        let metadataRepo = ShareMetadataRepository()
         let manager = InventorySharingManager(
             coordinator: coordinator,
+            metadataRepository: metadataRepo,
             shareRecordRepository: shareRecordRepo,
             sharedInventoryRepository: sharedInventoryRepo
         )
@@ -223,7 +244,24 @@ struct InventorySharingIntegrationTests {
         let mockAPIClient = MockSharingAPIClient()
         let sharingService = InventorySharingService(apiClient: mockAPIClient)
         let coordinator = InventorySharingCoordinator(sharingService: sharingService)
-        let manager = InventorySharingManager(coordinator: coordinator)
+
+        // Set up test dependencies
+        let deps = AppDependencies(forTesting: true)
+        let testController = PersistenceController.createTestController()
+        let testContext = testController.container.viewContext
+        let metadataRepo = ShareMetadataRepository()
+        let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
+        let sharedInventoryRepo = CoreDataSharedInventoryRepository(
+            context: testContext,
+            catalogRepository: deps.glassItemRepository
+        )
+
+        let manager = InventorySharingManager(
+            coordinator: coordinator,
+            metadataRepository: metadataRepo,
+            shareRecordRepository: shareRecordRepo,
+            sharedInventoryRepository: sharedInventoryRepo
+        )
 
         // Create initial share
         let item1 = createTestItem()
@@ -263,7 +301,24 @@ struct InventorySharingIntegrationTests {
         let mockAPIClient = MockSharingAPIClient()
         let sharingService = InventorySharingService(apiClient: mockAPIClient)
         let coordinator = InventorySharingCoordinator(sharingService: sharingService)
-        let manager = InventorySharingManager(coordinator: coordinator)
+
+        // Set up test dependencies
+        let deps = AppDependencies(forTesting: true)
+        let testController = PersistenceController.createTestController()
+        let testContext = testController.container.viewContext
+        let metadataRepo = ShareMetadataRepository()
+        let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
+        let sharedInventoryRepo = CoreDataSharedInventoryRepository(
+            context: testContext,
+            catalogRepository: deps.glassItemRepository
+        )
+
+        let manager = InventorySharingManager(
+            coordinator: coordinator,
+            metadataRepository: metadataRepo,
+            shareRecordRepository: shareRecordRepo,
+            sharedInventoryRepository: sharedInventoryRepo
+        )
 
         let item = createTestItem()
 

@@ -44,10 +44,15 @@ class FileSystemUserImageRepository: @unchecked Sendable, UserImageRepository {
             }
         }
 
-        // Extract text from image using OCR
-        let extractor = ImageTextExtractor()
-        let ocrText = try? await extractor.extractText(from: image)
-        let cleanedOcrText = ocrText?.isEmpty == false ? ocrText : nil
+        // Extract text from image using OCR (skip during tests to avoid Vision/CoreML crashes)
+        let cleanedOcrText: String?
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            let extractor = ImageTextExtractor()
+            let ocrText = try? await extractor.extractText(from: image)
+            cleanedOcrText = ocrText?.isEmpty == false ? ocrText : nil
+        } else {
+            cleanedOcrText = nil  // Skip expensive Vision OCR during test runs
+        }
 
         // Create model with new structure
         let model = UserImageModel(

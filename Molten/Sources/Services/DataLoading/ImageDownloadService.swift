@@ -63,18 +63,23 @@ final class ImageDownloadService: Sendable {
 
         // PRIORITY 1: If exact filename provided (from catalog image_path), try it first
         if let filename = exactFilename, !filename.isEmpty {
+            print("📸 [ImageDownloadService] Trying exact filename: \(filename)")
+
             // First check local cache
             if let cachedImage = await loadFromCache(filename: filename) {
+                print("✅ [ImageDownloadService] Found in cache: \(filename)")
                 return cachedImage
             }
 
             // If not cached, try to download
             if let downloadedImage = await downloadImage(filename: filename) {
+                print("✅ [ImageDownloadService] Downloaded from CDN: \(filename)")
                 // Save to cache for next time
                 await saveToCache(image: downloadedImage, filename: filename)
                 return downloadedImage
             }
 
+            print("❌ [ImageDownloadService] Failed to load: \(filename)")
             // If exact filename failed, fall through to variation logic below
         }
 
@@ -223,8 +228,11 @@ final class ImageDownloadService: Sendable {
     private nonisolated static func downloadImage(filename: String) async -> UIImage? {
         let urlString = "\(imageBaseURL)/\(filename)"
         guard let url = URL(string: urlString) else {
+            print("❌ [ImageDownloadService] Invalid URL: \(urlString)")
             return nil
         }
+
+        print("🌐 [ImageDownloadService] Fetching: \(urlString)")
 
         do {
             let (data, response) = try await urlSession.data(from: url)

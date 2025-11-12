@@ -17,9 +17,9 @@ struct GlassManufacturers {
 
     /// Static mapping of manufacturer shorthand codes to full names
     nonisolated static let manufacturers: [String: String] = [
+        "AB": "Asian (Chinese) Boro",
         "BB": "Boro Batch",
         "BE": "Bullseye Glass",
-        "CHB": "Chinese Boro",
         "CiM": "Creation is Messy",
         "DH": "Double Helix",
         "DS": "Delphi Superior",
@@ -44,10 +44,10 @@ struct GlassManufacturers {
     ]
     
     nonisolated static let manufacturerImages: [String: String] = [
+        "AB": "ab",
         "EF": "effetre",
         "DH": "dh",
         "BB": "bb",
-        "CHB": "chb",
         "CiM": "cim",
         "DS": "ds",
         "GA": "ga",
@@ -73,9 +73,9 @@ struct GlassManufacturers {
     /// Tracks whether we have permission to use product-specific images from each manufacturer
     /// If false, we must always use the default manufacturer image instead
     nonisolated static let productImagePermissions: [String: Bool] = [
+        "AB": true,           // Asian (Chinese) Boro - permission TBD
         "BB": true,           // Boro Batch - permission granted
         "BE": true,           // Bullseye Glass - permission granted
-        "CHB": true,          // Chinese Boro - permission TBD
         "CiM": false,         // Creation is Messy - NO permission
         "DH": true,           // Double Helix - permission granted
         "DS": false,          // Delphi Superior - NO product images (bot-protected site)
@@ -142,8 +142,8 @@ struct GlassManufacturers {
     
     /// Static mapping of manufacturer codes to their COE (Coefficient of Expansion) values
     nonisolated static let manufacturerCOEs: [String: [Int]] = [
+        "AB": [33],           // Asian (Chinese) Boro makes 33
         "BB": [33],           // Boro Batch makes 33
-        "CHB": [33],          // Chinese Boro makes 33
         "CiM": [33],          // Creation is Messy makes 33
         "GA": [33],           // Glass Alchemy makes 33
         "GRE": [33],          // Greasy Glass makes 33
@@ -273,6 +273,8 @@ struct GlassManufacturers {
         
         // Map colors based on full manufacturer names and common aliases
         switch fullName {
+        case "asian (chinese) boro", "asian boro", "ab":
+            return Color(red: 0.95, green: 0.85, blue: 0.6)  // Pale gold/beige
         case "glass alchemy", "ga":
             return .blue
         case "vetrofond", "vf":
@@ -293,8 +295,6 @@ struct GlassManufacturers {
             return .cyan
         case "bullseye glass", "bullseye", "be":
             return .indigo
-        case "chinese boro", "chb":
-            return Color(red: 0.6, green: 0.9, blue: 0.4)  // Lime/light green
         case "delphi superior", "ds":
             return Color(red: 0.4, green: 0.7, blue: 0.9)  // Light blue
         case "gaffer", "gaf":

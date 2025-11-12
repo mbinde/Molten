@@ -14,30 +14,17 @@ import RevenueCat
 struct MoltenApp: App {
 
     init() {
-        print(String(repeating: "=", count: 80))
-        print("🚀 MoltenApp.init() STARTING")
-        print(String(repeating: "=", count: 80))
-
         // Configure RepositoryFactory for production (unless running tests)
         let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-        print("🔍 isRunningTests check: \(isRunningTests)")
-        print("🔍 XCTestConfigurationFilePath: \(ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] ?? "nil")")
-
         if !isRunningTests {
-            print("🎯 Calling RepositoryFactory.configureForProduction()")
             RepositoryFactory.configureForProduction()
             print("✅ RepositoryFactory configured for PRODUCTION mode")
-            print("✅ Current mode: \(RepositoryFactory.mode)")
         } else {
             print("⚠️ RepositoryFactory using MOCK mode (tests detected)")
         }
 
         // Configure RevenueCat SDK
         configureRevenueCat()
-
-        print(String(repeating: "=", count: 80))
-        print("🏁 MoltenApp.init() COMPLETE")
-        print(String(repeating: "=", count: 80))
     }
 
     // DO NOT initialize PersistenceController here!
@@ -63,24 +50,12 @@ struct MoltenApp: App {
 
     // Detect if we're running in test environment
     private var isRunningTests: Bool {
-        let isTest = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-        #if DEBUG
-        if isTest {
-            print("🧪 Detected test environment via XCTestConfigurationFilePath")
-        }
-        #endif
-        return isTest
+        return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 
     // Detect if we're running UI tests specifically
     private var isRunningUITests: Bool {
-        let isUITest = ProcessInfo.processInfo.arguments.contains("UI-Testing")
-        #if DEBUG
-        if isUITest {
-            print("🧪 Detected UI test via UI-Testing argument")
-        }
-        #endif
-        return isUITest
+        return ProcessInfo.processInfo.arguments.contains("UI-Testing")
     }
 
     // UI Test configuration flags
@@ -240,7 +215,8 @@ extension MoltenApp {
                 handleOpenURL(url)
             }
             .onAppear {
-                checkAlphaDisclaimer()
+                // Alpha disclaimer disabled
+                // checkAlphaDisclaimer()
             }
             .task {
                 // Perform background catalog update check
@@ -323,7 +299,8 @@ extension MoltenApp {
                         handleOpenURL(url)
                     }
                     .onAppear {
-                        checkAlphaDisclaimer()
+                        // Alpha disclaimer disabled
+                        // checkAlphaDisclaimer()
                     }
                 #endif
             }
@@ -392,14 +369,20 @@ extension MoltenApp {
     }
 
     /// Check if user needs to acknowledge the alpha disclaimer
-    /// NOTE: Currently HIDDEN - uncomment to show on every launch during alpha testing
+    /// Shows only once per install (or until UserDefaults is cleared)
     private func checkAlphaDisclaimer() {
-        // Temporarily hidden - uncomment to show alpha disclaimer on every launch
-        // Use Task instead of DispatchQueue to avoid update loops
-        // Task { @MainActor in
-        //     try? await Task.sleep(for: .seconds(0.3))
-        //     showAlphaDisclaimer = true
-        // }
+        // Check if user has already acknowledged the disclaimer
+        let hasAcknowledged = UserDefaults.standard.bool(forKey: "hasAcknowledgedAlphaDisclaimer")
+
+        guard !hasAcknowledged else {
+            return  // User has already seen and acknowledged
+        }
+
+        // Show disclaimer for first-time users
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(0.3))
+            showAlphaDisclaimer = true
+        }
     }
 
     /// Perform background catalog update check on app startup
@@ -423,7 +406,6 @@ extension MoltenApp {
     /// Configure environment for UI testing
     @MainActor
     private func configureUITestEnvironment() {
-        print("🧪 configureUITestEnvironment() called - isRunningUITests: \(isRunningUITests)")
 
         // Skip all onboarding screens
         UserDefaults.standard.set(true, forKey: "hasAcknowledgedAlphaDisclaimer")
@@ -438,7 +420,6 @@ extension MoltenApp {
         // Configure RepositoryFactory based on test type
         if isRunningUITests {
             // UI tests need to test the full stack with real Core Data
-            print("🧪 Configuring for UI tests with Core Data")
             RepositoryFactory.configureForProduction()
 
             // Reset database if requested
@@ -454,8 +435,6 @@ extension MoltenApp {
             }
         } else {
             // Unit tests should use mocks to avoid Core Data
-            // NOTE: This should ONLY run during XCTest unit test execution
-            print("🧪 Configuring for unit tests with mocks")
             RepositoryFactory.configureForTesting()
         }
 

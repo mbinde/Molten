@@ -29,12 +29,19 @@ struct AddRecipeView: View {
     @State private var isLoadingGlassItems = false
 
     init(
-        recipeService: RecipeService = RepositoryFactory.createRecipeService(),
-        catalogService: CatalogService = RepositoryFactory.createCatalogService(),
+        recipeService: RecipeService,
+        catalogService: CatalogService,
         onSave: @escaping (RecipeModel) -> Void = { _ in }
     ) {
         self.recipeService = recipeService
         self.catalogService = catalogService
+        self.onSave = onSave
+    }
+
+    /// Convenience init using AppDependencies
+    init(deps: AppDependencies = AppDependencies(), onSave: @escaping (RecipeModel) -> Void = { _ in }) {
+        self.recipeService = deps.recipeService
+        self.catalogService = deps.catalogService
         self.onSave = onSave
     }
 

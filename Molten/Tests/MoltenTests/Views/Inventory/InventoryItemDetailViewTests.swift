@@ -52,12 +52,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create InventoryDetailView with business model
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: View should be created successfully with business model
@@ -97,12 +92,7 @@ struct InventoryItemDetailViewTests {
         let detailView = InventoryDetailView(
             item: completeItem,
             inventoryTrackingService: inventoryTrackingService,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: Should work without Core Data environment
@@ -141,12 +131,7 @@ struct InventoryItemDetailViewTests {
         let detailView = InventoryDetailView(
             item: completeItem,
             inventoryTrackingService: inventoryTrackingService,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: Should accept service via dependency injection
@@ -176,12 +161,7 @@ struct InventoryItemDetailViewTests {
         // This should NOT crash (previous version had force-unwrap that would crash)
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: View should be created successfully without crashing
@@ -209,12 +189,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view with item containing empty URL
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: View should be created successfully
@@ -242,12 +217,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view with item containing nil URL
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: View should be created successfully
@@ -309,12 +279,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view - should not crash even if image doesn't exist
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: View should handle missing images gracefully
@@ -341,12 +306,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: ProductImageDetail should use sku (591284) not natural_key (ef-591284-0)
@@ -385,12 +345,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: View should be created with expandable notes functionality
@@ -420,12 +375,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view - should still show expand button (SwiftUI handles showing it appropriately)
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: View should handle short notes gracefully
@@ -453,12 +403,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view - should not show notes section at all
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: View should handle missing notes gracefully
@@ -486,12 +431,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view - should not show notes section for empty string
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: View should handle empty notes gracefully

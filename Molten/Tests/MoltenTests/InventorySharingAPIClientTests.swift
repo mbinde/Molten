@@ -552,6 +552,134 @@ struct InventorySharingAPIClientTests {
         let headerValue = mockSession.lastRequest?.value(forHTTPHeaderField: "X-Apple-Assertion")
         #expect(headerValue != nil)
     }
+
+    // MARK: - API Versioning Tests
+
+    @Test("Upload endpoint uses /v1/share path")
+    func testUploadUsesVersionedPath() async throws {
+        let mockSession = MockURLSession()
+        let client = InventorySharingAPIClient(
+            session: mockSession,
+            baseURL: URL(string: "https://api.example.com")!
+        )
+
+        let shareCode = "A7B2X9"
+        let snapshotData = Data([0x01, 0x02, 0x03])
+        let publicKey = Data(count: 32)
+
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://api.example.com/v1/share")!,
+            statusCode: 201,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        mockSession.nextData = Data()
+
+        try await client.uploadSnapshot(
+            shareCode: shareCode,
+            snapshotData: snapshotData,
+            publicKey: publicKey
+        )
+
+        // Verify path includes /v1/
+        let request = try #require(mockSession.lastRequest)
+        let url = try #require(request.url)
+        #expect(url.path == "/v1/share")
+    }
+
+    @Test("Download endpoint uses /v1/share/{shareCode} path")
+    func testDownloadUsesVersionedPath() async throws {
+        let mockSession = MockURLSession()
+        let client = InventorySharingAPIClient(
+            session: mockSession,
+            baseURL: URL(string: "https://api.example.com")!
+        )
+
+        let shareCode = "A7B2X9"
+        let responseJSON: [String: Any] = [
+            "snapshotData": Data([0x01, 0x02, 0x03]).base64EncodedString(),
+            "publicKey": Data(count: 32).base64EncodedString()
+        ]
+        let responseData = try JSONSerialization.data(withJSONObject: responseJSON)
+
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://api.example.com/v1/share/\(shareCode)")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        mockSession.nextData = responseData
+
+        _ = try await client.downloadSnapshot(shareCode: shareCode)
+
+        // Verify path includes /v1/
+        let request = try #require(mockSession.lastRequest)
+        let url = try #require(request.url)
+        #expect(url.path == "/v1/share/\(shareCode)")
+    }
+
+    @Test("Delete endpoint uses /v1/share/{shareCode} path")
+    func testDeleteUsesVersionedPath() async throws {
+        let mockSession = MockURLSession()
+        let client = InventorySharingAPIClient(
+            session: mockSession,
+            baseURL: URL(string: "https://api.example.com")!
+        )
+
+        let shareCode = "A7B2X9"
+        let signature = Data(count: 64)
+
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://api.example.com/v1/share/\(shareCode)")!,
+            statusCode: 204,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        mockSession.nextData = Data()
+
+        try await client.deleteShare(shareCode: shareCode, ownershipSignature: signature)
+
+        // Verify path includes /v1/
+        let request = try #require(mockSession.lastRequest)
+        let url = try #require(request.url)
+        #expect(url.path == "/v1/share/\(shareCode)")
+        #expect(request.httpMethod == "DELETE")
+    }
+
+    @Test("Update endpoint uses /v1/share/{shareCode} path")
+    func testUpdateUsesVersionedPath() async throws {
+        let mockSession = MockURLSession()
+        let client = InventorySharingAPIClient(
+            session: mockSession,
+            baseURL: URL(string: "https://api.example.com")!
+        )
+
+        let shareCode = "A7B2X9"
+        let snapshotData = Data([0x01, 0x02, 0x03])
+        let publicKey = Data(count: 32)
+        let signature = Data(count: 64)
+
+        mockSession.nextResponse = HTTPURLResponse(
+            url: URL(string: "https://api.example.com/v1/share/\(shareCode)")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        mockSession.nextData = Data()
+
+        try await client.updateSnapshot(
+            shareCode: shareCode,
+            snapshotData: snapshotData,
+            publicKey: publicKey,
+            ownershipSignature: signature
+        )
+
+        // Verify path includes /v1/
+        let request = try #require(mockSession.lastRequest)
+        let url = try #require(request.url)
+        #expect(url.path == "/v1/share/\(shareCode)")
+        #expect(request.httpMethod == "PUT")
+    }
 }
 
 // MARK: - Mock URLSession

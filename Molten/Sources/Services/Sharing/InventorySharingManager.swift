@@ -29,21 +29,41 @@ class InventorySharingManager {
 
     // MARK: - Initialization
 
+    /// Initialize with explicit dependencies (for testing)
     init(
-        coordinator: InventorySharingCoordinator = InventorySharingCoordinator(),
-        metadataRepository: ShareMetadataRepository = ShareMetadataRepository(),
-        shareRecordRepository: CoreDataShareRecordRepository = CoreDataShareRecordRepository(
-            context: PersistenceController.shared.container.viewContext
-        ),
-        sharedInventoryRepository: CoreDataSharedInventoryRepository = CoreDataSharedInventoryRepository(
-            context: PersistenceController.shared.container.viewContext,
-            catalogRepository: RepositoryFactory.createGlassItemRepository()
-        )
+        coordinator: InventorySharingCoordinator,
+        metadataRepository: ShareMetadataRepository,
+        shareRecordRepository: CoreDataShareRecordRepository,
+        sharedInventoryRepository: CoreDataSharedInventoryRepository
     ) {
         self.coordinator = coordinator
         self.metadataRepository = metadataRepository
         self.shareRecordRepository = shareRecordRepository
         self.sharedInventoryRepository = sharedInventoryRepository
+    }
+
+    /// Convenience init using AppDependencies (default for production/tests)
+    convenience init(deps: AppDependencies = AppDependencies.shared) {
+        let coordinator = InventorySharingCoordinator()
+        let metadataRepository = ShareMetadataRepository()
+
+        // Use cloud context for share records (synced across devices)
+        let shareRecordRepository = CoreDataShareRecordRepository(
+            context: deps.persistenceController.cloudContext ?? deps.persistenceController.container.viewContext
+        )
+
+        // Use local context for cached inventory, with catalog repository from deps
+        let sharedInventoryRepository = CoreDataSharedInventoryRepository(
+            context: deps.persistenceController.localContext ?? deps.persistenceController.container.viewContext,
+            catalogRepository: deps.glassItemRepository
+        )
+
+        self.init(
+            coordinator: coordinator,
+            metadataRepository: metadataRepository,
+            shareRecordRepository: shareRecordRepository,
+            sharedInventoryRepository: sharedInventoryRepository
+        )
     }
 
     // MARK: - My Share

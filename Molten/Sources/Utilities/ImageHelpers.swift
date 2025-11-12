@@ -395,7 +395,7 @@ struct ProductImageView: View {
     @State private var refreshTrigger: UUID = UUID()
 
     // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
-    private static let sharedUserImageRepository = RepositoryFactory.createUserImageRepository()
+    private static let sharedUserImageRepository = AppDependencies.shared.userImageRepository
 
     init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, size: CGFloat = 60) {
         self.itemCode = itemCode
@@ -510,7 +510,7 @@ struct ProductImageDetail: View {
     @State private var showingImagePicker: Bool = false
 
     // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
-    private static let sharedUserImageRepository = RepositoryFactory.createUserImageRepository()
+    private static let sharedUserImageRepository = AppDependencies.shared.userImageRepository
 
     init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, onImageUploaded: (() -> Void)? = nil) {
         self.itemCode = itemCode

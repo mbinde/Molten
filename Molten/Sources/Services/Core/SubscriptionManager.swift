@@ -45,7 +45,7 @@ class SubscriptionManager {
 
     // MARK: - Initialization
 
-    init(entitlementService: EntitlementService, subscriptionService: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService()) {
+    init(entitlementService: EntitlementService, subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService) {
         self.entitlementService = entitlementService
         self.subscriptionService = subscriptionService
 

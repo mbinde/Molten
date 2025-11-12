@@ -19,12 +19,13 @@ struct DataExportView: View {
 
     private let exportService: DataExportService
 
-    init(exportService: DataExportService? = nil) {
-        if let service = exportService {
-            self.exportService = service
-        } else {
-            self.exportService = RepositoryFactory.createDataExportService()
-        }
+    init(exportService: DataExportService) {
+        self.exportService = exportService
+    }
+
+    /// Convenience init using AppDependencies
+    init(deps: AppDependencies = AppDependencies()) {
+        self.exportService = deps.dataExportService
     }
 
     var body: some View {

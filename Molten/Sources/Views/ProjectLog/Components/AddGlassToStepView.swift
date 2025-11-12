@@ -28,10 +28,17 @@ struct AddGlassToStepView: View {
 
     private let catalogService: CatalogService
 
-    init(plan: ProjectModel, onSave: @escaping (ProjectGlassItem) -> Void) {
+    init(plan: ProjectModel, catalogService: CatalogService, onSave: @escaping (ProjectGlassItem) -> Void) {
+        self.plan = plan
+        self.catalogService = catalogService
+        self.onSave = onSave
+    }
+
+    /// Convenience init using AppDependencies
+    init(plan: ProjectModel, deps: AppDependencies = AppDependencies(), onSave: @escaping (ProjectGlassItem) -> Void) {
         self.plan = plan
         self.onSave = onSave
-        self.catalogService = RepositoryFactory.createCatalogService()
+        self.catalogService = deps.catalogService
     }
 
     /// Get all unique glass items used in any step of this plan

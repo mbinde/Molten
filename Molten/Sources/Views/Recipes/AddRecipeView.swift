@@ -283,6 +283,6 @@ struct AddRecipeView: View {
 }
 
 #Preview("Add Recipe") {
-    RepositoryFactory.configureForTesting()
-    return AddRecipeView()
+    let deps = AppDependencies(forTesting: true)
+    return AddRecipeView(deps: deps)
 }

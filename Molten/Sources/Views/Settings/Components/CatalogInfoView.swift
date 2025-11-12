@@ -252,13 +252,14 @@ struct CatalogInfoView: View {
 // MARK: - Previews
 
 #Preview("Up to Date") {
+    let deps = AppDependencies(forTesting: true)
     NavigationStack {
         CatalogInfoView(
             viewModel: CatalogUpdateViewModel(
                 updateService: CatalogUpdateService(
                     apiClient: CatalogAPIClient(),
                     storageService: try! CatalogStorageService(),
-                    dataLoadingService: RepositoryFactory.createGlassItemDataLoadingService(),
+                    dataLoadingService: deps.glassItemDataLoadingService,
                     networkMonitor: NetworkMonitor.shared
                 )
             )

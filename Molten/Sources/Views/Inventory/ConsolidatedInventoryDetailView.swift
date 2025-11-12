@@ -275,11 +275,11 @@ struct InventoryTypeRow: View {
         url: "https://bullseyeglass.com/products/red-glass-rods",
         mfr_status: "available"
     )
-    
-    let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
-    
+
+    let deps = AppDependencies(forTesting: true)
+
     ConsolidatedInventoryDetailView(
         glassItem: sampleGlassItem,
-        inventoryTrackingService: inventoryTrackingService
+        inventoryTrackingService: deps.inventoryTrackingService
     )
 }

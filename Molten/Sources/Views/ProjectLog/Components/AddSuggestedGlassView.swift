@@ -23,10 +23,17 @@ struct AddSuggestedGlassView: View {
 
     private let catalogService: CatalogService
 
-    init(plan: ProjectModel, repository: ProjectRepository) {
+    init(plan: ProjectModel, repository: ProjectRepository, catalogService: CatalogService) {
         self.plan = plan
         self.repository = repository
-        self.catalogService = RepositoryFactory.createCatalogService()
+        self.catalogService = catalogService
+    }
+
+    /// Convenience init using AppDependencies
+    init(plan: ProjectModel, repository: ProjectRepository, deps: AppDependencies = AppDependencies()) {
+        self.plan = plan
+        self.repository = repository
+        self.catalogService = deps.catalogService
     }
 
     var body: some View {

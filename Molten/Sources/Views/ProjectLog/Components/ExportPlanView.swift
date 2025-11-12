@@ -21,11 +21,18 @@ struct ExportPlanView: View {
     @StateObject private var authorSettings = AuthorSettings.shared
     private let exportService: ProjectExportService
 
-    init(plan: ProjectModel, onExportComplete: ((URL) -> Void)? = nil) {
+    init(plan: ProjectModel, exportService: ProjectExportService, onExportComplete: ((URL) -> Void)? = nil) {
+        self.plan = plan
+        self.exportService = exportService
+        self.onExportComplete = onExportComplete
+    }
+
+    /// Convenience init using AppDependencies
+    init(plan: ProjectModel, deps: AppDependencies = AppDependencies(), onExportComplete: ((URL) -> Void)? = nil) {
         self.plan = plan
         self.onExportComplete = onExportComplete
         self.exportService = ProjectExportService(
-            userImageRepository: RepositoryFactory.createUserImageRepository()
+            userImageRepository: deps.userImageRepository
         )
     }
 

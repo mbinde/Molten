@@ -571,7 +571,8 @@ struct InventoryDetailViewTests {
         ]
 
         let item = createTestItem(with: inventory)
-        let view = InventoryStorageDetailView(item: item, inventoryType: "rod")
+        let deps = AppDependencies(forTesting: true)
+        let view = InventoryStorageDetailView(item: item, inventoryType: "rod", deps: deps)
 
         #expect(view != nil)
     }

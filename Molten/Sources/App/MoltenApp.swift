@@ -380,6 +380,7 @@ extension MoltenApp {
         }
 
         let tabView = MainTabView(
+            deps: dependencies,
             catalogService: catalogService,
             purchaseService: purchaseService,
             inventoryService: inventoryService,

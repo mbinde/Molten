@@ -14,16 +14,10 @@ import CoreData
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
-    
+    private let deps = AppDependencies()
+
     var body: some View {
-        CatalogView(catalogService: createCatalogService())
-    }
-    
-    /// Create the production catalog service with new GlassItem architecture
-    private func createCatalogService() -> CatalogService {
-        // Use the RepositoryFactory to create the catalog service
-        // The factory will handle Core Data configuration internally
-        return RepositoryFactory.createCatalogService()
+        CatalogView(deps: deps)
     }
 }
 

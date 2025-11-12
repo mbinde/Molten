@@ -40,6 +40,7 @@ struct MainTabView: View {
     @Environment(\.appDependencies) private var dependencies
 
     // MARK: - Dependency Injection
+    private let deps: AppDependencies
     private let catalogService: CatalogService
     private let purchaseService: PurchaseRecordService?
     private let syncMonitor: CloudKitSyncMonitor?
@@ -51,6 +52,7 @@ struct MainTabView: View {
 
     /// Initialize MainTabView with dependency injection
     init(
+        deps: AppDependencies,
         catalogService: CatalogService,
         purchaseService: PurchaseRecordService? = nil,
         inventoryService: InventoryTrackingService,
@@ -58,6 +60,7 @@ struct MainTabView: View {
         kilnScheduleService: KilnScheduleService,
         syncMonitor: CloudKitSyncMonitor? = nil
     ) {
+        self.deps = deps
         self.catalogService = catalogService
         self.purchaseService = purchaseService
         self.inventoryTrackingService = inventoryService
@@ -78,22 +81,19 @@ struct MainTabView: View {
             // Main content area - use ZStack with opacity to preserve view state
             ZStack {
                 if selectedTab == .catalog || catalogHasBeenViewed {
-                    CatalogView(catalogService: catalogService)
+                    CatalogView(deps: deps)
                         .opacity(selectedTab == .catalog ? 1 : 0)
                         .id("catalog-view")
                 }
 
                 if selectedTab == .inventory || inventoryHasBeenViewed {
-                    InventoryView(
-                        catalogService: catalogService,
-                        inventoryTrackingService: inventoryTrackingService
-                    )
+                    InventoryView(deps: deps)
                     .opacity(selectedTab == .inventory ? 1 : 0)
                     .id("inventory-view")
                 }
 
                 if selectedTab == .shopping || shoppingHasBeenViewed {
-                    ShoppingListView(shoppingListService: shoppingListService)
+                    ShoppingListView(deps: deps)
                         .opacity(selectedTab == .shopping ? 1 : 0)
                         .id("shopping-view")
                 }
@@ -508,7 +508,8 @@ struct CustomTabBar: View {
     // Use test dependencies for preview
     let deps = AppDependencies(forTesting: true)
 
-    return MainTabView(
+    MainTabView(
+        deps: deps,
         catalogService: deps.catalogService,
         inventoryService: deps.inventoryTrackingService,
         shoppingListService: deps.shoppingListService,

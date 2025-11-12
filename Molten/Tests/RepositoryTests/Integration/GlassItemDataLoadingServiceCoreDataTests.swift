@@ -31,6 +31,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
         // This creates an isolated test controller internally
         RepositoryFactory.configureForTestingWithCoreData()
 
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let mockJsonLoader = MockJSONDataLoader()
         mockJsonLoader.testDataMode = .small
@@ -389,12 +390,13 @@ struct GlassItemDataLoadingServiceCoreDataTests {
     
     @Test("Should handle large datasets efficiently")
     func testLargeDatasetPerformance() async throws {
+        let deps = AppDependencies(forTesting: true)
         let (_, loadingService) = try await createTestEnvironment()
-        
+
         // Use medium dataset to test performance without overwhelming the test
         let mockJsonLoader = MockJSONDataLoader()
         mockJsonLoader.testDataMode = .medium
-        
+
         let customService = GlassItemDataLoadingService(
             catalogService: deps.catalogService,
             jsonLoader: mockJsonLoader
@@ -417,7 +419,8 @@ struct GlassItemDataLoadingServiceCoreDataTests {
     func testRepositoryFactoryIntegration() async throws {
         // Test that the factory creates working services
         RepositoryFactory.configureForTestingWithCoreData()
-        
+
+        let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let loadingService = GlassItemDataLoadingService(catalogService: catalogService)
         

@@ -67,7 +67,7 @@ struct GlassManufacturers {
         "OC": "oc",
         "PAR": "par",
         "PDX": "pdx",
-        "UST": "ust",
+        "UST": "ust",     // Note: Actual file is ust.png
         "WM": "wm",
         "Y96": "y96"
     ]

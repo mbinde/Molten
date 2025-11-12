@@ -49,12 +49,20 @@ struct DeepLinkedItemView: View {
     @State private var actionInProgress = false
     @State private var actionSuccessMessage: String?
 
-    // CRITICAL: Cache service instances in @State to prevent recreation on every body evaluation
-    @State private var catalogService: CatalogService?
-    @State private var inventoryService: InventoryTrackingService?
+    // Services from AppDependencies (NOT @State - services are stable)
+    private let deps: AppDependencies
+    private let catalogService: CatalogService
+    private let inventoryService: InventoryTrackingService
 
     // UserDefaults key for persisting selected action
     private let selectedActionKey = "qrScanQuickAction"
+
+    init(stableId: String, deps: AppDependencies = AppDependencies()) {
+        self.stableId = stableId
+        self.deps = deps
+        self.catalogService = deps.catalogService
+        self.inventoryService = deps.inventoryTrackingService
+    }
 
     var body: some View {
         NavigationStack {
@@ -72,19 +80,19 @@ struct DeepLinkedItemView: View {
                         ProgressView("Loading item...")
                     } else if let error = errorMessage {
                         errorView(error)
-                    } else if let item = item, let inventoryService = inventoryService {
+                    } else if let item = item {
                         // Show success message overlay if action succeeded
                         ZStack {
                             InventoryDetailView(
                                 item: item,
                                 inventoryTrackingService: inventoryService,
                                 catalogService: catalogService,
-                                userNotesRepository: RepositoryFactory.createUserNotesRepository(),
-                                userTagsRepository: RepositoryFactory.createUserTagsRepository(),
-                                shoppingListRepository: RepositoryFactory.createShoppingListRepository(),
-                                userImageRepository: RepositoryFactory.createUserImageRepository(),
-                                kilnScheduleService: RepositoryFactory.createKilnScheduleService(),
-                                glassItemRepository: RepositoryFactory.createGlassItemRepository()
+                                userNotesRepository: deps.userNotesRepository,
+                                userTagsRepository: deps.userTagsRepository,
+                                shoppingListRepository: deps.shoppingListRepository,
+                                userImageRepository: deps.userImageRepository,
+                                kilnScheduleService: deps.kilnScheduleService,
+                                glassItemRepository: deps.glassItemRepository
                             )
 
                             if let successMessage = actionSuccessMessage {
@@ -123,20 +131,8 @@ struct DeepLinkedItemView: View {
                     selectedAction = action
                 }
 
-                // Initialize services first (guaranteed to run on MainActor)
+                // Services already initialized in init() - just load the item
                 print("🔗 DeepLinkedItemView: .task started for stable_id: \(stableId)")
-                if catalogService == nil {
-                    print("🔗 DeepLinkedItemView: Creating CatalogService...")
-                    catalogService = RepositoryFactory.createCatalogService()
-                    print("✅ DeepLinkedItemView: CatalogService created")
-                }
-                if inventoryService == nil {
-                    print("🔗 DeepLinkedItemView: Creating InventoryTrackingService...")
-                    inventoryService = RepositoryFactory.createInventoryTrackingService()
-                    print("✅ DeepLinkedItemView: InventoryTrackingService created")
-                }
-
-                // Then load the item
                 await loadItem()
             }
             .confirmationDialog("Confirm Action", isPresented: $showingActionConfirmation) {
@@ -221,13 +217,6 @@ struct DeepLinkedItemView: View {
     private func loadItem() async {
         print("🔗 DeepLinkedItemView: loadItem() called for \(stableId)")
 
-        guard let catalogService = catalogService else {
-            print("❌ DeepLinkedItemView: catalogService is nil!")
-            errorMessage = "Service not initialized"
-            isLoading = false
-            return
-        }
-
         isLoading = true
         errorMessage = nil
 
@@ -253,8 +242,7 @@ struct DeepLinkedItemView: View {
 
     @MainActor
     private func performQuickAction() async {
-        guard let item = item,
-              let inventoryService = inventoryService else {
+        guard let item = item else {
             return
         }
 

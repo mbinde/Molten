@@ -30,8 +30,8 @@ struct LogbookView: View {
         self.logbookRepository = logbookRepository
     }
 
-    // Convenience init for production use
-    init(logbookRepository: LogbookRepository = RepositoryFactory.createLogbookRepository()) {
+    // Convenience init for production use (DI pattern)
+    init(logbookRepository: LogbookRepository) {
         let viewModel = LogbookViewModel(logbookRepository: logbookRepository)
         self.init(viewModel: viewModel, logbookRepository: logbookRepository)
     }
@@ -225,5 +225,6 @@ struct LogbookRow: View {
 }
 
 #Preview {
-    LogbookView()
+    let deps = AppDependencies(forTesting: true)
+    return LogbookView(logbookRepository: deps.logbookRepository)
 }

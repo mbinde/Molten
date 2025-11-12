@@ -37,6 +37,7 @@ struct MainTabView: View {
     @State private var showingMoreMenu = false
     @State private var tabConfig: TabConfiguration? = nil
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.appDependencies) private var dependencies
 
     // MARK: - Dependency Injection
     private let catalogService: CatalogService
@@ -125,7 +126,7 @@ struct MainTabView: View {
                 // Logbook tab
                 if selectedTab == .logbook {
                     if isLogbookEnabled {
-                        LogbookView()
+                        LogbookView(logbookRepository: dependencies.logbookRepository)
                     } else {
                         featureDisabledPlaceholder(title: "Logs", icon: "book.pages")
                     }

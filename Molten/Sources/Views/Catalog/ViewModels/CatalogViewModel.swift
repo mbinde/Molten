@@ -121,7 +121,8 @@ class CatalogViewModel: CatalogViewModelProtocol {
     // MARK: - Computed Properties
 
     var allAvailableTags: [String] {
-        return cachedAllTags
+        // Return only tags that have items in the current filtered view
+        return Array(tagCounts.keys).sorted()
     }
 
     var allUserTags: Set<String> {
@@ -129,11 +130,13 @@ class CatalogViewModel: CatalogViewModelProtocol {
     }
 
     var allAvailableCOEs: [Int32] {
-        return cachedAllCOEs
+        // Return only COEs that have items in the current filtered view
+        return Array(coeCounts.keys).sorted()
     }
 
     var availableManufacturers: [String] {
-        return cachedManufacturers
+        // Return only manufacturers that have items in the current filtered view
+        return Array(manufacturerCounts.keys).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
     var manufacturerCounts: [String: Int] {

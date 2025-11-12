@@ -20,7 +20,6 @@ struct GlassManufacturers {
         "AB": "Asian (Chinese) Boro",
         "BB": "Boro Batch",
         "BE": "Bullseye Glass",
-        "CHB": "Chinese Boro",
         "CiM": "Creation is Messy",
         "DH": "Double Helix",
         "DS": "Delphi Superior",
@@ -49,7 +48,6 @@ struct GlassManufacturers {
         "EF": "effetre",
         "DH": "dh",
         "BB": "bb",
-        "CHB": "chb",
         "CiM": "cim",
         "DS": "ds",
         "GA": "ga",
@@ -67,7 +65,7 @@ struct GlassManufacturers {
         "OC": "oc",
         "PAR": "par",
         "PDX": "pdx",
-        "UST": "ust",     // Note: Actual file is ust.png
+        "UST": "ust",
         "WM": "wm",
         "Y96": "y96"
     ]
@@ -78,7 +76,6 @@ struct GlassManufacturers {
         "AB": true,           // Asian (Chinese) Boro - permission TBD
         "BB": true,           // Boro Batch - permission granted
         "BE": true,           // Bullseye Glass - permission granted
-        "CHB": true,          // Chinese Boro - permission TBD
         "CiM": false,         // Creation is Messy - NO permission
         "DH": true,           // Double Helix - permission granted
         "DS": false,          // Delphi Superior - NO product images (bot-protected site)
@@ -147,7 +144,6 @@ struct GlassManufacturers {
     nonisolated static let manufacturerCOEs: [String: [Int]] = [
         "AB": [33],           // Asian (Chinese) Boro makes 33
         "BB": [33],           // Boro Batch makes 33
-        "CHB": [33],          // Chinese Boro makes 33
         "CiM": [33],          // Creation is Messy makes 33
         "GA": [33],           // Glass Alchemy makes 33
         "GRE": [33],          // Greasy Glass makes 33
@@ -299,8 +295,6 @@ struct GlassManufacturers {
             return .cyan
         case "bullseye glass", "bullseye", "be":
             return .indigo
-        case "chinese boro", "chb":
-            return Color(red: 0.6, green: 0.9, blue: 0.4)  // Lime/light green
         case "delphi superior", "ds":
             return Color(red: 0.4, green: 0.7, blue: 0.9)  // Light blue
         case "gaffer", "gaf":

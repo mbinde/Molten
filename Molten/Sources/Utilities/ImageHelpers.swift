@@ -477,8 +477,9 @@ struct ProductImageView: View {
             }
         }
 
-        // PRIORITY 1.5: Try to download from CDN (images.molten.glass)
-        if let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath) {
+        // PRIORITY 1.5: Try to download from CDN (only if we have an exact image_path from catalog)
+        if let imagePath = imagePath, !imagePath.isEmpty,
+           let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath) {
             loadedImage = cdnImage
             isLoading = false
             return
@@ -612,8 +613,9 @@ struct ProductImageDetail: View {
             }
         }
 
-        // PRIORITY 1.5: Try to download from CDN (images.molten.glass)
-        if let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath) {
+        // PRIORITY 1.5: Try to download from CDN (only if we have an exact image_path from catalog)
+        if let imagePath = imagePath, !imagePath.isEmpty,
+           let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath) {
             loadedImage = cdnImage
             isLoading = false
             return

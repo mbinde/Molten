@@ -361,7 +361,7 @@ struct InventorySharingManagerTests {
     private func createTestManager(coordinator: MockInventorySharingCoordinator) -> InventorySharingManager {
         // Create isolated test controller
         let testController = PersistenceController.createTestController()
-        RepositoryFactory.configureForTestingWithCoreData(controller: testController)
+        let deps = AppDependencies(forTesting: true)
 
         let testContext = testController.container.viewContext
         let catalogRepo = deps.glassItemRepository

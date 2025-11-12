@@ -115,6 +115,7 @@ struct InventorySharingIntegrationTests {
         let userBCoordinator = InventorySharingCoordinator(sharingService: userBSharingService)
 
         // Create manager with test repositories
+        let deps = AppDependencies(forTesting: true)
         let shareRecordRepo = CoreDataShareRecordRepository(context: testController.container.viewContext)
         let catalogRepo = deps.glassItemRepository
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
@@ -196,6 +197,7 @@ struct InventorySharingIntegrationTests {
 
         // Create test Core Data controller
         let testController = PersistenceController.createTestController()
+        let deps = AppDependencies(forTesting: true)
         let shareRecordRepo = CoreDataShareRecordRepository(context: testController.container.viewContext)
         let catalogRepo = deps.glassItemRepository
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(

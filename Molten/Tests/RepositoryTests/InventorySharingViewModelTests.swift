@@ -419,7 +419,7 @@ struct InventorySharingViewModelTests {
     private func createMockSharingManager() -> InventorySharingManager {
         // Create isolated test controller
         let testController = PersistenceController.createTestController()
-        RepositoryFactory.configureForTestingWithCoreData(controller: testController)
+        let deps = AppDependencies(forTesting: true)
 
         let testContext = testController.container.viewContext
         let catalogRepo = deps.glassItemRepository
@@ -455,7 +455,7 @@ struct InventorySharingViewModelTests {
     private func createMockSharingManagerWithInvalidSignature() -> InventorySharingManager {
         // Create isolated test controller
         let testController = PersistenceController.createTestController()
-        RepositoryFactory.configureForTestingWithCoreData(controller: testController)
+        let deps = AppDependencies(forTesting: true)
 
         let testContext = testController.container.viewContext
         let catalogRepo = deps.glassItemRepository

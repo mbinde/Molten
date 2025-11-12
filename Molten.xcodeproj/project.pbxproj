@@ -95,29 +95,6 @@
 		};
 /* End PBXCopyFilesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		5AD4D62AFCC1421CA59DBA1A /* Set Build Number from Git */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/Scripts/set-build-number.sh",
-			);
-			name = "Set Build Number from Git";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PROJECT_DIR}/Scripts/set-build-number.sh\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
-
 /* Begin PBXFileReference section */
 		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
 		878F664543088F1B86740DD2 /* UnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationRepository.swift; sourceTree = "<group>"; };
@@ -176,7 +153,6 @@
 				Tests/MoltenTests/Infrastructure/TestDataBuilder.swift,
 				Tests/MoltenTests/Infrastructure/TestDataSetup.swift,
 				Tests/MoltenTests/Infrastructure/TestHelpers.swift,
-				Tests/MoltenTests/Integration/AdvancedTestingTests.swift,
 				Tests/MoltenTests/Integration/BasicFunctionalityTests.swift,
 				Tests/MoltenTests/Integration/CoreFunctionalityTests.swift,
 				Tests/MoltenTests/Integration/CrossEntityIntegrationTests.swift,
@@ -352,7 +328,6 @@
 				Tests/MoltenTests/Infrastructure/TestDataBuilder.swift,
 				Tests/MoltenTests/Infrastructure/TestDataSetup.swift,
 				Tests/MoltenTests/Infrastructure/TestHelpers.swift,
-				Tests/MoltenTests/Integration/AdvancedTestingTests.swift,
 				Tests/MoltenTests/Integration/BasicFunctionalityTests.swift,
 				Tests/MoltenTests/Integration/CoreFunctionalityTests.swift,
 				Tests/MoltenTests/Integration/CrossEntityIntegrationTests.swift,
@@ -541,8 +516,6 @@
 				Tests/RepositoryTests/Integration/CatalogViewDataLoadingTests.swift,
 				Tests/RepositoryTests/Integration/GlassItemDataLoadingServiceCoreDataTests.swift,
 				Tests/RepositoryTests/Integration/JSONDataLoaderCoreDataTests.swift,
-				Tests/RepositoryTests/Integration/RepositoryFactoryDataLoadingTests.swift,
-				Tests/RepositoryTests/Integration/RepositoryFactoryTests.swift,
 				Tests/RepositoryTests/Integration/ShoppingListServiceIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingManagerTests.swift,
@@ -652,8 +625,6 @@
 				Tests/RepositoryTests/Integration/CatalogViewDataLoadingTests.swift,
 				Tests/RepositoryTests/Integration/GlassItemDataLoadingServiceCoreDataTests.swift,
 				Tests/RepositoryTests/Integration/JSONDataLoaderCoreDataTests.swift,
-				Tests/RepositoryTests/Integration/RepositoryFactoryDataLoadingTests.swift,
-				Tests/RepositoryTests/Integration/RepositoryFactoryTests.swift,
 				Tests/RepositoryTests/Integration/ShoppingListServiceIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingManagerTests.swift,
@@ -1022,8 +993,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = F5A13C722E890147002C0F7A /* Build configuration list for PBXNativeTarget "Molten" */;
 			buildPhases = (
-								5AD4D62AFCC1421CA59DBA1A /* Set Build Number from Git */,
-F5A13C472E890146002C0F7A /* Sources */,
+				5AD4D62AFCC1421CA59DBA1A /* Set Build Number from Git */,
+				F5A13C472E890146002C0F7A /* Sources */,
 				F5A13C482E890146002C0F7A /* Frameworks */,
 				F5A13C492E890146002C0F7A /* Resources */,
 				F5DB4DB82EAB159C00F6E879 /* Embed Foundation Extensions */,
@@ -1266,6 +1237,28 @@ F5A13C472E890146002C0F7A /* Sources */,
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		5AD4D62AFCC1421CA59DBA1A /* Set Build Number from Git */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Scripts/set-build-number.sh",
+			);
+			name = "Set Build Number from Git";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PROJECT_DIR}/Scripts/set-build-number.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		F506B6922EAFC16700CDBC6D /* Sources */ = {

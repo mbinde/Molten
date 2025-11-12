@@ -28,7 +28,7 @@ xcodebuild -project Molten.xcodeproj -scheme Molten -destination 'platform=iOS S
 ## Phase 1: MoltenApp Complete Integration ✅ COMPLETE
 
 **Estimate:** 2-3 hours
-**Actual:** ~45 minutes
+**Actual:** ~2 hours (including debugging environment object crashes)
 
 ### Files Modified
 
@@ -144,10 +144,20 @@ xcodebuild -project Molten.xcodeproj -scheme Molten -destination 'platform=iOS S
 
 ### Commit Status: ✅ COMMITTED
 
+**Initial completion:**
 ```bash
 git add Molten/Sources/App/ Docs/DI-Migration-Progress.md
 git commit -m "refactor(di): Phase 1 complete - MoltenApp uses AppDependencies"
 ```
+
+**Critical bug fix (environment object crashes):**
+- Issue: Views with `@Environment(SubscriptionManager.self)` crashed when subscriptionManager was nil
+- Root cause: Dependencies initialized in `.onAppear`, but views evaluated BEFORE `.onAppear` ran
+- Solution: Initialize dependencies in `body` via `ensureDependenciesInitialized()` BEFORE view tree creation
+- Affected views: SettingsView.swift (2 places), UpgradePromptView.swift
+- Commits:
+  - `81b6b074` - Re-added RepositoryFactory configuration for unmigrated views
+  - `c7ccdf71` - Fixed environment object initialization timing
 
 ---
 

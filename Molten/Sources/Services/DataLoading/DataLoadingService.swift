@@ -11,7 +11,7 @@
 //
 // This service now works with the new GlassItem architecture:
 // - Uses CatalogService for glass item operations
-// - Integrates with RepositoryFactory for dependency injection
+// - Integrates with AppDependencies for dependency injection
 // - Provides basic data loading functionality
 // - Simplified architecture focused on available services
 
@@ -24,19 +24,24 @@ import CoreData
 
 class DataLoadingService {
     static let shared = DataLoadingService()
-    
+
     private let logger = Logger(subsystem: "com.flameworker.dataLoading", category: "DataLoadingService")
     private let catalogService: CatalogService
-    
+
     private init() {
-        // Use RepositoryFactory for shared instance (production mode for real data)
-        RepositoryFactory.configureForProduction()
-        self.catalogService = RepositoryFactory.createCatalogService()
+        // Use AppDependencies for shared instance (production mode for real data)
+        let deps = AppDependencies()
+        self.catalogService = deps.catalogService
     }
-    
+
     /// Initialize with services (dependency injection)
     init(catalogService: CatalogService) {
         self.catalogService = catalogService
+    }
+
+    /// Convenience init using AppDependencies
+    init(deps: AppDependencies = AppDependencies()) {
+        self.catalogService = deps.catalogService
     }
     
     // MARK: - Public API
@@ -182,20 +187,16 @@ enum DataLoadingServiceError: Error, LocalizedError {
 // MARK: - Factory Methods
 
 extension DataLoadingService {
-    /// Create DataLoadingService with RepositoryFactory (for testing with mocks)
-    static func createWithRepositoryFactory() -> DataLoadingService {
-        RepositoryFactory.configureForTesting()  // Only for tests
-        let catalogService = RepositoryFactory.createCatalogService()
-
-        return DataLoadingService(catalogService: catalogService)
+    /// Create DataLoadingService with testing dependencies
+    static func createForTesting() -> DataLoadingService {
+        let deps = AppDependencies(forTesting: true)
+        return DataLoadingService(deps: deps)
     }
-    
+
     /// Create DataLoadingService for production
     static func createForProduction() -> DataLoadingService {
-        RepositoryFactory.configureForProduction()
-        let catalogService = RepositoryFactory.createCatalogService()
-        
-        return DataLoadingService(catalogService: catalogService)
+        let deps = AppDependencies()
+        return DataLoadingService(deps: deps)
     }
 }
 

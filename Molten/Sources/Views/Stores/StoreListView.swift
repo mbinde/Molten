@@ -56,7 +56,7 @@ struct StoreListView: View {
             .navigationDestination(for: StoreNavigationDestination.self) { destination in
                 switch destination {
                 case .storeDetail(let store):
-                    StoreDetailView(store: store, locationService: RepositoryFactory.createUnifiedLocationService())
+                    StoreDetailView(store: store, deps: AppDependencies())
                 }
             }
             .task {

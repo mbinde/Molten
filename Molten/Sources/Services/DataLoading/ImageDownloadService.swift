@@ -12,17 +12,18 @@ import UIKit
 #endif
 
 /// Service for downloading product images from images.molten.glass and caching locally
-@MainActor
+/// This is a utility service with static methods - does not need MainActor isolation
 final class ImageDownloadService: Sendable {
 
     // MARK: - Configuration
 
     /// Base URL for image CDN
     // Images served as static assets from Cloudflare Pages
-    private static let imageBaseURL = "https://www.moltenglass.app/images"
+    nonisolated(unsafe) private static let imageBaseURL = "https://www.moltenglass.app/images"
 
     /// Local cache directory for downloaded images
-    private static let cacheDirectory: URL? = {
+    /// Marked nonisolated(unsafe) because it's computed once at class load and never changes
+    nonisolated(unsafe) private static let cacheDirectory: URL? = {
         guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             return nil
         }
@@ -37,7 +38,8 @@ final class ImageDownloadService: Sendable {
     }()
 
     /// URL session for downloading images
-    private static let urlSession: URLSession = {
+    /// Marked nonisolated(unsafe) because URLSession is thread-safe and this is read-only
+    nonisolated(unsafe) private static let urlSession: URLSession = {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 10 // 10 second timeout
         config.timeoutIntervalForResource = 30 // 30 second total timeout

@@ -12,7 +12,7 @@ import Combine
 
 @testable import Molten
 
-@Suite("CatalogUpdateViewModel Tests")
+@Suite("CatalogUpdateViewModel Tests", .serialized)
 @MainActor
 struct CatalogUpdateViewModelTests {
 

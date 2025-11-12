@@ -103,17 +103,28 @@ class FriendInventoryViewModel {
 
     init(
         friend: FriendShare,
-        sharingManager: InventorySharingManager = RepositoryFactory.createInventorySharingManager(),
-        catalogService: CatalogService = RepositoryFactory.createCatalogService(),
-        sharedInventoryRepository: CoreDataSharedInventoryRepository = CoreDataSharedInventoryRepository(
-            context: PersistenceController.shared.container.viewContext,
-            catalogRepository: RepositoryFactory.createGlassItemRepository()
-        )
+        sharingManager: InventorySharingManager,
+        catalogService: CatalogService,
+        sharedInventoryRepository: CoreDataSharedInventoryRepository
     ) {
         self.friend = friend
         self.sharingManager = sharingManager
         self.catalogService = catalogService
         self.sharedInventoryRepository = sharedInventoryRepository
+    }
+
+    /// Convenience init using AppDependencies
+    convenience init(friend: FriendShare, deps: AppDependencies = AppDependencies()) {
+        let sharedInventoryRepository = CoreDataSharedInventoryRepository(
+            context: PersistenceController.shared.container.viewContext,
+            catalogRepository: deps.glassItemRepository
+        )
+        self.init(
+            friend: friend,
+            sharingManager: deps.inventorySharingManager,
+            catalogService: deps.catalogService,
+            sharedInventoryRepository: sharedInventoryRepository
+        )
     }
 
     // MARK: - Data Loading

@@ -26,6 +26,13 @@ struct StoreAutoCompleteField: View {
         self.locationService = locationService
     }
 
+    /// Convenience init using AppDependencies
+    init(store: Binding<String>, deps: AppDependencies = AppDependencies()) {
+        self._store = store
+        self.shoppingListRepository = deps.shoppingListRepository
+        self.locationService = deps.unifiedLocationService
+    }
+
     /// Represents a store suggestion with metadata about its source
     private struct StoreSuggestion: Identifiable, Hashable {
         let id = UUID()
@@ -190,13 +197,12 @@ struct StoreAutoCompleteField: View {
 
 #Preview {
     @Previewable @State var store = ""
-    let _ = RepositoryFactory.configureForTesting()
+    let deps = AppDependencies(forTesting: true)
 
     VStack {
         StoreAutoCompleteField(
             store: $store,
-            shoppingListRepository: RepositoryFactory.createShoppingListRepository(),
-            locationService: RepositoryFactory.createUnifiedLocationService()
+            deps: deps
         )
         Spacer()
     }

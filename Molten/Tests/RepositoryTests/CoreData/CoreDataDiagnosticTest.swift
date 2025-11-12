@@ -115,7 +115,7 @@ struct CoreDataDiagnosticTest {
     func suggestTestFixes() async throws {
         print("🔧 DIAGNOSTIC: Test fix suggestions...")
 
-        let deps = AppDependencies() // Production mode
+        let deps = AppDependencies(forTesting: true)
         let glassItemRepo = deps.glassItemRepository
         
         let actualTotal = try await glassItemRepo.fetchItems(matching: nil)

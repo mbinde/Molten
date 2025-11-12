@@ -552,17 +552,10 @@ struct InventoryDetailViewTests {
     @Test("View handles data loading on appear")
     func testDataLoadingOnAppear() {
         let item = createTestItem()
-        let mockNotesRepo = MockUserNotesRepository()
-        let mockTagsRepo = MockUserTagsRepository()
 
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: mockNotesRepo,
-            userTagsRepository: mockTagsRepo,
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)

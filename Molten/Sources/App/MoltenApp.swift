@@ -368,6 +368,9 @@ extension MoltenApp {
         // Get services from dependencies
         let catalogService = dependencies.catalogService
         let purchaseService = dependencies.purchaseRecordService
+        let inventoryService = dependencies.inventoryTrackingService
+        let shoppingListService = dependencies.shoppingListService
+        let kilnScheduleService = dependencies.kilnScheduleService
 
         // Create sync monitor if needed (only in production with CloudKit, NOT during UI tests)
         if !isRunningUITests, syncMonitor == nil, let container = dependencies.persistenceController.container as? NSPersistentCloudKitContainer {
@@ -379,6 +382,9 @@ extension MoltenApp {
         let tabView = MainTabView(
             catalogService: catalogService,
             purchaseService: purchaseService,
+            inventoryService: inventoryService,
+            shoppingListService: shoppingListService,
+            kilnScheduleService: kilnScheduleService,
             syncMonitor: syncMonitor
         )
         return tabView

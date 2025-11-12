@@ -49,14 +49,20 @@ struct MainTabView: View {
     private let kilnScheduleService: KilnScheduleService
 
     /// Initialize MainTabView with dependency injection
-    init(catalogService: CatalogService, purchaseService: PurchaseRecordService? = nil, syncMonitor: CloudKitSyncMonitor? = nil) {
+    init(
+        catalogService: CatalogService,
+        purchaseService: PurchaseRecordService? = nil,
+        inventoryService: InventoryTrackingService,
+        shoppingListService: ShoppingListService,
+        kilnScheduleService: KilnScheduleService,
+        syncMonitor: CloudKitSyncMonitor? = nil
+    ) {
         self.catalogService = catalogService
         self.purchaseService = purchaseService
+        self.inventoryTrackingService = inventoryService
+        self.shoppingListService = shoppingListService
+        self.kilnScheduleService = kilnScheduleService
         self.syncMonitor = syncMonitor
-
-        self.inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
-        self.shoppingListService = RepositoryFactory.createShoppingListService()
-        self.kilnScheduleService = RepositoryFactory.createKilnScheduleService()
     }
     
     private var lastActiveTab: DefaultTab {
@@ -496,11 +502,13 @@ struct CustomTabBar: View {
 }
 
 #Preview {
-    // Configure RepositoryFactory for preview
-    RepositoryFactory.configureForTesting()
+    // Use test dependencies for preview
+    let deps = AppDependencies(forTesting: true)
 
-    // Create catalog service using new architecture
-    let catalogService = RepositoryFactory.createCatalogService()
-
-    return MainTabView(catalogService: catalogService)
+    return MainTabView(
+        catalogService: deps.catalogService,
+        inventoryService: deps.inventoryTrackingService,
+        shoppingListService: deps.shoppingListService,
+        kilnScheduleService: deps.kilnScheduleService
+    )
 }

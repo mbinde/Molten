@@ -34,10 +34,12 @@ struct ProjectsView: View {
     @State private var selectedManufacturers: Set<String> = []
     @State private var showingManufacturerSelection = false
 
+    private let deps: AppDependencies
     private let projectPlanRepository: ProjectRepository
 
-    init(projectPlanRepository: ProjectRepository = RepositoryFactory.createProjectRepository()) {
-        self.projectPlanRepository = projectPlanRepository
+    init(deps: AppDependencies = AppDependencies()) {
+        self.deps = deps
+        self.projectPlanRepository = deps.projectRepository
     }
 
     // MARK: - Computed Properties
@@ -265,11 +267,13 @@ struct ProjectRow: View {
     let plan: ProjectModel
     @State private var tags: [String] = []
 
+    private let deps: AppDependencies
     private let projectService: ProjectService
 
-    init(plan: ProjectModel, projectService: ProjectService = RepositoryFactory.createProjectService()) {
+    init(plan: ProjectModel, deps: AppDependencies = AppDependencies()) {
         self.plan = plan
-        self.projectService = projectService
+        self.deps = deps
+        self.projectService = deps.projectService
     }
 
     var body: some View {
@@ -361,19 +365,20 @@ struct AddProjectView: View {
     @State private var projectLimit = 0
     @State private var kilnScheduleId: UUID?
 
+    private let deps: AppDependencies
     private let projectPlanRepository: ProjectRepository
     private let projectService: ProjectService
     private let kilnScheduleService: KilnScheduleService
     private let onSave: ((ProjectModel) -> Void)?
 
     init(
-        projectPlanRepository: ProjectRepository = RepositoryFactory.createProjectRepository(),
-        kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService(),
+        deps: AppDependencies = AppDependencies(),
         onSave: ((ProjectModel) -> Void)? = nil
     ) {
-        self.projectPlanRepository = projectPlanRepository
-        self.projectService = RepositoryFactory.createProjectService()
-        self.kilnScheduleService = kilnScheduleService
+        self.deps = deps
+        self.projectPlanRepository = deps.projectRepository
+        self.projectService = deps.projectService
+        self.kilnScheduleService = deps.kilnScheduleService
         self.onSave = onSave
     }
 
@@ -708,19 +713,21 @@ struct ProjectDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(EntitlementService.self) private var entitlementService
 
+    private let deps: AppDependencies
     private let catalogService: CatalogService
     private let projectService: ProjectService
     private let kilnScheduleService: KilnScheduleService
 
-    init(plan: ProjectModel, repository: ProjectRepository, startInEditMode: Bool = false) {
+    init(plan: ProjectModel, repository: ProjectRepository, startInEditMode: Bool = false, deps: AppDependencies = AppDependencies()) {
         self.projectId = plan.id
         self.repository = repository
         self._isNewPlan = State(initialValue: startInEditMode)  // If starting in edit mode, it's a new plan
         self._plan = State(initialValue: plan)
         self._isEditing = State(initialValue: startInEditMode)
-        self.catalogService = RepositoryFactory.createCatalogService()
-        self.projectService = RepositoryFactory.createProjectService()
-        self.kilnScheduleService = RepositoryFactory.createKilnScheduleService()
+        self.deps = deps
+        self.catalogService = deps.catalogService
+        self.projectService = deps.projectService
+        self.kilnScheduleService = deps.kilnScheduleService
     }
 
     var body: some View {
@@ -1782,7 +1789,7 @@ struct ProjectDetailView: View {
 
     private func loadPlanImages(for plan: ProjectModel) async {
         #if canImport(UIKit)
-        let userImageRepository = RepositoryFactory.createUserImageRepository()
+        let userImageRepository = deps.userImageRepository
 
         do {
             // Load all images for this plan
@@ -1852,8 +1859,8 @@ struct ProjectDetailView: View {
     private func loadSelectedImages(_ items: [PhotosPickerItem]) async {
         guard let plan = plan else { return }
 
-        let userImageRepository = RepositoryFactory.createUserImageRepository()
-        let projectImageRepository = RepositoryFactory.createProjectImageRepository()
+        let userImageRepository = deps.userImageRepository
+        let projectImageRepository = deps.projectImageRepository
 
         var updatedImages = plan.images
         var newHeroImageId = plan.heroImageId
@@ -1995,7 +2002,7 @@ struct ProjectDetailView: View {
         }
 
         do {
-            let userImageRepository = RepositoryFactory.createUserImageRepository()
+            let userImageRepository = deps.userImageRepository
             let pdfService = ProjectPDFService(userImageRepository: userImageRepository)
 
             let fileURL = try await pdfService.exportPlanAsPDF(planToExport)

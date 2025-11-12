@@ -71,8 +71,8 @@ struct ShoppingListViewTests {
 
     @Test("ShoppingListView initializes with default state")
     func testInitialization() {
-        let shoppingListService = createMockShoppingListService()
-        let view = ShoppingListView(shoppingListService: shoppingListService)
+        let deps = AppDependencies(forTesting: true)
+        let view = ShoppingListView(deps: deps)
 
         #expect(view != nil)
     }
@@ -452,12 +452,13 @@ struct ShoppingListViewTests {
 
     // Nested suite to serialize tests that use NotificationCenter.default
     @Suite("Checkout Notification Tests", .serialized)
+    @MainActor
     struct CheckoutNotificationTests {
 
         @Test("Checkout posts inventory notification when adding to inventory")
         func testCheckoutPostsInventoryNotification() async throws {
             // Configure for testing
-        let deps = AppDependencies(forTesting: true)
+            let deps = AppDependencies(forTesting: true)
 
             // Create shared repositories
             let glassItemRepository = MockGlassItemRepository()

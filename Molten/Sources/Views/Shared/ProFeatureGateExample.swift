@@ -11,8 +11,12 @@ struct ExampleFeatureGateView: View {
     private let subscriptionService: SubscriptionServiceProtocol
     @State private var hasProAccess = false
 
-    init(subscriptionService: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService()) {
+    init(subscriptionService: SubscriptionServiceProtocol) {
         self.subscriptionService = subscriptionService
+    }
+
+    init(deps: AppDependencies = AppDependencies()) {
+        self.subscriptionService = deps.subscriptionService
     }
 
     var body: some View {
@@ -62,8 +66,12 @@ struct ExampleListWithProFeatures: View {
     private let subscriptionService: SubscriptionServiceProtocol
     @State private var hasProAccess = false
 
-    init(subscriptionService: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService()) {
+    init(subscriptionService: SubscriptionServiceProtocol) {
         self.subscriptionService = subscriptionService
+    }
+
+    init(deps: AppDependencies = AppDependencies()) {
+        self.subscriptionService = deps.subscriptionService
     }
 
     var body: some View {
@@ -112,8 +120,12 @@ struct ExampleConditionalNavigation: View {
     @State private var hasProAccess = false
     @State private var showingPaywall = false
 
-    init(subscriptionService: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService()) {
+    init(subscriptionService: SubscriptionServiceProtocol) {
         self.subscriptionService = subscriptionService
+    }
+
+    init(deps: AppDependencies = AppDependencies()) {
+        self.subscriptionService = deps.subscriptionService
     }
 
     var body: some View {
@@ -143,8 +155,12 @@ struct ExampleQuantityLimitView: View {
     @State private var currentCount = 5
     @State private var showingLimitAlert = false
 
-    init(subscriptionService: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService()) {
+    init(subscriptionService: SubscriptionServiceProtocol) {
         self.subscriptionService = subscriptionService
+    }
+
+    init(deps: AppDependencies = AppDependencies()) {
+        self.subscriptionService = deps.subscriptionService
     }
 
     private var itemLimit: Int {

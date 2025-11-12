@@ -92,7 +92,7 @@ struct InventoryDetailView: View {
         userNotesRepository: UserNotesRepository,
         userTagsRepository: UserTagsRepository,
         shoppingListRepository: ShoppingListRepository,
-        locationService: UnifiedLocationService = RepositoryFactory.createUnifiedLocationService(),
+        locationService: UnifiedLocationService,
         userImageRepository: UserImageRepository,
         kilnScheduleService: KilnScheduleService,
         glassItemRepository: GlassItemRepository
@@ -107,6 +107,25 @@ struct InventoryDetailView: View {
         self.userImageRepository = userImageRepository
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
+        // Initialize from user settings
+        self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
+        self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
+        // Initialize currentItem with the passed item
+        self._currentItem = State(initialValue: item)
+    }
+
+    /// Convenience init using AppDependencies
+    init(item: CompleteInventoryItemModel, deps: AppDependencies = AppDependencies()) {
+        self.item = item
+        self.inventoryTrackingService = deps.inventoryTrackingService
+        self.catalogService = deps.catalogService
+        self.userNotesRepository = deps.userNotesRepository
+        self.userTagsRepository = deps.userTagsRepository
+        self.shoppingListRepository = deps.shoppingListRepository
+        self.locationService = deps.unifiedLocationService
+        self.userImageRepository = deps.userImageRepository
+        self.kilnScheduleService = deps.kilnScheduleService
+        self.glassItemRepository = deps.glassItemRepository
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
@@ -1189,11 +1208,18 @@ struct ShoppingListOptionsView: View {
     init(
         item: CompleteInventoryItemModel,
         shoppingListRepository: ShoppingListRepository,
-        locationService: UnifiedLocationService = RepositoryFactory.createUnifiedLocationService()
+        locationService: UnifiedLocationService
     ) {
         self.item = item
         self.shoppingListRepository = shoppingListRepository
         self.locationService = locationService
+    }
+
+    /// Convenience init using AppDependencies
+    init(item: CompleteInventoryItemModel, deps: AppDependencies = AppDependencies()) {
+        self.item = item
+        self.shoppingListRepository = deps.shoppingListRepository
+        self.locationService = deps.unifiedLocationService
     }
 
     var body: some View {
@@ -1333,8 +1359,15 @@ struct InventoryStorageDetailView: View {
     @State private var inventoryItemLimit = 0
     @State private var editingRecord: InventoryModel?
 
-    private let inventoryRepository = RepositoryFactory.createInventoryRepository()
-    private let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+    private let inventoryRepository: InventoryRepository
+    private let inventoryTrackingService: InventoryTrackingService
+
+    init(item: CompleteInventoryItemModel, inventoryType: String, deps: AppDependencies = AppDependencies()) {
+        self.item = item
+        self.inventoryType = inventoryType
+        self.inventoryRepository = deps.inventoryRepository
+        self.inventoryTrackingService = deps.inventoryTrackingService
+    }
 
     var body: some View {
         NavigationStack {

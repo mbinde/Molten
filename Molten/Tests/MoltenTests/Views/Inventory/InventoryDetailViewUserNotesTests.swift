@@ -102,12 +102,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view - notes will be loaded asynchronously
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: mockRepo,
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: View should handle special characters in notes gracefully
@@ -190,12 +185,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view with notes editor capability
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: mockRepo,
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         // Assert: Should support editing notes via UserNotesEditor

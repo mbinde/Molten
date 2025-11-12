@@ -91,7 +91,6 @@ struct InventoryItemDetailViewTests {
         // Act: Create view with business model and service (no Core Data context needed)
         let detailView = InventoryDetailView(
             item: completeItem,
-            inventoryTrackingService: inventoryTrackingService,
             deps: AppDependencies(forTesting: true)
         )
 
@@ -130,7 +129,6 @@ struct InventoryItemDetailViewTests {
         // Act: Create view with injected service
         let detailView = InventoryDetailView(
             item: completeItem,
-            inventoryTrackingService: inventoryTrackingService,
             deps: AppDependencies(forTesting: true)
         )
 
@@ -247,12 +245,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view with explicitly provided repositories
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: deps.userNotesRepository,
-            userTagsRepository: deps.userTagsRepository,
-            shoppingListRepository: deps.shoppingListRepository,
-            userImageRepository: deps.userImageRepository,
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: deps
         )
 
         // Assert: View should be created successfully and use ProductImageDetail

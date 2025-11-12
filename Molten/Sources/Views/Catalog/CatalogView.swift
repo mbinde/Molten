@@ -292,14 +292,7 @@ struct CatalogView: View {
                 case .catalogItemDetail(let itemModel):
                     InventoryDetailView(
                         item: itemModel,
-                        inventoryTrackingService: inventoryTrackingService,
-                        catalogService: catalogService,
-                        userNotesRepository: userNotesRepository,
-                        userTagsRepository: userTagsRepository,
-                        shoppingListRepository: shoppingListRepository,
-                        userImageRepository: userImageRepository,
-                        kilnScheduleService: kilnScheduleService,
-                        glassItemRepository: glassItemRepository
+                        deps: AppDependencies()
                     )
                 }
             }

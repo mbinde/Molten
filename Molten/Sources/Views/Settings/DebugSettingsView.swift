@@ -11,10 +11,10 @@ struct DebugSettingsView: View {
     @AppStorage("showDebugInfo") private var showDebugInfo = false
     @State private var showingResetDisclaimerAlert = false
 
-    private let catalogService: CatalogService
+    private let deps: AppDependencies
 
-    init(catalogService: CatalogService) {
-        self.catalogService = catalogService
+    init(deps: AppDependencies = AppDependencies()) {
+        self.deps = deps
     }
 
     var body: some View {
@@ -41,7 +41,7 @@ struct DebugSettingsView: View {
 
             Section {
                 NavigationLink {
-                    DataManagementView(catalogService: catalogService)
+                    DataManagementView(deps: deps)
                 } label: {
                     Label("Data Management", systemImage: "externaldrive")
                 }
@@ -81,8 +81,7 @@ struct DebugSettingsView: View {
 }
 
 #Preview {
-    let deps = AppDependencies(forTesting: true)
-    return NavigationStack {
-        DebugSettingsView(catalogService: deps.catalogService)
+    NavigationStack {
+        DebugSettingsView(deps: AppDependencies(forTesting: true))
     }
 }

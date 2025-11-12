@@ -123,25 +123,26 @@ struct SettingsView: View {
     @Environment(EntitlementService.self) private var entitlementService
     @Environment(SubscriptionManager.self) private var subscriptionManager
 
+    private let deps: AppDependencies
     private let catalogService: CatalogService
     private let subscriptionService: SubscriptionServiceProtocol
     @State private var subscriptionViewModel: SubscriptionViewModel
     @State private var catalogUpdateViewModel: CatalogUpdateViewModel
 
     init(
-        catalogService: CatalogService = RepositoryFactory.createCatalogService(),
-        subscriptionService: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService(),
+        deps: AppDependencies = AppDependencies(),
         catalogUpdateService: CatalogUpdateService? = nil
     ) {
-        self.catalogService = catalogService
-        self.subscriptionService = subscriptionService
-        self._subscriptionViewModel = State(initialValue: SubscriptionViewModel(subscriptionService: subscriptionService))
+        self.deps = deps
+        self.catalogService = deps.catalogService
+        self.subscriptionService = deps.subscriptionService
+        self._subscriptionViewModel = State(initialValue: SubscriptionViewModel(subscriptionService: deps.subscriptionService))
 
         // Initialize catalog update view model
         let updateService = catalogUpdateService ?? CatalogUpdateService(
             apiClient: CatalogAPIClient(),
             storageService: try! CatalogStorageService(),
-            dataLoadingService: RepositoryFactory.createGlassItemDataLoadingService(),
+            dataLoadingService: deps.glassItemDataLoadingService,
             networkMonitor: NetworkMonitor.shared
         )
         self._catalogUpdateViewModel = State(initialValue: CatalogUpdateViewModel(updateService: updateService))
@@ -455,7 +456,7 @@ struct SettingsView: View {
                     }
 
                     NavigationLink {
-                        DebugSettingsView(catalogService: catalogService)
+                        DebugSettingsView(deps: deps)
                     } label: {
                         Label("Debug Settings", systemImage: "ladybug")
                     }
@@ -483,17 +484,19 @@ struct DataManagementView: View {
     @State private var catalogItemsCount = 0
     @State private var inventoryItemsCount = 0
 
+    private let deps: AppDependencies
     private let catalogService: CatalogService
     private let dataLoadingService: GlassItemDataLoadingService
     private let inventoryRepository: InventoryRepository
 
     init(
-        catalogService: CatalogService = RepositoryFactory.createCatalogService(),
+        deps: AppDependencies = AppDependencies(),
         dataLoadingService: GlassItemDataLoadingService? = nil
     ) {
-        self.catalogService = catalogService
-        self.dataLoadingService = dataLoadingService ?? GlassItemDataLoadingService(catalogService: catalogService)
-        self.inventoryRepository = RepositoryFactory.createInventoryRepository()
+        self.deps = deps
+        self.catalogService = deps.catalogService
+        self.dataLoadingService = dataLoadingService ?? GlassItemDataLoadingService(catalogService: deps.catalogService)
+        self.inventoryRepository = deps.inventoryRepository
     }
     
     var body: some View {
@@ -784,9 +787,9 @@ struct ManufacturerFilterView: View {
     @State private var isLoading = true
     
     private let catalogService: CatalogService
-    
-    init(catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
-        self.catalogService = catalogService
+
+    init(deps: AppDependencies = AppDependencies()) {
+        self.catalogService = deps.catalogService
     }
     
     // All unique manufacturers from both catalog items and GlassManufacturers, sorted by COE first, then alphabetically

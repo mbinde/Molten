@@ -11,7 +11,7 @@ import Testing
 
 @testable import Molten
 
-@Suite("BackgroundUpdateService Tests")
+@Suite("BackgroundUpdateService Tests", .serialized)
 @MainActor
 struct BackgroundUpdateServiceTests {
 

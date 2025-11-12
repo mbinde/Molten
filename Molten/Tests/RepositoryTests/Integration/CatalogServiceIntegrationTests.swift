@@ -27,7 +27,7 @@ struct CatalogServiceIntegrationTests {
         RepositoryFactory.configure(testController: testController)
         RepositoryFactory.mode = .coreData
 
-        let service = RepositoryFactory.createCatalogService()
+        let service = deps.catalogService
         return (service, testController)
     }
 
@@ -62,7 +62,7 @@ struct CatalogServiceIntegrationTests {
     @Test("CatalogService integrates glass items with inventory tracking")
     func testGlassItemWithInventoryIntegration() async throws {
         let (service, _) = await createTestService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let inventoryService = deps.inventoryTrackingService
 
         // Create glass item with initial inventory
         let glassItem = GlassItemModel(
@@ -133,7 +133,7 @@ struct CatalogServiceIntegrationTests {
     @Test("CatalogService deletes cascade correctly")
     func testDeleteCascade() async throws {
         let (service, _) = await createTestService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let inventoryService = deps.inventoryTrackingService
 
         // Create item with inventory
         let glassItem = GlassItemModel(

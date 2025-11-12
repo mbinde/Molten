@@ -25,10 +25,10 @@ struct ResourceManagementTests {
 
     @MainActor
     private func createTestServices() async -> (CatalogService, InventoryTrackingService, InventoryViewModel) {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryTrackingService = deps.inventoryTrackingService
         let inventoryViewModel = await InventoryViewModel(inventoryTrackingService: inventoryTrackingService, catalogService: catalogService)
         
         return (catalogService, inventoryTrackingService, inventoryViewModel)

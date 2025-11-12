@@ -24,12 +24,12 @@ struct CoreDataDiagnosticTest {
     @Test("DIAGNOSTIC: Show all data in Core Data")
     func showAllCoreDataContent() async throws {
         print("🔍 DIAGNOSTIC TEST: Examining Core Data content...")
-        
-        // Configure for Core Data mode
-        RepositoryFactory.configureForProduction() // This uses Core Data
-        
+
+        // Configure for Core Data mode (production uses real Core Data)
+        let deps = AppDependencies() // Production mode
+
         // Get the Core Data repository
-        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
+        let glassItemRepo = deps.glassItemRepository
         
         // Cast to Core Data implementation to access debug methods
         guard let coreDataRepo = glassItemRepo as? CoreDataGlassItemRepository else {
@@ -66,7 +66,7 @@ struct CoreDataDiagnosticTest {
         print("🔍 DIAGNOSTIC: Comparing what tests expect vs what Core Data has...")
         
         RepositoryFactory.configureForProduction()
-        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
+        let glassItemRepo = deps.glassItemRepository
         
         // What the failing tests expect:
         print("\n📋 TEST EXPECTATIONS:")
@@ -116,7 +116,7 @@ struct CoreDataDiagnosticTest {
         print("🔧 DIAGNOSTIC: Test fix suggestions...")
         
         RepositoryFactory.configureForProduction()
-        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
+        let glassItemRepo = deps.glassItemRepository
         
         let actualTotal = try await glassItemRepo.fetchItems(matching: nil)
         let actualManufacturers = try await glassItemRepo.getDistinctManufacturers()

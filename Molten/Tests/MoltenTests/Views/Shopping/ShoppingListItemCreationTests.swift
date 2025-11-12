@@ -18,9 +18,9 @@ struct ShoppingListItemCreationTests {
     @Test("Create shopping list item with minimal fields")
     func testCreateMinimalShoppingListItem() async throws {
         // Configure for testing
-        RepositoryFactory.configureForTesting()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let shoppingListService = deps.shoppingListService
+        let catalogService = deps.catalogService
 
         // Create a test glass item first
         let glassItem = try await createTestGlassItem(catalogService: catalogService)
@@ -46,9 +46,9 @@ struct ShoppingListItemCreationTests {
 
     @Test("Create shopping list item with all optional fields")
     func testCreateFullShoppingListItem() async throws {
-        RepositoryFactory.configureForTesting()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let shoppingListService = deps.shoppingListService
+        let catalogService = deps.catalogService
 
         let glassItem = try await createTestGlassItem(catalogService: catalogService)
 
@@ -73,9 +73,9 @@ struct ShoppingListItemCreationTests {
 
     @Test("Create shopping list item with type and subtype")
     func testCreateWithTypeAndSubtype() async throws {
-        RepositoryFactory.configureForTesting()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let shoppingListService = deps.shoppingListService
+        let catalogService = deps.catalogService
 
         let glassItem = try await createTestGlassItem(catalogService: catalogService)
 
@@ -96,9 +96,9 @@ struct ShoppingListItemCreationTests {
 
     @Test("Create multiple shopping list items for same glass item")
     func testCreateMultipleItemsSameGlass() async throws {
-        RepositoryFactory.configureForTesting()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let shoppingListService = deps.shoppingListService
+        let catalogService = deps.catalogService
 
         let glassItem = try await createTestGlassItem(catalogService: catalogService)
 
@@ -132,8 +132,8 @@ struct ShoppingListItemCreationTests {
 
     @Test("Create shopping list item validates quantity")
     func testQuantityValidation() async throws {
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let catalogService = deps.catalogService
 
         let glassItem = try await createTestGlassItem(catalogService: catalogService)
 
@@ -152,9 +152,9 @@ struct ShoppingListItemCreationTests {
 
     @Test("Retrieve shopping list items by store")
     func testRetrieveByStore() async throws {
-        RepositoryFactory.configureForTesting()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let shoppingListService = deps.shoppingListService
+        let catalogService = deps.catalogService
 
         let glassItem = try await createTestGlassItem(catalogService: catalogService)
 
@@ -179,8 +179,8 @@ struct ShoppingListItemCreationTests {
 
     @Test("Type and subtype consistency")
     func testTypeSubtypeConsistency() async throws {
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let catalogService = deps.catalogService
 
         let glassItem = try await createTestGlassItem(catalogService: catalogService)
 

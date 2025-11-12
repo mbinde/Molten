@@ -31,11 +31,11 @@ struct CrossEntityIntegrationTests {
         // Arrange: Use isolated mock repositories to ensure clean state
         // NOTE: Mock repositories create new instances via RepositoryFactory
         // Each test gets fresh repositories, but Xcode may cache between runs
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
 
         // Create services with new instances to avoid data pollution
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryTrackingService = deps.inventoryTrackingService
         
         // Create coordination service that works across entities
         let coordinator = EntityCoordinator(
@@ -94,8 +94,8 @@ struct CrossEntityIntegrationTests {
     @Test("Should handle purchase and inventory correlation using new architecture")
     func testPurchaseInventoryCorrelation() async throws {
         // Arrange: Configure and create services
-        RepositoryFactory.configureForTesting()
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let inventoryTrackingService = deps.inventoryTrackingService
         let mockPurchaseRepo = MockPurchaseRecordRepository()
         let purchaseService = PurchaseRecordService(repository: mockPurchaseRepo)
         

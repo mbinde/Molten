@@ -41,8 +41,8 @@ struct LocationAutoCompleteFieldTests {
     @Test("LocationAutoCompleteField should work with RepositoryFactory pattern")
     func testLocationAutoCompleteFieldWorksWithRepositoryFactory() {
         // Arrange: Configure factory for testing
-        RepositoryFactory.configureForTesting()
-        let locationRepository = RepositoryFactory.createLocationRepository()
+        let deps = AppDependencies(forTesting: true)
+        let locationRepository = deps.locationRepository
 
         @State var testLocation = "Workshop"
 

@@ -16,14 +16,14 @@ struct PurchaseRecordServiceTests {
 
     init() async {
         // Configure repository factory for testing (uses mocks)
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
     }
 
     // MARK: - Basic CRUD Operations
 
     @Test("Create purchase record successfully")
     func testCreateRecord() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let record = PurchaseRecordModel(
             id: UUID(),
@@ -43,7 +43,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get record by ID when record exists")
     func testGetRecordByIdFound() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         // Create a record first
         let record = PurchaseRecordModel(
@@ -66,7 +66,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get record by ID returns nil when record not found")
     func testGetRecordByIdNotFound() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let nonExistentId = UUID()
         let retrieved = try await service.getRecord(byId: nonExistentId)
@@ -76,7 +76,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Update purchase record successfully")
     func testUpdateRecord() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         // Create record
         let record = PurchaseRecordModel(
@@ -107,7 +107,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Delete purchase record successfully")
     func testDeleteRecord() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         // Create record
         let record = PurchaseRecordModel(
@@ -130,7 +130,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get all records returns all created records")
     func testGetAllRecords() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         // Create multiple records
         let record1 = PurchaseRecordModel(
@@ -164,7 +164,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get records within date range")
     func testGetRecordsInDateRange() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let calendar = Calendar.current
         let now = Date()
@@ -201,7 +201,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get records with no matches in date range returns empty")
     func testGetRecordsInDateRangeNoMatches() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let calendar = Calendar.current
         let now = Date()
@@ -217,7 +217,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Search records by text finds matching records")
     func testSearchRecordsByText() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let record = PurchaseRecordModel(
             id: UUID(),
@@ -236,7 +236,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Search records with no matches returns empty")
     func testSearchRecordsNoMatches() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let results = try await service.searchRecords(searchText: "nonexistenttext12345")
 
@@ -245,7 +245,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Filter records by supplier")
     func testFilterRecordsBySupplier() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let record1 = PurchaseRecordModel(
             id: UUID(),
@@ -275,7 +275,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Filter records by supplier with no matches returns empty")
     func testFilterRecordsBySupplierNoMatches() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let results = try await service.getRecords(bySupplier: "Nonexistent Supplier")
 
@@ -286,7 +286,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Calculate total spending for date range")
     func testGetTotalSpending() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let calendar = Calendar.current
         let now = Date()
@@ -320,7 +320,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get distinct suppliers returns unique supplier names")
     func testGetDistinctSuppliers() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let record1 = PurchaseRecordModel(
             id: UUID(),
@@ -359,7 +359,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get spending by supplier calculates correctly")
     func testGetSpendingBySupplier() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let calendar = Calendar.current
         let now = Date()
@@ -403,7 +403,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get spending by supplier with empty data returns empty dictionary")
     func testGetSpendingBySupplierEmptyData() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let calendar = Calendar.current
         let now = Date()
@@ -419,7 +419,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get purchase history for glass item")
     func testGetPurchaseHistory() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let stableId = "test123"
         let item = PurchaseRecordItemModel(
@@ -447,7 +447,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get total purchased quantity for glass item")
     func testGetTotalPurchased() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let stableId = "test456"
         let item1 = PurchaseRecordItemModel(
@@ -492,7 +492,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get total purchased with no records returns zero")
     func testGetTotalPurchasedNoRecords() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let totalPurchased = try await service.getTotalPurchased(for: "nonexistent-id", type: "rod")
 
@@ -503,7 +503,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Handle purchase record with nil notes")
     func testRecordWithNilNotes() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let record = PurchaseRecordModel(
             id: UUID(),
@@ -521,7 +521,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Handle purchase record with nil subtotal")
     func testRecordWithNilSubtotal() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let record = PurchaseRecordModel(
             id: UUID(),
@@ -539,7 +539,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Handle empty supplier list gracefully")
     func testEmptySupplierList() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         // Don't create any records
         let suppliers = try await service.getDistinctSuppliers()
@@ -550,7 +550,7 @@ struct PurchaseRecordServiceTests {
 
     @Test("Handle zero spending calculations")
     func testZeroSpendingCalculation() async throws {
-        let service = RepositoryFactory.createPurchaseRecordService()
+        let service = deps.purchaseRecordService
 
         let calendar = Calendar.current
         let now = Date()

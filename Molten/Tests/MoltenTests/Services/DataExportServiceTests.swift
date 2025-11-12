@@ -16,7 +16,7 @@ struct DataExportServiceTests {
     // MARK: - Test Data Setup
 
     private func createTestService() -> DataExportService {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         return RepositoryFactory.createDataExportService()
     }
 
@@ -120,10 +120,10 @@ struct DataExportServiceTests {
     @Test("Export counts glass items correctly")
     func exportCountsGlassItems() async throws {
         // Configure testing mode once
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
 
         // Create services - they will all share the same cached mock repositories
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = deps.catalogService
         let service = RepositoryFactory.createDataExportService()
 
         // Create test glass items
@@ -173,11 +173,11 @@ struct DataExportServiceTests {
     @Test("Export counts inventory correctly")
     func exportCountsInventory() async throws {
         // Configure testing mode once
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
 
         // Create services - they will all share the same cached mock repositories
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
         let service = RepositoryFactory.createDataExportService()
 
         // Create test glass items using the catalog service
@@ -252,7 +252,7 @@ struct DataExportServiceTests {
     @Test("Export excludes archived projects by default")
     func exportExcludesArchivedProjects() async throws {
         let service = createTestService()
-        let projectRepo = RepositoryFactory.createProjectRepository()
+        let projectRepo = deps.projectRepository
 
         // Create active project
         let activeProject = ProjectModel(

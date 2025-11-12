@@ -67,9 +67,9 @@ struct InventoryImportServiceTests {
 
     /// Setup service with mock repositories (assumes RepositoryFactory is already configured for testing)
     func createTestService() -> InventoryImportService {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
-        let locationRepo = RepositoryFactory.createLocationRepository()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
+        let locationRepo = deps.locationRepository
 
         return InventoryImportService(
             catalogService: catalogService,
@@ -82,7 +82,7 @@ struct InventoryImportServiceTests {
     /// This ensures the items are available to all services sharing the same repository
     /// Idempotent: only creates items if they don't already exist
     func populateTestCatalog() async throws {
-        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
+        let glassItemRepo = deps.glassItemRepository
 
         // Create test glass items that match our import data
         let item1 = GlassItemModel(
@@ -154,7 +154,7 @@ struct InventoryImportServiceTests {
 
     @Test("Preview import shows correct item count")
     func testPreviewImport() async throws {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         try await populateTestCatalog()
 
         let service = createTestService()
@@ -174,7 +174,7 @@ struct InventoryImportServiceTests {
 
     @Test("Preview import shows manufacturer breakdown")
     func testPreviewManufacturerBreakdown() async throws {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         try await populateTestCatalog()
 
         let service = createTestService()
@@ -196,10 +196,10 @@ struct InventoryImportServiceTests {
 
     @Test("Erase and replace mode deletes existing inventory")
     func testEraseAndReplaceDeletesExisting() async throws {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         try await populateTestCatalog()
 
-        let inventoryRepo = RepositoryFactory.createInventoryRepository()
+        let inventoryRepo = deps.inventoryRepository
 
         // Add existing inventory
         let bullseyeStableId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
@@ -245,10 +245,10 @@ struct InventoryImportServiceTests {
 
     @Test("Add new only mode skips existing items")
     func testAddNewOnlySkipsExisting() async throws {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         try await populateTestCatalog()
 
-        let inventoryRepo = RepositoryFactory.createInventoryRepository()
+        let inventoryRepo = deps.inventoryRepository
 
         // Add one existing inventory item
         let bullseyeStableId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
@@ -289,7 +289,7 @@ struct InventoryImportServiceTests {
 
     @Test("Add new only mode imports all items when none exist")
     func testAddNewOnlyImportsAllWhenEmpty() async throws {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         try await populateTestCatalog()
 
         // No existing inventory
@@ -313,10 +313,10 @@ struct InventoryImportServiceTests {
 
     @Test("Add and increase mode increases existing quantities")
     func testAddAndIncreaseModeIncreasesQuantities() async throws {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         try await populateTestCatalog()
 
-        let inventoryRepo = RepositoryFactory.createInventoryRepository()
+        let inventoryRepo = deps.inventoryRepository
 
         // Add existing inventory with quantity 100
         let bullseyeStableId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
@@ -357,7 +357,7 @@ struct InventoryImportServiceTests {
 
     @Test("Add and increase mode adds new items")
     func testAddAndIncreaseModeAddsNewItems() async throws {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         try await populateTestCatalog()
 
         // No existing inventory
@@ -381,10 +381,10 @@ struct InventoryImportServiceTests {
 
     @Test("Ask per item mode calls delegate for conflicts")
     func testAskPerItemModeCallsDelegate() async throws {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         try await populateTestCatalog()
 
-        let inventoryRepo = RepositoryFactory.createInventoryRepository()
+        let inventoryRepo = deps.inventoryRepository
 
         // Add existing inventory
         let bullseyeStableId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
@@ -422,10 +422,10 @@ struct InventoryImportServiceTests {
 
     @Test("Ask per item mode replace action works")
     func testAskPerItemModeReplaceAction() async throws {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         try await populateTestCatalog()
 
-        let inventoryRepo = RepositoryFactory.createInventoryRepository()
+        let inventoryRepo = deps.inventoryRepository
 
         // Add existing inventory
         let bullseyeStableId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
@@ -464,10 +464,10 @@ struct InventoryImportServiceTests {
 
     @Test("Ask per item mode increase action works")
     func testAskPerItemModeIncreaseAction() async throws {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         try await populateTestCatalog()
 
-        let inventoryRepo = RepositoryFactory.createInventoryRepository()
+        let inventoryRepo = deps.inventoryRepository
 
         // Add existing inventory
         let bullseyeStableId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
@@ -508,7 +508,7 @@ struct InventoryImportServiceTests {
 
     @Test("Import fails with invalid JSON")
     func testImportFailsWithInvalidJSON() async throws {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
 
         let service = createTestService()
 
@@ -528,7 +528,7 @@ struct InventoryImportServiceTests {
 
     @Test("Import handles item not found error")
     func testImportHandlesItemNotFound() async throws {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         // Don't populate catalog - items won't be found
 
         let service = createTestService()
@@ -548,11 +548,11 @@ struct InventoryImportServiceTests {
 
     @Test("populateTestCatalog creates items that can be found by stable_id")
     func testPopulateCatalogWorks() async throws {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         try await populateTestCatalog()
 
         // Try to fetch the items we just created using the shared repository
-        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
+        let glassItemRepo = deps.glassItemRepository
         let bullseyeId = generateStableId(manufacturer: "bullseye", sku: "BU-001")
         let spectrumId = generateStableId(manufacturer: "spectrum", sku: "SP-96")
         let cimId = generateStableId(manufacturer: "cim", sku: "CIM-874")

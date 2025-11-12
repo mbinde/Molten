@@ -20,14 +20,14 @@ struct ShoppingModeCheckoutTests {
 
     init() {
         // Configure for testing with mocks
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
     }
 
     // MARK: - Add to Inventory Tests
 
     @Test("Can add basket items to inventory")
     func testAddBasketItemsToInventory() async throws {
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let inventoryService = deps.inventoryTrackingService
 
         // Create a test glass item
         let glassItem = GlassItemModel(
@@ -67,7 +67,7 @@ struct ShoppingModeCheckoutTests {
 
     @Test("Can add multiple basket items to inventory in batch")
     func testAddMultipleItemsToInventory() async throws {
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let inventoryService = deps.inventoryTrackingService
 
         // Create multiple test items
         let items: [GlassItemModel] = [
@@ -105,10 +105,10 @@ struct ShoppingModeCheckoutTests {
 
     @Test("Can remove item from shopping list")
     func testRemoveItemFromShoppingList() async throws {
-        let shoppingListService = RepositoryFactory.createShoppingListService()
+        let shoppingListService = deps.shoppingListService
 
         // Create a test glass item
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let inventoryService = deps.inventoryTrackingService
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "test", sku: "remove-001"),
             name: "Remove Test Item",
@@ -141,8 +141,8 @@ struct ShoppingModeCheckoutTests {
 
     @Test("Can remove multiple items from shopping list")
     func testRemoveMultipleItemsFromShoppingList() async throws {
-        let shoppingListService = RepositoryFactory.createShoppingListService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let shoppingListService = deps.shoppingListService
+        let inventoryService = deps.inventoryTrackingService
 
         // Create test items
         let items: [GlassItemModel] = [
@@ -184,8 +184,8 @@ struct ShoppingModeCheckoutTests {
 
     @Test("Complete checkout flow: add to inventory and remove from list")
     func testCompleteCheckoutFlow() async throws {
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
+        let inventoryService = deps.inventoryTrackingService
+        let shoppingListService = deps.shoppingListService
 
         // Create test item
         let glassItem = GlassItemModel(
@@ -239,8 +239,8 @@ struct ShoppingModeCheckoutTests {
 
     @Test("Checkout with partial quantity (user bought less than needed)")
     func testCheckoutWithPartialQuantity() async throws {
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
+        let inventoryService = deps.inventoryTrackingService
+        let shoppingListService = deps.shoppingListService
 
         // Create test item
         let glassItem = GlassItemModel(
@@ -286,8 +286,8 @@ struct ShoppingModeCheckoutTests {
 
     @Test("Checkout with extra quantity (user bought more than needed)")
     func testCheckoutWithExtraQuantity() async throws {
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
+        let inventoryService = deps.inventoryTrackingService
+        let shoppingListService = deps.shoppingListService
 
         // Create test item
         let glassItem = GlassItemModel(

@@ -564,7 +564,7 @@ struct CoreDataSharedInventoryRepositoryTests {
 
     private func createTestRepositories(controller: PersistenceController) async throws -> (CoreDataSharedInventoryRepository, GlassItemRepository) {
         RepositoryFactory.configureForTestingWithCoreData(controller: controller)
-        let glassRepo = RepositoryFactory.createGlassItemRepository()
+        let glassRepo = deps.glassItemRepository
         let sharedRepo = CoreDataSharedInventoryRepository(
             context: controller.container.viewContext,
             catalogRepository: glassRepo

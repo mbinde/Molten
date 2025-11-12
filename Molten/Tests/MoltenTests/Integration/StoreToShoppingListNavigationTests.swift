@@ -152,8 +152,8 @@ struct StoreToShoppingListNavigationTests {
     @MainActor
     func testNavigateFromStoreWithItems() async throws {
         // Arrange
-        let _ = RepositoryFactory.configureForTesting()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
+        let deps = AppDependencies(forTesting: true)
+        let shoppingListService = deps.shoppingListService
 
         let storeName = "Frantz Art Glass"
 
@@ -201,8 +201,8 @@ struct StoreToShoppingListNavigationTests {
     @MainActor
     func testNoNavigationWhenNoItems() async throws {
         // Arrange
-        let _ = RepositoryFactory.configureForTesting()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
+        let deps = AppDependencies(forTesting: true)
+        let shoppingListService = deps.shoppingListService
 
         let storeName = "Empty Store"
 

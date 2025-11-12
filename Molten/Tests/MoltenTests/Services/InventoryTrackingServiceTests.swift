@@ -19,8 +19,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Create complete item with all fields")
     func testCreateCompleteItemWithAllFields() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         // Create test data with all fields
         let stableId = generateStableId(manufacturer: "cim", sku: "123")
@@ -60,8 +60,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Create complete item with minimal fields")
     func testCreateCompleteItemMinimalFields() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "cim", sku: "456"),
@@ -86,8 +86,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Create complete item with empty inventory array")
     func testCreateCompleteItemEmptyInventory() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "ef", sku: "789"),
@@ -112,8 +112,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Add inventory with location distribution")
     func testAddInventoryWithLocations() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         // Create base item
         let stableId = generateStableId(manufacturer: "be", sku: "001")
@@ -158,8 +158,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Add inventory without locations")
     func testAddInventoryWithoutLocations() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "be", sku: "002")
         let glassItem = GlassItemModel(
@@ -185,8 +185,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Add inventory to non-existent item throws error")
     func testAddInventoryNonExistentItem() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         await #expect(throws: Error.self) {
             _ = try await service.addInventory(
@@ -201,8 +201,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Add multiple inventory types to same item")
     func testMultipleInventoryTypes() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "cim", sku: "multi")
         let glassItem = GlassItemModel(
@@ -230,8 +230,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Update inventory across multiple types")
     func testUpdateMultipleTypes() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "ef", sku: "update")
         let glassItem = GlassItemModel(
@@ -278,8 +278,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Get complete item with all data")
     func testGetCompleteItem() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "be", sku: "complete")
         let glassItem = GlassItemModel(
@@ -307,8 +307,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Get complete item returns nil for non-existent item")
     func testGetCompleteItemNonExistent() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let completeItem = try await service.getCompleteItem(stableId: "non-existent")
         #expect(completeItem == nil)
@@ -318,8 +318,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Update complete item updates glass item and tags")
     func testUpdateCompleteItem() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "cim", sku: "update")
         let glassItem = GlassItemModel(
@@ -356,8 +356,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Update complete item without changing tags")
     func testUpdateCompleteItemKeepTags() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "ef", sku: "keep")
         let glassItem = GlassItemModel(
@@ -394,8 +394,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Get inventory summary with locations")
     func testGetInventorySummaryWithLocations() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "be", sku: "summary")
         let glassItem = GlassItemModel(
@@ -433,8 +433,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Get inventory summary returns nil for non-existent item")
     func testGetInventorySummaryNonExistent() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let summary = try await service.getInventorySummary(for: "non-existent")
         #expect(summary == nil)
@@ -444,8 +444,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Search items by text")
     func testSearchItemsByText() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         // Create test items
         let item1 = GlassItemModel(
@@ -477,8 +477,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Search items with tag filter")
     func testSearchItemsWithTags() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let item1 = GlassItemModel(
             stable_id: generateStableId(manufacturer: "cim", sku: "tag1"),
@@ -509,9 +509,9 @@ struct InventoryTrackingServiceTests {
 
     @Test("Search items with inventory filter")
     func testSearchItemsWithInventoryFilter() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
+        let catalogService = deps.catalogService
 
         let stableId1 = generateStableId(manufacturer: "cim", sku: "inv1")
         let item1 = GlassItemModel(
@@ -547,8 +547,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Get low stock items below threshold")
     func testGetLowStockItems() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         // Create items with low stock
         let stableId1 = generateStableId(manufacturer: "cim", sku: "low1")
@@ -572,8 +572,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Low stock items are sorted by quantity")
     func testLowStockItemsSorted() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         // Create items with different low stock levels
         let stableId1 = generateStableId(manufacturer: "cim", sku: "low1")
@@ -616,8 +616,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Validate inventory consistency for valid item")
     func testValidateInventoryConsistency() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "be", sku: "valid")
         let glassItem = GlassItemModel(
@@ -650,8 +650,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Validate inventory consistency for non-existent item")
     func testValidateNonExistentItem() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let validation = try await service.validateInventoryConsistency(for: "non-existent")
 
@@ -663,8 +663,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Create item with duplicate tags removes duplicates")
     func testCreateItemDuplicateTags() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "cim", sku: "dup"),
@@ -686,8 +686,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Add zero quantity inventory")
     func testAddZeroQuantityInventory() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "be", sku: "zero")
         let glassItem = GlassItemModel(
@@ -712,8 +712,8 @@ struct InventoryTrackingServiceTests {
 
     @Test("Search with empty text returns results")
     func testSearchEmptyText() async throws {
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let glassItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "cim", sku: "empty"),

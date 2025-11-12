@@ -21,12 +21,18 @@ import SwiftUI
 @MainActor
 struct LogbookViewTests {
 
+    // Helper to create LogbookView with test dependencies
+    private func createLogbookView() -> LogbookView {
+        let deps = AppDependencies(forTesting: true)
+        return LogbookView(logbookRepository: deps.logbookRepository)
+    }
+
     // MARK: - View Creation Tests
 
     @Test("LogbookView should be created successfully")
     func testLogbookViewCreation() {
         // Act: Create LogbookView
-        let view = LogbookView()
+        let view = createLogbookView()
 
         // Assert: View should be created successfully
         #expect(view != nil, "LogbookView should be created successfully")
@@ -37,7 +43,7 @@ struct LogbookViewTests {
     @Test("LogbookView should start with empty log entries")
     func testInitialStateHasEmptyEntries() {
         // Act: Create LogbookView and access initial state
-        let view = LogbookView()
+        let view = createLogbookView()
 
         // Assert: View should exist (we can't directly test @State, but we verify the view is properly constructed)
         #expect(view != nil, "LogbookView should have valid initial state")
@@ -46,7 +52,7 @@ struct LogbookViewTests {
     @Test("LogbookView should not be loading initially")
     func testInitialStateNotLoading() {
         // Act: Create LogbookView
-        let view = LogbookView()
+        let view = createLogbookView()
 
         // Assert: View should be created with isLoading = false (default state)
         #expect(view != nil, "LogbookView should initialize with isLoading = false")
@@ -57,7 +63,7 @@ struct LogbookViewTests {
     @Test("LogbookView should use NavigationStack")
     func testUsesNavigationStack() {
         // Act: Create LogbookView
-        let view = LogbookView()
+        let view = createLogbookView()
 
         // Assert: View should contain a NavigationStack
         // The view structure includes NavigationStack at the root
@@ -69,7 +75,7 @@ struct LogbookViewTests {
     @Test("LogbookView should show empty state when there are no entries")
     func testShowsEmptyStateWithNoEntries() {
         // Act: Create LogbookView (starts with empty entries)
-        let view = LogbookView()
+        let view = createLogbookView()
 
         // Assert: View should be created and ready to show empty state
         #expect(view != nil, "LogbookView should be ready to display empty state")
@@ -80,7 +86,7 @@ struct LogbookViewTests {
     @Test("LogbookView should have toolbar content")
     func testHasToolbarContent() {
         // Act: Create LogbookView
-        let view = LogbookView()
+        let view = createLogbookView()
 
         // Assert: View should include toolbar with add button
         #expect(view != nil, "LogbookView should include toolbar with add button")
@@ -89,7 +95,7 @@ struct LogbookViewTests {
     @Test("LogbookView should have alert capability")
     func testHasAlertCapability() {
         // Act: Create LogbookView
-        let view = LogbookView()
+        let view = createLogbookView()
 
         // Assert: View should have alert for coming soon message
         #expect(view != nil, "LogbookView should include alert for coming soon message")

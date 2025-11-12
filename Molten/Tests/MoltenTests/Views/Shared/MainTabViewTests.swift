@@ -24,8 +24,8 @@ struct MainTabViewTests {
     @Test("MainTabView should accept pre-configured catalog service via dependency injection")
     func testMainTabViewAcceptsCatalogService() {
         // Arrange: Configure factory for testing and create catalog service
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let catalogService = deps.catalogService
         
         // Act: Create MainTabView with pre-configured service
         let tabView = MainTabView(catalogService: catalogService)
@@ -37,8 +37,8 @@ struct MainTabViewTests {
     @Test("MainTabView should accept pre-configured purchase service via dependency injection")
     func testMainTabViewAcceptsPurchaseService() {
         // Arrange: Configure factory for testing and create services
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let catalogService = deps.catalogService
         let mockPurchaseRepository = MockPurchaseRecordRepository()
         let purchaseService = PurchaseRecordService(repository: mockPurchaseRepository)
         
@@ -55,8 +55,8 @@ struct MainTabViewTests {
     @Test("MainTabView should not require Core Data context when using dependency injection")
     func testMainTabViewWorksWithoutCoreDataContext() {
         // Arrange: Configure factory for testing and create catalog service (no Core Data involved)
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let catalogService = deps.catalogService
         
         // Act: Create MainTabView with just the service (no Core Data context)
         let tabView = MainTabView(catalogService: catalogService)
@@ -73,11 +73,11 @@ struct MainTabViewTests {
     @Test("MainTabView should create services using RepositoryFactory")
     func testMainTabViewWithRepositoryFactory() {
         // Arrange: Configure factory for testing
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         
         // Act: Create services using the factory pattern
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryTrackingService = deps.inventoryTrackingService
         
         // Create MainTabView
         let tabView = MainTabView(catalogService: catalogService)

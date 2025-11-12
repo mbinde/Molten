@@ -28,9 +28,9 @@ struct ShoppingListServiceIntegrationTests {
         RepositoryFactory.configure(testController: testController)
         RepositoryFactory.mode = .coreData
 
-        let shoppingService = RepositoryFactory.createShoppingListService()
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let shoppingService = deps.shoppingListService
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
 
         return (shoppingService, catalogService, inventoryService, testController)
     }

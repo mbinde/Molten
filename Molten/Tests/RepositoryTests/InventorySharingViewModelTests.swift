@@ -422,7 +422,7 @@ struct InventorySharingViewModelTests {
         RepositoryFactory.configureForTestingWithCoreData(controller: testController)
 
         let testContext = testController.container.viewContext
-        let catalogRepo = RepositoryFactory.createGlassItemRepository()
+        let catalogRepo = deps.glassItemRepository
         let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
             context: testContext,
@@ -458,7 +458,7 @@ struct InventorySharingViewModelTests {
         RepositoryFactory.configureForTestingWithCoreData(controller: testController)
 
         let testContext = testController.container.viewContext
-        let catalogRepo = RepositoryFactory.createGlassItemRepository()
+        let catalogRepo = deps.glassItemRepository
         let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
             context: testContext,
@@ -488,7 +488,7 @@ struct InventorySharingViewModelTests {
     }
 
     private func createMockCatalogService() -> CatalogService {
-        RepositoryFactory.configureForTesting()
-        return RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        return deps.catalogService
     }
 }

@@ -29,8 +29,8 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testViewModelStoreFiltering() async throws {
         // Arrange
-        let _ = RepositoryFactory.configureForTesting()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
+        let deps = AppDependencies(forTesting: true)
+        let shoppingListService = deps.shoppingListService
 
         // Create items for different stores
         let frantzItem = ItemShoppingModel(
@@ -63,8 +63,8 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testClearStoreFilter() async throws {
         // Arrange
-        let _ = RepositoryFactory.configureForTesting()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
+        let deps = AppDependencies(forTesting: true)
+        let shoppingListService = deps.shoppingListService
         let viewModel = ShoppingListViewModel(shoppingListService: shoppingListService)
 
         // Set a filter
@@ -82,8 +82,8 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testStoreFilterWithNoMatches() async throws {
         // Arrange
-        let _ = RepositoryFactory.configureForTesting()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
+        let deps = AppDependencies(forTesting: true)
+        let shoppingListService = deps.shoppingListService
 
         // Create items for one store
         let item = ItemShoppingModel(
@@ -109,8 +109,8 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testRepositoryFetchItemsForStore() async throws {
         // Arrange
-        let _ = RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createShoppingListRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.shoppingListRepository
 
         let storeName = "Frantz Art Glass"
         let item1 = ItemShoppingModel(
@@ -145,8 +145,8 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testRepositoryGetDistinctStores() async throws {
         // Arrange
-        let _ = RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createShoppingListRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.shoppingListRepository
 
         // Add items with duplicate store names
         let stores = ["Frantz Art Glass", "Olympic Color", "Frantz Art Glass", "Bullseye"]
@@ -173,8 +173,8 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testGetItemCountByStore() async throws {
         // Arrange
-        let _ = RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createShoppingListRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.shoppingListRepository
 
         // Create items for different stores
         for i in 1...3 {
@@ -209,8 +209,8 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testEmptyStoreName() async throws {
         // Arrange
-        let _ = RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createShoppingListRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.shoppingListRepository
 
         let item = ItemShoppingModel(
             item_stable_id: "item-1",
@@ -231,8 +231,8 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testWhitespaceStoreName() async throws {
         // Arrange
-        let _ = RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createShoppingListRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.shoppingListRepository
 
         let item = ItemShoppingModel(
             item_stable_id: "item-1",
@@ -252,8 +252,8 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testVeryLongStoreName() async throws {
         // Arrange
-        let _ = RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createShoppingListRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.shoppingListRepository
 
         let longName = String(repeating: "A", count: 500)
         let item = ItemShoppingModel(
@@ -277,8 +277,8 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testMultipleFilters() async throws {
         // Arrange
-        let _ = RepositoryFactory.configureForTesting()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
+        let deps = AppDependencies(forTesting: true)
+        let shoppingListService = deps.shoppingListService
         let viewModel = ShoppingListViewModel(shoppingListService: shoppingListService)
 
         // Create items
@@ -304,8 +304,8 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testResetAllFilters() async throws {
         // Arrange
-        let _ = RepositoryFactory.configureForTesting()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
+        let deps = AppDependencies(forTesting: true)
+        let shoppingListService = deps.shoppingListService
         let viewModel = ShoppingListViewModel(shoppingListService: shoppingListService)
 
         // Apply filters
@@ -333,8 +333,8 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testSortingWithStoreFilter() async throws {
         // Arrange
-        let _ = RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createShoppingListRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.shoppingListRepository
 
         // Create items with different stable_ids
         let stores = ["Frantz Art Glass", "Frantz Art Glass", "Frantz Art Glass"]

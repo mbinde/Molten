@@ -311,7 +311,7 @@ struct JSONDataLoaderCoreDataTests {
         let mockJsonLoader = MockJSONDataLoader()
         mockJsonLoader.testDataMode = .small
         
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = deps.catalogService
         let loadingService = GlassItemDataLoadingService(
             catalogService: catalogService,
             jsonLoader: mockJsonLoader
@@ -326,7 +326,7 @@ struct JSONDataLoaderCoreDataTests {
     func testRealJSONDataLoaderIntegration() async throws {
         let _ = createTestEnvironment()
         
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = deps.catalogService
         
         // This uses the real JSONDataLoader, which should fail gracefully without JSON files
         let loadingService = GlassItemDataLoadingService(catalogService: catalogService)

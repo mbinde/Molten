@@ -457,7 +457,7 @@ struct ShoppingListViewTests {
         @Test("Checkout posts inventory notification when adding to inventory")
         func testCheckoutPostsInventoryNotification() async throws {
             // Configure for testing
-            RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
 
             // Create shared repositories
             let glassItemRepository = MockGlassItemRepository()
@@ -521,7 +521,7 @@ struct ShoppingListViewTests {
         @Test("Checkout does not post inventory notification when not adding to inventory")
         func testCheckoutDoesNotPostInventoryNotificationWhenSkipped() async throws {
             // Configure for testing
-            RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
 
             // Set up notification expectation
             var notificationReceived = false

@@ -30,8 +30,8 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     @Test("Should work with CatalogService using new GlassItem architecture")
     func testDataLoadingServiceBasicFunctionality() async throws {
         // Arrange: Create DataLoadingService with catalog service using RepositoryFactory
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let catalogService = deps.catalogService
         
         let dataLoader = DataLoadingService(catalogService: catalogService)
         
@@ -42,9 +42,9 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     @Test("Should load and manage glass items using repository pattern")
     func testDataLoadingServiceWithGlassItems() async throws {
         // Arrange: Configure factory and create services
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let catalogService = deps.catalogService
+        let inventoryTrackingService = deps.inventoryTrackingService
         
         // Create test glass item with inventory
         let testGlassItem = GlassItemModel(
@@ -82,9 +82,9 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     @Test("Should provide system overview using repository services")
     func testDataLoadingServiceSystemOverview() async throws {
         // Arrange: Configure factory and create services
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let catalogService = deps.catalogService
+        let inventoryTrackingService = deps.inventoryTrackingService
         
         // Create multiple test glass items
         let testItems = [
@@ -130,9 +130,9 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     @Test("Should support glass item search functionality")
     func testDataLoadingServiceSearch() async throws {
         // Arrange: Configure factory and create services
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let catalogService = deps.catalogService
+        let inventoryTrackingService = deps.inventoryTrackingService
         
         // Create searchable glass items
         let searchableItems = [
@@ -179,9 +179,9 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     @Test("Should filter items by manufacturer")
     func testDataLoadingServiceManufacturerFilter() async throws {
         // Arrange: Configure factory and create services
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let catalogService = deps.catalogService
+        let inventoryTrackingService = deps.inventoryTrackingService
         
         // Create items from different manufacturers
         let manufacturerItems = [
@@ -229,8 +229,8 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     @Test("Should provide hasExistingData method")
     func testDataLoadingServiceExistingDataDetection() async throws {
         // Arrange: Configure factory and create services
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let catalogService = deps.catalogService
         let dataLoader = DataLoadingService(catalogService: catalogService)
 
         // Act: Call hasExistingData - just verify it can be called without error

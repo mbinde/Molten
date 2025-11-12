@@ -91,8 +91,8 @@ struct UserTagsIntegrationTests {
     @Test("CatalogService fetches both manufacturer and user tags")
     func testCatalogServiceFetchesBothTagTypes() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let catalogService = deps.catalogService
 
         // TODO: Add test data with both manufacturer and user tags
         // TODO: Call getAllGlassItems() and verify both tag types are included
@@ -102,8 +102,8 @@ struct UserTagsIntegrationTests {
     @Test("ShoppingListService includes user tags in shopping lists")
     func testShoppingListServiceIncludesUserTags() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let shoppingListService = RepositoryFactory.createShoppingListService()
+        let deps = AppDependencies(forTesting: true)
+        let shoppingListService = deps.shoppingListService
 
         // TODO: Add test data with user tags
         // TODO: Generate shopping list
@@ -143,8 +143,8 @@ struct UserTagsIntegrationTests {
     @Test("CatalogService batch fetches user tags efficiently")
     func testBatchFetchingUserTags() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        let catalogService = deps.catalogService
 
         // TODO: Test that getAllGlassItems() uses fetchTagsForItems for batch fetching
         // TODO: Verify performance - should not make N+1 queries

@@ -215,7 +215,8 @@ extension MoltenApp {
                 handleOpenURL(url)
             }
             .onAppear {
-                checkAlphaDisclaimer()
+                // Alpha disclaimer disabled
+                // checkAlphaDisclaimer()
             }
             .task {
                 // Perform background catalog update check
@@ -298,7 +299,8 @@ extension MoltenApp {
                         handleOpenURL(url)
                     }
                     .onAppear {
-                        checkAlphaDisclaimer()
+                        // Alpha disclaimer disabled
+                        // checkAlphaDisclaimer()
                     }
                 #endif
             }

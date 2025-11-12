@@ -27,10 +27,6 @@ struct GlassItemDataLoadingServiceCoreDataTests {
     
     /// Create isolated test environment with Core Data
     private func createTestEnvironment() async throws -> (CatalogService, GlassItemDataLoadingService) {
-        // Use the proper Core Data test configuration
-        // This creates an isolated test controller internally
-        RepositoryFactory.configureForTestingWithCoreData()
-
         let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         let mockJsonLoader = MockJSONDataLoader()

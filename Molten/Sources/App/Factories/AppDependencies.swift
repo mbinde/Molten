@@ -3,7 +3,7 @@
 //  Molten
 //
 //  Created by Assistant on 2025-11-10.
-//  Replaces RepositoryFactory static methods with proper dependency injection
+//  Provides application-wide dependency injection for all services and repositories
 //
 
 import Foundation

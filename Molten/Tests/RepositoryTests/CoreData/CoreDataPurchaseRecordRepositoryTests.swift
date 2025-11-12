@@ -617,7 +617,6 @@ struct CoreDataPurchaseRecordRepositoryTests {
     // MARK: - Helper Methods
 
     private func createTestRepository(controller: PersistenceController) -> CoreDataPurchaseRecordRepository {
-        RepositoryFactory.configureForTestingWithCoreData(controller: controller)
         return CoreDataPurchaseRecordRepository(context: controller.container.viewContext)
     }
 }

@@ -96,6 +96,10 @@ struct MoltenApp: App {
 
     var body: some Scene {
         WindowGroup {
+            // CRITICAL: Initialize dependencies IMMEDIATELY to prevent environment object crashes
+            // Views expect these to always be present
+            let _ = ensureDependenciesInitialized()
+
             // CRITICAL: Show LaunchScreenView IMMEDIATELY by avoiding complex conditionals
             // This prevents SwiftUI from evaluating the entire view tree on first launch
             Group {
@@ -110,6 +114,26 @@ struct MoltenApp: App {
             .modifier(SubscriptionEnvironmentModifier(subscriptionManager: subscriptionManager))
             .preferredColorScheme(userSettings.colorScheme)
             .tint(DesignSystem.Colors.accentSecondary)
+        }
+    }
+
+    /// Ensures dependencies are initialized before view tree is created
+    /// Called from body to guarantee initialization happens before any view accesses environment
+    private func ensureDependenciesInitialized() {
+        guard dependencies == nil else { return }
+
+        if isRunningTests || isRunningUITests {
+            // Test mode - use mocks
+            RepositoryFactory.configureForTesting()
+            dependencies = AppDependencies(forTesting: true)
+        } else {
+            // Production mode - already configured in init()
+            dependencies = AppDependencies()
+        }
+
+        // Initialize subscription manager
+        if subscriptionManager == nil, let deps = dependencies {
+            subscriptionManager = SubscriptionManager(entitlementService: deps.entitlementService)
         }
     }
 }
@@ -147,9 +171,9 @@ extension MoltenApp {
         if mainTabView == nil {
             Color.clear
                 .onAppear {
-                    // CRITICAL: Configure test environment FIRST (creates dependencies)
+                    // Configure test-specific settings (skipping onboarding, etc.)
                     configureUITestEnvironment()
-                    // THEN create main view (needs dependencies)
+                    // THEN create main view (dependencies already initialized in body)
                     mainTabView = createMainTabView()
                 }
         } else {
@@ -163,18 +187,7 @@ extension MoltenApp {
             if mainTabView == nil {
                 Color.clear
                     .onAppear {
-                        // Initialize dependencies FIRST if not already initialized
-                        if dependencies == nil {
-                            print("🎬 MoltenApp: Initializing AppDependencies for production...")
-                            dependencies = AppDependencies()
-                        }
-
-                        // Initialize subscription manager
-                        if subscriptionManager == nil {
-                            print("🎬 MoltenApp: Initializing SubscriptionManager...")
-                            subscriptionManager = SubscriptionManager(entitlementService: dependencies!.entitlementService)
-                        }
-
+                        // Dependencies already initialized in body
                         print("🎬 MoltenApp: Creating cached MainTabView...")
                         mainTabView = createMainTabView()
                     }
@@ -291,18 +304,7 @@ extension MoltenApp {
                     if mainTabView == nil {
                         Color.clear
                             .onAppear {
-                                // Initialize dependencies FIRST if not already initialized
-                                if dependencies == nil {
-                                    print("🎬 MoltenApp: Initializing AppDependencies for production...")
-                                    dependencies = AppDependencies()
-                                }
-
-                                // Initialize subscription manager
-                                if subscriptionManager == nil {
-                                    print("🎬 MoltenApp: Initializing SubscriptionManager...")
-                                    subscriptionManager = SubscriptionManager(entitlementService: dependencies!.entitlementService)
-                                }
-
+                                // Dependencies already initialized in body
                                 print("🎬 MoltenApp: Creating cached MainTabView...")
                                 mainTabView = createMainTabView()
                             }
@@ -471,20 +473,8 @@ extension MoltenApp {
             #endif
         }
 
-        // Configure dependencies for tests
-        // TODO: In Phase 4, UI tests may need real Core Data setup
-        // For now, all tests use mocks to avoid initialization complexity
-        print("🧪 Configuring test environment with mocks")
-
-        // TEMPORARY: Configure RepositoryFactory for views not yet migrated to DI
-        RepositoryFactory.configureForTesting()
-
-        dependencies = AppDependencies(forTesting: true)
-
-        // Initialize subscription manager for tests
-        if subscriptionManager == nil, let deps = dependencies {
-            subscriptionManager = SubscriptionManager(entitlementService: deps.entitlementService)
-        }
+        // Note: Dependencies already initialized in body via ensureDependenciesInitialized()
+        // This method only handles test-specific UI configuration
 
         // Note: Database reset and test data population deferred to Phase 4
         // when we properly set up Core Data for UI tests
@@ -493,7 +483,7 @@ extension MoltenApp {
             print("⚠️ This will be implemented in Phase 4 of DI migration")
         }
 
-        print("✅ Test Environment configured with mocks")
+        print("✅ Test Environment UI configuration complete")
     }
 
     /// Handle URLs opened from outside the app (e.g., .molten files, deep links)

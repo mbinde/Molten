@@ -155,7 +155,15 @@ class CatalogUpdatePreferences: ObservableObject {
 
     private init() {
         // Load settings with defaults
-        self.autoUpdateEnabled = defaults.bool(forKey: Keys.autoUpdate)
+        // Check if this is first launch (key doesn't exist)
+        if defaults.object(forKey: Keys.autoUpdate) == nil {
+            // First launch - default to ON for alpha testing
+            self.autoUpdateEnabled = true
+            defaults.set(true, forKey: Keys.autoUpdate)
+        } else {
+            // Use saved preference
+            self.autoUpdateEnabled = defaults.bool(forKey: Keys.autoUpdate)
+        }
 
         if let policyRaw = defaults.string(forKey: Keys.downloadPolicy),
            let policy = DownloadPolicy(rawValue: policyRaw) {

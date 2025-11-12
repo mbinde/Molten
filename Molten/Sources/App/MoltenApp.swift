@@ -19,7 +19,15 @@ struct MoltenApp: App {
     /// This replaces RepositoryFactory static methods with proper DI
     @State private var dependencies: AppDependencies?
 
+    /// Subscription manager - MUST be initialized immediately to prevent environment crashes
+    /// Views use @Environment(SubscriptionManager.self) which force-unwraps
+    @State private var subscriptionManager: SubscriptionManager
+
     init() {
+        // Initialize with placeholder - will be replaced with proper one after AppDependencies loads
+        let placeholderEntitlement = EntitlementService(tier: .free)
+        _subscriptionManager = State(initialValue: SubscriptionManager(entitlementService: placeholderEntitlement))
+
         print(String(repeating: "=", count: 80))
         print("🚀 MoltenApp.init() STARTING")
         print(String(repeating: "=", count: 80))
@@ -57,7 +65,6 @@ struct MoltenApp: App {
     @State private var showingDeepLinkedItem = false
     @State private var pendingDeepLinkStableId: String?  // Hold the new ID during refresh
     @State private var mainTabView: MainTabView?
-    @State private var subscriptionManager: SubscriptionManager?
 
     // Detect if we're running in test environment
     private var isRunningTests: Bool {
@@ -96,10 +103,6 @@ struct MoltenApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // CRITICAL: Initialize dependencies IMMEDIATELY to prevent environment object crashes
-            // Views expect these to always be present
-            let _ = ensureDependenciesInitialized()
-
             // CRITICAL: Show LaunchScreenView IMMEDIATELY by avoiding complex conditionals
             // This prevents SwiftUI from evaluating the entire view tree on first launch
             Group {
@@ -109,6 +112,11 @@ struct MoltenApp: App {
                 } else {
                     mainContentView
                 }
+            }
+            .onAppear {
+                // Initialize dependencies when view appears
+                // This runs BEFORE child views access environment
+                ensureDependenciesInitialized()
             }
             .modifier(DependenciesEnvironmentModifier(dependencies: dependencies))
             .modifier(SubscriptionEnvironmentModifier(subscriptionManager: subscriptionManager))
@@ -131,8 +139,8 @@ struct MoltenApp: App {
             dependencies = AppDependencies()
         }
 
-        // Initialize subscription manager
-        if subscriptionManager == nil, let deps = dependencies {
+        // Replace placeholder subscription manager with proper one
+        if let deps = dependencies {
             subscriptionManager = SubscriptionManager(entitlementService: deps.entitlementService)
         }
     }
@@ -153,14 +161,10 @@ struct DependenciesEnvironmentModifier: ViewModifier {
 }
 
 struct SubscriptionEnvironmentModifier: ViewModifier {
-    let subscriptionManager: SubscriptionManager?
+    let subscriptionManager: SubscriptionManager
 
     func body(content: Content) -> some View {
-        if let manager = subscriptionManager {
-            content.environment(manager)
-        } else {
-            content
-        }
+        content.environment(subscriptionManager)
     }
 }
 

@@ -70,8 +70,8 @@ struct RepositoryFactoryDataLoadingTests {
         #expect(RepositoryFactory.persistentContainer != nil, "Should have a persistent container configured")
 
         // Verify services are created with Core Data repositories
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
 
         // Services should be created successfully
         #expect(catalogService != nil, "Should create catalog service")
@@ -90,7 +90,7 @@ struct RepositoryFactoryDataLoadingTests {
         #expect(RepositoryFactory.mode == .coreData, "Should be in Core Data mode after setup")
 
         // Should be able to create services
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = deps.catalogService
         let items = try await catalogService.getAllGlassItems()
         #expect(items.count >= 0, "Should have items (0 or more depending on data availability)")
     }
@@ -103,7 +103,7 @@ struct RepositoryFactoryDataLoadingTests {
         // Configure factory to use test container (not production)
         RepositoryFactory.configureForTestingWithCoreData(controller: testController)
 
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = deps.catalogService
 
         // Create data loading service with mock data
         let mockJsonLoader = MockJSONDataLoader()
@@ -134,11 +134,11 @@ struct RepositoryFactoryDataLoadingTests {
         RepositoryFactory.mode = .coreData
 
         // Create services
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
-        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
-        let inventoryRepo = RepositoryFactory.createInventoryRepository()
-        let locationRepo = RepositoryFactory.createLocationRepository()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
+        let glassItemRepo = deps.glassItemRepository
+        let inventoryRepo = deps.inventoryRepository
+        let locationRepo = deps.locationRepository
         
         // All services should be created
         #expect(catalogService != nil, "Should create catalog service")
@@ -178,7 +178,7 @@ struct RepositoryFactoryDataLoadingTests {
         // Don't call configureForProduction() as it would switch to shared container
         RepositoryFactory.mode = .coreData
 
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = deps.catalogService
 
         // Verify empty state
         let initialItems = try await catalogService.getAllGlassItems()
@@ -249,8 +249,8 @@ struct RepositoryFactoryDataLoadingTests {
         RepositoryFactory.mode = .coreData
 
         // Create multiple services concurrently
-        let catalogService1 = RepositoryFactory.createCatalogService()
-        let catalogService2 = RepositoryFactory.createCatalogService()
+        let catalogService1 = deps.catalogService
+        let catalogService2 = deps.catalogService
         
         let mockJsonLoader = MockJSONDataLoader()
         mockJsonLoader.testDataMode = .small
@@ -287,7 +287,7 @@ struct RepositoryFactoryDataLoadingTests {
         let testController = createTestEnvironment()
         RepositoryFactory.mode = .coreData
 
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = deps.catalogService
 
         // Try to load with real JSON loader (which should fail in test environment without JSON files)
         let realJsonLoader = JSONDataLoader()
@@ -319,7 +319,7 @@ struct RepositoryFactoryDataLoadingTests {
         RepositoryFactory.mode = .coreData
 
         // Create service
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = deps.catalogService
 
         // Create test item
         // Use natural key format: manufacturer-sku-sequence (manufacturer is lowercased)
@@ -365,11 +365,11 @@ struct RepositoryFactoryDataLoadingTests {
         
         // Create many services quickly
         for _ in 1...10 {
-            _ = RepositoryFactory.createCatalogService()
-            _ = RepositoryFactory.createInventoryTrackingService()
-            _ = RepositoryFactory.createGlassItemRepository()
-            _ = RepositoryFactory.createInventoryRepository()
-            _ = RepositoryFactory.createLocationRepository()
+            _ = deps.catalogService
+            _ = deps.inventoryTrackingService
+            _ = deps.glassItemRepository
+            _ = deps.inventoryRepository
+            _ = deps.locationRepository
         }
         
         let duration = Date().timeIntervalSince(startTime)
@@ -392,7 +392,7 @@ struct RepositoryFactoryDataLoadingTests {
 
         // Note: resetToProduction() resets mode based on default behavior
         // Just verify factory still works after reset
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = deps.catalogService
         let items = try await catalogService.getAllGlassItems()
         #expect(items.count >= 0, "Factory should still work after reset")
     }
@@ -405,7 +405,7 @@ struct RepositoryFactoryDataLoadingTests {
         // Verify we're in mock mode
         #expect(RepositoryFactory.mode == .mock, "Should be in mock mode")
 
-        let mockService = RepositoryFactory.createCatalogService()
+        let mockService = deps.catalogService
         let mockItems = try await mockService.getAllGlassItems()
         #expect(mockItems.isEmpty, "Mock service should start empty")
 
@@ -415,7 +415,7 @@ struct RepositoryFactoryDataLoadingTests {
 
         #expect(RepositoryFactory.mode == .coreData, "Should switch to Core Data mode")
 
-        let coreDataService = RepositoryFactory.createCatalogService()
+        let coreDataService = deps.catalogService
         let coreDataItems = try await coreDataService.getAllGlassItems()
         #expect(coreDataItems.isEmpty, "Core Data service should start empty too")
 

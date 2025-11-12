@@ -26,9 +26,9 @@ struct CatalogRepositoryTests {
     /// Reset repository factory and clear all mock data before each test
     @MainActor
     private func resetTestEnvironment() {
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         // Clear mock repositories to ensure test isolation
-        if let glassItemRepo = RepositoryFactory.createGlassItemRepository() as? MockGlassItemRepository {
+        if let glassItemRepo = deps.glassItemRepository as? MockGlassItemRepository {
             glassItemRepo.clearAllData()
         }
     }
@@ -171,7 +171,7 @@ struct CatalogRepositoryTests {
 
         // Arrange: Reset environment to ensure clean state
         resetTestEnvironment()
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = deps.catalogService
 
         // Act - Service should delegate to repository
         let items = try await catalogService.getAllGlassItems()
@@ -187,8 +187,8 @@ struct CatalogRepositoryTests {
 
         // Arrange: Reset environment to ensure clean state
         resetTestEnvironment()
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryTrackingService = deps.inventoryTrackingService
         
         // Create a test glass item
         let testGlassItem = GlassItemModel(

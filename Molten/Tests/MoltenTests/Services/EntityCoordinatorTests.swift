@@ -16,7 +16,7 @@ struct EntityCoordinatorTests {
 
     init() async {
         // Configure repository factory for testing (uses mocks)
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
     }
 
     // MARK: - Setup Helpers
@@ -57,8 +57,8 @@ struct EntityCoordinatorTests {
 
     @Test("Get inventory for valid glass item")
     func testGetInventoryForValidGlassItem() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -80,8 +80,8 @@ struct EntityCoordinatorTests {
 
     @Test("Get inventory for non-existent glass item throws error")
     func testGetInventoryForNonExistentItem() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -98,8 +98,8 @@ struct EntityCoordinatorTests {
 
     @Test("Get inventory for item with zero quantity")
     func testGetInventoryWithZeroQuantity() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -118,8 +118,8 @@ struct EntityCoordinatorTests {
 
     @Test("Get inventory for item with multiple locations")
     func testGetInventoryWithMultipleLocations() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -152,8 +152,8 @@ struct EntityCoordinatorTests {
 
     @Test("GlassItemInventoryCoordination convenience accessors work correctly")
     func testInventoryCoordinationAccessors() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -177,9 +177,9 @@ struct EntityCoordinatorTests {
 
     @Test("Correlate purchases with inventory")
     func testCorrelatePurchasesWithInventory() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
-        let purchaseService = RepositoryFactory.createPurchaseRecordService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
+        let purchaseService = deps.purchaseRecordService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService,
@@ -224,9 +224,9 @@ struct EntityCoordinatorTests {
 
     @Test("Calculate average price per unit")
     func testCalculateAveragePricePerUnit() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
-        let purchaseService = RepositoryFactory.createPurchaseRecordService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
+        let purchaseService = deps.purchaseRecordService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService,
@@ -258,9 +258,9 @@ struct EntityCoordinatorTests {
 
     @Test("Handle no purchase records for item")
     func testNoPurchaseRecords() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
-        let purchaseService = RepositoryFactory.createPurchaseRecordService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
+        let purchaseService = deps.purchaseRecordService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService,
@@ -282,9 +282,9 @@ struct EntityCoordinatorTests {
 
     @Test("Handle no inventory records for item")
     func testNoInventoryRecords() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
-        let purchaseService = RepositoryFactory.createPurchaseRecordService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
+        let purchaseService = deps.purchaseRecordService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService,
@@ -304,9 +304,9 @@ struct EntityCoordinatorTests {
 
     @Test("PurchaseInventoryCorrelation convenience accessors work correctly")
     func testCorrelationAccessors() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
-        let purchaseService = RepositoryFactory.createPurchaseRecordService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
+        let purchaseService = deps.purchaseRecordService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService,
@@ -329,8 +329,8 @@ struct EntityCoordinatorTests {
 
     @Test("Search glass items with inventory context")
     func testSearchWithInventoryContext() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -349,8 +349,8 @@ struct EntityCoordinatorTests {
 
     @Test("Search with multiple matches")
     func testSearchWithMultipleMatches() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -371,8 +371,8 @@ struct EntityCoordinatorTests {
 
     @Test("Search with no matches returns empty")
     func testSearchNoMatches() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -386,8 +386,8 @@ struct EntityCoordinatorTests {
 
     @Test("Search includes items without inventory")
     func testSearchIncludesItemsWithoutInventory() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -409,7 +409,7 @@ struct EntityCoordinatorTests {
 
     @Test("Missing catalog service throws error")
     func testMissingCatalogService() async throws {
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
             catalogService: nil,
             inventoryTrackingService: inventoryService
@@ -425,7 +425,7 @@ struct EntityCoordinatorTests {
 
     @Test("Missing inventory service throws error")
     func testMissingInventoryService() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = deps.catalogService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: nil
@@ -441,8 +441,8 @@ struct EntityCoordinatorTests {
 
     @Test("Missing purchase service throws error")
     func testMissingPurchaseService() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService,
@@ -462,8 +462,8 @@ struct EntityCoordinatorTests {
 
     @Test("Catalog item not found error")
     func testCatalogItemNotFoundError() async throws {
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
+        let catalogService = deps.catalogService
+        let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService

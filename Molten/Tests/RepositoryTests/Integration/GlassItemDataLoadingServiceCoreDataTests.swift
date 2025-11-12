@@ -31,7 +31,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
         // This creates an isolated test controller internally
         RepositoryFactory.configureForTestingWithCoreData()
 
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = deps.catalogService
         let mockJsonLoader = MockJSONDataLoader()
         mockJsonLoader.testDataMode = .small
 
@@ -396,7 +396,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
         mockJsonLoader.testDataMode = .medium
         
         let customService = GlassItemDataLoadingService(
-            catalogService: RepositoryFactory.createCatalogService(),
+            catalogService: deps.catalogService,
             jsonLoader: mockJsonLoader
         )
         
@@ -418,7 +418,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
         // Test that the factory creates working services
         RepositoryFactory.configureForTestingWithCoreData()
         
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = deps.catalogService
         let loadingService = GlassItemDataLoadingService(catalogService: catalogService)
         
         // Should work with factory-created service

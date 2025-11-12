@@ -18,14 +18,14 @@ struct ProjectServiceTests {
 
     init() async throws {
         // Configure for testing with mocks (no Core Data)
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
     }
 
     // MARK: - Plan CRUD Operations
 
     @Test("Create a new project plan")
     func testCreatePlan() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let plan = ProjectModel(
             title: "Test Plan",
@@ -43,7 +43,7 @@ struct ProjectServiceTests {
 
     @Test("Update an existing plan")
     func testUpdatePlan() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         // Create a plan
         let plan = ProjectModel(
@@ -73,7 +73,7 @@ struct ProjectServiceTests {
 
     @Test("Delete a plan")
     func testDeletePlan() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let plan = ProjectModel(
             title: "Plan to Delete",
@@ -89,7 +89,7 @@ struct ProjectServiceTests {
 
     @Test("Archive and unarchive a plan")
     func testArchivePlan() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let plan = ProjectModel(
             title: "Plan to Archive",
@@ -113,7 +113,7 @@ struct ProjectServiceTests {
 
     @Test("Get active plans excludes archived plans")
     func testGetActivePlans() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         // Create active plan
         let activePlan = ProjectModel(
@@ -140,7 +140,7 @@ struct ProjectServiceTests {
 
     @Test("Get archived plans only returns archived plans")
     func testGetArchivedPlans() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         // Create and archive a plan
         let plan = ProjectModel(
@@ -162,7 +162,7 @@ struct ProjectServiceTests {
 
     @Test("Record plan usage increments timesUsed")
     func testRecordPlanUsage() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let plan = ProjectModel(
             title: "Plan to Use",
@@ -188,7 +188,7 @@ struct ProjectServiceTests {
 
     @Test("Get most used plans returns sorted by usage")
     func testGetMostUsedPlans() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         // Create plans with different usage counts
         let plan1 = try await service.createProject(ProjectModel(
@@ -223,7 +223,7 @@ struct ProjectServiceTests {
 
     @Test("Get unused plans returns only plans never used")
     func testGetUnusedPlans() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         // Create used plan
         let usedPlan = try await service.createProject(ProjectModel(
@@ -249,7 +249,7 @@ struct ProjectServiceTests {
 
     @Test("Add step to a plan")
     func testAddStep() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with Steps",
@@ -273,7 +273,7 @@ struct ProjectServiceTests {
 
     @Test("Update a step")
     func testUpdateStep() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with Steps",
@@ -304,7 +304,7 @@ struct ProjectServiceTests {
 
     @Test("Delete a step")
     func testDeleteStep() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with Steps",
@@ -325,7 +325,7 @@ struct ProjectServiceTests {
 
     @Test("Reorder steps in a plan")
     func testReorderSteps() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with Steps",
@@ -363,7 +363,7 @@ struct ProjectServiceTests {
 
     @Test("Add reference URL to a plan")
     func testAddReferenceUrl() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with URLs",
@@ -384,7 +384,7 @@ struct ProjectServiceTests {
 
     @Test("Update reference URL")
     func testUpdateReferenceUrl() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with URLs",
@@ -416,7 +416,7 @@ struct ProjectServiceTests {
 
     @Test("Delete reference URL")
     func testDeleteReferenceUrl() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
             title: "Plan with URLs",
@@ -439,7 +439,7 @@ struct ProjectServiceTests {
 
     @Test("Create a new project log")
     func testCreateLog() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let log = LogbookModel(
             title: "Test Log",
@@ -455,7 +455,7 @@ struct ProjectServiceTests {
 
     @Test("Create log from plan")
     func testCreateLogFromPlan() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         // Create a plan
         let plan = try await service.createProject(ProjectModel(
@@ -480,7 +480,7 @@ struct ProjectServiceTests {
 
     @Test("Create log from plan with custom title")
     func testCreateLogFromPlanWithCustomTitle() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
             title: "Plan Title",
@@ -495,7 +495,7 @@ struct ProjectServiceTests {
 
     @Test("Update an existing log")
     func testUpdateLog() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let log = try await service.createLog(LogbookModel(
             title: "Original Title",
@@ -521,7 +521,7 @@ struct ProjectServiceTests {
 
     @Test("Delete a log")
     func testDeleteLog() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let log = try await service.createLog(LogbookModel(
             title: "Log to Delete",
@@ -538,7 +538,7 @@ struct ProjectServiceTests {
 
     @Test("Get logs by status")
     func testGetLogsByStatus() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         // Create logs with different statuses
         _ = try await service.createLog(LogbookModel(
@@ -572,7 +572,7 @@ struct ProjectServiceTests {
 
     @Test("Get logs by date range")
     func testGetLogsByDateRange() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let now = Date()
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: now)!
@@ -590,7 +590,7 @@ struct ProjectServiceTests {
 
     @Test("Get logs based on a specific plan")
     func testGetLogsBasedOnPlan() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         // Create a plan
         let plan = try await service.createProject(ProjectModel(
@@ -615,7 +615,7 @@ struct ProjectServiceTests {
 
     @Test("Calculate total revenue from sold projects")
     func testGetTotalRevenue() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         // Create sold logs with prices
         let log1 = try await service.createLog(LogbookModel(
@@ -643,7 +643,7 @@ struct ProjectServiceTests {
 
     @Test("Calculate revenue for date range")
     func testGetRevenueForDateRange() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let now = Date()
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: now)!
@@ -666,7 +666,7 @@ struct ProjectServiceTests {
     @Test("Get project statistics")
     @MainActor
     func testGetProjectStatistics() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         // Create some plans
         let plan1 = try await service.createProject(ProjectModel(
@@ -722,7 +722,7 @@ struct ProjectServiceTests {
     @Test("Project statistics calculates completion rate")
     @MainActor
     func testProjectStatisticsCompletionRate() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         // Create 2 completed/sold, 1 in-progress
         _ = try await service.createLog(LogbookModel(
@@ -752,7 +752,7 @@ struct ProjectServiceTests {
     @Test("Project statistics calculates average revenue per sale")
     @MainActor
     func testProjectStatisticsAverageRevenue() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         _ = try await service.createLog(LogbookModel(
             title: "Sale 1",
@@ -780,7 +780,7 @@ struct ProjectServiceTests {
 
     @Test("Create plan with glass items data")
     func testCreatePlanWithGlassItems() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let glassItemData = ProjectGlassItem(
             stableId: generateStableId(manufacturer: "cim", sku: "123"),
@@ -804,7 +804,7 @@ struct ProjectServiceTests {
 
     @Test("Create log from plan preserves glass items")
     func testCreateLogFromPlanPreservesGlassItems() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let glassItemData = ProjectGlassItem(
             stableId: generateStableId(manufacturer: "cim", sku: "456"),
@@ -829,7 +829,7 @@ struct ProjectServiceTests {
 
     @Test("Create log from non-existent plan throws error")
     func testCreateLogFromNonExistentPlan() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let nonExistentId = UUID()
 
@@ -840,7 +840,7 @@ struct ProjectServiceTests {
 
     @Test("Record usage for non-existent plan throws error")
     func testRecordUsageForNonExistentPlan() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let nonExistentId = UUID()
 
@@ -851,7 +851,7 @@ struct ProjectServiceTests {
 
     @Test("Get unused plans when all plans are used")
     func testGetUnusedPlansWhenAllUsed() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
             title: "Used Plan",
@@ -868,7 +868,7 @@ struct ProjectServiceTests {
 
     @Test("Get most used plans with limit")
     func testGetMostUsedPlansWithLimit() async throws {
-        let service = RepositoryFactory.createProjectService()
+        let service = deps.projectService
 
         // Create 3 used plans
         let plan1 = try await service.createProject(ProjectModel(title: "Plan 1", type: .recipe))

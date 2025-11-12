@@ -90,8 +90,8 @@ struct InventoryItemDetailViewTests {
         )
         
         // Use existing repository system
-        RepositoryFactory.configureForTesting()
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let inventoryTrackingService = deps.inventoryTrackingService
 
         // Act: Create view with business model and service (no Core Data context needed)
         let detailView = InventoryDetailView(
@@ -134,8 +134,8 @@ struct InventoryItemDetailViewTests {
             inventory: inventory, tags: [], userTags: []
         )
         
-        RepositoryFactory.configureForTesting()
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let inventoryTrackingService = deps.inventoryTrackingService
 
         // Act: Create view with injected service
         let detailView = InventoryDetailView(
@@ -257,7 +257,7 @@ struct InventoryItemDetailViewTests {
     @Test("InventoryDetailView should use ProductImageDetail with sku field")
     func testDetailViewUsesProductImageWithSKU() {
         // Configure factory to use mocks (prevent Core Data access)
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
 
         // Arrange: Create item with known SKU and manufacturer
         let glassItem = GlassItemModel(
@@ -277,10 +277,10 @@ struct InventoryItemDetailViewTests {
         // Act: Create view with explicitly provided repositories
         let detailView = InventoryDetailView(
             item: completeItem,
-            userNotesRepository: RepositoryFactory.createUserNotesRepository(),
-            userTagsRepository: RepositoryFactory.createUserTagsRepository(),
-            shoppingListRepository: RepositoryFactory.createShoppingListRepository(),
-            userImageRepository: RepositoryFactory.createUserImageRepository(),
+            userNotesRepository: deps.userNotesRepository,
+            userTagsRepository: deps.userTagsRepository,
+            shoppingListRepository: deps.shoppingListRepository,
+            userImageRepository: deps.userImageRepository,
             kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
             glassItemRepository: MockGlassItemRepository()
         )

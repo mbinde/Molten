@@ -17,9 +17,9 @@ struct InventoryTrackingServiceLocationTests {
     @Test("addInventory creates inventory with location")
     func testAddInventoryWithLocation() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let glassItemRepo = deps.glassItemRepository
+        let service = deps.inventoryTrackingService
 
         // Create a glass item first
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
@@ -50,9 +50,9 @@ struct InventoryTrackingServiceLocationTests {
     @Test("addInventory creates inventory without location")
     func testAddInventoryWithoutLocation() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let glassItemRepo = deps.glassItemRepository
+        let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
@@ -80,8 +80,8 @@ struct InventoryTrackingServiceLocationTests {
     @Test("createCompleteItem with initial inventory including locations")
     func testCreateCompleteItemWithLocations() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
         let glassItem = GlassItemModel(
@@ -117,10 +117,10 @@ struct InventoryTrackingServiceLocationTests {
     @Test("getCompleteItem includes location information")
     func testGetCompleteItemWithLocations() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
-        let inventoryRepo = RepositoryFactory.createInventoryRepository()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let glassItemRepo = deps.glassItemRepository
+        let inventoryRepo = deps.inventoryRepository
+        let service = deps.inventoryTrackingService
 
         // Create glass item
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
@@ -158,10 +158,10 @@ struct InventoryTrackingServiceLocationTests {
     @Test("getInventorySummary includes location details")
     func testGetInventorySummaryWithLocations() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
-        let inventoryRepo = RepositoryFactory.createInventoryRepository()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let glassItemRepo = deps.glassItemRepository
+        let inventoryRepo = deps.inventoryRepository
+        let service = deps.inventoryTrackingService
 
         // Create glass item
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
@@ -208,9 +208,9 @@ struct InventoryTrackingServiceLocationTests {
     @Test("Multiple locations for same item and type")
     func testMultipleLocationsForSameItemType() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let glassItemRepo = deps.glassItemRepository
+        let service = deps.inventoryTrackingService
 
         // Create glass item
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
@@ -253,10 +253,10 @@ struct InventoryTrackingServiceLocationTests {
     @Test("validateInventoryConsistency checks for negative quantities")
     func testValidateInventoryConsistency() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
-        let inventoryRepo = RepositoryFactory.createInventoryRepository()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let glassItemRepo = deps.glassItemRepository
+        let inventoryRepo = deps.inventoryRepository
+        let service = deps.inventoryTrackingService
 
         // Create glass item
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
@@ -284,9 +284,9 @@ struct InventoryTrackingServiceLocationTests {
     @Test("Inventory without location is valid")
     func testInventoryWithoutLocationIsValid() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
-        let service = RepositoryFactory.createInventoryTrackingService()
+        let deps = AppDependencies(forTesting: true)
+        let glassItemRepo = deps.glassItemRepository
+        let service = deps.inventoryTrackingService
 
         // Create glass item
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")

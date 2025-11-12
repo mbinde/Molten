@@ -24,7 +24,7 @@ struct InventorySharingCoordinatorTests {
 
     init() {
         KeyPairManager.deleteAllKeys()
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
     }
 
     // MARK: - Conversion Tests

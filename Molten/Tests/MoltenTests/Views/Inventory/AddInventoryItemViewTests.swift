@@ -81,7 +81,7 @@ struct AddInventoryItemViewTests {
     @Test("Initialize with default services when none provided")
     func testInitWithDefaultServices() {
         // Configure for testing to get mocks
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
 
         let (inventoryService, catalogService) = createMockServices()
 

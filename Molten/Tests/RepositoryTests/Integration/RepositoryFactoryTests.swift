@@ -62,13 +62,13 @@ struct RepositoryFactoryTests {
     @Test("Factory creates repositories in mock mode")
     func testMockModeCreation() async throws {
         // Configure for testing
-        RepositoryFactory.configureForTesting()
+        let deps = AppDependencies(forTesting: true)
         
         // Create repositories
-        let glassItemRepo = RepositoryFactory.createGlassItemRepository()
-        let inventoryRepo = RepositoryFactory.createInventoryRepository()
-        let locationRepo = RepositoryFactory.createLocationRepository()
-        let tagsRepo = RepositoryFactory.createItemTagsRepository()
+        let glassItemRepo = deps.glassItemRepository
+        let inventoryRepo = deps.inventoryRepository
+        let locationRepo = deps.locationRepository
+        let tagsRepo = deps.itemTagsRepository
         let minimumRepo = RepositoryFactory.createItemMinimumRepository()
         
         // Verify we got mock implementations

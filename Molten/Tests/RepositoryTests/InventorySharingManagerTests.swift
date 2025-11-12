@@ -364,7 +364,7 @@ struct InventorySharingManagerTests {
         RepositoryFactory.configureForTestingWithCoreData(controller: testController)
 
         let testContext = testController.container.viewContext
-        let catalogRepo = RepositoryFactory.createGlassItemRepository()
+        let catalogRepo = deps.glassItemRepository
         let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
             context: testContext,

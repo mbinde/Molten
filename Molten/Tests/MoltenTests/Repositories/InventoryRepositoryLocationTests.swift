@@ -16,8 +16,8 @@ struct InventoryRepositoryLocationTests {
     @Test("fetchInventory(atLocation:) returns inventory at specific location")
     func testFetchInventoryAtLocation() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.inventoryRepository
 
         // Create inventory at different locations
         _ = try await repository.createInventory(
@@ -43,8 +43,8 @@ struct InventoryRepositoryLocationTests {
     @Test("fetchInventory(atLocation:) handles whitespace normalization")
     func testFetchInventoryAtLocationNormalization() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.inventoryRepository
 
         _ = try await repository.createInventory(
             InventoryModel(item_stable_id: "item1", type: "rod", quantity: 5, location: "Shelf A")
@@ -61,8 +61,8 @@ struct InventoryRepositoryLocationTests {
     @Test("getDistinctLocations returns unique location names")
     func testGetDistinctLocations() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.inventoryRepository
 
         // Create inventory at various locations
         _ = try await repository.createInventory(
@@ -91,8 +91,8 @@ struct InventoryRepositoryLocationTests {
     @Test("getLocationNames(withPrefix:) filters by prefix")
     func testGetLocationNamesWithPrefix() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.inventoryRepository
 
         // Create inventory at various locations
         _ = try await repository.createInventory(
@@ -118,8 +118,8 @@ struct InventoryRepositoryLocationTests {
     @Test("getLocationNames(withPrefix:) is case-insensitive")
     func testGetLocationNamesWithPrefixCaseInsensitive() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.inventoryRepository
 
         _ = try await repository.createInventory(
             InventoryModel(item_stable_id: "item1", type: "rod", quantity: 5, location: "Shelf A")
@@ -136,8 +136,8 @@ struct InventoryRepositoryLocationTests {
     @Test("getLocationUtilization(for:) calculates quantities per item")
     func testGetLocationUtilization() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.inventoryRepository
 
         // Create inventory for multiple items at same location
         _ = try await repository.createInventory(
@@ -162,8 +162,8 @@ struct InventoryRepositoryLocationTests {
     @Test("getAllLocationUtilization returns totals for all locations")
     func testGetAllLocationUtilization() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.inventoryRepository
 
         // Create inventory at various locations
         _ = try await repository.createInventory(
@@ -191,8 +191,8 @@ struct InventoryRepositoryLocationTests {
     @Test("createInventory preserves location field")
     func testCreateInventoryPreservesLocation() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.inventoryRepository
 
         // Test
         let created = try await repository.createInventory(
@@ -210,8 +210,8 @@ struct InventoryRepositoryLocationTests {
     @Test("updateInventory preserves location field")
     func testUpdateInventoryPreservesLocation() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.inventoryRepository
 
         let created = try await repository.createInventory(
             InventoryModel(item_stable_id: "item1", type: "rod", quantity: 5, location: "Shelf A")
@@ -238,8 +238,8 @@ struct InventoryRepositoryLocationTests {
     @Test("Multiple inventory records for same item at different locations")
     func testMultipleRecordsDifferentLocations() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.inventoryRepository
 
         // Test - same item, same type, different locations
         let inv1 = try await repository.createInventory(
@@ -263,8 +263,8 @@ struct InventoryRepositoryLocationTests {
     @Test("Multiple inventory records for same item/location with different types")
     func testMultipleRecordsSameLocationDifferentTypes() async throws {
         // Setup
-        RepositoryFactory.configureForTesting()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let deps = AppDependencies(forTesting: true)
+        let repository = deps.inventoryRepository
 
         // Test - same item, same location, different types
         let inv1 = try await repository.createInventory(

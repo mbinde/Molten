@@ -19,7 +19,7 @@ struct CoreDataInventoryLocationTests {
     func testCoreDataPersistsLocation() async throws {
         // Setup - use isolated test controller
         RepositoryFactory.configureForTestingWithCoreData()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let repository = deps.inventoryRepository
 
         // Test
         let created = try await repository.createInventory(
@@ -39,7 +39,7 @@ struct CoreDataInventoryLocationTests {
     func testCoreDataHandlesNilLocation() async throws {
         // Setup
         RepositoryFactory.configureForTestingWithCoreData()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let repository = deps.inventoryRepository
 
         // Test
         let created = try await repository.createInventory(
@@ -57,7 +57,7 @@ struct CoreDataInventoryLocationTests {
     func testCoreDataFetchAtLocation() async throws {
         // Setup
         RepositoryFactory.configureForTestingWithCoreData()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let repository = deps.inventoryRepository
 
         // Create inventory at different locations
         _ = try await repository.createInventory(
@@ -83,7 +83,7 @@ struct CoreDataInventoryLocationTests {
     func testCoreDataGetDistinctLocations() async throws {
         // Setup
         RepositoryFactory.configureForTestingWithCoreData()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let repository = deps.inventoryRepository
 
         // Create inventory
         _ = try await repository.createInventory(
@@ -109,7 +109,7 @@ struct CoreDataInventoryLocationTests {
     func testCoreDataGetLocationNamesWithPrefix() async throws {
         // Setup
         RepositoryFactory.configureForTestingWithCoreData()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let repository = deps.inventoryRepository
 
         _ = try await repository.createInventory(
             InventoryModel(item_stable_id: "item1", type: "rod", quantity: 5, location: "Shelf A")
@@ -134,7 +134,7 @@ struct CoreDataInventoryLocationTests {
     func testCoreDataGetLocationUtilization() async throws {
         // Setup
         RepositoryFactory.configureForTestingWithCoreData()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let repository = deps.inventoryRepository
 
         // Create multiple items at same location
         _ = try await repository.createInventory(
@@ -159,7 +159,7 @@ struct CoreDataInventoryLocationTests {
     func testCoreDataGetAllLocationUtilization() async throws {
         // Setup
         RepositoryFactory.configureForTestingWithCoreData()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let repository = deps.inventoryRepository
 
         _ = try await repository.createInventory(
             InventoryModel(item_stable_id: "item1", type: "rod", quantity: 5, location: "Shelf A")
@@ -183,7 +183,7 @@ struct CoreDataInventoryLocationTests {
     func testCoreDataUpdatePreservesLocation() async throws {
         // Setup
         RepositoryFactory.configureForTestingWithCoreData()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let repository = deps.inventoryRepository
 
         let created = try await repository.createInventory(
             InventoryModel(item_stable_id: "item1", type: "rod", quantity: 5, location: "Shelf A")
@@ -214,7 +214,7 @@ struct CoreDataInventoryLocationTests {
     func testCoreDataMultipleLocationsSameItem() async throws {
         // Setup
         RepositoryFactory.configureForTestingWithCoreData()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let repository = deps.inventoryRepository
 
         // Create same item/type at different locations
         let inv1 = try await repository.createInventory(
@@ -243,7 +243,7 @@ struct CoreDataInventoryLocationTests {
     func testCoreDataDeleteRemovesLocation() async throws {
         // Setup
         RepositoryFactory.configureForTestingWithCoreData()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let repository = deps.inventoryRepository
 
         let created = try await repository.createInventory(
             InventoryModel(item_stable_id: "item1", type: "rod", quantity: 5, location: "Shelf A")
@@ -268,7 +268,7 @@ struct CoreDataInventoryLocationTests {
     func testCoreDataBatchCreateWithLocations() async throws {
         // Setup
         RepositoryFactory.configureForTestingWithCoreData()
-        let repository = RepositoryFactory.createInventoryRepository()
+        let repository = deps.inventoryRepository
 
         let inventories = [
             InventoryModel(item_stable_id: "item1", type: "rod", quantity: 5, location: "Shelf A"),

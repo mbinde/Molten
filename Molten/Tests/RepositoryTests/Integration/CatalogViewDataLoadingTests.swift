@@ -43,7 +43,7 @@ struct CatalogViewDataLoadingTests {
 
         RepositoryFactory.configureForTestingWithCoreData(controller: testController)
 
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = deps.catalogService
         return (testController, catalogService)
     }
 
@@ -51,8 +51,8 @@ struct CatalogViewDataLoadingTests {
     /// Create mock catalog service with predictable data
     @MainActor
     private func createMockCatalogService() -> CatalogService {
-        RepositoryFactory.configureForTesting()
-        return RepositoryFactory.createCatalogService()
+        let deps = AppDependencies(forTesting: true)
+        return deps.catalogService
     }
     
     // MARK: - CatalogView Initialization Tests
@@ -353,7 +353,7 @@ struct CatalogViewDataLoadingTests {
         views = Array(repeating: nil, count: 5)
         
         // Factory should still work after views are released
-        let newService = RepositoryFactory.createCatalogService()
+        let newService = deps.catalogService
         let items = try await newService.getAllGlassItems()
         #expect(items.count >= 0, "Factory should work after view cleanup")
     }

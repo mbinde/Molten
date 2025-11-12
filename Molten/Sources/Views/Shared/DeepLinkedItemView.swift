@@ -85,14 +85,7 @@ struct DeepLinkedItemView: View {
                         ZStack {
                             InventoryDetailView(
                                 item: item,
-                                inventoryTrackingService: inventoryService,
-                                catalogService: catalogService,
-                                userNotesRepository: deps.userNotesRepository,
-                                userTagsRepository: deps.userTagsRepository,
-                                shoppingListRepository: deps.shoppingListRepository,
-                                userImageRepository: deps.userImageRepository,
-                                kilnScheduleService: deps.kilnScheduleService,
-                                glassItemRepository: deps.glassItemRepository
+                                deps: deps
                             )
 
                             if let successMessage = actionSuccessMessage {

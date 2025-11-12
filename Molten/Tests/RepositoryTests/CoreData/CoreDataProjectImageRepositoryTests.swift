@@ -271,7 +271,6 @@ struct CoreDataProjectImageRepositoryTests {
     // MARK: - Helper Methods
 
     private func createTestRepository(controller: PersistenceController) -> CoreDataProjectImageRepository {
-        RepositoryFactory.configureForTestingWithCoreData(controller: controller)
         return CoreDataProjectImageRepository(context: controller.container.viewContext)
     }
 

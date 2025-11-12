@@ -557,7 +557,6 @@ struct CoreDataCatalogRepositoryTests {
     // MARK: - Helper Methods
 
     private func createTestRepository(controller: PersistenceController) -> CoreDataCatalogRepository {
-        RepositoryFactory.configureForTestingWithCoreData(controller: controller)
         return CoreDataCatalogRepository(context: controller.container.viewContext)
     }
 }

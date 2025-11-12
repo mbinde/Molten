@@ -16,7 +16,7 @@ struct MoltenApp: App {
     // MARK: - Dependency Injection
 
     /// Application dependencies - created once at app startup
-    /// This replaces RepositoryFactory static methods with proper DI
+    /// Provides all services and repositories with proper dependency injection
     /// MUST be initialized immediately to prevent environment crashes
     @State private var dependencies: AppDependencies
 
@@ -30,7 +30,6 @@ struct MoltenApp: App {
 
         if isTest {
             // Test mode - use mocks
-            RepositoryFactory.configureForTesting()
             _dependencies = State(initialValue: AppDependencies(forTesting: true))
         } else {
             // Production mode - real Core Data (will init in background during launch screen)
@@ -44,14 +43,8 @@ struct MoltenApp: App {
         print("🚀 MoltenApp.init() STARTING")
         print(String(repeating: "=", count: 80))
 
-        // Note: AppDependencies will be created in .onAppear after view hierarchy is set up
-        // This avoids blocking app launch with Core Data initialization
-
-        // TEMPORARY: Configure RepositoryFactory for views not yet migrated to DI
-        // This will be removed in Phase 5 after all views are migrated
-        if !isRunningTests {
-            RepositoryFactory.configureForProduction()
-        }
+        // Note: AppDependencies automatically detects test environment
+        // and provides appropriate dependencies (mocks for tests, Core Data for production)
 
         // Configure RevenueCat SDK
         configureRevenueCat()

@@ -17,7 +17,6 @@ struct CoreDataKilnScheduleRepositoryTests {
     // MARK: - Test Helpers
 
     private func createTestRepository(controller: PersistenceController) -> CoreDataKilnScheduleRepository {
-        RepositoryFactory.configureForTestingWithCoreData(controller: controller)
         return CoreDataKilnScheduleRepository(context: controller.container.viewContext)
     }
 

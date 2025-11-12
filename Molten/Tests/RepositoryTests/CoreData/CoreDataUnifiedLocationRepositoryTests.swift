@@ -379,7 +379,6 @@ struct CoreDataUnifiedLocationRepositoryTests {
     // MARK: - Helper Methods
 
     private func createTestRepository(controller: PersistenceController) -> CoreDataUnifiedLocationRepository {
-        RepositoryFactory.configureForTestingWithCoreData(controller: controller)
         return CoreDataUnifiedLocationRepository(persistenceController: controller)
     }
 }

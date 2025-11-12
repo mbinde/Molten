@@ -16,8 +16,6 @@ struct ProjectRepositoryTechniqueTypeTests {
 
     @Test("Create project with techniqueType saves to Core Data")
     func createProjectWithTechniqueType() async throws {
-        // Configure for Core Data testing
-        RepositoryFactory.configureForTestingWithCoreData()
         let controller = PersistenceController.createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
@@ -43,7 +41,6 @@ struct ProjectRepositoryTechniqueTypeTests {
 
     @Test("Create project without techniqueType saves as nil")
     func createProjectWithoutTechniqueType() async throws {
-        RepositoryFactory.configureForTestingWithCoreData()
         let controller = PersistenceController.createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
@@ -67,7 +64,6 @@ struct ProjectRepositoryTechniqueTypeTests {
 
     @Test("Update project techniqueType")
     func updateProjectTechniqueType() async throws {
-        RepositoryFactory.configureForTestingWithCoreData()
         let controller = PersistenceController.createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
@@ -117,7 +113,6 @@ struct ProjectRepositoryTechniqueTypeTests {
 
     @Test("Clear project techniqueType")
     func clearProjectTechniqueType() async throws {
-        RepositoryFactory.configureForTestingWithCoreData()
         let controller = PersistenceController.createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
@@ -167,7 +162,6 @@ struct ProjectRepositoryTechniqueTypeTests {
 
     @Test("All techniqueType values persist correctly")
     func allTechniqueTypesPerist() async throws {
-        RepositoryFactory.configureForTestingWithCoreData()
         let controller = PersistenceController.createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
@@ -194,7 +188,6 @@ struct ProjectRepositoryTechniqueTypeTests {
 
     @Test("Query projects by techniqueType")
     func queryProjectsByTechniqueType() async throws {
-        RepositoryFactory.configureForTestingWithCoreData()
         let controller = PersistenceController.createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 

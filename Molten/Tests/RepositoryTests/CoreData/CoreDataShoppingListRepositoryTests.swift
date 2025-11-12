@@ -544,7 +544,6 @@ struct CoreDataShoppingListRepositoryTests {
     // MARK: - Helper Methods
 
     private func createTestRepository(controller: PersistenceController) -> CoreDataShoppingListRepository {
-        RepositoryFactory.configureForTestingWithCoreData(controller: controller)
         return CoreDataShoppingListRepository(context: controller.container.viewContext)
     }
 }

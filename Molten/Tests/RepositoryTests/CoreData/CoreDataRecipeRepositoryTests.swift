@@ -17,7 +17,6 @@ struct CoreDataRecipeRepositoryTests {
     // MARK: - Test Helpers
 
     private func createTestRepository(controller: PersistenceController) -> CoreDataRecipeRepository {
-        RepositoryFactory.configureForTestingWithCoreData(controller: controller)
         return CoreDataRecipeRepository(context: controller.container.viewContext)
     }
 

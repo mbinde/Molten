@@ -617,12 +617,14 @@ struct ProductImageDetail: View {
         }
 
         // PRIORITY 1.5: Try to download from CDN (only if we have an exact image_path from catalog)
-        // ProductImageDetail uses full-size images for better quality in detail views
-        if let imagePath = imagePath, !imagePath.isEmpty,
-           let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath, useThumbnail: false) {
-            loadedImage = cdnImage
-            isLoading = false
-            return
+        // ProductImageDetail respects user preference for image quality
+        if let imagePath = imagePath, !imagePath.isEmpty {
+            let useThumbnail = !UserSettings.shared.downloadFullSizeImages
+            if let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath, useThumbnail: useThumbnail) {
+                loadedImage = cdnImage
+                isLoading = false
+                return
+            }
         }
 
         // PRIORITY 2: Load bundle/manufacturer images

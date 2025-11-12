@@ -456,8 +456,7 @@ struct ShoppingListView: View {
             }) {
                 NavigationStack {
                     AddShoppingListItemView(
-                        shoppingListService: shoppingListService,
-                        catalogService: catalogService
+                        deps: AppDependencies()
                     )
                 }
             }
@@ -516,14 +515,7 @@ struct ShoppingListView: View {
             .navigationDestination(for: CompleteInventoryItemModel.self) { item in
                 InventoryDetailView(
                     item: item,
-                    inventoryTrackingService: inventoryTrackingService,
-                    catalogService: catalogService,
-                    userNotesRepository: userNotesRepository,
-                    userTagsRepository: userTagsRepository,
-                    shoppingListRepository: shoppingListRepository,
-                    userImageRepository: userImageRepository,
-                    kilnScheduleService: kilnScheduleService,
-                    glassItemRepository: glassItemRepository
+                    deps: AppDependencies()
                 )
             }
         }

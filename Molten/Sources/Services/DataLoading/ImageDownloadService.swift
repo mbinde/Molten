@@ -54,12 +54,31 @@ final class ImageDownloadService: Sendable {
     /// - Parameters:
     ///   - itemCode: The item code (e.g., "650001" or "BB-650001")
     ///   - manufacturer: The manufacturer abbreviation (e.g., "BB", "CiM")
+    ///   - exactFilename: If provided, try this exact filename first (from catalog's image_path field)
     /// - Returns: UIImage if found/downloaded, nil otherwise
-    nonisolated static func loadImage(itemCode: String, manufacturer: String?) async -> UIImage? {
+    nonisolated static func loadImage(itemCode: String, manufacturer: String?, exactFilename: String? = nil) async -> UIImage? {
         guard let manufacturer = manufacturer, !manufacturer.isEmpty else {
             return nil
         }
 
+        // PRIORITY 1: If exact filename provided (from catalog image_path), try it first
+        if let filename = exactFilename, !filename.isEmpty {
+            // First check local cache
+            if let cachedImage = await loadFromCache(filename: filename) {
+                return cachedImage
+            }
+
+            // If not cached, try to download
+            if let downloadedImage = await downloadImage(filename: filename) {
+                // Save to cache for next time
+                await saveToCache(image: downloadedImage, filename: filename)
+                return downloadedImage
+            }
+
+            // If exact filename failed, fall through to variation logic below
+        }
+
+        // PRIORITY 2: Try variations if no exact filename or exact filename failed
         // Sanitize filename (replace slashes with dashes)
         let sanitizedCode = itemCode.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: "\\", with: "-")
         let sanitizedManufacturer = manufacturer.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: "\\", with: "-")

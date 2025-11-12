@@ -126,6 +126,7 @@ struct MoltenApp: App {
                 }
             }
             .modifier(DependenciesEnvironmentModifier(dependencies: dependencies))
+            .environment(dependencies.entitlementService)
             .modifier(SubscriptionEnvironmentModifier(subscriptionManager: subscriptionManager))
             .preferredColorScheme(userSettings.colorScheme)
             .tint(DesignSystem.Colors.accentSecondary)

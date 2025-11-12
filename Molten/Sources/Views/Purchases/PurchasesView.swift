@@ -17,8 +17,8 @@ struct PurchasesView: View {
         self._viewModel = State(initialValue: viewModel)
     }
 
-    // Convenience init for production use (RepositoryFactory pattern)
-    init(purchaseService: PurchaseRecordService = RepositoryFactory.createPurchaseRecordService()) {
+    // Convenience init for production use (DI pattern)
+    init(purchaseService: PurchaseRecordService) {
         let viewModel = PurchasesViewModel(purchaseService: purchaseService)
         self.init(viewModel: viewModel)
     }
@@ -213,9 +213,6 @@ struct PurchaseListRowView: View {
 }
 
 #Preview {
-    let mockRepository = MockPurchaseRecordRepository()
-    let purchaseService = PurchaseRecordService(repository: mockRepository)
-    let viewModel = PurchasesViewModel(purchaseService: purchaseService)
-
-    return PurchasesView(viewModel: viewModel)
+    let deps = AppDependencies(forTesting: true)
+    return PurchasesView(purchaseService: deps.purchaseRecordService)
 }

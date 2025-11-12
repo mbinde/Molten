@@ -42,30 +42,27 @@ struct AddLogbookEntryView: View {
     init(
         viewModel: AddLogbookEntryViewModel,
         logbookRepository: LogbookRepository? = nil,
-        userImageRepository: UserImageRepository = RepositoryFactory.createUserImageRepository(),
-        kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService()
+        deps: AppDependencies = AppDependencies()
     ) {
         self.viewModel = viewModel
         self.logbookRepository = logbookRepository
-        self.userImageRepository = userImageRepository
-        self.kilnScheduleService = kilnScheduleService
+        self.userImageRepository = deps.userImageRepository
+        self.kilnScheduleService = deps.kilnScheduleService
     }
 
     // Convenience init for production use
     init(
         logbookRepository: LogbookRepository? = nil,
-        projectRepository: ProjectRepository = RepositoryFactory.createProjectRepository(),
-        userImageRepository: UserImageRepository = RepositoryFactory.createUserImageRepository(),
-        kilnScheduleService: KilnScheduleService = RepositoryFactory.createKilnScheduleService()
+        deps: AppDependencies = AppDependencies()
     ) {
         self.viewModel = AddLogbookEntryViewModel(
-            logbookRepository: logbookRepository ?? RepositoryFactory.createLogbookRepository(),
-            projectRepository: projectRepository,
-            kilnScheduleService: kilnScheduleService
+            logbookRepository: logbookRepository ?? deps.logbookRepository,
+            projectRepository: deps.projectRepository,
+            kilnScheduleService: deps.kilnScheduleService
         )
         self.logbookRepository = logbookRepository
-        self.userImageRepository = userImageRepository
-        self.kilnScheduleService = kilnScheduleService
+        self.userImageRepository = deps.userImageRepository
+        self.kilnScheduleService = deps.kilnScheduleService
     }
 
     var body: some View {

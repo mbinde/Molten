@@ -108,11 +108,9 @@ struct CatalogViewModelTests {
         ]
 
         let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
 
         let viewModel = CatalogViewModel(
-            catalogService: catalogService,
-            inventoryTrackingService: inventoryService
+            catalogService: catalogService
         )
 
         // Simulate loaded items
@@ -140,11 +138,9 @@ struct CatalogViewModelTests {
         ]
 
         let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
 
         let viewModel = CatalogViewModel(
-            catalogService: catalogService,
-            inventoryTrackingService: inventoryService
+            catalogService: catalogService
         )
 
         viewModel.items = items
@@ -180,11 +176,9 @@ struct CatalogViewModelTests {
         let items = [glassWithTags, toolWithTags]
 
         let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
 
         let viewModel = CatalogViewModel(
-            catalogService: catalogService,
-            inventoryTrackingService: inventoryService
+            catalogService: catalogService
         )
 
         viewModel.items = items
@@ -211,11 +205,9 @@ struct CatalogViewModelTests {
         ]
 
         let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
 
         let viewModel = CatalogViewModel(
-            catalogService: catalogService,
-            inventoryTrackingService: inventoryService
+            catalogService: catalogService
         )
 
         viewModel.items = items
@@ -240,11 +232,9 @@ struct CatalogViewModelTests {
         ]
 
         let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryService = RepositoryFactory.createInventoryTrackingService()
 
         let viewModel = CatalogViewModel(
-            catalogService: catalogService,
-            inventoryTrackingService: inventoryService
+            catalogService: catalogService
         )
 
         viewModel.items = items

@@ -274,13 +274,94 @@ git commit -m "refactor(di): migrate [Feature] views to AppDependencies
 Batch X of Phase 2 - [FeatureName] views"
 ```
 
+### Automation Scripts Created ✅
+
+Created three scripts to assist with migration:
+
+**Scripts/migrate-di.py** - Advanced Python tool
+- `--analyze <file>`: Show migration plan
+- `--migrate <file>`: Apply automated transformations
+- `--batch <directory>`: Migrate directories
+- Handles 20 service/repository mappings
+
+**Scripts/plan-di-migration.sh** - Migration planner
+- Scans codebase, organizes by batches
+- Shows usage statistics
+
+**Scripts/migrate-to-di.sh** - Bash migration tool
+- Dry-run support, backup creation
+
+**Scripts/README-DI-Migration.md** - Complete usage guide
+
+### Key Learnings & Migration Patterns
+
+#### 🚨 CRITICAL: Default Parameters Cannot Use @Environment
+
+**Problem:** `@Environment` values are NOT available during `init()` execution.
+
+**BROKEN Pattern (scripts may produce this):**
+```swift
+@Environment(\.appDependencies) private var dependencies
+
+init(service: MyService = dependencies.service) { }  // ❌ CRASHES - dependencies is nil
+```
+
+**Correct Pattern (see MainTabView.swift:52-66):**
+```swift
+// Option A: Remove default parameter
+private let service: MyService
+
+init(service: MyService) {
+    self.service = service
+}
+
+// Parent passes from dependencies
+MyView(service: dependencies.myService)
+```
+
+**Correct Pattern for ViewModels:**
+```swift
+// Option B: ViewModel with service in init
+init(viewModel: MyViewModel = MyViewModel(
+    locationService: RepositoryFactory.createUnifiedLocationService()  // Keep RepositoryFactory temporarily
+)) {
+    self.viewModel = viewModel
+}
+```
+
+**Why:** SwiftUI evaluates `init()` parameters before body, before @Environment is available.
+
+#### ✅ What Automation Scripts CAN Handle
+
+- Direct RepositoryFactory calls in method bodies
+- Adding @Environment(\.appDependencies) declarations
+- Replacing `RepositoryFactory.createService()` → `dependencies.service`
+- Creating backups before changes
+
+#### ⚠️ What REQUIRES Manual Migration
+
+- Default parameters in init (see above)
+- Updating parent views to pass services
+- Updating #Preview blocks to use AppDependencies(forTesting: true)
+- Removing convenience inits that lose their defaults
+- Views that create ViewModels with services in init
+
+#### Migration Statistics (from plan-di-migration.sh)
+
+- 44 files with 141 total usages
+- Most used: CatalogService (26×), KilnScheduleService (15×), InventoryTrackingService (14×)
+- Batch 1: Main Navigation (7 views)
+- Batch 2: Catalog Feature (6 views)
+- Batch 3: Inventory Feature (5 views)
+- Batch 4+: Other features (26 views)
+
 ### Commit Point (After All Batches)
 
 ```bash
 git add Molten/Sources/Views/
 git commit -m "refactor(di): complete Phase 2 - all views migrated to AppDependencies
 
-Updated 60+ view files to use dependency injection.
+Updated 44 view files to use dependency injection.
 Views now access services via @Environment(\.appDependencies)"
 ```
 

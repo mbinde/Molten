@@ -584,10 +584,33 @@ Migration stats:
 |-------|--------|----------------|--------|
 | 0: Foundation | ✅ COMPLETE | 2 | YES |
 | 1: MoltenApp | ✅ COMPLETE | 1 | YES |
-| 2: High-Traffic Views | ⏳ PENDING | ~60 | NO |
+| 2: High-Traffic Views | 🔄 IN PROGRESS | 6/44 done | YES (partial) |
 | 3: Remaining Sources | ⏳ PENDING | ~40 | NO |
 | 4: Tests | ⏳ PENDING | ~100 | NO |
 | 5: Cleanup | ⏳ PENDING | 1-2 | NO |
+
+### Phase 2 Progress (Current)
+
+**Session:** 2025-11-11
+**Started:** 141 RepositoryFactory usages across 44 files
+**Current:** 137 usages across 40 files
+**Migrated:** 6 files, 4 usages removed
+
+**Files Completed:**
+1. ✅ MainTabView.swift - Added @Environment(\.appDependencies) for child views
+2. ✅ PurchasesView.swift - Removed default parameter, updated Preview
+3. ✅ LogbookView.swift - Removed default parameter, MainTabView passes repository
+4. ✅ LocationsView.swift - Removed default parameter, MainTabView passes ViewModel
+5. ✅ DebugSettingsView.swift - Removed default parameter, updated Preview
+
+**Remaining High-Priority:**
+- CatalogView.swift (10 usages) - Complex, main navigation
+- InventoryView.swift (8 usages) - Complex, main navigation
+- ShoppingListView.swift (13 usages) - Complex, main navigation
+- SettingsView.swift (6 usages) - Medium complexity
+- ProjectsView.swift (12 usages) - Complex
+- RecipesView.swift (3 usages) - Medium complexity
+- 34 other views with 1-5 usages each
 
 ### Key Commands
 

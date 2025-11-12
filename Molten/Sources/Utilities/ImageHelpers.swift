@@ -97,9 +97,10 @@ struct ImageHelpers {
     /// Attempts to load a product image for the given item code and manufacturer
     /// Images are loaded in priority order:
     /// 1. User-uploaded images (from UserImageRepository)
-    /// 2. Exact image path if provided
-    /// 3. Bundle images in Data/product-images/ folder
-    /// 4. Manufacturer default images
+    /// 2. Downloaded images from CDN (cdn.moltenglass.app) - cached locally
+    /// 3. Exact image path if provided
+    /// 4. Bundle images in Data/product-images/ folder
+    /// 5. Manufacturer default images
     /// Format: manufacturer-itemcode.jpg (e.g., "CiM-511101.jpg")
     /// Item codes with slashes (/) or backslashes (\) will have them replaced with dashes (-) for the filename
     /// - Parameters:
@@ -476,6 +477,14 @@ struct ProductImageView: View {
             }
         }
 
+        // PRIORITY 1.5: Try to download from CDN (only if we have an exact image_path from catalog)
+        if let imagePath = imagePath, !imagePath.isEmpty,
+           let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath) {
+            loadedImage = cdnImage
+            isLoading = false
+            return
+        }
+
         // PRIORITY 2: Load bundle/manufacturer images with low priority to avoid blocking UI
         let image = await Task.detached(priority: .background) {
             ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: imagePath)
@@ -602,6 +611,14 @@ struct ProductImageDetail: View {
                 isLoading = false
                 return
             }
+        }
+
+        // PRIORITY 1.5: Try to download from CDN (only if we have an exact image_path from catalog)
+        if let imagePath = imagePath, !imagePath.isEmpty,
+           let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath) {
+            loadedImage = cdnImage
+            isLoading = false
+            return
         }
 
         // PRIORITY 2: Load bundle/manufacturer images

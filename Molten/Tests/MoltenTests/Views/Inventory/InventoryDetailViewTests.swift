@@ -291,9 +291,10 @@ struct InventoryDetailViewTests {
     @Test("ShoppingListOptionsView initializes with item")
     func testShoppingListOptionsViewInit() {
         let item = createTestItem()
+        let deps = AppDependencies(forTesting: true)
         let view = ShoppingListOptionsView(
             item: item,
-            shoppingListRepository: MockShoppingListRepository()
+            deps: deps
         )
 
         #expect(view != nil)
@@ -303,8 +304,8 @@ struct InventoryDetailViewTests {
     @Test("Shopping list validates positive quantity")
     func testShoppingListQuantityValidation() {
         let item = createTestItem()
-        let mockRepo = MockShoppingListRepository()
-        let view = ShoppingListOptionsView(item: item, shoppingListRepository: mockRepo)
+        let deps = AppDependencies(forTesting: true)
+        let view = ShoppingListOptionsView(item: item, deps: deps)
 
         #expect(view != nil)
         // Validation happens when saving
@@ -369,7 +370,6 @@ struct InventoryDetailViewTests {
 
         let view = InventoryDetailView(
             item: item,
-            inventoryTrackingService: mockService,
             deps: AppDependencies(forTesting: true)
         )
 
@@ -421,16 +421,10 @@ struct InventoryDetailViewTests {
     @Test("User tags editor integration")
     func testUserTagsEditorIntegration() {
         let item = createTestItem()
-        let mockRepo = MockUserTagsRepository()
 
         let view = InventoryDetailView(
             item: item,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: mockRepo,
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
@@ -548,12 +542,11 @@ struct InventoryDetailViewTests {
         let item = createTestItem()
         let view = InventoryDetailView(
             item: item,
-            inventoryTrackingService: nil,
             deps: AppDependencies(forTesting: true)
         )
 
         #expect(view != nil)
-        // View should still work without service (add inventory disabled)
+        // View always has service from deps (add inventory enabled)
     }
 
     @Test("View handles data loading on appear")

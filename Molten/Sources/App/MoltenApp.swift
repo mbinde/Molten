@@ -17,16 +17,28 @@ struct MoltenApp: App {
 
     /// Application dependencies - created once at app startup
     /// This replaces RepositoryFactory static methods with proper DI
-    @State private var dependencies: AppDependencies?
+    /// MUST be initialized immediately to prevent environment crashes
+    @State private var dependencies: AppDependencies
 
     /// Subscription manager - MUST be initialized immediately to prevent environment crashes
     /// Views use @Environment(SubscriptionManager.self) which force-unwraps
     @State private var subscriptionManager: SubscriptionManager
 
     init() {
-        // Initialize with placeholder - will be replaced with proper one after AppDependencies loads
-        let placeholderEntitlement = EntitlementService(tier: .free)
-        _subscriptionManager = State(initialValue: SubscriptionManager(entitlementService: placeholderEntitlement))
+        // Detect test environment BEFORE initializing dependencies
+        let isTest = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+
+        if isTest {
+            // Test mode - use mocks
+            RepositoryFactory.configureForTesting()
+            _dependencies = State(initialValue: AppDependencies(forTesting: true))
+        } else {
+            // Production mode - real Core Data (will init in background during launch screen)
+            _dependencies = State(initialValue: AppDependencies())
+        }
+
+        // Initialize subscription manager with proper entitlement service
+        _subscriptionManager = State(initialValue: SubscriptionManager(entitlementService: _dependencies.wrappedValue.entitlementService))
 
         print(String(repeating: "=", count: 80))
         print("🚀 MoltenApp.init() STARTING")
@@ -113,11 +125,6 @@ struct MoltenApp: App {
                     mainContentView
                 }
             }
-            .onAppear {
-                // Initialize dependencies when view appears
-                // This runs BEFORE child views access environment
-                ensureDependenciesInitialized()
-            }
             .modifier(DependenciesEnvironmentModifier(dependencies: dependencies))
             .modifier(SubscriptionEnvironmentModifier(subscriptionManager: subscriptionManager))
             .preferredColorScheme(userSettings.colorScheme)
@@ -125,38 +132,15 @@ struct MoltenApp: App {
         }
     }
 
-    /// Ensures dependencies are initialized before view tree is created
-    /// Called from body to guarantee initialization happens before any view accesses environment
-    private func ensureDependenciesInitialized() {
-        guard dependencies == nil else { return }
-
-        if isRunningTests || isRunningUITests {
-            // Test mode - use mocks
-            RepositoryFactory.configureForTesting()
-            dependencies = AppDependencies(forTesting: true)
-        } else {
-            // Production mode - already configured in init()
-            dependencies = AppDependencies()
-        }
-
-        // Replace placeholder subscription manager with proper one
-        if let deps = dependencies {
-            subscriptionManager = SubscriptionManager(entitlementService: deps.entitlementService)
-        }
-    }
 }
 
 // MARK: - Helper ViewModifier
 
 struct DependenciesEnvironmentModifier: ViewModifier {
-    let dependencies: AppDependencies?
+    let dependencies: AppDependencies
 
     func body(content: Content) -> some View {
-        if let deps = dependencies {
-            content.environment(\.appDependencies, deps)
-        } else {
-            content
-        }
+        content.environment(\.appDependencies, dependencies)
     }
 }
 
@@ -380,17 +364,12 @@ extension MoltenApp {
         }
         #endif
 
-        // Get dependencies
-        guard let deps = dependencies else {
-            fatalError("Dependencies not initialized - cannot create MainTabView")
-        }
-
         // Get services from dependencies
-        let catalogService = deps.catalogService
-        let purchaseService = deps.purchaseRecordService
+        let catalogService = dependencies.catalogService
+        let purchaseService = dependencies.purchaseRecordService
 
         // Create sync monitor if needed (only in production with CloudKit, NOT during UI tests)
-        if !isRunningUITests, syncMonitor == nil, let container = deps.persistenceController.container as? NSPersistentCloudKitContainer {
+        if !isRunningUITests, syncMonitor == nil, let container = dependencies.persistenceController.container as? NSPersistentCloudKitContainer {
             syncMonitor = CloudKitSyncMonitor(container: container)
         } else if isRunningUITests {
             print("🧪 Skipping CloudKit sync monitor for UI tests")
@@ -447,17 +426,11 @@ extension MoltenApp {
             return
         }
 
-        // Skip if dependencies not initialized yet
-        guard let deps = dependencies else {
-            print("⚠️ Dependencies not initialized, skipping catalog update check")
-            return
-        }
-
         // Small delay to avoid competing with initial data load
         try? await Task.sleep(for: .seconds(2))
 
         print("📦 Starting background catalog update check...")
-        let backgroundUpdateService = deps.backgroundUpdateService
+        let backgroundUpdateService = dependencies.backgroundUpdateService
         await backgroundUpdateService.checkForUpdatesIfNeeded()
         print("✅ Background catalog update check completed")
     }
@@ -590,12 +563,7 @@ extension MoltenApp {
     /// Reset Core Data store for clean test runs
     @MainActor
     private func resetCoreDataStore() {
-        guard let deps = dependencies else {
-            print("❌ Dependencies not initialized")
-            return
-        }
-
-        let container = deps.persistenceController.container
+        let container = dependencies.persistenceController.container
 
         guard let storeURL = container.persistentStoreDescriptions.first?.url else {
             print("❌ Could not get store URL")
@@ -618,14 +586,9 @@ extension MoltenApp {
     /// Populate database with known test data
     @MainActor
     private func populateTestData() async {
-        guard let deps = dependencies else {
-            print("❌ Dependencies not initialized")
-            return
-        }
-
         do {
-            let glassItemRepo = deps.glassItemRepository
-            let inventoryRepo = deps.inventoryRepository
+            let glassItemRepo = dependencies.glassItemRepository
+            let inventoryRepo = dependencies.inventoryRepository
 
             // Create a few known glass items that tests can rely on
             let testItems = [

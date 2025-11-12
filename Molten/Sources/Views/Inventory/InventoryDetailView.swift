@@ -1923,14 +1923,10 @@ struct QuickAddInventoryView: View {
             userTags: []
         )
 
+        let deps = AppDependencies(forTesting: true)
         InventoryDetailView(
             item: sampleCompleteItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: deps
         )
     }
 }
@@ -1953,14 +1949,10 @@ struct QuickAddInventoryView: View {
             userTags: []
         )
 
+        let deps = AppDependencies(forTesting: true)
         InventoryDetailView(
             item: sampleCompleteItem,
-            userNotesRepository: MockUserNotesRepository(),
-            userTagsRepository: MockUserTagsRepository(),
-            shoppingListRepository: MockShoppingListRepository(),
-            userImageRepository: MockUserImageRepository(),
-            kilnScheduleService: KilnScheduleService(repository: MockKilnScheduleRepository()),
-            glassItemRepository: MockGlassItemRepository()
+            deps: deps
         )
     }
 }

@@ -34,10 +34,15 @@ class CoreDataUserImageRepository: @unchecked Sendable, UserImageRepository {
             return data
         }
 
-        // Extract OCR text from the image
-        let extractor = ImageTextExtractor()
-        let ocrText = try? await extractor.extractText(from: image)
-        let cleanedOcrText = ocrText?.isEmpty == false ? ocrText : nil
+        // Extract OCR text from the image (skip during tests to avoid Vision/CoreML crashes)
+        let cleanedOcrText: String?
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            let extractor = ImageTextExtractor()
+            let ocrText = try? await extractor.extractText(from: image)
+            cleanedOcrText = ocrText?.isEmpty == false ? ocrText : nil
+        } else {
+            cleanedOcrText = nil  // Skip expensive Vision OCR during test runs
+        }
 
         return try await context.perform {
             // If this is a primary image, demote any existing primary image

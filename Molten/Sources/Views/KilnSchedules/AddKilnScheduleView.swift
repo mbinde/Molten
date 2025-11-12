@@ -526,6 +526,6 @@ extension Int: @retroactive Identifiable {
 }
 
 #Preview {
-    let service = RepositoryFactory.createKilnScheduleService()
-    return AddKilnScheduleView(kilnScheduleService: service)
+    let deps = AppDependencies(forTesting: true)
+    return AddKilnScheduleView(kilnScheduleService: deps.kilnScheduleService)
 }

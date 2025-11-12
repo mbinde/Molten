@@ -193,6 +193,6 @@ struct ImportScheduleView: View {
 }
 
 #Preview {
-    let service = RepositoryFactory.createKilnScheduleService()
-    return ImportScheduleView(kilnScheduleService: service, onImportComplete: nil)
+    let deps = AppDependencies(forTesting: true)
+    return ImportScheduleView(kilnScheduleService: deps.kilnScheduleService, onImportComplete: nil)
 }

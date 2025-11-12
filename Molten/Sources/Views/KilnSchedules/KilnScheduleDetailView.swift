@@ -673,7 +673,7 @@ struct EditKilnScheduleView: View {
 }
 
 #Preview {
-    let service = RepositoryFactory.createKilnScheduleService()
+    let deps = AppDependencies(forTesting: true)
     let schedule = KilnSchedule(
         name: "Full Fuse - Standard",
         technique: .fusing,
@@ -687,6 +687,6 @@ struct EditKilnScheduleView: View {
         temperatureUnit: .celsius
     )
     NavigationStack {
-        KilnScheduleDetailView(schedule: schedule, kilnScheduleService: service)
+        KilnScheduleDetailView(schedule: schedule, kilnScheduleService: deps.kilnScheduleService)
     }
 }

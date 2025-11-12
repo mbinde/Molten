@@ -17,6 +17,7 @@ struct GlassManufacturers {
 
     /// Static mapping of manufacturer shorthand codes to full names
     nonisolated static let manufacturers: [String: String] = [
+        "AB": "Asian (Chinese) Boro",
         "BB": "Boro Batch",
         "BE": "Bullseye Glass",
         "CHB": "Chinese Boro",
@@ -44,6 +45,7 @@ struct GlassManufacturers {
     ]
     
     nonisolated static let manufacturerImages: [String: String] = [
+        "AB": "ab",
         "EF": "effetre",
         "DH": "dh",
         "BB": "bb",
@@ -73,6 +75,7 @@ struct GlassManufacturers {
     /// Tracks whether we have permission to use product-specific images from each manufacturer
     /// If false, we must always use the default manufacturer image instead
     nonisolated static let productImagePermissions: [String: Bool] = [
+        "AB": true,           // Asian (Chinese) Boro - permission TBD
         "BB": true,           // Boro Batch - permission granted
         "BE": true,           // Bullseye Glass - permission granted
         "CHB": true,          // Chinese Boro - permission TBD
@@ -142,6 +145,7 @@ struct GlassManufacturers {
     
     /// Static mapping of manufacturer codes to their COE (Coefficient of Expansion) values
     nonisolated static let manufacturerCOEs: [String: [Int]] = [
+        "AB": [33],           // Asian (Chinese) Boro makes 33
         "BB": [33],           // Boro Batch makes 33
         "CHB": [33],          // Chinese Boro makes 33
         "CiM": [33],          // Creation is Messy makes 33
@@ -273,6 +277,8 @@ struct GlassManufacturers {
         
         // Map colors based on full manufacturer names and common aliases
         switch fullName {
+        case "asian (chinese) boro", "asian boro", "ab":
+            return Color(red: 0.95, green: 0.85, blue: 0.6)  // Pale gold/beige
         case "glass alchemy", "ga":
             return .blue
         case "vetrofond", "vf":

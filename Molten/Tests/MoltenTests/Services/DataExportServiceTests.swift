@@ -15,16 +15,17 @@ struct DataExportServiceTests {
 
     // MARK: - Test Data Setup
 
-    private func createTestService() -> DataExportService {
+    private func createTestService() -> (DataExportService, AppDependencies) {
         let deps = AppDependencies(forTesting: true)
-        return RepositoryFactory.createDataExportService()
+        let service = RepositoryFactory.createDataExportService()
+        return (service, deps)
     }
 
     // MARK: - Basic Export Tests
 
     @Test("Export creates directory")
     func exportCreatesDirectory() async throws {
-        let service = createTestService()
+        let (service, deps) = createTestService()
 
         let result = await service.exportAllData()
 
@@ -45,7 +46,7 @@ struct DataExportServiceTests {
 
     @Test("Export includes metadata")
     func exportIncludesMetadata() async throws {
-        let service = createTestService()
+        let (service, deps) = createTestService()
 
         let result = await service.exportAllData()
 
@@ -66,7 +67,7 @@ struct DataExportServiceTests {
 
     @Test("Export with images option works")
     func exportWithImagesOption() async throws {
-        let service = createTestService()
+        let (service, deps) = createTestService()
 
         // Export with images
         let configWithImages = DataExportConfiguration(includeImages: true)
@@ -94,7 +95,7 @@ struct DataExportServiceTests {
 
     @Test("Empty database exports with zero counts")
     func emptyDatabaseExport() async throws {
-        let service = createTestService()
+        let (service, deps) = createTestService()
 
         let result = await service.exportAllData()
 
@@ -251,7 +252,7 @@ struct DataExportServiceTests {
 
     @Test("Export excludes archived projects by default")
     func exportExcludesArchivedProjects() async throws {
-        let service = createTestService()
+        let (service, deps) = createTestService()
         let projectRepo = deps.projectRepository
 
         // Create active project
@@ -301,7 +302,7 @@ struct DataExportServiceTests {
 
     @Test("Export directory contains JSON files")
     func exportDirectoryContainsJsonFiles() async throws {
-        let service = createTestService()
+        let (service, deps) = createTestService()
 
         let result = await service.exportAllData()
 
@@ -380,7 +381,7 @@ struct DataExportServiceTests {
 
     @Test("Export handles empty catalog gracefully")
     func exportHandlesEmptyCatalog() async throws {
-        let service = createTestService()
+        let (service, deps) = createTestService()
 
         // Don't create any data - export empty database
 

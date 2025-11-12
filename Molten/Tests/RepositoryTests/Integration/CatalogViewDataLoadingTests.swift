@@ -28,7 +28,7 @@ struct CatalogViewDataLoadingTests {
 
     /// Create test environment with Core Data and catalog service
     @MainActor
-    private func createTestEnvironment() -> (PersistenceController, CatalogService) {
+    private func createTestEnvironment() -> (PersistenceController, CatalogService, AppDependencies) {
         let testController = PersistenceController.createTestController()
 
         // Clear any existing data to ensure test isolation
@@ -44,7 +44,7 @@ struct CatalogViewDataLoadingTests {
         let deps = AppDependencies(forTesting: true)
 
         let catalogService = deps.catalogService
-        return (testController, catalogService)
+        return (testController, catalogService, deps)
     }
 
 
@@ -59,10 +59,10 @@ struct CatalogViewDataLoadingTests {
     
     @Test("Should initialize CatalogView successfully with catalog service")
     func testCatalogViewInitialization() async throws {
-        let (_, catalogService) = createTestEnvironment()
+        let (_, catalogService, deps) = createTestEnvironment()
 
         // Create CatalogView with catalog service
-        let catalogView = CatalogView(catalogService: catalogService)
+        let catalogView = CatalogView(deps: deps)
 
         // CatalogView should be created successfully
         #expect(catalogView != nil, "Should create CatalogView successfully")
@@ -76,14 +76,14 @@ struct CatalogViewDataLoadingTests {
     
     @Test("Should handle empty database by loading initial data")
     func testEmptyDatabaseDataLoading() async throws {
-        let (_, catalogService) = createTestEnvironment()
+        let (_, catalogService, deps) = createTestEnvironment()
         
         // Verify empty state
         let initialItems = try await catalogService.getAllGlassItems()
         #expect(initialItems.isEmpty, "Should start with empty database")
         
         // Create catalog view
-        let catalogView = CatalogView(catalogService: catalogService)
+        let catalogView = CatalogView(deps: deps)
         
         // Simulate the refresh behavior that happens when view appears
         // Note: We can't directly test private methods, but we can test the behavior
@@ -94,7 +94,7 @@ struct CatalogViewDataLoadingTests {
     
     @Test("Should handle existing data by checking for updates")
     func testExistingDataUpdateCheck() async throws {
-        let (_, catalogService) = createTestEnvironment()
+        let (_, catalogService, deps) = createTestEnvironment()
 
         // Pre-populate database with test item
         let existingItem = GlassItemModel(
@@ -118,7 +118,7 @@ struct CatalogViewDataLoadingTests {
 
         // The main thing we're testing is that CatalogView can be created without crashing
         // when there might be existing data in the database
-        let catalogView = CatalogView(catalogService: catalogService)
+        let catalogView = CatalogView(deps: deps)
 
         #expect(catalogView != nil, "Should handle existing data gracefully")
 
@@ -131,22 +131,23 @@ struct CatalogViewDataLoadingTests {
     @Test("Should work with mock catalog service")
     func testMockCatalogServiceIntegration() async throws {
         let mockService = createMockCatalogService()
-        
+        let deps = AppDependencies(forTesting: true)
+
         // Mock service should start empty
         let initialItems = try await mockService.getAllGlassItems()
         #expect(initialItems.isEmpty, "Mock service should start empty")
-        
+
         // Create catalog view with mock service
-        let catalogView = CatalogView(catalogService: mockService)
+        let catalogView = CatalogView(deps: deps)
         #expect(catalogView != nil, "Should work with mock catalog service")
-        
+
         // View should still configure for production despite using mock service
         // This tests that the configuration doesn't break with different service types
     }
     
     @Test("Should handle data loading with mock JSON loader")
     func testMockJSONLoaderIntegration() async throws {
-        let (_, catalogService) = createTestEnvironment()
+        let (_, catalogService, deps) = createTestEnvironment()
         
         // Create data loading service with mock JSON loader
         let mockJsonLoader = MockJSONDataLoader()
@@ -192,7 +193,7 @@ struct CatalogViewDataLoadingTests {
     
     @Test("Should handle data loading errors gracefully")
     func testDataLoadingErrorHandling() async throws {
-        let (_, catalogService) = createTestEnvironment()
+        let (_, catalogService, deps) = createTestEnvironment()
         
         // Create data loading service that will fail (real JSON loader without files)
         let dataLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
@@ -212,7 +213,7 @@ struct CatalogViewDataLoadingTests {
         }
         
         // CatalogView should still be creatable even if data loading fails
-        let catalogView = CatalogView(catalogService: catalogService)
+        let catalogView = CatalogView(deps: deps)
         #expect(catalogView != nil, "Should create CatalogView even with data loading errors")
     }
     
@@ -221,8 +222,8 @@ struct CatalogViewDataLoadingTests {
         // Test with invalid persistent container configuration
         // Note: This is mainly testing that the system doesn't crash
         
-        let (_, catalogService) = createTestEnvironment()
-        let catalogView = CatalogView(catalogService: catalogService)
+        let (_, catalogService, deps) = createTestEnvironment()
+        let catalogView = CatalogView(deps: deps)
         
         // Should handle configuration gracefully
         #expect(catalogView != nil, "Should handle repository configuration")
@@ -236,14 +237,14 @@ struct CatalogViewDataLoadingTests {
     
     @Test("Should handle rapid view creation efficiently")
     func testRapidViewCreation() async throws {
-        let (_, catalogService) = createTestEnvironment()
+        let (_, catalogService, deps) = createTestEnvironment()
         
         let startTime = Date()
         
         // Create multiple CatalogViews rapidly
         var views: [CatalogView] = []
         for _ in 1...10 {
-            let view = CatalogView(catalogService: catalogService)
+            let view = CatalogView(deps: deps)
             views.append(view)
         }
         
@@ -257,10 +258,10 @@ struct CatalogViewDataLoadingTests {
     
     @Test("Should maintain proper state during data loading")
     func testDataLoadingStateManagement() async throws {
-        let (_, catalogService) = createTestEnvironment()
+        let (_, catalogService, deps) = createTestEnvironment()
         
         // Create view
-        let catalogView = CatalogView(catalogService: catalogService)
+        let catalogView = CatalogView(deps: deps)
         
         // The view should be in a valid initial state
         #expect(catalogView != nil, "Should have valid initial state")
@@ -308,15 +309,15 @@ struct CatalogViewDataLoadingTests {
     
     @Test("Should maintain factory configuration consistency")
     func testFactoryConfigurationConsistency() async throws {
-        let (_, catalogService) = createTestEnvironment()
+        let (_, catalogService, deps) = createTestEnvironment()
         
         // Initial mode should be set by test environment
         let initialMode = RepositoryFactory.mode
         
         // Create multiple views
-        let view1 = CatalogView(catalogService: catalogService)
-        let view2 = CatalogView(catalogService: catalogService) 
-        let view3 = CatalogView(catalogService: catalogService)
+        let view1 = CatalogView(deps: deps)
+        let view2 = CatalogView(deps: deps) 
+        let view3 = CatalogView(deps: deps)
         
         // Mode should be consistently configured
         #expect(RepositoryFactory.mode == initialMode || RepositoryFactory.mode == .coreData,
@@ -336,13 +337,13 @@ struct CatalogViewDataLoadingTests {
     
     @Test("Should handle view lifecycle properly")
     func testViewLifecycleHandling() async throws {
-        let (_, catalogService) = createTestEnvironment()
+        let (_, catalogService, deps) = createTestEnvironment()
         
         // Create and release views to test memory management
         var views: [CatalogView?] = []
         
         for _ in 1...5 {
-            let view = CatalogView(catalogService: catalogService)
+            let view = CatalogView(deps: deps)
             views.append(view)
         }
         
@@ -353,7 +354,6 @@ struct CatalogViewDataLoadingTests {
         views = Array(repeating: nil, count: 5)
 
         // Factory should still work after views are released
-        let deps = AppDependencies(forTesting: true)
         let newService = deps.catalogService
         let items = try await newService.getAllGlassItems()
         #expect(items.count >= 0, "Factory should work after view cleanup")

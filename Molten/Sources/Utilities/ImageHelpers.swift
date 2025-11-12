@@ -478,11 +478,14 @@ struct ProductImageView: View {
         }
 
         // PRIORITY 1.5: Try to download from CDN (only if we have an exact image_path from catalog)
-        if let imagePath = imagePath, !imagePath.isEmpty,
-           let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath) {
-            loadedImage = cdnImage
-            isLoading = false
-            return
+        // ProductImageView uses thumbnails by default for faster loading in lists (unless user enabled full-size)
+        if let imagePath = imagePath, !imagePath.isEmpty {
+            let useThumbnail = !UserSettings.shared.downloadFullSizeImages
+            if let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath, useThumbnail: useThumbnail) {
+                loadedImage = cdnImage
+                isLoading = false
+                return
+            }
         }
 
         // PRIORITY 2: Load bundle/manufacturer images with low priority to avoid blocking UI
@@ -614,8 +617,9 @@ struct ProductImageDetail: View {
         }
 
         // PRIORITY 1.5: Try to download from CDN (only if we have an exact image_path from catalog)
+        // ProductImageDetail uses full-size images for better quality in detail views
         if let imagePath = imagePath, !imagePath.isEmpty,
-           let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath) {
+           let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath, useThumbnail: false) {
             loadedImage = cdnImage
             isLoading = false
             return

@@ -52,7 +52,7 @@ final class ImageDownloadService: Sendable {
 
     /// Attempts to load a product image from cache or download from CDN
     /// - Parameters:
-    ///   - itemCode: The item code (e.g., "650001")
+    ///   - itemCode: The item code (e.g., "650001" or "BB-40-T-Beeswax")
     ///   - manufacturer: The manufacturer abbreviation (e.g., "BB")
     /// - Returns: UIImage if found/downloaded, nil otherwise
     nonisolated static func loadImage(itemCode: String, manufacturer: String?) async -> UIImage? {
@@ -61,7 +61,14 @@ final class ImageDownloadService: Sendable {
         }
 
         // Build filename: MANUFACTURER-CODE (e.g., "BB-650001")
-        let filename = "\(manufacturer.uppercased())-\(itemCode)"
+        // If itemCode already has manufacturer prefix, don't duplicate it
+        let filename = if itemCode.uppercased().hasPrefix("\(manufacturer.uppercased())-") {
+            itemCode  // Already has prefix
+        } else {
+            "\(manufacturer.uppercased())-\(itemCode)"  // Add prefix
+        }
+
+        print("🖼️ [ImageDownloadService] Attempting to load: \(filename)")
 
         // Try common extensions
         let extensions = ["webp", "jpg", "jpeg", "png"]

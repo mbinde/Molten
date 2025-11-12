@@ -12,19 +12,14 @@ import CryptoKit
 @testable import Molten
 
 @Suite("ProjectService Tests", .serialized)
+@MainActor
 struct ProjectServiceTests {
-
-    // MARK: - Setup
-
-    init() async throws {
-        // Configure for testing with mocks (no Core Data)
-        let deps = AppDependencies(forTesting: true)
-    }
 
     // MARK: - Plan CRUD Operations
 
     @Test("Create a new project plan")
     func testCreatePlan() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let plan = ProjectModel(
@@ -43,6 +38,7 @@ struct ProjectServiceTests {
 
     @Test("Update an existing plan")
     func testUpdatePlan() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         // Create a plan
@@ -73,6 +69,7 @@ struct ProjectServiceTests {
 
     @Test("Delete a plan")
     func testDeletePlan() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let plan = ProjectModel(
@@ -89,6 +86,7 @@ struct ProjectServiceTests {
 
     @Test("Archive and unarchive a plan")
     func testArchivePlan() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let plan = ProjectModel(
@@ -113,6 +111,7 @@ struct ProjectServiceTests {
 
     @Test("Get active plans excludes archived plans")
     func testGetActivePlans() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         // Create active plan
@@ -140,6 +139,7 @@ struct ProjectServiceTests {
 
     @Test("Get archived plans only returns archived plans")
     func testGetArchivedPlans() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         // Create and archive a plan
@@ -162,6 +162,7 @@ struct ProjectServiceTests {
 
     @Test("Record plan usage increments timesUsed")
     func testRecordPlanUsage() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let plan = ProjectModel(
@@ -188,6 +189,7 @@ struct ProjectServiceTests {
 
     @Test("Get most used plans returns sorted by usage")
     func testGetMostUsedPlans() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         // Create plans with different usage counts
@@ -223,6 +225,7 @@ struct ProjectServiceTests {
 
     @Test("Get unused plans returns only plans never used")
     func testGetUnusedPlans() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         // Create used plan
@@ -249,6 +252,7 @@ struct ProjectServiceTests {
 
     @Test("Add step to a plan")
     func testAddStep() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
@@ -273,6 +277,7 @@ struct ProjectServiceTests {
 
     @Test("Update a step")
     func testUpdateStep() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
@@ -304,6 +309,7 @@ struct ProjectServiceTests {
 
     @Test("Delete a step")
     func testDeleteStep() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
@@ -325,6 +331,7 @@ struct ProjectServiceTests {
 
     @Test("Reorder steps in a plan")
     func testReorderSteps() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
@@ -363,6 +370,7 @@ struct ProjectServiceTests {
 
     @Test("Add reference URL to a plan")
     func testAddReferenceUrl() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
@@ -384,6 +392,7 @@ struct ProjectServiceTests {
 
     @Test("Update reference URL")
     func testUpdateReferenceUrl() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
@@ -416,6 +425,7 @@ struct ProjectServiceTests {
 
     @Test("Delete reference URL")
     func testDeleteReferenceUrl() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
@@ -439,6 +449,7 @@ struct ProjectServiceTests {
 
     @Test("Create a new project log")
     func testCreateLog() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let log = LogbookModel(
@@ -455,6 +466,7 @@ struct ProjectServiceTests {
 
     @Test("Create log from plan")
     func testCreateLogFromPlan() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         // Create a plan
@@ -480,6 +492,7 @@ struct ProjectServiceTests {
 
     @Test("Create log from plan with custom title")
     func testCreateLogFromPlanWithCustomTitle() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
@@ -495,6 +508,7 @@ struct ProjectServiceTests {
 
     @Test("Update an existing log")
     func testUpdateLog() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let log = try await service.createLog(LogbookModel(
@@ -521,6 +535,7 @@ struct ProjectServiceTests {
 
     @Test("Delete a log")
     func testDeleteLog() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let log = try await service.createLog(LogbookModel(
@@ -538,6 +553,7 @@ struct ProjectServiceTests {
 
     @Test("Get logs by status")
     func testGetLogsByStatus() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         // Create logs with different statuses
@@ -572,6 +588,7 @@ struct ProjectServiceTests {
 
     @Test("Get logs by date range")
     func testGetLogsByDateRange() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let now = Date()
@@ -590,6 +607,7 @@ struct ProjectServiceTests {
 
     @Test("Get logs based on a specific plan")
     func testGetLogsBasedOnPlan() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         // Create a plan
@@ -615,6 +633,7 @@ struct ProjectServiceTests {
 
     @Test("Calculate total revenue from sold projects")
     func testGetTotalRevenue() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         // Create sold logs with prices
@@ -643,6 +662,7 @@ struct ProjectServiceTests {
 
     @Test("Calculate revenue for date range")
     func testGetRevenueForDateRange() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let now = Date()
@@ -666,6 +686,7 @@ struct ProjectServiceTests {
     @Test("Get project statistics")
     @MainActor
     func testGetProjectStatistics() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         // Create some plans
@@ -722,6 +743,7 @@ struct ProjectServiceTests {
     @Test("Project statistics calculates completion rate")
     @MainActor
     func testProjectStatisticsCompletionRate() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         // Create 2 completed/sold, 1 in-progress
@@ -752,6 +774,7 @@ struct ProjectServiceTests {
     @Test("Project statistics calculates average revenue per sale")
     @MainActor
     func testProjectStatisticsAverageRevenue() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         _ = try await service.createLog(LogbookModel(
@@ -780,6 +803,7 @@ struct ProjectServiceTests {
 
     @Test("Create plan with glass items data")
     func testCreatePlanWithGlassItems() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let glassItemData = ProjectGlassItem(
@@ -804,6 +828,7 @@ struct ProjectServiceTests {
 
     @Test("Create log from plan preserves glass items")
     func testCreateLogFromPlanPreservesGlassItems() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let glassItemData = ProjectGlassItem(
@@ -829,6 +854,7 @@ struct ProjectServiceTests {
 
     @Test("Create log from non-existent plan throws error")
     func testCreateLogFromNonExistentPlan() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let nonExistentId = UUID()
@@ -840,6 +866,7 @@ struct ProjectServiceTests {
 
     @Test("Record usage for non-existent plan throws error")
     func testRecordUsageForNonExistentPlan() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let nonExistentId = UUID()
@@ -851,6 +878,7 @@ struct ProjectServiceTests {
 
     @Test("Get unused plans when all plans are used")
     func testGetUnusedPlansWhenAllUsed() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         let plan = try await service.createProject(ProjectModel(
@@ -868,6 +896,7 @@ struct ProjectServiceTests {
 
     @Test("Get most used plans with limit")
     func testGetMostUsedPlansWithLimit() async throws {
+        let deps = AppDependencies(forTesting: true)
         let service = deps.projectService
 
         // Create 3 used plans

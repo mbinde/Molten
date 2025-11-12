@@ -84,18 +84,10 @@ struct CatalogItemSearchField: View {
     @State private var availableCatalogItems: [CompleteInventoryItemModel] = []
 
     private let catalogService: CatalogService
-    
-    init(selectedCatalogId: Binding<String>, catalogService: CatalogService? = nil) {
+
+    init(selectedCatalogId: Binding<String>, deps: AppDependencies = AppDependencies()) {
         self._selectedCatalogId = selectedCatalogId
-        
-        // Use provided service or create default with mock repository
-        if let service = catalogService {
-            self.catalogService = service
-        } else {
-            // Use RepositoryFactory to create proper service
-            RepositoryFactory.configureForTesting()
-            self.catalogService = RepositoryFactory.createCatalogService()
-        }
+        self.catalogService = deps.catalogService
     }
     
     // Filtered catalog items based on search text
@@ -446,30 +438,16 @@ struct InventoryFormView: View {
     private let inventoryService: InventoryTrackingService
     private let catalogService: CatalogService
     @Environment(\.dismiss) private var dismiss
-    
+
     init(
-        editinginventory_id: UUID? = nil, 
+        editinginventory_id: UUID? = nil,
         prefilledCatalogCode: String? = nil,
-        inventoryService: InventoryTrackingService? = nil,
-        catalogService: CatalogService? = nil
+        deps: AppDependencies = AppDependencies()
     ) {
         self.editinginventory_id = editinginventory_id
-        
-        // Use provided services or create defaults with repositories
-        if let invService = inventoryService {
-            self.inventoryService = invService
-        } else {
-            RepositoryFactory.configureForTesting()
-            self.inventoryService = RepositoryFactory.createInventoryTrackingService()
-        }
-        
-        if let catService = catalogService {
-            self.catalogService = catService
-        } else {
-            RepositoryFactory.configureForTesting()
-            self.catalogService = RepositoryFactory.createCatalogService()
-        }
-        
+        self.inventoryService = deps.inventoryTrackingService
+        self.catalogService = deps.catalogService
+
         // Initialize form state
         if let code = prefilledCatalogCode {
             self._formState = StateObject(wrappedValue: InventoryFormState(prefilledCatalogCode: code))

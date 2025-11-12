@@ -329,8 +329,7 @@ struct InventoryView: View {
             }) {
                 AddInventoryItemView(
                     prefilledNaturalKey: prefilledNaturalKey.isEmpty ? nil : prefilledNaturalKey,
-                    inventoryTrackingService: inventoryTrackingService,
-                    catalogService: catalogService
+                    deps: AppDependencies()
                 )
             }
             .sheet(isPresented: $showingLabelDesigner) {

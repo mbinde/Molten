@@ -258,8 +258,7 @@ struct InventoryDetailView: View {
                let catalogService = catalogService {
                 AddInventoryItemView(
                     prefilledNaturalKey: item.glassItem.stable_id,
-                    inventoryTrackingService: inventoryTrackingService,
-                    catalogService: catalogService
+                    deps: AppDependencies()
                 )
             }
         }

@@ -13,7 +13,7 @@ struct DebugSettingsView: View {
 
     private let catalogService: CatalogService
 
-    init(catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
+    init(catalogService: CatalogService) {
         self.catalogService = catalogService
     }
 
@@ -81,7 +81,8 @@ struct DebugSettingsView: View {
 }
 
 #Preview {
-    NavigationStack {
-        DebugSettingsView()
+    let deps = AppDependencies(forTesting: true)
+    return NavigationStack {
+        DebugSettingsView(catalogService: deps.catalogService)
     }
 }

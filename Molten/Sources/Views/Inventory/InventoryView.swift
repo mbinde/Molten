@@ -429,14 +429,7 @@ struct InventoryView: View {
         .navigationDestination(for: CompleteInventoryItemModel.self) { item in
             InventoryDetailView(
                 item: item,
-                inventoryTrackingService: inventoryTrackingService,
-                catalogService: catalogService,
-                userNotesRepository: userNotesRepository,
-                userTagsRepository: userTagsRepository,
-                shoppingListRepository: shoppingListRepository,
-                userImageRepository: userImageRepository,
-                kilnScheduleService: kilnScheduleService,
-                glassItemRepository: glassItemRepository
+                deps: AppDependencies()
             )
         }
     }

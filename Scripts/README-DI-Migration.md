@@ -187,13 +187,55 @@ python3 Scripts/migrate-di.py --migrate Molten/Sources/Views/Locations/Locations
 ```
 
 The script handles:
-- ✅ Removing default parameters
-- ✅ Replacing direct RepositoryFactory calls
+- ✅ Replacing direct RepositoryFactory calls in method bodies
 - ✅ Adding @Environment(\.appDependencies)
+- ⚠️ **Partially** removes default parameters (manual verification required)
 
 ### Step 4: Manual Fixes Required
 
 The automated scripts **cannot** handle:
+
+#### 🚨 IMPORTANT: Default Parameters Limitation
+
+**The scripts CANNOT properly migrate default parameters that use RepositoryFactory** because `@Environment` values are not available during `init()`.
+
+**Example Problem:**
+```swift
+// BEFORE (works)
+init(service: MyService = RepositoryFactory.createService()) { }
+
+// AFTER SCRIPT (BROKEN - dependencies not available in init)
+@Environment(\.appDependencies) private var dependencies
+init(service: MyService = dependencies.service) { }  // ❌ CRASHES
+```
+
+**Correct Migration Options:**
+
+**Option A:** Remove default parameter entirely
+```swift
+// View takes service directly
+init(service: MyService) {
+    self.service = service
+}
+
+// Parent view passes from dependencies
+MyView(service: dependencies.myService)
+```
+
+**Option B:** Store services as private let
+```swift
+private let service: MyService
+
+init(service: MyService) {
+    self.service = service
+}
+```
+
+See MainTabView.swift:52-66 for the correct pattern.
+
+---
+
+#### Other Manual Fixes:
 
 #### A. Update Parent Views
 If a view had default parameters, parent views must now pass services explicitly:

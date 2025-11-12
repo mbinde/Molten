@@ -301,15 +301,18 @@ struct DateRange {
 // MARK: - Factory Methods
 
 extension ReportingService {
-    /// Create ReportingService using RepositoryFactory
-    static func createWithRepositoryFactory() -> ReportingService {
-        RepositoryFactory.configureForTesting()
-        let catalogService = RepositoryFactory.createCatalogService()
-        let inventoryTrackingService = RepositoryFactory.createInventoryTrackingService()
-        
-        return ReportingService(
-            catalogService: catalogService,
-            inventoryTrackingService: inventoryTrackingService
+    /// Create ReportingService using AppDependencies
+    convenience init(deps: AppDependencies = AppDependencies()) {
+        self.init(
+            catalogService: deps.catalogService,
+            inventoryTrackingService: deps.inventoryTrackingService,
+            shoppingListService: deps.shoppingListService
         )
+    }
+
+    /// Create ReportingService for testing
+    static func createForTesting() -> ReportingService {
+        let deps = AppDependencies(forTesting: true)
+        return ReportingService(deps: deps)
     }
 }

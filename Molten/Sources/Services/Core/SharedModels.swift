@@ -631,6 +631,21 @@ struct ManufacturerStatisticsModel: Identifiable, Sendable {
     nonisolated var id: String { name }
 }
 
+// MARK: - Sorting Logic (Business Rules)
+
+extension ManufacturerStatisticsModel: Comparable {
+    /// Sort manufacturers by itemCount (descending)
+    /// Business rule: Manufacturers with most items should appear first
+    static func < (lhs: ManufacturerStatisticsModel, rhs: ManufacturerStatisticsModel) -> Bool {
+        // Higher itemCount is "less than" for descending sort
+        return lhs.itemCount > rhs.itemCount
+    }
+
+    static func == (lhs: ManufacturerStatisticsModel, rhs: ManufacturerStatisticsModel) -> Bool {
+        return lhs.name == rhs.name
+    }
+}
+
 /// Items needing attention report
 struct ItemAttentionReportModel: Sendable {
     let itemsWithoutInventory: [GlassItemModel]

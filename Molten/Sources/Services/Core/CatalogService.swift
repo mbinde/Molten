@@ -412,7 +412,7 @@ actor CatalogService {
             ))
         }
         
-        return statistics.sorted { $0.itemCount > $1.itemCount }
+        return statistics.sorted() // Uses Comparable conformance from model
     }
     
     /// Get popular tags with usage counts

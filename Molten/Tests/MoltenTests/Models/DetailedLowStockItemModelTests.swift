@@ -40,7 +40,6 @@ struct DetailedLowStockItemModelTests {
             type: "rod",
             minimumQuantity: 10.0,
             currentQuantity: 10.0 - shortfall,
-            shortfall: shortfall,
             store: "Store A"
         )
 

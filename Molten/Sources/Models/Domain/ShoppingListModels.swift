@@ -133,7 +133,7 @@ extension DetailedLowStockItemModel: Comparable {
 }
 
 /// Minimum with complete context
-nonisolated struct DetailedMinimumModel {
+struct DetailedMinimumModel {
     let minimum: ItemMinimumModel
     let glassItem: GlassItemModel
     let tags: [String]

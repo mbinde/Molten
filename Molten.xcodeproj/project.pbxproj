@@ -381,7 +381,6 @@
 				Tests/MoltenTests/Models/WeightUnitTests.swift,
 				Tests/MoltenTests/Repositories/InventoryRepositoryLocationTests.swift,
 				Tests/MoltenTests/Repositories/KilnScheduleRepositoryErrorsTests.swift,
-				Tests/MoltenTests/Repositories/KilnScheduleRepositoryTests.swift,
 				Tests/MoltenTests/Repositories/MockLogbookRepositoryTests.swift,
 				Tests/MoltenTests/Repositories/MockUserImageRepositoryTests.swift,
 				Tests/MoltenTests/Repositories/ProjectRepositoryErrorsTests.swift,
@@ -486,7 +485,6 @@
 				Tests/MoltenUITests/Helpers/BaseUITest.swift,
 				"Tests/MoltenUITests/Helpers/XCUIElement+Helpers.swift",
 				Tests/MoltenUITests/ProjectsUITests.swift,
-				Tests/PerformanceTests/PerformanceTests.swift,
 				Tests/PerformanceTests/ResourceManagementTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataCatalogRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataDiagnosticTest.swift,
@@ -535,13 +533,6 @@
 			);
 			target = F5A13C4A2E890146002C0F7A /* Molten */;
 		};
-		F5D352FB2E9F3D5300EE1EDF /* Exceptions for "Molten" folder in "PerformanceTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Tests/PerformanceTests/PerformanceTests.swift,
-			);
-			target = F5D3D6362E9DCB0100DAA195 /* PerformanceTests */;
-		};
 		F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Molten" folder in "MoltenUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -580,7 +571,6 @@
 		F5FACB172EA0B4A10084A6D0 /* Exceptions for "Molten" folder in "RepositoryTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Tests/MoltenTests/Repositories/KilnScheduleRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataCatalogRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataDiagnosticTest.swift,
 				Tests/RepositoryTests/CoreData/CoreDataHelpersTests.swift,
@@ -635,7 +625,6 @@
 				F58D50C22E8B91F1005B18B3 /* Exceptions for "Molten" folder in "Molten" target */,
 				F58C7A602E90AE620052C821 /* Exceptions for "Molten" folder in "MoltenTests" target */,
 				F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Molten" folder in "MoltenUITests" target */,
-				F5D352FB2E9F3D5300EE1EDF /* Exceptions for "Molten" folder in "PerformanceTests" target */,
 				F5FACB172EA0B4A10084A6D0 /* Exceptions for "Molten" folder in "RepositoryTests" target */,
 				F5DBC4B82EAB1A8C00F6E879 /* Exceptions for "Molten" folder in "MoltenShareExtension" target */,
 				F5F58EE52EAECD830017A02E /* Exceptions for "Molten" folder in "InventoryImport" target */,

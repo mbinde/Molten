@@ -323,8 +323,7 @@ class MockShoppingListViewModel: ShoppingListViewModelProtocol {
         let glassSupplyList = DetailedShoppingListModel(
             store: "Glass Supply Co",
             items: glassSupplyItems,
-            totalItems: glassSupplyItems.count,
-            totalValue: 0
+            totalItems: glassSupplyItems.count
         )
 
         // Create list for "Art Glass Store"
@@ -332,8 +331,7 @@ class MockShoppingListViewModel: ShoppingListViewModelProtocol {
         let artGlassList = DetailedShoppingListModel(
             store: "Art Glass Store",
             items: artGlassItems,
-            totalItems: artGlassItems.count,
-            totalValue: 0
+            totalItems: artGlassItems.count
         )
 
         return [

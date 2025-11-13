@@ -187,8 +187,7 @@ actor ShoppingListService {
             detailedShoppingLists[store] = DetailedShoppingListModel(
                 store: store,
                 items: detailedItems,
-                totalItems: detailedItems.count,
-                totalValue: estimateTotalValue(for: detailedItems)
+                totalItems: detailedItems.count
             )
         }
 

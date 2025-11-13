@@ -140,3 +140,18 @@ enum UrgencyLevel: String, CaseIterable {
         }
     }
 }
+
+// MARK: - Sorting Logic (Business Rules)
+
+extension DetailedShoppingListItemModel: Comparable {
+    /// Sort shopping list items by neededQuantity (descending)
+    /// Business rule: Items with highest need should appear first
+    static func < (lhs: DetailedShoppingListItemModel, rhs: DetailedShoppingListItemModel) -> Bool {
+        // Higher neededQuantity is "less than" for descending sort
+        return lhs.shoppingListItem.neededQuantity > rhs.shoppingListItem.neededQuantity
+    }
+
+    static func == (lhs: DetailedShoppingListItemModel, rhs: DetailedShoppingListItemModel) -> Bool {
+        return lhs.shoppingListItem.item_stable_id == rhs.shoppingListItem.item_stable_id
+    }
+}

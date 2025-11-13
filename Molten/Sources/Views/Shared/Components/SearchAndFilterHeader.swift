@@ -575,48 +575,29 @@ struct SearchAndFilterHeader: View {
             }
         } label: {
             HStack(spacing: DesignSystem.Spacing.sm) {
-                if selectedProductTypes.isEmpty {
+                // Show selected type (always has a selection now)
+                if let selectedType = selectedProductTypes.first {
+                    Text(selectedType.capitalized)
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                        .lineLimit(1)
+                } else {
+                    // Fallback if somehow empty (shouldn't happen with default)
                     Image(systemName: "square.stack.3d.up")
                         .font(DesignSystem.Typography.captionSmall)
                     Text("Type")
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
-                } else {
-                    // Show first 2 types inline
-                    let sortedTypes = selectedProductTypes.sorted()
-                    ForEach(Array(sortedTypes.prefix(2)), id: \.self) { type in
-                        Text(type.capitalized)
-                            .font(DesignSystem.Typography.captionSmall)
-                            .fontWeight(DesignSystem.FontWeight.medium)
-                            .lineLimit(1)
-                    }
-
-                    // Show "+X" if more than 2 types selected
-                    if selectedProductTypes.count > 2 {
-                        Text("+\(selectedProductTypes.count - 2)")
-                            .font(DesignSystem.Typography.captionSmall)
-                            .fontWeight(DesignSystem.FontWeight.semibold)
-                    }
-
-                    // X to clear
-                    Image(systemName: "xmark.circle.fill")
-                        .font(DesignSystem.Typography.caption)
-                        .onTapGesture {
-                            withAnimation {
-                                selectedProductTypes.removeAll()
-                            }
-                        }
                 }
 
-                if selectedProductTypes.isEmpty {
-                    Image(systemName: "chevron.down")
-                        .font(Font.system(size: 10))
-                }
+                // Always show dropdown arrow
+                Image(systemName: "chevron.down")
+                    .font(Font.system(size: 10))
             }
-            .foregroundColor(selectedProductTypes.isEmpty ? DesignSystem.Colors.textSecondary : .white)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
             .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)
             .padding(.vertical, DesignSystem.Padding.buttonVertical)
-            .background(selectedProductTypes.isEmpty ? DesignSystem.Colors.backgroundInput : DesignSystem.Colors.accentPrimary)
+            .background(DesignSystem.Colors.backgroundInput)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
         .accessibilityIdentifier("productTypeFilterButton")

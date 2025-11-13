@@ -45,7 +45,6 @@ struct LowStockReportModelTests {
             type: type,
             minimumQuantity: 10.0,
             currentQuantity: 10.0 - shortfall,
-            shortfall: shortfall,
             store: store
         )
 

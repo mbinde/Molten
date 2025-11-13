@@ -27,7 +27,7 @@ struct GlassItemSortOptionTests {
         stableId: String,
         name: String,
         manufacturer: String = "test",
-        coe: Int = 96,
+        coe: Int32 = 96,
         quantity: Double = 0.0
     ) -> CompleteInventoryItemModel {
         let glassItem = GlassItemModel(

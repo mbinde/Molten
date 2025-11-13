@@ -185,6 +185,33 @@ struct ShoppingListItemModel: Identifiable, Equatable, Sendable {
             self.priority = .low
         }
     }
+
+    /// Business Logic: Merge this shopping item with another (for same item+type+store)
+    /// - Parameter other: Another shopping item for the same item/type/store
+    /// - Returns: Merged shopping item using max of needed quantities
+    ///
+    /// Business rule: When merging shopping items (e.g., manual items with auto-generated minimums),
+    /// use the maximum of the needed quantities to ensure we have enough inventory.
+    nonisolated func merged(with other: ShoppingListItemModel) -> ShoppingListItemModel {
+        precondition(
+            self.item_stable_id == other.item_stable_id &&
+            self.type == other.type &&
+            self.store == other.store,
+            "Can only merge shopping items for same item/type/store"
+        )
+
+        // Business rule: Use max of needed quantities
+        let combinedNeeded = max(self.neededQuantity, other.neededQuantity)
+
+        // Create new item with combined needed quantity
+        return ShoppingListItemModel(
+            item_stable_id: self.item_stable_id,
+            type: self.type,
+            currentQuantity: self.currentQuantity,
+            minimumQuantity: self.currentQuantity + combinedNeeded,
+            store: self.store
+        )
+    }
 }
 
 /// Shopping priority levels

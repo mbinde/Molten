@@ -133,7 +133,7 @@ extension DetailedLowStockItemModel: Comparable {
 }
 
 /// Minimum with complete context
-struct DetailedMinimumModel {
+struct DetailedMinimumModel: Sendable {
     let minimum: ItemMinimumModel
     let glassItem: GlassItemModel
     let tags: [String]
@@ -151,7 +151,7 @@ struct DetailedMinimumModel {
 }
 
 /// Store utilization statistics
-struct StoreStatisticsModel {
+struct StoreStatisticsModel: Sendable {
     let storeName: String
     let minimumCount: Int
     let currentNeedsCount: Int

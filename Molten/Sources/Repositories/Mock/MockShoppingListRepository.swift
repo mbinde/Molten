@@ -121,8 +121,10 @@ class MockShoppingListRepository: @unchecked Sendable, ShoppingListRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
+                    // Trim store name to match ItemShoppingModel.init behavior
+                    let trimmedStore = store.trimmingCharacters(in: .whitespacesAndNewlines)
                     let storeItems = self.items.values.filter { item in
-                        item.store?.lowercased() == store.lowercased()
+                        item.store?.lowercased() == trimmedStore.lowercased()
                     }.sorted { $0.dateAdded < $1.dateAdded }
 
                     continuation.resume(returning: Array(storeItems))
@@ -423,8 +425,10 @@ class MockShoppingListRepository: @unchecked Sendable, ShoppingListRepository {
         return try await simulateOperation {
             return await withCheckedContinuation { continuation in
                 self.queue.async {
+                    // Trim store name to match ItemShoppingModel.init behavior
+                    let trimmedStore = store.trimmingCharacters(in: .whitespacesAndNewlines)
                     let count = self.items.values.filter { item in
-                        item.store?.lowercased() == store.lowercased()
+                        item.store?.lowercased() == trimmedStore.lowercased()
                     }.count
                     continuation.resume(returning: count)
                 }
@@ -527,8 +531,10 @@ class MockShoppingListRepository: @unchecked Sendable, ShoppingListRepository {
         try await simulateOperation {
             await withCheckedContinuation { continuation in
                 self.queue.async(flags: .barrier) {
+                    // Trim store name to match ItemShoppingModel.init behavior
+                    let trimmedStore = store.trimmingCharacters(in: .whitespacesAndNewlines)
                     let idsToDelete = self.items.values
-                        .filter { $0.store?.lowercased() == store.lowercased() }
+                        .filter { $0.store?.lowercased() == trimmedStore.lowercased() }
                         .map { $0.id }
 
                     for id in idsToDelete {

@@ -105,7 +105,9 @@ class CoreDataShoppingListRepository: @unchecked Sendable, ShoppingListRepositor
     }
 
     func fetchItems(forStore store: String) async throws -> [ItemShoppingModel] {
-        let predicate = NSPredicate(format: "store ==[cd] %@", store)
+        // Trim store name to match ItemShoppingModel.init behavior
+        let trimmedStore = store.trimmingCharacters(in: .whitespacesAndNewlines)
+        let predicate = NSPredicate(format: "store ==[cd] %@", trimmedStore)
         return try await fetchItems(matching: predicate)
     }
 
@@ -453,8 +455,10 @@ class CoreDataShoppingListRepository: @unchecked Sendable, ShoppingListRepositor
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Int, Error>) in
             backgroundContext.perform {
                 do {
+                    // Trim store name to match ItemShoppingModel.init behavior
+                    let trimmedStore = store.trimmingCharacters(in: .whitespacesAndNewlines)
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    fetchRequest.predicate = NSPredicate(format: "store ==[cd] %@", store)
+                    fetchRequest.predicate = NSPredicate(format: "store ==[cd] %@", trimmedStore)
                     let count = try self.backgroundContext.count(for: fetchRequest)
 
                     continuation.resume(returning: count)
@@ -572,8 +576,10 @@ class CoreDataShoppingListRepository: @unchecked Sendable, ShoppingListRepositor
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
+                    // Trim store name to match ItemShoppingModel.init behavior
+                    let trimmedStore = store.trimmingCharacters(in: .whitespacesAndNewlines)
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    fetchRequest.predicate = NSPredicate(format: "store ==[cd] %@", store)
+                    fetchRequest.predicate = NSPredicate(format: "store ==[cd] %@", trimmedStore)
                     let items = try self.backgroundContext.fetch(fetchRequest)
 
                     for item in items {
@@ -584,7 +590,7 @@ class CoreDataShoppingListRepository: @unchecked Sendable, ShoppingListRepositor
                         try self.backgroundContext.save()
                     }
 
-                    self.log.info("Deleted \(items.count) shopping list items for store: \(store)")
+                    self.log.info("Deleted \(items.count) shopping list items for store: \(trimmedStore)")
                     continuation.resume()
 
                 } catch {

@@ -254,8 +254,8 @@ struct LogbookRepositoryTests {
         #expect(results.contains { $0.title == "At End" })
     }
 
-    @Test("Get logs by date range excludes nil dates")
-    func testGetLogsByDateRangeExcludesNilDates() async throws {
+    @Test("Get logs by date range includes logs with nil dates via dateCreated fallback")
+    func testGetLogsByDateRangeIncludesNilDatesViaFallback() async throws {
         let repository = MockLogbookRepository()
 
         let logWithDate = createTestLog(title: "With Date", startDate: Date())
@@ -269,8 +269,10 @@ struct LogbookRepositoryTests {
             end: Date(timeIntervalSinceNow: 86400)
         )
 
-        #expect(results.count == 1)
-        #expect(results.first?.title == "With Date")
+        // Both logs should be included: one via startDate, one via dateCreated fallback
+        #expect(results.count == 2)
+        #expect(results.contains { $0.title == "With Date" })
+        #expect(results.contains { $0.title == "Without Date" })
     }
 
     @Test("Get sold logs")

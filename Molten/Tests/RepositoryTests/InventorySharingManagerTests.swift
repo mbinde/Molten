@@ -244,7 +244,7 @@ struct InventorySharingManagerTests {
         cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
-        mockCoordinator.mockDownloadResult = createValidSnapshotResult()
+        mockCoordinator.mockDownloadResult = createSnapshotResult(ownerName: "Bob's Glass Shop")
         let manager = createTestManager(coordinator: mockCoordinator)
 
         let result = try await manager.addFriendShare(shareCode: "FRIEND")
@@ -264,7 +264,7 @@ struct InventorySharingManagerTests {
         cleanupUserDefaults()
 
         let mockCoordinator = MockInventorySharingCoordinator()
-        mockCoordinator.mockDownloadResult = createValidSnapshotResult()
+        mockCoordinator.mockDownloadResult = createSnapshotResult(ownerName: "Bob's Glass Shop")
         let manager = createTestManager(coordinator: mockCoordinator)
 
         _ = try await manager.addFriendShare(shareCode: "FRIEND", nickname: "Bob from GAS 2025")

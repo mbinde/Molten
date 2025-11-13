@@ -636,16 +636,6 @@ nonisolated struct RepositoryFactory {
         )
     }
 
-    /// Creates a GlassItemDataLoadingService with all dependencies
-    /// Includes CatalogStorageService for OTA catalog support
-    nonisolated static func createGlassItemDataLoadingService() -> GlassItemDataLoadingService {
-        return GlassItemDataLoadingService(
-            catalogService: createCatalogService(),
-            jsonLoader: JSONDataLoader(),
-            catalogStorageService: try? CatalogStorageService()
-        )
-    }
-
     /// Creates a CatalogUpdateService with all dependencies
     /// Note: This is a @MainActor class, so must be called from main thread
     @MainActor

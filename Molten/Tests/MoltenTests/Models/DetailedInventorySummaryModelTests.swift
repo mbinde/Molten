@@ -17,6 +17,7 @@ import XCTest
 import Foundation
 @testable import Molten
 
+@MainActor
 @Suite("DetailedInventorySummaryModel Tests")
 struct DetailedInventorySummaryModelTests {
 

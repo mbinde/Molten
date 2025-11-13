@@ -162,8 +162,7 @@ struct ShoppingListView: View {
                 return DetailedShoppingListModel(
                     store: list.store,
                     items: filteredItems,
-                    totalItems: filteredItems.count,
-                    totalValue: list.totalValue
+                    totalItems: filteredItems.count
                 )
             }.filter { !$0.value.items.isEmpty }
         }
@@ -177,8 +176,7 @@ struct ShoppingListView: View {
                 return DetailedShoppingListModel(
                     store: list.store,
                     items: filteredItems,
-                    totalItems: filteredItems.count,
-                    totalValue: list.totalValue
+                    totalItems: filteredItems.count
                 )
             }.filter { !$0.value.items.isEmpty }
         }
@@ -192,8 +190,7 @@ struct ShoppingListView: View {
                 return DetailedShoppingListModel(
                     store: list.store,
                     items: filteredItems,
-                    totalItems: filteredItems.count,
-                    totalValue: list.totalValue
+                    totalItems: filteredItems.count
                 )
             }.filter { !$0.value.items.isEmpty }
         }
@@ -207,8 +204,7 @@ struct ShoppingListView: View {
                 return DetailedShoppingListModel(
                     store: list.store,
                     items: filteredItems,
-                    totalItems: filteredItems.count,
-                    totalValue: list.totalValue
+                    totalItems: filteredItems.count
                 )
             }.filter { !$0.value.items.isEmpty }
         }

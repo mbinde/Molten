@@ -514,7 +514,7 @@ struct GlassItemSearchRequest: Sendable {
 
     nonisolated func getAppliedFiltersDescription() -> String {
         var filters: [String] = []
-        
+
         if let text = searchText, !text.isEmpty {
             filters.append("Text: '\(text)'")
         }
@@ -536,8 +536,63 @@ struct GlassItemSearchRequest: Sendable {
         if !inventoryTypes.isEmpty {
             filters.append("Inventory Types: \(inventoryTypes.joined(separator: ", "))")
         }
-        
+
         return filters.isEmpty ? "No filters applied" : filters.joined(separator: "; ")
+    }
+}
+
+// MARK: - Business Logic (Filtering)
+
+extension GlassItemSearchRequest {
+    /// Business Logic: Filter items based on search request criteria
+    ///
+    /// - Parameters:
+    ///   - items: Items to filter
+    ///   - itemsWithTags: Closure that returns stable_ids of items having all requested tags
+    ///   - itemsWithInventory: Closure that returns true if item has inventory
+    /// - Returns: Filtered items matching all criteria
+    ///
+    /// Business rules:
+    /// - All filters are AND operations (must match ALL criteria)
+    /// - Empty filter arrays mean "no filtering" for that criterion
+    /// - Tags filter uses closure to coordinate with repository
+    /// - Inventory filter uses closure to coordinate with repository
+    nonisolated func filter(
+        _ items: [CompleteInventoryItemModel],
+        itemsWithTags: ([String]) -> [String],
+        itemsWithInventory: (String) -> Bool
+    ) -> [CompleteInventoryItemModel] {
+        var filtered = items
+
+        // Filter by tags (uses closure for repository coordination)
+        if !tags.isEmpty {
+            let stableIdsWithTags = Set(itemsWithTags(tags))
+            filtered = filtered.filter { stableIdsWithTags.contains($0.glassItem.stable_id) }
+        }
+
+        // Filter by manufacturers
+        if !manufacturers.isEmpty {
+            filtered = filtered.filter { manufacturers.contains($0.glassItem.manufacturer) }
+        }
+
+        // Filter by COE values
+        if !coeValues.isEmpty {
+            filtered = filtered.filter { coeValues.contains($0.glassItem.coe) }
+        }
+
+        // Filter by manufacturer status
+        if !manufacturerStatuses.isEmpty {
+            filtered = filtered.filter { manufacturerStatuses.contains($0.glassItem.mfr_status) }
+        }
+
+        // Filter by inventory presence (uses closure for repository coordination)
+        if let hasInventory = hasInventory {
+            filtered = filtered.filter { item in
+                itemsWithInventory(item.glassItem.stable_id) == hasInventory
+            }
+        }
+
+        return filtered
     }
 }
 
@@ -671,7 +726,7 @@ struct CatalogOverviewModel: Sendable {
     ///   - lowStockItems: Number of items below minimum threshold
     ///   - systemType: Type of catalog system (e.g., "GlassItem")
     /// - Returns: Overview model with aggregated statistics
-    static func from(
+    nonisolated static func from(
         totalItems: Int,
         totalManufacturers: Int,
         totalTags: Int,

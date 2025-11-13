@@ -394,7 +394,7 @@ class MockGlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {
 
     func loadGlassItemsFromData(
         _ data: Data,
-        options: GlassItemDataLoadingService.LoadingOptions = .default
+        options: LoadingOptions = .default
     ) async throws -> GlassItemLoadingResult {
         loadFromDataCalled = true
 

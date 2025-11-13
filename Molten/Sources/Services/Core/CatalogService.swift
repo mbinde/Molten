@@ -149,7 +149,7 @@ actor CatalogService {
         request: GlassItemSearchRequest
     ) async throws -> GlassItemSearchResult {
         let trackingService = inventoryTrackingService
-        
+
         // Start with text search if provided
         var candidateItems: [GlassItemModel]
         if let searchText = request.searchText, !searchText.isEmpty {
@@ -157,9 +157,6 @@ actor CatalogService {
         } else {
             candidateItems = try await glassItemRepository.fetchItems(matching: nil)
         }
-
-        // Apply filters
-        candidateItems = try await applyFilters(candidateItems, using: request)
 
         // OPTIMIZED: Batch fetch inventory for all items
         let allInventory = try await trackingService.inventoryRepository.fetchInventory(matching: nil)
@@ -187,7 +184,23 @@ actor CatalogService {
             )
             completeItems.append(completeItem)
         }
-        
+
+        // Apply filters using model business logic
+        completeItems = request.filter(
+            completeItems,
+            itemsWithTags: { requestedTags in
+                // Return items that have ALL requested tags
+                completeItems
+                    .filter { item in
+                        Set(requestedTags).isSubset(of: Set(item.tags))
+                    }
+                    .map { $0.glassItem.stable_id }
+            },
+            itemsWithInventory: { stableId in
+                inventoryByItem[stableId]?.isEmpty == false
+            }
+        )
+
         // Apply sorting
         let sortedItems = sortItems(completeItems, by: request.sortBy)
         
@@ -464,64 +477,7 @@ actor CatalogService {
     }
     
     // MARK: - Private Helper Methods
-    
-    private func applyFilters(
-        _ items: [GlassItemModel],
-        using request: GlassItemSearchRequest
-    ) async throws -> [GlassItemModel] {
-        var filteredItems = items
-        
-        // Filter by tags
-        if !request.tags.isEmpty {
-            let itemsWithTags = try await itemTagsRepository.fetchItems(withAllTags: request.tags)
-            filteredItems = filteredItems.filter { itemsWithTags.contains($0.stable_id) }
-        }
-        
-        // Filter by manufacturers
-        if !request.manufacturers.isEmpty {
-            filteredItems = filteredItems.filter { item in
-                request.manufacturers.contains(item.manufacturer)
-            }
-        }
-        
-        // Filter by COE values
-        if !request.coeValues.isEmpty {
-            filteredItems = filteredItems.filter { item in
-                request.coeValues.contains(item.coe)
-            }
-        }
-        
-        // Filter by manufacturer status
-        if !request.manufacturerStatuses.isEmpty {
-            filteredItems = filteredItems.filter { item in
-                request.manufacturerStatuses.contains(item.mfr_status)
-            }
-        }
-        
-        // Filter by inventory status
-        if let hasInventory = request.hasInventory {
-            let itemsWithInventory = Set(try await inventoryTrackingService.inventoryRepository.getItemsWithInventory())
-            filteredItems = filteredItems.filter { item in
-                let hasInv = itemsWithInventory.contains(item.stable_id)
-                return hasInv == hasInventory
-            }
-        }
-        
-        // Filter by inventory types
-        if !request.inventoryTypes.isEmpty {
-            var itemsWithTypes: Set<String> = []
-            for type in request.inventoryTypes {
-                let itemsOfType = try await inventoryTrackingService.inventoryRepository.getItemsWithInventory(ofType: type)
-                itemsWithTypes.formUnion(itemsOfType)
-            }
-            filteredItems = filteredItems.filter { item in
-                itemsWithTypes.contains(item.stable_id)
-            }
-        }
-        
-        return filteredItems
-    }
-    
+
     private func sortItems(
         _ items: [CompleteInventoryItemModel],
         by sortOption: GlassItemSortOption

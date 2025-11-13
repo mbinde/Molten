@@ -31,31 +31,31 @@ class PersistenceController {
     private nonisolated let stateLock = OSAllocatedUnfairLock(initialState: SynchronizedState())
 
     // Lazy model loading - only load when first accessed
-    private nonisolated(unsafe) static var _sharedModel: NSManagedObjectModel?
-    private nonisolated static let modelLock = NSLock()
+    // Thread-safe using OSAllocatedUnfairLock (no more nonisolated(unsafe))
+    private nonisolated static let modelLock = OSAllocatedUnfairLock<NSManagedObjectModel?>(initialState: nil)
 
     nonisolated private static var sharedModel: NSManagedObjectModel {
-        modelLock.lock()
-        defer { modelLock.unlock() }
-
-        if let model = _sharedModel {
-            return model
+        // Check if already loaded
+        if let existingModel = modelLock.withLock({ $0 }) {
+            return existingModel
         }
 
+        // Load the model (only happens once)
         Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Loading Core Data model...")
 
+        let loadedModel: NSManagedObjectModel
         if let modelURL = Bundle.main.url(forResource: "Molten", withExtension: "momd"),
            let model = NSManagedObjectModel(contentsOf: modelURL) {
-
             Logger(subsystem: "com.flameworker.app", category: "persistence").info("✅ Model loaded with \(model.entities.count) entities")
-            _sharedModel = model
-            return model
+            loadedModel = model
         } else {
             Logger(subsystem: "com.flameworker.app", category: "persistence").error("Could not load Core Data model from bundle, using fallback")
-            let model = NSManagedObjectModel.mergedModel(from: [Bundle.main])!
-            _sharedModel = model
-            return model
+            loadedModel = NSManagedObjectModel.mergedModel(from: [Bundle.main])!
         }
+
+        // Store and return atomically
+        modelLock.withLock { $0 = loadedModel }
+        return loadedModel
     }
 
     @MainActor

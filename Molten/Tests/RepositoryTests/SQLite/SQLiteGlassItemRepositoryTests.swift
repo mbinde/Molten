@@ -11,6 +11,7 @@ import SQLite3
 @testable import Molten
 
 @Suite("SQLiteGlassItemRepository Tests", .serialized)
+@MainActor
 struct SQLiteGlassItemRepositoryTests {
 
     // MARK: - Test Helpers

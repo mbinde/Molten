@@ -11,6 +11,7 @@ import SQLite3
 @testable import Molten
 
 @Suite("Catalog Database Integration Tests", .serialized)
+@MainActor
 struct CatalogDatabaseIntegrationTests {
 
     // MARK: - End-to-End Tests
@@ -402,6 +403,7 @@ struct CatalogDatabaseIntegrationTests {
 // MARK: - Database File Size Tests
 
 @Suite("Catalog Database File Tests")
+@MainActor
 struct CatalogDatabaseFileTests {
 
     @Test("Should have reasonable file size")

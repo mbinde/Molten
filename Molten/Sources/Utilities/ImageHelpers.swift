@@ -518,6 +518,8 @@ struct ProductImageView: View {
 
         // PRIORITY 1.5: Try to download from CDN (only if we have an exact image_path from catalog)
         // ProductImageView uses thumbnails by default for faster loading in lists (unless user enabled full-size)
+        // TEMPORARY: Disabled to test local-only thumbnail loading performance
+        /*
         if let imagePath = imagePath, !imagePath.isEmpty {
             let useThumbnail = !UserSettings.shared.downloadFullSizeImages
             if let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath, useThumbnail: useThumbnail) {
@@ -526,6 +528,7 @@ struct ProductImageView: View {
                 return
             }
         }
+        */
 
         // PRIORITY 2: Load bundle/manufacturer images with low priority to avoid blocking UI
         let image = await Task.detached(priority: .background) {

@@ -276,7 +276,7 @@ struct InventoryTypeRow: View {
         mfr_status: "available"
     )
 
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
 
     ConsolidatedInventoryDetailView(
         glassItem: sampleGlassItem,

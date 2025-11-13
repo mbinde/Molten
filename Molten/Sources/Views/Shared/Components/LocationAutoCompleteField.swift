@@ -138,7 +138,7 @@ struct LocationAutoCompleteField: View {
 
 #Preview {
     @Previewable @State var location = ""
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
 
     VStack {
         LocationAutoCompleteField(

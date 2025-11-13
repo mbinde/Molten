@@ -313,9 +313,11 @@ struct UserTagsEditor: View {
         userTags: []
     )
 
+    let deps = AppDependencies(persistenceController: .createTestController())
+
     UserTagsEditor(
         item: sampleCompleteItem,
-        userTagsRepository: MockUserTagsRepository()
+        userTagsRepository: deps.userTagsRepository
     )
 }
 
@@ -336,9 +338,11 @@ struct UserTagsEditor: View {
         userTags: []
     )
 
+    let deps = AppDependencies(persistenceController: .createTestController())
+
     // Note: Preview starts with empty tags; tags are loaded via .onAppear
     UserTagsEditor(
         item: sampleCompleteItem,
-        userTagsRepository: MockUserTagsRepository()
+        userTagsRepository: deps.userTagsRepository
     )
 }

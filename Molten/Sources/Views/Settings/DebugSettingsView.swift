@@ -86,7 +86,7 @@ struct DebugSettingsView: View {
 
             Section {
                 NavigationLink {
-                    DataManagementView(deps: deps)
+                    DataManagementView()
                 } label: {
                     Label("Data Management", systemImage: "externaldrive")
                 }
@@ -127,6 +127,6 @@ struct DebugSettingsView: View {
 
 #Preview {
     NavigationStack {
-        DebugSettingsView(deps: AppDependencies(forTesting: true))
+        DebugSettingsView(deps: AppDependencies(persistenceController: .createTestController()))
     }
 }

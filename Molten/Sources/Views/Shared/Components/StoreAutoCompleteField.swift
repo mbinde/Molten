@@ -197,7 +197,7 @@ struct StoreAutoCompleteField: View {
 
 #Preview {
     @Previewable @State var store = ""
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
 
     VStack {
         StoreAutoCompleteField(

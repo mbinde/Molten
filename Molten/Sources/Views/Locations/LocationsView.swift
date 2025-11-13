@@ -449,7 +449,7 @@ struct LocationsView: View {
 }
 
 #Preview {
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
     return LocationsView(viewModel: LocationsViewModel(
         locationService: deps.unifiedLocationService
     ))

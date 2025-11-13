@@ -366,7 +366,7 @@ struct StoreDetailView: View {
 }
 
 #Preview("Store with Full Info") {
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
     NavigationStack {
         StoreDetailView(
             store: UnifiedLocationModel(
@@ -396,7 +396,7 @@ struct StoreDetailView: View {
 }
 
 #Preview("Store with Minimal Info") {
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
     NavigationStack {
         StoreDetailView(
             store: UnifiedLocationModel(

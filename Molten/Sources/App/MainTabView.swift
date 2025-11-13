@@ -506,7 +506,7 @@ struct CustomTabBar: View {
 
 #Preview {
     // Use test dependencies for preview
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
 
     MainTabView(
         deps: deps,

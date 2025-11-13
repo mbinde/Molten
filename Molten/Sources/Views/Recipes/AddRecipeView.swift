@@ -283,6 +283,6 @@ struct AddRecipeView: View {
 }
 
 #Preview("Add Recipe") {
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
     return AddRecipeView(deps: deps)
 }

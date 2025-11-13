@@ -238,9 +238,11 @@ struct UserNotesEditor: View {
         userTags: []
     )
 
+    let deps = AppDependencies(persistenceController: .createTestController())
+
     UserNotesEditor(
         item: sampleCompleteItem,
-        userNotesRepository: MockUserNotesRepository()
+        userNotesRepository: deps.userNotesRepository
     )
 }
 
@@ -261,8 +263,10 @@ struct UserNotesEditor: View {
         userTags: []
     )
 
+    let deps = AppDependencies(persistenceController: .createTestController())
+
     UserNotesEditor(
         item: sampleCompleteItem,
-        userNotesRepository: MockUserNotesRepository()
+        userNotesRepository: deps.userNotesRepository
     )
 }

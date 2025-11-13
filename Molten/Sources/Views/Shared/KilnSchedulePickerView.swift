@@ -156,7 +156,7 @@ struct KilnSchedulePickerView: View {
 
 #Preview {
     @Previewable @State var selectedId: UUID? = nil
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
 
     return Form {
         Section("Firing Schedule") {

@@ -30,7 +30,7 @@ struct MoltenApp: App {
 
         if isTest {
             // Test mode - use mocks
-            _dependencies = State(initialValue: AppDependencies(forTesting: true))
+            _dependencies = State(initialValue: AppDependencies(persistenceController: .createTestController()))
         } else {
             // Production mode - real Core Data (will init in background during launch screen)
             _dependencies = State(initialValue: AppDependencies())

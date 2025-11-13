@@ -163,9 +163,8 @@ struct FirstRunDataLoadingView: View {
             print("✅ [SCREENSHOTS] All data deleted")
         }
 
-        // Configure repository factory (only set container, preserve mode from MoltenApp)
-        RepositoryFactory.configure(persistentContainer: PersistenceController.shared.container)
-        print("✅ Repository factory container configured (mode: \(RepositoryFactory.mode))")
+        // AppDependencies automatically uses PersistenceController.shared
+        print("✅ AppDependencies ready")
 
         progress = 0.1
 
@@ -179,7 +178,7 @@ struct FirstRunDataLoadingView: View {
             print("✅ Catalog database initialized")
 
             // Get item count from database for display
-            let catalogService = RepositoryFactory.createCatalogService()
+            let catalogService = AppDependencies().catalogService
             let existingItems = try await catalogService.getAllGlassItems()
             itemsLoaded = existingItems.count
             print("✅ Catalog contains \(itemsLoaded) items (bundled data)")
@@ -213,7 +212,7 @@ struct FirstRunDataLoadingView: View {
             currentStep = .loadingLocations
             progress = 0.90
 
-            let locationService = RepositoryFactory.createUnifiedLocationService()
+            let locationService = AppDependencies().unifiedLocationService
             do {
                 let result = try await locationService.loadLocationsHybrid()
                 print("✅ Loaded \(result.total) locations total (\(result.bundled) from bundle, \(result.web) from web)")
@@ -225,9 +224,10 @@ struct FirstRunDataLoadingView: View {
             // Step 5: Generate demo data if in screenshot mode
             if isScreenshotMode {
                 print("🎬 [SCREENSHOTS] Generating demo data for screenshots...")
-                let inventoryService = RepositoryFactory.createInventoryTrackingService()
-                let shoppingListService = RepositoryFactory.createShoppingListService()
-                let purchaseRecordService = RepositoryFactory.createPurchaseRecordService()
+                let deps = AppDependencies()
+                let inventoryService = deps.inventoryTrackingService
+                let shoppingListService = deps.shoppingListService
+                let purchaseRecordService = deps.purchaseRecordService
 
                 let demoDataGenerator = DemoDataGenerator(
                     catalogService: catalogService,

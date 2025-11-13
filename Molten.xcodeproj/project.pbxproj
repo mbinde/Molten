@@ -97,16 +97,16 @@
 		E7C7A65B94A6533A14E7AE47 /* taglia_tools.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = taglia_tools.json; sourceTree = "<group>"; };
 		F0AA0F21EF80657D274B4674 /* ToolItemDataLoadingService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemDataLoadingService.swift; sourceTree = "<group>"; };
 		F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = ViewModelTests.xctestplan; sourceTree = "<group>"; };
+		F528A82F2EC693C700CE1F4A /* Molten.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Molten.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F528A8302EC693C700CE1F4A /* MoltenShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoltenShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F528A8312EC693C700CE1F4A /* MoltenTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoltenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F528A8322EC693C700CE1F4A /* MoltenUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoltenUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F528A8332EC693C700CE1F4A /* PerformanceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PerformanceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F528A8342EC693C700CE1F4A /* RepositoryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RepositoryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F528A8352EC693C700CE1F4A /* InventoryImport.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InventoryImport.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F528A8362EC693C700CE1F4A /* ScreenshotAutomation.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenshotAutomation.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F528A8372EC693C700CE1F4A /* ViewModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ViewModelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Screenshots.xctestplan; sourceTree = "<group>"; };
-		F5C06D232EB7A7670038084E /* Molten.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = Molten.app; path = /Users/binde/projects/arch/build/Debug/Molten.app; sourceTree = "<absolute>"; };
-		F5C06D242EB7A7670038084E /* MoltenShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; name = MoltenShareExtension.appex; path = "/Users/binde/projects/arch/build/Debug-iphoneos/MoltenShareExtension.appex"; sourceTree = "<absolute>"; };
-		F5C06D252EB7A7670038084E /* MoltenTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = MoltenTests.xctest; path = "/Users/binde/projects/arch/build/Debug-iphoneos/Molten.app/PlugIns/MoltenTests.xctest"; sourceTree = "<absolute>"; };
-		F5C06D262EB7A7670038084E /* MoltenUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = MoltenUITests.xctest; path = "/Users/binde/projects/arch/build/Debug-iphoneos/MoltenUITests-Runner.app/PlugIns/MoltenUITests.xctest"; sourceTree = "<absolute>"; };
-		F5C06D272EB7A7670038084E /* PerformanceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = PerformanceTests.xctest; path = "/Users/binde/projects/arch/build/Debug-iphoneos/Molten.app/PlugIns/PerformanceTests.xctest"; sourceTree = "<absolute>"; };
-		F5C06D282EB7A7670038084E /* RepositoryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = RepositoryTests.xctest; path = "/Users/binde/projects/arch/build/Debug-iphoneos/Molten.app/PlugIns/RepositoryTests.xctest"; sourceTree = "<absolute>"; };
-		F5C06D292EB7A7670038084E /* InventoryImport.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = InventoryImport.xctest; path = "/Users/binde/projects/arch/build/Debug-iphoneos/Molten.app/PlugIns/InventoryImport.xctest"; sourceTree = "<absolute>"; };
-		F5C06D2A2EB7A7670038084E /* ScreenshotAutomation.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = ScreenshotAutomation.xctest; path = "/Users/binde/projects/arch/build/Debug-iphoneos/ScreenshotAutomation-Runner.app/PlugIns/ScreenshotAutomation.xctest"; sourceTree = "<absolute>"; };
-		F5C06D2B2EB7A7670038084E /* ViewModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = ViewModelTests.xctest; path = "/Users/binde/projects/arch/build/Debug-iphoneos/Molten.app/PlugIns/ViewModelTests.xctest"; sourceTree = "<absolute>"; };
 		F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTestsOnly.xctestplan; sourceTree = "<group>"; };
 		F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
 		F5FACB512EA0C9590084A6D0 /* RepositoryTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = RepositoryTests.xctestplan; sourceTree = "<group>"; };
@@ -190,6 +190,7 @@
 				Tests/MoltenTests/Repositories/UserImageRepositoryTests.swift,
 				Tests/MoltenTests/Services/BackgroundUpdateServiceTests.swift,
 				Tests/MoltenTests/Services/CatalogAPIClientTests.swift,
+				Tests/MoltenTests/Services/CatalogDatabaseManagerTests.swift,
 				Tests/MoltenTests/Services/CatalogServiceAdvancedTests.swift,
 				Tests/MoltenTests/Services/CatalogStorageServiceTests.swift,
 				Tests/MoltenTests/Services/CatalogUpdateNotificationTests.swift,
@@ -368,6 +369,7 @@
 				Tests/MoltenTests/Repositories/UserImageRepositoryTests.swift,
 				Tests/MoltenTests/Services/BackgroundUpdateServiceTests.swift,
 				Tests/MoltenTests/Services/CatalogAPIClientTests.swift,
+				Tests/MoltenTests/Services/CatalogDatabaseManagerTests.swift,
 				Tests/MoltenTests/Services/CatalogServiceAdvancedTests.swift,
 				Tests/MoltenTests/Services/CatalogStorageServiceTests.swift,
 				Tests/MoltenTests/Services/CatalogUpdateNotificationTests.swift,
@@ -502,12 +504,14 @@
 				Tests/RepositoryTests/CoreDataShareRecordRepositoryTests.swift,
 				Tests/RepositoryTests/FileSystem/FileSystemUserImageRepositoryTests.swift,
 				Tests/RepositoryTests/GlassItemRepositoryDuplicateTests.swift,
+				Tests/RepositoryTests/Integration/CatalogDatabaseIntegrationTests.swift,
 				Tests/RepositoryTests/Integration/CatalogServiceIntegrationTests.swift,
 				Tests/RepositoryTests/Integration/ShoppingListServiceIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingManagerTests.swift,
 				Tests/RepositoryTests/InventorySharingViewModelTests.swift,
 				Tests/RepositoryTests/ShareMetadataRepositoryTests.swift,
+				Tests/RepositoryTests/SQLite/SQLiteGlassItemRepositoryTests.swift,
 				Tools/Documentation/check_core_data_violations.sh,
 				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
 				Tools/Documentation/CORE_DATA_PREVENTION_GUIDE.md,
@@ -598,12 +602,14 @@
 				Tests/RepositoryTests/CoreDataShareRecordRepositoryTests.swift,
 				Tests/RepositoryTests/FileSystem/FileSystemUserImageRepositoryTests.swift,
 				Tests/RepositoryTests/GlassItemRepositoryDuplicateTests.swift,
+				Tests/RepositoryTests/Integration/CatalogDatabaseIntegrationTests.swift,
 				Tests/RepositoryTests/Integration/CatalogServiceIntegrationTests.swift,
 				Tests/RepositoryTests/Integration/ShoppingListServiceIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingManagerTests.swift,
 				Tests/RepositoryTests/InventorySharingViewModelTests.swift,
 				Tests/RepositoryTests/ShareMetadataRepositoryTests.swift,
+				Tests/RepositoryTests/SQLite/SQLiteGlassItemRepositoryTests.swift,
 			);
 			target = F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */;
 		};
@@ -856,6 +862,15 @@
 				F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */,
 				F5DB4DAA2EAB159C00F6E879 /* MoltenShareExtension */,
 				05644C20A407154AE488E490 /* Molten */,
+				F528A82F2EC693C700CE1F4A /* Molten.app */,
+				F528A8302EC693C700CE1F4A /* MoltenShareExtension.appex */,
+				F528A8312EC693C700CE1F4A /* MoltenTests.xctest */,
+				F528A8322EC693C700CE1F4A /* MoltenUITests.xctest */,
+				F528A8332EC693C700CE1F4A /* PerformanceTests.xctest */,
+				F528A8342EC693C700CE1F4A /* RepositoryTests.xctest */,
+				F528A8352EC693C700CE1F4A /* InventoryImport.xctest */,
+				F528A8362EC693C700CE1F4A /* ScreenshotAutomation.xctest */,
+				F528A8372EC693C700CE1F4A /* ViewModelTests.xctest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -877,7 +892,7 @@
 			);
 			name = ViewModelTests;
 			productName = ViewModelTests;
-			productReference = F5C06D2B2EB7A7670038084E /* ViewModelTests.xctest */;
+			productReference = F528A8372EC693C700CE1F4A /* ViewModelTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		F53C0BB02EA7FB020020E1AB /* ScreenshotAutomation */ = {
@@ -898,7 +913,7 @@
 			);
 			name = ScreenshotAutomation;
 			productName = ScreenshotAutomation;
-			productReference = F5C06D2A2EB7A7670038084E /* ScreenshotAutomation.xctest */;
+			productReference = F528A8362EC693C700CE1F4A /* ScreenshotAutomation.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 		F551A4262E9DAA1A00C9C2F1 /* MoltenUITests */ = {
@@ -916,7 +931,7 @@
 			);
 			name = MoltenUITests;
 			productName = FlameworkerUITests;
-			productReference = F5C06D262EB7A7670038084E /* MoltenUITests.xctest */;
+			productReference = F528A8322EC693C700CE1F4A /* MoltenUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 		F55B2F442E8F335D00C8059F /* MoltenTests */ = {
@@ -934,7 +949,7 @@
 			);
 			name = MoltenTests;
 			productName = FlameworkerTests;
-			productReference = F5C06D252EB7A7670038084E /* MoltenTests.xctest */;
+			productReference = F528A8312EC693C700CE1F4A /* MoltenTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		F5A13C4A2E890146002C0F7A /* Molten */ = {
@@ -957,7 +972,7 @@
 			);
 			name = Molten;
 			productName = Flameworker;
-			productReference = F5C06D232EB7A7670038084E /* Molten.app */;
+			productReference = F528A82F2EC693C700CE1F4A /* Molten.app */;
 			productType = "com.apple.product-type.application";
 		};
 		F5D3D6362E9DCB0100DAA195 /* PerformanceTests */ = {
@@ -975,7 +990,7 @@
 			);
 			name = PerformanceTests;
 			productName = PerformanceTests;
-			productReference = F5C06D272EB7A7670038084E /* PerformanceTests.xctest */;
+			productReference = F528A8332EC693C700CE1F4A /* PerformanceTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		F5DB4DA82EAB159B00F6E879 /* MoltenShareExtension */ = {
@@ -995,7 +1010,7 @@
 			);
 			name = MoltenShareExtension;
 			productName = MoltenShareExtension;
-			productReference = F5C06D242EB7A7670038084E /* MoltenShareExtension.appex */;
+			productReference = F528A8302EC693C700CE1F4A /* MoltenShareExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 		F5F58ED62EAECD460017A02E /* InventoryImport */ = {
@@ -1013,7 +1028,7 @@
 			);
 			name = InventoryImport;
 			productName = InventoryImport;
-			productReference = F5C06D292EB7A7670038084E /* InventoryImport.xctest */;
+			productReference = F528A8352EC693C700CE1F4A /* InventoryImport.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */ = {
@@ -1031,7 +1046,7 @@
 			);
 			name = RepositoryTests;
 			productName = RepositoryTests;
-			productReference = F5C06D282EB7A7670038084E /* RepositoryTests.xctest */;
+			productReference = F528A8342EC693C700CE1F4A /* RepositoryTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */

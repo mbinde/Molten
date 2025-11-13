@@ -487,7 +487,6 @@
 				"Tests/MoltenUITests/Helpers/XCUIElement+Helpers.swift",
 				Tests/MoltenUITests/ProjectsUITests.swift,
 				Tests/PerformanceTests/PerformanceTests.swift,
-				Tests/PerformanceTests/RealisticLoadTests.swift,
 				Tests/PerformanceTests/ResourceManagementTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataCatalogRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataDiagnosticTest.swift,
@@ -540,7 +539,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Tests/PerformanceTests/PerformanceTests.swift,
-				Tests/PerformanceTests/RealisticLoadTests.swift,
 			);
 			target = F5D3D6362E9DCB0100DAA195 /* PerformanceTests */;
 		};

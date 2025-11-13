@@ -566,6 +566,46 @@ enum GlassItemSortOption: CaseIterable, Sendable {
     }
 }
 
+// MARK: - Sorting Logic (Business Rules)
+
+extension GlassItemSortOption {
+    /// Sort items according to this sort option's business rules
+    /// Business rules:
+    /// - name: Sort by name (case-insensitive, ascending)
+    /// - manufacturer: Sort by manufacturer, then name (both ascending)
+    /// - coe: Sort by COE, then name (ascending)
+    /// - totalQuantity: Sort by quantity (descending), then name (ascending)
+    nonisolated func sort(_ items: [CompleteInventoryItemModel]) -> [CompleteInventoryItemModel] {
+        switch self {
+        case .name:
+            return items.sorted { (item1, item2) -> Bool in
+                item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
+            }
+        case .manufacturer:
+            return items.sorted { (item1, item2) -> Bool in
+                if item1.glassItem.manufacturer != item2.glassItem.manufacturer {
+                    return item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer) == .orderedAscending
+                }
+                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
+            }
+        case .coe:
+            return items.sorted { (item1, item2) -> Bool in
+                if item1.glassItem.coe != item2.glassItem.coe {
+                    return item1.glassItem.coe < item2.glassItem.coe
+                }
+                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
+            }
+        case .totalQuantity:
+            return items.sorted { (item1, item2) -> Bool in
+                if item1.totalQuantity != item2.totalQuantity {
+                    return item1.totalQuantity > item2.totalQuantity // Descending for quantity
+                }
+                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
+            }
+        }
+    }
+}
+
 /// System status model
 struct SystemStatusModel: Sendable {
     let itemCount: Int

@@ -82,7 +82,7 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
             }
         }
     }
-    
+
     func createItem(_ item: GlassItemModel) async throws -> GlassItemModel {
         return try await context.perform {
 
@@ -93,9 +93,6 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
 
             do {
                 let existing = try self.context.fetch(existingRequest)
-                if !existing.isEmpty {
-                    print("⚠️ DUPLICATE CREATION ATTEMPT: stable_id=\(item.stable_id) already exists! Found \(existing.count) copies. Updating instead of creating.")
-                }
                 if let existingEntity = existing.first {
                     self.updateEntity(existingEntity, with: item)
                     try self.context.save()
@@ -110,9 +107,7 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
                 let entity = NSManagedObject(entity: entityDescription, insertInto: self.context)
                 self.updateEntity(entity, with: item)
 
-                let timestamp = Date().timeIntervalSince1970
                 try self.context.save()
-                let afterSave = Date().timeIntervalSince1970
 
                 return self.convertToGlassItemModel(entity) ?? item
             } catch {

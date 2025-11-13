@@ -138,19 +138,11 @@ struct ImageHelpers {
                 let resourceName = pathComponents.dropLast().joined(separator: ".")
                 let ext = String(pathComponents.last!)
 
+                // Files in Molten/Resources/ are flattened to bundle root
                 if let path = Bundle.main.path(forResource: resourceName, ofType: ext) {
                     if let image = loadImageWithoutColorProfile(from: path) {
-                        // Cache the successful result
                         imageCache.setObject(image, forKey: cacheKeyNS)
                         return image
-                    }
-                } else {
-                    // Try with product-images directory
-                    if let dirPath = Bundle.main.path(forResource: resourceName, ofType: ext, inDirectory: "product-images") {
-                        if let image = loadImageWithoutColorProfile(from: dirPath) {
-                            imageCache.setObject(image, forKey: cacheKeyNS)
-                            return image
-                        }
                     }
                 }
             }
@@ -165,18 +157,9 @@ struct ImageHelpers {
                 let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
 
                 for ext in extensions {
-                    // Try with directory
-                    if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images"),
-                       let image = loadImageWithoutColorProfile(from: path) {
-                        // Cache the successful result
-                        imageCache.setObject(image, forKey: cacheKeyNS)
-                        return image
-                    }
-
-                    // Try without directory (in case files are at bundle root)
+                    // Files in Molten/Resources/ are flattened to bundle root
                     if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext),
                        let image = loadImageWithoutColorProfile(from: path) {
-                        // Cache the successful result
                         imageCache.setObject(image, forKey: cacheKeyNS)
                         return image
                     }
@@ -186,6 +169,24 @@ struct ImageHelpers {
             // Cache the negative result
             negativeCache.setObject(NSNumber(booleanLiteral: true), forKey: cacheKeyNS)
             return nil
+        }
+
+        // PRIORITY 2.5: Check for bundled thumbnail (AFTER permission check)
+        // Thumbnails are named like "{stableId}_thumb.jpg" (e.g., "000NCe_thumb.jpg")
+        // These are pre-generated 400px thumbnails bundled with the app for offline access
+        if let stableId = stableId, !stableId.isEmpty {
+            let thumbnailExtensions = ["jpg", "jpeg"]
+            for ext in thumbnailExtensions {
+                let thumbnailName = "\(stableId)_thumb"
+
+                // Files in Molten/Resources/ are flattened to bundle root
+                if let path = Bundle.main.path(forResource: thumbnailName, ofType: ext) {
+                    if let image = loadImageWithoutColorProfile(from: path) {
+                        imageCache.setObject(image, forKey: cacheKeyNS)
+                        return image
+                    }
+                }
+            }
         }
 
         let sanitizedCode = sanitizeItemCodeForFilename(itemCode)
@@ -247,17 +248,9 @@ struct ImageHelpers {
         if let manufacturer = manufacturer,
            let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
             for ext in extensions {
-                if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images"),
-                   let image = loadImageWithoutColorProfile(from: path) {
-                    // Cache the successful result
-                    imageCache.setObject(image, forKey: cacheKeyNS)
-                    return image
-                }
-
-                // Also try at bundle root
+                // Files in Molten/Resources/ are flattened to bundle root
                 if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext),
                    let image = loadImageWithoutColorProfile(from: path) {
-                    // Cache the successful result
                     imageCache.setObject(image, forKey: cacheKeyNS)
                     return image
                 }
@@ -289,12 +282,7 @@ struct ImageHelpers {
             if let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
                 let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
                 for ext in extensions {
-                    // Try with directory
-                    if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images"),
-                       loadImageWithoutColorProfile(from: path) != nil {
-                        return "manufacturer-images/\(defaultImageName).\(ext)"
-                    }
-                    // Try without directory (in case files are at bundle root)
+                    // Files in Molten/Resources/ are flattened to bundle root
                     if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext),
                        loadImageWithoutColorProfile(from: path) != nil {
                         return "\(defaultImageName).\(ext)"
@@ -356,9 +344,10 @@ struct ImageHelpers {
         if let manufacturer = manufacturer,
            let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
             for ext in extensions {
-                if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images"),
+                // Files in Molten/Resources/ are flattened to bundle root
+                if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext),
                    loadImageWithoutColorProfile(from: path) != nil {
-                    return "manufacturer-images/\(defaultImageName).\(ext)"
+                    return "\(defaultImageName).\(ext)"
                 }
             }
         }

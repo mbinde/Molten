@@ -29,7 +29,7 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
 
     private let apiClient: CatalogAPIClientProtocol
     private let storageService: CatalogStorageServiceProtocol
-    private let dataLoadingService: GlassItemDataLoadingServiceProtocol
+    private let databaseManager: CatalogDatabaseManager
     private let networkMonitor: NetworkMonitorProtocol
     private let log = Logger(subsystem: "Molten", category: "CatalogUpdate")
 
@@ -42,12 +42,12 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
     init(
         apiClient: CatalogAPIClientProtocol,
         storageService: CatalogStorageServiceProtocol,
-        dataLoadingService: GlassItemDataLoadingServiceProtocol,
+        databaseManager: CatalogDatabaseManager = .shared,
         networkMonitor: NetworkMonitorProtocol
     ) {
         self.apiClient = apiClient
         self.storageService = storageService
-        self.dataLoadingService = dataLoadingService
+        self.databaseManager = databaseManager
         self.networkMonitor = networkMonitor
     }
 
@@ -186,31 +186,29 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
 
             downloadProgress = 0.7
 
-            // 5. Parse and load into database
-            log.info("Loading catalog into database...")
+            // 5. Replace database with downloaded version
+            log.info("Replacing catalog database...")
 
-            let loadingResult = try await dataLoadingService.loadGlassItemsFromData(
-                catalogData,
-                options: .appUpdate
-            )
+            try await databaseManager.replaceDatabaseWith(tempFile: tempFile)
 
             downloadProgress = 0.9
 
-            // 6. Promote temp to current
-            try await storageService.promoteTempToCurrent(tempFile: tempFile)
-
-            // 7. Update version tracking
+            // 6. Update version tracking
             CatalogUpdatePreferences.shared.currentCatalogVersion = updateInfo.availableVersion
             CatalogUpdatePreferences.shared.lastSuccessfulUpdate = Date()
             CatalogUpdatePreferences.shared.catalogSource = .downloaded
 
             downloadProgress = 1.0
 
+            // 7. Get item count from new database
+            let repository = SQLiteGlassItemRepository()
+            let items = try await repository.fetchItems(matching: nil)
+
             let result = CatalogUpdateResult(
                 version: updateInfo.availableVersion,
-                itemsCreated: loadingResult.itemsCreated,
-                itemsUpdated: loadingResult.itemsUpdated,
-                itemsRemoved: 0,  // Not tracking removals in v1.5
+                itemsCreated: items.count,  // Total item count (can't differentiate created vs updated for full DB replacement)
+                itemsUpdated: 0,
+                itemsRemoved: 0,
                 appliedAt: Date()
             )
 

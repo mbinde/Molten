@@ -156,6 +156,20 @@ struct ImageHelpers {
             }
         }
 
+        // PRIORITY 2.5: Check for bundled thumbnail in product-images/glass directory
+        // Thumbnails are named like "{stableId}_thumb.jpg" (e.g., "000NCe_thumb.jpg")
+        // These are pre-generated 400px thumbnails bundled with the app for offline access
+        let thumbnailExtensions = ["jpg", "jpeg"]
+        for ext in thumbnailExtensions {
+            let thumbnailName = "\(sanitizeItemCodeForFilename(itemCode))_thumb"
+            if let path = Bundle.main.path(forResource: thumbnailName, ofType: ext, inDirectory: "product-images/glass"),
+               let image = loadImageWithoutColorProfile(from: path) {
+                // Cache the successful result
+                imageCache.setObject(image, forKey: cacheKeyNS)
+                return image
+            }
+        }
+
         // Check if we have permission to use product-specific images for this manufacturer
         // If not, skip directly to default manufacturer image
         if let manufacturer = manufacturer,

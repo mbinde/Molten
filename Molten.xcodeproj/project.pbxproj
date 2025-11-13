@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */ = {isa = PBXBuildFile; fileRef = F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */; };
 		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
 		F53C0BD32EA81F980020E1AB /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */; };
 		F59F21B92EBF2CDE005A6269 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = F59F21B82EBF2CDE005A6269 /* RevenueCat */; };
@@ -16,10 +15,6 @@
 		F59F3AD82EBF1A2C005A6269 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = F59F3AD72EBF1A2C005A6269 /* RevenueCatUI */; };
 		F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */; };
 		F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */; };
-		F5D3E3522E9EAB2000DAA195 /* core-data-verification.md in Resources */ = {isa = PBXBuildFile; fileRef = F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */; };
-		F5EA2FB92E9F4ACA00DB21AD /* AppTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */; };
-		F5EA3BDB2E9FF29700DB21AD /* DELETED_TESTS.md in Resources */ = {isa = PBXBuildFile; fileRef = F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */; };
-		F5FACAF92EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md in Resources */ = {isa = PBXBuildFile; fileRef = F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,26 +96,19 @@
 		DB95FB5AC403E8CFD93211C5 /* CoreDataUnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataUnifiedLocationRepository.swift; sourceTree = "<group>"; };
 		E7C7A65B94A6533A14E7AE47 /* taglia_tools.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = taglia_tools.json; sourceTree = "<group>"; };
 		F0AA0F21EF80657D274B4674 /* ToolItemDataLoadingService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemDataLoadingService.swift; sourceTree = "<group>"; };
-		F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
-		F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DESIGN_PROJECT_ENTITIES.md; sourceTree = "<group>"; };
 		F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = ViewModelTests.xctestplan; sourceTree = "<group>"; };
 		F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Screenshots.xctestplan; sourceTree = "<group>"; };
-		F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Flameworker.xctestplan; sourceTree = "<group>"; };
-		F5C06D232EB7A7670038084E /* Molten.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Molten.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5C06D242EB7A7670038084E /* MoltenShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoltenShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5C06D252EB7A7670038084E /* MoltenTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoltenTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5C06D262EB7A7670038084E /* MoltenUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoltenUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5C06D272EB7A7670038084E /* PerformanceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PerformanceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5C06D282EB7A7670038084E /* RepositoryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RepositoryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5C06D292EB7A7670038084E /* InventoryImport.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InventoryImport.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5C06D2A2EB7A7670038084E /* ScreenshotAutomation.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenshotAutomation.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5C06D2B2EB7A7670038084E /* ViewModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ViewModelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F5C06D232EB7A7670038084E /* Molten.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = Molten.app; path = /Users/binde/projects/arch/build/Debug/Molten.app; sourceTree = "<absolute>"; };
+		F5C06D242EB7A7670038084E /* MoltenShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; name = MoltenShareExtension.appex; path = "/Users/binde/projects/arch/build/Debug-iphoneos/MoltenShareExtension.appex"; sourceTree = "<absolute>"; };
+		F5C06D252EB7A7670038084E /* MoltenTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = MoltenTests.xctest; path = "/Users/binde/projects/arch/build/Debug-iphoneos/Molten.app/PlugIns/MoltenTests.xctest"; sourceTree = "<absolute>"; };
+		F5C06D262EB7A7670038084E /* MoltenUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = MoltenUITests.xctest; path = "/Users/binde/projects/arch/build/Debug-iphoneos/MoltenUITests-Runner.app/PlugIns/MoltenUITests.xctest"; sourceTree = "<absolute>"; };
+		F5C06D272EB7A7670038084E /* PerformanceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = PerformanceTests.xctest; path = "/Users/binde/projects/arch/build/Debug-iphoneos/Molten.app/PlugIns/PerformanceTests.xctest"; sourceTree = "<absolute>"; };
+		F5C06D282EB7A7670038084E /* RepositoryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = RepositoryTests.xctest; path = "/Users/binde/projects/arch/build/Debug-iphoneos/Molten.app/PlugIns/RepositoryTests.xctest"; sourceTree = "<absolute>"; };
+		F5C06D292EB7A7670038084E /* InventoryImport.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = InventoryImport.xctest; path = "/Users/binde/projects/arch/build/Debug-iphoneos/Molten.app/PlugIns/InventoryImport.xctest"; sourceTree = "<absolute>"; };
+		F5C06D2A2EB7A7670038084E /* ScreenshotAutomation.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = ScreenshotAutomation.xctest; path = "/Users/binde/projects/arch/build/Debug-iphoneos/ScreenshotAutomation-Runner.app/PlugIns/ScreenshotAutomation.xctest"; sourceTree = "<absolute>"; };
+		F5C06D2B2EB7A7670038084E /* ViewModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = ViewModelTests.xctest; path = "/Users/binde/projects/arch/build/Debug-iphoneos/Molten.app/PlugIns/ViewModelTests.xctest"; sourceTree = "<absolute>"; };
 		F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTestsOnly.xctestplan; sourceTree = "<group>"; };
 		F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
-		F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "core-data-verification.md"; sourceTree = "<group>"; };
-		F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AppTests.xctestplan; sourceTree = "<group>"; };
-		F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DELETED_TESTS.md; sourceTree = "<group>"; };
-		F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TEST_FIXES_SUMMARY.md; sourceTree = "<group>"; };
 		F5FACB512EA0C9590084A6D0 /* RepositoryTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = RepositoryTests.xctestplan; sourceTree = "<group>"; };
 		F887709B0F20E4BA442FDEF0 /* UnifiedLocationModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -861,29 +849,13 @@
 			children = (
 				F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */,
 				F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */,
-				F5044B4C2EA1A47E00375368 /* AppTests.xctestplan */,
 				F5FACB512EA0C9590084A6D0 /* RepositoryTests.xctestplan */,
 				F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */,
-				F5EA291C2E9F4ACA00DB21AD /* AppTests.xctestplan */,
-				F565A1BF2E906F6A00A7F490 /* Flameworker.xctestplan */,
 				F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */,
 				F5A13C4D2E890146002C0F7A /* Molten */,
 				F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */,
 				F5DB4DAA2EAB159C00F6E879 /* MoltenShareExtension */,
-				F5D3E3512E9EAB2000DAA195 /* core-data-verification.md */,
-				F5EA3BDA2E9FF29700DB21AD /* DELETED_TESTS.md */,
-				F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */,
-				F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */,
 				05644C20A407154AE488E490 /* Molten */,
-				F5C06D232EB7A7670038084E /* Molten.app */,
-				F5C06D242EB7A7670038084E /* MoltenShareExtension.appex */,
-				F5C06D252EB7A7670038084E /* MoltenTests.xctest */,
-				F5C06D262EB7A7670038084E /* MoltenUITests.xctest */,
-				F5C06D272EB7A7670038084E /* PerformanceTests.xctest */,
-				F5C06D282EB7A7670038084E /* RepositoryTests.xctest */,
-				F5C06D292EB7A7670038084E /* InventoryImport.xctest */,
-				F5C06D2A2EB7A7670038084E /* ScreenshotAutomation.xctest */,
-				F5C06D2B2EB7A7670038084E /* ViewModelTests.xctest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1165,7 +1137,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5EA2FB92E9F4ACA00DB21AD /* AppTests.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1173,13 +1144,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F5EA3BDB2E9FF29700DB21AD /* DELETED_TESTS.md in Resources */,
 				F53C0BD32EA81F980020E1AB /* Screenshots.xctestplan in Resources */,
 				F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */,
-				F5D3E3522E9EAB2000DAA195 /* core-data-verification.md in Resources */,
-				F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */,
 				F5D3D6A82E9DCDE600DAA195 /* UnitTestsOnly.xctestplan in Resources */,
-				F5FACAF92EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md in Resources */,
 				F5D3D6CD2E9DE21600DAA195 /* UITests.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

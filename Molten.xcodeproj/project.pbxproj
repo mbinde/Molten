@@ -123,7 +123,6 @@
 		F5FACAF82EA0AE170084A6D0 /* TEST_FIXES_SUMMARY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TEST_FIXES_SUMMARY.md; sourceTree = "<group>"; };
 		F5FACB512EA0C9590084A6D0 /* RepositoryTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = RepositoryTests.xctestplan; sourceTree = "<group>"; };
 		F887709B0F20E4BA442FDEF0 /* UnifiedLocationModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationModel.swift; sourceTree = "<group>"; };
-		FB705A027A7FAEC05529AC2E /* MockUnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockUnifiedLocationRepository.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -786,7 +785,6 @@
 			children = (
 				CA711F134995AC292780E108 /* Protocols */,
 				20315DBE882FEEB1FA04C5C6 /* CoreData */,
-				9F5B17E700B5B1BCBB47F1BF /* Mock */,
 			);
 			path = Repositories;
 			sourceTree = "<group>";
@@ -807,14 +805,6 @@
 				60B9505ADF25024ADEAE86D6 /* Services */,
 			);
 			path = Sources;
-			sourceTree = "<group>";
-		};
-		9F5B17E700B5B1BCBB47F1BF /* Mock */ = {
-			isa = PBXGroup;
-			children = (
-				FB705A027A7FAEC05529AC2E /* MockUnifiedLocationRepository.swift */,
-			);
-			path = Mock;
 			sourceTree = "<group>";
 		};
 		A5B1C4F2D3237B073CAF9C79 /* Tools */ = {

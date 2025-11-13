@@ -661,6 +661,33 @@ struct CatalogOverviewModel: Sendable {
     let itemsWithInventory: Int
     let lowStockItems: Int
     let systemType: String
+
+    /// Business Logic: Aggregate catalog statistics into overview model
+    /// - Parameters:
+    ///   - totalItems: Total number of catalog items
+    ///   - totalManufacturers: Number of distinct manufacturers
+    ///   - totalTags: Total number of tags
+    ///   - itemsWithInventory: Number of items that have inventory
+    ///   - lowStockItems: Number of items below minimum threshold
+    ///   - systemType: Type of catalog system (e.g., "GlassItem")
+    /// - Returns: Overview model with aggregated statistics
+    static func from(
+        totalItems: Int,
+        totalManufacturers: Int,
+        totalTags: Int,
+        itemsWithInventory: Int,
+        lowStockItems: Int,
+        systemType: String
+    ) -> CatalogOverviewModel {
+        return CatalogOverviewModel(
+            totalItems: totalItems,
+            totalManufacturers: totalManufacturers,
+            totalTags: totalTags,
+            itemsWithInventory: itemsWithInventory,
+            lowStockItems: lowStockItems,
+            systemType: systemType
+        )
+    }
 }
 
 /// Manufacturer statistics

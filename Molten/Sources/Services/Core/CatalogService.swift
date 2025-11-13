@@ -538,8 +538,9 @@ actor CatalogService {
         let totalTags = try await tagsRepository.getAllTags().count
         let itemsWithInventory = try await trackingService.inventoryRepository.getItemsWithInventory().count
         let lowStockItems = try await trackingService.getLowStockItems(threshold: 5.0).count
-        
-        return CatalogOverviewModel(
+
+        // Use business logic from model
+        return CatalogOverviewModel.from(
             totalItems: totalItems,
             totalManufacturers: totalManufacturers,
             totalTags: totalTags,

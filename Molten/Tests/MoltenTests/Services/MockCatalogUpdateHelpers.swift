@@ -28,6 +28,11 @@ class MockCatalogUpdateService: CatalogUpdateServiceProtocol {
     var lastForceFlag: Bool?
 
     func checkForUpdates() async throws -> CatalogUpdateInfo? {
+        // Prevent concurrent checks (match real service behavior)
+        guard !isChecking else {
+            return nil
+        }
+
         checkForUpdatesCallCount += 1
         isChecking = true
         defer { isChecking = false }
@@ -47,6 +52,14 @@ class MockCatalogUpdateService: CatalogUpdateServiceProtocol {
         updateInfo: CatalogUpdateInfo,
         force: Bool = false
     ) async throws -> CatalogUpdateResult {
+        // Prevent concurrent downloads (match real service behavior)
+        guard !isDownloading else {
+            throw CatalogUpdateError.downloadFailed(
+                underlying: NSError(domain: "MockService", code: -2,
+                                  userInfo: [NSLocalizedDescriptionKey: "Download already in progress"])
+            )
+        }
+
         downloadCallCount += 1
         lastForceFlag = force
 

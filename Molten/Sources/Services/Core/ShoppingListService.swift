@@ -320,7 +320,7 @@ actor ShoppingListService {
             ))
         }
         
-        return detailedMinimums.sorted { $0.minimum.type < $1.minimum.type }
+        return detailedMinimums.sorted() // Uses Comparable conformance from model
     }
     
     /// Remove minimum for an item and type

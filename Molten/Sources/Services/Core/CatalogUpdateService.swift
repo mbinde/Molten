@@ -66,12 +66,12 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
 
         log.info("Checking for catalog updates...")
 
+        // Update last check time (even if check fails, we want to track when we attempted)
+        CatalogUpdatePreferences.shared.lastUpdateCheck = Date()
+
         do {
             // Get latest version from server
             let latestMetadata = try await apiClient.getLatestVersion()
-
-            // Update last check time
-            CatalogUpdatePreferences.shared.lastUpdateCheck = Date()
 
             // Get current version
             let currentVersion = CatalogUpdatePreferences.shared.currentCatalogVersion

@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "B2C3D4E5-F6A7-4890-BCDE-F01234567890",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Molten.xcodeproj",
+        "identifier" : "F53C0BB02EA7FB020020E1AB",
+        "name" : "ScreenshotAutomation"
+      }
+    }
+  ],
+  "version" : 1
+}

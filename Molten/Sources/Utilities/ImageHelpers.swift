@@ -112,16 +112,20 @@ struct ImageHelpers {
     nonisolated static func loadProductImage(for itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil) -> UIImage? {
         guard !itemCode.isEmpty else { return nil }
 
+        print("🔍 [ImageHelpers] loadProductImage called - itemCode: \(itemCode), manufacturer: \(manufacturer ?? "nil"), stableId: \(stableId ?? "nil"), imagePath: \(imagePath ?? "nil")")
+
         let cacheKey = "\(manufacturer ?? "nil")-\(itemCode)"
         let cacheKeyNS = cacheKey as NSString
 
         // Check positive cache first
         if let cachedImage = imageCache.object(forKey: cacheKeyNS) {
+            print("✅ [ImageHelpers] Found in cache: \(itemCode)")
             return cachedImage
         }
 
         // Check negative cache (items we know don't have images)
         if negativeCache.object(forKey: cacheKeyNS) != nil {
+            print("⚠️ [ImageHelpers] Found in negative cache (known to not have image): \(itemCode)")
             return nil
         }
 
@@ -162,11 +166,36 @@ struct ImageHelpers {
         let thumbnailExtensions = ["jpg", "jpeg"]
         for ext in thumbnailExtensions {
             let thumbnailName = "\(sanitizeItemCodeForFilename(itemCode))_thumb"
-            if let path = Bundle.main.path(forResource: thumbnailName, ofType: ext, inDirectory: "product-images/glass"),
-               let image = loadImageWithoutColorProfile(from: path) {
-                // Cache the successful result
-                imageCache.setObject(image, forKey: cacheKeyNS)
-                return image
+            print("🔍 [ImageHelpers] Looking for bundled thumbnail: \(thumbnailName).\(ext) in product-images/glass")
+
+            // Debug: List what's actually in the bundle
+            if let bundleURL = Bundle.main.url(forResource: "product-images/glass", withExtension: nil) {
+                print("📂 [ImageHelpers] Bundle glass directory exists at: \(bundleURL.path)")
+                if let files = try? FileManager.default.contentsOfDirectory(atPath: bundleURL.path) {
+                    print("📂 [ImageHelpers] Found \(files.count) files in glass directory")
+                    let matchingFiles = files.filter { $0.hasPrefix(thumbnailName) }
+                    if !matchingFiles.isEmpty {
+                        print("📂 [ImageHelpers] Matching files: \(matchingFiles)")
+                    }
+                } else {
+                    print("❌ [ImageHelpers] Could not read glass directory contents")
+                }
+            } else {
+                print("❌ [ImageHelpers] Bundle glass directory does not exist in bundle!")
+            }
+
+            if let path = Bundle.main.path(forResource: thumbnailName, ofType: ext, inDirectory: "product-images/glass") {
+                print("✅ [ImageHelpers] Found bundled thumbnail at: \(path)")
+                if let image = loadImageWithoutColorProfile(from: path) {
+                    // Cache the successful result
+                    imageCache.setObject(image, forKey: cacheKeyNS)
+                    print("✅ [ImageHelpers] Successfully loaded bundled thumbnail for \(itemCode)")
+                    return image
+                } else {
+                    print("❌ [ImageHelpers] Failed to load image from path: \(path)")
+                }
+            } else {
+                print("❌ [ImageHelpers] Bundled thumbnail not found: \(thumbnailName).\(ext)")
             }
         }
 
@@ -260,11 +289,13 @@ struct ImageHelpers {
         // Final fallback: try manufacturer default image
         if let manufacturer = manufacturer,
            let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
+            print("🔍 [ImageHelpers] Trying manufacturer fallback image: \(defaultImageName)")
             for ext in extensions {
                 if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images"),
                    let image = loadImageWithoutColorProfile(from: path) {
                     // Cache the successful result
                     imageCache.setObject(image, forKey: cacheKeyNS)
+                    print("✅ [ImageHelpers] Using manufacturer fallback image for \(itemCode): \(defaultImageName).\(ext)")
                     return image
                 }
 
@@ -273,6 +304,7 @@ struct ImageHelpers {
                    let image = loadImageWithoutColorProfile(from: path) {
                     // Cache the successful result
                     imageCache.setObject(image, forKey: cacheKeyNS)
+                    print("✅ [ImageHelpers] Using manufacturer fallback image (bundle root) for \(itemCode): \(defaultImageName).\(ext)")
                     return image
                 }
             }
@@ -280,6 +312,7 @@ struct ImageHelpers {
 
         // Cache the negative result to prevent future lookups
         negativeCache.setObject(NSNumber(booleanLiteral: true), forKey: cacheKeyNS)
+        print("❌ [ImageHelpers] No image found for \(itemCode), caching negative result")
         return nil
     }
     

@@ -884,28 +884,15 @@ nonisolated struct RepositoryFactory {
         persistentContainer = controller.container
     }
     
-    /// Configure for production and ensure initial data is loaded
+    /// Configure for production and ensure catalog database is initialized
     nonisolated static func configureForProductionWithInitialData() async throws {
         configureForProduction()
-        
-        // Check if we need to load initial data
-        let catalogService = createCatalogService()
-        let existingItems = try await catalogService.getAllGlassItems()
-        
-        if existingItems.isEmpty {
-            print("🔄 Loading initial data for production...")
-            
-            // Use mock data loader temporarily since JSON files aren't in bundle
-            let mockDataLoader = MockJSONDataLoader()
-            mockDataLoader.testDataMode = .medium  // Use more test data
-            
-            let dataLoadingService = GlassItemDataLoadingService(
-                catalogService: catalogService,
-                jsonLoader: mockDataLoader
-            )
-            let result = try await dataLoadingService.loadGlassItemsFromJSON(options: .default)
-            print("🔄 Initial data loaded: \(result.itemsCreated) items created, \(result.itemsFailed) failed")
-        }
+
+        // Initialize the bundled SQLite catalog database
+        // This copies the database from the bundle to Documents on first launch
+        // or updates it if the bundle has a newer version
+        try await CatalogDatabaseManager.shared.initialize()
+        print("✅ Catalog database initialized")
     }
     
     /// Configure factory for development with hybrid approach

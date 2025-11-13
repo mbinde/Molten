@@ -30,9 +30,6 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:Flameworker.xctestplan">
-         </TestPlanReference>
-         <TestPlanReference
             reference = "container:UnitTestsOnly.xctestplan"
             default = "YES">
          </TestPlanReference>

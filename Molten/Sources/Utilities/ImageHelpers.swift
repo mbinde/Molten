@@ -142,53 +142,14 @@ struct ImageHelpers {
                 let resourceName = pathComponents.dropLast().joined(separator: ".")
                 let ext = String(pathComponents.last!)
 
+                // Files in Molten/Resources/ are flattened to bundle root
                 if let path = Bundle.main.path(forResource: resourceName, ofType: ext) {
                     if let image = loadImageWithoutColorProfile(from: path) {
-                        // Cache the successful result
                         imageCache.setObject(image, forKey: cacheKeyNS)
                         return image
                     }
-                } else {
-                    // Try with product-images directory
-                    if let dirPath = Bundle.main.path(forResource: resourceName, ofType: ext, inDirectory: "product-images") {
-                        if let image = loadImageWithoutColorProfile(from: dirPath) {
-                            imageCache.setObject(image, forKey: cacheKeyNS)
-                            return image
-                        }
-                    }
                 }
             }
-        }
-
-        // PRIORITY 2.5: Check for bundled thumbnail in product-images/glass directory
-        // Thumbnails are named like "{stableId}_thumb.jpg" (e.g., "000NCe_thumb.jpg")
-        // These are pre-generated 400px thumbnails bundled with the app for offline access
-        let thumbnailExtensions = ["jpg", "jpeg"]
-        for ext in thumbnailExtensions {
-            let thumbnailName = "\(sanitizeItemCodeForFilename(itemCode))_thumb"
-            print("🔍 [ImageHelpers] Looking for bundled thumbnail: \(thumbnailName).\(ext)")
-
-            // Try in product-images/glass subdirectory first
-            if let path = Bundle.main.path(forResource: thumbnailName, ofType: ext, inDirectory: "product-images/glass") {
-                print("✅ [ImageHelpers] Found bundled thumbnail in subdirectory at: \(path)")
-                if let image = loadImageWithoutColorProfile(from: path) {
-                    imageCache.setObject(image, forKey: cacheKeyNS)
-                    print("✅ [ImageHelpers] Successfully loaded bundled thumbnail for \(itemCode)")
-                    return image
-                }
-            }
-
-            // Also try at bundle root (files in Sources/Resources/ may be flattened)
-            if let path = Bundle.main.path(forResource: thumbnailName, ofType: ext) {
-                print("✅ [ImageHelpers] Found bundled thumbnail at bundle root: \(path)")
-                if let image = loadImageWithoutColorProfile(from: path) {
-                    imageCache.setObject(image, forKey: cacheKeyNS)
-                    print("✅ [ImageHelpers] Successfully loaded bundled thumbnail (bundle root) for \(itemCode)")
-                    return image
-                }
-            }
-
-            print("❌ [ImageHelpers] Bundled thumbnail not found: \(thumbnailName).\(ext)")
         }
 
         // Check if we have permission to use product-specific images for this manufacturer
@@ -200,18 +161,9 @@ struct ImageHelpers {
                 let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
 
                 for ext in extensions {
-                    // Try with directory
-                    if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images"),
-                       let image = loadImageWithoutColorProfile(from: path) {
-                        // Cache the successful result
-                        imageCache.setObject(image, forKey: cacheKeyNS)
-                        return image
-                    }
-
-                    // Try without directory (in case files are at bundle root)
+                    // Files in Molten/Resources/ are flattened to bundle root
                     if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext),
                        let image = loadImageWithoutColorProfile(from: path) {
-                        // Cache the successful result
                         imageCache.setObject(image, forKey: cacheKeyNS)
                         return image
                     }
@@ -221,6 +173,25 @@ struct ImageHelpers {
             // Cache the negative result
             negativeCache.setObject(NSNumber(booleanLiteral: true), forKey: cacheKeyNS)
             return nil
+        }
+
+        // PRIORITY 2.5: Check for bundled thumbnail (AFTER permission check)
+        // Thumbnails are named like "{stableId}_thumb.jpg" (e.g., "000NCe_thumb.jpg")
+        // These are pre-generated 400px thumbnails bundled with the app for offline access
+        let thumbnailExtensions = ["jpg", "jpeg"]
+        for ext in thumbnailExtensions {
+            let thumbnailName = "\(sanitizeItemCodeForFilename(itemCode))_thumb"
+            print("🔍 [ImageHelpers] Looking for bundled thumbnail: \(thumbnailName).\(ext)")
+
+            // Files in Molten/Resources/ are flattened to bundle root
+            if let path = Bundle.main.path(forResource: thumbnailName, ofType: ext) {
+                print("✅ [ImageHelpers] Found bundled thumbnail at: \(path)")
+                if let image = loadImageWithoutColorProfile(from: path) {
+                    imageCache.setObject(image, forKey: cacheKeyNS)
+                    print("✅ [ImageHelpers] Successfully loaded bundled thumbnail for \(itemCode)")
+                    return image
+                }
+            }
         }
 
         let sanitizedCode = sanitizeItemCodeForFilename(itemCode)
@@ -283,20 +254,11 @@ struct ImageHelpers {
            let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
             print("🔍 [ImageHelpers] Trying manufacturer fallback image: \(defaultImageName)")
             for ext in extensions {
-                if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images"),
-                   let image = loadImageWithoutColorProfile(from: path) {
-                    // Cache the successful result
-                    imageCache.setObject(image, forKey: cacheKeyNS)
-                    print("✅ [ImageHelpers] Using manufacturer fallback image for \(itemCode): \(defaultImageName).\(ext)")
-                    return image
-                }
-
-                // Also try at bundle root
+                // Files in Molten/Resources/ are flattened to bundle root
                 if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext),
                    let image = loadImageWithoutColorProfile(from: path) {
-                    // Cache the successful result
                     imageCache.setObject(image, forKey: cacheKeyNS)
-                    print("✅ [ImageHelpers] Using manufacturer fallback image (bundle root) for \(itemCode): \(defaultImageName).\(ext)")
+                    print("✅ [ImageHelpers] Using manufacturer fallback image for \(itemCode): \(defaultImageName).\(ext)")
                     return image
                 }
             }
@@ -328,12 +290,7 @@ struct ImageHelpers {
             if let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
                 let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
                 for ext in extensions {
-                    // Try with directory
-                    if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images"),
-                       loadImageWithoutColorProfile(from: path) != nil {
-                        return "manufacturer-images/\(defaultImageName).\(ext)"
-                    }
-                    // Try without directory (in case files are at bundle root)
+                    // Files in Molten/Resources/ are flattened to bundle root
                     if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext),
                        loadImageWithoutColorProfile(from: path) != nil {
                         return "\(defaultImageName).\(ext)"
@@ -395,9 +352,10 @@ struct ImageHelpers {
         if let manufacturer = manufacturer,
            let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
             for ext in extensions {
-                if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext, inDirectory: "manufacturer-images"),
+                // Files in Molten/Resources/ are flattened to bundle root
+                if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext),
                    loadImageWithoutColorProfile(from: path) != nil {
-                    return "manufacturer-images/\(defaultImageName).\(ext)"
+                    return "\(defaultImageName).\(ext)"
                 }
             }
         }
@@ -518,8 +476,6 @@ struct ProductImageView: View {
 
         // PRIORITY 1.5: Try to download from CDN (only if we have an exact image_path from catalog)
         // ProductImageView uses thumbnails by default for faster loading in lists (unless user enabled full-size)
-        // TEMPORARY: Disabled to test local-only thumbnail loading performance
-        /*
         if let imagePath = imagePath, !imagePath.isEmpty {
             let useThumbnail = !UserSettings.shared.downloadFullSizeImages
             if let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath, useThumbnail: useThumbnail) {
@@ -528,7 +484,6 @@ struct ProductImageView: View {
                 return
             }
         }
-        */
 
         // PRIORITY 2: Load bundle/manufacturer images with low priority to avoid blocking UI
         let image = await Task.detached(priority: .background) {

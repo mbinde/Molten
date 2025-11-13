@@ -152,62 +152,38 @@ class AppDependencies {
         self.userImageRepository = CoreDataUserImageRepository(context: cloudContext)
         #endif
 
-        // Create services
-        self.inventoryTrackingService = InventoryTrackingService(
-            glassItemRepository: glassItemRepository,
-            inventoryRepository: inventoryRepository,
-            itemTagsRepository: itemTagsRepository
-        )
-
-        self.catalogService = CatalogService(
+        // Create services (using helper to avoid duplication)
+        (
+            self.inventoryTrackingService,
+            self.catalogService,
+            self.shoppingListService,
+            self.projectService,
+            self.purchaseRecordService,
+            self.kilnScheduleService,
+            self.recipeService,
+            self.unifiedLocationService,
+            self.entitlementService,
+            self.glassItemDataLoadingService,
+            self.subscriptionService
+        ) = Self.setupServices(
             glassItemRepository: glassItemRepository,
             coatingItemRepository: coatingItemRepository,
             toolItemRepository: toolItemRepository,
-            inventoryTrackingService: inventoryTrackingService,
-            itemMinimumRepository: itemMinimumRepository,
+            inventoryRepository: inventoryRepository,
             itemTagsRepository: itemTagsRepository,
-            userTagsRepository: userTagsRepository
-        )
-
-        self.shoppingListService = ShoppingListService(
+            userTagsRepository: userTagsRepository,
             itemMinimumRepository: itemMinimumRepository,
             shoppingListRepository: shoppingListRepository,
-            inventoryRepository: inventoryRepository,
-            glassItemRepository: glassItemRepository,
-            itemTagsRepository: itemTagsRepository,
-            userTagsRepository: userTagsRepository
-        )
-
-        self.projectService = ProjectService(
             projectRepository: projectRepository,
             logbookRepository: logbookRepository,
-            userTagsRepository: userTagsRepository
-        )
-
-        self.purchaseRecordService = PurchaseRecordService(
-            repository: purchaseRecordRepository
-        )
-
-        self.kilnScheduleService = KilnScheduleService(
-            repository: kilnScheduleRepository
-        )
-
-        self.glassItemDataLoadingService = GlassItemDataLoadingService(
-            catalogService: catalogService,
+            purchaseRecordRepository: purchaseRecordRepository,
+            kilnScheduleRepository: kilnScheduleRepository,
+            recipeRepository: recipeRepository,
+            unifiedLocationRepository: unifiedLocationRepository,
             jsonLoader: JSONDataLoader(),
-            catalogStorageService: try? CatalogStorageService()
+            catalogStorageService: try? CatalogStorageService(),
+            subscriptionService: RevenueCatSubscriptionService()
         )
-
-        self.recipeService = RecipeService(
-            repository: recipeRepository
-        )
-
-        self.unifiedLocationService = UnifiedLocationService(
-            repository: unifiedLocationRepository
-        )
-
-        self.entitlementService = EntitlementService(tier: .free)
-        self.subscriptionService = RevenueCatSubscriptionService()
     }
 
     /// Initialize with testing configuration (mocks)
@@ -241,14 +217,84 @@ class AppDependencies {
         self.userImageRepository = MockUserImageRepository()
         #endif
 
-        // Create services with mocks
-        self.inventoryTrackingService = InventoryTrackingService(
+        // Create services (using helper to avoid duplication)
+        (
+            self.inventoryTrackingService,
+            self.catalogService,
+            self.shoppingListService,
+            self.projectService,
+            self.purchaseRecordService,
+            self.kilnScheduleService,
+            self.recipeService,
+            self.unifiedLocationService,
+            self.entitlementService,
+            self.glassItemDataLoadingService,
+            self.subscriptionService
+        ) = Self.setupServices(
+            glassItemRepository: glassItemRepository,
+            coatingItemRepository: coatingItemRepository,
+            toolItemRepository: toolItemRepository,
+            inventoryRepository: inventoryRepository,
+            itemTagsRepository: itemTagsRepository,
+            userTagsRepository: userTagsRepository,
+            itemMinimumRepository: itemMinimumRepository,
+            shoppingListRepository: shoppingListRepository,
+            projectRepository: projectRepository,
+            logbookRepository: logbookRepository,
+            purchaseRecordRepository: purchaseRecordRepository,
+            kilnScheduleRepository: kilnScheduleRepository,
+            recipeRepository: recipeRepository,
+            unifiedLocationRepository: unifiedLocationRepository,
+            jsonLoader: MockJSONDataLoader(),
+            catalogStorageService: nil as CatalogStorageService?,  // No storage service for tests
+            subscriptionService: MockSubscriptionService(hasProAccess: false)
+        )
+    }
+
+    // MARK: - Service Setup Helper
+
+    /// Create all services with the provided repositories
+    /// This eliminates duplication between production and test inits
+    private static func setupServices(
+        glassItemRepository: GlassItemRepository,
+        coatingItemRepository: CoatingItemRepository,
+        toolItemRepository: ToolItemRepository,
+        inventoryRepository: InventoryRepository,
+        itemTagsRepository: ItemTagsRepository,
+        userTagsRepository: UserTagsRepository,
+        itemMinimumRepository: ItemMinimumRepository,
+        shoppingListRepository: ShoppingListRepository,
+        projectRepository: ProjectRepository,
+        logbookRepository: LogbookRepository,
+        purchaseRecordRepository: PurchaseRecordRepository,
+        kilnScheduleRepository: KilnScheduleRepository,
+        recipeRepository: RecipeRepository,
+        unifiedLocationRepository: UnifiedLocationRepository,
+        jsonLoader: JSONDataLoading,
+        catalogStorageService: CatalogStorageService?,
+        subscriptionService: SubscriptionServiceProtocol
+    ) -> (
+        InventoryTrackingService,
+        CatalogService,
+        ShoppingListService,
+        ProjectService,
+        PurchaseRecordService,
+        KilnScheduleService,
+        RecipeService,
+        UnifiedLocationService,
+        EntitlementService,
+        GlassItemDataLoadingService,
+        SubscriptionServiceProtocol
+    ) {
+        // Create inventory tracking service first (needed by catalog service)
+        let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepository,
             inventoryRepository: inventoryRepository,
             itemTagsRepository: itemTagsRepository
         )
 
-        self.catalogService = CatalogService(
+        // Create catalog service (depends on inventory tracking service)
+        let catalogService = CatalogService(
             glassItemRepository: glassItemRepository,
             coatingItemRepository: coatingItemRepository,
             toolItemRepository: toolItemRepository,
@@ -258,7 +304,8 @@ class AppDependencies {
             userTagsRepository: userTagsRepository
         )
 
-        self.shoppingListService = ShoppingListService(
+        // Create shopping list service
+        let shoppingListService = ShoppingListService(
             itemMinimumRepository: itemMinimumRepository,
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: inventoryRepository,
@@ -267,35 +314,56 @@ class AppDependencies {
             userTagsRepository: userTagsRepository
         )
 
-        self.projectService = ProjectService(
+        // Create project service
+        let projectService = ProjectService(
             projectRepository: projectRepository,
             logbookRepository: logbookRepository,
             userTagsRepository: userTagsRepository
         )
 
-        self.purchaseRecordService = PurchaseRecordService(
+        // Create purchase record service
+        let purchaseRecordService = PurchaseRecordService(
             repository: purchaseRecordRepository
         )
 
-        self.kilnScheduleService = KilnScheduleService(
+        // Create kiln schedule service
+        let kilnScheduleService = KilnScheduleService(
             repository: kilnScheduleRepository
         )
 
-        self.glassItemDataLoadingService = GlassItemDataLoadingService(
-            catalogService: catalogService,
-            jsonLoader: MockJSONDataLoader()
-        )
-
-        self.recipeService = RecipeService(
+        // Create recipe service
+        let recipeService = RecipeService(
             repository: recipeRepository
         )
 
-        self.unifiedLocationService = UnifiedLocationService(
+        // Create unified location service
+        let unifiedLocationService = UnifiedLocationService(
             repository: unifiedLocationRepository
         )
 
-        self.entitlementService = EntitlementService(tier: .free)
-        self.subscriptionService = MockSubscriptionService(hasProAccess: false)
+        // Create entitlement service
+        let entitlementService = EntitlementService()
+
+        // Create glass item data loading service
+        let glassItemDataLoadingService = GlassItemDataLoadingService(
+            catalogService: catalogService,
+            jsonLoader: jsonLoader,
+            catalogStorageService: catalogStorageService
+        )
+
+        return (
+            inventoryTrackingService,
+            catalogService,
+            shoppingListService,
+            projectService,
+            purchaseRecordService,
+            kilnScheduleService,
+            recipeService,
+            unifiedLocationService,
+            entitlementService,
+            glassItemDataLoadingService,
+            subscriptionService
+        )
     }
 
     // MARK: - Lazy Services

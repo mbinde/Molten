@@ -98,22 +98,23 @@ Technical reference for working with the Molten codebase.
 
 ---
 
-## Repository Pattern
+## Dependency Injection Pattern
 
-**Use `RepositoryFactory` to switch between Mock and Core Data implementations:**
+**Use `AppDependencies` for all service and repository access:**
 
 ```swift
-// Production (Core Data)
-RepositoryFactory.configureForProduction()
+// Production (Core Data) - automatically configured
+let dependencies = AppDependencies()
 
 // Testing (Mocks, isolated from Core Data)
-RepositoryFactory.configureForTesting()
+let dependencies = AppDependencies(forTesting: true)
 
-// Create services
-let catalogService = RepositoryFactory.createCatalogService()
+// Access services
+let catalogService = dependencies.catalogService
+let inventoryService = dependencies.inventoryTrackingService
 ```
 
-**CRITICAL**: Factory defaults to `.mock` to protect production data. Production code must call `configureForProduction()`.
+**CRITICAL**: `AppDependencies.shared` auto-detects test environment and provides appropriate implementations (mocks for tests, Core Data for production).
 
 ---
 
@@ -131,7 +132,7 @@ struct MyView: View {
             .task {
                 // ❌ Creates NEW service on every view recreation
                 if service == nil {
-                    service = RepositoryFactory.createService()
+                    service = AppDependencies.shared.catalogService
                 }
             }
     }
@@ -143,7 +144,7 @@ struct MyView: View {
 struct MyView: View {
     private let service: MyService  // NOT @State, NOT optional
 
-    init(service: MyService = RepositoryFactory.createService()) {
+    init(service: MyService = AppDependencies.shared.catalogService) {
         self.service = service  // Default parameter evaluated ONCE
     }
 
@@ -204,12 +205,12 @@ xcodebuild test -project Molten.xcodeproj -scheme Molten -destination 'platform=
 **Unit Tests** (`MoltenTests/`)
 - ViewModels, Models, Services, Utilities
 - Use mocks only, never Core Data
-- Use `RepositoryFactory.configureForTesting()`
+- Use `AppDependencies(forTesting: true)` or `AppDependencies.shared` (auto-detects tests)
 - Use `TestDataBuilder` for consistent test scenarios
 
 **Integration Tests** (`RepositoryTests/`)
 - Core Data repositories, persistence, migrations
-- Use `RepositoryFactory.configureForTestingWithCoreData()` with isolated controllers
+- Use `PersistenceController.createTestController()` for isolated Core Data contexts
 - **ALWAYS verify Core Data schema before writing tests**:
   ```bash
   cat Molten/Molten.xcdatamodeld/.xccurrentversion
@@ -268,7 +269,7 @@ Molten/
 
 1. **Service creation in `.onAppear`/`.task`** → Crashes (see anti-pattern above)
 2. **Business logic in Services** → Belongs in Models
-3. **Forgetting RepositoryFactory configuration** → Views fail silently
+3. **Not using AppDependencies** → Create dependencies in init, not in view lifecycle
 4. **N+1 queries** → Batch fetch inventory
 5. **Manual Core Data files** → Use Xcode's automatic code generation only
 6. **Skipping TDD** → Write tests first, always
@@ -281,10 +282,9 @@ Molten/
 
 ## Important Files
 
-- **`MoltenApp.swift`**: App entry point, dependency injection (uses `AppDependencies`)
-- **`RepositoryFactory.swift`**: Central factory for repositories and services
+- **`MoltenApp.swift`**: App entry point, creates and provides `AppDependencies`
+- **`AppDependencies.swift`**: Dependency injection container (replaces old RepositoryFactory pattern)
 - **`Persistence.swift`**: Core Data stack with two-store architecture, CloudKit, migration recovery
-- **`AppDependencies.swift`**: Dependency injection container
 - **`CompleteInventoryItemModel`**: Aggregates glass item + inventory + tags
 - **`TestDataBuilder.swift`**: Fluent API for creating test scenarios
 

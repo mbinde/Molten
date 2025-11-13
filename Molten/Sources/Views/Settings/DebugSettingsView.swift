@@ -10,6 +10,7 @@ import SwiftUI
 struct DebugSettingsView: View {
     @AppStorage("showDebugInfo") private var showDebugInfo = false
     @State private var showingResetDisclaimerAlert = false
+    @ObservedObject private var catalogPreferences = CatalogUpdatePreferences.shared
 
     private let deps: AppDependencies
 
@@ -24,6 +25,50 @@ struct DebugSettingsView: View {
                     .help("Show additional debug information throughout the app")
             } header: {
                 Text("Display")
+            }
+
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Glass Catalog:")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("v\(catalogPreferences.glassCatalogVersion)")
+                            .fontWeight(.medium)
+                    }
+
+                    HStack {
+                        Text("Tools Catalog:")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("v\(catalogPreferences.toolsCatalogVersion)")
+                            .fontWeight(.medium)
+                    }
+
+                    HStack {
+                        Text("Coatings Catalog:")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("v\(catalogPreferences.coatingsCatalogVersion)")
+                            .fontWeight(.medium)
+                    }
+
+                    if let lastUpdate = catalogPreferences.lastSuccessfulUpdate {
+                        HStack {
+                            Text("Last Update:")
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text(lastUpdate, style: .relative)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.top, 4)
+                    }
+                }
+            } header: {
+                Text("Catalog Versions")
+            } footer: {
+                Text("Catalog versions currently loaded in the app. Glass catalog v0 means bundled catalog is being used.")
             }
 
             Section {

@@ -59,7 +59,7 @@ actor CatalogStorageService: CatalogStorageServiceProtocol {
         // Setup directories
         self.storageDirectory = storageDirectory
         self.tempDirectory = storageDirectory.appendingPathComponent("Temp", isDirectory: true)
-        self.currentCatalogFile = storageDirectory.appendingPathComponent("current_catalog.json")
+        self.currentCatalogFile = storageDirectory.appendingPathComponent("catalog.sqlite")
 
         // Create directories if needed
         for directory in [self.storageDirectory, self.tempDirectory] {
@@ -75,19 +75,19 @@ actor CatalogStorageService: CatalogStorageServiceProtocol {
 
     // MARK: - Public API
 
-    /// Save catalog data to temporary storage
+    /// Save catalog database to temporary storage
     /// - Parameters:
-    ///   - data: Catalog JSON data
+    ///   - data: Catalog SQLite database data
     ///   - version: Catalog version number
     /// - Returns: URL of saved temp file
     func saveTempCatalog(_ data: Data, version: Int) throws -> URL {
-        let tempFile = tempDirectory.appendingPathComponent("catalog_v\(version)_temp.json")
+        let tempFile = tempDirectory.appendingPathComponent("catalog_v\(version)_temp.sqlite")
 
-        log.debug("Saving temp catalog to: \(tempFile.path)")
+        log.debug("Saving temp catalog database to: \(tempFile.path)")
 
         do {
             try data.write(to: tempFile, options: .atomic)
-            log.info("Saved temp catalog (\(data.count) bytes)")
+            log.info("Saved temp catalog database (\(data.count) bytes)")
             return tempFile
         } catch {
             log.error("Failed to save temp catalog: \(error.localizedDescription)")
@@ -116,17 +116,17 @@ actor CatalogStorageService: CatalogStorageServiceProtocol {
         }
     }
 
-    /// Load current catalog from storage
-    /// - Returns: Catalog JSON data, or nil if no catalog exists
+    /// Load current catalog database from storage
+    /// - Returns: Catalog SQLite database data, or nil if no catalog exists
     func loadCurrentCatalog() -> Data? {
         guard fileManager.fileExists(atPath: currentCatalogFile.path) else {
-            log.debug("No current catalog file exists")
+            log.debug("No current catalog database file exists")
             return nil
         }
 
         do {
             let data = try Data(contentsOf: currentCatalogFile)
-            log.debug("Loaded current catalog (\(data.count) bytes)")
+            log.debug("Loaded current catalog database (\(data.count) bytes)")
             return data
         } catch {
             log.error("Failed to load current catalog: \(error.localizedDescription)")

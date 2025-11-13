@@ -113,6 +113,31 @@ class CatalogUpdatePreferences: ObservableObject {
         }
     }
 
+    // Separate version tracking for each catalog type
+    var glassCatalogVersion: Int {
+        get { defaults.integer(forKey: Keys.glassCatalogVersion) }
+        set {
+            defaults.set(newValue, forKey: Keys.glassCatalogVersion)
+            objectWillChange.send()
+        }
+    }
+
+    var toolsCatalogVersion: Int {
+        get { defaults.integer(forKey: Keys.toolsCatalogVersion) }
+        set {
+            defaults.set(newValue, forKey: Keys.toolsCatalogVersion)
+            objectWillChange.send()
+        }
+    }
+
+    var coatingsCatalogVersion: Int {
+        get { defaults.integer(forKey: Keys.coatingsCatalogVersion) }
+        set {
+            defaults.set(newValue, forKey: Keys.coatingsCatalogVersion)
+            objectWillChange.send()
+        }
+    }
+
     var lastSuccessfulUpdate: Date? {
         get { defaults.object(forKey: Keys.lastSuccessfulUpdate) as? Date }
         set { defaults.set(newValue, forKey: Keys.lastSuccessfulUpdate) }
@@ -147,6 +172,9 @@ class CatalogUpdatePreferences: ObservableObject {
         static let hasUpdateAvailable = "catalog.hasUpdateAvailable"
         static let lastUpdateCheck = "catalog.lastUpdateCheck"
         static let currentVersion = "catalog.currentVersion"
+        static let glassCatalogVersion = "catalog.glass.version"
+        static let toolsCatalogVersion = "catalog.tools.version"
+        static let coatingsCatalogVersion = "catalog.coatings.version"
         static let lastSuccessfulUpdate = "catalog.lastSuccessfulUpdate"
         static let catalogSource = "catalog.source"
     }
@@ -155,7 +183,15 @@ class CatalogUpdatePreferences: ObservableObject {
 
     private init() {
         // Load settings with defaults
-        self.autoUpdateEnabled = defaults.bool(forKey: Keys.autoUpdate)
+        // Check if this is first launch (key doesn't exist)
+        if defaults.object(forKey: Keys.autoUpdate) == nil {
+            // First launch - default to ON for alpha testing
+            self.autoUpdateEnabled = true
+            defaults.set(true, forKey: Keys.autoUpdate)
+        } else {
+            // Use saved preference
+            self.autoUpdateEnabled = defaults.bool(forKey: Keys.autoUpdate)
+        }
 
         if let policyRaw = defaults.string(forKey: Keys.downloadPolicy),
            let policy = DownloadPolicy(rawValue: policyRaw) {
@@ -168,7 +204,7 @@ class CatalogUpdatePreferences: ObservableObject {
            let frequency = UpdateFrequency(rawValue: frequencyRaw) {
             self.updateFrequency = frequency
         } else {
-            self.updateFrequency = .weekly  // Default
+            self.updateFrequency = .daily  // Default - check daily during alpha
         }
 
         self.hasUpdateAvailable = defaults.bool(forKey: Keys.hasUpdateAvailable)

@@ -23,24 +23,20 @@ struct CatalogUpdateServiceTests {
     func createMockUpdateService(
         apiClient: MockCatalogAPIClient? = nil,
         storageService: MockCatalogStorageService? = nil,
-        dataLoadingService: MockGlassItemDataLoadingService? = nil,
         networkMonitor: MockNetworkMonitor? = nil
     ) async throws -> (
         service: CatalogUpdateService,
         apiClient: MockCatalogAPIClient,
         storageService: MockCatalogStorageService,
-        dataLoadingService: MockGlassItemDataLoadingService,
         networkMonitor: MockNetworkMonitor
     ) {
         let mockAPI = apiClient ?? MockCatalogAPIClient()
         let mockStorage = storageService ?? MockCatalogStorageService()
-        let mockDataLoading = dataLoadingService ?? MockGlassItemDataLoadingService()
         let mockNetwork = networkMonitor ?? MockNetworkMonitor()
 
         let service = CatalogUpdateService(
             apiClient: mockAPI,
             storageService: mockStorage,
-            dataLoadingService: mockDataLoading,
             networkMonitor: mockNetwork
         )
 
@@ -48,7 +44,6 @@ struct CatalogUpdateServiceTests {
             service: service,
             apiClient: mockAPI,
             storageService: mockStorage,
-            dataLoadingService: mockDataLoading,
             networkMonitor: mockNetwork
         )
     }
@@ -362,51 +357,6 @@ struct CatalogUpdateServiceTests {
         // 6. Load current
         let loadedData = await storage.loadCurrentCatalog()
         #expect(loadedData == catalogData)
-    }
-}
-
-// MARK: - Mock Network Monitor
-
-@MainActor
-class MockNetworkMonitor: NetworkMonitorProtocol {
-    @Published var isConnected: Bool = true
-    @Published var isOnWiFi: Bool = true
-    @Published var isExpensive: Bool = false
-    @Published var isConstrained: Bool = false
-
-    var connectionDescription: String {
-        guard isConnected else { return "No connection" }
-        return isOnWiFi ? "WiFi" : "Cellular"
-    }
-
-    func canDownloadCatalog() -> Bool {
-        guard isConnected else { return false }
-        let policy = CatalogUpdatePreferences.shared.downloadPolicy
-        return policy.allowsDownload(isOnWiFi: isOnWiFi)
-    }
-}
-
-// MARK: - Mock Data Loading Service
-
-class MockGlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {
-    var loadFromDataCalled = false
-    var mockResult: GlassItemLoadingResult?
-
-    func loadGlassItemsFromData(
-        _ data: Data,
-        options: LoadingOptions = .default
-    ) async throws -> GlassItemLoadingResult {
-        loadFromDataCalled = true
-
-        if let result = mockResult {
-            return result
-        }
-
-        // Return default result
-        return GlassItemLoadingResult(
-            itemsCreated: 10,
-            itemsUpdated: 5
-        )
     }
 }
 

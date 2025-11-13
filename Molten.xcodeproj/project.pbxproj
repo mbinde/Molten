@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		36D95164C45EC4E84CF4EC68 /* ToolItemDataLoadingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */; };
 		F50466F82EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md in Resources */ = {isa = PBXBuildFile; fileRef = F50466F72EA4333C00375368 /* DESIGN_PROJECT_ENTITIES.md */; };
 		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
 		F53C0BD32EA81F980020E1AB /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */; };
@@ -98,7 +97,6 @@
 /* Begin PBXFileReference section */
 		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
 		878F664543088F1B86740DD2 /* UnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationRepository.swift; sourceTree = "<group>"; };
-		95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemDataLoadingServiceTests.swift; sourceTree = "<group>"; };
 		B244734885B21EAEB2AAC553 /* ServiceType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceType.swift; sourceTree = "<group>"; };
 		DB95FB5AC403E8CFD93211C5 /* CoreDataUnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataUnifiedLocationRepository.swift; sourceTree = "<group>"; };
 		E7C7A65B94A6533A14E7AE47 /* taglia_tools.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = taglia_tools.json; sourceTree = "<group>"; };
@@ -161,6 +159,7 @@
 				Tests/MoltenTests/Integration/GlassItemSpecificTests.swift,
 				Tests/MoltenTests/Integration/IntegrationTests.swift,
 				Tests/MoltenTests/Integration/MultiUserScenarioTests.swift,
+				Tests/MoltenTests/Integration/StoreToShoppingListNavigationTests.swift,
 				Tests/MoltenTests/Integration/UserTagsIntegrationTests.swift,
 				Tests/MoltenTests/Integration/ViewRepositoryIntegrationTests.swift,
 				Tests/MoltenTests/InventorySharingAPIClientTests.swift,
@@ -175,38 +174,23 @@
 				Tests/MoltenTests/Models/CatalogItemHelpersTests.swift,
 				Tests/MoltenTests/Models/CatalogItemModelPhase1Tests.swift,
 				Tests/MoltenTests/Models/CatalogItemParentModelTests.swift,
-				Tests/MoltenTests/Models/CatalogOverviewModelTests.swift,
 				Tests/MoltenTests/Models/CatalogSortOptionTests.swift,
 				Tests/MoltenTests/Models/CatalogUnitsTests.swift,
 				Tests/MoltenTests/Models/CatalogUpdateModelsTests.swift,
 				Tests/MoltenTests/Models/CatalogUpdatePreferencesTests.swift,
 				Tests/MoltenTests/Models/COEGlassTypeTests.swift,
-				Tests/MoltenTests/Models/CompleteInventoryItemModelTests.swift,
 				Tests/MoltenTests/Models/DataModelValidationTests.swift,
 				Tests/MoltenTests/Models/DefaultUnitsTests.swift,
-				Tests/MoltenTests/Models/DetailedInventorySummaryModelTests.swift,
-				Tests/MoltenTests/Models/DetailedLowStockItemModelTests.swift,
-				Tests/MoltenTests/Models/DetailedShoppingListModelTests.swift,
-				Tests/MoltenTests/Models/GlassItemSearchRequestTests.swift,
-				Tests/MoltenTests/Models/GlassItemSortOptionTests.swift,
 				Tests/MoltenTests/Models/InventoryLocationTests.swift,
-				Tests/MoltenTests/Models/InventoryModelValidationTests.swift,
 				Tests/MoltenTests/Models/ItemShoppingModelTests.swift,
 				Tests/MoltenTests/Models/KilnScheduleModelTests.swift,
 				Tests/MoltenTests/Models/LocationTypeTests.swift,
 				Tests/MoltenTests/Models/LogbookModelTests.swift,
-				Tests/MoltenTests/Models/LowStockDetailModelTests.swift,
-				Tests/MoltenTests/Models/LowStockReportModelTests.swift,
-				Tests/MoltenTests/Models/ManufacturerStatisticsModelSortingTests.swift,
 				Tests/MoltenTests/Models/ProjectGlassItemTests.swift,
 				Tests/MoltenTests/Models/ProjectModelTests.swift,
 				Tests/MoltenTests/Models/ProjectReferenceUrlTests.swift,
 				Tests/MoltenTests/Models/ServiceTypeTests.swift,
 				Tests/MoltenTests/Models/ServiceValidationTests.swift,
-				Tests/MoltenTests/Models/ShoppingListItemModelTests.swift,
-				Tests/MoltenTests/Models/ShoppingListModelsSortingTests.swift,
-				Tests/MoltenTests/Models/StorageLocationModelTests.swift,
-				Tests/MoltenTests/Models/StoreStatisticsModelSortingTests.swift,
 				Tests/MoltenTests/Models/SubscriptionModelsTests.swift,
 				Tests/MoltenTests/Models/TechniqueTypeTests.swift,
 				Tests/MoltenTests/Models/WeightUnitTests.swift,
@@ -219,6 +203,7 @@
 				Tests/MoltenTests/Repositories/UserImageRepositoryTests.swift,
 				Tests/MoltenTests/Services/BackgroundUpdateServiceTests.swift,
 				Tests/MoltenTests/Services/CatalogAPIClientTests.swift,
+				Tests/MoltenTests/Services/CatalogDatabaseManagerTests.swift,
 				Tests/MoltenTests/Services/CatalogServiceAdvancedTests.swift,
 				Tests/MoltenTests/Services/CatalogStorageServiceTests.swift,
 				Tests/MoltenTests/Services/CatalogUpdateNotificationTests.swift,
@@ -230,10 +215,10 @@
 				Tests/MoltenTests/Services/InventoryServiceTests.swift,
 				Tests/MoltenTests/Services/InventoryTrackingServiceLocationTests.swift,
 				Tests/MoltenTests/Services/InventoryTrackingServiceTests.swift,
-				Tests/MoltenTests/Services/JSONDataLoaderTests.swift,
 				Tests/MoltenTests/Services/KilnScheduleServiceTests.swift,
 				Tests/MoltenTests/Services/LabelPrintingServiceTests.swift,
 				Tests/MoltenTests/Services/LocationServiceTests.swift,
+				Tests/MoltenTests/Services/MockCatalogUpdateHelpers.swift,
 				Tests/MoltenTests/Services/ProjectExportServiceTests.swift,
 				Tests/MoltenTests/Services/ProjectImportServiceTests.swift,
 				Tests/MoltenTests/Services/ProjectServiceTests.swift,
@@ -242,7 +227,6 @@
 				Tests/MoltenTests/Services/ServiceCoordinationTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
 				Tests/MoltenTests/Services/SubscriptionServiceTests.swift,
-				Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift,
 				Tests/MoltenTests/ShareCodeGeneratorTests.swift,
 				Tests/MoltenTests/SubscriptionManagerTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
@@ -304,6 +288,7 @@
 				Tests/MoltenTests/Views/Shopping/MockShoppingListViewModel.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListItemCreationTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListOptionsViewTests.swift,
+				Tests/MoltenTests/Views/Shopping/ShoppingListStoreFilteringTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListViewTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
@@ -352,6 +337,7 @@
 				Tests/MoltenTests/Integration/GlassItemSpecificTests.swift,
 				Tests/MoltenTests/Integration/IntegrationTests.swift,
 				Tests/MoltenTests/Integration/MultiUserScenarioTests.swift,
+				Tests/MoltenTests/Integration/StoreToShoppingListNavigationTests.swift,
 				Tests/MoltenTests/Integration/UserTagsIntegrationTests.swift,
 				Tests/MoltenTests/Integration/ViewRepositoryIntegrationTests.swift,
 				Tests/MoltenTests/InventorySharingAPIClientTests.swift,
@@ -366,38 +352,23 @@
 				Tests/MoltenTests/Models/CatalogItemHelpersTests.swift,
 				Tests/MoltenTests/Models/CatalogItemModelPhase1Tests.swift,
 				Tests/MoltenTests/Models/CatalogItemParentModelTests.swift,
-				Tests/MoltenTests/Models/CatalogOverviewModelTests.swift,
 				Tests/MoltenTests/Models/CatalogSortOptionTests.swift,
 				Tests/MoltenTests/Models/CatalogUnitsTests.swift,
 				Tests/MoltenTests/Models/CatalogUpdateModelsTests.swift,
 				Tests/MoltenTests/Models/CatalogUpdatePreferencesTests.swift,
 				Tests/MoltenTests/Models/COEGlassTypeTests.swift,
-				Tests/MoltenTests/Models/CompleteInventoryItemModelTests.swift,
 				Tests/MoltenTests/Models/DataModelValidationTests.swift,
 				Tests/MoltenTests/Models/DefaultUnitsTests.swift,
-				Tests/MoltenTests/Models/DetailedInventorySummaryModelTests.swift,
-				Tests/MoltenTests/Models/DetailedLowStockItemModelTests.swift,
-				Tests/MoltenTests/Models/DetailedShoppingListModelTests.swift,
-				Tests/MoltenTests/Models/GlassItemSearchRequestTests.swift,
-				Tests/MoltenTests/Models/GlassItemSortOptionTests.swift,
 				Tests/MoltenTests/Models/InventoryLocationTests.swift,
-				Tests/MoltenTests/Models/InventoryModelValidationTests.swift,
 				Tests/MoltenTests/Models/ItemShoppingModelTests.swift,
 				Tests/MoltenTests/Models/KilnScheduleModelTests.swift,
 				Tests/MoltenTests/Models/LocationTypeTests.swift,
 				Tests/MoltenTests/Models/LogbookModelTests.swift,
-				Tests/MoltenTests/Models/LowStockDetailModelTests.swift,
-				Tests/MoltenTests/Models/LowStockReportModelTests.swift,
-				Tests/MoltenTests/Models/ManufacturerStatisticsModelSortingTests.swift,
 				Tests/MoltenTests/Models/ProjectGlassItemTests.swift,
 				Tests/MoltenTests/Models/ProjectModelTests.swift,
 				Tests/MoltenTests/Models/ProjectReferenceUrlTests.swift,
 				Tests/MoltenTests/Models/ServiceTypeTests.swift,
 				Tests/MoltenTests/Models/ServiceValidationTests.swift,
-				Tests/MoltenTests/Models/ShoppingListItemModelTests.swift,
-				Tests/MoltenTests/Models/ShoppingListModelsSortingTests.swift,
-				Tests/MoltenTests/Models/StorageLocationModelTests.swift,
-				Tests/MoltenTests/Models/StoreStatisticsModelSortingTests.swift,
 				Tests/MoltenTests/Models/SubscriptionModelsTests.swift,
 				Tests/MoltenTests/Models/TechniqueTypeTests.swift,
 				Tests/MoltenTests/Models/WeightUnitTests.swift,
@@ -411,6 +382,7 @@
 				Tests/MoltenTests/Repositories/UserImageRepositoryTests.swift,
 				Tests/MoltenTests/Services/BackgroundUpdateServiceTests.swift,
 				Tests/MoltenTests/Services/CatalogAPIClientTests.swift,
+				Tests/MoltenTests/Services/CatalogDatabaseManagerTests.swift,
 				Tests/MoltenTests/Services/CatalogServiceAdvancedTests.swift,
 				Tests/MoltenTests/Services/CatalogStorageServiceTests.swift,
 				Tests/MoltenTests/Services/CatalogUpdateNotificationTests.swift,
@@ -422,10 +394,10 @@
 				Tests/MoltenTests/Services/InventoryServiceTests.swift,
 				Tests/MoltenTests/Services/InventoryTrackingServiceLocationTests.swift,
 				Tests/MoltenTests/Services/InventoryTrackingServiceTests.swift,
-				Tests/MoltenTests/Services/JSONDataLoaderTests.swift,
 				Tests/MoltenTests/Services/KilnScheduleServiceTests.swift,
 				Tests/MoltenTests/Services/LabelPrintingServiceTests.swift,
 				Tests/MoltenTests/Services/LocationServiceTests.swift,
+				Tests/MoltenTests/Services/MockCatalogUpdateHelpers.swift,
 				Tests/MoltenTests/Services/ProjectExportServiceTests.swift,
 				Tests/MoltenTests/Services/ProjectImportServiceTests.swift,
 				Tests/MoltenTests/Services/ProjectServiceTests.swift,
@@ -434,7 +406,6 @@
 				Tests/MoltenTests/Services/ServiceCoordinationTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
 				Tests/MoltenTests/Services/SubscriptionServiceTests.swift,
-				Tests/MoltenTests/Services/ToolItemDataLoadingServiceTests.swift,
 				Tests/MoltenTests/ShareCodeGeneratorTests.swift,
 				Tests/MoltenTests/SubscriptionManagerTests.swift,
 				Tests/MoltenTests/Utilities/ArrayExtensionsTests.swift,
@@ -463,6 +434,7 @@
 				Tests/MoltenTests/Views/Catalog/CatalogBundleDebugViewTests.swift,
 				Tests/MoltenTests/Views/Catalog/CatalogViewDataInitializationTests.swift,
 				Tests/MoltenTests/Views/Catalog/GlassItemSearchSelectorTests.swift,
+				Tests/MoltenTests/Views/Catalog/MockCatalogViewModel.swift,
 				Tests/MoltenTests/Views/CatalogUpdateViewModelTests.swift,
 				Tests/MoltenTests/Views/CatalogViewModelTests.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemViewTests.swift,
@@ -495,6 +467,7 @@
 				Tests/MoltenTests/Views/Shopping/MockShoppingListViewModel.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListItemCreationTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListOptionsViewTests.swift,
+				Tests/MoltenTests/Views/Shopping/ShoppingListStoreFilteringTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingListViewTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeCheckoutTests.swift,
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
@@ -544,31 +517,20 @@
 				Tests/RepositoryTests/CoreDataShareRecordRepositoryTests.swift,
 				Tests/RepositoryTests/FileSystem/FileSystemUserImageRepositoryTests.swift,
 				Tests/RepositoryTests/GlassItemRepositoryDuplicateTests.swift,
+				Tests/RepositoryTests/Integration/CatalogDatabaseIntegrationTests.swift,
 				Tests/RepositoryTests/Integration/CatalogServiceIntegrationTests.swift,
-				Tests/RepositoryTests/Integration/CatalogViewDataLoadingTests.swift,
-				Tests/RepositoryTests/Integration/GlassItemDataLoadingServiceCoreDataTests.swift,
-				Tests/RepositoryTests/Integration/JSONDataLoaderCoreDataTests.swift,
 				Tests/RepositoryTests/Integration/ShoppingListServiceIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingManagerTests.swift,
 				Tests/RepositoryTests/InventorySharingViewModelTests.swift,
 				Tests/RepositoryTests/ShareMetadataRepositoryTests.swift,
+				Tests/RepositoryTests/SQLite/SQLiteGlassItemRepositoryTests.swift,
 				Tools/Documentation/check_core_data_violations.sh,
 				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
 				Tools/Documentation/CORE_DATA_PREVENTION_GUIDE.md,
 				Tools/Documentation/detect_all_coredata.sh,
 				Tools/Documentation/RELEASE_STRATEGY_UPDATED.md,
 				Tools/Documentation/TODO.txt,
-				"Tools/Scraping Tools/boro_batch_scraper.py",
-				"Tools/Scraping Tools/cim_scraper.py",
-				"Tools/Scraping Tools/color_extractor.py",
-				"Tools/Scraping Tools/csv_to_json_converter.py",
-				"Tools/Scraping Tools/double_helix_scraper.py",
-				"Tools/Scraping Tools/effetre_vetrofond.py",
-				"Tools/Scraping Tools/glass_alchemy_scraper.py",
-				"Tools/Scraping Tools/glass_scraper.py",
-				"Tools/Scraping Tools/image_downloader.py",
-				"Tools/Scraping Tools/tag_scraper.py",
 			);
 			target = F5A13C4A2E890146002C0F7A /* Molten */;
 		};
@@ -653,15 +615,14 @@
 				Tests/RepositoryTests/CoreDataShareRecordRepositoryTests.swift,
 				Tests/RepositoryTests/FileSystem/FileSystemUserImageRepositoryTests.swift,
 				Tests/RepositoryTests/GlassItemRepositoryDuplicateTests.swift,
+				Tests/RepositoryTests/Integration/CatalogDatabaseIntegrationTests.swift,
 				Tests/RepositoryTests/Integration/CatalogServiceIntegrationTests.swift,
-				Tests/RepositoryTests/Integration/CatalogViewDataLoadingTests.swift,
-				Tests/RepositoryTests/Integration/GlassItemDataLoadingServiceCoreDataTests.swift,
-				Tests/RepositoryTests/Integration/JSONDataLoaderCoreDataTests.swift,
 				Tests/RepositoryTests/Integration/ShoppingListServiceIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingManagerTests.swift,
 				Tests/RepositoryTests/InventorySharingViewModelTests.swift,
 				Tests/RepositoryTests/ShareMetadataRepositoryTests.swift,
+				Tests/RepositoryTests/SQLite/SQLiteGlassItemRepositoryTests.swift,
 			);
 			target = F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */;
 		};
@@ -781,7 +742,6 @@
 		160E2B3414703E0C705D824A /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				95C0C87DA015ACAAF835CAF5 /* ToolItemDataLoadingServiceTests.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -1318,7 +1278,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				36D95164C45EC4E84CF4EC68 /* ToolItemDataLoadingServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

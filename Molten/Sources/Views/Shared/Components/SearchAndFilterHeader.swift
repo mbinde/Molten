@@ -155,17 +155,15 @@ struct SearchAndFilterHeader: View {
                     }
                 }
 
-                // Filter buttons row: Product Type, Manufacturers, COE, Tags
+                // Filter buttons row: Type (left), then COE/Tags/Mfr (right-aligned)
                 HStack(spacing: DesignSystem.Spacing.md) {
-                    // Product type selector (Glass/Coating)
+                    // Product type selector (left-anchored)
                     compactProductTypePicker
 
-                    // Manufacturer filter button
-                    if !allAvailableManufacturers.isEmpty {
-                        compactManufacturerFilterButton
-                    }
+                    Spacer()
 
-                    // COE filter button
+                    // Right-aligned filters: COE, Tags, Mfr (from left to right)
+                    // COE filter button (only for glass)
                     if !allAvailableCOEs.isEmpty {
                         compactCOEFilterButton
                     }
@@ -173,6 +171,11 @@ struct SearchAndFilterHeader: View {
                     // Tag filter button (always shown if tags are available)
                     if !allAvailableTags.isEmpty {
                         compactTagFilterButton
+                    }
+
+                    // Manufacturer filter button (far right)
+                    if !allAvailableManufacturers.isEmpty {
+                        compactManufacturerFilterButton
                     }
                 }
             }
@@ -550,35 +553,18 @@ struct SearchAndFilterHeader: View {
 
     private var compactProductTypePicker: some View {
         Menu {
-            // "Show All" option
-            Button {
-                withAnimation {
-                    selectedProductTypes.removeAll()
-                }
-            } label: {
-                HStack {
-                    Text("Show All")
-                    Spacer()
-                    if selectedProductTypes.isEmpty {
-                        Image(systemName: "checkmark")
-                    }
-                }
-            }
-
-            Divider()
-
-            // Individual product type options (filter out zero-count items and show counts)
+            // Individual product type options (single-select, filter out zero-count items and show counts)
             ForEach(allAvailableProductTypes.filter { type in
                 // Show all items if no counts provided, otherwise only show items with count > 0
                 productTypeCounts == nil || (productTypeCounts?[type] ?? 0) > 0
             }, id: \.self) { type in
                 Button {
                     withAnimation {
-                        toggleProductType(type)
+                        selectProductType(type)
                     }
                 } label: {
                     HStack {
-                        Text(type.capitalized)
+                        Text(displayName(for: type))
                         Spacer()
                         if selectedProductTypes.contains(type) {
                             Image(systemName: "checkmark")
@@ -592,51 +578,38 @@ struct SearchAndFilterHeader: View {
             }
         } label: {
             HStack(spacing: DesignSystem.Spacing.sm) {
-                if selectedProductTypes.isEmpty {
+                // Show selected type (always has a selection now)
+                if let selectedType = selectedProductTypes.first {
+                    Text(displayName(for: selectedType))
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                        .lineLimit(1)
+                } else {
+                    // Fallback if somehow empty (shouldn't happen with default)
                     Image(systemName: "square.stack.3d.up")
                         .font(DesignSystem.Typography.captionSmall)
                     Text("Type")
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
-                } else {
-                    // Show first 2 types inline
-                    let sortedTypes = selectedProductTypes.sorted()
-                    ForEach(Array(sortedTypes.prefix(2)), id: \.self) { type in
-                        Text(type.capitalized)
-                            .font(DesignSystem.Typography.captionSmall)
-                            .fontWeight(DesignSystem.FontWeight.medium)
-                            .lineLimit(1)
-                    }
-
-                    // Show "+X" if more than 2 types selected
-                    if selectedProductTypes.count > 2 {
-                        Text("+\(selectedProductTypes.count - 2)")
-                            .font(DesignSystem.Typography.captionSmall)
-                            .fontWeight(DesignSystem.FontWeight.semibold)
-                    }
-
-                    // X to clear
-                    Image(systemName: "xmark.circle.fill")
-                        .font(DesignSystem.Typography.caption)
-                        .onTapGesture {
-                            withAnimation {
-                                selectedProductTypes.removeAll()
-                            }
-                        }
                 }
 
-                if selectedProductTypes.isEmpty {
-                    Image(systemName: "chevron.down")
-                        .font(Font.system(size: 10))
-                }
+                // Always show dropdown arrow
+                Image(systemName: "chevron.down")
+                    .font(Font.system(size: 10))
             }
-            .foregroundColor(selectedProductTypes.isEmpty ? DesignSystem.Colors.textSecondary : .white)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
             .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)
             .padding(.vertical, DesignSystem.Padding.buttonVertical)
-            .background(selectedProductTypes.isEmpty ? DesignSystem.Colors.backgroundInput : DesignSystem.Colors.accentPrimary)
+            .background(DesignSystem.Colors.backgroundInput)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
         .accessibilityIdentifier("productTypeFilterButton")
+    }
+
+    private func selectProductType(_ type: String) {
+        // Single-select: replace all selections with this one type
+        selectedProductTypes.removeAll()
+        selectedProductTypes.insert(type)
     }
 
     private func toggleProductType(_ type: String) {
@@ -651,6 +624,19 @@ struct SearchAndFilterHeader: View {
         #if canImport(UIKit)
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         #endif
+    }
+
+    private func displayName(for type: String) -> String {
+        switch type.lowercased() {
+        case "glass":
+            return "Glass"
+        case "coating":
+            return "Coatings"
+        case "tool":
+            return "Tools"
+        default:
+            return type.capitalized
+        }
     }
 
 }

@@ -187,23 +187,9 @@ actor InventoryTrackingService {
 
         // Get detailed location information from inventory records
         let inventory = try await self.inventoryRepository.fetchInventory(forItem: stableId)
-        var locationDetails: [String: [(location: String, quantity: Double)]] = [:]
 
-        for inventoryRecord in inventory {
-            if let location = inventoryRecord.location {
-                let locationInfo = (location: location, quantity: inventoryRecord.quantity)
-                let typeKey = inventoryRecord.type
-                if locationDetails[typeKey] == nil {
-                    locationDetails[typeKey] = []
-                }
-                locationDetails[typeKey]?.append(locationInfo)
-            }
-        }
-
-        return DetailedInventorySummaryModel(
-            summary: summary,
-            locationDetails: locationDetails
-        )
+        // Use business logic from model
+        return DetailedInventorySummaryModel.from(summary: summary, inventory: inventory)
     }
     
     // MARK: - Search and Discovery Operations
@@ -332,6 +318,31 @@ actor InventoryTrackingService {
 nonisolated struct DetailedInventorySummaryModel {
     let summary: InventorySummaryModel
     let locationDetails: [String: [(location: String, quantity: Double)]]
+
+    /// Business Logic: Aggregate inventory by type and location
+    /// - Parameters:
+    ///   - summary: The base inventory summary
+    ///   - inventory: Inventory records to aggregate
+    /// - Returns: Detailed summary with location information grouped by type
+    static func from(summary: InventorySummaryModel, inventory: [InventoryModel]) -> DetailedInventorySummaryModel {
+        var locationDetails: [String: [(location: String, quantity: Double)]] = [:]
+
+        for inventoryRecord in inventory {
+            if let location = inventoryRecord.location {
+                let locationInfo = (location: location, quantity: inventoryRecord.quantity)
+                let typeKey = inventoryRecord.type
+                if locationDetails[typeKey] == nil {
+                    locationDetails[typeKey] = []
+                }
+                locationDetails[typeKey]?.append(locationInfo)
+            }
+        }
+
+        return DetailedInventorySummaryModel(
+            summary: summary,
+            locationDetails: locationDetails
+        )
+    }
 }
 
 // MARK: - Service Models

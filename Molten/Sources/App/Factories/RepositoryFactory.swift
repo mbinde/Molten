@@ -88,21 +88,9 @@ nonisolated struct RepositoryFactory {
             mockGlassItemRepo = repo
             return repo
 
-        case .coreData:
-            // GlassItem is catalog data → use localContext
-            let controller = getSharedController()
-            guard let context = controller.localContext else {
-                fatalError("localContext not initialized - call PersistenceController.shared.initialize() first")
-            }
-            return CoreDataGlassItemRepository(context: context)
-
-        case .hybrid:
-            // GlassItem is catalog data → use localContext
-            let controller = getSharedController()
-            guard let context = controller.localContext else {
-                fatalError("localContext not initialized - call PersistenceController.shared.initialize() first")
-            }
-            return CoreDataGlassItemRepository(context: context)
+        case .coreData, .hybrid:
+            // GlassItem is catalog data → use bundled SQLite database
+            return SQLiteGlassItemRepository()
         }
     }
 

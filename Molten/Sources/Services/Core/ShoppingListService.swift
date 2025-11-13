@@ -91,8 +91,7 @@ actor ShoppingListService {
         return DetailedShoppingListModel(
             store: store,
             items: detailedItems,
-            totalItems: detailedItems.count,
-            totalValue: estimateTotalValue(for: detailedItems)
+            totalItems: detailedItems.count
         )
     }
     
@@ -392,14 +391,6 @@ actor ShoppingListService {
         return inventoryState
     }
     
-    /// Estimate total value of shopping list items (placeholder implementation)
-    private func estimateTotalValue(for items: [DetailedShoppingListItemModel]) -> Double {
-        // Placeholder: In a real implementation, this would use pricing data
-        // For now, return a simple estimate based on quantity
-        return items.reduce(0.0) { total, item in
-            total + (item.shoppingListItem.neededQuantity * 10.0) // $10 per unit estimate
-        }
-    }
 }
 
 // MARK: - Service Models

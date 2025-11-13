@@ -83,6 +83,10 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
         }
     }
     
+    // Track duplicate creation attempts to diagnose WAL checkpoint issue
+    private static var duplicateCreationCount = 0
+    private static var newCreationCount = 0
+
     func createItem(_ item: GlassItemModel) async throws -> GlassItemModel {
         return try await context.perform {
 
@@ -94,10 +98,12 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
             do {
                 let existing = try self.context.fetch(existingRequest)
                 if !existing.isEmpty {
-                    print("⚠️ DUPLICATE CREATION ATTEMPT: stable_id=\(item.stable_id) already exists! Found \(existing.count) copies. Updating instead of creating.")
+                    Self.duplicateCreationCount += 1
+                    print("⚠️ [PERF-DIAG] DUPLICATE #\(Self.duplicateCreationCount): stable_id=\(item.stable_id) already exists! Updating instead of creating.")
                 }
                 if let existingEntity = existing.first {
                     self.updateEntity(existingEntity, with: item)
+                    print("💾 [PERF-DIAG] Saving context for DUPLICATE update (total duplicates: \(Self.duplicateCreationCount))")
                     try self.context.save()
                     return self.convertToGlassItemModel(existingEntity) ?? item
                 }
@@ -109,6 +115,11 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
 
                 let entity = NSManagedObject(entity: entityDescription, insertInto: self.context)
                 self.updateEntity(entity, with: item)
+
+                Self.newCreationCount += 1
+                if Self.newCreationCount % 100 == 0 {
+                    print("💾 [PERF-DIAG] Saving context for NEW item #\(Self.newCreationCount) (stable_id: \(item.stable_id))")
+                }
 
                 let timestamp = Date().timeIntervalSince1970
                 try self.context.save()

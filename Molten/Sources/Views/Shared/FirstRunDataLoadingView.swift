@@ -197,27 +197,36 @@ struct FirstRunDataLoadingView: View {
 
             if needsDataLoad {
                 print("🎯 First run detected - loading catalog from JSON")
+                print("⏱️ [PERF] Starting glass items load at \(Date())")
 
                 // Load glass items
                 let glassResult = try await glassItemLoadingService.loadGlassItemsFromJSONIfEmpty()
                 if let loadingResult = glassResult {
                     itemsLoaded = loadingResult.itemsCreated
+                    print("⏱️ [PERF] Glass items complete at \(Date())")
                     print("✅ Loaded \(itemsLoaded) glass items from JSON")
+                    print("📊 [PERF] Glass: created=\(loadingResult.itemsCreated), failed=\(loadingResult.itemsFailed), skipped=\(loadingResult.itemsSkipped)")
                 }
 
+                print("⏱️ [PERF] Starting coatings load at \(Date())")
                 // Load coatings
                 let coatingRepository = RepositoryFactory.createCoatingItemRepository()
                 let coatingLoadingService = CoatingItemDataLoadingService(coatingRepository: coatingRepository)
                 let coatingResult = try await coatingLoadingService.loadCoatingsFromJSON()
                 itemsLoaded += coatingResult.itemsCreated
+                print("⏱️ [PERF] Coatings complete at \(Date())")
                 print("✅ Loaded \(coatingResult.itemsCreated) coatings from JSON")
+                print("📊 [PERF] Coatings: created=\(coatingResult.itemsCreated), failed=\(coatingResult.itemsFailed), skipped=\(coatingResult.itemsSkipped)")
 
+                print("⏱️ [PERF] Starting tools load at \(Date())")
                 // Load tools
                 let toolRepository = RepositoryFactory.createToolItemRepository()
                 let toolLoadingService = ToolItemDataLoadingService(toolRepository: toolRepository)
                 let toolResult = try await toolLoadingService.loadAllToolsFromJSON()
                 itemsLoaded += toolResult.itemsCreated
+                print("⏱️ [PERF] Tools complete at \(Date())")
                 print("✅ Loaded \(toolResult.itemsCreated) tools from JSON")
+                print("📊 [PERF] Tools: created=\(toolResult.itemsCreated), failed=\(toolResult.itemsFailed), skipped=\(toolResult.itemsSkipped)")
 
                 print("✅ Total items loaded: \(itemsLoaded) (glass + coatings + tools)")
 
@@ -329,6 +338,13 @@ struct FirstRunDataLoadingView: View {
             progress = 1.0
 
             print("🎉 All initialization complete - app is fully ready!")
+
+            // Print diagnostic summary for WAL checkpoint investigation
+            print("📊 [PERF-SUMMARY] Data loading complete:")
+            print("   - Total glass items created: \(itemsLoaded)")
+            print("   - Check logs above for [PERF-DIAG] messages showing duplicate creations and tag saves")
+            print("   - Expected saves: ~\(itemsLoaded * 2) (item + tags)")
+            print("   - If you see many DUPLICATE messages, that's the root cause of extra WAL checkpoints")
 
             // Brief pause to show completion message
             try? await Task.sleep(for: .milliseconds(500))

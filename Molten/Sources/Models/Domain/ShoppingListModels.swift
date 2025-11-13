@@ -118,6 +118,20 @@ nonisolated struct DetailedLowStockItemModel {
     }
 }
 
+extension DetailedLowStockItemModel: Comparable {
+    /// Business Logic: Sort by shortfall descending (highest shortfall first)
+    /// Business rule: Items with highest shortfall are most urgent and should appear first
+    static func < (lhs: DetailedLowStockItemModel, rhs: DetailedLowStockItemModel) -> Bool {
+        // Higher shortfall = "less than" (sorts first)
+        return lhs.lowStockItem.shortfall > rhs.lowStockItem.shortfall
+    }
+
+    static func == (lhs: DetailedLowStockItemModel, rhs: DetailedLowStockItemModel) -> Bool {
+        return lhs.lowStockItem.item_stable_id == rhs.lowStockItem.item_stable_id &&
+               lhs.lowStockItem.type == rhs.lowStockItem.type
+    }
+}
+
 /// Minimum with complete context
 nonisolated struct DetailedMinimumModel {
     let minimum: ItemMinimumModel

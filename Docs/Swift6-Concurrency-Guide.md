@@ -12,11 +12,12 @@ This guide covers Swift 6 concurrency patterns used in the Molten codebase.
 ## 🔥 CRITICAL: Key Rules
 
 1. **NEVER write `nonisolated struct`** - Invalid syntax, causes EXC_BREAKPOINT crashes
-2. **Sendable structs are already safe** - No annotations needed on struct declaration
-3. **Mark individual members** - Use `nonisolated` on init/static methods only when needed
-4. **Service classes need `@preconcurrency`** - Prevents MainActor inference
-5. **Test suites need `@MainActor`** - When accessing MainActor-isolated properties
-6. **Let Swift synthesize Equatable/Hashable** - Don't write explicit implementations for protocol-conforming Sendable structs
+2. **NEVER use `nonisolated(unsafe)` in production/app code** - Race conditions waiting to happen; only acceptable in test mocks
+3. **Sendable structs are already safe** - No annotations needed on struct declaration
+4. **Mark individual members** - Use `nonisolated` on init/static methods only when needed
+5. **Service classes need `@preconcurrency`** - Prevents MainActor inference
+6. **Test suites need `@MainActor`** - When accessing MainActor-isolated properties
+7. **Let Swift synthesize Equatable/Hashable** - Don't write explicit implementations for protocol-conforming Sendable structs
 
 ## Common Patterns
 
@@ -48,6 +49,280 @@ class CatalogService {
 @MainActor  // ✅ When accessing MainActor-isolated code
 struct MyTests { }
 ```
+
+## 🚨 CRITICAL: The `nonisolated(unsafe)` Anti-Pattern
+
+### NEVER Use `nonisolated(unsafe)` in Production Code
+
+**THE RULE**: `nonisolated(unsafe)` is acceptable ONLY in test code (Mock repositories). NEVER use it in production app code.
+
+**WHY**: `nonisolated(unsafe)` opts out of Swift's concurrency safety checks WITHOUT providing any thread-safety guarantees. It's a compiler escape hatch that says "trust me, I know what I'm doing" - but doesn't enforce that you actually do.
+
+### The Problem
+
+```swift
+// ❌ ANTI-PATTERN: Race condition waiting to happen
+class PersistenceController {
+    private nonisolated(unsafe) var _isInitialized = false
+
+    nonisolated var isInitialized: Bool {
+        get { _isInitialized }
+        set { _isInitialized = newValue }
+    }
+
+    @MainActor
+    func initialize() async {
+        if isInitialized { return }  // ❌ Race: Two threads both see false
+
+        // Both threads proceed to initialize
+        _isInitialized = true
+    }
+}
+```
+
+**What goes wrong**:
+- Thread A: Checks `isInitialized` → sees `false`
+- Thread B: Checks `isInitialized` → sees `false` (race!)
+- Thread A: Starts initialization, sets `_isInitialized = true`
+- Thread B: ALSO starts initialization (duplicate work!)
+
+### The Solution: OSAllocatedUnfairLock
+
+Use `OSAllocatedUnfairLock` for thread-safe mutable state (iOS 16+):
+
+```swift
+// ✅ CORRECT: Thread-safe with lock
+class PersistenceController {
+    private nonisolated let isInitializedLock = OSAllocatedUnfairLock<Bool>(initialState: false)
+
+    nonisolated var isInitialized: Bool {
+        get { isInitializedLock.withLock { $0 } }
+        set { isInitializedLock.withLock { $0 = newValue } }
+    }
+
+    @MainActor
+    func initialize() async {
+        if isInitialized { return }  // ✅ Atomic read
+
+        // Only one thread proceeds
+        isInitialized = true  // ✅ Atomic write
+    }
+}
+```
+
+### Real-World Case Study: Persistence.swift Race Condition Fixes
+
+Friend performed security audit and identified **77 uses of `nonisolated(unsafe)`** as potential race conditions:
+- 66 in Mock repositories (test code - acceptable)
+- 11 in production Core Data code (Persistence.swift - **NOT acceptable**)
+
+We fixed **4 race conditions** in `Persistence.swift`:
+
+#### Issue #1: Initialization Flag Race
+
+**BEFORE (race condition)**:
+```swift
+private nonisolated(unsafe) var _isInitialized = false
+
+nonisolated var isInitialized: Bool {
+    get { _isInitialized }
+    set { _isInitialized = newValue }
+}
+```
+
+**AFTER (fixed)**:
+```swift
+private nonisolated let _isInitialized = SynchronizedState<Bool>(false)
+
+nonisolated var isInitialized: Bool {
+    get { _isInitialized.value }
+    set { _isInitialized.value = newValue }
+}
+```
+
+#### Issue #2: Error State Race
+
+**BEFORE**:
+```swift
+private nonisolated(unsafe) var _storeLoadingError: Error?
+```
+
+**AFTER**:
+```swift
+private nonisolated let _storeLoadingError = SynchronizedState<Error?>(nil)
+```
+
+#### Issue #3: Lazy Context Initialization
+
+**BEFORE (race condition)**:
+```swift
+private nonisolated(unsafe) var _localContext: NSManagedObjectContext?
+
+nonisolated var localContext: NSManagedObjectContext {
+    if _localContext == nil {
+        // ❌ Two threads both see nil → both create contexts
+        _localContext = NSManagedObjectContext(...)
+    }
+    return _localContext!
+}
+```
+
+**AFTER (fixed with double-checked locking)**:
+```swift
+private nonisolated let localContextLock = OSAllocatedUnfairLock<NSManagedObjectContext?>(initialState: nil)
+
+nonisolated var localContext: NSManagedObjectContext {
+    // Fast path: already initialized
+    if let existingContext = localContextLock.withLock({ $0 }) {
+        return existingContext
+    }
+
+    // Slow path: create new context (only happens once)
+    let newContext = NSManagedObjectContext(...)
+    localContextLock.withLock { $0 = newContext }
+    return newContext
+}
+```
+
+#### Issue #4: Model Loading Consistency
+
+**BEFORE (technically safe but inconsistent)**:
+```swift
+private nonisolated(unsafe) static var _sharedModel: NSManagedObjectModel?
+private nonisolated static let modelLock = NSLock()  // ⚠️ Old pattern
+
+nonisolated private static var sharedModel: NSManagedObjectModel {
+    modelLock.lock()
+    defer { modelLock.unlock() }
+    // ...
+}
+```
+
+**AFTER (consistent modern pattern)**:
+```swift
+private nonisolated static let modelLock = OSAllocatedUnfairLock<NSManagedObjectModel?>(initialState: nil)
+
+nonisolated private static var sharedModel: NSManagedObjectModel {
+    if let existingModel = modelLock.withLock({ $0 }) {
+        return existingModel
+    }
+    // ... load and store atomically
+}
+```
+
+### Results
+
+**BEFORE**:
+- 11 uses of `nonisolated(unsafe)` in production Core Data code
+- 4 race conditions (initialization flags, error state, lazy contexts)
+
+**AFTER**:
+- 0 uses of `nonisolated(unsafe)` in production Core Data code
+- All race conditions fixed with OSAllocatedUnfairLock
+- Consistent patterns throughout Persistence.swift
+
+**Commits**:
+- `54a9576c` - Fixed issues #1-3 (isInitialized, storeLoadingError, contexts)
+- `d42ddda1` - Fixed issue #4 (model loading consistency)
+
+### OSAllocatedUnfairLock Patterns
+
+**Pattern 1: Simple read/write**
+```swift
+private nonisolated let stateLock = OSAllocatedUnfairLock<Bool>(initialState: false)
+
+nonisolated var isReady: Bool {
+    get { stateLock.withLock { $0 } }
+    set { stateLock.withLock { $0 = newValue } }
+}
+```
+
+**Pattern 2: Lazy initialization (double-checked locking)**
+```swift
+private nonisolated let resourceLock = OSAllocatedUnfairLock<ExpensiveResource?>(initialState: nil)
+
+nonisolated var resource: ExpensiveResource {
+    // Fast path: already initialized
+    if let existing = resourceLock.withLock({ $0 }) {
+        return existing
+    }
+
+    // Slow path: create and store
+    let newResource = ExpensiveResource()
+    resourceLock.withLock { $0 = newResource }
+    return newResource
+}
+```
+
+**Pattern 3: Complex state updates**
+```swift
+private nonisolated let errorLock = OSAllocatedUnfairLock<Error?>(initialState: nil)
+
+nonisolated func recordError(_ error: Error) {
+    errorLock.withLock { currentError in
+        // Only store first error
+        if currentError == nil {
+            currentError = error
+        }
+    }
+}
+```
+
+### SynchronizedState Helper
+
+For simple cases, use a reusable wrapper:
+
+```swift
+/// Thread-safe wrapper using OSAllocatedUnfairLock
+final class SynchronizedState<T>: @unchecked Sendable {
+    private let lock: OSAllocatedUnfairLock<T>
+
+    nonisolated init(_ initialValue: T) {
+        self.lock = OSAllocatedUnfairLock(initialState: initialValue)
+    }
+
+    nonisolated var value: T {
+        get { lock.withLock { $0 } }
+        set { lock.withLock { $0 = newValue } }
+    }
+}
+```
+
+**Usage**:
+```swift
+private nonisolated let isReady = SynchronizedState<Bool>(false)
+
+// Later:
+if isReady.value {  // ✅ Thread-safe read
+    isReady.value = false  // ✅ Thread-safe write
+}
+```
+
+### When to Use OSAllocatedUnfairLock vs Actors
+
+**Use OSAllocatedUnfairLock when**:
+- ✅ You need `nonisolated` access (no async/await)
+- ✅ Operations are VERY fast (nanoseconds)
+- ✅ Protecting simple state (Bools, optionals, counters)
+- ✅ Backward compatibility with synchronous APIs
+
+**Use actors when**:
+- ✅ Operations can be async (network, database, file I/O)
+- ✅ Complex state with multiple related properties
+- ✅ You want Swift to enforce isolation at compile-time
+
+### When `nonisolated(unsafe)` IS Acceptable
+
+**ONLY in test code**:
+- ✅ Mock repositories (66 occurrences in Molten/Tests/)
+- ✅ Test fixtures and test data builders
+- ✅ Test-only utilities
+
+**NEVER in production**:
+- ❌ Core Data repositories
+- ❌ Services or view models
+- ❌ Business logic
+- ❌ Any code that ships to users
 
 ## Special Cases
 

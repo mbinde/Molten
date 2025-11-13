@@ -111,7 +111,7 @@ struct CatalogViewDataLoadingTests {
         _ = try await catalogService.createGlassItem(existingItem, initialInventory: [], tags: [])
 
         // Note: Cannot reliably verify item count here because:
-        // 1. CatalogView.init calls RepositoryFactory.configureForProduction()
+        // 1. CatalogView.init calls AppDependencies.configureForProduction()
         // 2. This resets the factory configuration we set up in createTestEnvironment()
         // 3. The catalog service's repositories might be pointing to different instances
         // 4. In Core Data mode, this can lead to data being in one container but not visible from another

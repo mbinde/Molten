@@ -20,8 +20,8 @@ echo "=== LISTING ALL TEST FILES ==="
 find FlameworkerTests/ -name "*.swift" | sort
 
 echo ""
-echo "=== CHECKING FOR REPOSITORY FACTORY USAGE ==="
-find FlameworkerTests/ -name "*.swift" -exec grep -l "RepositoryFactory\." {} \;
+echo "=== CHECKING FOR APP DEPENDENCIES USAGE ==="
+find FlameworkerTests/ -name "*.swift" -exec grep -l "AppDependencies(" {} \;
 
 echo ""
 echo "✅ Detection complete!"

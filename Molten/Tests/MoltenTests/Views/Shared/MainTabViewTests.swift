@@ -86,8 +86,8 @@ struct MainTabViewTests {
         // because it's using injected services instead of creating its own
     }
     
-    @Test("MainTabView should create services using RepositoryFactory")
-    func testMainTabViewWithRepositoryFactory() {
+    @Test("MainTabView should create services using AppDependencies")
+    func testMainTabViewWithAppDependencies() {
         // Arrange: Configure factory for testing
         let deps = AppDependencies(forTesting: true)
 
@@ -105,7 +105,7 @@ struct MainTabViewTests {
         )
 
         // Assert: All services should be created successfully
-        #expect(tabView != nil, "MainTabView should work with RepositoryFactory-created services")
+        #expect(tabView != nil, "MainTabView should work with AppDependencies-created services")
         #expect(catalogService != nil, "CatalogService should be created successfully")
         #expect(inventoryTrackingService != nil, "InventoryTrackingService should be created successfully")
     }

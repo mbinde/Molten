@@ -166,10 +166,10 @@ Comprehensive test coverage for all entitlement checks.
 - Clear upgrade value ("Get unlimited + these features")
 - Easy to dismiss and continue with free
 
-### Phase 4: Integration with RepositoryFactory
+### Phase 4: Integration with AppDependencies
 **Goal**: Make EntitlementService easily accessible
 
-**Update** `Molten/Sources/App/Factories/RepositoryFactory.swift`:
+**Update** `Molten/Sources/App/Factories/AppDependencies.swift`:
 ```swift
 static func createEntitlementService() -> EntitlementService {
     // In production, fetch tier from SubscriptionService
@@ -182,7 +182,7 @@ static func createEntitlementService() -> EntitlementService {
 - Create singleton EntitlementService at app launch
 - Inject into environment for easy access in views:
   ```swift
-  @StateObject private var entitlementService = RepositoryFactory.createEntitlementService()
+  @StateObject private var entitlementService = AppDependencies.createEntitlementService()
 
   var body: some Scene {
       WindowGroup {

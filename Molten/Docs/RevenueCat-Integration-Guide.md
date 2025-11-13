@@ -68,7 +68,7 @@ struct SettingsView: View {
 
     @State private var viewModel: SubscriptionViewModel
 
-    init(subscriptionService: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService()) {
+    init(subscriptionService: SubscriptionServiceProtocol = AppDependencies.createSubscriptionService()) {
         self.subscriptionService = subscriptionService
         self._viewModel = State(initialValue: SubscriptionViewModel(subscriptionService: subscriptionService))
     }
@@ -106,7 +106,7 @@ struct CatalogView: View {
     private let subscriptionService: SubscriptionServiceProtocol
     @State private var hasProAccess = false
 
-    init(subscriptionService: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService()) {
+    init(subscriptionService: SubscriptionServiceProtocol = AppDependencies.createSubscriptionService()) {
         self.subscriptionService = subscriptionService
     }
 
@@ -271,14 +271,14 @@ struct MyFeatureTests {
 
 ### ✅ DO:
 
-1. **Use RepositoryFactory** for dependency injection:
+1. **Use AppDependencies** for dependency injection:
    ```swift
-   let service = RepositoryFactory.createSubscriptionService()
+   let service = AppDependencies.createSubscriptionService()
    ```
 
 2. **Create services in `init()` with default parameters** (NOT in `.task` or `.onAppear`):
    ```swift
-   init(service: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService()) {
+   init(service: SubscriptionServiceProtocol = AppDependencies.createSubscriptionService()) {
        self.service = service
    }
    ```
@@ -335,7 +335,7 @@ struct MyFeatureTests {
 - Check that you're not creating services in `.onAppear` or `.task`
 
 ### Tests failing
-- Ensure `RepositoryFactory.configureForTesting()` is called in test setup
+- Ensure `AppDependencies.configureForTesting()` is called in test setup
 - Use `MockSubscriptionService` instead of production service
 - Don't let tests touch RevenueCat servers
 
@@ -360,7 +360,7 @@ Molten/
 │   └── App/
 │       ├── MoltenApp.swift (RevenueCat configuration)
 │       └── Factories/
-│           └── RepositoryFactory.swift (service creation)
+│           └── AppDependencies.swift (service creation)
 └── Tests/MoltenTests/
     ├── Models/
     │   └── SubscriptionModelsTests.swift

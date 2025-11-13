@@ -924,7 +924,7 @@ Molten/Sources/
 5. UI tests
 
 **Phase 5: Integration (Day 5-6)**
-1. Wire up services in `RepositoryFactory`
+1. Wire up services in `AppDependencies`
 2. Add background update check to `MoltenApp`
 3. Integration tests
 4. Manual testing
@@ -2373,7 +2373,7 @@ import CommonCrypto
 - App lifecycle integration
 
 **Tasks:**
-1. Update `RepositoryFactory.swift`
+1. Update `AppDependencies.swift`
    - Create `CatalogUpdateService` instance
    - Inject dependencies
 2. Update `MoltenApp.swift`
@@ -2947,8 +2947,8 @@ enum ImageDownloadError: LocalizedError {
 @main
 struct MoltenApp: App {
 
-    @StateObject private var catalogUpdateService = RepositoryFactory.createCatalogUpdateService()
-    @StateObject private var imageDownloadService = RepositoryFactory.createImageDownloadService()
+    @StateObject private var catalogUpdateService = AppDependencies.createCatalogUpdateService()
+    @StateObject private var imageDownloadService = AppDependencies.createImageDownloadService()
 
     var body: some Scene {
         WindowGroup {
@@ -2977,12 +2977,12 @@ struct MoltenApp: App {
 
     private func loadBundledCatalogIfNeeded() async {
         // Check if catalog is empty
-        let catalogService = RepositoryFactory.createCatalogService()
+        let catalogService = AppDependencies.createCatalogService()
         let existingItems = try? await catalogService.getAllGlassItems()
 
         if existingItems?.isEmpty ?? true {
             // Load bundled catalog
-            let loadingService = RepositoryFactory.createGlassItemDataLoadingService()
+            let loadingService = AppDependencies.createGlassItemDataLoadingService()
             _ = try? await loadingService.loadGlassItemsFromJSON(options: .default)
 
             // Mark as bundled source

@@ -44,7 +44,7 @@ struct LocationServiceTests {
     
     @Test("InventoryTrackingService should coordinate location operations")
     func testInventoryTrackingServiceLocationOperations() {
-        // Arrange: Create InventoryTrackingService using RepositoryFactory
+        // Arrange: Create InventoryTrackingService using AppDependencies
         let deps = AppDependencies(forTesting: true)
         let inventoryTrackingService = deps.inventoryTrackingService
         

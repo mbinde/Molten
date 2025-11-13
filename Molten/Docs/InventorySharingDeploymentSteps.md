@@ -44,9 +44,9 @@ openssl s_client -connect api.yourdomain.com:443 -showcerts < /dev/null \
 
 ---
 
-### Step 3: Update RepositoryFactory with Pinned Certificate
+### Step 3: Update AppDependencies with Pinned Certificate
 
-**File:** `Molten/Sources/App/Factories/RepositoryFactory.swift`
+**File:** `Molten/Sources/App/Factories/AppDependencies.swift`
 
 Find the `createInventorySharingManager()` method and update it:
 

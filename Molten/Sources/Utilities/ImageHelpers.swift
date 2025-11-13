@@ -166,37 +166,29 @@ struct ImageHelpers {
         let thumbnailExtensions = ["jpg", "jpeg"]
         for ext in thumbnailExtensions {
             let thumbnailName = "\(sanitizeItemCodeForFilename(itemCode))_thumb"
-            print("🔍 [ImageHelpers] Looking for bundled thumbnail: \(thumbnailName).\(ext) in product-images/glass")
+            print("🔍 [ImageHelpers] Looking for bundled thumbnail: \(thumbnailName).\(ext)")
 
-            // Debug: List what's actually in the bundle
-            if let bundleURL = Bundle.main.url(forResource: "product-images/glass", withExtension: nil) {
-                print("📂 [ImageHelpers] Bundle glass directory exists at: \(bundleURL.path)")
-                if let files = try? FileManager.default.contentsOfDirectory(atPath: bundleURL.path) {
-                    print("📂 [ImageHelpers] Found \(files.count) files in glass directory")
-                    let matchingFiles = files.filter { $0.hasPrefix(thumbnailName) }
-                    if !matchingFiles.isEmpty {
-                        print("📂 [ImageHelpers] Matching files: \(matchingFiles)")
-                    }
-                } else {
-                    print("❌ [ImageHelpers] Could not read glass directory contents")
-                }
-            } else {
-                print("❌ [ImageHelpers] Bundle glass directory does not exist in bundle!")
-            }
-
+            // Try in product-images/glass subdirectory first
             if let path = Bundle.main.path(forResource: thumbnailName, ofType: ext, inDirectory: "product-images/glass") {
-                print("✅ [ImageHelpers] Found bundled thumbnail at: \(path)")
+                print("✅ [ImageHelpers] Found bundled thumbnail in subdirectory at: \(path)")
                 if let image = loadImageWithoutColorProfile(from: path) {
-                    // Cache the successful result
                     imageCache.setObject(image, forKey: cacheKeyNS)
                     print("✅ [ImageHelpers] Successfully loaded bundled thumbnail for \(itemCode)")
                     return image
-                } else {
-                    print("❌ [ImageHelpers] Failed to load image from path: \(path)")
                 }
-            } else {
-                print("❌ [ImageHelpers] Bundled thumbnail not found: \(thumbnailName).\(ext)")
             }
+
+            // Also try at bundle root (files in Sources/Resources/ may be flattened)
+            if let path = Bundle.main.path(forResource: thumbnailName, ofType: ext) {
+                print("✅ [ImageHelpers] Found bundled thumbnail at bundle root: \(path)")
+                if let image = loadImageWithoutColorProfile(from: path) {
+                    imageCache.setObject(image, forKey: cacheKeyNS)
+                    print("✅ [ImageHelpers] Successfully loaded bundled thumbnail (bundle root) for \(itemCode)")
+                    return image
+                }
+            }
+
+            print("❌ [ImageHelpers] Bundled thumbnail not found: \(thumbnailName).\(ext)")
         }
 
         // Check if we have permission to use product-specific images for this manufacturer

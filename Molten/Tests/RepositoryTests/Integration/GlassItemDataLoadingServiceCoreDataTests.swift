@@ -106,7 +106,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
         #expect(initialResult.itemsCreated > 0, "Should create items initially")
         
         // Second load with skip option
-        let skipOptions = GlassItemDataLoadingService.LoadingOptions(
+        let skipOptions = LoadingOptions(
             skipExistingItems: true,
             createInitialInventory: false,
             defaultInventoryType: "rod",
@@ -327,7 +327,7 @@ struct GlassItemDataLoadingServiceCoreDataTests {
         let (_, loadingService) = try await createTestEnvironment()
         
         // Test that appUpdate options are configured correctly
-        let options = GlassItemDataLoadingService.LoadingOptions.appUpdate
+        let options = LoadingOptions.appUpdate
         
         #expect(options.skipExistingItems == false, "Should not skip existing items for updates")
         #expect(options.createInitialInventory == false, "Should not create inventory during updates") 

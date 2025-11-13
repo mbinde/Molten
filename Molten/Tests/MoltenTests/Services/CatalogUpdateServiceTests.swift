@@ -9,6 +9,7 @@
 import Foundation
 import Testing
 import Combine
+import SQLite3
 
 @testable import Molten
 
@@ -61,12 +62,64 @@ struct CatalogUpdateServiceTests {
     }
 
     func createTestCatalogData() -> Data {
-        let json: [String: Any] = [
-            "version": "1.0",
-            "catalog_data_version": 2,
-            "glassitems": []
-        ]
-        return try! JSONSerialization.data(withJSONObject: json)
+        // Create a minimal valid SQLite database for testing
+        // SQLite file format starts with "SQLite format 3\0" (16 bytes magic number)
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("test_catalog_\(UUID().uuidString).sqlite")
+
+        // Create a minimal SQLite database using SQLite3
+        var db: OpaquePointer?
+        guard sqlite3_open(tempURL.path, &db) == SQLITE_OK else {
+            fatalError("Failed to create test SQLite database")
+        }
+
+        // Create catalog_items table
+        let createTableSQL = """
+        CREATE TABLE IF NOT EXISTS catalog_items (
+            id INTEGER PRIMARY KEY,
+            stable_id TEXT NOT NULL UNIQUE,
+            manufacturer TEXT,
+            name TEXT,
+            coe INTEGER
+        );
+        """
+
+        var createTableStatement: OpaquePointer?
+        if sqlite3_prepare_v2(db, createTableSQL, -1, &createTableStatement, nil) == SQLITE_OK {
+            sqlite3_step(createTableStatement)
+        }
+        sqlite3_finalize(createTableStatement)
+
+        // Create metadata table
+        let createMetadataSQL = """
+        CREATE TABLE IF NOT EXISTS metadata (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        );
+        """
+        var createMetadataStatement: OpaquePointer?
+        if sqlite3_prepare_v2(db, createMetadataSQL, -1, &createMetadataStatement, nil) == SQLITE_OK {
+            sqlite3_step(createMetadataStatement)
+        }
+        sqlite3_finalize(createMetadataStatement)
+
+        // Insert version metadata
+        let insertMetadataSQL = "INSERT INTO metadata (key, value) VALUES ('version', '2');"
+        var insertMetadataStatement: OpaquePointer?
+        if sqlite3_prepare_v2(db, insertMetadataSQL, -1, &insertMetadataStatement, nil) == SQLITE_OK {
+            sqlite3_step(insertMetadataStatement)
+        }
+        sqlite3_finalize(insertMetadataStatement)
+
+        sqlite3_close(db)
+
+        // Read the database file
+        let data = try! Data(contentsOf: tempURL)
+
+        // Clean up temp file
+        try? FileManager.default.removeItem(at: tempURL)
+
+        return data
     }
 
     // MARK: - Check For Updates Tests
@@ -432,7 +485,7 @@ actor MockCatalogStorageService: CatalogStorageServiceProtocol {
         savedTempCatalogs.append((data, version))
 
         let tempURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("mock_catalog_v\(version)_temp.json")
+            .appendingPathComponent("mock_catalog_v\(version)_temp.sqlite")
 
         try data.write(to: tempURL)
 

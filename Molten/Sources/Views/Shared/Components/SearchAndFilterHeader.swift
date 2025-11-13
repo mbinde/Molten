@@ -155,19 +155,22 @@ struct SearchAndFilterHeader: View {
                     }
                 }
 
-                // Filter buttons row: Product Type, Manufacturers, COE, Tags
+                // Filter buttons row: Type (left), then COE/Mfr/Tags (right-aligned)
                 HStack(spacing: DesignSystem.Spacing.md) {
-                    // Product type selector (Glass/Coating)
+                    // Product type selector (left-anchored)
                     compactProductTypePicker
+
+                    Spacer()
+
+                    // Right-aligned filters: COE, Mfr, Tags (from left to right)
+                    // COE filter button (only for glass)
+                    if !allAvailableCOEs.isEmpty {
+                        compactCOEFilterButton
+                    }
 
                     // Manufacturer filter button
                     if !allAvailableManufacturers.isEmpty {
                         compactManufacturerFilterButton
-                    }
-
-                    // COE filter button
-                    if !allAvailableCOEs.isEmpty {
-                        compactCOEFilterButton
                     }
 
                     // Tag filter button (always shown if tags are available)

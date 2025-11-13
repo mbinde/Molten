@@ -363,7 +363,7 @@ actor ShoppingListService {
             ))
         }
         
-        return statistics.sorted { $0.currentNeedsCount > $1.currentNeedsCount }
+        return statistics.sorted() // Uses Comparable conformance from model
     }
     
     /// Update store name across all minimum records

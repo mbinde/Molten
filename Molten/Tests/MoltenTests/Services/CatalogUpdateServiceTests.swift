@@ -23,24 +23,20 @@ struct CatalogUpdateServiceTests {
     func createMockUpdateService(
         apiClient: MockCatalogAPIClient? = nil,
         storageService: MockCatalogStorageService? = nil,
-        dataLoadingService: MockGlassItemDataLoadingService? = nil,
         networkMonitor: MockNetworkMonitor? = nil
     ) async throws -> (
         service: CatalogUpdateService,
         apiClient: MockCatalogAPIClient,
         storageService: MockCatalogStorageService,
-        dataLoadingService: MockGlassItemDataLoadingService,
         networkMonitor: MockNetworkMonitor
     ) {
         let mockAPI = apiClient ?? MockCatalogAPIClient()
         let mockStorage = storageService ?? MockCatalogStorageService()
-        let mockDataLoading = dataLoadingService ?? MockGlassItemDataLoadingService()
         let mockNetwork = networkMonitor ?? MockNetworkMonitor()
 
         let service = CatalogUpdateService(
             apiClient: mockAPI,
             storageService: mockStorage,
-            dataLoadingService: mockDataLoading,
             networkMonitor: mockNetwork
         )
 
@@ -48,7 +44,6 @@ struct CatalogUpdateServiceTests {
             service: service,
             apiClient: mockAPI,
             storageService: mockStorage,
-            dataLoadingService: mockDataLoading,
             networkMonitor: mockNetwork
         )
     }

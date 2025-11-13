@@ -40,9 +40,6 @@
             reference = "container:RepositoryTests.xctestplan">
          </TestPlanReference>
          <TestPlanReference
-            reference = "container:AppTests.xctestplan">
-         </TestPlanReference>
-         <TestPlanReference
             reference = "container:Screenshots.xctestplan">
          </TestPlanReference>
       </TestPlans>

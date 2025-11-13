@@ -501,7 +501,7 @@ enum CoreDataItemMinimumRepositoryError: Error, LocalizedError {
 
 extension String {
     /// Converts a string to a deterministic UUID string by hashing it
-    func sha256AsUUIDString() -> String {
+    nonisolated func sha256AsUUIDString() -> String {
         // Simple hash to UUID conversion (for deterministic ID generation)
         // This is a simplified approach - in production, consider using CryptoKit
         let hash = self.hashValue

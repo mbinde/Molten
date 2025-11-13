@@ -178,18 +178,20 @@ struct ImageHelpers {
         // PRIORITY 2.5: Check for bundled thumbnail (AFTER permission check)
         // Thumbnails are named like "{stableId}_thumb.jpg" (e.g., "000NCe_thumb.jpg")
         // These are pre-generated 400px thumbnails bundled with the app for offline access
-        let thumbnailExtensions = ["jpg", "jpeg"]
-        for ext in thumbnailExtensions {
-            let thumbnailName = "\(sanitizeItemCodeForFilename(itemCode))_thumb"
-            print("🔍 [ImageHelpers] Looking for bundled thumbnail: \(thumbnailName).\(ext)")
+        if let stableId = stableId, !stableId.isEmpty {
+            let thumbnailExtensions = ["jpg", "jpeg"]
+            for ext in thumbnailExtensions {
+                let thumbnailName = "\(stableId)_thumb"
+                print("🔍 [ImageHelpers] Looking for bundled thumbnail: \(thumbnailName).\(ext)")
 
-            // Files in Molten/Resources/ are flattened to bundle root
-            if let path = Bundle.main.path(forResource: thumbnailName, ofType: ext) {
-                print("✅ [ImageHelpers] Found bundled thumbnail at: \(path)")
-                if let image = loadImageWithoutColorProfile(from: path) {
-                    imageCache.setObject(image, forKey: cacheKeyNS)
-                    print("✅ [ImageHelpers] Successfully loaded bundled thumbnail for \(itemCode)")
-                    return image
+                // Files in Molten/Resources/ are flattened to bundle root
+                if let path = Bundle.main.path(forResource: thumbnailName, ofType: ext) {
+                    print("✅ [ImageHelpers] Found bundled thumbnail at: \(path)")
+                    if let image = loadImageWithoutColorProfile(from: path) {
+                        imageCache.setObject(image, forKey: cacheKeyNS)
+                        print("✅ [ImageHelpers] Successfully loaded bundled thumbnail for \(itemCode)")
+                        return image
+                    }
                 }
             }
         }

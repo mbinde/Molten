@@ -360,30 +360,6 @@ struct CatalogUpdateServiceTests {
     }
 }
 
-// MARK: - Mock Data Loading Service
-
-class MockGlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {
-    var loadFromDataCalled = false
-    var mockResult: GlassItemLoadingResult?
-
-    func loadGlassItemsFromData(
-        _ data: Data,
-        options: GlassItemDataLoadingService.LoadingOptions = .default
-    ) async throws -> GlassItemLoadingResult {
-        loadFromDataCalled = true
-
-        if let result = mockResult {
-            return result
-        }
-
-        // Return default result
-        return GlassItemLoadingResult(
-            itemsCreated: 10,
-            itemsUpdated: 5
-        )
-    }
-}
-
 // MARK: - Mock Catalog API Client
 
 @MainActor

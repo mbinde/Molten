@@ -186,19 +186,23 @@ actor CatalogService {
         }
 
         // Apply filters using model business logic
+        let tagFilterClosure: ([String]) -> [String] = { requestedTags in
+            // Return items that have ALL requested tags
+            completeItems
+                .filter { item in
+                    Set(requestedTags).isSubset(of: Set(item.tags))
+                }
+                .map { $0.glassItem.stable_id }
+        }
+
+        let inventoryFilterClosure: (String) -> Bool = { stableId in
+            inventoryByItem[stableId]?.isEmpty == false
+        }
+
         completeItems = request.filter(
             completeItems,
-            itemsWithTags: { requestedTags in
-                // Return items that have ALL requested tags
-                completeItems
-                    .filter { item in
-                        Set(requestedTags).isSubset(of: Set(item.tags))
-                    }
-                    .map { $0.glassItem.stable_id }
-            },
-            itemsWithInventory: { stableId in
-                inventoryByItem[stableId]?.isEmpty == false
-            }
+            itemsWithTags: tagFilterClosure,
+            itemsWithInventory: inventoryFilterClosure
         )
 
         // Apply sorting

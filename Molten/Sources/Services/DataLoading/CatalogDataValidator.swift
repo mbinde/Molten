@@ -14,9 +14,8 @@ final class CatalogDataValidator: Sendable {
 
     // MARK: - Properties
 
-    private let log = Logger.dataLoading
-    private let jsonLoader: JSONDataLoader
-    private let catalogService: CatalogService
+    nonisolated private let jsonLoader: any JSONDataLoading
+    nonisolated private let catalogService: CatalogService
 
     // MARK: - Initialization
 
@@ -24,7 +23,7 @@ final class CatalogDataValidator: Sendable {
     /// - Parameters:
     ///   - jsonLoader: Loader for accessing catalog JSON data
     ///   - catalogService: Service for checking existing items
-    init(jsonLoader: JSONDataLoader, catalogService: CatalogService) {
+    nonisolated init(jsonLoader: any JSONDataLoading, catalogService: CatalogService) {
         self.jsonLoader = jsonLoader
         self.catalogService = catalogService
     }

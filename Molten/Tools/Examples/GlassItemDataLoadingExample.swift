@@ -101,7 +101,7 @@ class GlassItemDataLoadingExample {
         let loadingService = try await setupGlassItemDataLoadingService()
         
         // Configure options for initial setup
-        let setupOptions = GlassItemDataLoadingService.LoadingOptions(
+        let setupOptions = LoadingOptions(
             skipExistingItems: false, // Don't skip for fresh setup
             createInitialInventory: true, // Create starter inventory
             defaultInventoryType: "rod",
@@ -287,7 +287,7 @@ class GlassItemDataLoadingExample {
         let loadingService = try await setupGlassItemDataLoadingService()
         
         // Configure for optimal performance
-        let performanceOptions = GlassItemDataLoadingService.LoadingOptions(
+        let performanceOptions = LoadingOptions(
             skipExistingItems: true, // Skip existing for speed
             createInitialInventory: false, // Don't create inventory for speed
             defaultInventoryType: "rod",
@@ -351,7 +351,7 @@ class GlassItemDataLoadingExample {
         
         // Step 3: Load with merge strategy
         log.info("Step 3: Loading with merge strategy...")
-        let mergeOptions = GlassItemDataLoadingService.LoadingOptions(
+        let mergeOptions = LoadingOptions(
             skipExistingItems: true, // Skip existing items
             createInitialInventory: false, // Don't overwrite existing inventory
             defaultInventoryType: "rod",

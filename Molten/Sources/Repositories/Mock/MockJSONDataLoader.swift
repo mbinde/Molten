@@ -8,7 +8,7 @@
 import Foundation
 
 /// Protocol for JSON data loading (for dependency injection)
-protocol JSONDataLoading {
+protocol JSONDataLoading: Sendable {
     func findCatalogJSONData() throws -> Data
     func decodeCatalogItems(from data: Data) throws -> [CatalogItemData]
 }
@@ -18,7 +18,7 @@ extension JSONDataLoader: JSONDataLoading {}
 
 /// Mock implementation of JSONDataLoading for testing
 /// Provides controlled test data instead of loading from actual JSON files
-class MockJSONDataLoader: JSONDataLoading {
+final class MockJSONDataLoader: JSONDataLoading, @unchecked Sendable {
     
     // MARK: - Test Configuration
 

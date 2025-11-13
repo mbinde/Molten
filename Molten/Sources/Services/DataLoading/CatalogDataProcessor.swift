@@ -14,14 +14,13 @@ final class CatalogDataProcessor: Sendable {
 
     // MARK: - Properties
 
-    private let log = Logger.dataLoading
-    private let catalogService: CatalogService
+    nonisolated private let catalogService: CatalogService
 
     // MARK: - Initialization
 
     /// Initialize processor with catalog service
     /// - Parameter catalogService: Service for catalog operations
-    init(catalogService: CatalogService) {
+    nonisolated init(catalogService: CatalogService) {
         self.catalogService = catalogService
     }
 
@@ -115,12 +114,12 @@ final class CatalogDataProcessor: Sendable {
                         let updatedItem = try await updateExistingItem(existingItem.glassItem, withRequest: request)
                         result.successfulItems.append(updatedItem)
                         result.itemsUpdated += 1
-                        log.debug("Updated existing item: \(naturalKey)")
+                        Logger.dataLoading.debug("Updated existing item: \(naturalKey)")
                     } else {
                         // No update needed, count as skipped
                         result.successfulItems.append(existingItem)
                         result.itemsSkipped += 1
-                        log.debug("Skipped unchanged item: \(naturalKey)")
+                        Logger.dataLoading.debug("Skipped unchanged item: \(naturalKey)")
                     }
                 } else {
                     // Item doesn't exist - create new
@@ -155,7 +154,7 @@ final class CatalogDataProcessor: Sendable {
                 )
                 result.failedItems.append(failedItem)
                 result.itemsFailed += 1
-                log.error("Failed to process item: \(error.localizedDescription)")
+                Logger.dataLoading.error("Failed to process item: \(error.localizedDescription)")
             }
         }
 
@@ -214,10 +213,10 @@ final class CatalogDataProcessor: Sendable {
         return allItems.first { $0.glassItem.stable_id == existingItem.stable_id }!
     }
 
-    // MARK: - Data Extraction Helpers
+    // MARK: - Data Extraction Helpers (public for service reuse)
 
     /// Extract manufacturer abbreviation from catalog item
-    private func extractManufacturer(from catalogItem: CatalogItemData) -> String {
+    func extractManufacturer(from catalogItem: CatalogItemData) -> String {
         // Manufacturers in the database are stored as abbreviations (e.g., "BE", "CiM", "EF", "GAF")
         // NOT as full names like "Bullseye Glass Co"
 
@@ -239,7 +238,7 @@ final class CatalogDataProcessor: Sendable {
     }
 
     /// Extract SKU from CatalogItemData (returns nil if code is missing)
-    private func extractSKU(from catalogItem: CatalogItemData) -> String? {
+    func extractSKU(from catalogItem: CatalogItemData) -> String? {
         // Return the full code as the SKU if it exists
         // This ensures image loading works correctly since image files are named with the full code
         // For example: "OC-6023-83CC-F" stays as "OC-6023-83CC-F", not truncated to "6023"
@@ -248,7 +247,7 @@ final class CatalogDataProcessor: Sendable {
     }
 
     /// Extract COE from CatalogItemData
-    private func extractCOE(from catalogItem: CatalogItemData) -> Int32 {
+    func extractCOE(from catalogItem: CatalogItemData) -> Int32 {
         guard let coeString = catalogItem.coe else { return 96 } // Default to 96
 
         // Try to parse as integer
@@ -265,7 +264,7 @@ final class CatalogDataProcessor: Sendable {
     }
 
     /// Extract tags from CatalogItemData
-    private func extractTags(from catalogItem: CatalogItemData) -> [String] {
+    func extractTags(from catalogItem: CatalogItemData) -> [String] {
         var tags: [String] = []
 
         // Add explicit tags from JSON only
@@ -278,7 +277,7 @@ final class CatalogDataProcessor: Sendable {
     }
 
     /// Extract synonym-based tags from CatalogItemData
-    private func extractSynonymTags(from catalogItem: CatalogItemData) -> [String] {
+    func extractSynonymTags(from catalogItem: CatalogItemData) -> [String] {
         guard let synonyms = catalogItem.synonyms else { return [] }
 
         return synonyms.map { $0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).lowercased() }
@@ -305,7 +304,7 @@ final class CatalogDataProcessor: Sendable {
     /// The stable_id is the primary identifier (6-char hash from the scraper database).
     /// natural_key is now a legacy field that mirrors stable_id.
     /// DO NOT use item_stable_id, manufacturer_url, or other fields for identification.
-    private func generateNaturalKey(from catalogItem: CatalogItemData) -> String {
+    func generateNaturalKey(from catalogItem: CatalogItemData) -> String {
         // Use stable_id from JSON if available (preferred - this is the standard case)
         if let stableId = catalogItem.stable_id, !stableId.isEmpty {
             return stableId

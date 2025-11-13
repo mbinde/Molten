@@ -14,10 +14,9 @@ final class CatalogVersionManager: Sendable {
 
     // MARK: - Properties
 
-    private let log = Logger.dataLoading
     private let catalogDataVersionKey = "com.flameworker.catalog.data.version"
-    private let jsonLoader: JSONDataLoader
-    private let catalogService: CatalogService
+    nonisolated private let jsonLoader: any JSONDataLoading
+    nonisolated private let catalogService: CatalogService
 
     // MARK: - Initialization
 
@@ -25,7 +24,7 @@ final class CatalogVersionManager: Sendable {
     /// - Parameters:
     ///   - jsonLoader: Loader for accessing catalog JSON data
     ///   - catalogService: Service for wiping catalog data
-    init(jsonLoader: JSONDataLoader, catalogService: CatalogService) {
+    nonisolated init(jsonLoader: any JSONDataLoading, catalogService: CatalogService) {
         self.jsonLoader = jsonLoader
         self.catalogService = catalogService
     }
@@ -41,7 +40,7 @@ final class CatalogVersionManager: Sendable {
 
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               let jsonVersion = json["catalog_data_version"] as? Int else {
-            log.warning("JSON does not contain catalog_data_version, assuming no wipe needed")
+            Logger.dataLoading.warning("JSON does not contain catalog_data_version, assuming no wipe needed")
             return false
         }
 
@@ -49,10 +48,10 @@ final class CatalogVersionManager: Sendable {
         let storedVersion = UserDefaults.standard.integer(forKey: catalogDataVersionKey)
 
         if jsonVersion > storedVersion {
-            log.warning("🔄 Catalog data version increased (\(storedVersion) → \(jsonVersion)), will wipe and reload")
+            Logger.dataLoading.warning("🔄 Catalog data version increased (\(storedVersion) → \(jsonVersion)), will wipe and reload")
             return true
         } else {
-            log.info("✅ Catalog data version unchanged (\(storedVersion))")
+            Logger.dataLoading.info("✅ Catalog data version unchanged (\(storedVersion))")
             return false
         }
     }
@@ -64,12 +63,12 @@ final class CatalogVersionManager: Sendable {
 
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               let version = json["catalog_data_version"] as? Int else {
-            log.warning("JSON does not contain catalog_data_version, cannot save")
+            Logger.dataLoading.warning("JSON does not contain catalog_data_version, cannot save")
             return
         }
 
         UserDefaults.standard.set(version, forKey: catalogDataVersionKey)
-        log.info("💾 Saved catalog data version: \(version)")
+        Logger.dataLoading.info("💾 Saved catalog data version: \(version)")
     }
 
     /// Get current catalog data version from JSON
@@ -95,22 +94,22 @@ final class CatalogVersionManager: Sendable {
     /// Delete all catalog-related data (GlassItems and tags)
     /// - Throws: If deletion fails
     func wipeCatalogData() async throws {
-        log.warning("🗑️ Wiping all catalog data (GlassItems and tags)...")
+        Logger.dataLoading.warning("🗑️ Wiping all catalog data (GlassItems and tags)...")
 
         // Delete all GlassItems
         let allItems = try await catalogService.getAllGlassItems()
-        log.info("Deleting \(allItems.count) GlassItems...")
+        Logger.dataLoading.info("Deleting \(allItems.count) GlassItems...")
 
         for item in allItems {
             try await catalogService.deleteGlassItem(stableId: item.glassItem.stable_id)
         }
 
-        log.info("✅ All catalog data wiped")
+        Logger.dataLoading.info("✅ All catalog data wiped")
     }
 
     /// Clear stored version (useful for testing or forcing a reload)
     func clearStoredVersion() {
         UserDefaults.standard.removeObject(forKey: catalogDataVersionKey)
-        log.info("🗑️ Cleared stored catalog data version")
+        Logger.dataLoading.info("🗑️ Cleared stored catalog data version")
     }
 }

@@ -14,7 +14,6 @@ final class CatalogChecksumManager: Sendable {
 
     // MARK: - Properties
 
-    private let log = Logger.dataLoading
     private let checksumKey = "com.flameworker.json.checksum"
     private let resourceName: String
     private let resourceType: String
@@ -22,7 +21,7 @@ final class CatalogChecksumManager: Sendable {
     // MARK: - Initialization
 
     /// Initialize with default glassitems.json resource
-    init() {
+    nonisolated init() {
         self.resourceName = "glassitems"
         self.resourceType = "json"
     }
@@ -31,7 +30,7 @@ final class CatalogChecksumManager: Sendable {
     /// - Parameters:
     ///   - resourceName: Name of the resource file (without extension)
     ///   - resourceType: File extension (e.g., "json")
-    init(resourceName: String, resourceType: String) {
+    nonisolated init(resourceName: String, resourceType: String) {
         self.resourceName = resourceName
         self.resourceType = resourceType
     }
@@ -44,7 +43,7 @@ final class CatalogChecksumManager: Sendable {
     func hasFileChanged() throws -> Bool {
         // Get file attributes to compute checksum
         guard let filePath = Bundle.main.path(forResource: resourceName, ofType: resourceType) else {
-            log.warning("Could not find \(resourceName).\(resourceType) file path, assuming changed")
+            Logger.dataLoading.warning("Could not find \(self.resourceName).\(self.resourceType) file path, assuming changed")
             return true
         }
 
@@ -53,7 +52,7 @@ final class CatalogChecksumManager: Sendable {
 
         guard let modificationDate = attributes[.modificationDate] as? Date,
               let fileSize = attributes[.size] as? Int64 else {
-            log.warning("Could not read file attributes, assuming changed")
+            Logger.dataLoading.warning("Could not read file attributes, assuming changed")
             return true
         }
 
@@ -68,14 +67,14 @@ final class CatalogChecksumManager: Sendable {
                            storedChecksum.fileSize != currentChecksum.fileSize
 
             if hasChanged {
-                log.info("🔄 Detected JSON file change (mod date or size changed)")
+                Logger.dataLoading.info("🔄 Detected JSON file change (mod date or size changed)")
             } else {
-                log.info("✅ JSON file unchanged since last load, skipping")
+                Logger.dataLoading.info("✅ JSON file unchanged since last load, skipping")
             }
 
             return hasChanged
         } else {
-            log.info("🆕 First run or no checksum found, will load JSON")
+            Logger.dataLoading.info("🆕 First run or no checksum found, will load JSON")
             return true
         }
     }
@@ -84,7 +83,7 @@ final class CatalogChecksumManager: Sendable {
     /// - Throws: If file attributes cannot be read
     func saveChecksum() throws {
         guard let filePath = Bundle.main.path(forResource: resourceName, ofType: resourceType) else {
-            log.warning("Could not find \(resourceName).\(resourceType) file path, cannot save checksum")
+            Logger.dataLoading.warning("Could not find \(self.resourceName).\(self.resourceType) file path, cannot save checksum")
             return
         }
 
@@ -93,7 +92,7 @@ final class CatalogChecksumManager: Sendable {
 
         guard let modificationDate = attributes[.modificationDate] as? Date,
               let fileSize = attributes[.size] as? Int64 else {
-            log.warning("Could not read file attributes, cannot save checksum")
+            Logger.dataLoading.warning("Could not read file attributes, cannot save checksum")
             return
         }
 
@@ -101,13 +100,13 @@ final class CatalogChecksumManager: Sendable {
         let data = try JSONEncoder().encode(checksum)
         UserDefaults.standard.set(data, forKey: checksumKey)
 
-        log.info("💾 Saved JSON checksum (size: \(fileSize) bytes, modified: \(modificationDate))")
+        Logger.dataLoading.info("💾 Saved JSON checksum (size: \(fileSize) bytes, modified: \(modificationDate))")
     }
 
     /// Clear stored checksum (useful for testing or forcing a reload)
     func clearChecksum() {
         UserDefaults.standard.removeObject(forKey: checksumKey)
-        log.info("🗑️ Cleared stored JSON checksum")
+        Logger.dataLoading.info("🗑️ Cleared stored JSON checksum")
     }
 }
 

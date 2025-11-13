@@ -190,24 +190,65 @@ final class CatalogDatabaseManager: Sendable {
         return connection
     }
 
-    // MARK: - Future: OTA Updates
+    // MARK: - OTA Updates
 
-    /// Check for catalog updates from server (to be implemented)
-    func checkForServerUpdate() async throws -> Int? {
-        // TODO: Implement server version checking
-        // GET /api/catalog/version -> {"version": 12}
-        return nil
-    }
+    /// Replace current database with downloaded update
+    /// - Parameter tempFile: URL of the downloaded database file
+    func replaceDatabaseWith(tempFile: URL) async throws {
+        print("🔄 Replacing catalog database with downloaded version...")
 
-    /// Download and install updated catalog from server (to be implemented)
-    func downloadAndInstallUpdate(version: Int) async throws {
-        // TODO: Implement server download
-        // 1. Download to temp location
-        // 2. Verify database integrity
-        // 3. Close current connection
-        // 4. Replace database file
-        // 5. Reopen connection
-        print("⚠️ Server updates not yet implemented")
+        // 1. Verify temp file is valid SQLite database
+        let tempVersion = try await getVersion(from: tempFile)
+        print("   Downloaded database version: \(tempVersion)")
+
+        // 2. Close current database connection
+        closeDatabase()
+
+        // 3. Backup current database (in case of failure)
+        let backupURL = documentsDatabaseURL.deletingLastPathComponent()
+            .appendingPathComponent("catalog_backup.sqlite")
+
+        if fileManager.fileExists(atPath: backupURL.path) {
+            try fileManager.removeItem(at: backupURL)
+        }
+
+        if fileManager.fileExists(atPath: documentsDatabaseURL.path) {
+            try fileManager.moveItem(at: documentsDatabaseURL, to: backupURL)
+            print("   Created backup at \(backupURL.path)")
+        }
+
+        // 4. Move temp file to Documents
+        do {
+            try fileManager.moveItem(at: tempFile, to: documentsDatabaseURL)
+            print("   Moved downloaded database to Documents")
+
+            // 5. Reopen database connection
+            try openDatabase()
+
+            // 6. Verify the new database works
+            let newVersion = try await getDocumentsVersion()
+            print("✅ Database replaced successfully (version \(newVersion))")
+
+            // 7. Remove backup on success
+            if fileManager.fileExists(atPath: backupURL.path) {
+                try? fileManager.removeItem(at: backupURL)
+            }
+
+        } catch {
+            print("❌ Failed to replace database, restoring backup...")
+
+            // Restore backup if replacement failed
+            if fileManager.fileExists(atPath: backupURL.path) {
+                if fileManager.fileExists(atPath: documentsDatabaseURL.path) {
+                    try? fileManager.removeItem(at: documentsDatabaseURL)
+                }
+                try fileManager.moveItem(at: backupURL, to: documentsDatabaseURL)
+                try openDatabase()
+                print("   Backup restored")
+            }
+
+            throw CatalogDatabaseError.cannotOpenDatabase("Failed to replace database: \(error.localizedDescription)")
+        }
     }
 }
 

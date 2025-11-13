@@ -88,18 +88,18 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
 
     // MARK: - Data Download
 
-    /// Download full catalog JSON
+    /// Download full catalog SQLite database
     /// - Parameters:
     ///   - version: Specific version to download (nil = latest)
     ///   - progressHandler: Optional closure for progress updates (0.0 to 1.0)
-    /// - Returns: Decompressed catalog JSON data
+    /// - Returns: Catalog SQLite database data (uncompressed binary)
     func downloadFullCatalog(
         version: Int? = nil,
         progressHandler: ((Double) -> Void)? = nil
     ) async throws -> Data {
 
         var urlComponents = URLComponents(
-            url: baseURL.appendingPathComponent("v1/catalog/data"),
+            url: baseURL.appendingPathComponent("v1/catalog/database"),
             resolvingAgainstBaseURL: true
         )!
 
@@ -115,7 +115,7 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("application/x-sqlite3", forHTTPHeaderField: "Accept")
         request.setValue("gzip", forHTTPHeaderField: "Accept-Encoding")
 
         // REQUIRED: Add App Attest assertion for data downloads
@@ -146,7 +146,17 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
                 data = try data.gunzipped()
             }
 
-            log.info("Downloaded catalog: \(data.count) bytes (decompressed)")
+            log.info("Downloaded catalog database: \(data.count) bytes (decompressed)")
+
+            // Verify SQLite file signature (magic number)
+            guard data.count >= 16 else {
+                throw CatalogUpdateError.invalidResponse
+            }
+            let header = String(data: data.prefix(16), encoding: .ascii) ?? ""
+            guard header.hasPrefix("SQLite format 3") else {
+                log.error("Downloaded file is not a valid SQLite database")
+                throw CatalogUpdateError.invalidResponse
+            }
 
             // Cleanup temp file
             try? FileManager.default.removeItem(at: localURL)

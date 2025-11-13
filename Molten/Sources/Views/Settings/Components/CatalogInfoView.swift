@@ -258,7 +258,6 @@ struct CatalogInfoView: View {
                 updateService: CatalogUpdateService(
                     apiClient: CatalogAPIClient(),
                     storageService: try! CatalogStorageService(),
-                    dataLoadingService: RepositoryFactory.createGlassItemDataLoadingService(),
                     networkMonitor: NetworkMonitor.shared
                 )
             )

@@ -3,222 +3,66 @@
 //  Flameworker
 //
 //  Created by Assistant on 10/14/25.
+//  Refactored 2025-11-12: Split into focused components
 //
 
 import Foundation
 import OSLog
 
-// Import required models and types from other modules
-// Note: In a real project, these would be proper module imports
-
 /// Protocol for glass item data loading operations (for dependency injection)
 protocol GlassItemDataLoadingServiceProtocol {
-    func loadGlassItemsFromData(_ data: Data, options: GlassItemDataLoadingService.LoadingOptions) async throws -> GlassItemLoadingResult
+    func loadGlassItemsFromData(_ data: Data, options: LoadingOptions) async throws -> GlassItemLoadingResult
 }
 
 /// Service for loading data from JSON files into the new GlassItem system
-/// Handles transformation from legacy JSON format to the new normalized entity structure
-/// Supports initial loading, migration from legacy system, and bulk import operations
+/// Orchestrates catalog data loading using specialized components
+/// Handles OTA updates, batch processing, and incremental syncing
 @preconcurrency
 class GlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {
-    
+
     // MARK: - Dependencies
 
     nonisolated private let catalogService: CatalogService
     nonisolated(unsafe) private let jsonLoader: JSONDataLoading
     nonisolated private let catalogStorageService: CatalogStorageService?
+
+    // Component dependencies
+    nonisolated private let checksumManager: CatalogChecksumManager
+    nonisolated private let versionManager: CatalogVersionManager
+    nonisolated private let validator: CatalogDataValidator
+    nonisolated private let processor: CatalogDataProcessor
+
     private let log = Logger(subsystem: "Flameworker", category: "GlassItemDataLoading")
     
-    // MARK: - JSON Checksum Support
-
-    /// Store JSON file checksum in UserDefaults for change detection
-    private struct JSONChecksum: Codable {
-        let modificationDate: Date
-        let fileSize: Int64
-    }
-
-    private static let checksumKey = "com.flameworker.json.checksum"
+    // MARK: - Checksum & Version Management (delegated to components)
 
     /// Check if JSON file has changed since last load
-    /// Returns true if file has changed or is first run, false if unchanged
+    /// - Returns: true if file has changed or is first run, false if unchanged
     func hasJSONFileChanged() throws -> Bool {
-        // Get file attributes to compute checksum
-        guard let filePath = Bundle.main.path(forResource: "glassitems", ofType: "json") else {
-            log.warning("Could not find glassitems.json file path, assuming changed")
-            return true
-        }
-
-        let fileURL = URL(fileURLWithPath: filePath)
-        let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
-
-        guard let modificationDate = attributes[.modificationDate] as? Date,
-              let fileSize = attributes[.size] as? Int64 else {
-            log.warning("Could not read file attributes, assuming changed")
-            return true
-        }
-
-        let currentChecksum = JSONChecksum(modificationDate: modificationDate, fileSize: fileSize)
-
-        // Check stored checksum
-        if let storedData = UserDefaults.standard.data(forKey: Self.checksumKey),
-           let storedChecksum = try? JSONDecoder().decode(JSONChecksum.self, from: storedData) {
-
-            // Compare checksums
-            let hasChanged = storedChecksum.modificationDate != currentChecksum.modificationDate ||
-                           storedChecksum.fileSize != currentChecksum.fileSize
-
-            if hasChanged {
-                log.info("🔄 Detected JSON file change (mod date or size changed)")
-            } else {
-                log.info("✅ JSON file unchanged since last load, skipping")
-            }
-
-            return hasChanged
-        } else {
-            log.info("🆕 First run or no checksum found, will load JSON")
-            return true
-        }
+        try checksumManager.hasFileChanged()
     }
 
-    /// Save current JSON file checksum to UserDefaults after successful load
+    /// Save current JSON file checksum after successful load
     func saveJSONChecksum() throws {
-        guard let filePath = Bundle.main.path(forResource: "glassitems", ofType: "json") else {
-            log.warning("Could not find glassitems.json file path, cannot save checksum")
-            return
-        }
-
-        let fileURL = URL(fileURLWithPath: filePath)
-        let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
-
-        guard let modificationDate = attributes[.modificationDate] as? Date,
-              let fileSize = attributes[.size] as? Int64 else {
-            log.warning("Could not read file attributes, cannot save checksum")
-            return
-        }
-
-        let checksum = JSONChecksum(modificationDate: modificationDate, fileSize: fileSize)
-        let data = try JSONEncoder().encode(checksum)
-        UserDefaults.standard.set(data, forKey: Self.checksumKey)
-
-        log.info("💾 Saved JSON checksum (size: \(fileSize) bytes, modified: \(modificationDate))")
+        try checksumManager.saveChecksum()
     }
 
-    // MARK: - Catalog Data Version Management
-
-    private static let catalogDataVersionKey = "com.flameworker.catalog.data.version"
-
-    /// Check if JSON has a newer catalog_data_version that requires wiping and reloading all data
-    /// Returns true if JSON version > stored version (need to wipe and reload)
+    /// Check if JSON has newer version requiring data wipe
+    /// - Returns: true if wipe needed, false otherwise
     func needsCatalogDataWipe() throws -> Bool {
-        // Load JSON to check version
-        let data = try jsonLoader.findCatalogJSONData()
-
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let jsonVersion = json["catalog_data_version"] as? Int else {
-            log.warning("JSON does not contain catalog_data_version, assuming no wipe needed")
-            return false
-        }
-
-        // Get stored version (defaults to 0 if never set)
-        let storedVersion = UserDefaults.standard.integer(forKey: Self.catalogDataVersionKey)
-
-        if jsonVersion > storedVersion {
-            log.warning("🔄 Catalog data version increased (\(storedVersion) → \(jsonVersion)), will wipe and reload")
-            return true
-        } else {
-            log.info("✅ Catalog data version unchanged (\(storedVersion))")
-            return false
-        }
+        try versionManager.needsCatalogDataWipe()
     }
 
     /// Save current catalog data version after successful load
     func saveCatalogDataVersion() throws {
-        let data = try jsonLoader.findCatalogJSONData()
-
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let version = json["catalog_data_version"] as? Int else {
-            log.warning("JSON does not contain catalog_data_version, cannot save")
-            return
-        }
-
-        UserDefaults.standard.set(version, forKey: Self.catalogDataVersionKey)
-        log.info("💾 Saved catalog data version: \(version)")
+        try versionManager.saveCatalogDataVersion()
     }
 
     /// Delete all catalog-related data (GlassItems and tags)
     func wipeCatalogData() async throws {
-        log.warning("🗑️ Wiping all catalog data (GlassItems and tags)...")
-
-        // Delete all GlassItems
-        let allItems = try await catalogService.getAllGlassItems()
-        log.info("Deleting \(allItems.count) GlassItems...")
-
-        for item in allItems {
-            try await catalogService.deleteGlassItem(stableId: item.glassItem.stable_id)
-        }
-
-        log.info("✅ All catalog data wiped")
+        try await versionManager.wipeCatalogData()
     }
 
-    // MARK: - Configuration
-
-    /// Options for controlling the data loading behavior
-    struct LoadingOptions {
-        let skipExistingItems: Bool
-        let createInitialInventory: Bool
-        let defaultInventoryType: String
-        let defaultInventoryQuantity: Double
-        let enableTagExtraction: Bool
-        let enableSynonymTags: Bool
-        let validateNaturalKeys: Bool
-        let batchSize: Int
-        
-        static let `default` = LoadingOptions(
-            skipExistingItems: true,
-            createInitialInventory: false,
-            defaultInventoryType: "rod",
-            defaultInventoryQuantity: 0.0,
-            enableTagExtraction: true,
-            enableSynonymTags: true,
-            validateNaturalKeys: true,
-            batchSize: 50
-        )
-        
-        static let migration = LoadingOptions(
-            skipExistingItems: false, // Overwrite during migration
-            createInitialInventory: true,
-            defaultInventoryType: "rod",
-            defaultInventoryQuantity: 1.0, // Assume 1 unit for migration
-            enableTagExtraction: true,
-            enableSynonymTags: true,
-            validateNaturalKeys: true,
-            batchSize: 25 // Smaller batches for migration stability
-        )
-        
-        static let testing = LoadingOptions(
-            skipExistingItems: false,
-            createInitialInventory: true,
-            defaultInventoryType: "test",
-            defaultInventoryQuantity: 10.0,
-            enableTagExtraction: true,
-            enableSynonymTags: false, // Simpler for testing
-            validateNaturalKeys: true,
-            batchSize: 10
-        )
-        
-        /// Option for app updates - processes all items and updates any that have changed
-        static let appUpdate = LoadingOptions(
-            skipExistingItems: false, // Process all items to check for updates
-            createInitialInventory: false, // Don't create new inventory for updates
-            defaultInventoryType: "rod",
-            defaultInventoryQuantity: 0.0,
-            enableTagExtraction: true,
-            enableSynonymTags: true,
-            validateNaturalKeys: true,
-            batchSize: 25 // Moderate batch size for stability
-        )
-    }
-    
     // MARK: - Initialization
 
     nonisolated init(
@@ -229,6 +73,12 @@ class GlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {
         self.catalogService = catalogService
         self.jsonLoader = jsonLoader
         self.catalogStorageService = catalogStorageService
+
+        // Initialize component dependencies
+        self.checksumManager = CatalogChecksumManager()
+        self.versionManager = CatalogVersionManager(jsonLoader: jsonLoader, catalogService: catalogService)
+        self.validator = CatalogDataValidator(jsonLoader: jsonLoader, catalogService: catalogService)
+        self.processor = CatalogDataProcessor(catalogService: catalogService)
     }
     
     // MARK: - Public API
@@ -475,76 +325,17 @@ class GlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {
     /// Validate JSON data without actually loading it
     /// - Returns: Validation results with potential issues identified
     func validateJSONData() async throws -> JSONValidationResult {
-        let data = try jsonLoader.findCatalogJSONData()
-        let catalogItems = try jsonLoader.decodeCatalogItems(from: data)
-        
-        var result = JSONValidationResult(
-            totalItemsFound: 0,
-            itemsWithErrors: 0,
-            itemsWithWarnings: 0,
-            validationDetails: []
-        )
-        result.totalItemsFound = catalogItems.count
-        
-        // Validate each item
-        for (index, item) in catalogItems.enumerated() {
-            let validation = await validateCatalogItem(item, index: index)
-            result.merge(validation)
-        }
-        
-        return result
+        try await validator.validateJSONData()
     }
     
     // MARK: - Private Implementation
     
-    /// Transform a single CatalogItemData to GlassItemCreationRequest
+    /// Transform a single CatalogItemData to GlassItemCreationRequest (delegated to processor)
     private func transformSingleItemToRequest(
         _ catalogItem: CatalogItemData,
         options: LoadingOptions
     ) async -> GlassItemCreationRequest {
-        
-        // Extract basic information
-        let manufacturer = extractManufacturer(from: catalogItem)
-        let sku = extractSKU(from: catalogItem)
-        let coe = extractCOE(from: catalogItem)
-        
-        // Generate or use custom natural key
-        let naturalKey = generateNaturalKey(from: catalogItem)
-        
-        // Extract tags
-        var tags: [String] = []
-        if options.enableTagExtraction {
-            tags.append(contentsOf: extractTags(from: catalogItem))
-        }
-        if options.enableSynonymTags {
-            tags.append(contentsOf: extractSynonymTags(from: catalogItem))
-        }
-        
-        // Create initial inventory if requested
-        var initialInventory: [InventoryModel] = []
-        if options.createInitialInventory && options.defaultInventoryQuantity > 0 {
-            let inventory = InventoryModel(
-                item_stable_id: naturalKey,
-                type: options.defaultInventoryType,
-                quantity: options.defaultInventoryQuantity
-            )
-            initialInventory.append(inventory)
-        }
-        
-        return GlassItemCreationRequest(
-            name: catalogItem.name,
-            sku: sku,
-            manufacturer: manufacturer,
-            mfr_notes: catalogItem.manufacturer_description,
-            coe: coe,
-            url: catalogItem.manufacturer_url,
-            mfr_status: extractManufacturerStatus(from: catalogItem),
-            customNaturalKey: naturalKey,
-            initialInventory: initialInventory,
-            tags: Array(Set(tags)), // Remove duplicates
-            image_url: catalogItem.image_url,
-            image_path: catalogItem.image_path
-        )
+        return await processor.transformToRequest(catalogItem, options: options)
     }
     
     /// Process a batch of creation requests, handling both creates and updates
@@ -610,7 +401,7 @@ class GlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {
                 
             } catch {
                 let failedItem = FailedGlassItem(
-                    originalData: catalogItemFromRequest(request),
+                    originalData: processor.catalogItemFromRequest(request),
                     error: error,
                     failureReason: error.localizedDescription
                 )
@@ -663,174 +454,10 @@ class GlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {
         let allItems = try await catalogService.getAllGlassItems()
         return allItems.first { $0.glassItem.stable_id == existingItem.stable_id }!
     }
-    
-    // MARK: - Data Extraction Helpers
-    
-    /// Extract manufacturer from CatalogItemData
-    private func extractManufacturer(from catalogItem: CatalogItemData) -> String {
-        // Manufacturers in the database are stored as abbreviations (e.g., "BE", "CiM", "EF", "GAF")
-        // NOT as full names like "Bullseye Glass Co"
 
-        // ALWAYS use the manufacturer field if provided (this is the proper manufacturer code from JSON)
-        if let manufacturer = catalogItem.manufacturer, !manufacturer.isEmpty {
-            return manufacturer  // Keep original case to match GlassManufacturers mapping
-        }
+    // MARK: - Extraction Helpers (delegated to processor)
+    // Note: Extraction logic moved to CatalogDataProcessor for reuse
 
-        // Fallback: extract from code (format like "CIM-123" -> "CIM")
-        // This is a legacy fallback for old data that might not have the manufacturer field
-        if let code = catalogItem.code {
-            let codeParts = code.components(separatedBy: "-")
-            if codeParts.count >= 2 {
-                return codeParts[0]  // Keep original case
-            }
-        }
-
-        return "unknown"
-    }
-    
-    /// Extract SKU from CatalogItemData (returns nil if code is missing)
-    private func extractSKU(from catalogItem: CatalogItemData) -> String? {
-        // Return the full code as the SKU if it exists
-        // This ensures image loading works correctly since image files are named with the full code
-        // For example: "OC-6023-83CC-F" stays as "OC-6023-83CC-F", not truncated to "6023"
-        // Returns nil for manufacturers that don't use SKUs
-        return catalogItem.code
-    }
-    
-    /// Extract COE from CatalogItemData
-    private func extractCOE(from catalogItem: CatalogItemData) -> Int32 {
-        guard let coeString = catalogItem.coe else { return 96 } // Default to 96
-        
-        // Try to parse as integer
-        if let coeInt = Int32(coeString) {
-            return coeInt
-        }
-        
-        // Try to parse as double and convert
-        if let coeDouble = Double(coeString) {
-            return Int32(coeDouble)
-        }
-        
-        return 96 // Default fallback
-    }
-    
-    /// Extract tags from CatalogItemData
-    private func extractTags(from catalogItem: CatalogItemData) -> [String] {
-        var tags: [String] = []
-
-        // Add explicit tags from JSON only
-        if let itemTags = catalogItem.tags {
-            tags.append(contentsOf: itemTags)
-        }
-
-        return tags.map { $0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).lowercased() }
-               .filter { !$0.isEmpty }
-    }
-    
-    /// Extract synonym-based tags from CatalogItemData
-    private func extractSynonymTags(from catalogItem: CatalogItemData) -> [String] {
-        guard let synonyms = catalogItem.synonyms else { return [] }
-        
-        return synonyms.map { $0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).lowercased() }
-                      .filter { !$0.isEmpty }
-                      .map { "synonym-\($0)" }
-    }
-    
-    /// Extract manufacturer status from CatalogItemData
-    private func extractManufacturerStatus(from catalogItem: CatalogItemData) -> String {
-        // Default to "available" if no specific status information
-        return "available"
-    }
-
-    /// Extract stable_id from CatalogItemData
-    /// CRITICAL: stable_id is the primary identifier for glass items (6-character hash-based ID).
-    /// This is used throughout the app to identify items, NOT old keys like item_stable_id
-    /// or manufacturer_url.
-    private func extractStableId(from catalogItem: CatalogItemData) -> String? {
-        return catalogItem.stable_id
-    }
-
-    /// Generate natural key from CatalogItemData
-    /// CRITICAL: This always prefers stable_id from JSON when available.
-    /// The stable_id is the primary identifier (6-char hash from the scraper database).
-    /// natural_key is now a legacy field that mirrors stable_id.
-    /// DO NOT use item_stable_id, manufacturer_url, or other fields for identification.
-    private func generateNaturalKey(from catalogItem: CatalogItemData) -> String {
-        // Use stable_id from JSON if available (preferred - this is the standard case)
-        if let stableId = catalogItem.stable_id, !stableId.isEmpty {
-            return stableId
-        }
-
-        // Fallback: generate a stable_id for very old data without one
-        // stable_id is a 6-char hash, not a sequential key
-        let manufacturer = extractManufacturer(from: catalogItem)
-        let sku = extractSKU(from: catalogItem) ?? "NO_SKU"
-        return String(format: "%06d", abs("\(manufacturer)-\(sku)".hashValue % 1000000))
-    }
-    
-    /// Validate a single catalog item
-    private func validateCatalogItem(_ catalogItem: CatalogItemData, index: Int) async -> ItemValidationResult {
-        var result = ItemValidationResult(
-            itemIndex: 0,
-            itemCode: "",
-            itemName: "",
-            errors: [],
-            warnings: []
-        )
-        result.itemIndex = index
-        result.itemCode = catalogItem.code ?? "NO_CODE"
-        result.itemName = catalogItem.name
-
-        // Check required fields
-        if catalogItem.name.isEmpty {
-            result.errors.append("Name is empty")
-        }
-
-        // Code is now optional - only validate if present
-        if let code = catalogItem.code, code.isEmpty {
-            result.errors.append("Code is empty (present but blank)")
-        }
-        
-        // Validate COE
-        let coe = extractCOE(from: catalogItem)
-        if coe < 80 || coe > 120 {
-            result.warnings.append("COE value \(coe) is outside typical range (80-120)")
-        }
-        
-        // Validate manufacturer
-        let manufacturer = extractManufacturer(from: catalogItem)
-        if manufacturer == "unknown" {
-            result.warnings.append("Could not determine manufacturer")
-        }
-        
-        // Validate natural key
-        let naturalKey = generateNaturalKey(from: catalogItem)
-        if let isAvailable = try? await catalogService.isNaturalKeyAvailable(naturalKey),
-           !isAvailable {
-            result.warnings.append("Natural key \(naturalKey) already exists")
-        }
-        
-        return result
-    }
-    
-    /// Convert GlassItemCreationRequest back to CatalogItemData for error reporting
-    private func catalogItemFromRequest(_ request: GlassItemCreationRequest) -> CatalogItemData {
-        return CatalogItemData(
-            id: nil,
-            code: "\(request.manufacturer)-\(request.sku)",
-            manufacturer: request.manufacturer,
-            name: request.name,
-            manufacturer_description: request.mfr_notes,
-            synonyms: nil,
-            tags: request.tags,
-            image_path: request.image_path,
-            coe: String(request.coe),
-            stock_type: request.initialInventory.first?.type,
-            image_url: request.image_url,
-            manufacturer_url: request.url
-        )
-    }
-    
     /// Log the final loading results
     private func logLoadingResults(_ result: GlassItemLoadingResult) {
         log.info("=== GlassItem Loading Results ===")
@@ -862,102 +489,8 @@ class GlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {
     }
 }
 
-// MARK: - Result Models
-
-/// Results of a GlassItem loading operation
-struct GlassItemLoadingResult {
-    var itemsCreated: Int = 0
-    var itemsFailed: Int = 0
-    var itemsSkipped: Int = 0
-    var itemsUpdated: Int = 0  // New field for tracking updates
-    var successfulItems: [CompleteInventoryItemModel] = []
-    var failedItems: [FailedGlassItem] = []
-    var batchErrors: [BatchError] = []
-    
-    /// Merge another result into this one
-    mutating func merge(_ other: GlassItemLoadingResult) {
-        itemsCreated += other.itemsCreated
-        itemsFailed += other.itemsFailed
-        itemsSkipped += other.itemsSkipped
-        itemsUpdated += other.itemsUpdated  // Include updates in merge
-        successfulItems.append(contentsOf: other.successfulItems)
-        failedItems.append(contentsOf: other.failedItems)
-        batchErrors.append(contentsOf: other.batchErrors)
-    }
-    
-    /// Total items processed
-    var totalProcessed: Int {
-        itemsCreated + itemsFailed + itemsSkipped
-    }
-    
-    /// Success rate as a percentage
-    var successRate: Double {
-        let total = totalProcessed
-        return total > 0 ? (Double(itemsCreated) / Double(total)) * 100.0 : 0.0
-    }
-}
-
-/// Information about a failed glass item creation
-struct FailedGlassItem {
-    let originalData: CatalogItemData
-    let error: Error
-    let failureReason: String
-}
-
-/// Information about a failed item (generic failure type)
-struct FailedItem {
-    let originalData: CatalogItemData
-    let failureReason: String
-}
-
-/// Information about a batch processing error
-struct BatchError {
-    let batchIndex: Int
-    let itemsInBatch: Int
-    let error: Error
-}
-
-/// Results of JSON validation
-struct JSONValidationResult {
-    var totalItemsFound: Int = 0
-    var itemsWithErrors: Int = 0
-    var itemsWithWarnings: Int = 0
-    var validationDetails: [ItemValidationResult] = []
-    
-    /// Merge another validation result into this one
-    mutating func merge(_ other: ItemValidationResult) {
-        validationDetails.append(other)
-        if !other.errors.isEmpty {
-            itemsWithErrors += 1
-        }
-        if !other.warnings.isEmpty {
-            itemsWithWarnings += 1
-        }
-    }
-}
-
 // MARK: - Comparison and Update Support
-
-/// Result of comparing JSON data with existing GlassItems
-struct ComparisonResult {
-    let toCreate: [CatalogItemData]      // Items that don't exist yet
-    let toUpdate: [ItemUpdatePair]       // Items that exist but have changed
-    let unchanged: [GlassItemModel]      // Items that exist and haven't changed
-}
-
-/// Pair of items for updating - old and new data
-struct ItemUpdatePair {
-    let existing: GlassItemModel
-    let updated: CatalogItemData
-    let differences: [String]  // Description of what changed
-}
-
-/// Result of processing updates
-struct UpdateResult {
-    let itemsUpdated: Int
-    let itemsFailed: Int
-    let failedUpdates: [FailedItem]
-}
+// Note: Result models moved to GlassItemDataLoadingModels.swift
 
 extension GlassItemDataLoadingService {
     
@@ -1031,13 +564,13 @@ extension GlassItemDataLoadingService {
         // Extract manufacturer from code (as we do when creating/updating items)
         // Compare with existing manufacturer (both lowercased for consistency)
         let existingManufacturer = existing.manufacturer.lowercased()
-        let newManufacturer = extractManufacturer(from: jsonItem).lowercased()
+        let newManufacturer = processor.extractManufacturer(from: jsonItem).lowercased()
         if existingManufacturer != newManufacturer {
-            differences.append("manufacturer: '\(existing.manufacturer)' -> '\(extractManufacturer(from: jsonItem))'")
+            differences.append("manufacturer: '\(existing.manufacturer)' -> '\(processor.extractManufacturer(from: jsonItem))'")
         }
 
         let existingCOE = existing.coe
-        let newCOE = extractCOE(from: jsonItem)
+        let newCOE = processor.extractCOE(from: jsonItem)
         if existingCOE != newCOE {
             differences.append("coe: '\(existingCOE)' -> '\(newCOE)'")
         }
@@ -1066,21 +599,11 @@ extension GlassItemDataLoadingService {
         return differences
     }
     
-    /// Generate natural key from CatalogItemData (must match generateNaturalKey format!)
+    /// Generate natural key from CatalogItemData (delegated to processor)
     /// CRITICAL: This always prefers stable_id from JSON (the primary identifier).
     /// DO NOT use item_stable_id, manufacturer_url, or other fields for identification.
     private func generateNaturalKeyFromCatalogItem(from item: CatalogItemData) -> String {
-        // CRITICAL: Use the SAME logic as generateNaturalKey to ensure comparison works
-        // If stable_id is present in JSON, use it (standard case - all current data has this)
-        if let stableId = item.stable_id, !stableId.isEmpty {
-            return stableId
-        }
-
-        // Fallback: generate a stable_id for very old data without one
-        // stable_id is a 6-char hash, not a sequential key
-        let manufacturer = extractManufacturer(from: item)
-        let sku = extractSKU(from: item) ?? "NO_SKU"
-        return String(format: "%06d", abs("\(manufacturer)-\(sku)".hashValue % 1000000))
+        return processor.generateNaturalKey(from: item)
     }
     
     // MARK: - Processing Methods
@@ -1170,7 +693,7 @@ extension GlassItemDataLoadingService {
                     let updatedItem = createUpdatedGlassItem(from: updatePair)
 
                     // Extract tags from JSON (same as we do for creates)
-                    let updatedTags = extractTags(from: updatePair.updated)
+                    let updatedTags = processor.extractTags(from: updatePair.updated)
 
                     // Update the item using catalogService, passing tags to sync with JSON
                     _ = try await catalogService.updateGlassItem(
@@ -1240,10 +763,10 @@ extension GlassItemDataLoadingService {
                     // Extract tags from JSON (same as we do for creates and updates)
                     var updatedTags: [String] = []
                     if options.enableTagExtraction {
-                        updatedTags.append(contentsOf: extractTags(from: jsonItem))
+                        updatedTags.append(contentsOf: processor.extractTags(from: jsonItem))
                     }
                     if options.enableSynonymTags {
-                        updatedTags.append(contentsOf: extractSynonymTags(from: jsonItem))
+                        updatedTags.append(contentsOf: processor.extractSynonymTags(from: jsonItem))
                     }
 
                     // Get existing tags to check if they changed
@@ -1294,10 +817,10 @@ extension GlassItemDataLoadingService {
         return GlassItemModel(
             stable_id: existing.stable_id,
             name: jsonItem.name,
-            sku: extractSKU(from: jsonItem), // Update SKU from JSON (can be nil for manufacturers without SKUs)
-            manufacturer: extractManufacturer(from: jsonItem), // Extract abbreviation from code
+            sku: processor.extractSKU(from: jsonItem), // Update SKU from JSON (can be nil for manufacturers without SKUs)
+            manufacturer: processor.extractManufacturer(from: jsonItem), // Extract abbreviation from code
             mfr_notes: jsonItem.manufacturer_description,
-            coe: extractCOE(from: jsonItem),
+            coe: processor.extractCOE(from: jsonItem),
             url: jsonItem.manufacturer_url,
             mfr_status: existing.mfr_status, // Keep existing status
             image_url: jsonItem.image_url,
@@ -1305,19 +828,3 @@ extension GlassItemDataLoadingService {
         )
     }
 }
-
-/// Validation result for a single item
-struct ItemValidationResult {
-    var itemIndex: Int = 0
-    var itemCode: String = ""
-    var itemName: String = ""
-    var errors: [String] = []
-    var warnings: [String] = []
-    
-    /// Whether this item is valid (no errors)
-    var isValid: Bool {
-        errors.isEmpty
-    }
-}
-
-

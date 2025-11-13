@@ -365,27 +365,6 @@ struct CatalogUpdateServiceTests {
     }
 }
 
-// MARK: - Mock Network Monitor
-
-@MainActor
-class MockNetworkMonitor: NetworkMonitorProtocol {
-    @Published var isConnected: Bool = true
-    @Published var isOnWiFi: Bool = true
-    @Published var isExpensive: Bool = false
-    @Published var isConstrained: Bool = false
-
-    var connectionDescription: String {
-        guard isConnected else { return "No connection" }
-        return isOnWiFi ? "WiFi" : "Cellular"
-    }
-
-    func canDownloadCatalog() -> Bool {
-        guard isConnected else { return false }
-        let policy = CatalogUpdatePreferences.shared.downloadPolicy
-        return policy.allowsDownload(isOnWiFi: isOnWiFi)
-    }
-}
-
 // MARK: - Mock Data Loading Service
 
 class MockGlassItemDataLoadingService: GlassItemDataLoadingServiceProtocol {

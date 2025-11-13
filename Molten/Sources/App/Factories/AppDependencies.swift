@@ -123,7 +123,17 @@ class AppDependencies {
                 await PersistenceController.shared.initialize()
                 semaphore.signal()
             }
-            _ = semaphore.wait(timeout: .now() + .seconds(30))
+            let result = semaphore.wait(timeout: .now() + .seconds(30))
+
+            // If initialization timed out, we cannot safely continue
+            if result == .timedOut {
+                fatalError("Core Data initialization timed out after 30 seconds. Cannot proceed without valid persistence layer.")
+            }
+
+            // Verify initialization actually succeeded
+            guard persistenceController.isReady else {
+                fatalError("Core Data initialization completed but persistence controller is not ready. Check initialization logic.")
+            }
         }
 
         // Access contexts directly - they will fatalError if initialization failed

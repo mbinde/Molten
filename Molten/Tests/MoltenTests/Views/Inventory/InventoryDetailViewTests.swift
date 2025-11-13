@@ -51,7 +51,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -71,7 +71,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -86,7 +86,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: [])
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -125,7 +125,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -147,7 +147,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -186,7 +186,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -209,7 +209,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -229,7 +229,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -243,7 +243,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: [])
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -281,7 +281,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem()
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -291,7 +291,7 @@ struct InventoryDetailViewTests {
     @Test("ShoppingListOptionsView initializes with item")
     func testShoppingListOptionsViewInit() {
         let item = createTestItem()
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let view = ShoppingListOptionsView(
             item: item,
             deps: deps
@@ -304,7 +304,7 @@ struct InventoryDetailViewTests {
     @Test("Shopping list validates positive quantity")
     func testShoppingListQuantityValidation() {
         let item = createTestItem()
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let view = ShoppingListOptionsView(item: item, deps: deps)
 
         #expect(view != nil)
@@ -326,7 +326,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -338,7 +338,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: [])
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -352,7 +352,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem()
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -370,7 +370,7 @@ struct InventoryDetailViewTests {
 
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -385,7 +385,7 @@ struct InventoryDetailViewTests {
 
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -411,7 +411,7 @@ struct InventoryDetailViewTests {
 
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -424,7 +424,7 @@ struct InventoryDetailViewTests {
 
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -457,7 +457,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem(with: inventory)
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -542,7 +542,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem()
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -555,7 +555,7 @@ struct InventoryDetailViewTests {
 
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -571,7 +571,7 @@ struct InventoryDetailViewTests {
         ]
 
         let item = createTestItem(with: inventory)
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let view = InventoryStorageDetailView(item: item, inventoryType: "rod", deps: deps)
 
         #expect(view != nil)
@@ -614,7 +614,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem()
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -628,7 +628,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem()
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -654,7 +654,7 @@ struct InventoryDetailViewTests {
 
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -680,7 +680,7 @@ struct InventoryDetailViewTests {
 
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -713,7 +713,7 @@ struct InventoryDetailViewTests {
 
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -726,7 +726,7 @@ struct InventoryDetailViewTests {
         let item = createTestItem()
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)
@@ -817,7 +817,7 @@ struct InventoryDetailViewTests {
         // Step 9: Create view and verify it can access the data
         let view = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         #expect(view != nil)

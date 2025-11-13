@@ -134,7 +134,7 @@ struct TechniqueTypeTests {
     @Test("Project repository can save and load techniqueType")
     func testProjectRepositoryWithTechniqueType() async throws {
         // Configure for testing with AppDependencies
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.projectRepository
 
         // Create project with techniqueType
@@ -156,7 +156,7 @@ struct TechniqueTypeTests {
 
     @Test("Project repository preserves nil techniqueType")
     func testProjectRepositoryWithNilTechniqueType() async throws {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.projectRepository
 
         let project = ProjectModel(
@@ -174,7 +174,7 @@ struct TechniqueTypeTests {
 
     @Test("Project repository can update techniqueType")
     func testProjectRepositoryUpdateTechniqueType() async throws {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.projectRepository
 
         // Create project without techniqueType
@@ -205,7 +205,7 @@ struct TechniqueTypeTests {
 
     @Test("Logbook repository can save and load techniqueType")
     func testLogbookRepositoryWithTechniqueType() async throws {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.logbookRepository
 
         let logbook = LogbookModel(
@@ -222,7 +222,7 @@ struct TechniqueTypeTests {
 
     @Test("Logbook repository preserves nil techniqueType")
     func testLogbookRepositoryWithNilTechniqueType() async throws {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.logbookRepository
 
         let logbook = LogbookModel(
@@ -239,7 +239,7 @@ struct TechniqueTypeTests {
 
     @Test("Logbook repository can update techniqueType")
     func testLogbookRepositoryUpdateTechniqueType() async throws {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.logbookRepository
 
         // Create logbook without techniqueType

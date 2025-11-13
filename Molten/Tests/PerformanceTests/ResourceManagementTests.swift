@@ -25,7 +25,7 @@ struct ResourceManagementTests {
 
     @MainActor
     private func createTestServices() async -> (CatalogService, InventoryTrackingService, InventoryViewModel) {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         
         let catalogService = deps.catalogService
         let inventoryTrackingService = deps.inventoryTrackingService

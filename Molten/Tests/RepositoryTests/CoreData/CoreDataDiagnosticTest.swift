@@ -25,7 +25,7 @@ struct CoreDataDiagnosticTest {
     func showAllCoreDataContent() async throws {
         print("🔍 DIAGNOSTIC TEST: Examining Core Data content...")
 
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         // Get the Core Data repository
         let glassItemRepo = deps.glassItemRepository
@@ -64,7 +64,7 @@ struct CoreDataDiagnosticTest {
     func compareExpectedVsActualData() async throws {
         print("🔍 DIAGNOSTIC: Comparing what tests expect vs what Core Data has...")
 
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let glassItemRepo = deps.glassItemRepository
         
         // What the failing tests expect:
@@ -114,7 +114,7 @@ struct CoreDataDiagnosticTest {
     func suggestTestFixes() async throws {
         print("🔧 DIAGNOSTIC: Test fix suggestions...")
 
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let glassItemRepo = deps.glassItemRepository
         
         let actualTotal = try await glassItemRepo.fetchItems(matching: nil)

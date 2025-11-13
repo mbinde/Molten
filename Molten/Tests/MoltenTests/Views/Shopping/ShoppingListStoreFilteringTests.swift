@@ -29,7 +29,7 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testViewModelStoreFiltering() async throws {
         // Arrange
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
 
         // Create items for different stores
@@ -63,7 +63,7 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testClearStoreFilter() async throws {
         // Arrange
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
         let viewModel = ShoppingListViewModel(shoppingListService: shoppingListService)
 
@@ -82,7 +82,7 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testStoreFilterWithNoMatches() async throws {
         // Arrange
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
 
         // Create items for one store
@@ -109,7 +109,7 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testRepositoryFetchItemsForStore() async throws {
         // Arrange
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.shoppingListRepository
 
         let storeName = "Frantz Art Glass"
@@ -145,7 +145,7 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testRepositoryGetDistinctStores() async throws {
         // Arrange
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.shoppingListRepository
 
         // Add items with duplicate store names
@@ -173,7 +173,7 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testGetItemCountByStore() async throws {
         // Arrange
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.shoppingListRepository
 
         // Create items for different stores
@@ -209,7 +209,7 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testEmptyStoreName() async throws {
         // Arrange
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.shoppingListRepository
 
         let item = ItemShoppingModel(
@@ -231,7 +231,7 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testWhitespaceStoreName() async throws {
         // Arrange
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.shoppingListRepository
 
         let item = ItemShoppingModel(
@@ -252,7 +252,7 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testVeryLongStoreName() async throws {
         // Arrange
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.shoppingListRepository
 
         let longName = String(repeating: "A", count: 500)
@@ -277,7 +277,7 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testMultipleFilters() async throws {
         // Arrange
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
         let viewModel = ShoppingListViewModel(shoppingListService: shoppingListService)
 
@@ -304,7 +304,7 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testResetAllFilters() async throws {
         // Arrange
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
         let viewModel = ShoppingListViewModel(shoppingListService: shoppingListService)
 
@@ -333,7 +333,7 @@ struct ShoppingListStoreFilteringTests {
     @MainActor
     func testSortingWithStoreFilter() async throws {
         // Arrange
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.shoppingListRepository
 
         // Create items with different stable_ids

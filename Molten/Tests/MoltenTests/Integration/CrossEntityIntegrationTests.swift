@@ -31,7 +31,7 @@ struct CrossEntityIntegrationTests {
         // Arrange: Use isolated mock repositories to ensure clean state
         // NOTE: Mock repositories create new instances via AppDependencies
         // Each test gets fresh repositories, but Xcode may cache between runs
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         // Create services with new instances to avoid data pollution
         let catalogService = deps.catalogService
@@ -94,7 +94,7 @@ struct CrossEntityIntegrationTests {
     @Test("Should handle purchase and inventory correlation using new architecture")
     func testPurchaseInventoryCorrelation() async throws {
         // Arrange: Configure and create services
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let inventoryTrackingService = deps.inventoryTrackingService
         let mockPurchaseRepo = MockPurchaseRecordRepository()
         let purchaseService = PurchaseRecordService(repository: mockPurchaseRepo)

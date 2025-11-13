@@ -78,6 +78,25 @@ class PersistenceController {
 
         return result
     }()
+
+    /// Create a fresh in-memory PersistenceController for tests
+    /// Each test should create its own instance to avoid sharing state between tests
+    /// - Returns: A new PersistenceController with an isolated in-memory store
+    nonisolated static func createTestController() -> PersistenceController {
+        Logger(subsystem: "com.flameworker.app", category: "persistence").debug("🧪 Creating test PersistenceController (in-memory, isolated)")
+        // Use inMemory=true, forceCloudKit=false for fast test isolation
+        // Each call creates a NEW in-memory store (not shared)
+        let controller = PersistenceController(inMemory: true, forceCloudKit: false)
+
+        // Verify the controller is ready
+        guard controller.isReady else {
+            Logger(subsystem: "com.flameworker.app", category: "persistence").error("❌ Test controller failed to initialize")
+            fatalError("Test PersistenceController failed to initialize. Cannot run tests without valid persistence layer.")
+        }
+
+        Logger(subsystem: "com.flameworker.app", category: "persistence").debug("✅ Test controller ready")
+        return controller
+    }
     
     /// Lazy preview data creation - called only when needed, not during static initialization
     @MainActor

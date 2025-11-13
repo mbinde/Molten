@@ -38,8 +38,8 @@ struct LocationAutoCompleteFieldTests {
         #expect(locationField != nil, "LocationAutoCompleteField should accept LocationRepository via dependency injection")
     }
     
-    @Test("LocationAutoCompleteField should work with RepositoryFactory pattern")
-    func testLocationAutoCompleteFieldWorksWithRepositoryFactory() {
+    @Test("LocationAutoCompleteField should work with AppDependencies pattern")
+    func testLocationAutoCompleteFieldWorksWithAppDependencies() {
         // Arrange: Configure factory for testing
         let deps = AppDependencies(forTesting: true)
         let locationRepository = deps.locationRepository
@@ -50,7 +50,7 @@ struct LocationAutoCompleteFieldTests {
         let locationField = LocationAutoCompleteField(location: $testLocation, locationRepository: locationRepository)
 
         // Assert: Should work with factory-created repository
-        #expect(locationField != nil, "LocationAutoCompleteField should work with RepositoryFactory pattern")
+        #expect(locationField != nil, "LocationAutoCompleteField should work with AppDependencies pattern")
     }
     
     @Test("LocationAutoCompleteField should use repository pattern for location data")

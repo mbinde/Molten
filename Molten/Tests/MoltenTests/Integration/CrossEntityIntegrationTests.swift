@@ -29,7 +29,7 @@ struct CrossEntityIntegrationTests {
     @Test("Should coordinate glass item and inventory data using new architecture")
     func testGlassItemInventoryCoordination() async throws {
         // Arrange: Use isolated mock repositories to ensure clean state
-        // NOTE: Mock repositories create new instances via RepositoryFactory
+        // NOTE: Mock repositories create new instances via AppDependencies
         // Each test gets fresh repositories, but Xcode may cache between runs
         let deps = AppDependencies(forTesting: true)
 

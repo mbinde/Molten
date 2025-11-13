@@ -65,7 +65,7 @@ struct InventoryImportServiceTests {
         ]
     }
 
-    /// Setup service with mock repositories (assumes RepositoryFactory is already configured for testing)
+    /// Setup service with mock repositories (assumes AppDependencies is already configured for testing)
     func createTestService() -> InventoryImportService {
         let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService

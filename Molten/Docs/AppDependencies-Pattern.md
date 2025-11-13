@@ -1,10 +1,10 @@
-# RepositoryFactory Safety Mechanisms
+# AppDependencies Safety Mechanisms
 
 This document explains the safety mechanisms in place to prevent accidental use of `configureForTesting()` in production code.
 
 ## The Problem
 
-`RepositoryFactory.configureForTesting()` switches the **entire app** to mock mode. If called in production code, it causes:
+`AppDependencies.configureForTesting()` switches the **entire app** to mock mode. If called in production code, it causes:
 - All repositories use in-memory mocks instead of Core Data
 - No data persists to disk
 - Users cannot save their inventory, projects, or other data
@@ -18,7 +18,7 @@ This has happened multiple times:
 
 ### 1. Runtime Safety Check (Primary Defense)
 
-**Location:** `RepositoryFactory.swift` lines 736-798
+**Location:** `AppDependencies.swift` lines 736-798
 
 **How it works:**
 ```swift
@@ -52,9 +52,9 @@ nonisolated static func configureForTesting() {
 
 **How it works:**
 - Scans all staged Swift files (excluding test files)
-- Searches for patterns: `.configureForTesting()` or `RepositoryFactory.configureForTesting()`
+- Searches for patterns: `.configureForTesting()` or `AppDependencies.configureForTesting()`
 - Blocks commit if found in production code
-- Skips `RepositoryFactory.swift` (where the function is defined)
+- Skips `AppDependencies.swift` (where the function is defined)
 
 **Example output when triggered:**
 ```
@@ -62,7 +62,7 @@ nonisolated static func configureForTesting() {
    File: Molten/Sources/Services/DataLoading/DataLoadingService.swift
 
    This will put the ENTIRE app in mock mode.
-   Replace with: RepositoryFactory.configureForProduction()
+   Replace with: AppDependencies.configureForProduction()
 
    To bypass this check (NOT recommended):
    git commit --no-verify
@@ -75,10 +75,10 @@ git commit --no-verify
 
 ### 3. Documentation and Comments
 
-All calls to `RepositoryFactory.configureForTesting()` should have comments:
+All calls to `AppDependencies.configureForTesting()` should have comments:
 ```swift
 // ONLY for tests - DO NOT use in production code
-RepositoryFactory.configureForTesting()
+AppDependencies.configureForTesting()
 ```
 
 ## Best Practices
@@ -91,8 +91,8 @@ class MyService {
     static let shared = MyService()
 
     private init() {
-        RepositoryFactory.configureForProduction()  // ✅ Correct
-        self.repo = RepositoryFactory.createMyRepository()
+        AppDependencies.configureForProduction()  // ✅ Correct
+        self.repo = AppDependencies.createMyRepository()
     }
 }
 ```
@@ -102,7 +102,7 @@ class MyService {
 ```swift
 // In test files (MoltenTests, RepositoryTests, etc.)
 @Test func testSomething() {
-    RepositoryFactory.configureForTesting()  // ✅ Correct in tests
+    AppDependencies.configureForTesting()  // ✅ Correct in tests
     // ...
 }
 ```
@@ -114,8 +114,8 @@ class MyService {
     static let shared = MyService()
 
     private init() {
-        RepositoryFactory.configureForTesting()  // ❌ WRONG - will crash in DEBUG
-        self.repo = RepositoryFactory.createMyRepository()
+        AppDependencies.configureForTesting()  // ❌ WRONG - will crash in DEBUG
+        self.repo = AppDependencies.createMyRepository()
     }
 }
 ```
@@ -125,7 +125,7 @@ class MyService {
 ### Error: "configureForTesting() called outside of test context!"
 
 **In production code:**
-- Replace with: `RepositoryFactory.configureForProduction()`
+- Replace with: `AppDependencies.configureForProduction()`
 - This is always a bug
 
 **In test code:**
@@ -155,7 +155,7 @@ If it's blocking a test file incorrectly:
 
 ## Related Files
 
-- `RepositoryFactory.swift` - Factory with safety checks
+- `AppDependencies.swift` - Factory with safety checks
 - `.git/hooks/pre-commit` - Git pre-commit hook
 - `CLAUDE.md` - General project architecture guide
 

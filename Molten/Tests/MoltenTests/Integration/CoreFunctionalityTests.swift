@@ -27,7 +27,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         inventoryTrackingService: InventoryTrackingService,
         repos: (glassItem: MockGlassItemRepository, inventory: MockInventoryRepository, location: MockLocationRepository, itemTags: MockItemTagsRepository, itemMinimum: MockItemMinimumRepository)
     ) {
-        // Use the working TestConfiguration pattern instead of RepositoryFactory
+        // Use the working TestConfiguration pattern instead of AppDependencies
         let repos = TestConfiguration.setupMockOnlyTestEnvironment()
         let userTagsRepo = MockUserTagsRepository()
 
@@ -66,7 +66,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
     
     // MARK: - Core Repository Tests
     
-    @Test("RepositoryFactory creates core repositories")
+    @Test("AppDependencies creates core repositories")
     func testCoreRepositoryCreation() async throws {
         let (_, _, repos) = try await createCoreServices()
         
@@ -75,7 +75,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         #expect(repos.inventory is MockInventoryRepository)
     }
     
-    @Test("RepositoryFactory creates core services")
+    @Test("AppDependencies creates core services")
     func testCoreServiceCreation() async throws {
         let (catalogService, inventoryTrackingService, _) = try await createCoreServices()
         

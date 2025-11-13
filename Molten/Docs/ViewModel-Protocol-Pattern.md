@@ -217,7 +217,7 @@ struct CatalogView<ViewModel: CatalogViewModelProtocol>: View {
 
 extension CatalogView where ViewModel == CatalogViewModel {
     /// Convenience initializer that creates a production ViewModel
-    init(catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
+    init(catalogService: CatalogService = AppDependencies.createCatalogService()) {
         self.init(viewModel: CatalogViewModel(catalogService: catalogService))
     }
 }

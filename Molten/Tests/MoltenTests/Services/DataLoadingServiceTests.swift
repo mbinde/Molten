@@ -29,7 +29,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     
     @Test("Should work with CatalogService using new GlassItem architecture")
     func testDataLoadingServiceBasicFunctionality() async throws {
-        // Arrange: Create DataLoadingService with catalog service using RepositoryFactory
+        // Arrange: Create DataLoadingService with catalog service using AppDependencies
         let deps = AppDependencies(forTesting: true)
         let catalogService = deps.catalogService
         
@@ -238,7 +238,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
 
         // Assert: Method should execute successfully and return a boolean
         // Note: Cannot reliably test the actual value because:
-        // 1. RepositoryFactory creates different repository instances for each service
+        // 1. AppDependencies creates different repository instances for each service
         // 2. catalogService.createGlassItem() uses inventoryTrackingService's repository
         // 3. dataLoader.hasExistingData() uses catalogService's direct repository
         // 4. These are different instances in mock mode, so data doesn't transfer

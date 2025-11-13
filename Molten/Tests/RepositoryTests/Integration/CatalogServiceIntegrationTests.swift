@@ -132,8 +132,9 @@ struct CatalogServiceIntegrationTests {
 
     @Test("CatalogService deletes cascade correctly")
     func testDeleteCascade() async throws {
-        let (service, _) = await createTestService()
+        // Use single AppDependencies instance for both services
         let deps = AppDependencies(forTesting: true)
+        let service = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
 
         // Create item with inventory

@@ -526,33 +526,7 @@ actor CatalogService {
         _ items: [CompleteInventoryItemModel],
         by sortOption: GlassItemSortOption
     ) -> [CompleteInventoryItemModel] {
-        switch sortOption {
-        case .name:
-            return items.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
-                item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
-            }
-        case .manufacturer:
-            return items.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
-                if item1.glassItem.manufacturer != item2.glassItem.manufacturer {
-                    return item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer) == .orderedAscending
-                }
-                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
-            }
-        case .coe:
-            return items.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
-                if item1.glassItem.coe != item2.glassItem.coe {
-                    return item1.glassItem.coe < item2.glassItem.coe
-                }
-                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
-            }
-        case .totalQuantity:
-            return items.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
-                if item1.totalQuantity != item2.totalQuantity {
-                    return item1.totalQuantity > item2.totalQuantity // Descending for quantity
-                }
-                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
-            }
-        }
+        return sortOption.sort(items) // Uses business logic from model
     }
     
     private func getSystemOverview() async throws -> CatalogOverviewModel {

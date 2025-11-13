@@ -24,7 +24,7 @@ struct MainTabViewTests {
     @Test("MainTabView should accept pre-configured catalog service via dependency injection")
     func testMainTabViewAcceptsCatalogService() {
         // Arrange: Configure factory for testing and create catalog service
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
 
         // Act: Create MainTabView with pre-configured services
@@ -43,7 +43,7 @@ struct MainTabViewTests {
     @Test("MainTabView should accept pre-configured purchase service via dependency injection")
     func testMainTabViewAcceptsPurchaseService() {
         // Arrange: Configure factory for testing and create services
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let mockPurchaseRepository = MockPurchaseRecordRepository()
         let purchaseService = PurchaseRecordService(repository: mockPurchaseRepository)
@@ -65,7 +65,7 @@ struct MainTabViewTests {
     @Test("MainTabView should not require Core Data context when using dependency injection")
     func testMainTabViewWorksWithoutCoreDataContext() {
         // Arrange: Configure factory for testing and create catalog service (no Core Data involved)
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
 
         // Act: Create MainTabView with all required services (no Core Data context)
@@ -89,7 +89,7 @@ struct MainTabViewTests {
     @Test("MainTabView should create services using AppDependencies")
     func testMainTabViewWithAppDependencies() {
         // Arrange: Configure factory for testing
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         // Act: Create services using the factory pattern
         let catalogService = deps.catalogService

@@ -71,7 +71,7 @@ struct ShoppingListViewTests {
 
     @Test("ShoppingListView initializes with default state")
     func testInitialization() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let view = ShoppingListView(deps: deps)
 
         #expect(view != nil)
@@ -458,7 +458,7 @@ struct ShoppingListViewTests {
         @Test("Checkout posts inventory notification when adding to inventory")
         func testCheckoutPostsInventoryNotification() async throws {
             // Configure for testing
-            let deps = AppDependencies(forTesting: true)
+            let deps = AppDependencies(persistenceController: .createTestController())
 
             // Create shared repositories
             let glassItemRepository = MockGlassItemRepository()
@@ -522,7 +522,7 @@ struct ShoppingListViewTests {
         @Test("Checkout does not post inventory notification when not adding to inventory")
         func testCheckoutDoesNotPostInventoryNotificationWhenSkipped() async throws {
             // Configure for testing
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
             // Set up notification expectation
             var notificationReceived = false

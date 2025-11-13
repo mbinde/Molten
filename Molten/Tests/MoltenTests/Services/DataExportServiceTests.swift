@@ -16,7 +16,7 @@ struct DataExportServiceTests {
     // MARK: - Test Data Setup
 
     private func createTestService() -> (DataExportService, AppDependencies) {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.dataExportService
         return (service, deps)
     }
@@ -121,7 +121,7 @@ struct DataExportServiceTests {
     @Test("Export counts glass items correctly")
     func exportCountsGlassItems() async throws {
         // Configure testing mode once
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         // Create services - they will all share the same cached mock repositories
         let catalogService = deps.catalogService
@@ -174,7 +174,7 @@ struct DataExportServiceTests {
     @Test("Export counts inventory correctly")
     func exportCountsInventory() async throws {
         // Configure testing mode once
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         // Create services - they will all share the same cached mock repositories
         let catalogService = deps.catalogService

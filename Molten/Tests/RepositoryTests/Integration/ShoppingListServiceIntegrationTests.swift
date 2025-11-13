@@ -25,7 +25,7 @@ struct ShoppingListServiceIntegrationTests {
 
     private func createTestEnvironment() async -> (ShoppingListService, CatalogService, InventoryTrackingService, PersistenceController) {
         let testController = PersistenceController.createTestController()
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let shoppingService = deps.shoppingListService
         let catalogService = deps.catalogService

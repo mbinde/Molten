@@ -52,7 +52,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create InventoryDetailView with business model
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: View should be created successfully with business model
@@ -85,13 +85,13 @@ struct InventoryItemDetailViewTests {
         )
         
         // Use existing repository system
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let inventoryTrackingService = deps.inventoryTrackingService
 
         // Act: Create view with business model and service (no Core Data context needed)
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: Should work without Core Data environment
@@ -123,13 +123,13 @@ struct InventoryItemDetailViewTests {
             inventory: inventory, tags: [], userTags: []
         )
         
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let inventoryTrackingService = deps.inventoryTrackingService
 
         // Act: Create view with injected service
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: Should accept service via dependency injection
@@ -159,7 +159,7 @@ struct InventoryItemDetailViewTests {
         // This should NOT crash (previous version had force-unwrap that would crash)
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: View should be created successfully without crashing
@@ -187,7 +187,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view with item containing empty URL
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: View should be created successfully
@@ -215,7 +215,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view with item containing nil URL
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: View should be created successfully
@@ -225,7 +225,7 @@ struct InventoryItemDetailViewTests {
     @Test("InventoryDetailView should use ProductImageDetail with sku field")
     func testDetailViewUsesProductImageWithSKU() {
         // Configure factory to use mocks (prevent Core Data access)
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         // Arrange: Create item with known SKU and manufacturer
         let glassItem = GlassItemModel(
@@ -272,7 +272,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view - should not crash even if image doesn't exist
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: View should handle missing images gracefully
@@ -299,7 +299,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: ProductImageDetail should use sku (591284) not natural_key (ef-591284-0)
@@ -338,7 +338,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: View should be created with expandable notes functionality
@@ -368,7 +368,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view - should still show expand button (SwiftUI handles showing it appropriately)
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: View should handle short notes gracefully
@@ -396,7 +396,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view - should not show notes section at all
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: View should handle missing notes gracefully
@@ -424,7 +424,7 @@ struct InventoryItemDetailViewTests {
         // Act: Create view - should not show notes section for empty string
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: View should handle empty notes gracefully

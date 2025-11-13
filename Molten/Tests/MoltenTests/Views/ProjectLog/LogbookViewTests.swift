@@ -23,7 +23,7 @@ struct LogbookViewTests {
 
     // Helper to create LogbookView with test dependencies
     private func createLogbookView() -> LogbookView {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         return LogbookView(logbookRepository: deps.logbookRepository)
     }
 

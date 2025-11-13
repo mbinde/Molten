@@ -41,7 +41,7 @@ struct LocationAutoCompleteFieldTests {
     @Test("LocationAutoCompleteField should work with AppDependencies pattern")
     func testLocationAutoCompleteFieldWorksWithAppDependencies() {
         // Arrange: Configure factory for testing
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let locationRepository = deps.locationRepository
 
         @State var testLocation = "Workshop"

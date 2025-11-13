@@ -45,7 +45,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create InventoryDetailView with injected UserNotesRepository
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: View should be created successfully
@@ -72,7 +72,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view (should show "Add a note" button initially)
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: View should be created and ready to show add note button
@@ -102,7 +102,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view - notes will be loaded asynchronously
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: View should handle special characters in notes gracefully
@@ -129,7 +129,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view - should support expandable long notes
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: View should handle long notes with Show More/Less functionality
@@ -156,7 +156,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: Should handle empty notes gracefully
@@ -185,7 +185,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view with notes editor capability
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: Should support editing notes via UserNotesEditor
@@ -212,7 +212,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view - notes section should be expandable
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: Should show expandable notes section
@@ -239,7 +239,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view - should use blue color scheme for notes
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: Should maintain consistent styling (blue theme for notes)
@@ -266,7 +266,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view - should reload notes on sheet dismiss
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: Should reload notes after UserNotesEditor dismisses
@@ -293,7 +293,7 @@ struct InventoryDetailViewUserNotesTests {
         // Act: Create view - should handle notes loading errors
         let detailView = InventoryDetailView(
             item: completeItem,
-            deps: AppDependencies(forTesting: true)
+            deps: AppDependencies(persistenceController: .createTestController())
         )
 
         // Assert: Should handle errors gracefully and show "Add note" button

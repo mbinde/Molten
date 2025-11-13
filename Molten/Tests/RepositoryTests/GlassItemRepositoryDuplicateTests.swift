@@ -17,7 +17,7 @@ struct GlassItemRepositoryDuplicateTests {
 
     /// Create a fresh repository instance for each test
     private func createRepository() -> MockGlassItemRepository {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let repo = MockGlassItemRepository()
         repo.clearAllData()
         return repo

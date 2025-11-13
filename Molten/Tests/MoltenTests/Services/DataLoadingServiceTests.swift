@@ -30,7 +30,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     @Test("Should work with CatalogService using new GlassItem architecture")
     func testDataLoadingServiceBasicFunctionality() async throws {
         // Arrange: Create DataLoadingService with catalog service using AppDependencies
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         
         let dataLoader = DataLoadingService(catalogService: catalogService)
@@ -42,7 +42,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     @Test("Should load and manage glass items using repository pattern")
     func testDataLoadingServiceWithGlassItems() async throws {
         // Arrange: Configure factory and create services
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryTrackingService = deps.inventoryTrackingService
         
@@ -82,7 +82,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     @Test("Should provide system overview using repository services")
     func testDataLoadingServiceSystemOverview() async throws {
         // Arrange: Configure factory and create services
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryTrackingService = deps.inventoryTrackingService
         
@@ -130,7 +130,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     @Test("Should support glass item search functionality")
     func testDataLoadingServiceSearch() async throws {
         // Arrange: Configure factory and create services
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryTrackingService = deps.inventoryTrackingService
         
@@ -179,7 +179,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     @Test("Should filter items by manufacturer")
     func testDataLoadingServiceManufacturerFilter() async throws {
         // Arrange: Configure factory and create services
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryTrackingService = deps.inventoryTrackingService
         
@@ -229,7 +229,7 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
     @Test("Should provide hasExistingData method")
     func testDataLoadingServiceExistingDataDetection() async throws {
         // Arrange: Configure factory and create services
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let dataLoader = DataLoadingService(catalogService: catalogService)
 

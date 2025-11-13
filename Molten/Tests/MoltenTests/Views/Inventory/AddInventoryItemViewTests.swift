@@ -18,7 +18,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Initialize without prefilled natural key")
     func testInitWithoutPrefilledKey() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryItemView(
             prefilledNaturalKey: nil,
@@ -31,7 +31,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Initialize with prefilled natural key")
     func testInitWithPrefilledKey() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryItemView(
             prefilledNaturalKey: "test-item-001-0",
@@ -45,7 +45,7 @@ struct AddInventoryItemViewTests {
     @Test("Initialize with default services when none provided")
     func testInitWithDefaultServices() {
         // Configure for testing to get mocks
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryItemView(
             prefilledNaturalKey: nil,
@@ -59,7 +59,7 @@ struct AddInventoryItemViewTests {
 
     @Test("GlassItemSearchSelector integration")
     func testGlassItemSearchSelectorIntegration() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -72,7 +72,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Prefilled natural key is used in search selector")
     func testPrefilledKeyInSearchSelector() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: "test-item-001-0",
@@ -86,7 +86,7 @@ struct AddInventoryItemViewTests {
     @Test("Search text updates on selection")
     func testSearchTextUpdatesOnSelection() {
         // This tests the onSelect callback behavior
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -99,7 +99,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Clear selection resets state")
     func testClearSelectionResetsState() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -114,7 +114,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Default type is rod")
     func testDefaultTypeIsRod() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -155,7 +155,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Changing type resets subtype")
     func testChangingTypeResetsSubtype() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -168,7 +168,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Subtype is optional")
     func testSubtypeIsOptional() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -241,7 +241,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Location field is optional")
     func testLocationFieldOptional() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -254,7 +254,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Location is used for distribution when provided")
     func testLocationUsedForDistribution() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -269,7 +269,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Save requires natural key")
     func testSaveRequiresNaturalKey() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -282,7 +282,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Save requires quantity")
     func testSaveRequiresQuantity() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -356,7 +356,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Save uses inventory tracking service")
     func testSaveUsesInventoryTrackingService() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -369,7 +369,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Save posts notification on success")
     func testSavePostsNotification() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -384,7 +384,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Cancel button dismisses view")
     func testCancelButtonDismisses() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -399,7 +399,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Error shown for missing glass item")
     func testErrorForMissingGlassItem() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -412,7 +412,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Error shown for invalid quantity format")
     func testErrorForInvalidQuantity() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -425,7 +425,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Error shown for empty required fields")
     func testErrorForEmptyRequiredFields() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -438,7 +438,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Error alert dismisses on OK")
     func testErrorAlertDismisses() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -471,7 +471,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Glass items loaded on appear")
     func testGlassItemsLoadedOnAppear() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -484,7 +484,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Prefilled natural key triggers lookup on load")
     func testPrefilledKeyTriggersLookup() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: "test-item-001-0",
@@ -497,7 +497,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Natural key change triggers lookup")
     func testNaturalKeyChangeTriggersLookup() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -512,7 +512,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Form integrates with GlassItemSearchSelector")
     func testFormIntegratesWithSearchSelector() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -525,7 +525,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Form integrates with GlassItemTypeSystem")
     func testFormIntegratesWithTypeSystem() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: nil,
@@ -538,7 +538,7 @@ struct AddInventoryItemViewTests {
 
     @Test("Complete workflow - select item, enter quantity, save")
     func testCompleteWorkflow() {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = AddInventoryFormView(
             prefilledNaturalKey: "test-item-001-0",

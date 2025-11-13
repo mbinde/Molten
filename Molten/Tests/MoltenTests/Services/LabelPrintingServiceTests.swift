@@ -17,7 +17,7 @@ struct LabelPrintingServiceTests {
 
     init() async {
         // Configure repository factory for testing (uses mocks)
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
     }
 
     // MARK: - QR Code Generation Tests

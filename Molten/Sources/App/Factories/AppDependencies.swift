@@ -20,12 +20,14 @@ class AppDependencies {
     // MARK: - Shared Instance
 
     /// Shared instance that automatically detects test vs production environment
-    /// - In tests: Uses mock repositories
-    /// - In production: Uses Core Data repositories
+    /// - In tests: Uses in-memory Core Data (isolated per-test instances)
+    /// - In production: Uses persistent Core Data repositories
     static let shared: AppDependencies = {
         if isRunningInTestBundle() {
-            return AppDependencies(forTesting: true)
+            // Tests get a fresh in-memory Core Data controller (isolated)
+            return AppDependencies(persistenceController: .createTestController())
         } else {
+            // Production uses the shared persistent controller
             return AppDependencies()
         }
     }()
@@ -108,15 +110,16 @@ class AppDependencies {
 
     // MARK: - Initialization
 
-    /// Initialize with production configuration (Core Data)
-    /// Initializes PersistenceController if needed
-    init() {
-        self.mode = .coreData
-        self.persistenceController = PersistenceController.shared
+    /// Initialize with custom or default persistence controller
+    /// - Parameter persistenceController: Optional persistence controller (defaults to shared production controller)
+    init(persistenceController: PersistenceController = PersistenceController.shared) {
+        self.persistenceController = persistenceController
 
-        // Initialize persistence controller if not already initialized
-        // This blocks until Core Data is ready, but only on first init
-        if !persistenceController.isReady {
+        // Determine mode based on whether this is in-memory or persistent
+        self.mode = persistenceController.container.persistentStoreDescriptions.first?.url?.path == "/dev/null" ? .mock : .coreData
+
+        // Initialize persistence controller if not already initialized (production only)
+        if self.mode == .coreData && !persistenceController.isReady {
             // Need to initialize - use a semaphore to wait for async init
             let semaphore = DispatchSemaphore(value: 0)
             Task.detached {
@@ -193,71 +196,6 @@ class AppDependencies {
             jsonLoader: JSONDataLoader(),
             catalogStorageService: try? CatalogStorageService(),
             subscriptionService: RevenueCatSubscriptionService()
-        )
-    }
-
-    /// Initialize with testing configuration (mocks)
-    init(forTesting: Bool) {
-        guard forTesting else {
-            fatalError("Use init() for production, init(forTesting: true) for tests")
-        }
-
-        self.mode = .mock
-        self.persistenceController = PersistenceController.preview
-
-        // Create mock repositories
-        self.glassItemRepository = MockGlassItemRepository()
-        self.coatingItemRepository = MockCoatingItemRepository()
-        self.toolItemRepository = MockToolItemRepository()
-        self.inventoryRepository = MockInventoryRepository()
-        self.locationRepository = MockLocationRepository()
-        self.itemTagsRepository = MockItemTagsRepository()
-        self.userTagsRepository = MockUserTagsRepository()
-        self.userNotesRepository = MockUserNotesRepository()
-        self.shoppingListRepository = MockShoppingListRepository()
-        self.itemMinimumRepository = MockItemMinimumRepository()
-        self.projectRepository = MockProjectRepository()
-        self.logbookRepository = MockLogbookRepository()
-        self.purchaseRecordRepository = MockPurchaseRecordRepository()
-        self.projectImageRepository = MockProjectImageRepository()
-        self.kilnScheduleRepository = MockKilnScheduleRepository()
-        self.recipeRepository = MockRecipeRepository()
-        self.unifiedLocationRepository = MockUnifiedLocationRepository()
-        #if canImport(UIKit)
-        self.userImageRepository = MockUserImageRepository()
-        #endif
-
-        // Create services (using helper to avoid duplication)
-        (
-            self.inventoryTrackingService,
-            self.catalogService,
-            self.shoppingListService,
-            self.projectService,
-            self.purchaseRecordService,
-            self.kilnScheduleService,
-            self.recipeService,
-            self.unifiedLocationService,
-            self.entitlementService,
-            self.glassItemDataLoadingService,
-            self.subscriptionService
-        ) = Self.setupServices(
-            glassItemRepository: glassItemRepository,
-            coatingItemRepository: coatingItemRepository,
-            toolItemRepository: toolItemRepository,
-            inventoryRepository: inventoryRepository,
-            itemTagsRepository: itemTagsRepository,
-            userTagsRepository: userTagsRepository,
-            itemMinimumRepository: itemMinimumRepository,
-            shoppingListRepository: shoppingListRepository,
-            projectRepository: projectRepository,
-            logbookRepository: logbookRepository,
-            purchaseRecordRepository: purchaseRecordRepository,
-            kilnScheduleRepository: kilnScheduleRepository,
-            recipeRepository: recipeRepository,
-            unifiedLocationRepository: unifiedLocationRepository,
-            jsonLoader: MockJSONDataLoader(),
-            catalogStorageService: nil as CatalogStorageService?,  // No storage service for tests
-            subscriptionService: MockSubscriptionService(hasProAccess: false)
         )
     }
 

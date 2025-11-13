@@ -152,7 +152,7 @@ struct StoreToShoppingListNavigationTests {
     @MainActor
     func testNavigateFromStoreWithItems() async throws {
         // Arrange
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
 
         let storeName = "Frantz Art Glass"
@@ -201,7 +201,7 @@ struct StoreToShoppingListNavigationTests {
     @MainActor
     func testNoNavigationWhenNoItems() async throws {
         // Arrange
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
 
         let storeName = "Empty Store"

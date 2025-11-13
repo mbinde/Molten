@@ -155,27 +155,27 @@ struct SearchAndFilterHeader: View {
                     }
                 }
 
-                // Filter buttons row: Type (left), then COE/Mfr/Tags (right-aligned)
+                // Filter buttons row: Type (left), then COE/Tags/Mfr (right-aligned)
                 HStack(spacing: DesignSystem.Spacing.md) {
                     // Product type selector (left-anchored)
                     compactProductTypePicker
 
                     Spacer()
 
-                    // Right-aligned filters: COE, Mfr, Tags (from left to right)
+                    // Right-aligned filters: COE, Tags, Mfr (from left to right)
                     // COE filter button (only for glass)
                     if !allAvailableCOEs.isEmpty {
                         compactCOEFilterButton
                     }
 
-                    // Manufacturer filter button
-                    if !allAvailableManufacturers.isEmpty {
-                        compactManufacturerFilterButton
-                    }
-
                     // Tag filter button (always shown if tags are available)
                     if !allAvailableTags.isEmpty {
                         compactTagFilterButton
+                    }
+
+                    // Manufacturer filter button (far right)
+                    if !allAvailableManufacturers.isEmpty {
+                        compactManufacturerFilterButton
                     }
                 }
             }

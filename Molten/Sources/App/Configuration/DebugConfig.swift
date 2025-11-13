@@ -46,7 +46,8 @@ struct DebugConfig {
     /// Set to true to disable all product image loading
     /// NOTE: Testing confirmed images are NOT causing first-run keyboard delays
     /// (the delay was Xcode debugging overhead)
-    static var disableImageLoading = false
+    /// TESTING: Enabled to diagnose WAL checkpoint issue (84 checkpoints on first run)
+    static var disableImageLoading = true
     
     // MARK: - Built-in Feature Flags for Debug Purposes
     

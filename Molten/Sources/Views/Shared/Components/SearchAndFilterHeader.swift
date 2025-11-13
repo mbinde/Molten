@@ -564,7 +564,7 @@ struct SearchAndFilterHeader: View {
                     }
                 } label: {
                     HStack {
-                        Text(type.capitalized)
+                        Text(displayName(for: type))
                         Spacer()
                         if selectedProductTypes.contains(type) {
                             Image(systemName: "checkmark")
@@ -580,7 +580,7 @@ struct SearchAndFilterHeader: View {
             HStack(spacing: DesignSystem.Spacing.sm) {
                 // Show selected type (always has a selection now)
                 if let selectedType = selectedProductTypes.first {
-                    Text(selectedType.capitalized)
+                    Text(displayName(for: selectedType))
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
                         .lineLimit(1)
@@ -624,6 +624,19 @@ struct SearchAndFilterHeader: View {
         #if canImport(UIKit)
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         #endif
+    }
+
+    private func displayName(for type: String) -> String {
+        switch type.lowercased() {
+        case "glass":
+            return "Glass"
+        case "coating":
+            return "Coatings"
+        case "tool":
+            return "Tools"
+        default:
+            return type.capitalized
+        }
     }
 
 }

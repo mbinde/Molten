@@ -14,12 +14,7 @@ import Testing
 @MainActor
 struct CatalogViewModelTests {
 
-    // MARK: - Test Lifecycle
-
-    init() {
-        // Configure for testing with mocks
-        RepositoryFactory.configureForTesting()
-    }
+    // Note: AppDependencies.shared automatically detects test environment and uses mocks
 
     // MARK: - Helper Methods
 
@@ -107,10 +102,8 @@ struct CatalogViewModelTests {
             createToolItem(manufacturer: "ennion", sku: "T02", name: "Reamer")
         ]
 
-        let catalogService = RepositoryFactory.createCatalogService()
-
         let viewModel = CatalogViewModel(
-            catalogService: catalogService
+            catalogService: AppDependencies.shared.catalogService
         )
 
         // Simulate loaded items
@@ -137,10 +130,8 @@ struct CatalogViewModelTests {
             createToolItem(manufacturer: "ennion", sku: "T01", name: "Glass Cutter")
         ]
 
-        let catalogService = RepositoryFactory.createCatalogService()
-
         let viewModel = CatalogViewModel(
-            catalogService: catalogService
+            catalogService: AppDependencies.shared.catalogService
         )
 
         viewModel.items = items
@@ -175,10 +166,8 @@ struct CatalogViewModelTests {
 
         let items = [glassWithTags, toolWithTags]
 
-        let catalogService = RepositoryFactory.createCatalogService()
-
         let viewModel = CatalogViewModel(
-            catalogService: catalogService
+            catalogService: AppDependencies.shared.catalogService
         )
 
         viewModel.items = items
@@ -204,10 +193,8 @@ struct CatalogViewModelTests {
             createCoatingItem(manufacturer: "glassalchemist", sku: "C01", name: "Reducer")
         ]
 
-        let catalogService = RepositoryFactory.createCatalogService()
-
         let viewModel = CatalogViewModel(
-            catalogService: catalogService
+            catalogService: AppDependencies.shared.catalogService
         )
 
         viewModel.items = items
@@ -231,10 +218,8 @@ struct CatalogViewModelTests {
             createToolItem(manufacturer: "ennion", sku: "T01", name: "Glass Cutter")
         ]
 
-        let catalogService = RepositoryFactory.createCatalogService()
-
         let viewModel = CatalogViewModel(
-            catalogService: catalogService
+            catalogService: AppDependencies.shared.catalogService
         )
 
         viewModel.items = items

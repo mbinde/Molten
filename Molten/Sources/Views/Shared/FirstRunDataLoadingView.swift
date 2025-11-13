@@ -170,97 +170,19 @@ struct FirstRunDataLoadingView: View {
         progress = 0.1
 
         do {
-            let catalogService = RepositoryFactory.createCatalogService()
-            let glassItemLoadingService = GlassItemDataLoadingService(catalogService: catalogService)
-
-            // Check if we need to wipe and reload due to catalog data version change
-            let needsDataWipe = (try? glassItemLoadingService.needsCatalogDataWipe()) ?? false
-
-            if needsDataWipe {
-                print("🔄 Catalog data version increased - wiping all catalog data")
-                try await glassItemLoadingService.wipeCatalogData()
-            }
-
-            // Check if we need to load or update data from JSON
-            let existingItems = try await catalogService.getAllGlassItems()
-            let isFirstRun = existingItems.isEmpty || needsDataWipe
-
-            // Check if JSON file has changed (for existing installations)
-            let jsonHasChanged = (try? glassItemLoadingService.hasJSONFileChanged()) ?? false
-
-            let needsDataLoad = isFirstRun || isScreenshotMode  // Always reload in screenshot mode
-            let needsDataUpdate = !isFirstRun && jsonHasChanged && !isScreenshotMode
-
-            // Step 2: Load catalog data (if needed)
+            // Step 2: Initialize catalog database (bundled SQLite)
             currentStep = .loadingCatalog
             progress = 0.25
 
-            if needsDataLoad {
-                print("🎯 First run detected - loading catalog from JSON")
-                print("⏱️ [PERF] Starting glass items load at \(Date())")
+            print("📦 Initializing catalog database from bundle...")
+            try await CatalogDatabaseManager.shared.initialize()
+            print("✅ Catalog database initialized")
 
-                // Load glass items
-                let glassResult = try await glassItemLoadingService.loadGlassItemsFromJSONIfEmpty()
-                if let loadingResult = glassResult {
-                    itemsLoaded = loadingResult.itemsCreated
-                    print("⏱️ [PERF] Glass items complete at \(Date())")
-                    print("✅ Loaded \(itemsLoaded) glass items from JSON")
-                    print("📊 [PERF] Glass: created=\(loadingResult.itemsCreated), failed=\(loadingResult.itemsFailed), skipped=\(loadingResult.itemsSkipped)")
-                }
-
-                print("⏱️ [PERF] Starting coatings load at \(Date())")
-                // Load coatings
-                let coatingRepository = RepositoryFactory.createCoatingItemRepository()
-                let coatingLoadingService = CoatingItemDataLoadingService(coatingRepository: coatingRepository)
-                let coatingResult = try await coatingLoadingService.loadCoatingsFromJSON()
-                itemsLoaded += coatingResult.itemsCreated
-                print("⏱️ [PERF] Coatings complete at \(Date())")
-                print("✅ Loaded \(coatingResult.itemsCreated) coatings from JSON")
-                print("📊 [PERF] Coatings: created=\(coatingResult.itemsCreated), failed=\(coatingResult.itemsFailed), skipped=\(coatingResult.itemsSkipped)")
-
-                print("⏱️ [PERF] Starting tools load at \(Date())")
-                // Load tools
-                let toolRepository = RepositoryFactory.createToolItemRepository()
-                let toolLoadingService = ToolItemDataLoadingService(toolRepository: toolRepository)
-                let toolResult = try await toolLoadingService.loadAllToolsFromJSON()
-                itemsLoaded += toolResult.itemsCreated
-                print("⏱️ [PERF] Tools complete at \(Date())")
-                print("✅ Loaded \(toolResult.itemsCreated) tools from JSON")
-                print("📊 [PERF] Tools: created=\(toolResult.itemsCreated), failed=\(toolResult.itemsFailed), skipped=\(toolResult.itemsSkipped)")
-
-                print("✅ Total items loaded: \(itemsLoaded) (glass + coatings + tools)")
-
-                // DO NOT purge persistent history when using CloudKit!
-                // Purging causes CloudKit to lose sync state and re-import everything, creating duplicates.
-                // See: https://stackoverflow.com/questions/72557060/
-                print("🐛✅ Loaded \(itemsLoaded) items - letting CloudKit manage persistent history")
-            } else if needsDataUpdate {
-                print("🔄 JSON file changed - updating existing catalog data")
-
-                // Update glass items
-                let glassResult = try await glassItemLoadingService.loadGlassItemsAndUpdateExisting(options: .appUpdate)
-                itemsLoaded = glassResult.itemsUpdated + glassResult.itemsCreated
-                print("✅ Updated glass catalog: \(glassResult.itemsUpdated) updated, \(glassResult.itemsCreated) new, \(glassResult.itemsSkipped) unchanged")
-
-                // Check and update coatings if needed
-                let coatingRepository = RepositoryFactory.createCoatingItemRepository()
-                let coatingLoadingService = CoatingItemDataLoadingService(coatingRepository: coatingRepository)
-                if (try? coatingLoadingService.hasJSONFileChanged()) == true {
-                    let coatingResult = try await coatingLoadingService.loadCoatingsFromJSON(options: .appUpdate)
-                    itemsLoaded += coatingResult.itemsUpdated + coatingResult.itemsCreated
-                    print("✅ Updated coatings: \(coatingResult.itemsUpdated) updated, \(coatingResult.itemsCreated) new")
-                }
-
-                // Check and update tools if needed (check each manufacturer)
-                let toolRepository = RepositoryFactory.createToolItemRepository()
-                let toolLoadingService = ToolItemDataLoadingService(toolRepository: toolRepository)
-                let toolResult = try await toolLoadingService.loadAllToolsFromJSON(options: .appUpdate)
-                itemsLoaded += toolResult.itemsUpdated + toolResult.itemsCreated
-                print("✅ Updated tools: \(toolResult.itemsUpdated) updated, \(toolResult.itemsCreated) new")
-            } else {
-                print("✅ Catalog data already exists and up-to-date (\(existingItems.count) items)")
-                itemsLoaded = existingItems.count
-            }
+            // Get item count from database for display
+            let catalogService = RepositoryFactory.createCatalogService()
+            let existingItems = try await catalogService.getAllGlassItems()
+            itemsLoaded = existingItems.count
+            print("✅ Catalog contains \(itemsLoaded) items (bundled data)")
 
             progress = 0.5
 
@@ -338,13 +260,6 @@ struct FirstRunDataLoadingView: View {
             progress = 1.0
 
             print("🎉 All initialization complete - app is fully ready!")
-
-            // Print diagnostic summary for WAL checkpoint investigation
-            print("📊 [PERF-SUMMARY] Data loading complete:")
-            print("   - Total glass items created: \(itemsLoaded)")
-            print("   - Check logs above for [PERF-DIAG] messages showing duplicate creations and tag saves")
-            print("   - Expected saves: ~\(itemsLoaded * 2) (item + tags)")
-            print("   - If you see many DUPLICATE messages, that's the root cause of extra WAL checkpoints")
 
             // Brief pause to show completion message
             try? await Task.sleep(for: .milliseconds(500))

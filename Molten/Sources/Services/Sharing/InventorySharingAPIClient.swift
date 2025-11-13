@@ -42,7 +42,7 @@ class InventorySharingAPIClient: NSObject {
     ///   - snapshotData: Serialized snapshot data
     ///   - publicKey: Public key for signature verification
     open func uploadSnapshot(shareCode: String, snapshotData: Data, publicKey: Data) async throws {
-        let url = baseURL.appendingPathComponent("share")
+        let url = baseURL.appendingPathComponent("v1/share")
 
         // Create request body
         let requestBody: [String: Any] = [
@@ -88,7 +88,7 @@ class InventorySharingAPIClient: NSObject {
     /// - Parameter shareCode: Share code to download
     /// - Returns: Downloaded snapshot with public key
     open func downloadSnapshot(shareCode: String) async throws -> DownloadedSnapshot {
-        let url = baseURL.appendingPathComponent("share").appendingPathComponent(shareCode)
+        let url = baseURL.appendingPathComponent("v1/share").appendingPathComponent(shareCode)
 
         // Create request
         var request = URLRequest(url: url)
@@ -132,7 +132,7 @@ class InventorySharingAPIClient: NSObject {
     ///   - shareCode: Share code to delete
     ///   - ownershipSignature: Signature proving ownership (signed with original private key)
     open func deleteShare(shareCode: String, ownershipSignature: Data) async throws {
-        let url = baseURL.appendingPathComponent("share").appendingPathComponent(shareCode)
+        let url = baseURL.appendingPathComponent("v1/share").appendingPathComponent(shareCode)
 
         print("🔐 [API] DELETE URL: \(url)")
         print("🔐 [API] Ownership signature (base64): \(ownershipSignature.base64EncodedString())")
@@ -185,7 +185,7 @@ class InventorySharingAPIClient: NSObject {
     ///   - publicKey: Public key for signature verification
     ///   - ownershipSignature: Signature proving ownership (signed with original private key)
     open func updateSnapshot(shareCode: String, snapshotData: Data, publicKey: Data, ownershipSignature: Data) async throws {
-        let url = baseURL.appendingPathComponent("share").appendingPathComponent(shareCode)
+        let url = baseURL.appendingPathComponent("v1/share").appendingPathComponent(shareCode)
 
         // Create request body
         let requestBody: [String: Any] = [

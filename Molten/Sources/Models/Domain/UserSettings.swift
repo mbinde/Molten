@@ -97,6 +97,23 @@ class UserSettings {
         }
     }
 
+    // MARK: - Image Quality Settings
+
+    /// Controls whether to download full-size images instead of thumbnails
+    /// - Default: false (use thumbnails for better performance and storage)
+    /// - When true, downloads full-size images which use significantly more storage space
+    /// - When false, downloads optimized 400px thumbnails
+    var downloadFullSizeImages: Bool {
+        get {
+            UserDefaults.standard.bool(forKey: Keys.downloadFullSizeImages)
+        }
+        set {
+            withMutation(keyPath: \.downloadFullSizeImages) {
+                UserDefaults.standard.set(newValue, forKey: Keys.downloadFullSizeImages)
+            }
+        }
+    }
+
     // MARK: - Tag Filter Settings
 
     /// Controls whether user-created tags appear in the tag filter menu
@@ -393,6 +410,7 @@ class UserSettings {
         static let kilnCooldownRate260to540 = "kilnCooldownRate260to540"
         static let kilnCooldownRate540to815 = "kilnCooldownRate540to815"
         static let kilnCooldownRate815Plus = "kilnCooldownRate815Plus"
+        static let downloadFullSizeImages = "downloadFullSizeImages"
     }
 
     // MARK: - Enums

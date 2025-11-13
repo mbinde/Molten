@@ -353,6 +353,71 @@ struct CatalogAPIClientTests {
             _ = try await client.downloadDeltaCatalog(from: 1, to: 2)
         }
     }
+
+    // MARK: - API Versioning Tests
+
+    @Test("Version endpoint uses /v1/catalog/version path")
+    func testVersionEndpointUsesVersionedPath() async throws {
+        let metadata = createTestMetadata()
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let responseData = try encoder.encode(metadata)
+
+        let mockSession = MockCatalogURLSession()
+        mockSession.mockData = responseData
+        mockSession.mockResponse = HTTPURLResponse(
+            url: URL(string: "https://api.example.com/v1/catalog/version")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: ["Content-Type": "application/json"]
+        )
+
+        let mockAttestation = MockCatalogAttestationManager()
+        let client = CatalogAPIClient(
+            session: mockSession,
+            baseURL: URL(string: "https://api.example.com")!,
+            attestationManager: mockAttestation
+        )
+
+        _ = try await client.getLatestVersion()
+
+        // Verify the path includes /v1/
+        let request = try #require(mockSession.lastRequest)
+        let url = try #require(request.url)
+        #expect(url.path == "/v1/catalog/version")
+    }
+
+    @Test("Data download endpoint uses /v1/catalog/data path")
+    func testDataDownloadEndpointUsesVersionedPath() async throws {
+        let catalogData = createTestCatalogData()
+
+        let mockSession = MockCatalogURLSession()
+        mockSession.mockDownloadURL = URL(fileURLWithPath: "/tmp/catalog.json")
+        mockSession.mockResponse = HTTPURLResponse(
+            url: URL(string: "https://api.example.com/v1/catalog/data")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+
+        try catalogData.write(to: mockSession.mockDownloadURL!)
+
+        let mockAttestation = MockCatalogAttestationManager()
+        mockAttestation.shouldSucceed = true
+
+        let client = CatalogAPIClient(
+            session: mockSession,
+            baseURL: URL(string: "https://api.example.com")!,
+            attestationManager: mockAttestation
+        )
+
+        _ = try await client.downloadFullCatalog()
+
+        // Verify the path includes /v1/
+        let request = try #require(mockSession.lastDownloadRequest)
+        let url = try #require(request.url)
+        #expect(url.path == "/v1/catalog/data")
+    }
 }
 
 // MARK: - Mock URLSession

@@ -86,7 +86,7 @@ actor ShoppingListService {
         }
         
         // 4. Sort by priority (highest shortfall first)
-        detailedItems.sort { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
+        detailedItems.sort() // Uses Comparable conformance from model
         
         return DetailedShoppingListModel(
             store: store,
@@ -191,7 +191,7 @@ actor ShoppingListService {
             }
 
             // Sort by priority (highest needed quantity first)
-            detailedItems.sort { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
+            detailedItems.sort() // Uses Comparable conformance from model
 
             detailedShoppingLists[store] = DetailedShoppingListModel(
                 store: store,

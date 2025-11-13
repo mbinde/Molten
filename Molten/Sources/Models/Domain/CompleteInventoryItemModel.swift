@@ -83,6 +83,12 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
         catalogItem.itemType.rawValue
     }
 
+    /// Whether this item has any inventory (quantity > 0)
+    /// Business rule: Item "has inventory" if ANY inventory record has positive quantity
+    nonisolated var hasInventory: Bool {
+        inventory.contains { $0.quantity > 0 }
+    }
+
     nonisolated static func == (lhs: CompleteInventoryItemModel, rhs: CompleteInventoryItemModel) -> Bool {
         return lhs.catalogItem.stable_id == rhs.catalogItem.stable_id
     }

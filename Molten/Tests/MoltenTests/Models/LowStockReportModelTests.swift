@@ -43,8 +43,8 @@ struct LowStockReportModelTests {
         let lowStockItem = LowStockItemModel(
             item_stable_id: stableId,
             type: type,
-            minimumQuantity: 10.0,
             currentQuantity: 10.0 - shortfall,
+            minimumQuantity: 10.0,
             store: store
         )
 

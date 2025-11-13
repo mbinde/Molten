@@ -486,7 +486,6 @@ struct SettingsView: View {
 
 // MARK: - Data Management View
 struct DataManagementView: View {
-    @State private var isLoadingData = false
     @State private var showingDeleteAlert = false
     @State private var showingClearInventoryAlert = false
     @StateObject private var errorState = ErrorAlertState()
@@ -494,15 +493,12 @@ struct DataManagementView: View {
     @State private var inventoryItemsCount = 0
 
     private let catalogService: CatalogService
-    private let dataLoadingService: GlassItemDataLoadingService
     private let inventoryRepository: InventoryRepository
 
     init(
-        catalogService: CatalogService = RepositoryFactory.createCatalogService(),
-        dataLoadingService: GlassItemDataLoadingService? = nil
+        catalogService: CatalogService = RepositoryFactory.createCatalogService()
     ) {
         self.catalogService = catalogService
-        self.dataLoadingService = dataLoadingService ?? GlassItemDataLoadingService(catalogService: catalogService)
         self.inventoryRepository = RepositoryFactory.createInventoryRepository()
     }
     
@@ -525,37 +521,7 @@ struct DataManagementView: View {
             } header: {
                 Text("Database Status")
             }
-            
-            Section {
-                Button {
-                    loadJSONData()
-                } label: {
-                    Label("Load JSON Data", systemImage: "square.and.arrow.down")
-                }
-                .disabled(isLoadingData)
-                
-                Button {
-                    smartMergeJSONData()
-                } label: {
-                    Label("Smart Merge JSON", systemImage: "arrow.triangle.merge")
-                }
-                .disabled(isLoadingData)
-                
-                Button {
-                    loadJSONIfEmpty()
-                } label: {
-                    Label("Load if Empty", systemImage: "questionmark.square.dashed")
-                }
-                .disabled(isLoadingData)
-            } header: {
-                Text("Data Import")
-            } footer: {
-                if isLoadingData {
-                    Text("Loading data...")
-                        .foregroundColor(.secondary)
-                }
-            }
-            
+
             Section {
                 Button {
                     showingClearInventoryAlert = true
@@ -649,82 +615,7 @@ struct DataManagementView: View {
             }
         }
     }
-    
-    private func loadJSONData() {
-        guard !isLoadingData else { return }
-        
-        isLoadingData = true
-        
-        Task {
-            let result = await ErrorHandler.shared.executeAsync(context: "Loading JSON data") {
-                _ = try await dataLoadingService.loadGlassItemsFromJSON()
-            }
-            
-            await MainActor.run {
-                isLoadingData = false
-                switch result {
-                case .success:
-                    print("✅ JSON loading completed successfully")
-                    Task {
-                        await loadCatalogItemsCount()
-                    }
-                case .failure(let error):
-                    errorState.show(error: error, context: "JSON loading failed")
-                }
-            }
-        }
-    }
-    
-    private func smartMergeJSONData() {
-        guard !isLoadingData else { return }
-        
-        isLoadingData = true
-        
-        Task {
-            let result = await ErrorHandler.shared.executeAsync(context: "Smart merging JSON data") {
-                _ = try await dataLoadingService.loadGlassItemsAndUpdateExisting()
-            }
-            
-            await MainActor.run {
-                isLoadingData = false
-                switch result {
-                case .success:
-                    print("✅ Smart merge completed successfully")
-                    Task {
-                        await loadCatalogItemsCount()
-                    }
-                case .failure(let error):
-                    errorState.show(error: error, context: "Smart merge failed")
-                }
-            }
-        }
-    }
-    
-    private func loadJSONIfEmpty() {
-        guard !isLoadingData else { return }
-        
-        isLoadingData = true
-        
-        Task {
-            let result = await ErrorHandler.shared.executeAsync(context: "Conditional JSON loading") {
-                _ = try await dataLoadingService.loadGlassItemsFromJSONIfEmpty()
-            }
-            
-            await MainActor.run {
-                isLoadingData = false
-                switch result {
-                case .success:
-                    print("✅ Conditional JSON loading completed")
-                    Task {
-                        await loadCatalogItemsCount()
-                    }
-                case .failure(let error):
-                    errorState.show(error: error, context: "Conditional JSON loading failed")
-                }
-            }
-        }
-    }
-    
+
     private func deleteAllItems() {
         // TODO: Add deleteAllItems method to CatalogService/Repository
         // For now, this functionality needs to be implemented at the repository level

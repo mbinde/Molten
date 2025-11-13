@@ -77,7 +77,7 @@ struct LowStockReportModel {
     /// - Group items by store for shopping organization
     /// - Calculate total shortfall across all items
     /// - Count unique stores affected
-    static func from(items: [DetailedLowStockItemModel]) -> LowStockReportModel {
+    nonisolated static func from(items: [DetailedLowStockItemModel]) -> LowStockReportModel {
         // Group by store for shopping organization
         let groupedByStore = Dictionary(grouping: items) { $0.lowStockItem.store }
 

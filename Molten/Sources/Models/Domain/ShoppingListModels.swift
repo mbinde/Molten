@@ -15,7 +15,14 @@ nonisolated struct DetailedShoppingListModel {
     let store: String
     let items: [DetailedShoppingListItemModel]
     let totalItems: Int
-    let totalValue: Double
+
+    /// Business Logic: Estimated total value of shopping list
+    /// Business rule: $10 per needed unit (placeholder until real pricing added)
+    nonisolated var totalValue: Double {
+        items.reduce(0.0) { total, item in
+            total + (item.shoppingListItem.neededQuantity * 10.0)
+        }
+    }
 
     /// Items grouped by manufacturer for easier shopping
     nonisolated var itemsByManufacturer: [String: [DetailedShoppingListItemModel]] {

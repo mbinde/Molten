@@ -113,6 +113,31 @@ class CatalogUpdatePreferences: ObservableObject {
         }
     }
 
+    // Separate version tracking for each catalog type
+    var glassCatalogVersion: Int {
+        get { defaults.integer(forKey: Keys.glassCatalogVersion) }
+        set {
+            defaults.set(newValue, forKey: Keys.glassCatalogVersion)
+            objectWillChange.send()
+        }
+    }
+
+    var toolsCatalogVersion: Int {
+        get { defaults.integer(forKey: Keys.toolsCatalogVersion) }
+        set {
+            defaults.set(newValue, forKey: Keys.toolsCatalogVersion)
+            objectWillChange.send()
+        }
+    }
+
+    var coatingsCatalogVersion: Int {
+        get { defaults.integer(forKey: Keys.coatingsCatalogVersion) }
+        set {
+            defaults.set(newValue, forKey: Keys.coatingsCatalogVersion)
+            objectWillChange.send()
+        }
+    }
+
     var lastSuccessfulUpdate: Date? {
         get { defaults.object(forKey: Keys.lastSuccessfulUpdate) as? Date }
         set { defaults.set(newValue, forKey: Keys.lastSuccessfulUpdate) }
@@ -147,6 +172,9 @@ class CatalogUpdatePreferences: ObservableObject {
         static let hasUpdateAvailable = "catalog.hasUpdateAvailable"
         static let lastUpdateCheck = "catalog.lastUpdateCheck"
         static let currentVersion = "catalog.currentVersion"
+        static let glassCatalogVersion = "catalog.glass.version"
+        static let toolsCatalogVersion = "catalog.tools.version"
+        static let coatingsCatalogVersion = "catalog.coatings.version"
         static let lastSuccessfulUpdate = "catalog.lastSuccessfulUpdate"
         static let catalogSource = "catalog.source"
     }

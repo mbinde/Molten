@@ -141,7 +141,7 @@ class AppDependencies {
         self.userTagsRepository = CoreDataUserTagsRepository(context: cloudContext)
         self.userNotesRepository = CoreDataUserNotesRepository(context: cloudContext)
         self.shoppingListRepository = CoreDataShoppingListRepository(context: cloudContext)
-        self.itemMinimumRepository = MockItemMinimumRepository() // TODO: Implement Core Data version
+        self.itemMinimumRepository = CoreDataItemMinimumRepository(context: cloudContext)
         self.projectRepository = CoreDataProjectRepository(context: cloudContext)
         self.logbookRepository = CoreDataLogbookRepository(context: cloudContext)
         self.purchaseRecordRepository = CoreDataPurchaseRecordRepository(context: cloudContext)

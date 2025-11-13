@@ -221,22 +221,8 @@ actor ShoppingListService {
             }
         }
         
-        // 4. Group by store for shopping organization
-        let groupedByStore = Dictionary(grouping: detailedLowStockItems) { $0.lowStockItem.store }
-        
-        // 5. Calculate summary statistics
-        let totalItemsLow = detailedLowStockItems.count
-        let totalShortfall = detailedLowStockItems.reduce(0.0) { $0 + $1.lowStockItem.shortfall }
-        let storesAffected = Set(detailedLowStockItems.map { $0.lowStockItem.store }).count
-        
-        return LowStockReportModel(
-            items: detailedLowStockItems,
-            groupedByStore: groupedByStore,
-            totalItemsLow: totalItemsLow,
-            totalShortfall: totalShortfall,
-            storesAffected: storesAffected,
-            generatedAt: Date()
-        )
+        // 4. Use business logic from model to create report
+        return LowStockReportModel.from(items: detailedLowStockItems)
     }
     
     // MARK: - Minimum Management Operations

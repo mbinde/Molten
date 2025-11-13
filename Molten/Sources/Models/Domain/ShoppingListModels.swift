@@ -61,6 +61,33 @@ nonisolated struct LowStockReportModel {
     let totalShortfall: Double
     let storesAffected: Int
     let generatedAt: Date
+
+    /// Business Logic: Aggregate low stock items and calculate statistics
+    /// - Parameter items: Low stock items to aggregate
+    /// - Returns: Low stock report with grouped items and summary statistics
+    ///
+    /// Business rules:
+    /// - Group items by store for shopping organization
+    /// - Calculate total shortfall across all items
+    /// - Count unique stores affected
+    static func from(items: [DetailedLowStockItemModel]) -> LowStockReportModel {
+        // Group by store for shopping organization
+        let groupedByStore = Dictionary(grouping: items) { $0.lowStockItem.store }
+
+        // Calculate summary statistics
+        let totalItemsLow = items.count
+        let totalShortfall = items.reduce(0.0) { $0 + $1.lowStockItem.shortfall }
+        let storesAffected = Set(items.map { $0.lowStockItem.store }).count
+
+        return LowStockReportModel(
+            items: items,
+            groupedByStore: groupedByStore,
+            totalItemsLow: totalItemsLow,
+            totalShortfall: totalShortfall,
+            storesAffected: storesAffected,
+            generatedAt: Date()
+        )
+    }
 }
 
 /// Low stock item with complete context

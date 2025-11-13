@@ -105,3 +105,105 @@ struct DetailedShoppingListItemModelSortingTests {
         #expect(!(smaller < larger))
     }
 }
+
+@Suite("DetailedMinimumModel Sorting Tests")
+struct DetailedMinimumModelSortingTests {
+
+    // MARK: - Test Helpers
+
+    private func createMinimumItem(
+        stableId: String,
+        type: String,
+        quantity: Double = 10.0
+    ) -> DetailedMinimumModel {
+        let glassItem = GlassItemModel(
+            stable_id: stableId,
+            name: "Test Item",
+            sku: "001",
+            manufacturer: "test",
+            mfr_notes: "Test notes",
+            coe: 96,
+            url: nil,
+            mfr_status: "available"
+        )
+
+        let minimum = ItemMinimumModel(
+            item_stable_id: stableId,
+            quantity: quantity,
+            type: type,
+            store: "TestStore"
+        )
+
+        return DetailedMinimumModel(
+            minimum: minimum,
+            glassItem: glassItem,
+            tags: [],
+            currentQuantity: 5.0
+        )
+    }
+
+    // MARK: - Comparable Tests
+
+    @Test("Should sort by type alphabetically (ascending)")
+    func testSortByType() {
+        let rod = createMinimumItem(stableId: "test-001-0", type: "rod")
+        let frit = createMinimumItem(stableId: "test-002-0", type: "frit")
+        let tube = createMinimumItem(stableId: "test-003-0", type: "tube")
+
+        var items = [tube, rod, frit]
+        items.sort() // Uses Comparable conformance
+
+        #expect(items[0].minimum.type == "frit")
+        #expect(items[1].minimum.type == "rod")
+        #expect(items[2].minimum.type == "tube")
+    }
+
+    @Test("Should handle equal types gracefully")
+    func testSortWithEqualTypes() {
+        let item1 = createMinimumItem(stableId: "test-001-0", type: "rod")
+        let item2 = createMinimumItem(stableId: "test-002-0", type: "rod")
+
+        // Should not crash with equal types
+        let result = item1 < item2 || item1 == item2 || item1 > item2
+        #expect(result == true) // One of these must be true
+    }
+
+    @Test("Should allow sorting with Swift's sorted method")
+    func testSwiftSortedMethod() {
+        let items = [
+            createMinimumItem(stableId: "1", type: "tube"),
+            createMinimumItem(stableId: "2", type: "frit"),
+            createMinimumItem(stableId: "3", type: "rod")
+        ]
+
+        let sorted = items.sorted() // Should use Comparable
+
+        #expect(sorted[0].minimum.type == "frit")
+        #expect(sorted[1].minimum.type == "rod")
+        #expect(sorted[2].minimum.type == "tube")
+    }
+
+    @Test("Less than operator should compare types alphabetically")
+    func testLessThanOperator() {
+        let earlier = createMinimumItem(stableId: "a", type: "frit")
+        let later = createMinimumItem(stableId: "b", type: "rod")
+
+        // Business rule: alphabetically earlier type is "less than"
+        #expect(earlier < later)
+        #expect(!(later < earlier))
+    }
+
+    @Test("Should sort correctly regardless of quantity")
+    func testSortByTypeIgnoresQuantity() {
+        // Different quantities should not affect type-based sorting
+        let rod = createMinimumItem(stableId: "1", type: "rod", quantity: 100.0)
+        let frit = createMinimumItem(stableId: "2", type: "frit", quantity: 1.0)
+
+        var items = [rod, frit]
+        items.sort()
+
+        // Should still sort by type, not quantity
+        #expect(items[0].minimum.type == "frit")
+        #expect(items[1].minimum.type == "rod")
+    }
+}

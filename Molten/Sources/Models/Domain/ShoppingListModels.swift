@@ -155,3 +155,15 @@ extension DetailedShoppingListItemModel: Comparable {
         return lhs.shoppingListItem.item_stable_id == rhs.shoppingListItem.item_stable_id
     }
 }
+
+extension DetailedMinimumModel: Comparable {
+    /// Sort minimums by type (alphabetically ascending)
+    /// Business rule: Alphabetical ordering for consistent display
+    static func < (lhs: DetailedMinimumModel, rhs: DetailedMinimumModel) -> Bool {
+        lhs.minimum.type < rhs.minimum.type
+    }
+
+    static func == (lhs: DetailedMinimumModel, rhs: DetailedMinimumModel) -> Bool {
+        lhs.minimum.item_stable_id == rhs.minimum.item_stable_id && lhs.minimum.type == rhs.minimum.type
+    }
+}

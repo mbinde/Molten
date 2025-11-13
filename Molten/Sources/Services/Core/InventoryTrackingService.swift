@@ -297,7 +297,7 @@ actor InventoryTrackingService {
             }
         }
         
-        return results.sorted { $0.currentQuantity < $1.currentQuantity }
+        return results.sorted() // Uses Comparable conformance from model
     }
     
     // MARK: - Validation Operations

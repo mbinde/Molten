@@ -23,6 +23,20 @@ nonisolated struct LowStockDetailModel {
     }
 }
 
+// MARK: - Sorting Logic (Business Rules)
+
+extension LowStockDetailModel: Comparable {
+    /// Sort low stock items by currentQuantity (ascending)
+    /// Business rule: Items with lowest stock should appear first (highest priority)
+    static func < (lhs: LowStockDetailModel, rhs: LowStockDetailModel) -> Bool {
+        lhs.currentQuantity < rhs.currentQuantity
+    }
+
+    static func == (lhs: LowStockDetailModel, rhs: LowStockDetailModel) -> Bool {
+        lhs.glassItem.stable_id == rhs.glassItem.stable_id && lhs.type == rhs.type
+    }
+}
+
 /// Inventory consistency validation result
 nonisolated struct InventoryConsistencyValidation {
     let stableId: String

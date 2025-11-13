@@ -129,8 +129,8 @@ struct SettingsView: View {
     @State private var catalogUpdateViewModel: CatalogUpdateViewModel
 
     init(
-        catalogService: CatalogService = RepositoryFactory.createCatalogService(),
-        subscriptionService: SubscriptionServiceProtocol = RepositoryFactory.createSubscriptionService(),
+        catalogService: CatalogService = AppDependencies().catalogService,
+        subscriptionService: SubscriptionServiceProtocol = AppDependencies().subscriptionService,
         catalogUpdateService: CatalogUpdateService? = nil
     ) {
         self.catalogService = catalogService
@@ -465,7 +465,7 @@ struct SettingsView: View {
                     }
 
                     NavigationLink {
-                        DebugSettingsView(catalogService: catalogService)
+                        DebugSettingsView()
                     } label: {
                         Label("Debug Settings", systemImage: "ladybug")
                     }
@@ -496,10 +496,10 @@ struct DataManagementView: View {
     private let inventoryRepository: InventoryRepository
 
     init(
-        catalogService: CatalogService = RepositoryFactory.createCatalogService()
+        catalogService: CatalogService = AppDependencies().catalogService
     ) {
         self.catalogService = catalogService
-        self.inventoryRepository = RepositoryFactory.createInventoryRepository()
+        self.inventoryRepository = AppDependencies().inventoryRepository
     }
     
     var body: some View {
@@ -686,7 +686,7 @@ struct ManufacturerFilterView: View {
     
     private let catalogService: CatalogService
     
-    init(catalogService: CatalogService = RepositoryFactory.createCatalogService()) {
+    init(catalogService: CatalogService = AppDependencies().catalogService) {
         self.catalogService = catalogService
     }
     

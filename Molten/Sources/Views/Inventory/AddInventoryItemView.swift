@@ -362,6 +362,6 @@ struct TypeDisplayView: View {
 
 #Preview {
     NavigationStack {
-        AddInventoryItemView(deps: AppDependencies(forTesting: true))
+        AddInventoryItemView(deps: AppDependencies(persistenceController: .createTestController()))
     }
 }

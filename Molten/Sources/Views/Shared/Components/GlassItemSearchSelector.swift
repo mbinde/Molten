@@ -243,7 +243,7 @@ struct NotFoundCard: View {
         private let catalogService: CatalogService
 
         init() {
-            let deps = AppDependencies(forTesting: true)
+            let deps = AppDependencies(persistenceController: .createTestController())
             self.catalogService = deps.catalogService
         }
 

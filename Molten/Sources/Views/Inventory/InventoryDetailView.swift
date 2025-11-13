@@ -1923,7 +1923,7 @@ struct QuickAddInventoryView: View {
             userTags: []
         )
 
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         InventoryDetailView(
             item: sampleCompleteItem,
             deps: deps
@@ -1949,7 +1949,7 @@ struct QuickAddInventoryView: View {
             userTags: []
         )
 
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         InventoryDetailView(
             item: sampleCompleteItem,
             deps: deps

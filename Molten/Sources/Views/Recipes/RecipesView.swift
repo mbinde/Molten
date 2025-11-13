@@ -311,12 +311,12 @@ struct RecipeDetailView: View {
 }
 
 #Preview("Empty State") {
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
     return RecipesView(deps: deps)
 }
 
 #Preview("With Recipes") {
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
 
     // Create some test recipes
     Task {

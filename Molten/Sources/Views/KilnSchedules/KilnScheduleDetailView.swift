@@ -673,7 +673,7 @@ struct EditKilnScheduleView: View {
 }
 
 #Preview {
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
     let schedule = KilnSchedule(
         name: "Full Fuse - Standard",
         technique: .fusing,

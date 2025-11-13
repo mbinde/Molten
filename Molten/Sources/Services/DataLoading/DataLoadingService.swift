@@ -189,7 +189,7 @@ enum DataLoadingServiceError: Error, LocalizedError {
 extension DataLoadingService {
     /// Create DataLoadingService with testing dependencies
     static func createForTesting() -> DataLoadingService {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         return DataLoadingService(deps: deps)
     }
 

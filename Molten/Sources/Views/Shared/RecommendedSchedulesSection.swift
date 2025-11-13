@@ -204,7 +204,7 @@ struct RecommendedSchedulesSection: View {
 }
 
 #Preview {
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
     Form {
         RecommendedSchedulesSection(
             glassItemId: "bullseye-clear-0",

@@ -96,7 +96,6 @@ class AppDependencies {
     let projectService: ProjectService
     let purchaseRecordService: PurchaseRecordService
     let kilnScheduleService: KilnScheduleService
-    let glassItemDataLoadingService: GlassItemDataLoadingService
     let recipeService: RecipeService
     let unifiedLocationService: UnifiedLocationService
     let entitlementService: EntitlementService
@@ -176,7 +175,6 @@ class AppDependencies {
             self.recipeService,
             self.unifiedLocationService,
             self.entitlementService,
-            self.glassItemDataLoadingService,
             self.subscriptionService
         ) = Self.setupServices(
             glassItemRepository: glassItemRepository,
@@ -193,8 +191,6 @@ class AppDependencies {
             kilnScheduleRepository: kilnScheduleRepository,
             recipeRepository: recipeRepository,
             unifiedLocationRepository: unifiedLocationRepository,
-            jsonLoader: JSONDataLoader(),
-            catalogStorageService: try? CatalogStorageService(),
             subscriptionService: RevenueCatSubscriptionService()
         )
     }
@@ -218,8 +214,6 @@ class AppDependencies {
         kilnScheduleRepository: KilnScheduleRepository,
         recipeRepository: RecipeRepository,
         unifiedLocationRepository: UnifiedLocationRepository,
-        jsonLoader: JSONDataLoading,
-        catalogStorageService: CatalogStorageService?,
         subscriptionService: SubscriptionServiceProtocol
     ) -> (
         InventoryTrackingService,
@@ -231,7 +225,6 @@ class AppDependencies {
         RecipeService,
         UnifiedLocationService,
         EntitlementService,
-        GlassItemDataLoadingService,
         SubscriptionServiceProtocol
     ) {
         // Create inventory tracking service first (needed by catalog service)
@@ -292,13 +285,6 @@ class AppDependencies {
         // Create entitlement service
         let entitlementService = EntitlementService()
 
-        // Create glass item data loading service
-        let glassItemDataLoadingService = GlassItemDataLoadingService(
-            catalogService: catalogService,
-            jsonLoader: jsonLoader,
-            catalogStorageService: catalogStorageService
-        )
-
         return (
             inventoryTrackingService,
             catalogService,
@@ -309,7 +295,6 @@ class AppDependencies {
             recipeService,
             unifiedLocationService,
             entitlementService,
-            glassItemDataLoadingService,
             subscriptionService
         )
     }
@@ -324,7 +309,7 @@ class AppDependencies {
         let service = CatalogUpdateService(
             apiClient: CatalogAPIClient(),
             storageService: try! CatalogStorageService(),
-            dataLoadingService: glassItemDataLoadingService,
+            databaseManager: CatalogDatabaseManager.shared,
             networkMonitor: NetworkMonitor.shared
         )
         _catalogUpdateService = service

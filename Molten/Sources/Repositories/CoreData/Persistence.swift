@@ -86,13 +86,8 @@ class PersistenceController {
         Logger(subsystem: "com.flameworker.app", category: "persistence").debug("🧪 Creating test PersistenceController (in-memory, isolated)")
         // Use inMemory=true, forceCloudKit=false for fast test isolation
         // Each call creates a NEW in-memory store (not shared)
+        // In-memory stores are immediately ready, no async initialization needed
         let controller = PersistenceController(inMemory: true, forceCloudKit: false)
-
-        // Verify the controller is ready
-        guard controller.isReady else {
-            Logger(subsystem: "com.flameworker.app", category: "persistence").error("❌ Test controller failed to initialize")
-            fatalError("Test PersistenceController failed to initialize. Cannot run tests without valid persistence layer.")
-        }
 
         Logger(subsystem: "com.flameworker.app", category: "persistence").debug("✅ Test controller ready")
         return controller
@@ -712,20 +707,7 @@ class PersistenceController {
     }
     
     // MARK: - Test Helpers
-    
-    /// Creates a truly isolated in-memory persistence controller for testing
-    /// Each call creates a completely separate Core Data stack to ensure test isolation
-    nonisolated static func createTestController() -> PersistenceController {
-        // Create a completely isolated in-memory controller with its own model instance
-        // Uses NSPersistentContainer (not CloudKit variant) to avoid CloudKit warnings
-        let controller = PersistenceController(inMemory: true)
 
-        // Configure merge policy to handle any conflicts
-        controller.container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-
-        return controller
-    }
-    
     /// Forces creation of a new test controller (for when you need true isolation)
     static func createFreshTestController() -> PersistenceController {
         let controller = PersistenceController(inMemory: true)

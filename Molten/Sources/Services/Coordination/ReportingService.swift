@@ -312,7 +312,7 @@ extension ReportingService {
 
     /// Create ReportingService for testing
     static func createForTesting() -> ReportingService {
-        let deps = AppDependencies(forTesting: true)
+        let deps = AppDependencies(persistenceController: .createTestController())
         return ReportingService(deps: deps)
     }
 }

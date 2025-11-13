@@ -758,6 +758,6 @@ struct CatalogManufacturerFilterView: View {
 
 // MARK: - Preview
 #Preview {
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
     return CatalogView(deps: deps)
 }

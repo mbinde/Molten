@@ -348,7 +348,7 @@ struct AddShoppingListFormView: View {
 }
 
 #Preview {
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
     NavigationStack {
         AddShoppingListItemView(deps: deps)
     }

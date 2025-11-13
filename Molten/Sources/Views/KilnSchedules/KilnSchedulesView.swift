@@ -319,6 +319,6 @@ struct KilnSchedulesView: View {
 }
 
 #Preview {
-    let deps = AppDependencies(forTesting: true)
+    let deps = AppDependencies(persistenceController: .createTestController())
     return KilnSchedulesView(deps: deps)
 }

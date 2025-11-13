@@ -21,12 +21,12 @@ struct PurchaseRecordDetailView: View {
     
     init(purchaseRecord: PurchaseRecordModel, purchaseService: PurchaseRecordService? = nil) {
         self._purchaseRecord = State(initialValue: purchaseRecord)
-        
+
         if let service = purchaseService {
             self.purchaseService = service
         } else {
-            let mockRepository = MockPurchaseRecordRepository()
-            self.purchaseService = PurchaseRecordService(repository: mockRepository)
+            let deps = AppDependencies(persistenceController: .createTestController())
+            self.purchaseService = deps.purchaseRecordService
         }
     }
     
@@ -202,10 +202,9 @@ struct PurchaseRecordDetailView: View {
         notes: "Monthly order of glass rods and tools"
     )
 
-    let mockRepository = MockPurchaseRecordRepository()
-    let purchaseService = PurchaseRecordService(repository: mockRepository)
+    let deps = AppDependencies(persistenceController: .createTestController())
 
     NavigationView {
-        PurchaseRecordDetailView(purchaseRecord: sampleRecord, purchaseService: purchaseService)
+        PurchaseRecordDetailView(purchaseRecord: sampleRecord, purchaseService: deps.purchaseRecordService)
     }
 }

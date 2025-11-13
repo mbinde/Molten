@@ -550,31 +550,14 @@ struct SearchAndFilterHeader: View {
 
     private var compactProductTypePicker: some View {
         Menu {
-            // "Show All" option
-            Button {
-                withAnimation {
-                    selectedProductTypes.removeAll()
-                }
-            } label: {
-                HStack {
-                    Text("Show All")
-                    Spacer()
-                    if selectedProductTypes.isEmpty {
-                        Image(systemName: "checkmark")
-                    }
-                }
-            }
-
-            Divider()
-
-            // Individual product type options (filter out zero-count items and show counts)
+            // Individual product type options (single-select, filter out zero-count items and show counts)
             ForEach(allAvailableProductTypes.filter { type in
                 // Show all items if no counts provided, otherwise only show items with count > 0
                 productTypeCounts == nil || (productTypeCounts?[type] ?? 0) > 0
             }, id: \.self) { type in
                 Button {
                     withAnimation {
-                        toggleProductType(type)
+                        selectProductType(type)
                     }
                 } label: {
                     HStack {
@@ -637,6 +620,12 @@ struct SearchAndFilterHeader: View {
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
         .accessibilityIdentifier("productTypeFilterButton")
+    }
+
+    private func selectProductType(_ type: String) {
+        // Single-select: replace all selections with this one type
+        selectedProductTypes.removeAll()
+        selectedProductTypes.insert(type)
     }
 
     private func toggleProductType(_ type: String) {

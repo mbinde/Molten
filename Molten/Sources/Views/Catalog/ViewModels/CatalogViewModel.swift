@@ -111,10 +111,14 @@ class CatalogViewModel: CatalogViewModelProtocol {
     init(catalogService: CatalogService) {
         self.catalogService = catalogService
 
-        // Load saved product type filter from UserDefaults
+        // Load saved product type filter from UserDefaults, default to "glass"
         if let savedData = UserDefaults.standard.data(forKey: Self.productTypeFilterKey),
-           let savedTypes = try? JSONDecoder().decode(Set<String>.self, from: savedData) {
+           let savedTypes = try? JSONDecoder().decode(Set<String>.self, from: savedData),
+           !savedTypes.isEmpty {
             self.selectedProductTypes = savedTypes
+        } else {
+            // Default to "glass" if no saved filter
+            self.selectedProductTypes = ["glass"]
         }
     }
 

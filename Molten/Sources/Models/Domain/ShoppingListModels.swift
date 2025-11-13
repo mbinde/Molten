@@ -167,3 +167,16 @@ extension DetailedMinimumModel: Comparable {
         lhs.minimum.item_stable_id == rhs.minimum.item_stable_id && lhs.minimum.type == rhs.minimum.type
     }
 }
+
+extension StoreStatisticsModel: Comparable {
+    /// Sort stores by currentNeedsCount (descending)
+    /// Business rule: Stores with highest needs should appear first (priority ordering)
+    static func < (lhs: StoreStatisticsModel, rhs: StoreStatisticsModel) -> Bool {
+        // Higher currentNeedsCount is "less than" for descending sort
+        return lhs.currentNeedsCount > rhs.currentNeedsCount
+    }
+
+    static func == (lhs: StoreStatisticsModel, rhs: StoreStatisticsModel) -> Bool {
+        return lhs.storeName == rhs.storeName
+    }
+}

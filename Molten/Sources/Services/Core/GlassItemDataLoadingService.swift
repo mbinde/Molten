@@ -1101,46 +1101,41 @@ extension GlassItemDataLoadingService {
             Array(items[$0..<min($0 + options.batchSize, items.count)])
         }
 
-        for (_, batch) in batches.enumerated() {
-            for catalogItem in batch {
-                do {
-                    // Transform to creation request
+        for (batchIndex, batch) in batches.enumerated() {
+            do {
+                // Transform all items in batch to creation requests
+                var creationRequests: [GlassItemCreationRequest] = []
+                for catalogItem in batch {
                     let request = await transformSingleItemToRequest(catalogItem, options: options)
-                    let naturalKey = request.customNaturalKey ?? "unknown"
+                    creationRequests.append(request)
+                }
 
-                    // Create the glass item
-                    let glassItem = GlassItemModel(
-                        stable_id: naturalKey,
-                        name: request.name,
-                        sku: request.sku,
-                        manufacturer: request.manufacturer,
-                        mfr_notes: request.mfr_notes,
-                        coe: request.coe,
-                        url: request.url,
-                        mfr_status: request.mfr_status,
-                        image_url: request.image_url,
-                        image_path: request.image_path
-                    )
+                // Batch create all items (ONE database save for glass items)
+                log.info("Processing create batch \(batchIndex + 1)/\(batches.count) (\(batch.count) items)")
+                let createdItems = try await catalogService.createGlassItems(creationRequests)
 
-                    let createdItem = try await catalogService.createGlassItem(
-                        glassItem,
-                        initialInventory: request.initialInventory,
-                        tags: request.tags
-                    )
+                results.successfulItems.append(contentsOf: createdItems)
+                results.itemsCreated += createdItems.count
 
-                    results.successfulItems.append(createdItem)
-                    results.itemsCreated += 1
+            } catch {
+                log.error("Failed to process create batch \(batchIndex + 1): \(error.localizedDescription)")
 
-                } catch {
+                // On batch failure, record all items in batch as failed
+                for catalogItem in batch {
                     let failedItem = FailedGlassItem(
                         originalData: catalogItem,
                         error: error,
-                        failureReason: error.localizedDescription
+                        failureReason: "Batch creation failed: \(error.localizedDescription)"
                     )
                     results.failedItems.append(failedItem)
-                    results.itemsFailed += 1
-                    log.error("Failed to create item: \(error.localizedDescription)")
                 }
+                results.itemsFailed += batch.count
+
+                results.batchErrors.append(BatchError(
+                    batchIndex: batchIndex,
+                    itemsInBatch: batch.count,
+                    error: error
+                ))
             }
 
             // Brief pause between batches

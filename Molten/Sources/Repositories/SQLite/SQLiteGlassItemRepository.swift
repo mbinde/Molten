@@ -160,7 +160,7 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
         // But provide a basic implementation for compatibility
         let baseKey = "\(manufacturer)-\(sku ?? "unknown")"
         let existingItems = try await fetchItems(byManufacturer: manufacturer)
-        let matchingItems = existingItems.filter { $0.naturalKey.hasPrefix(baseKey) }
+        let matchingItems = existingItems.filter { $0.uri.hasPrefix(baseKey) }
 
         if matchingItems.isEmpty {
             return "\(baseKey)-000"
@@ -239,7 +239,12 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
 
     /// Parse a GlassItemModel from a SQLite row
     private func parseGlassItem(from statement: OpaquePointer) throws -> GlassItemModel {
-        // Column indices (match schema from build script)
+        // Column indices (match schema from build script):
+        // 0=stable_id, 1=status, 2=added_date, 3=last_seen, 4=discontinued_date,
+        // 5=manufacturer, 6=code, 7=name, 8=start_date, 9=end_date,
+        // 10=manufacturer_description, 11=tags, 12=synonyms, 13=coe, 14=type,
+        // 15=manufacturer_url, 16=image_path, 17=image_url, 18=stock_type
+
         func getText(_ column: Int32) -> String? {
             guard let cString = sqlite3_column_text(statement, column) else {
                 return nil
@@ -247,65 +252,46 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
             return String(cString: cString)
         }
 
-        guard let stableId = getText(0) else {
+        guard let stable_id = getText(0) else {
             throw SQLiteError.invalidData("Missing stable_id")
-        }
-
-        guard let manufacturer = getText(5) else {
-            throw SQLiteError.invalidData("Missing manufacturer")
-        }
-
-        guard let code = getText(6) else {
-            throw SQLiteError.invalidData("Missing code")
         }
 
         guard let name = getText(7) else {
             throw SQLiteError.invalidData("Missing name")
         }
 
-        // Parse tags from JSON array
-        var tags: [String] = []
-        if let tagsJSON = getText(11) {
-            if let data = tagsJSON.data(using: .utf8),
-               let array = try? JSONSerialization.jsonObject(with: data) as? [String] {
-                tags = array
-            }
+        guard let manufacturer = getText(5) else {
+            throw SQLiteError.invalidData("Missing manufacturer")
         }
 
-        // Parse COE
-        var coe: Int32? = nil
+        let sku = getText(6)  // code -> sku
+        let mfr_notes = getText(10)  // manufacturer_description -> mfr_notes
+
+        // Parse COE (required field, default to 90 if missing)
+        let coe: Int32
         if let coeText = getText(13), let coeValue = Int32(coeText) {
             coe = coeValue
+        } else {
+            coe = 90  // Default COE
         }
+
+        let url = getText(15)  // manufacturer_url -> url
+        let mfr_status = getText(1) ?? "available"  // status -> mfr_status
+        let image_url = getText(17)
+        let image_path = getText(16)
 
         return GlassItemModel(
-            stableId: stableId,
-            naturalKey: code, // Use code as natural key for now
+            stable_id: stable_id,
+            name: name,
+            sku: sku,
             manufacturer: manufacturer,
-            sku: code,
-            colorName: name,
+            mfr_notes: mfr_notes,
             coe: coe,
-            type: getText(14) ?? "rod",
-            status: getText(1) ?? "available",
-            manufacturerDescription: getText(10),
-            tags: tags,
-            imageURL: getText(17),
-            manufacturerURL: getText(15),
-            addedDate: parseDate(getText(2)),
-            lastSeenDate: parseDate(getText(3)),
-            discontinuedDate: parseDate(getText(4))
+            url: url,
+            mfr_status: mfr_status,
+            image_url: image_url,
+            image_path: image_path
         )
-    }
-
-    /// Parse date string to Date
-    private func parseDate(_ dateString: String?) -> Date? {
-        guard let dateString = dateString, !dateString.isEmpty else {
-            return nil
-        }
-
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate]
-        return formatter.date(from: dateString)
     }
 }
 

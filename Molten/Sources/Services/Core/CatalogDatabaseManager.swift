@@ -12,18 +12,18 @@ import Foundation
 import SQLite3
 
 /// Manages catalog database versioning and access
-@MainActor
-class CatalogDatabaseManager {
+final class CatalogDatabaseManager: Sendable {
 
     // MARK: - Singleton
 
-    static let shared = CatalogDatabaseManager()
+    nonisolated(unsafe) static let shared = CatalogDatabaseManager()
 
     // MARK: - Properties
 
     private let fileManager = FileManager.default
     private let databaseName = "catalog.sqlite"
-    private var databaseConnection: OpaquePointer?
+    private let connectionLock = NSLock()
+    private nonisolated(unsafe) var databaseConnection: OpaquePointer?
 
     /// URL of the catalog database in Documents directory
     private var documentsDatabaseURL: URL {
@@ -38,7 +38,7 @@ class CatalogDatabaseManager {
 
     // MARK: - Initialization
 
-    private init() {}
+    private nonisolated init() {}
 
     deinit {
         closeDatabase()
@@ -159,6 +159,9 @@ class CatalogDatabaseManager {
 
     /// Open database connection
     private func openDatabase() throws {
+        connectionLock.lock()
+        defer { connectionLock.unlock() }
+
         guard sqlite3_open(documentsDatabaseURL.path, &databaseConnection) == SQLITE_OK else {
             let errorMessage = String(cString: sqlite3_errmsg(databaseConnection))
             throw CatalogDatabaseError.cannotOpenDatabase(errorMessage)
@@ -166,7 +169,10 @@ class CatalogDatabaseManager {
     }
 
     /// Close database connection
-    private func closeDatabase() {
+    private nonisolated func closeDatabase() {
+        connectionLock.lock()
+        defer { connectionLock.unlock() }
+
         if databaseConnection != nil {
             sqlite3_close(databaseConnection)
             databaseConnection = nil
@@ -174,7 +180,10 @@ class CatalogDatabaseManager {
     }
 
     /// Get the active database connection (for repository use)
-    func getDatabaseConnection() throws -> OpaquePointer {
+    nonisolated func getDatabaseConnection() throws -> OpaquePointer {
+        connectionLock.lock()
+        defer { connectionLock.unlock() }
+
         guard let connection = databaseConnection else {
             throw CatalogDatabaseError.databaseNotInitialized
         }

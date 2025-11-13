@@ -11,7 +11,7 @@ import Foundation
 // MARK: - Shopping List Domain Models
 
 /// Detailed shopping list with complete item information
-nonisolated struct DetailedShoppingListModel {
+struct DetailedShoppingListModel {
     let store: String
     let items: [DetailedShoppingListItemModel]
     let totalItems: Int
@@ -31,7 +31,7 @@ nonisolated struct DetailedShoppingListModel {
 }
 
 /// Shopping list item with complete glass item information
-nonisolated struct DetailedShoppingListItemModel {
+struct DetailedShoppingListItemModel {
     let shoppingListItem: ShoppingListItemModel
     let glassItem: GlassItemModel
     let tags: [String]  // Manufacturer/system tags
@@ -61,7 +61,7 @@ nonisolated struct DetailedShoppingListItemModel {
 }
 
 /// Low stock report with actionable information
-nonisolated struct LowStockReportModel {
+struct LowStockReportModel {
     let items: [DetailedLowStockItemModel]
     let groupedByStore: [String: [DetailedLowStockItemModel]]
     let totalItemsLow: Int
@@ -98,7 +98,7 @@ nonisolated struct LowStockReportModel {
 }
 
 /// Low stock item with complete context
-nonisolated struct DetailedLowStockItemModel {
+struct DetailedLowStockItemModel {
     let lowStockItem: LowStockItemModel
     let glassItem: GlassItemModel
     let tags: [String]
@@ -151,7 +151,7 @@ struct DetailedMinimumModel {
 }
 
 /// Store utilization statistics
-nonisolated struct StoreStatisticsModel {
+struct StoreStatisticsModel {
     let storeName: String
     let minimumCount: Int
     let currentNeedsCount: Int
@@ -165,7 +165,7 @@ nonisolated struct StoreStatisticsModel {
 }
 
 /// Comprehensive minimum analytics
-nonisolated struct MinimumAnalyticsModel {
+struct MinimumAnalyticsModel {
     let basicStatistics: MinimumQuantityStatistics
     let commonTypes: [String: Int]
     let storeDistribution: [String: Int]

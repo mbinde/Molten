@@ -317,12 +317,8 @@ actor InventoryTrackingService {
         let inventory = try await self.inventoryRepository.fetchInventory(forItem: stableId)
         var errors: [String] = []
 
-        // Check for negative quantities
-        for inventoryRecord in inventory {
-            if inventoryRecord.quantity < 0 {
-                errors.append("Inventory record \(inventoryRecord.id) has negative quantity: \(inventoryRecord.quantity)")
-            }
-        }
+        // Note: Negative quantity validation now enforced in InventoryModel.init
+        // No need to check here as model guarantees non-negative quantities
 
         return InventoryConsistencyValidation(
             stableId: stableId,

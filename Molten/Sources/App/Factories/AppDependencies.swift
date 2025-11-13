@@ -116,7 +116,7 @@ class AppDependencies {
 
         // Initialize persistence controller if not already initialized
         // This blocks until Core Data is ready, but only on first init
-        if persistenceController.localContext == nil || persistenceController.cloudContext == nil {
+        if !persistenceController.isReady {
             // Need to initialize - use a semaphore to wait for async init
             let semaphore = DispatchSemaphore(value: 0)
             Task.detached {
@@ -126,10 +126,9 @@ class AppDependencies {
             _ = semaphore.wait(timeout: .now() + .seconds(30))
         }
 
-        guard let localContext = persistenceController.localContext,
-              let cloudContext = persistenceController.cloudContext else {
-            fatalError("Persistence controller failed to initialize after 30 seconds")
-        }
+        // Access contexts directly - they will fatalError if initialization failed
+        let localContext = persistenceController.localContext
+        let cloudContext = persistenceController.cloudContext
 
         // Create repositories (catalog data from local store, user data from cloud store)
         self.glassItemRepository = CoreDataGlassItemRepository(context: localContext)

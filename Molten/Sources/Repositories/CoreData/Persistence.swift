@@ -17,8 +17,18 @@ class PersistenceController {
     }()
     private let log = Logger(subsystem: "com.flameworker.app", category: "persistence")
 
-    // Track whether async initialization has completed
-    nonisolated(unsafe) private var isInitialized = false
+    // MARK: - Synchronized State
+
+    /// Thread-safe state protected by lock
+    /// Fixes race conditions in isInitialized, storeLoadingError, and context initialization
+    private struct SynchronizedState {
+        var isInitialized = false
+        var storeLoadingError: Error?
+        var localContext: NSManagedObjectContext?
+        var cloudContext: NSManagedObjectContext?
+    }
+
+    private nonisolated let stateLock = OSAllocatedUnfairLock(initialState: SynchronizedState())
 
     // Lazy model loading - only load when first accessed
     private nonisolated(unsafe) static var _sharedModel: NSManagedObjectModel?
@@ -123,17 +133,25 @@ class PersistenceController {
     }
 
     let container: NSPersistentContainer
-    nonisolated(unsafe) private(set) var storeLoadingError: Error?
 
-    // Two separate contexts for two-store architecture
-    // localContext: For catalog data (GlassItem, ItemTags) - no CloudKit sync
-    // cloudContext: For user data (Inventory, Purchases, Projects) - CloudKit sync
-    // nonisolated(unsafe) is safe here because:
-    // - Set once during initialization in configureContexts()
-    // - Read-only after initialization
-    // - Accessed from multiple threads but never modified
-    nonisolated(unsafe) private(set) var localContext: NSManagedObjectContext!
-    nonisolated(unsafe) private(set) var cloudContext: NSManagedObjectContext!
+    // Thread-safe accessors for synchronized state
+    nonisolated var storeLoadingError: Error? {
+        stateLock.withLock { $0.storeLoadingError }
+    }
+
+    nonisolated var localContext: NSManagedObjectContext {
+        guard let context = stateLock.withLock({ $0.localContext }) else {
+            fatalError("localContext accessed before initialization")
+        }
+        return context
+    }
+
+    nonisolated var cloudContext: NSManagedObjectContext {
+        guard let context = stateLock.withLock({ $0.cloudContext }) else {
+            fatalError("cloudContext accessed before initialization")
+        }
+        return context
+    }
 
     nonisolated init(inMemory: Bool = false, forceCloudKit: Bool = false) {
         // Use the shared model instance to prevent multiple models
@@ -333,8 +351,9 @@ class PersistenceController {
     /// IMPORTANT: This must be called before using the container!
     @MainActor
     func initialize() async {
-        // Only initialize once
-        guard !isInitialized else {
+        // Only initialize once - thread-safe check
+        let alreadyInitialized = stateLock.withLock { $0.isInitialized }
+        guard !alreadyInitialized else {
             log.info("✅ PersistenceController already initialized")
             return
         }
@@ -349,7 +368,7 @@ class PersistenceController {
 
             container.loadPersistentStores { storeDescription, error in
                 if let error = error as NSError? {
-                    self.storeLoadingError = error
+                    self.stateLock.withLock { $0.storeLoadingError = error }
                     self.log.error("❌ Core Data load error for \(storeDescription.url?.lastPathComponent ?? "unknown"): \(error)")
                 } else {
                     self.log.info("✅ Store loaded successfully: \(storeDescription.url?.lastPathComponent ?? "unknown")")
@@ -374,9 +393,10 @@ class PersistenceController {
                 self.log.info("🎉 All stores processed (\(loadedStoreCount)/\(expectedStoreCount))")
 
                 // Check if there were any errors
-                if self.storeLoadingError != nil {
+                let hasError = self.stateLock.withLock { $0.storeLoadingError != nil }
+                if hasError {
                     self.log.error("❌ Store loading failed, skipping context configuration")
-                    self.isInitialized = true
+                    self.stateLock.withLock { $0.isInitialized = true }
                     continuation.resume()
                     return
                 }
@@ -385,10 +405,12 @@ class PersistenceController {
                 let validationSuccess = self.validateEntityRegistration()
                 if !validationSuccess {
                     self.log.error("❌ Entity validation failed")
-                    self.storeLoadingError = NSError(domain: "PersistenceController", code: 1004, userInfo: [
-                        NSLocalizedDescriptionKey: "Entity registration validation failed"
-                    ])
-                    self.isInitialized = true
+                    self.stateLock.withLock {
+                        $0.storeLoadingError = NSError(domain: "PersistenceController", code: 1004, userInfo: [
+                            NSLocalizedDescriptionKey: "Entity registration validation failed"
+                        ])
+                        $0.isInitialized = true
+                    }
                     continuation.resume()
                     return
                 }
@@ -407,7 +429,7 @@ class PersistenceController {
                 }
 
                 // Mark as initialized and resume continuation (only once, after all stores loaded)
-                self.isInitialized = true
+                self.stateLock.withLock { $0.isInitialized = true }
                 continuation.resume()
             }
         }
@@ -419,27 +441,36 @@ class PersistenceController {
         log.info("🔄 Configuring local and cloud contexts...")
 
         // Local context for catalog data (GlassItem, ItemTags)
-        localContext = container.newBackgroundContext()
-        localContext.automaticallyMergesChangesFromParent = true  // Important for consistency
-        localContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-        localContext.transactionAuthor = "MoltenApp-Local"
+        let local = container.newBackgroundContext()
+        local.automaticallyMergesChangesFromParent = true  // Important for consistency
+        local.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        local.transactionAuthor = "MoltenApp-Local"
         log.info("✅ Local context configured")
 
         // Cloud context for user data (Inventory, Purchases, Projects)
-        cloudContext = container.newBackgroundContext()
-        cloudContext.automaticallyMergesChangesFromParent = true  // CRITICAL for CloudKit
-        cloudContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-        cloudContext.transactionAuthor = "MoltenApp-Cloud"
+        let cloud = container.newBackgroundContext()
+        cloud.automaticallyMergesChangesFromParent = true  // CRITICAL for CloudKit
+        cloud.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        cloud.transactionAuthor = "MoltenApp-Cloud"
         log.info("✅ Cloud context configured")
+
+        // Store contexts atomically
+        stateLock.withLock {
+            $0.localContext = local
+            $0.cloudContext = cloud
+        }
     }
 
     /// Synchronous store loading for tests only (in-memory stores are fast)
     nonisolated private func loadStoresSynchronously() {
         let semaphore = DispatchSemaphore(value: 0)
+        let errorLock = NSLock()
         var capturedError: Error?
 
         container.loadPersistentStores { _, error in
+            errorLock.lock()
             capturedError = error
+            errorLock.unlock()
             if let error = error {
                 self.log.error("In-memory store load error: \(error)")
             }
@@ -447,14 +478,22 @@ class PersistenceController {
         }
 
         semaphore.wait()
-        self.storeLoadingError = capturedError
-        self.isInitialized = true
 
         // For in-memory tests, use viewContext for both local and cloud
         // (simpler than configuring two separate in-memory stores)
-        // Set synchronously since tests need these immediately and they're nonisolated(unsafe)
-        self.localContext = self.container.viewContext
-        self.cloudContext = self.container.viewContext
+        let context = self.container.viewContext
+
+        // Update all state atomically
+        errorLock.lock()
+        let finalError = capturedError
+        errorLock.unlock()
+
+        stateLock.withLock {
+            $0.storeLoadingError = finalError
+            $0.isInitialized = true
+            $0.localContext = context
+            $0.cloudContext = context
+        }
     }
 
     /// Helper to clean up corrupted store files
@@ -578,10 +617,10 @@ class PersistenceController {
             container.loadPersistentStores { _, error in
                 if let error = error {
                     self.log.error("Error reloading persistent store: \(error)")
-                    self.storeLoadingError = error
+                    self.stateLock.withLock { $0.storeLoadingError = error }
                 } else {
                     self.log.info("Successfully reloaded persistent store")
-                    self.storeLoadingError = nil
+                    self.stateLock.withLock { $0.storeLoadingError = nil }
                 }
                 continuation.resume()
             }

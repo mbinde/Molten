@@ -219,12 +219,12 @@ extension DetailedMinimumModel: Comparable {
 extension StoreStatisticsModel: Comparable {
     /// Sort stores by currentNeedsCount (descending)
     /// Business rule: Stores with highest needs should appear first (priority ordering)
-    static func < (lhs: StoreStatisticsModel, rhs: StoreStatisticsModel) -> Bool {
+    nonisolated static func < (lhs: StoreStatisticsModel, rhs: StoreStatisticsModel) -> Bool {
         // Higher currentNeedsCount is "less than" for descending sort
         return lhs.currentNeedsCount > rhs.currentNeedsCount
     }
 
-    static func == (lhs: StoreStatisticsModel, rhs: StoreStatisticsModel) -> Bool {
+    nonisolated static func == (lhs: StoreStatisticsModel, rhs: StoreStatisticsModel) -> Bool {
         return lhs.storeName == rhs.storeName
     }
 }

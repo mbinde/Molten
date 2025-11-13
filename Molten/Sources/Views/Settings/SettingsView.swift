@@ -141,7 +141,6 @@ struct SettingsView: View {
         let updateService = catalogUpdateService ?? CatalogUpdateService(
             apiClient: CatalogAPIClient(),
             storageService: try! CatalogStorageService(),
-            dataLoadingService: RepositoryFactory.createGlassItemDataLoadingService(),
             networkMonitor: NetworkMonitor.shared
         )
         self._catalogUpdateViewModel = State(initialValue: CatalogUpdateViewModel(updateService: updateService))

@@ -112,20 +112,16 @@ struct ImageHelpers {
     nonisolated static func loadProductImage(for itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil) -> UIImage? {
         guard !itemCode.isEmpty else { return nil }
 
-        print("🔍 [ImageHelpers] loadProductImage called - itemCode: \(itemCode), manufacturer: \(manufacturer ?? "nil"), stableId: \(stableId ?? "nil"), imagePath: \(imagePath ?? "nil")")
-
         let cacheKey = "\(manufacturer ?? "nil")-\(itemCode)"
         let cacheKeyNS = cacheKey as NSString
 
         // Check positive cache first
         if let cachedImage = imageCache.object(forKey: cacheKeyNS) {
-            print("✅ [ImageHelpers] Found in cache: \(itemCode)")
             return cachedImage
         }
 
         // Check negative cache (items we know don't have images)
         if negativeCache.object(forKey: cacheKeyNS) != nil {
-            print("⚠️ [ImageHelpers] Found in negative cache (known to not have image): \(itemCode)")
             return nil
         }
 
@@ -182,14 +178,11 @@ struct ImageHelpers {
             let thumbnailExtensions = ["jpg", "jpeg"]
             for ext in thumbnailExtensions {
                 let thumbnailName = "\(stableId)_thumb"
-                print("🔍 [ImageHelpers] Looking for bundled thumbnail: \(thumbnailName).\(ext)")
 
                 // Files in Molten/Resources/ are flattened to bundle root
                 if let path = Bundle.main.path(forResource: thumbnailName, ofType: ext) {
-                    print("✅ [ImageHelpers] Found bundled thumbnail at: \(path)")
                     if let image = loadImageWithoutColorProfile(from: path) {
                         imageCache.setObject(image, forKey: cacheKeyNS)
-                        print("✅ [ImageHelpers] Successfully loaded bundled thumbnail for \(itemCode)")
                         return image
                     }
                 }
@@ -254,13 +247,11 @@ struct ImageHelpers {
         // Final fallback: try manufacturer default image
         if let manufacturer = manufacturer,
            let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
-            print("🔍 [ImageHelpers] Trying manufacturer fallback image: \(defaultImageName)")
             for ext in extensions {
                 // Files in Molten/Resources/ are flattened to bundle root
                 if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext),
                    let image = loadImageWithoutColorProfile(from: path) {
                     imageCache.setObject(image, forKey: cacheKeyNS)
-                    print("✅ [ImageHelpers] Using manufacturer fallback image for \(itemCode): \(defaultImageName).\(ext)")
                     return image
                 }
             }
@@ -268,7 +259,6 @@ struct ImageHelpers {
 
         // Cache the negative result to prevent future lookups
         negativeCache.setObject(NSNumber(booleanLiteral: true), forKey: cacheKeyNS)
-        print("❌ [ImageHelpers] No image found for \(itemCode), caching negative result")
         return nil
     }
     

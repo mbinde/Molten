@@ -18,6 +18,10 @@ class CoreDataItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
     private let backgroundContext: NSManagedObjectContext
     private let log = Logger(subsystem: "com.flameworker.app", category: "itemtags-repository")
 
+    // Track tag save operations to diagnose WAL checkpoint issue
+    private static var tagSaveCount = 0
+    private static var totalTagsAdded = 0
+
     // MARK: - Initialization
 
     /// Initialize CoreDataItemTagsRepository with a managed object context
@@ -185,6 +189,11 @@ class CoreDataItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
                         coreDataItem.setValue(tag, forKey: "tag")
                     }
 
+                    Self.tagSaveCount += 1
+                    Self.totalTagsAdded += newTags.count
+                    if Self.tagSaveCount % 100 == 0 {
+                        print("🏷️ [PERF-DIAG] Tag save #\(Self.tagSaveCount): Added \(newTags.count) tags to \(item_stable_id) (total tags: \(Self.totalTagsAdded))")
+                    }
                     try self.backgroundContext.save()
 
                     continuation.resume()

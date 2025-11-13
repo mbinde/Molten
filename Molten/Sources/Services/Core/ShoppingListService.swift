@@ -145,17 +145,9 @@ actor ShoppingListService {
             if var existingItems = combinedListsByStore[store] {
                 // Check for duplicate by item natural key
                 if let existingIndex = existingItems.firstIndex(where: { $0.item_stable_id == manualItem.item_stable_id }) {
-                    // Item exists - combine the needed quantities
+                    // Item exists - use business logic from model
                     let existingItem = existingItems[existingIndex]
-                    // The new minimum should be current + max(existing needed, manual needed)
-                    let combinedNeeded = max(existingItem.neededQuantity, manualItem.quantity)
-                    let mergedItem = ShoppingListItemModel(
-                        item_stable_id: existingItem.item_stable_id,
-                        type: existingItem.type,
-                        currentQuantity: existingItem.currentQuantity,
-                        minimumQuantity: existingItem.currentQuantity + combinedNeeded,
-                        store: existingItem.store
-                    )
+                    let mergedItem = existingItem.merged(with: shoppingListItem)
                     existingItems[existingIndex] = mergedItem
                     combinedListsByStore[store] = existingItems
                 } else {

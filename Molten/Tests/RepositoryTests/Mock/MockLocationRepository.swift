@@ -10,6 +10,7 @@ import Foundation
 
 /// Mock implementation of LocationRepository for testing
 /// Stores locations in memory using a dictionary
+@MainActor
 final class MockLocationRepository: LocationRepository {
 
     // MARK: - Storage
@@ -106,11 +107,11 @@ final class MockLocationRepository: LocationRepository {
     }
 
     func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventory_id: UUID) async throws -> StorageLocationModel {
-        let existing = try await fetchLocations(forInventory: inventory_id)
-            .first { (loc: StorageLocationModel) in
-                let locName = loc.location
-                return locName == locationName
-            }
+        let locs = try await fetchLocations(forInventory: inventory_id)
+        let existing = locs.first { (loc: StorageLocationModel) in
+            let locName = loc.location
+            return locName == locationName
+        }
 
         if let existing = existing {
             let existingQty = existing.quantity
@@ -134,11 +135,11 @@ final class MockLocationRepository: LocationRepository {
     }
 
     func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventory_id: UUID) async throws -> StorageLocationModel? {
-        guard let existing = try await fetchLocations(forInventory: inventory_id)
-            .first(where: { (loc: StorageLocationModel) in
-                let locName = loc.location
-                return locName == locationName
-            }) else {
+        let locs = try await fetchLocations(forInventory: inventory_id)
+        guard let existing = locs.first(where: { (loc: StorageLocationModel) in
+            let locName = loc.location
+            return locName == locationName
+        }) else {
             throw NSError(domain: "MockLocationRepository", code: 404)
         }
 
@@ -169,11 +170,12 @@ final class MockLocationRepository: LocationRepository {
 
     func getDistinctLocationNames() async throws -> [String] {
         let locationsArray = Array(locations.values)
-        let names = Set(locationsArray.map { (loc: StorageLocationModel) in
+        var namesSet: Set<String> = []
+        for loc in locationsArray {
             let location = loc.location
-            return location
-        })
-        return names.sorted()
+            namesSet.insert(location)
+        }
+        return namesSet.sorted()
     }
 
     func getLocationNames(withPrefix prefix: String) async throws -> [String] {
@@ -183,14 +185,15 @@ final class MockLocationRepository: LocationRepository {
 
     func getInventoriesInLocation(_ locationName: String) async throws -> [UUID] {
         let locationsArray = Array(locations.values)
-        let inventories = Set(locationsArray.filter { (loc: StorageLocationModel) in
+        var inventoriesSet: Set<UUID> = []
+        for loc in locationsArray {
             let locName = loc.location
-            return locName == locationName
-        }.map { (loc: StorageLocationModel) in
-            let inventoryId = loc.inventory_id
-            return inventoryId
-        })
-        return Array(inventories).sorted()
+            if locName == locationName {
+                let inventoryId = loc.inventory_id
+                inventoriesSet.insert(inventoryId)
+            }
+        }
+        return Array(inventoriesSet).sorted()
     }
 
     func getLocationUtilization() async throws -> [String: Double] {
@@ -223,18 +226,20 @@ final class MockLocationRepository: LocationRepository {
 
     func validateLocationQuantities(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Bool {
         let locs = try await fetchLocations(forInventory: inventory_id)
-        let total = locs.reduce(0.0) { (sum: Double, loc: StorageLocationModel) in
+        var total: Double = 0.0
+        for loc in locs {
             let qty = loc.quantity
-            return sum + qty
+            total += qty
         }
         return abs(total - expectedTotal) < 0.001 // Tolerance for floating point
     }
 
     func getLocationQuantityDiscrepancy(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Double {
         let locs = try await fetchLocations(forInventory: inventory_id)
-        let total = locs.reduce(0.0) { (sum: Double, loc: StorageLocationModel) in
+        var total: Double = 0.0
+        for loc in locs {
             let qty = loc.quantity
-            return sum + qty
+            total += qty
         }
         return total - expectedTotal
     }

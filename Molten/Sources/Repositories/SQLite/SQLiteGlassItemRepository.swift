@@ -160,7 +160,13 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
         // But provide a basic implementation for compatibility
         let baseKey = "\(manufacturer)-\(sku ?? "unknown")"
         let existingItems = try await fetchItems(byManufacturer: manufacturer)
-        let matchingItems = existingItems.filter { $0.uri.hasPrefix(baseKey) }
+        var matchingItems: [GlassItemModel] = []
+        for item in existingItems {
+            let uri = await item.uri
+            if uri.hasPrefix(baseKey) {
+                matchingItems.append(item)
+            }
+        }
 
         if matchingItems.isEmpty {
             return "\(baseKey)-000"

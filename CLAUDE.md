@@ -328,4 +328,5 @@ For detailed guidance on specific topics, see:
 3. Choose "Create groups", select correct target (MoltenTests/RepositoryTests/MoltenUITests)
 4. Xcode adds only new files, preserves structure
 5. Commit: `git add Molten.xcodeproj/project.pbxproj && git commit -m "chore: add test files to Xcode"`
-6. Clean build: Product → Clean Build Folder (⇧⌘K)
+6. **Verify**: `xcodebuild build-for-testing` to catch missing mocks/dependencies
+7. Clean build: Product → Clean Build Folder (⇧⌘K)

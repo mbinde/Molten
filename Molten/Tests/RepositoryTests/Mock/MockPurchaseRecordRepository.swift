@@ -15,7 +15,7 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
 
     // MARK: - Storage
 
-    private var records: [UUID: PurchaseRecordModel] = [:]
+    nonisolated(unsafe) private var records: [UUID: PurchaseRecordModel] = [:]
 
     // MARK: - CRUD Operations
 

@@ -15,7 +15,7 @@ final class MockUserNotesRepository: UserNotesRepository {
 
     // MARK: - Storage
 
-    private var notes: [String: UserNotesModel] = [:] // Key: itemStableId
+    nonisolated(unsafe) private var notes: [String: UserNotesModel] = [:] // Key: itemStableId
 
     // MARK: - CRUD Operations
 

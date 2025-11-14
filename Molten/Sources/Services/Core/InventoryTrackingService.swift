@@ -15,22 +15,8 @@ actor InventoryTrackingService {
     // MARK: - Dependencies
 
     private let glassItemRepository: GlassItemRepository
-    private let _inventoryRepository: InventoryRepository
-    private let _itemTagsRepository: ItemTagsRepository
-
-    // MARK: - Exposed Dependencies for Advanced Operations
-
-    /// Direct access to inventory repository for advanced inventory operations
-    /// This allows the CatalogService and other external services to perform complex inventory queries
-    var inventoryRepository: InventoryRepository {
-        return _inventoryRepository
-    }
-
-    /// Direct access to item tags repository for advanced tag operations
-    /// This allows external services to perform complex tag queries
-    var itemTagsRepository: ItemTagsRepository {
-        return _itemTagsRepository
-    }
+    private let inventoryRepository: InventoryRepository
+    private let itemTagsRepository: ItemTagsRepository
 
     // MARK: - Initialization
 
@@ -40,8 +26,8 @@ actor InventoryTrackingService {
         itemTagsRepository: ItemTagsRepository
     ) {
         self.glassItemRepository = glassItemRepository
-        self._inventoryRepository = inventoryRepository
-        self._itemTagsRepository = itemTagsRepository
+        self.inventoryRepository = inventoryRepository
+        self.itemTagsRepository = itemTagsRepository
     }
     
     // MARK: - Complete Item Operations
@@ -146,7 +132,37 @@ actor InventoryTrackingService {
     }
     
     // MARK: - Inventory Management Operations
-    
+
+    /// Fetch all inventory records (for bulk operations like data import)
+    /// - Parameter request: Optional inventory request to filter results, nil fetches all
+    /// - Returns: Array of inventory models
+    func fetchAllInventory(matching request: InventoryRequest? = nil) async throws -> [InventoryModel] {
+        return try await inventoryRepository.fetchInventory(matching: request)
+    }
+
+    /// Fetch inventory for a specific item
+    /// - Parameter stableId: Item natural key
+    /// - Returns: Array of inventory records for this item
+    func fetchInventory(forItem stableId: String) async throws -> [InventoryModel] {
+        return try await inventoryRepository.fetchInventory(forItem: stableId)
+    }
+
+    /// Delete inventory record by ID
+    /// - Parameter id: UUID of inventory record to delete
+    func deleteInventory(id: UUID) async throws {
+        try await inventoryRepository.deleteInventory(id: id)
+    }
+
+    /// Add quantity to existing inventory or create new record
+    /// - Parameters:
+    ///   - quantity: Quantity to add
+    ///   - stableId: Item natural key
+    ///   - type: Inventory type (rod, tube, frit, etc.)
+    /// - Returns: Updated inventory model
+    func addQuantityToInventory(_ quantity: Double, toItem stableId: String, type: String) async throws -> InventoryModel {
+        return try await inventoryRepository.addQuantity(quantity, toItem: stableId, type: type)
+    }
+
     /// Add inventory to an item with optional location
     /// - Parameters:
     ///   - quantity: Quantity to add

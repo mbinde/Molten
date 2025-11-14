@@ -169,7 +169,10 @@ final class MockLocationRepository: LocationRepository {
 
     func getDistinctLocationNames() async throws -> [String] {
         let locationsArray = Array(locations.values)
-        let names = Set(locationsArray.map { (loc: StorageLocationModel) in loc.location })
+        let names = Set(locationsArray.map { (loc: StorageLocationModel) in
+            let location = loc.location
+            return location
+        })
         return names.sorted()
     }
 
@@ -183,7 +186,10 @@ final class MockLocationRepository: LocationRepository {
         let inventories = Set(locationsArray.filter { (loc: StorageLocationModel) in
             let locName = loc.location
             return locName == locationName
-        }.map { (loc: StorageLocationModel) in loc.inventory_id })
+        }.map { (loc: StorageLocationModel) in
+            let inventoryId = loc.inventory_id
+            return inventoryId
+        })
         return Array(inventories).sorted()
     }
 
@@ -217,7 +223,7 @@ final class MockLocationRepository: LocationRepository {
 
     func validateLocationQuantities(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Bool {
         let locs = try await fetchLocations(forInventory: inventory_id)
-        let total = locs.reduce(0.0) { (sum, loc) in
+        let total = locs.reduce(0.0) { (sum: Double, loc: StorageLocationModel) in
             let qty = loc.quantity
             return sum + qty
         }
@@ -226,7 +232,7 @@ final class MockLocationRepository: LocationRepository {
 
     func getLocationQuantityDiscrepancy(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Double {
         let locs = try await fetchLocations(forInventory: inventory_id)
-        let total = locs.reduce(0.0) { (sum, loc) in
+        let total = locs.reduce(0.0) { (sum: Double, loc: StorageLocationModel) in
             let qty = loc.quantity
             return sum + qty
         }

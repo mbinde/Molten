@@ -212,4 +212,9 @@ final class MockItemMinimumRepository: ItemMinimumRepository {
     func clearAll() async {
         minimums.removeAll()
     }
+
+    /// Clear all data (test helper, alias for clearAll for consistency with other mocks)
+    func clearAllData() {
+        minimums.removeAll()
+    }
 }

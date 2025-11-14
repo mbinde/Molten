@@ -123,6 +123,9 @@ struct GlassItemRowView: View {
                     badge
                 }
 
+                // Rating badge
+                RatingBadgeView(itemStableId: item.stableId)
+
                 // Tags if available
                 if !item.tags.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {

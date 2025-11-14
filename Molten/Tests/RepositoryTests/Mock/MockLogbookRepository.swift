@@ -15,7 +15,7 @@ final class MockLogbookRepository: LogbookRepository {
 
     // MARK: - Storage
 
-    private var logs: [UUID: LogbookModel] = [:]
+    nonisolated(unsafe) private var logs: [UUID: LogbookModel] = [:]
 
     // MARK: - CRUD Operations
 
@@ -29,7 +29,7 @@ final class MockLogbookRepository: LogbookRepository {
     }
 
     func getAllLogs() async throws -> [LogbookModel] {
-        return Array(logs.values).sorted { $0.dateAdded > $1.dateAdded }
+        return Array(logs.values).sorted { $0.dateCreated > $1.dateCreated }
     }
 
     func getLogs(status: ProjectStatus?) async throws -> [LogbookModel] {
@@ -38,7 +38,7 @@ final class MockLogbookRepository: LogbookRepository {
         }
         return logs.values
             .filter { $0.status == status }
-            .sorted { $0.dateAdded > $1.dateAdded }
+            .sorted { $0.dateCreated > $1.dateCreated }
     }
 
     func updateLog(_ log: LogbookModel) async throws {
@@ -63,19 +63,19 @@ final class MockLogbookRepository: LogbookRepository {
 
     func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
         return logs.values
-            .filter { $0.dateAdded >= start && $0.dateAdded <= end }
-            .sorted { $0.dateAdded > $1.dateAdded }
+            .filter { $0.dateCreated >= start && $0.dateCreated <= end }
+            .sorted { $0.dateCreated > $1.dateCreated }
     }
 
     func getSoldLogs() async throws -> [LogbookModel] {
         return logs.values
             .filter { $0.status == .sold }
-            .sorted { $0.dateAdded > $1.dateAdded }
+            .sorted { $0.dateCreated > $1.dateCreated }
     }
 
     func getTotalRevenue() async throws -> Decimal {
         return logs.values
-            .compactMap { $0.salePrice }
+            .compactMap { $0.pricePoint }
             .reduce(0, +)
     }
 
@@ -86,10 +86,10 @@ final class MockLogbookRepository: LogbookRepository {
         return logs.values
             .filter { log in
                 log.title.lowercased().contains(lowercasedQuery) ||
-                log.notes.lowercased().contains(lowercasedQuery) ||
-                log.techniques.contains(where: { $0.lowercased().contains(lowercasedQuery) })
+                (log.notes?.lowercased().contains(lowercasedQuery) ?? false) ||
+                (log.techniquesUsed?.contains(where: { $0.lowercased().contains(lowercasedQuery) }) ?? false)
             }
-            .sorted { (a: LogbookModel, b: LogbookModel) in a.dateAdded > b.dateAdded }
+            .sorted { (a: LogbookModel, b: LogbookModel) in a.dateCreated > b.dateCreated }
     }
 
     // MARK: - Test Helpers
@@ -102,5 +102,10 @@ final class MockLogbookRepository: LogbookRepository {
     /// Clear all logs (test helper)
     func clearAll() async {
         logs.removeAll()
+    }
+
+    /// Reset (alias for clearAll)
+    func reset() async {
+        await clearAll()
     }
 }

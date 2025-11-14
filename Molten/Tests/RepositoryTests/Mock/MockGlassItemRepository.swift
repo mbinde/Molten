@@ -194,9 +194,9 @@ final class MockGlassItemRepository: GlassItemRepository {
     // MARK: - Test Helpers
 
     /// Configuration flags for testing
-    var simulateLatency: Bool = false
-    var shouldRandomlyFail: Bool = false
-    var suppressVerboseLogging: Bool = true
+    nonisolated(unsafe) var simulateLatency: Bool = false
+    nonisolated(unsafe) var shouldRandomlyFail: Bool = false
+    nonisolated(unsafe) var suppressVerboseLogging: Bool = true
 
     /// Get count of stored items (test helper)
     func getItemCount() async -> Int {

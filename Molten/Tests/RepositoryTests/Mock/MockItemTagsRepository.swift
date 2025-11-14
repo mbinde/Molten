@@ -190,8 +190,18 @@ final class MockItemTagsRepository: ItemTagsRepository {
         return tags.count
     }
 
+    /// Get count of all tags (test helper, alias for getTagCount)
+    func getAllTagsCount() async -> Int {
+        return tags.count
+    }
+
     /// Clear all tags (test helper)
     func clearAll() async {
+        tags.removeAll()
+    }
+
+    /// Clear all data (test helper, alias for clearAll for consistency with other mocks)
+    func clearAllData() {
         tags.removeAll()
     }
 }

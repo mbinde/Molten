@@ -132,7 +132,8 @@ final class MockGlassItemRepository: GlassItemRepository {
     func getDistinctManufacturers() async throws -> [String] {
         let itemsArray = Array(items.values)
         let manufacturers = Set(itemsArray.map { (item: GlassItemModel) in
-            item.manufacturer
+            let manufacturer = item.manufacturer
+            return manufacturer
         })
         return manufacturers.sorted()
     }
@@ -140,7 +141,8 @@ final class MockGlassItemRepository: GlassItemRepository {
     func getDistinctCOEValues() async throws -> [Int32] {
         let itemsArray = Array(items.values)
         let coes = Set(itemsArray.map { (item: GlassItemModel) in
-            item.coe
+            let coe = item.coe
+            return coe
         })
         return coes.sorted()
     }
@@ -148,7 +150,8 @@ final class MockGlassItemRepository: GlassItemRepository {
     func getDistinctStatuses() async throws -> [String] {
         let itemsArray = Array(items.values)
         let statuses = Set(itemsArray.map { (item: GlassItemModel) in
-            item.mfr_status
+            let status = item.mfr_status
+            return status
         })
         return statuses.sorted()
     }
@@ -190,6 +193,11 @@ final class MockGlassItemRepository: GlassItemRepository {
 
     // MARK: - Test Helpers
 
+    /// Configuration flags for testing
+    var simulateLatency: Bool = false
+    var shouldRandomlyFail: Bool = false
+    var suppressVerboseLogging: Bool = true
+
     /// Get count of stored items (test helper)
     func getItemCount() async -> Int {
         return items.count
@@ -197,6 +205,12 @@ final class MockGlassItemRepository: GlassItemRepository {
 
     /// Clear all items (test helper)
     func clearAll() async {
+        items.removeAll()
+        recommendedSchedules.removeAll()
+    }
+
+    /// Clear all data (test helper, alias for clearAll for consistency with other mocks)
+    func clearAllData() {
         items.removeAll()
         recommendedSchedules.removeAll()
     }

@@ -250,4 +250,9 @@ final class MockLocationRepository: LocationRepository {
     func clearAll() async {
         locations.removeAll()
     }
+
+    /// Clear all data (test helper, alias for clearAll for consistency with other mocks)
+    func clearAllData() {
+        locations.removeAll()
+    }
 }

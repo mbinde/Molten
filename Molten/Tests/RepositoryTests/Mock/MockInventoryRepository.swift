@@ -242,26 +242,20 @@ final class MockInventoryRepository: InventoryRepository {
     // MARK: - Aggregation Operations
 
     func getInventorySummary() async throws -> [InventorySummaryModel] {
-        var summaries: [String: InventorySummaryModel] = [:]
+        var summaries: [String: [InventoryModel]] = [:]
 
         let inventoryArray = Array(inventory.values)
         for inv in inventoryArray {
             let itemId = inv.item_stable_id
-            let type = inv.type
-            let qty = inv.quantity
-
-            if var existing = summaries[itemId] {
-                existing.types[type] = (existing.types[type] ?? 0) + qty
-                summaries[itemId] = existing
-            } else {
-                summaries[itemId] = InventorySummaryModel(
-                    item_stable_id: itemId,
-                    types: [type: qty]
-                )
+            if summaries[itemId] == nil {
+                summaries[itemId] = []
             }
+            summaries[itemId]?.append(inv)
         }
 
-        return Array(summaries.values).sorted { (a, b) in
+        return summaries.map { (key, value) in
+            InventorySummaryModel(item_stable_id: key, inventories: value)
+        }.sorted { (a, b) in
             let aId = a.item_stable_id
             let bId = b.item_stable_id
             return aId < bId
@@ -272,14 +266,7 @@ final class MockInventoryRepository: InventoryRepository {
         let items = try await fetchInventory(forItem: item_stable_id)
         guard !items.isEmpty else { return nil }
 
-        var types: [String: Double] = [:]
-        for inv in items {
-            let type = inv.type
-            let qty = inv.quantity
-            types[type] = (types[type] ?? 0) + qty
-        }
-
-        return InventorySummaryModel(item_stable_id: item_stable_id, types: types)
+        return InventorySummaryModel(item_stable_id: item_stable_id, inventories: items)
     }
 
     func estimateInventoryValue(defaultPricePerUnit: Double) async throws -> [String: Double] {
@@ -307,7 +294,10 @@ final class MockInventoryRepository: InventoryRepository {
 
     func getDistinctLocations() async throws -> [String] {
         let inventoryArray = Array(inventory.values)
-        let locations = Set(inventoryArray.compactMap { (inv: InventoryModel) in inv.location })
+        let locations = Set(inventoryArray.compactMap { (inv: InventoryModel) in
+            let location = inv.location
+            return location
+        })
         return locations.sorted()
     }
 
@@ -334,7 +324,8 @@ final class MockInventoryRepository: InventoryRepository {
 
         let inventoryArray = Array(inventory.values)
         for inv in inventoryArray {
-            if let location = inv.location {
+            let location = inv.location
+            if let location = location {
                 let qty = inv.quantity
                 utilization[location] = (utilization[location] ?? 0) + qty
             }
@@ -352,6 +343,11 @@ final class MockInventoryRepository: InventoryRepository {
 
     /// Clear all inventory (test helper)
     func clearAll() async {
+        inventory.removeAll()
+    }
+
+    /// Clear all data (test helper, alias for clearAll for consistency with other mocks)
+    func clearAllData() {
         inventory.removeAll()
     }
 }

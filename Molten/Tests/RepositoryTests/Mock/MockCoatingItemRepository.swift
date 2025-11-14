@@ -68,34 +68,62 @@ final class MockCoatingItemRepository: CoatingItemRepository {
 
     func searchItems(text: String) async throws -> [CoatingItemModel] {
         let lowercasedText = text.lowercased()
-        return items.values.filter { item in
-            item.name.lowercased().contains(lowercasedText) ||
-            item.manufacturer.lowercased().contains(lowercasedText) ||
-            (item.mfr_notes?.lowercased().contains(lowercasedText) ?? false)
-        }.sorted { $0.name < $1.name }
+        let itemsArray = Array(items.values)
+        return itemsArray.filter { (item: CoatingItemModel) in
+            let name = item.name
+            let manufacturer = item.manufacturer
+            let notes = item.mfr_notes
+            return name.lowercased().contains(lowercasedText) ||
+                   manufacturer.lowercased().contains(lowercasedText) ||
+                   (notes?.lowercased().contains(lowercasedText) ?? false)
+        }.sorted { (a: CoatingItemModel, b: CoatingItemModel) in
+            let aName = a.name
+            let bName = b.name
+            return aName < bName
+        }
     }
 
     func fetchItems(byManufacturer manufacturer: String) async throws -> [CoatingItemModel] {
-        return items.values
-            .filter { $0.manufacturer == manufacturer }
-            .sorted { $0.name < $1.name }
+        let itemsArray = Array(items.values)
+        return itemsArray.filter { (item: CoatingItemModel) in
+            let itemManufacturer = item.manufacturer
+            return itemManufacturer == manufacturer
+        }.sorted { (a: CoatingItemModel, b: CoatingItemModel) in
+            let aName = a.name
+            let bName = b.name
+            return aName < bName
+        }
     }
 
     func fetchItems(byStatus status: String) async throws -> [CoatingItemModel] {
-        return items.values
-            .filter { $0.mfr_status == status }
-            .sorted { $0.name < $1.name }
+        let itemsArray = Array(items.values)
+        return itemsArray.filter { (item: CoatingItemModel) in
+            let itemStatus = item.mfr_status
+            return itemStatus == status
+        }.sorted { (a: CoatingItemModel, b: CoatingItemModel) in
+            let aName = a.name
+            let bName = b.name
+            return aName < bName
+        }
     }
 
     // MARK: - Business Query Operations
 
     func getDistinctManufacturers() async throws -> [String] {
-        let manufacturers = Set(items.values.map { $0.manufacturer })
+        let itemsArray = Array(items.values)
+        let manufacturers = Set(itemsArray.map { (item: CoatingItemModel) in
+            let manufacturer = item.manufacturer
+            return manufacturer
+        })
         return manufacturers.sorted()
     }
 
     func getDistinctStatuses() async throws -> [String] {
-        let statuses = Set(items.values.map { $0.mfr_status })
+        let itemsArray = Array(items.values)
+        let statuses = Set(itemsArray.map { (item: CoatingItemModel) in
+            let status = item.mfr_status
+            return status
+        })
         return statuses.sorted()
     }
 

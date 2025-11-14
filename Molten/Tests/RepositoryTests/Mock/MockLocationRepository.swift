@@ -269,6 +269,19 @@ final class MockLocationRepository: LocationRepository {
 
     // MARK: - Test Helpers
 
+    /// Populate repository with sample test data
+    func populateWithTestData() async throws {
+        let testInventoryId = UUID()
+        let testLocations = [
+            StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Workshop Shelf A", quantity: 10.0),
+            StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Workshop Shelf B", quantity: 20.0),
+            StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Studio Cabinet 1", quantity: 5.0),
+            StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Studio Cabinet 2", quantity: 15.0),
+            StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Storage Room", quantity: 30.0)
+        ]
+        _ = try await createLocations(testLocations)
+    }
+
     /// Get count of stored locations (test helper)
     func getLocationCount() async -> Int {
         return locations.count
@@ -280,7 +293,7 @@ final class MockLocationRepository: LocationRepository {
     }
 
     /// Clear all data (test helper, alias for clearAll for consistency with other mocks)
-    func clearAllData() {
+    nonisolated func clearAllData() {
         locations.removeAll()
     }
 }

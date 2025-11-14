@@ -1575,8 +1575,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Molten/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Molten;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Flameworker needs access to your camera to let you take photos of your glass inventory items.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Flameworker needs access to your photo library to let you upload custom images for your glass inventory items.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Molten needs access to your camera to let you take photos of your glass inventory items.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Molten uses your location to help you find nearby glass art supply stores on the map.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Molten needs access to your photo library to let you upload custom images for your glass inventory items.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -1625,8 +1626,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Molten/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Molten;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Flameworker needs access to your camera to let you take photos of your glass inventory items.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Flameworker needs access to your photo library to let you upload custom images for your glass inventory items.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Molten needs access to your camera to let you take photos of your glass inventory items.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Molten uses your location to help you find nearby glass art supply stores on the map.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Molten needs access to your photo library to let you upload custom images for your glass inventory items.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

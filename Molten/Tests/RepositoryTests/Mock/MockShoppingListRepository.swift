@@ -21,8 +21,14 @@ final class MockShoppingListRepository: ShoppingListRepository {
 
     func fetchAllItems() async throws -> [ItemShoppingModel] {
         let itemsArray = Array(items.values)
-        // ItemShoppingModel properties are synchronous, no await needed
-        return itemsArray.sorted { $0.dateAdded > $1.dateAdded }
+        // Extract-pair-sort-map pattern for async property
+        var itemsWithDates: [(item: ItemShoppingModel, date: Date)] = []
+        for item in itemsArray {
+            let date = await item.dateAdded
+            itemsWithDates.append((item, date))
+        }
+        itemsWithDates.sort { $0.date > $1.date }
+        return itemsWithDates.map { $0.item }
     }
 
     func fetchItems(matching predicate: NSPredicate?) async throws -> [ItemShoppingModel] {
@@ -36,15 +42,34 @@ final class MockShoppingListRepository: ShoppingListRepository {
 
     func fetchItem(forItem item_stable_id: String) async throws -> ItemShoppingModel? {
         let itemsArray = Array(items.values)
-        // ItemShoppingModel properties are synchronous, no await needed
-        return itemsArray.first { $0.item_stable_id == item_stable_id }
+        // Use for loop to await actor-isolated property
+        for item in itemsArray {
+            let itemStableId = await item.item_stable_id
+            if itemStableId == item_stable_id {
+                return item
+            }
+        }
+        return nil
     }
 
     func fetchItems(forStore store: String) async throws -> [ItemShoppingModel] {
         let itemsArray = Array(items.values)
-        // ItemShoppingModel properties are synchronous, no await needed
-        let filtered = itemsArray.filter { $0.store == store }
-        return filtered.sorted { $0.dateAdded > $1.dateAdded }
+        // Filter by store
+        var filtered: [ItemShoppingModel] = []
+        for item in itemsArray {
+            let itemStore = await item.store
+            if itemStore == store {
+                filtered.append(item)
+            }
+        }
+        // Extract-pair-sort-map pattern for async property
+        var itemsWithDates: [(item: ItemShoppingModel, date: Date)] = []
+        for item in filtered {
+            let date = await item.dateAdded
+            itemsWithDates.append((item, date))
+        }
+        itemsWithDates.sort { $0.date > $1.date }
+        return itemsWithDates.map { $0.item }
     }
 
     func createItem(_ item: ItemShoppingModel) async throws -> ItemShoppingModel {
@@ -201,18 +226,30 @@ final class MockShoppingListRepository: ShoppingListRepository {
 
     func getItemsSortedByDate(ascending: Bool) async throws -> [ItemShoppingModel] {
         let itemsArray = Array(items.values)
-        // ItemShoppingModel properties are synchronous, no await needed
-        return itemsArray.sorted { a, b in
-            ascending ? a.dateAdded < b.dateAdded : a.dateAdded > b.dateAdded
+        // Extract-pair-sort-map pattern for async property
+        var itemsWithDates: [(item: ItemShoppingModel, date: Date)] = []
+        for item in itemsArray {
+            let date = await item.dateAdded
+            itemsWithDates.append((item, date))
         }
+        itemsWithDates.sort { a, b in
+            ascending ? a.date < b.date : a.date > b.date
+        }
+        return itemsWithDates.map { $0.item }
     }
 
     func getItemsSortedByQuantity(ascending: Bool) async throws -> [ItemShoppingModel] {
         let itemsArray = Array(items.values)
-        // ItemShoppingModel properties are synchronous, no await needed
-        return itemsArray.sorted { a, b in
+        // Extract-pair-sort-map pattern for async property
+        var itemsWithQuantities: [(item: ItemShoppingModel, quantity: Double)] = []
+        for item in itemsArray {
+            let quantity = await item.quantity
+            itemsWithQuantities.append((item, quantity))
+        }
+        itemsWithQuantities.sort { a, b in
             ascending ? a.quantity < b.quantity : a.quantity > b.quantity
         }
+        return itemsWithQuantities.map { $0.item }
     }
 
     // MARK: - Batch Operations

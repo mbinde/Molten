@@ -132,8 +132,8 @@ final class MockInventoryRepository: InventoryRepository {
             let updated = InventoryModel(
                 id: existingId,
                 item_stable_id: item_stable_id,
-                quantity: existingQty + quantity,
                 type: type,
+                quantity: existingQty + quantity,
                 location: existingLocation
             )
             return try await updateInventory(updated)
@@ -141,8 +141,8 @@ final class MockInventoryRepository: InventoryRepository {
             let new = InventoryModel(
                 id: UUID(),
                 item_stable_id: item_stable_id,
-                quantity: quantity,
                 type: type,
+                quantity: quantity,
                 location: nil
             )
             return try await createInventory(new)
@@ -167,8 +167,8 @@ final class MockInventoryRepository: InventoryRepository {
             let updated = InventoryModel(
                 id: existingId,
                 item_stable_id: item_stable_id,
-                quantity: newQty,
                 type: type,
+                quantity: newQty,
                 location: existingLocation
             )
             return try await updateInventory(updated)
@@ -189,8 +189,8 @@ final class MockInventoryRepository: InventoryRepository {
             let updated = InventoryModel(
                 id: existingId,
                 item_stable_id: item_stable_id,
-                quantity: quantity,
                 type: type,
+                quantity: quantity,
                 location: existingLocation
             )
             return try await updateInventory(updated)
@@ -198,8 +198,8 @@ final class MockInventoryRepository: InventoryRepository {
             let new = InventoryModel(
                 id: UUID(),
                 item_stable_id: item_stable_id,
-                quantity: quantity,
                 type: type,
+                quantity: quantity,
                 location: nil
             )
             return try await createInventory(new)
@@ -285,9 +285,14 @@ final class MockInventoryRepository: InventoryRepository {
         let summaryArray = summaries.map { (key, value) in
             InventorySummaryModel(item_stable_id: key, inventories: value)
         }
-        return summaryArray.sorted { (a, b) in
-            a.item_stable_id < b.item_stable_id
+        // Extract-pair-sort-map pattern for async property
+        var summariesWithIds: [(summary: InventorySummaryModel, id: String)] = []
+        for summary in summaryArray {
+            let id = await summary.item_stable_id
+            summariesWithIds.append((summary, id))
         }
+        summariesWithIds.sort { $0.id < $1.id }
+        return summariesWithIds.map { $0.summary }
     }
 
     func getInventorySummary(forItem item_stable_id: String) async throws -> InventorySummaryModel? {

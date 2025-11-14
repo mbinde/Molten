@@ -21,7 +21,14 @@ final class MockGlassItemRepository: GlassItemRepository {
     func fetchItems(matching predicate: NSPredicate?) async throws -> [GlassItemModel] {
         // For simplicity, ignore predicate filtering in mock
         let itemsArray = Array(items.values)
-        return itemsArray.sorted { $0.name < $1.name }
+        // Extract-pair-sort-map pattern for async property access
+        var itemsWithNames: [(item: GlassItemModel, name: String)] = []
+        for item in itemsArray {
+            let name = await item.name
+            itemsWithNames.append((item, name))
+        }
+        itemsWithNames.sort { $0.name < $1.name }
+        return itemsWithNames.map { $0.item }
     }
 
     func fetchItem(byStableId stableId: String) async throws -> GlassItemModel? {
@@ -29,21 +36,21 @@ final class MockGlassItemRepository: GlassItemRepository {
     }
 
     func createItem(_ item: GlassItemModel) async throws -> GlassItemModel {
-        let key = item.stable_id
+        let key = await item.stable_id
         items[key] = item
         return item
     }
 
     func createItems(_ items: [GlassItemModel]) async throws -> [GlassItemModel] {
         for item in items {
-            let key = item.stable_id
+            let key = await item.stable_id
             self.items[key] = item
         }
         return items
     }
 
     func updateItem(_ item: GlassItemModel) async throws -> GlassItemModel {
-        let key = item.stable_id
+        let key = await item.stable_id
         guard items[key] != nil else {
             throw NSError(domain: "MockGlassItemRepository", code: 404, userInfo: [
                 NSLocalizedDescriptionKey: "Item not found: \(key)"
@@ -77,9 +84,9 @@ final class MockGlassItemRepository: GlassItemRepository {
         // Filter items
         var filtered: [GlassItemModel] = []
         for item in itemsArray {
-            let name = item.name
-            let manufacturer = item.manufacturer
-            let notes = item.mfr_notes
+            let name = await item.name
+            let manufacturer = await item.manufacturer
+            let notes = await item.mfr_notes
             if name.lowercased().contains(lowercasedText) ||
                manufacturer.lowercased().contains(lowercasedText) ||
                (notes?.lowercased().contains(lowercasedText) ?? false) {
@@ -87,8 +94,14 @@ final class MockGlassItemRepository: GlassItemRepository {
             }
         }
 
-        // Sort results
-        return filtered.sorted { $0.name < $1.name }
+        // Sort results - extract-pair-sort-map pattern
+        var itemsWithNames: [(item: GlassItemModel, name: String)] = []
+        for item in filtered {
+            let name = await item.name
+            itemsWithNames.append((item, name))
+        }
+        itemsWithNames.sort { $0.name < $1.name }
+        return itemsWithNames.map { $0.item }
     }
 
     func fetchItems(byManufacturer manufacturer: String) async throws -> [GlassItemModel] {
@@ -97,14 +110,20 @@ final class MockGlassItemRepository: GlassItemRepository {
         // Filter by manufacturer
         var filtered: [GlassItemModel] = []
         for item in itemsArray {
-            let itemManufacturer = item.manufacturer
+            let itemManufacturer = await item.manufacturer
             if itemManufacturer == manufacturer {
                 filtered.append(item)
             }
         }
 
-        // Sort results
-        return filtered.sorted { $0.name < $1.name }
+        // Sort results - extract-pair-sort-map pattern
+        var itemsWithNames: [(item: GlassItemModel, name: String)] = []
+        for item in filtered {
+            let name = await item.name
+            itemsWithNames.append((item, name))
+        }
+        itemsWithNames.sort { $0.name < $1.name }
+        return itemsWithNames.map { $0.item }
     }
 
     func fetchItems(byCOE coe: Int32) async throws -> [GlassItemModel] {
@@ -113,14 +132,20 @@ final class MockGlassItemRepository: GlassItemRepository {
         // Filter by COE
         var filtered: [GlassItemModel] = []
         for item in itemsArray {
-            let itemCOE = item.coe
+            let itemCOE = await item.coe
             if itemCOE == coe {
                 filtered.append(item)
             }
         }
 
-        // Sort results
-        return filtered.sorted { $0.name < $1.name }
+        // Sort results - extract-pair-sort-map pattern
+        var itemsWithNames: [(item: GlassItemModel, name: String)] = []
+        for item in filtered {
+            let name = await item.name
+            itemsWithNames.append((item, name))
+        }
+        itemsWithNames.sort { $0.name < $1.name }
+        return itemsWithNames.map { $0.item }
     }
 
     func fetchItems(byStatus status: String) async throws -> [GlassItemModel] {
@@ -129,14 +154,20 @@ final class MockGlassItemRepository: GlassItemRepository {
         // Filter by status
         var filtered: [GlassItemModel] = []
         for item in itemsArray {
-            let itemStatus = item.mfr_status
+            let itemStatus = await item.mfr_status
             if itemStatus == status {
                 filtered.append(item)
             }
         }
 
-        // Sort results
-        return filtered.sorted { $0.name < $1.name }
+        // Sort results - extract-pair-sort-map pattern
+        var itemsWithNames: [(item: GlassItemModel, name: String)] = []
+        for item in filtered {
+            let name = await item.name
+            itemsWithNames.append((item, name))
+        }
+        itemsWithNames.sort { $0.name < $1.name }
+        return itemsWithNames.map { $0.item }
     }
 
     // MARK: - Business Query Operations
@@ -147,7 +178,7 @@ final class MockGlassItemRepository: GlassItemRepository {
         // Extract manufacturers
         var manufacturers: Set<String> = []
         for item in itemsArray {
-            let manufacturer = item.manufacturer
+            let manufacturer = await item.manufacturer
             manufacturers.insert(manufacturer)
         }
 
@@ -160,7 +191,7 @@ final class MockGlassItemRepository: GlassItemRepository {
         // Extract COE values
         var coes: Set<Int32> = []
         for item in itemsArray {
-            let coe = item.coe
+            let coe = await item.coe
             coes.insert(coe)
         }
 
@@ -173,7 +204,7 @@ final class MockGlassItemRepository: GlassItemRepository {
         // Extract statuses
         var statuses: Set<String> = []
         for item in itemsArray {
-            let status = item.mfr_status
+            let status = await item.mfr_status
             statuses.insert(status)
         }
 

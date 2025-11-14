@@ -10,7 +10,6 @@ import Foundation
 
 /// Mock implementation of PurchaseRecordRepository for testing
 /// Stores records in memory using a dictionary
-@MainActor
 final class MockPurchaseRecordRepository: PurchaseRecordRepository {
 
     // MARK: - Storage

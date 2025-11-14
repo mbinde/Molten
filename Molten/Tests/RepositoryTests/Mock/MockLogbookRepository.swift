@@ -10,7 +10,6 @@ import Foundation
 
 /// Mock implementation of LogbookRepository for testing
 /// Stores logbook entries in memory using a dictionary
-@MainActor
 final class MockLogbookRepository: LogbookRepository {
 
     // MARK: - Storage

@@ -10,7 +10,6 @@ import Foundation
 
 /// Mock implementation of UserNotesRepository for testing
 /// Stores notes in memory using a dictionary
-@MainActor
 final class MockUserNotesRepository: UserNotesRepository {
 
     // MARK: - Storage

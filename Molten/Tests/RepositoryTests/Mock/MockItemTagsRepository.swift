@@ -23,9 +23,9 @@ final class MockItemTagsRepository: ItemTagsRepository {
         let tagsArray = Array(tags.values)
         var result: [String] = []
         for tag in tagsArray {
-            let tagItemId = tag.item_stable_id
+            let tagItemId = await tag.item_stable_id
             if tagItemId == item_stable_id {
-                let tagString = tag.tag
+                let tagString = await tag.tag
                 result.append(tagString)
             }
         }
@@ -47,8 +47,8 @@ final class MockItemTagsRepository: ItemTagsRepository {
         let tagsArray = Array(tags.values)
         var exists = false
         for tagModel in tagsArray {
-            let modelItemId = tagModel.item_stable_id
-            let modelTag = tagModel.tag
+            let modelItemId = await tagModel.item_stable_id
+            let modelTag = await tagModel.tag
             if modelItemId == item_stable_id && modelTag == cleanedTag {
                 exists = true
                 break
@@ -56,12 +56,12 @@ final class MockItemTagsRepository: ItemTagsRepository {
         }
 
         if !exists {
-            let model = ItemTagModel(
+            let model = await ItemTagModel(
                 id: UUID(),
                 item_stable_id: item_stable_id,
                 tag: cleanedTag
             )
-            let id = model.id
+            let id = await model.id
             tags[id] = model
         }
     }
@@ -77,8 +77,8 @@ final class MockItemTagsRepository: ItemTagsRepository {
         let tagsArray = Array(self.tags)
 
         for (id, tagModel) in tagsArray {
-            let modelItemId = tagModel.item_stable_id
-            let modelTag = tagModel.tag
+            let modelItemId = await tagModel.item_stable_id
+            let modelTag = await tagModel.tag
             if modelItemId == item_stable_id && modelTag == cleanedTag {
                 self.tags.removeValue(forKey: id)
             }
@@ -88,7 +88,7 @@ final class MockItemTagsRepository: ItemTagsRepository {
     func removeAllTags(fromItem item_stable_id: String) async throws {
         let tagsArray = Array(tags)
         for (id, tagModel) in tagsArray {
-            let modelItemId = tagModel.item_stable_id
+            let modelItemId = await tagModel.item_stable_id
             if modelItemId == item_stable_id {
                 tags.removeValue(forKey: id)
             }
@@ -106,7 +106,7 @@ final class MockItemTagsRepository: ItemTagsRepository {
         let tagsArray = Array(tags.values)
         var allTags: Set<String> = []
         for tag in tagsArray {
-            let tagString = tag.tag
+            let tagString = await tag.tag
             allTags.insert(tagString)
         }
         return allTags.sorted()
@@ -132,9 +132,9 @@ final class MockItemTagsRepository: ItemTagsRepository {
         let tagsArray = Array(tags.values)
         var itemsSet: Set<String> = []
         for tagModel in tagsArray {
-            let modelTag = tagModel.tag
+            let modelTag = await tagModel.tag
             if modelTag == cleanedTag {
-                let itemId = tagModel.item_stable_id
+                let itemId = await tagModel.item_stable_id
                 itemsSet.insert(itemId)
             }
         }
@@ -146,7 +146,7 @@ final class MockItemTagsRepository: ItemTagsRepository {
         let tagsArray = Array(self.tags.values)
         var itemIdsSet: Set<String> = []
         for tag in tagsArray {
-            let itemId = tag.item_stable_id
+            let itemId = await tag.item_stable_id
             itemIdsSet.insert(itemId)
         }
         let itemTags = try await fetchTagsForItems(Array(itemIdsSet))
@@ -166,9 +166,9 @@ final class MockItemTagsRepository: ItemTagsRepository {
         let tagsArray = Array(self.tags.values)
         var itemsSet: Set<String> = []
         for tagModel in tagsArray {
-            let modelTag = tagModel.tag
+            let modelTag = await tagModel.tag
             if cleanedTags.contains(modelTag) {
-                let itemId = tagModel.item_stable_id
+                let itemId = await tagModel.item_stable_id
                 itemsSet.insert(itemId)
             }
         }
@@ -182,7 +182,7 @@ final class MockItemTagsRepository: ItemTagsRepository {
         let tagsArray = Array(tags.values)
 
         for tagModel in tagsArray {
-            let tag = tagModel.tag
+            let tag = await tagModel.tag
             counts[tag, default: 0] += 1
         }
 
@@ -201,7 +201,7 @@ final class MockItemTagsRepository: ItemTagsRepository {
         let cleanedTag = ItemTagModel.cleanTag(tag)
         let tagsArray = Array(tags.values)
         for tagModel in tagsArray {
-            let modelTag = tagModel.tag
+            let modelTag = await tagModel.tag
             if modelTag == cleanedTag {
                 return true
             }

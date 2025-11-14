@@ -164,11 +164,17 @@ final class MockItemMinimumRepository: ItemMinimumRepository {
 
     func updateStoreName(from oldStoreName: String, to newStoreName: String) async throws {
         for (key, minimum) in minimums where minimum.store == oldStoreName {
+            // Extract values outside to avoid actor isolation issues
+            let minId = minimum.id
+            let minItemId = minimum.item_stable_id
+            let minQty = minimum.quantity
+            let minType = minimum.type
+
             let updated = ItemMinimumModel(
-                id: minimum.id,
-                item_stable_id: minimum.item_stable_id,
-                quantity: minimum.quantity,
-                type: minimum.type,
+                id: minId,
+                item_stable_id: minItemId,
+                quantity: minQty,
+                type: minType,
                 store: newStoreName
             )
             minimums[key] = updated
@@ -184,21 +190,22 @@ final class MockItemMinimumRepository: ItemMinimumRepository {
 
     func getHighestMinimums(limit: Int) async throws -> [ItemMinimumModel] {
         return minimums.values
-            .sorted { $0.quantity > $1.quantity }
+            .sorted { (a: ItemMinimumModel, b: ItemMinimumModel) in a.quantity > b.quantity }
             .prefix(limit)
             .map { $0 }
     }
 
     func getMostCommonTypes() async throws -> [String: Int] {
         var typeCounts: [String: Int] = [:]
-        for minimum in minimums.values {
-            typeCounts[minimum.type, default: 0] += 1
+        for minimum in Array(minimums.values) {
+            let typeString = minimum.type
+            typeCounts[typeString, default: 0] += 1
         }
         return typeCounts
     }
 
     func validateMinimumRecords(validItemKeys: Set<String>) async throws -> [ItemMinimumModel] {
-        return minimums.values.filter { !validItemKeys.contains($0.item_stable_id) }
+        return minimums.values.filter { (minimum: ItemMinimumModel) in !validItemKeys.contains(minimum.item_stable_id) }
     }
 
     // MARK: - Test Helpers

@@ -49,7 +49,7 @@ actor InventoryTrackingService {
 
         // 2. Add tags if provided
         if !tags.isEmpty {
-            try await _itemTagsRepository.addTags(tags, toItem: createdGlassItem.stable_id)
+            try await itemTagsRepository.addTags(tags, toItem: createdGlassItem.stable_id)
         }
 
         // 3. Create inventory records if provided
@@ -69,7 +69,7 @@ actor InventoryTrackingService {
         }
 
         // 4. Get the tags that were created
-        let createdTags = try await _itemTagsRepository.fetchTags(forItem: createdGlassItem.stable_id)
+        let createdTags = try await itemTagsRepository.fetchTags(forItem: createdGlassItem.stable_id)
 
         // 5. Return complete model (locations are now part of inventory records)
         return CompleteInventoryItemModel(
@@ -93,7 +93,7 @@ actor InventoryTrackingService {
         let inventory = try await self.inventoryRepository.fetchInventory(forItem: stableId)
 
         // 3. Get all tags for this item
-        let tags = try await _itemTagsRepository.fetchTags(forItem: stableId)
+        let tags = try await itemTagsRepository.fetchTags(forItem: stableId)
 
         return CompleteInventoryItemModel(
             glassItem: glassItem,
@@ -120,7 +120,7 @@ actor InventoryTrackingService {
 
         // 2. Update tags if provided
         if let newTags = updatedTags {
-            try await _itemTagsRepository.setTags(newTags, forItem: stableId)
+            try await itemTagsRepository.setTags(newTags, forItem: stableId)
         }
         
         // 3. Get complete updated information
@@ -134,10 +134,10 @@ actor InventoryTrackingService {
     // MARK: - Inventory Management Operations
 
     /// Fetch all inventory records (for bulk operations like data import)
-    /// - Parameter request: Optional inventory request to filter results, nil fetches all
+    /// - Parameter predicate: Optional predicate to filter results, nil fetches all
     /// - Returns: Array of inventory models
-    func fetchAllInventory(matching request: InventoryRequest? = nil) async throws -> [InventoryModel] {
-        return try await inventoryRepository.fetchInventory(matching: request)
+    func fetchAllInventory(matching predicate: NSPredicate? = nil) async throws -> [InventoryModel] {
+        return try await inventoryRepository.fetchInventory(matching: predicate)
     }
 
     /// Fetch inventory for a specific item
@@ -161,6 +161,32 @@ actor InventoryTrackingService {
     /// - Returns: Updated inventory model
     func addQuantityToInventory(_ quantity: Double, toItem stableId: String, type: String) async throws -> InventoryModel {
         return try await inventoryRepository.addQuantity(quantity, toItem: stableId, type: type)
+    }
+
+    /// Delete all inventory for a specific item
+    /// - Parameter stableId: Item natural key
+    func deleteInventory(forItem stableId: String) async throws {
+        try await inventoryRepository.deleteInventory(forItem: stableId)
+    }
+
+    /// Get all items that have inventory
+    /// - Returns: Array of item stable IDs
+    func getItemsWithInventory() async throws -> [String] {
+        return try await inventoryRepository.getItemsWithInventory()
+    }
+
+    /// Update an existing inventory record
+    /// - Parameter inventory: The inventory model with updated values
+    /// - Returns: The updated inventory model
+    func updateInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
+        return try await inventoryRepository.updateInventory(inventory)
+    }
+
+    /// Create a new inventory record
+    /// - Parameter inventory: The inventory model to create
+    /// - Returns: The created inventory model with generated ID
+    func createInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
+        return try await inventoryRepository.createInventory(inventory)
     }
 
     /// Add inventory to an item with optional location
@@ -234,7 +260,7 @@ actor InventoryTrackingService {
         
         // 2. Filter by tags if specified
         if !tags.isEmpty {
-            let itemsWithTags = try await _itemTagsRepository.fetchItems(withAllTags: tags)
+            let itemsWithTags = try await itemTagsRepository.fetchItems(withAllTags: tags)
             candidateItems = candidateItems.filter { item in
                 itemsWithTags.contains(item.stable_id)
             }
@@ -287,7 +313,7 @@ actor InventoryTrackingService {
             // Get the glass item details
             if let glassItem = try await glassItemRepository.fetchItem(byStableId: stableId) {
                 // Get tags for context
-                let tags = try await _itemTagsRepository.fetchTags(forItem: stableId)
+                let tags = try await itemTagsRepository.fetchTags(forItem: stableId)
                 
                 results.append(LowStockDetailModel(
                     glassItem: glassItem,

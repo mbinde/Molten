@@ -407,7 +407,7 @@ final class InventoryFormState: ObservableObject {
             quantity: countValue
         )
         
-        return try await inventoryService.inventoryRepository.updateInventory(updatedInventory)
+        return try await inventoryService.updateInventory(updatedInventory)
     }
 }
 

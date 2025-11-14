@@ -28,26 +28,12 @@ extension NSPersistentContainer {
     func safeExecute(_ request: NSPersistentStoreRequest, with context: NSManagedObjectContext) throws -> NSPersistentStoreResult {
 
         // GUARD: Block persistent history deletion requests
-        if let historyRequest = request as? NSPersistentHistoryChangeRequest {
-            if case .deleteHistory = historyRequest.requestType {
-                fatalError("""
-                    ❌ FATAL: Attempting to delete persistent history
-
-                    This BREAKS CloudKit sync state and causes data loss!
-
-                    CloudKit sync relies on persistent history to track changes.
-                    Manually purging history destroys sync tokens and causes:
-                    - Lost changes across devices
-                    - Duplicate data on sync
-                    - Corrupted CloudKit state
-
-                    Solution: NEVER manually purge persistent history.
-                    Let CloudKit manage its own history tokens.
-
-                    See: CLAUDE.md - CloudKit Rules
-                    """)
-            }
-        }
+        // NOTE: NSPersistentHistoryChangeRequest doesn't expose a way to detect delete operations
+        // via requestType. The API uses factory methods like deleteHistory(before:) to create
+        // delete requests, but there's no public property to inspect the request type.
+        //
+        // For now, we rely on code review and documentation (CLAUDE.md) to prevent history deletion.
+        // CloudKit sync relies on persistent history - manually purging breaks sync state!
 
         // Request is safe - execute normally
         return try context.execute(request)

@@ -363,7 +363,6 @@ class PersistenceController {
     /// Asynchronously initialize the persistent stores
     /// Call this from your app startup code to load stores without blocking the main thread
     /// IMPORTANT: This must be called before using the container!
-    @MainActor
     func initialize() async {
         // Only initialize once - thread-safe check
         let alreadyInitialized = stateLock.withLock { $0.isInitialized }

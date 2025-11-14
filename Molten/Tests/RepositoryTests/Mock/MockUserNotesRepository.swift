@@ -19,7 +19,8 @@ final class MockUserNotesRepository: UserNotesRepository {
     // MARK: - CRUD Operations
 
     func createNotes(_ notes: UserNotesModel) async throws -> UserNotesModel {
-        self.notes[notes.item_stable_id] = notes
+        let key = notes.item_stable_id
+        self.notes[key] = notes
         return notes
     }
 
@@ -28,12 +29,13 @@ final class MockUserNotesRepository: UserNotesRepository {
     }
 
     func updateNotes(_ notes: UserNotesModel) async throws -> UserNotesModel {
-        guard self.notes[notes.item_stable_id] != nil else {
+        let key = notes.item_stable_id
+        guard self.notes[key] != nil else {
             throw NSError(domain: "MockUserNotesRepository", code: 404, userInfo: [
-                NSLocalizedDescriptionKey: "Notes not found for item: \(notes.item_stable_id)"
+                NSLocalizedDescriptionKey: "Notes not found for item: \(key)"
             ])
         }
-        self.notes[notes.item_stable_id] = notes
+        self.notes[key] = notes
         return notes
     }
 
@@ -43,7 +45,7 @@ final class MockUserNotesRepository: UserNotesRepository {
 
     func deleteNotes(byId id: String) async throws {
         // Find and delete by id
-        if let foundKey = notes.first(where: { $0.value.id == id })?.key {
+        if let foundKey = notes.first(where: { (pair: (key: String, value: UserNotesModel)) in pair.value.id == id })?.key {
             notes.removeValue(forKey: foundKey)
         } else {
             throw NSError(domain: "MockUserNotesRepository", code: 404, userInfo: [
@@ -69,10 +71,7 @@ final class MockUserNotesRepository: UserNotesRepository {
     }
 
     func searchNotes(containing searchText: String) async throws -> [UserNotesModel] {
-        let lowercasedSearch = searchText.lowercased()
-        return notes.values.filter { note in
-            note.notes.lowercased().contains(lowercasedSearch)
-        }
+        return notes.values.filter { $0.matchesSearchText(searchText) }
     }
 
     func notesExist(forItem itemStableId: String) async throws -> Bool {
@@ -83,7 +82,8 @@ final class MockUserNotesRepository: UserNotesRepository {
 
     func setNotes(_ notes: UserNotesModel) async throws -> UserNotesModel {
         // Upsert: create or update
-        self.notes[notes.item_stable_id] = notes
+        let key = notes.item_stable_id
+        self.notes[key] = notes
         return notes
     }
 

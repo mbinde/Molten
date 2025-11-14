@@ -10,6 +10,7 @@ import Foundation
 
 /// Mock implementation of ItemTagsRepository for testing
 /// Stores tags in memory using a dictionary
+@MainActor
 final class MockItemTagsRepository: ItemTagsRepository {
 
     // MARK: - Storage
@@ -20,13 +21,15 @@ final class MockItemTagsRepository: ItemTagsRepository {
 
     func fetchTags(forItem item_stable_id: String) async throws -> [String] {
         let tagsArray = Array(tags.values)
-        return tagsArray
-            .filter { (tag: ItemTagModel) in
-                let tagItemId = tag.item_stable_id
-                return tagItemId == item_stable_id
+        var result: [String] = []
+        for tag in tagsArray {
+            let tagItemId = tag.item_stable_id
+            if tagItemId == item_stable_id {
+                let tagString = tag.tag
+                result.append(tagString)
             }
-            .map { (tag: ItemTagModel) in tag.tag }
-            .sorted()
+        }
+        return result.sorted()
     }
 
     func fetchTagsForItems(_ item_stable_ids: [String]) async throws -> [String: [String]] {
@@ -42,10 +45,14 @@ final class MockItemTagsRepository: ItemTagsRepository {
 
         // Check if already exists
         let tagsArray = Array(tags.values)
-        let exists = tagsArray.contains { (tagModel: ItemTagModel) in
+        var exists = false
+        for tagModel in tagsArray {
             let modelItemId = tagModel.item_stable_id
             let modelTag = tagModel.tag
-            return modelItemId == item_stable_id && modelTag == cleanedTag
+            if modelItemId == item_stable_id && modelTag == cleanedTag {
+                exists = true
+                break
+            }
         }
 
         if !exists {
@@ -97,7 +104,11 @@ final class MockItemTagsRepository: ItemTagsRepository {
 
     func getAllTags() async throws -> [String] {
         let tagsArray = Array(tags.values)
-        let allTags = Set(tagsArray.map { (tag: ItemTagModel) in tag.tag })
+        var allTags: Set<String> = []
+        for tag in tagsArray {
+            let tagString = tag.tag
+            allTags.insert(tagString)
+        }
         return allTags.sorted()
     }
 
@@ -119,37 +130,49 @@ final class MockItemTagsRepository: ItemTagsRepository {
     func fetchItems(withTag tag: String) async throws -> [String] {
         let cleanedTag = ItemTagModel.cleanTag(tag)
         let tagsArray = Array(tags.values)
-        let items = tagsArray
-            .filter { (tagModel: ItemTagModel) in
-                let modelTag = tagModel.tag
-                return modelTag == cleanedTag
+        var itemsSet: Set<String> = []
+        for tagModel in tagsArray {
+            let modelTag = tagModel.tag
+            if modelTag == cleanedTag {
+                let itemId = tagModel.item_stable_id
+                itemsSet.insert(itemId)
             }
-            .map { (tagModel: ItemTagModel) in tagModel.item_stable_id }
-        return Array(Set(items)).sorted()
+        }
+        return Array(itemsSet).sorted()
     }
 
     func fetchItems(withAllTags tags: [String]) async throws -> [String] {
         let cleanedTags = Set(tags.map { ItemTagModel.cleanTag($0) })
-        let itemTags = try await fetchTagsForItems(
-            Array(Set(self.tags.values.map { (tag: ItemTagModel) in tag.item_stable_id }))
-        )
+        let tagsArray = Array(self.tags.values)
+        var itemIdsSet: Set<String> = []
+        for tag in tagsArray {
+            let itemId = tag.item_stable_id
+            itemIdsSet.insert(itemId)
+        }
+        let itemTags = try await fetchTagsForItems(Array(itemIdsSet))
 
-        return itemTags
-            .filter { cleanedTags.isSubset(of: Set($0.value)) }
-            .map { $0.key }
-            .sorted()
+        var result: [String] = []
+        for (key, value) in itemTags {
+            let valueTags = value
+            if cleanedTags.isSubset(of: Set(valueTags)) {
+                result.append(key)
+            }
+        }
+        return result.sorted()
     }
 
     func fetchItems(withAnyTags tags: [String]) async throws -> [String] {
         let cleanedTags = Set(tags.map { ItemTagModel.cleanTag($0) })
         let tagsArray = Array(self.tags.values)
-        let items = tagsArray
-            .filter { (tagModel: ItemTagModel) in
-                let modelTag = tagModel.tag
-                return cleanedTags.contains(modelTag)
+        var itemsSet: Set<String> = []
+        for tagModel in tagsArray {
+            let modelTag = tagModel.tag
+            if cleanedTags.contains(modelTag) {
+                let itemId = tagModel.item_stable_id
+                itemsSet.insert(itemId)
             }
-            .map { (tagModel: ItemTagModel) in tagModel.item_stable_id }
-        return Array(Set(items)).sorted()
+        }
+        return Array(itemsSet).sorted()
     }
 
     // MARK: - Tag Analytics Operations
@@ -177,10 +200,13 @@ final class MockItemTagsRepository: ItemTagsRepository {
     func tagExists(_ tag: String) async throws -> Bool {
         let cleanedTag = ItemTagModel.cleanTag(tag)
         let tagsArray = Array(tags.values)
-        return tagsArray.contains { (tagModel: ItemTagModel) in
+        for tagModel in tagsArray {
             let modelTag = tagModel.tag
-            return modelTag == cleanedTag
+            if modelTag == cleanedTag {
+                return true
+            }
         }
+        return false
     }
 
     // MARK: - Test Helpers

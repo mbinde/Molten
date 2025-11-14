@@ -62,15 +62,17 @@ final class MockShoppingListRepository: ShoppingListRepository {
     }
 
     func createItem(_ item: ItemShoppingModel) async throws -> ItemShoppingModel {
-        items[item.id] = item
+        let itemId = await item.id
+        items[itemId] = item
         return item
     }
 
     func updateItem(_ item: ItemShoppingModel) async throws -> ItemShoppingModel {
-        guard items[item.id] != nil else {
+        let itemId = await item.id
+        guard items[itemId] != nil else {
             throw NSError(domain: "MockShoppingListRepository", code: 404)
         }
-        items[item.id] = item
+        items[itemId] = item
         return item
     }
 
@@ -83,7 +85,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
 
     func deleteItem(forItem item_stable_id: String) async throws {
         if let item = try await fetchItem(forItem: item_stable_id) {
-            items.removeValue(forKey: item.id)
+            let itemId = await item.id; items.removeValue(forKey: itemId)
         }
     }
 
@@ -98,13 +100,13 @@ final class MockShoppingListRepository: ShoppingListRepository {
             throw NSError(domain: "MockShoppingListRepository", code: 404)
         }
 
-        let existingId = existing.id
-        let existingItemId = existing.item_stable_id
-        let existingStore = existing.store
-        let existingType = existing.type
-        let existingSubtype = existing.subtype
-        let existingSubsubtype = existing.subsubtype
-        let existingDate = existing.dateAdded
+        let existingId = await existing.id
+        let existingItemId = await existing.item_stable_id
+        let existingStore = await existing.store
+        let existingType = await existing.type
+        let existingSubtype = await existing.subtype
+        let existingSubsubtype = await existing.subsubtype
+        let existingDate = await existing.dateAdded
 
         let updated = ItemShoppingModel(
             id: existingId,
@@ -123,7 +125,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
 
     func addQuantity(_ quantity: Double, toItem item_stable_id: String, store: String?) async throws -> ItemShoppingModel {
         if let existing = try await fetchItem(forItem: item_stable_id) {
-            let existingQty = existing.quantity
+            let existingQty = await existing.quantity
             let newQuantity = existingQty + quantity
             return try await updateQuantity(newQuantity, forItem: item_stable_id)
         } else {
@@ -143,13 +145,13 @@ final class MockShoppingListRepository: ShoppingListRepository {
             throw NSError(domain: "MockShoppingListRepository", code: 404)
         }
 
-        let existingId = existing.id
-        let existingItemId = existing.item_stable_id
-        let existingQty = existing.quantity
-        let existingType = existing.type
-        let existingSubtype = existing.subtype
-        let existingSubsubtype = existing.subsubtype
-        let existingDate = existing.dateAdded
+        let existingId = await existing.id
+        let existingItemId = await existing.item_stable_id
+        let existingQty = await existing.quantity
+        let existingType = await existing.type
+        let existingSubtype = await existing.subtype
+        let existingSubsubtype = await existing.subsubtype
+        let existingDate = await existing.dateAdded
 
         let updated = ItemShoppingModel(
             id: existingId,
@@ -170,7 +172,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
         let itemsArray = Array(items.values)
         var stores: Set<String> = []
         for item in itemsArray {
-            let store = item.store
+            let store = await item.store
             if let store = store {
                 stores.insert(store)
             }
@@ -182,7 +184,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
         var counts: [String: Int] = [:]
         let itemsArray = Array(items.values)
         for item in itemsArray {
-            let store = item.store
+            let store = await item.store
             if let store = store {
                 counts[store, default: 0] += 1
             }
@@ -251,7 +253,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
 
     func addItems(_ items: [ItemShoppingModel]) async throws -> [ItemShoppingModel] {
         for item in items {
-            self.items[item.id] = item
+            let itemId = await item.id; self.items[itemId] = item
         }
         return items
     }
@@ -266,7 +268,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
         let itemsArray = Array(items)
         var newItems: [UUID: ItemShoppingModel] = [:]
         for (key, value) in itemsArray {
-            let itemStore = value.store
+            let itemStore = await value.store
             if itemStore != store {
                 newItems[key] = value
             }

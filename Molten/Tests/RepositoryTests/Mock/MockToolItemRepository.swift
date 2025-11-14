@@ -34,20 +34,21 @@ final class MockToolItemRepository: ToolItemRepository {
     }
 
     func createItem(_ item: ToolItemModel) async throws -> ToolItemModel {
-        items[item.stable_id] = item
+        let stableId = await item.stable_id
+        items[stableId] = item
         return item
     }
 
     func createItems(_ items: [ToolItemModel]) async throws -> [ToolItemModel] {
         for item in items {
-            let stableId = item.stable_id
+            let stableId = await item.stable_id
             self.items[stableId] = item
         }
         return items
     }
 
     func updateItem(_ item: ToolItemModel) async throws -> ToolItemModel {
-        let key = item.stable_id
+        let key = await item.stable_id
         guard items[key] != nil else {
             throw NSError(domain: "MockToolItemRepository", code: 404, userInfo: [
                 NSLocalizedDescriptionKey: "Item not found: \(key)"
@@ -124,7 +125,7 @@ final class MockToolItemRepository: ToolItemRepository {
         let itemsArray = Array(items.values)
         var manufacturers: Set<String> = []
         for item in itemsArray {
-            let manufacturer = item.manufacturer
+            let manufacturer = await item.manufacturer
             manufacturers.insert(manufacturer)
         }
         return manufacturers.sorted()
@@ -134,7 +135,7 @@ final class MockToolItemRepository: ToolItemRepository {
         let itemsArray = Array(items.values)
         var statuses: Set<String> = []
         for item in itemsArray {
-            let status = item.mfr_status
+            let status = await item.mfr_status
             statuses.insert(status)
         }
         return statuses.sorted()

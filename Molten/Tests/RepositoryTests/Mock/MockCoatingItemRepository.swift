@@ -28,24 +28,26 @@ final class MockCoatingItemRepository: CoatingItemRepository {
     }
 
     func createItem(_ item: CoatingItemModel) async throws -> CoatingItemModel {
-        items[item.stable_id] = item
+        let stableId = await item.stable_id; items[stableId] = item
         return item
     }
 
     func createItems(_ items: [CoatingItemModel]) async throws -> [CoatingItemModel] {
         for item in items {
-            self.items[item.stable_id] = item
+            let stableId = await item.stable_id
+            self.items[stableId] = item
         }
         return items
     }
 
     func updateItem(_ item: CoatingItemModel) async throws -> CoatingItemModel {
-        guard items[item.stable_id] != nil else {
+        let stableId = await item.stable_id
+        guard items[stableId] != nil else {
             throw NSError(domain: "MockCoatingItemRepository", code: 404, userInfo: [
-                NSLocalizedDescriptionKey: "Item not found: \(item.stable_id)"
+                NSLocalizedDescriptionKey: "Item not found: \(stableId)"
             ])
         }
-        items[item.stable_id] = item
+        items[stableId] = item
         return item
     }
 
@@ -70,15 +72,15 @@ final class MockCoatingItemRepository: CoatingItemRepository {
         let lowercasedText = text.lowercased()
         let itemsArray = Array(items.values)
         return itemsArray.filter { (item: CoatingItemModel) in
-            let name = item.name
-            let manufacturer = item.manufacturer
-            let notes = item.mfr_notes
+            let name = await item.name
+            let manufacturer = await item.manufacturer
+            let notes = await item.mfr_notes
             return name.lowercased().contains(lowercasedText) ||
                    manufacturer.lowercased().contains(lowercasedText) ||
                    (notes?.lowercased().contains(lowercasedText) ?? false)
         }.sorted { (a: CoatingItemModel, b: CoatingItemModel) in
-            let aName = a.name
-            let bName = b.name
+            let aName = await a.name
+            let bName = await b.name
             return aName < bName
         }
     }
@@ -86,11 +88,11 @@ final class MockCoatingItemRepository: CoatingItemRepository {
     func fetchItems(byManufacturer manufacturer: String) async throws -> [CoatingItemModel] {
         let itemsArray = Array(items.values)
         return itemsArray.filter { (item: CoatingItemModel) in
-            let itemManufacturer = item.manufacturer
+            let itemManufacturer = await item.manufacturer
             return itemManufacturer == manufacturer
         }.sorted { (a: CoatingItemModel, b: CoatingItemModel) in
-            let aName = a.name
-            let bName = b.name
+            let aName = await a.name
+            let bName = await b.name
             return aName < bName
         }
     }
@@ -98,11 +100,11 @@ final class MockCoatingItemRepository: CoatingItemRepository {
     func fetchItems(byStatus status: String) async throws -> [CoatingItemModel] {
         let itemsArray = Array(items.values)
         return itemsArray.filter { (item: CoatingItemModel) in
-            let itemStatus = item.mfr_status
+            let itemStatus = await item.mfr_status
             return itemStatus == status
         }.sorted { (a: CoatingItemModel, b: CoatingItemModel) in
-            let aName = a.name
-            let bName = b.name
+            let aName = await a.name
+            let bName = await b.name
             return aName < bName
         }
     }
@@ -112,7 +114,7 @@ final class MockCoatingItemRepository: CoatingItemRepository {
     func getDistinctManufacturers() async throws -> [String] {
         let itemsArray = Array(items.values)
         let manufacturers = Set(itemsArray.map { (item: CoatingItemModel) in
-            let manufacturer = item.manufacturer
+            let manufacturer = await item.manufacturer
             return manufacturer
         })
         return manufacturers.sorted()
@@ -121,7 +123,7 @@ final class MockCoatingItemRepository: CoatingItemRepository {
     func getDistinctStatuses() async throws -> [String] {
         let itemsArray = Array(items.values)
         let statuses = Set(itemsArray.map { (item: CoatingItemModel) in
-            let status = item.mfr_status
+            let status = await item.mfr_status
             return status
         })
         return statuses.sorted()

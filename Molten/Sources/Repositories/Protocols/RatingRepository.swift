@@ -9,7 +9,7 @@
 import Foundation
 
 /// Repository protocol for rating data persistence operations
-nonisolated protocol RatingRepository: Sendable {
+public nonisolated protocol RatingRepository: Sendable {
 
     // MARK: - Aggregated Ratings (Cached from Server)
 

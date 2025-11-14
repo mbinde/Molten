@@ -8,15 +8,15 @@
 import Foundation
 
 /// Business model for submitting a rating (star rating + descriptive words)
-struct RatingSubmissionModel: Identifiable, Equatable, Codable, Sendable {
-    let id: UUID
-    let itemStableId: String
-    let starRating: Int
-    let words: [String]
-    let createdAt: Date
+public struct RatingSubmissionModel: Identifiable, Equatable, Codable, Sendable {
+    public let id: UUID
+    public let itemStableId: String
+    public let starRating: Int
+    public let words: [String]
+    public let createdAt: Date
 
     /// Initialize with business logic validation
-    nonisolated init(
+    public nonisolated init(
         id: UUID = UUID(),
         itemStableId: String,
         starRating: Int,
@@ -33,12 +33,12 @@ struct RatingSubmissionModel: Identifiable, Equatable, Codable, Sendable {
     // MARK: - Validation
 
     /// Validate that the submission has required data
-    nonisolated var isValid: Bool {
+    public nonisolated var isValid: Bool {
         return validationErrors.isEmpty
     }
 
     /// Get validation errors if any
-    nonisolated var validationErrors: [String] {
+    public nonisolated var validationErrors: [String] {
         var errors: [String] = []
 
         if itemStableId.isEmpty {
@@ -71,7 +71,7 @@ struct RatingSubmissionModel: Identifiable, Equatable, Codable, Sendable {
     // MARK: - Profanity Filter
 
     /// Check if any word contains profanity
-    nonisolated var containsProfanity: Bool {
+    public nonisolated var containsProfanity: Bool {
         let profanityList: Set<String> = [
             "damn", "hell", "shit", "fuck", "ass", "bitch",
             "bastard", "crap", "piss", "dick", "cock", "pussy",

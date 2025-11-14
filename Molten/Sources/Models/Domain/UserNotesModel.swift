@@ -8,7 +8,7 @@
 import Foundation
 
 /// Business model for user notes with validation and business logic
-struct UserNotesModel: Identifiable, Equatable, Codable {
+struct UserNotesModel: Identifiable, Equatable, Codable, Sendable {
     let id: String
     let item_stable_id: String
     let notes: String

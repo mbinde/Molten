@@ -258,46 +258,58 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
     func generateShoppingList(forStore store: String, currentInventory: [String: [String: Double]]) async throws -> [ShoppingListItemModel] {
         let minimums = try await fetchMinimums(forStore: store)
 
-        let shoppingList = minimums.compactMap { minimum -> ShoppingListItemModel? in
-            let currentQuantity = currentInventory[minimum.item_stable_id]?[minimum.type] ?? 0.0
+        var shoppingList: [ShoppingListItemModel] = []
+        for minimum in minimums {
+            let itemKey = await minimum.item_stable_id
+            let type = await minimum.type
+            let currentQuantity = currentInventory[itemKey]?[type] ?? 0.0
+            let minimumQty = await minimum.quantity
 
             // Only include items where current quantity is below minimum
-            if currentQuantity < minimum.quantity {
-                return ShoppingListItemModel(
-                    item_stable_id: minimum.item_stable_id,
-                    type: minimum.type,
+            if currentQuantity < minimumQty {
+                shoppingList.append(ShoppingListItemModel(
+                    item_stable_id: itemKey,
+                    type: type,
                     currentQuantity: currentQuantity,
-                    minimumQuantity: minimum.quantity,
-                    store: minimum.store
-                )
+                    minimumQuantity: minimumQty,
+                    store: await minimum.store
+                ))
             }
-            return nil
-        }.sorted()
+        }
 
-        return shoppingList
+        return shoppingList.sorted()
     }
 
     func generateShoppingLists(currentInventory: [String: [String: Double]]) async throws -> [String: [ShoppingListItemModel]] {
         let allMinimums = try await fetchMinimums(matching: nil)
 
-        let groupedByStore = Dictionary(grouping: allMinimums) { $0.store }
+        var groupedByStore: [String: [ItemMinimumModel]] = [:]
+        for minimum in allMinimums {
+            let store = await minimum.store
+            groupedByStore[store, default: []].append(minimum)
+        }
 
-        let shoppingLists = groupedByStore.mapValues { storeMinimums in
-            storeMinimums.compactMap { minimum -> ShoppingListItemModel? in
-                let currentQuantity = currentInventory[minimum.item_stable_id]?[minimum.type] ?? 0.0
+        var shoppingLists: [String: [ShoppingListItemModel]] = [:]
+        for (store, storeMinimums) in groupedByStore {
+            var items: [ShoppingListItemModel] = []
+            for minimum in storeMinimums {
+                let itemKey = await minimum.item_stable_id
+                let type = await minimum.type
+                let currentQuantity = currentInventory[itemKey]?[type] ?? 0.0
+                let minimumQty = await minimum.quantity
 
                 // Only include items where current quantity is below minimum
-                if currentQuantity < minimum.quantity {
-                    return ShoppingListItemModel(
-                        item_stable_id: minimum.item_stable_id,
-                        type: minimum.type,
+                if currentQuantity < minimumQty {
+                    items.append(ShoppingListItemModel(
+                        item_stable_id: itemKey,
+                        type: type,
                         currentQuantity: currentQuantity,
-                        minimumQuantity: minimum.quantity,
-                        store: minimum.store
-                    )
+                        minimumQuantity: minimumQty,
+                        store: store
+                    ))
                 }
-                return nil
-            }.sorted()
+            }
+            shoppingLists[store] = items.sorted()
         }
 
         return shoppingLists
@@ -306,23 +318,26 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
     func getLowStockItems(currentInventory: [String: [String: Double]]) async throws -> [LowStockItemModel] {
         let allMinimums = try await fetchMinimums(matching: nil)
 
-        let lowStockItems = allMinimums.compactMap { minimum -> LowStockItemModel? in
-            let currentQuantity = currentInventory[minimum.item_stable_id]?[minimum.type] ?? 0.0
+        var lowStockItems: [LowStockItemModel] = []
+        for minimum in allMinimums {
+            let itemKey = await minimum.item_stable_id
+            let type = await minimum.type
+            let currentQuantity = currentInventory[itemKey]?[type] ?? 0.0
+            let minimumQty = await minimum.quantity
 
             // Only include items where current quantity is below minimum
-            if currentQuantity < minimum.quantity {
-                return LowStockItemModel(
-                    item_stable_id: minimum.item_stable_id,
-                    type: minimum.type,
+            if currentQuantity < minimumQty {
+                lowStockItems.append(LowStockItemModel(
+                    item_stable_id: itemKey,
+                    type: type,
                     currentQuantity: currentQuantity,
-                    minimumQuantity: minimum.quantity,
-                    store: minimum.store
-                )
+                    minimumQuantity: minimumQty,
+                    store: await minimum.store
+                ))
             }
-            return nil
-        }.sorted()
+        }
 
-        return lowStockItems
+        return lowStockItems.sorted()
     }
 
     func setMinimumQuantity(_ quantity: Double, forItem item_stable_id: String, type: String, store: String) async throws -> ItemMinimumModel {
@@ -385,8 +400,11 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
 
     func getStoreUtilization() async throws -> [String: Int] {
         let allMinimums = try await fetchMinimums(matching: nil)
-        let utilization = Dictionary(grouping: allMinimums, by: { $0.store })
-            .mapValues { $0.count }
+        var utilization: [String: Int] = [:]
+        for minimum in allMinimums {
+            let store = await minimum.store
+            utilization[store, default: 0] += 1
+        }
         return utilization
     }
 
@@ -425,21 +443,39 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
 
     func getHighestMinimums(limit: Int) async throws -> [ItemMinimumModel] {
         let allMinimums = try await fetchMinimums(matching: nil)
-        let highest = allMinimums.sorted { $0.quantity > $1.quantity }.prefix(limit)
-        return Array(highest)
+
+        // Extract quantities and pair with models for sorting
+        var minimumsWithQty: [(model: ItemMinimumModel, qty: Double)] = []
+        for minimum in allMinimums {
+            let qty = await minimum.quantity
+            minimumsWithQty.append((model: minimum, qty: qty))
+        }
+
+        // Sort by quantity descending
+        minimumsWithQty.sort { $0.qty > $1.qty }
+
+        // Extract the models and return limited result
+        return Array(minimumsWithQty.prefix(limit).map { $0.model })
     }
 
     func getMostCommonTypes() async throws -> [String: Int] {
         let allMinimums = try await fetchMinimums(matching: nil)
-        let typeCounts = Dictionary(grouping: allMinimums, by: { $0.type })
-            .mapValues { $0.count }
+        var typeCounts: [String: Int] = [:]
+        for minimum in allMinimums {
+            let type = await minimum.type
+            typeCounts[type, default: 0] += 1
+        }
         return typeCounts
     }
 
     func validateMinimumRecords(validItemKeys: Set<String>) async throws -> [ItemMinimumModel] {
         let allMinimums = try await fetchMinimums(matching: nil)
-        let invalidMinimums = allMinimums.filter { minimum in
-            !validItemKeys.contains(minimum.item_stable_id)
+        var invalidMinimums: [ItemMinimumModel] = []
+        for minimum in allMinimums {
+            let itemKey = await minimum.item_stable_id
+            if !validItemKeys.contains(itemKey) {
+                invalidMinimums.append(minimum)
+            }
         }
         return invalidMinimums
     }

@@ -225,7 +225,6 @@
 				Tests/MoltenTests/Services/ProjectServiceTests.swift,
 				Tests/MoltenTests/Services/PurchaseRecordServiceTests.swift,
 				Tests/MoltenTests/Services/ReportingServiceTests.swift,
-				Tests/MoltenTests/Services/ServiceCoordinationTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
 				Tests/MoltenTests/Services/SubscriptionServiceTests.swift,
 				Tests/MoltenTests/ShareCodeGeneratorTests.swift,
@@ -296,6 +295,18 @@
 				Tests/MoltenTests/Views/Shopping/StoreAutoCompleteFieldTests.swift,
 				Tests/MoltenTests/Views/SubscriptionViewModelTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataKilnScheduleRepositoryTests.swift,
+				Tests/RepositoryTests/Mock/MockCoatingItemRepository.swift,
+				Tests/RepositoryTests/Mock/MockGlassItemRepository.swift,
+				Tests/RepositoryTests/Mock/MockInventoryRepository.swift,
+				Tests/RepositoryTests/Mock/MockItemMinimumRepository.swift,
+				Tests/RepositoryTests/Mock/MockItemTagsRepository.swift,
+				Tests/RepositoryTests/Mock/MockLocationRepository.swift,
+				Tests/RepositoryTests/Mock/MockLogbookRepository.swift,
+				Tests/RepositoryTests/Mock/MockPurchaseRecordRepository.swift,
+				Tests/RepositoryTests/Mock/MockShoppingListRepository.swift,
+				Tests/RepositoryTests/Mock/MockToolItemRepository.swift,
+				Tests/RepositoryTests/Mock/MockUserNotesRepository.swift,
+				Tests/RepositoryTests/Mock/MockUserTagsRepository.swift,
 				Tools/Documentation/check_core_data_violations.sh,
 				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
 				Tools/Documentation/CORE_DATA_PREVENTION_GUIDE.md,
@@ -417,7 +428,6 @@
 				Tests/MoltenTests/Services/ProjectServiceTests.swift,
 				Tests/MoltenTests/Services/PurchaseRecordServiceTests.swift,
 				Tests/MoltenTests/Services/ReportingServiceTests.swift,
-				Tests/MoltenTests/Services/ServiceCoordinationTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
 				Tests/MoltenTests/Services/SubscriptionServiceTests.swift,
 				Tests/MoltenTests/ShareCodeGeneratorTests.swift,
@@ -531,6 +541,18 @@
 				Tests/RepositoryTests/InventorySharingIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingManagerTests.swift,
 				Tests/RepositoryTests/InventorySharingViewModelTests.swift,
+				Tests/RepositoryTests/Mock/MockCoatingItemRepository.swift,
+				Tests/RepositoryTests/Mock/MockGlassItemRepository.swift,
+				Tests/RepositoryTests/Mock/MockInventoryRepository.swift,
+				Tests/RepositoryTests/Mock/MockItemMinimumRepository.swift,
+				Tests/RepositoryTests/Mock/MockItemTagsRepository.swift,
+				Tests/RepositoryTests/Mock/MockLocationRepository.swift,
+				Tests/RepositoryTests/Mock/MockLogbookRepository.swift,
+				Tests/RepositoryTests/Mock/MockPurchaseRecordRepository.swift,
+				Tests/RepositoryTests/Mock/MockShoppingListRepository.swift,
+				Tests/RepositoryTests/Mock/MockToolItemRepository.swift,
+				Tests/RepositoryTests/Mock/MockUserNotesRepository.swift,
+				Tests/RepositoryTests/Mock/MockUserTagsRepository.swift,
 				Tests/RepositoryTests/ShareMetadataRepositoryTests.swift,
 				Tests/RepositoryTests/SQLite/SQLiteGlassItemRepositoryTests.swift,
 				Tools/Documentation/check_core_data_violations.sh,
@@ -616,6 +638,18 @@
 				Tests/RepositoryTests/InventorySharingIntegrationTests.swift,
 				Tests/RepositoryTests/InventorySharingManagerTests.swift,
 				Tests/RepositoryTests/InventorySharingViewModelTests.swift,
+				Tests/RepositoryTests/Mock/MockCoatingItemRepository.swift,
+				Tests/RepositoryTests/Mock/MockGlassItemRepository.swift,
+				Tests/RepositoryTests/Mock/MockInventoryRepository.swift,
+				Tests/RepositoryTests/Mock/MockItemMinimumRepository.swift,
+				Tests/RepositoryTests/Mock/MockItemTagsRepository.swift,
+				Tests/RepositoryTests/Mock/MockLocationRepository.swift,
+				Tests/RepositoryTests/Mock/MockLogbookRepository.swift,
+				Tests/RepositoryTests/Mock/MockPurchaseRecordRepository.swift,
+				Tests/RepositoryTests/Mock/MockShoppingListRepository.swift,
+				Tests/RepositoryTests/Mock/MockToolItemRepository.swift,
+				Tests/RepositoryTests/Mock/MockUserNotesRepository.swift,
+				Tests/RepositoryTests/Mock/MockUserTagsRepository.swift,
 				Tests/RepositoryTests/ShareMetadataRepositoryTests.swift,
 				Tests/RepositoryTests/SQLite/SQLiteGlassItemRepositoryTests.swift,
 			);
@@ -1549,8 +1583,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Molten/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Molten;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Flameworker needs access to your camera to let you take photos of your glass inventory items.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Flameworker needs access to your photo library to let you upload custom images for your glass inventory items.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Molten needs access to your camera to let you take photos of your glass inventory items.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Molten uses your location to help you find nearby glass art supply stores on the map.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Molten needs access to your photo library to let you upload custom images for your glass inventory items.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -1599,8 +1634,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Molten/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Molten;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Flameworker needs access to your camera to let you take photos of your glass inventory items.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Flameworker needs access to your photo library to let you upload custom images for your glass inventory items.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Molten needs access to your camera to let you take photos of your glass inventory items.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Molten uses your location to help you find nearby glass art supply stores on the map.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Molten needs access to your photo library to let you upload custom images for your glass inventory items.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

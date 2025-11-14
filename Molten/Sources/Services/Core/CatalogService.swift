@@ -185,14 +185,23 @@ actor CatalogService {
             completeItems.append(completeItem)
         }
 
+        // OPTIMIZATION: Extract actor-isolated properties before creating closures
+        // to avoid async closure requirements
+        var tagsByStableId: [String: [String]] = [:]
+        for item in completeItems {
+            let stableId = await item.glassItem.stable_id
+            let tags = await item.tags
+            tagsByStableId[stableId] = tags
+        }
+
         // Apply filters using model business logic
         let tagFilterClosure: ([String]) -> [String] = { requestedTags in
             // Return items that have ALL requested tags
-            completeItems
-                .filter { item in
-                    Set(requestedTags).isSubset(of: Set(item.tags))
+            tagsByStableId
+                .filter { (_, itemTags) in
+                    Set(requestedTags).isSubset(of: Set(itemTags))
                 }
-                .map { $0.glassItem.stable_id }
+                .map { $0.key }
         }
 
         let inventoryFilterClosure: (String) -> Bool = { stableId in

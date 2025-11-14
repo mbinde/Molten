@@ -30,7 +30,7 @@ enum ImageOwnerType: String, CaseIterable, Codable, Sendable {
 }
 
 /// Model for user-uploaded images
-nonisolated struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
+struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
     let id: UUID
     let ownerType: ImageOwnerType
     let ownerId: String?  // naturalKey for glass items, UUID.uuidString for plans, nil for standalone
@@ -106,7 +106,7 @@ enum UserImageType: String, CaseIterable, Codable, Sendable {
 
 #if canImport(UIKit)
 /// Repository protocol for managing user-uploaded images
-nonisolated protocol UserImageRepository: Sendable {
+protocol UserImageRepository: Sendable {
     // MARK: - New Generic Methods (Support all owner types)
 
     /// Save a new image with owner information

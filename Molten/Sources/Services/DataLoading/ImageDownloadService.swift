@@ -11,15 +11,37 @@ import Foundation
 import UIKit
 #endif
 
+// MARK: - Manifest Types
+
+/// Image manifest response from R2 API
+@preconcurrency struct ImageManifest: Codable, Sendable {
+    let version: String
+    let generatedAt: String
+    let images: [ImageEntry]
+    let totalCount: Int
+    let totalSize: Int
+}
+
+/// Individual image entry in manifest
+@preconcurrency struct ImageEntry: Codable, Sendable {
+    let filename: String
+    let etag: String
+    let size: Int
+    let lastModified: String
+}
+
 /// Service for downloading product images from images.molten.glass and caching locally
 /// This is a utility service with static methods - does not need MainActor isolation
 final class ImageDownloadService: Sendable {
 
     // MARK: - Configuration
 
-    /// Base URL for image CDN
-    // Images served as static assets from Cloudflare Pages
-    nonisolated(unsafe) private static let imageBaseURL = "https://www.moltenglass.app/images"
+    /// Base URL for image API (R2-backed)
+    // Images served from Cloudflare R2 via API with checksum validation
+    nonisolated(unsafe) private static let imageBaseURL = "https://www.moltenglass.app/api/v1/images"
+
+    /// URL for image manifest (contains all images with their ETags)
+    nonisolated(unsafe) private static let manifestURL = "https://www.moltenglass.app/api/v1/images/manifest"
 
     /// Local cache directory for downloaded images
     /// Marked nonisolated(unsafe) because it's computed once at class load and never changes
@@ -49,6 +71,25 @@ final class ImageDownloadService: Sendable {
     }()
 
     // MARK: - Public API
+
+    /// Fetches the image manifest from R2 API
+    /// - Returns: ImageManifest containing all available images with their ETags
+    static func fetchManifest() async throws -> ImageManifest {
+        guard let url = URL(string: manifestURL) else {
+            throw URLError(.badURL)
+        }
+
+        let (data, response) = try await urlSession.data(from: url)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+
+        let manifest = try JSONDecoder().decode(ImageManifest.self, from: data)
+        print("📋 [ImageDownloadService] Fetched manifest: \(manifest.totalCount) images available")
+        return manifest
+    }
 
     /// Attempts to load a product image from cache or download from CDN
     /// - Parameters:
@@ -81,11 +122,11 @@ final class ImageDownloadService: Sendable {
             }
 
             // If not cached, try to download
-            if let downloadedImage = await downloadImage(filename: targetFilename) {
+            if let result = await downloadImage(filename: targetFilename) {
                 print("✅ [ImageDownloadService] Downloaded from CDN: \(targetFilename)")
-                // Save to cache for next time
-                await saveToCache(image: downloadedImage, filename: targetFilename)
-                return downloadedImage
+                // Save to cache for next time with ETag for checksum validation
+                await saveToCache(image: result.image, filename: targetFilename, etag: result.etag)
+                return result.image
             }
 
             print("❌ [ImageDownloadService] Failed to load: \(targetFilename)")
@@ -99,10 +140,10 @@ final class ImageDownloadService: Sendable {
                     return cachedImage
                 }
 
-                if let downloadedImage = await downloadImage(filename: filename) {
+                if let result = await downloadImage(filename: filename) {
                     print("✅ [ImageDownloadService] Downloaded full-size from CDN: \(filename)")
-                    await saveToCache(image: downloadedImage, filename: filename)
-                    return downloadedImage
+                    await saveToCache(image: result.image, filename: filename, etag: result.etag)
+                    return result.image
                 }
             }
 
@@ -146,10 +187,10 @@ final class ImageDownloadService: Sendable {
                 }
 
                 // If not cached, try to download
-                if let downloadedImage = await downloadImage(filename: filenameWithExt) {
-                    // Save to cache for next time
-                    await saveToCache(image: downloadedImage, filename: filenameWithExt)
-                    return downloadedImage
+                if let result = await downloadImage(filename: filenameWithExt) {
+                    // Save to cache for next time with ETag for checksum validation
+                    await saveToCache(image: result.image, filename: filenameWithExt, etag: result.etag)
+                    return result.image
                 }
             }
         }
@@ -164,10 +205,10 @@ final class ImageDownloadService: Sendable {
             }
 
             // If not cached, try to download
-            if let downloadedImage = await downloadImage(filename: filenameWithExt) {
-                // Save to cache for next time
-                await saveToCache(image: downloadedImage, filename: filenameWithExt)
-                return downloadedImage
+            if let result = await downloadImage(filename: filenameWithExt) {
+                // Save to cache for next time with ETag for checksum validation
+                await saveToCache(image: result.image, filename: filenameWithExt, etag: result.etag)
+                return result.image
             }
         }
 
@@ -250,8 +291,9 @@ final class ImageDownloadService: Sendable {
         return image
     }
 
-    /// Downloads image from CDN
-    private nonisolated static func downloadImage(filename: String) async -> UIImage? {
+    /// Downloads image from CDN and returns both the image and its ETag for checksum validation
+    /// - Returns: Tuple of (UIImage, ETag) if successful, nil otherwise
+    private nonisolated static func downloadImage(filename: String) async -> (image: UIImage, etag: String)? {
         let urlString = "\(imageBaseURL)/\(filename)"
         guard let url = URL(string: urlString) else {
             print("❌ [ImageDownloadService] Invalid URL: \(urlString)")
@@ -269,12 +311,15 @@ final class ImageDownloadService: Sendable {
                 return nil
             }
 
+            // Extract ETag from response headers (for checksum validation)
+            let etag = httpResponse.value(forHTTPHeaderField: "ETag") ?? ""
+
             // Convert data to UIImage
             guard let image = UIImage(data: data) else {
                 return nil
             }
 
-            return image
+            return (image: image, etag: etag)
         } catch {
             // Silently fail for missing images (expected for many items)
             // Only log unexpected errors
@@ -286,8 +331,12 @@ final class ImageDownloadService: Sendable {
         }
     }
 
-    /// Saves image to local cache
-    private nonisolated static func saveToCache(image: UIImage, filename: String) async {
+    /// Saves image to local cache along with its ETag for checksum validation
+    /// - Parameters:
+    ///   - image: The image to save
+    ///   - filename: The filename to save as
+    ///   - etag: Optional ETag from server for checksum validation
+    private nonisolated static func saveToCache(image: UIImage, filename: String, etag: String? = nil) async {
         guard let cacheDir = cacheDirectory else {
             return
         }
@@ -316,6 +365,11 @@ final class ImageDownloadService: Sendable {
 
         do {
             try imageData.write(to: fileURL, options: .atomic)
+
+            // Store ETag alongside the image for future checksum validation
+            if let etag = etag, !etag.isEmpty {
+                storeETag(etag, for: filename)
+            }
         } catch {
             print("❌ [ImageDownloadService] Failed to save to cache: \(error)")
         }
@@ -334,5 +388,62 @@ final class ImageDownloadService: Sendable {
         } else {
             return "\(nameWithoutExt)_thumb.\(ext)"
         }
+    }
+
+    // MARK: - ETag Storage (for checksum validation)
+
+    /// Returns the path for storing an image's ETag
+    private nonisolated static func etagPath(for filename: String) -> URL? {
+        guard let cacheDir = cacheDirectory else {
+            return nil
+        }
+        return cacheDir.appendingPathComponent("\(filename).etag")
+    }
+
+    /// Stores the ETag for a cached image
+    private nonisolated static func storeETag(_ etag: String, for filename: String) {
+        guard let path = etagPath(for: filename) else {
+            return
+        }
+
+        do {
+            try etag.write(to: path, atomically: true, encoding: .utf8)
+        } catch {
+            print("⚠️ [ImageDownloadService] Failed to store ETag for \(filename): \(error)")
+        }
+    }
+
+    /// Retrieves the stored ETag for a cached image
+    private nonisolated static func getStoredETag(for filename: String) -> String? {
+        guard let path = etagPath(for: filename),
+              FileManager.default.fileExists(atPath: path.path) else {
+            return nil
+        }
+
+        return try? String(contentsOf: path, encoding: .utf8)
+    }
+
+    /// Checks if a cached image matches the expected ETag
+    /// - Parameters:
+    ///   - filename: The image filename
+    ///   - expectedETag: The ETag from R2 manifest
+    /// - Returns: true if cached image exists and ETags match
+    nonisolated static func isCacheValid(for filename: String, expectedETag: String) -> Bool {
+        // Check if image file exists
+        guard let cacheDir = cacheDirectory else {
+            return false
+        }
+
+        let imageURL = cacheDir.appendingPathComponent(filename)
+        guard FileManager.default.fileExists(atPath: imageURL.path) else {
+            return false
+        }
+
+        // Check if stored ETag matches expected
+        guard let storedETag = getStoredETag(for: filename) else {
+            return false
+        }
+
+        return storedETag == expectedETag
     }
 }

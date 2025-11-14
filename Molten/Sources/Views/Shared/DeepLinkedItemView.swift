@@ -289,7 +289,7 @@ struct DeepLinkedItemView: View {
             date_modified: Date()
         )
 
-        _ = try await service.inventoryRepository.updateInventory(updatedInventory)
+        _ = try await service.updateInventory(updatedInventory)
     }
 
     private func addOneToInventory(item: CompleteInventoryItemModel, service: InventoryTrackingService) async throws {
@@ -309,7 +309,7 @@ struct DeepLinkedItemView: View {
                 date_modified: Date()
             )
 
-            _ = try await service.inventoryRepository.updateInventory(updatedInventory)
+            _ = try await service.updateInventory(updatedInventory)
         } else {
             // Create new inventory record with quantity 1
             let newInventory = InventoryModel(
@@ -324,7 +324,7 @@ struct DeepLinkedItemView: View {
                 date_modified: Date()
             )
 
-            _ = try await service.inventoryRepository.createInventory(newInventory)
+            _ = try await service.createInventory(newInventory)
         }
     }
 

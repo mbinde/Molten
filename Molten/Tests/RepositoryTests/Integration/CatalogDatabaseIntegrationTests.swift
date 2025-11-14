@@ -67,8 +67,9 @@ struct CatalogDatabaseIntegrationTests {
             // Initialize database
             try await CatalogDatabaseManager.shared.initialize()
 
-            // Create catalog service (uses SQLiteGlassItemRepository via RepositoryFactory)
-            let catalogService = RepositoryFactory.createCatalogService()
+            // Create catalog service (uses SQLiteGlassItemRepository via AppDependencies)
+            let deps = AppDependencies(persistenceController: .createTestController())
+            let catalogService = deps.catalogService
 
             // Fetch items through service
             let items = try await catalogService.getAllGlassItems()

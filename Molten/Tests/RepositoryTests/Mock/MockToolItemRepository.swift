@@ -40,12 +40,13 @@ final class MockToolItemRepository: ToolItemRepository {
     }
 
     func updateItem(_ item: ToolItemModel) async throws -> ToolItemModel {
-        guard items[item.stable_id] != nil else {
+        let key = item.stable_id
+        guard items[key] != nil else {
             throw NSError(domain: "MockToolItemRepository", code: 404, userInfo: [
-                NSLocalizedDescriptionKey: "Item not found: \(item.stable_id)"
+                NSLocalizedDescriptionKey: "Item not found: \(key)"
             ])
         }
-        items[item.stable_id] = item
+        items[key] = item
         return item
     }
 
@@ -68,34 +69,64 @@ final class MockToolItemRepository: ToolItemRepository {
 
     func searchItems(text: String) async throws -> [ToolItemModel] {
         let lowercasedText = text.lowercased()
-        return items.values.filter { item in
-            item.name.lowercased().contains(lowercasedText) ||
-            item.manufacturer.lowercased().contains(lowercasedText) ||
-            (item.mfr_notes?.lowercased().contains(lowercasedText) ?? false)
-        }.sorted { $0.name < $1.name }
+        let itemsArray = Array(items.values)
+        return itemsArray.filter { (item: ToolItemModel) in
+            let name = item.name
+            let manufacturer = item.manufacturer
+            let notes = item.mfr_notes
+            return name.lowercased().contains(lowercasedText) ||
+                   manufacturer.lowercased().contains(lowercasedText) ||
+                   (notes?.lowercased().contains(lowercasedText) ?? false)
+        }.sorted { (a: ToolItemModel, b: ToolItemModel) in
+            let aName = a.name
+            let bName = b.name
+            return aName < bName
+        }
     }
 
     func fetchItems(byManufacturer manufacturer: String) async throws -> [ToolItemModel] {
-        return items.values
-            .filter { $0.manufacturer == manufacturer }
-            .sorted { $0.name < $1.name }
+        let itemsArray = Array(items.values)
+        return itemsArray
+            .filter { (item: ToolItemModel) in
+                let itemManufacturer = item.manufacturer
+                return itemManufacturer == manufacturer
+            }
+            .sorted { (a: ToolItemModel, b: ToolItemModel) in
+                let aName = a.name
+                let bName = b.name
+                return aName < bName
+            }
     }
 
     func fetchItems(byStatus status: String) async throws -> [ToolItemModel] {
-        return items.values
-            .filter { $0.mfr_status == status }
-            .sorted { $0.name < $1.name }
+        let itemsArray = Array(items.values)
+        return itemsArray
+            .filter { (item: ToolItemModel) in
+                let itemStatus = item.mfr_status
+                return itemStatus == status
+            }
+            .sorted { (a: ToolItemModel, b: ToolItemModel) in
+                let aName = a.name
+                let bName = b.name
+                return aName < bName
+            }
     }
 
     // MARK: - Business Query Operations
 
     func getDistinctManufacturers() async throws -> [String] {
-        let manufacturers = Set(items.values.map { $0.manufacturer })
+        let itemsArray = Array(items.values)
+        let manufacturers = Set(itemsArray.map { (item: ToolItemModel) in
+            item.manufacturer
+        })
         return manufacturers.sorted()
     }
 
     func getDistinctStatuses() async throws -> [String] {
-        let statuses = Set(items.values.map { $0.mfr_status })
+        let itemsArray = Array(items.values)
+        let statuses = Set(itemsArray.map { (item: ToolItemModel) in
+            item.mfr_status
+        })
         return statuses.sorted()
     }
 

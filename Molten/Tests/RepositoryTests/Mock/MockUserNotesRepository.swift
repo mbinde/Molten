@@ -20,7 +20,7 @@ final class MockUserNotesRepository: UserNotesRepository {
     // MARK: - CRUD Operations
 
     func createNotes(_ notes: UserNotesModel) async throws -> UserNotesModel {
-        let key = notes.item_stable_id
+        let key = await notes.item_stable_id
         self.notes[key] = notes
         return notes
     }
@@ -30,7 +30,7 @@ final class MockUserNotesRepository: UserNotesRepository {
     }
 
     func updateNotes(_ notes: UserNotesModel) async throws -> UserNotesModel {
-        let key = notes.item_stable_id
+        let key = await notes.item_stable_id
         guard self.notes[key] != nil else {
             throw NSError(domain: "MockUserNotesRepository", code: 404, userInfo: [
                 NSLocalizedDescriptionKey: "Notes not found for item: \(key)"
@@ -53,7 +53,7 @@ final class MockUserNotesRepository: UserNotesRepository {
         }
 
         if let foundNote = found {
-            let foundItemId = foundNote.item_stable_id
+            let foundItemId = await foundNote.item_stable_id
             notes.removeValue(forKey: foundItemId)
         } else {
             throw NSError(domain: "MockUserNotesRepository", code: 404, userInfo: [
@@ -93,7 +93,7 @@ final class MockUserNotesRepository: UserNotesRepository {
 
     func setNotes(_ notes: UserNotesModel) async throws -> UserNotesModel {
         // Upsert: create or update
-        let key = notes.item_stable_id
+        let key = await notes.item_stable_id
         self.notes[key] = notes
         return notes
     }

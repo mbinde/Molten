@@ -10,6 +10,7 @@ import Foundation
 
 /// Mock implementation of ItemMinimumRepository for testing
 /// Stores minimums in memory using a dictionary
+@MainActor
 final class MockItemMinimumRepository: ItemMinimumRepository {
 
     // MARK: - Storage
@@ -35,18 +36,26 @@ final class MockItemMinimumRepository: ItemMinimumRepository {
 
     func fetchMinimums(forItem item_stable_id: String) async throws -> [ItemMinimumModel] {
         let minimumsArray = Array(minimums.values)
-        return minimumsArray.filter { (minimum: ItemMinimumModel) in
+        var result: [ItemMinimumModel] = []
+        for minimum in minimumsArray {
             let minItemId = minimum.item_stable_id
-            return minItemId == item_stable_id
+            if minItemId == item_stable_id {
+                result.append(minimum)
+            }
         }
+        return result
     }
 
     func fetchMinimums(forStore store: String) async throws -> [ItemMinimumModel] {
         let minimumsArray = Array(minimums.values)
-        return minimumsArray.filter { (minimum: ItemMinimumModel) in
+        var result: [ItemMinimumModel] = []
+        for minimum in minimumsArray {
             let minStore = minimum.store
-            return minStore == store
+            if minStore == store {
+                result.append(minimum)
+            }
         }
+        return result
     }
 
     func createMinimum(_ minimum: ItemMinimumModel) async throws -> ItemMinimumModel {
@@ -130,13 +139,14 @@ final class MockItemMinimumRepository: ItemMinimumRepository {
 
     func generateShoppingLists(currentInventory: [String: [String: Double]]) async throws -> [String: [ShoppingListItemModel]] {
         let minimumsArray = Array(minimums.values)
-        let allStores = Set(minimumsArray.map { (minimum: ItemMinimumModel) in
+        var storesSet: Set<String> = []
+        for minimum in minimumsArray {
             let store = minimum.store
-            return store
-        })
+            storesSet.insert(store)
+        }
         var result: [String: [ShoppingListItemModel]] = [:]
 
-        for store in allStores {
+        for store in storesSet {
             result[store] = try await generateShoppingList(forStore: store, currentInventory: currentInventory)
         }
 
@@ -184,18 +194,22 @@ final class MockItemMinimumRepository: ItemMinimumRepository {
 
     func getDistinctStores() async throws -> [String] {
         let minimumsArray = Array(minimums.values)
-        let stores = Set(minimumsArray.map { (minimum: ItemMinimumModel) in
-            minimum.store
-        })
-        return stores.sorted()
+        var storesSet: Set<String> = []
+        for minimum in minimumsArray {
+            let store = minimum.store
+            storesSet.insert(store)
+        }
+        return storesSet.sorted()
     }
 
     func getStores(withPrefix prefix: String) async throws -> [String] {
         let minimumsArray = Array(minimums.values)
-        let stores = Set(minimumsArray.map { (minimum: ItemMinimumModel) in
-            minimum.store
-        })
-        return stores.filter { $0.hasPrefix(prefix) }.sorted()
+        var storesSet: Set<String> = []
+        for minimum in minimumsArray {
+            let store = minimum.store
+            storesSet.insert(store)
+        }
+        return storesSet.filter { $0.hasPrefix(prefix) }.sorted()
     }
 
     func getStoreUtilization() async throws -> [String: Int] {
@@ -240,14 +254,17 @@ final class MockItemMinimumRepository: ItemMinimumRepository {
 
     func getHighestMinimums(limit: Int) async throws -> [ItemMinimumModel] {
         let minimumsArray = Array(minimums.values)
-        return minimumsArray
-            .sorted { (a: ItemMinimumModel, b: ItemMinimumModel) in
-                let aQty = a.quantity
-                let bQty = b.quantity
-                return aQty > bQty
-            }
-            .prefix(limit)
-            .map { $0 }
+        var sortedArray: [ItemMinimumModel] = []
+        for minimum in minimumsArray {
+            sortedArray.append(minimum)
+        }
+        sortedArray.sort { (a: ItemMinimumModel, b: ItemMinimumModel) in
+            let aQty = a.quantity
+            let bQty = b.quantity
+            return aQty > bQty
+        }
+        let result = Array(sortedArray.prefix(limit))
+        return result
     }
 
     func getMostCommonTypes() async throws -> [String: Int] {
@@ -262,10 +279,14 @@ final class MockItemMinimumRepository: ItemMinimumRepository {
 
     func validateMinimumRecords(validItemKeys: Set<String>) async throws -> [ItemMinimumModel] {
         let minimumsArray = Array(minimums.values)
-        return minimumsArray.filter { (minimum: ItemMinimumModel) in
+        var result: [ItemMinimumModel] = []
+        for minimum in minimumsArray {
             let itemId = minimum.item_stable_id
-            return !validItemKeys.contains(itemId)
+            if !validItemKeys.contains(itemId) {
+                result.append(minimum)
+            }
         }
+        return result
     }
 
     // MARK: - Test Helpers

@@ -48,13 +48,13 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
     }
 
     func createRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel {
-        let id = record.id
+        let id = await record.id
         records[id] = record
         return record
     }
 
     func updateRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel {
-        let id = record.id
+        let id = await record.id
         guard records[id] != nil else {
             throw PurchaseRecordRepositoryError.recordNotFound(id.uuidString)
         }
@@ -75,8 +75,8 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
         let searchText = text.lowercased()
         let recordsArray = Array(records.values)
         let filtered = recordsArray.filter { (record: PurchaseRecordModel) in
-            let supplier = record.supplier
-            let notes = record.notes
+            let supplier = await record.supplier
+            let notes = await record.notes
             return supplier.lowercased().contains(searchText) ||
                 (notes?.lowercased().contains(searchText) ?? false)
         }
@@ -108,7 +108,7 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
         let recordsArray = Array(records.values)
         var suppliers: Set<String> = []
         for record in recordsArray {
-            let supplier = record.supplier
+            let supplier = await record.supplier
             suppliers.insert(supplier)
         }
         return suppliers.sorted()
@@ -119,9 +119,9 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
 
         var total: Decimal = 0
         for record in filteredRecords {
-            let subtotal = record.subtotal
-            let tax = record.tax
-            let shipping = record.shipping
+            let subtotal = await record.subtotal
+            let tax = await record.tax
+            let shipping = await record.shipping
 
             if let subtotal = subtotal {
                 total += subtotal
@@ -143,10 +143,10 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
         var spendingBySupplier: [String: Decimal] = [:]
 
         for record in filteredRecords {
-            let subtotal = record.subtotal
-            let tax = record.tax
-            let shipping = record.shipping
-            let supplier = record.supplier
+            let subtotal = await record.subtotal
+            let tax = await record.tax
+            let shipping = await record.shipping
+            let supplier = await record.supplier
 
             var recordTotal: Decimal = 0
 
@@ -175,7 +175,7 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
 
         let recordsArray = Array(records.values)
         for record in recordsArray {
-            let recordItems = record.items
+            let recordItems = await record.items
             let matchingItems = recordItems.filter { (item: PurchaseRecordItemModel) in
                 let itemStableId = item.item_stable_id
                 return itemStableId == stableId

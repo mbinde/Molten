@@ -8,16 +8,16 @@
 import Foundation
 
 /// Business model for aggregated rating data from the server
-struct AggregatedRatingModel: Identifiable, Equatable, Codable, Sendable {
-    let id: UUID
-    let itemStableId: String
-    let averageRating: Double
-    let totalRatings: Int
-    let topWords: [RatingWordModel]
-    let lastAggregated: Date
+public struct AggregatedRatingModel: Identifiable, Equatable, Codable, Sendable {
+    public let id: UUID
+    public let itemStableId: String
+    public let averageRating: Double
+    public let totalRatings: Int
+    public let topWords: [RatingWordModel]
+    public let lastAggregated: Date
 
     /// Initialize with business logic validation
-    nonisolated init(
+    public nonisolated init(
         id: UUID = UUID(),
         itemStableId: String,
         averageRating: Double,
@@ -36,12 +36,12 @@ struct AggregatedRatingModel: Identifiable, Equatable, Codable, Sendable {
     // MARK: - Validation
 
     /// Validate that the aggregated rating has required data
-    nonisolated var isValid: Bool {
+    public nonisolated var isValid: Bool {
         return validationErrors.isEmpty
     }
 
     /// Get validation errors if any
-    nonisolated var validationErrors: [String] {
+    public nonisolated var validationErrors: [String] {
         var errors: [String] = []
 
         if itemStableId.isEmpty {
@@ -62,7 +62,7 @@ struct AggregatedRatingModel: Identifiable, Equatable, Codable, Sendable {
     // MARK: - Business Logic
 
     /// Rating category based on average rating
-    var ratingCategory: RatingCategory {
+    public var ratingCategory: RatingCategory {
         switch averageRating {
         case 4.5...5.0:
             return .excellent
@@ -79,29 +79,29 @@ struct AggregatedRatingModel: Identifiable, Equatable, Codable, Sendable {
 
     /// Check if there are enough ratings to be statistically significant
     /// (minimum 5 ratings)
-    var hasEnoughRatings: Bool {
+    public var hasEnoughRatings: Bool {
         return totalRatings >= 5
     }
 
     /// Get top N words for display (default 10)
-    func topWordsForDisplay(limit: Int = 10) -> [RatingWordModel] {
+    public func topWordsForDisplay(limit: Int = 10) -> [RatingWordModel] {
         return Array(topWords.prefix(limit))
     }
 
     /// Formatted average rating (e.g., "4.7")
-    var formattedAverageRating: String {
+    public var formattedAverageRating: String {
         return String(format: "%.1f", averageRating)
     }
 
     /// Check if data is stale (older than specified interval)
-    func isStale(threshold: TimeInterval) -> Bool {
+    public func isStale(threshold: TimeInterval) -> Bool {
         return Date().timeIntervalSince(lastAggregated) > threshold
     }
 }
 
 // MARK: - Rating Category
 
-enum RatingCategory: String, Codable, Sendable {
+public enum RatingCategory: String, Codable, Sendable {
     case excellent = "Excellent"
     case good = "Good"
     case average = "Average"
@@ -113,7 +113,7 @@ enum RatingCategory: String, Codable, Sendable {
 
 extension AggregatedRatingModel {
     /// Create aggregated rating from a dictionary (useful for JSON parsing from server)
-    static func from(dictionary: [String: Any]) -> AggregatedRatingModel? {
+    public static func from(dictionary: [String: Any]) -> AggregatedRatingModel? {
         guard let itemStableId = dictionary["itemStableId"] as? String,
               let averageRating = dictionary["averageRating"] as? Double,
               let totalRatings = dictionary["totalRatings"] as? Int else {

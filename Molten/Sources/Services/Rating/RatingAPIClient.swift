@@ -144,7 +144,8 @@ public class RatingAPIClient: RatingAPIClientProtocol {
 
         // Convert to models
         return json.ratings.compactMap { dict in
-            AggregatedRatingModel.from(dictionary: dict)
+            let anyDict = dict.mapValues { $0.value }
+            return AggregatedRatingModel.from(dictionary: anyDict)
         }
     }
 
@@ -194,75 +195,5 @@ public class RatingAPIClient: RatingAPIClientProtocol {
 // MARK: - Response Types
 
 private struct FetchRatingsResponse: Codable {
-    let ratings: [[String: Any]]
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-
-        // Decode as array of dictionaries
-        var ratingsArray = try container.nestedUnkeyedContainer(forKey: .ratings)
-        var decodedRatings: [[String: Any]] = []
-
-        while !ratingsArray.isAtEnd {
-            if let dict = try? ratingsArray.decode([String: AnyCodable].self) {
-                decodedRatings.append(dict.mapValues { $0.value })
-            }
-        }
-
-        self.ratings = decodedRatings
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case ratings
-    }
-}
-
-// Helper for decoding Any values
-private struct AnyCodable: Codable {
-    let value: Any
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-
-        if let bool = try? container.decode(Bool.self) {
-            value = bool
-        } else if let int = try? container.decode(Int.self) {
-            value = int
-        } else if let double = try? container.decode(Double.self) {
-            value = double
-        } else if let string = try? container.decode(String.self) {
-            value = string
-        } else if let array = try? container.decode([AnyCodable].self) {
-            value = array.map { $0.value }
-        } else if let dict = try? container.decode([String: AnyCodable].self) {
-            value = dict.mapValues { $0.value }
-        } else {
-            value = NSNull()
-        }
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-
-        switch value {
-        case let bool as Bool:
-            try container.encode(bool)
-        case let int as Int:
-            try container.encode(int)
-        case let double as Double:
-            try container.encode(double)
-        case let string as String:
-            try container.encode(string)
-        case let array as [Any]:
-            try container.encode(array.map { AnyCodable(value: $0) })
-        case let dict as [String: Any]:
-            try container.encode(dict.mapValues { AnyCodable(value: $0) })
-        default:
-            try container.encodeNil()
-        }
-    }
-
-    init(value: Any) {
-        self.value = value
-    }
+    let ratings: [[String: AnyCodable]]
 }

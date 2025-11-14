@@ -103,7 +103,7 @@ struct RatingDisplayView: View {
                         .fontWeight(.semibold)
                         .foregroundStyle(.secondary)
 
-                    FlowLayout(spacing: 8) {
+                    RatingFlowLayout(spacing: 8) {
                         ForEach(rating.topWordsForDisplay(limit: 10)) { word in
                             wordTag(word: word)
                         }
@@ -213,7 +213,7 @@ struct RatingDisplayView: View {
 // MARK: - Flow Layout
 
 /// Simple flow layout for wrapping word tags
-private struct FlowLayout: Layout {
+private struct RatingFlowLayout: Layout {
     var spacing: CGFloat = 8
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {

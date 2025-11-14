@@ -8,14 +8,14 @@
 import Foundation
 
 /// Business model for a rating word with its frequency and rank
-struct RatingWordModel: Identifiable, Equatable, Codable, Sendable, Comparable {
-    let id: UUID
-    let word: String
-    let frequency: Int
-    let rank: Int
+public struct RatingWordModel: Identifiable, Equatable, Codable, Sendable, Comparable {
+    public let id: UUID
+    public let word: String
+    public let frequency: Int
+    public let rank: Int
 
     /// Initialize with business logic validation
-    nonisolated init(
+    public nonisolated init(
         id: UUID = UUID(),
         word: String,
         frequency: Int,
@@ -30,12 +30,12 @@ struct RatingWordModel: Identifiable, Equatable, Codable, Sendable, Comparable {
     // MARK: - Validation
 
     /// Validate that the word has required data
-    nonisolated var isValid: Bool {
+    public nonisolated var isValid: Bool {
         return validationErrors.isEmpty
     }
 
     /// Get validation errors if any
-    nonisolated var validationErrors: [String] {
+    public nonisolated var validationErrors: [String] {
         var errors: [String] = []
 
         if word.isEmpty {
@@ -56,7 +56,7 @@ struct RatingWordModel: Identifiable, Equatable, Codable, Sendable, Comparable {
     // MARK: - Comparable
 
     /// Compare by rank (lower rank is "less than")
-    static func < (lhs: RatingWordModel, rhs: RatingWordModel) -> Bool {
+    public static func < (lhs: RatingWordModel, rhs: RatingWordModel) -> Bool {
         return lhs.rank < rhs.rank
     }
 }
@@ -65,7 +65,7 @@ struct RatingWordModel: Identifiable, Equatable, Codable, Sendable, Comparable {
 
 extension RatingWordModel {
     /// Create word model from a dictionary (useful for JSON parsing)
-    static func from(dictionary: [String: Any]) -> RatingWordModel? {
+    public static func from(dictionary: [String: Any]) -> RatingWordModel? {
         guard let word = dictionary["word"] as? String,
               let frequency = dictionary["frequency"] as? Int,
               let rank = dictionary["rank"] as? Int else {

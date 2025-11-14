@@ -10,7 +10,7 @@ import Foundation
 import CoreData
 
 /// Core Data implementation of RatingRepository
-public class CoreDataRatingRepository: RatingRepository {
+public final class CoreDataRatingRepository: RatingRepository, @unchecked Sendable {
 
     // MARK: - Properties
 

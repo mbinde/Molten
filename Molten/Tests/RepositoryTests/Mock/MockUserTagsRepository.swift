@@ -122,9 +122,17 @@ final class MockUserTagsRepository: UserTagsRepository {
 
     func fetchOwners(withAnyTags tags: [String], ownerType: TagOwnerType) async throws -> [String] {
         let cleanedTags = Set(tags.map { UserTagModel.cleanTag($0) })
-        let owners = self.tags.values
-            .filter { (tag: UserTagModel) in tag.ownerType == ownerType && cleanedTags.contains(tag.tag) }
-            .map { (tag: UserTagModel) in tag.ownerId }
+        let tagsArray = Array(self.tags.values)
+        let filtered = tagsArray.filter { (tag: UserTagModel) in
+            let tagOwnerType = tag.ownerType
+            let tagString = tag.tag
+            return tagOwnerType == ownerType && cleanedTags.contains(tagString)
+        }
+        var owners: [String] = []
+        for tag in filtered {
+            let ownerId = tag.ownerId
+            owners.append(ownerId)
+        }
         return Array(Set(owners)).sorted()
     }
 
@@ -132,7 +140,11 @@ final class MockUserTagsRepository: UserTagsRepository {
 
     func getTagUsageCounts(ownerType: TagOwnerType?) async throws -> [String: Int] {
         var counts: [String: Int] = [:]
-        let filteredTags = Array(tags.values.filter { (tag: UserTagModel) in ownerType == nil || tag.ownerType == ownerType })
+        let tagsArray = Array(tags.values)
+        let filteredTags = tagsArray.filter { (tag: UserTagModel) in
+            let tagOwnerType = tag.ownerType
+            return ownerType == nil || tagOwnerType == ownerType
+        }
 
         for tagModel in filteredTags {
             let tagString = tagModel.tag
@@ -152,8 +164,11 @@ final class MockUserTagsRepository: UserTagsRepository {
 
     func tagExists(_ tag: String, ownerType: TagOwnerType?) async throws -> Bool {
         let cleanedTag = UserTagModel.cleanTag(tag)
-        return tags.values.contains { (tagModel: UserTagModel) in
-            tagModel.tag == cleanedTag && (ownerType == nil || tagModel.ownerType == ownerType)
+        let tagsArray = Array(tags.values)
+        return tagsArray.contains { (tagModel: UserTagModel) in
+            let modelTag = tagModel.tag
+            let modelOwnerType = tagModel.ownerType
+            return modelTag == cleanedTag && (ownerType == nil || modelOwnerType == ownerType)
         }
     }
 

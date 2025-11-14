@@ -434,37 +434,65 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
     func getInventoriesInLocation(_ locationName: String) async throws -> [UUID] {
         let cleanLocationName = StorageLocationModel.cleanLocationName(locationName)
         let locations = try await fetchLocations(withName: cleanLocationName)
-        let inventory_ids = Set(locations.map { $0.inventory_id })
+        var inventory_ids = Set<UUID>()
+        for location in locations {
+            inventory_ids.insert(await location.inventory_id)
+        }
         return Array(inventory_ids).sorted { $0.uuidString < $1.uuidString }
     }
     
     func getLocationUtilization() async throws -> [String: Double] {
         let allLocations = try await fetchLocations(matching: nil)
-        let grouped = Dictionary(grouping: allLocations, by: { $0.location })
-        return grouped.mapValues { locations in
-            locations.reduce(0.0) { $0 + $1.quantity }
+        var grouped: [String: [StorageLocationModel]] = [:]
+        for location in allLocations {
+            let key = await location.location
+            grouped[key, default: []].append(location)
         }
+
+        var result: [String: Double] = [:]
+        for (key, locations) in grouped {
+            var total = 0.0
+            for location in locations {
+                total += await location.quantity
+            }
+            result[key] = total
+        }
+        return result
     }
     
     func getLocationUsageCounts() async throws -> [(location: String, usageCount: Int)] {
         let allLocations = try await fetchLocations(matching: nil)
-        let grouped = Dictionary(grouping: allLocations, by: { $0.location })
-        let counts = grouped.mapValues { $0.count }
-        return counts.map { (location: $0.key, usageCount: $0.value) }.sorted { $0.usageCount > $1.usageCount }
+        var grouped: [String: [StorageLocationModel]] = [:]
+        for location in allLocations {
+            let key = await location.location
+            grouped[key, default: []].append(location)
+        }
+
+        var results: [(location: String, usageCount: Int)] = []
+        for (location, items) in grouped {
+            results.append((location: location, usageCount: items.count))
+        }
+        return results.sorted { $0.usageCount > $1.usageCount }
     }
     
     // MARK: - Validation Operations
     
     func validateLocationQuantities(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Bool {
         let locations = try await fetchLocations(forInventory: inventory_id)
-        let actualTotal = locations.reduce(0.0) { $0 + $1.quantity }
+        var actualTotal = 0.0
+        for location in locations {
+            actualTotal += await location.quantity
+        }
         let tolerance = 0.001
         return abs(actualTotal - expectedTotal) <= tolerance
     }
     
     func getLocationQuantityDiscrepancy(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Double {
         let locations = try await fetchLocations(forInventory: inventory_id)
-        let actualTotal = locations.reduce(0.0) { $0 + $1.quantity }
+        var actualTotal = 0.0
+        for location in locations {
+            actualTotal += await location.quantity
+        }
         return actualTotal - expectedTotal
     }
     

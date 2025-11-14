@@ -26,36 +26,44 @@ final class MockLocationRepository: LocationRepository {
 
     func fetchLocations(forInventory inventory_id: UUID) async throws -> [StorageLocationModel] {
         let locationsArray = Array(locations.values)
-        return locationsArray.filter { (loc: StorageLocationModel) in
-            let locInventoryId = loc.inventory_id
-            return locInventoryId == inventory_id
+        var result: [StorageLocationModel] = []
+        for loc in locationsArray {
+            let locInventoryId = await loc.inventory_id
+            if locInventoryId == inventory_id {
+                result.append(loc)
+            }
         }
+        return result
     }
 
     func fetchLocations(withName locationName: String) async throws -> [StorageLocationModel] {
         let locationsArray = Array(locations.values)
-        return locationsArray.filter { (loc: StorageLocationModel) in
-            let locName = loc.location
-            return locName == locationName
+        var result: [StorageLocationModel] = []
+        for loc in locationsArray {
+            let locName = await loc.location
+            if locName == locationName {
+                result.append(loc)
+            }
         }
+        return result
     }
 
     func createLocation(_ location: StorageLocationModel) async throws -> StorageLocationModel {
-        let id = location.id
+        let id = await location.id
         locations[id] = location
         return location
     }
 
     func createLocations(_ locations: [StorageLocationModel]) async throws -> [StorageLocationModel] {
         for location in locations {
-            let id = location.id
+            let id = await location.id
             self.locations[id] = location
         }
         return locations
     }
 
     func updateLocation(_ location: StorageLocationModel) async throws -> StorageLocationModel {
-        let id = location.id
+        let id = await location.id
         guard locations[id] != nil else {
             throw NSError(domain: "MockLocationRepository", code: 404)
         }
@@ -64,14 +72,14 @@ final class MockLocationRepository: LocationRepository {
     }
 
     func deleteLocation(_ location: StorageLocationModel) async throws {
-        let id = location.id
+        let id = await location.id
         locations.removeValue(forKey: id)
     }
 
     func deleteLocations(forInventory inventory_id: UUID) async throws {
         let locationsArray = Array(locations)
         for (id, loc) in locationsArray {
-            let locInventoryId = loc.inventory_id
+            let locInventoryId = await loc.inventory_id
             if locInventoryId == inventory_id {
                 locations.removeValue(forKey: id)
             }
@@ -81,7 +89,7 @@ final class MockLocationRepository: LocationRepository {
     func deleteLocations(withName locationName: String) async throws {
         let locationsArray = Array(locations)
         for (id, loc) in locationsArray {
-            let locName = loc.location
+            let locName = await loc.location
             if locName == locationName {
                 locations.removeValue(forKey: id)
             }
@@ -108,14 +116,18 @@ final class MockLocationRepository: LocationRepository {
 
     func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventory_id: UUID) async throws -> StorageLocationModel {
         let locs = try await fetchLocations(forInventory: inventory_id)
-        let existing = locs.first { (loc: StorageLocationModel) in
-            let locName = loc.location
-            return locName == locationName
+        var existing: StorageLocationModel? = nil
+        for loc in locs {
+            let locName = await loc.location
+            if locName == locationName {
+                existing = loc
+                break
+            }
         }
 
         if let existing = existing {
-            let existingQty = existing.quantity
-            let existingId = existing.id
+            let existingQty = await existing.quantity
+            let existingId = await existing.id
             let updated = StorageLocationModel(
                 id: existingId,
                 inventory_id: inventory_id,
@@ -136,21 +148,26 @@ final class MockLocationRepository: LocationRepository {
 
     func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventory_id: UUID) async throws -> StorageLocationModel? {
         let locs = try await fetchLocations(forInventory: inventory_id)
-        guard let existing = locs.first(where: { (loc: StorageLocationModel) in
-            let locName = loc.location
-            return locName == locationName
-        }) else {
+        var existing: StorageLocationModel? = nil
+        for loc in locs {
+            let locName = await loc.location
+            if locName == locationName {
+                existing = loc
+                break
+            }
+        }
+        guard let existing = existing else {
             throw NSError(domain: "MockLocationRepository", code: 404)
         }
 
-        let existingQty = existing.quantity
+        let existingQty = await existing.quantity
         let newQty = existingQty - quantity
 
         if newQty <= 0 {
             try await deleteLocation(existing)
             return nil
         } else {
-            let existingId = existing.id
+            let existingId = await existing.id
             let updated = StorageLocationModel(
                 id: existingId,
                 inventory_id: inventory_id,
@@ -172,7 +189,7 @@ final class MockLocationRepository: LocationRepository {
         let locationsArray = Array(locations.values)
         var namesSet: Set<String> = []
         for loc in locationsArray {
-            let location = loc.location
+            let location = await loc.location
             namesSet.insert(location)
         }
         return namesSet.sorted()
@@ -187,9 +204,9 @@ final class MockLocationRepository: LocationRepository {
         let locationsArray = Array(locations.values)
         var inventoriesSet: Set<UUID> = []
         for loc in locationsArray {
-            let locName = loc.location
+            let locName = await loc.location
             if locName == locationName {
-                let inventoryId = loc.inventory_id
+                let inventoryId = await loc.inventory_id
                 inventoriesSet.insert(inventoryId)
             }
         }
@@ -201,8 +218,8 @@ final class MockLocationRepository: LocationRepository {
 
         let locationsArray = Array(locations.values)
         for loc in locationsArray {
-            let name = loc.location
-            let qty = loc.quantity
+            let name = await loc.location
+            let qty = await loc.quantity
             utilization[name] = (utilization[name] ?? 0) + qty
         }
 
@@ -214,7 +231,7 @@ final class MockLocationRepository: LocationRepository {
 
         let locationsArray = Array(locations.values)
         for loc in locationsArray {
-            let name = loc.location
+            let name = await loc.location
             counts[name] = (counts[name] ?? 0) + 1
         }
 
@@ -228,7 +245,7 @@ final class MockLocationRepository: LocationRepository {
         let locs = try await fetchLocations(forInventory: inventory_id)
         var total: Double = 0.0
         for loc in locs {
-            let qty = loc.quantity
+            let qty = await loc.quantity
             total += qty
         }
         return abs(total - expectedTotal) < 0.001 // Tolerance for floating point
@@ -238,7 +255,7 @@ final class MockLocationRepository: LocationRepository {
         let locs = try await fetchLocations(forInventory: inventory_id)
         var total: Double = 0.0
         for loc in locs {
-            let qty = loc.quantity
+            let qty = await loc.quantity
             total += qty
         }
         return total - expectedTotal

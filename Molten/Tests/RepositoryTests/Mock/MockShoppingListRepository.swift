@@ -21,12 +21,8 @@ final class MockShoppingListRepository: ShoppingListRepository {
 
     func fetchAllItems() async throws -> [ItemShoppingModel] {
         let itemsArray = Array(items.values)
-        let sorted = itemsArray.sorted { (a: ItemShoppingModel, b: ItemShoppingModel) in
-            let aDate = a.dateAdded
-            let bDate = b.dateAdded
-            return aDate > bDate
-        }
-        return sorted
+        // ItemShoppingModel properties are synchronous, no await needed
+        return itemsArray.sorted { $0.dateAdded > $1.dateAdded }
     }
 
     func fetchItems(matching predicate: NSPredicate?) async throws -> [ItemShoppingModel] {
@@ -40,25 +36,15 @@ final class MockShoppingListRepository: ShoppingListRepository {
 
     func fetchItem(forItem item_stable_id: String) async throws -> ItemShoppingModel? {
         let itemsArray = Array(items.values)
-        let found = itemsArray.first { (item: ItemShoppingModel) in
-            let itemId = item.item_stable_id
-            return itemId == item_stable_id
-        }
-        return found
+        // ItemShoppingModel properties are synchronous, no await needed
+        return itemsArray.first { $0.item_stable_id == item_stable_id }
     }
 
     func fetchItems(forStore store: String) async throws -> [ItemShoppingModel] {
         let itemsArray = Array(items.values)
-        let filtered = itemsArray.filter { (item: ItemShoppingModel) in
-            let itemStore = item.store
-            return itemStore == store
-        }
-        let sorted = filtered.sorted { (a: ItemShoppingModel, b: ItemShoppingModel) in
-            let aDate = a.dateAdded
-            let bDate = b.dateAdded
-            return aDate > bDate
-        }
-        return sorted
+        // ItemShoppingModel properties are synchronous, no await needed
+        let filtered = itemsArray.filter { $0.store == store }
+        return filtered.sorted { $0.dateAdded > $1.dateAdded }
     }
 
     func createItem(_ item: ItemShoppingModel) async throws -> ItemShoppingModel {
@@ -203,49 +189,29 @@ final class MockShoppingListRepository: ShoppingListRepository {
     }
 
     func getItemCount(forStore store: String) async throws -> Int {
-        let itemsArray = Array(items.values)
-        let filtered = itemsArray.filter { (item: ItemShoppingModel) in
-            let itemStore = item.store
-            return itemStore == store
+        var count = 0
+        for item in items.values {
+            let itemStore = await item.store
+            if itemStore == store {
+                count += 1
+            }
         }
-        return filtered.count
+        return count
     }
 
     func getItemsSortedByDate(ascending: Bool) async throws -> [ItemShoppingModel] {
         let itemsArray = Array(items.values)
-        if ascending {
-            let sorted = itemsArray.sorted { (a: ItemShoppingModel, b: ItemShoppingModel) in
-                let aDate = a.dateAdded
-                let bDate = b.dateAdded
-                return aDate < bDate
-            }
-            return sorted
-        } else {
-            let sorted = itemsArray.sorted { (a: ItemShoppingModel, b: ItemShoppingModel) in
-                let aDate = a.dateAdded
-                let bDate = b.dateAdded
-                return aDate > bDate
-            }
-            return sorted
+        // ItemShoppingModel properties are synchronous, no await needed
+        return itemsArray.sorted { a, b in
+            ascending ? a.dateAdded < b.dateAdded : a.dateAdded > b.dateAdded
         }
     }
 
     func getItemsSortedByQuantity(ascending: Bool) async throws -> [ItemShoppingModel] {
         let itemsArray = Array(items.values)
-        if ascending {
-            let sorted = itemsArray.sorted { (a: ItemShoppingModel, b: ItemShoppingModel) in
-                let aQty = a.quantity
-                let bQty = b.quantity
-                return aQty < bQty
-            }
-            return sorted
-        } else {
-            let sorted = itemsArray.sorted { (a: ItemShoppingModel, b: ItemShoppingModel) in
-                let aQty = a.quantity
-                let bQty = b.quantity
-                return aQty > bQty
-            }
-            return sorted
+        // ItemShoppingModel properties are synchronous, no await needed
+        return itemsArray.sorted { a, b in
+            ascending ? a.quantity < b.quantity : a.quantity > b.quantity
         }
     }
 

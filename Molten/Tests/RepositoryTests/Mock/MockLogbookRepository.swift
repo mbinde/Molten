@@ -28,25 +28,54 @@ final class MockLogbookRepository: LogbookRepository {
     }
 
     func getAllLogs() async throws -> [LogbookModel] {
-        return Array(logs.values).sorted { $0.dateCreated > $1.dateCreated }
+        let logsArray = Array(logs.values)
+
+        // Extract dates and pair with logs for sorting
+        var logsWithDates: [(log: LogbookModel, date: Date)] = []
+        for log in logsArray {
+            let date = await log.dateCreated
+            logsWithDates.append((log, date))
+        }
+
+        // Sort by date descending
+        logsWithDates.sort { $0.date > $1.date }
+
+        return logsWithDates.map { $0.log }
     }
 
     func getLogs(status: ProjectStatus?) async throws -> [LogbookModel] {
         guard let status = status else {
             return try await getAllLogs()
         }
-        return logs.values
-            .filter { $0.status == status }
-            .sorted { $0.dateCreated > $1.dateCreated }
+        var filtered: [LogbookModel] = []
+        for log in logs.values {
+            let logStatus = await log.status
+            if logStatus == status {
+                filtered.append(log)
+            }
+        }
+
+        // Extract dates and pair with logs for sorting
+        var logsWithDates: [(log: LogbookModel, date: Date)] = []
+        for log in filtered {
+            let date = await log.dateCreated
+            logsWithDates.append((log, date))
+        }
+
+        // Sort by date descending
+        logsWithDates.sort { $0.date > $1.date }
+
+        return logsWithDates.map { $0.log }
     }
 
     func updateLog(_ log: LogbookModel) async throws {
-        guard logs[log.id] != nil else {
+        let logId = await log.id
+        guard logs[logId] != nil else {
             throw NSError(domain: "MockLogbookRepository", code: 404, userInfo: [
-                NSLocalizedDescriptionKey: "Log not found with id: \(log.id)"
+                NSLocalizedDescriptionKey: "Log not found with id: \(logId)"
             ])
         }
-        logs[log.id] = log
+        logs[logId] = log
     }
 
     func deleteLog(id: UUID) async throws {
@@ -61,34 +90,100 @@ final class MockLogbookRepository: LogbookRepository {
     // MARK: - Business Queries
 
     func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
-        return logs.values
-            .filter { $0.dateCreated >= start && $0.dateCreated <= end }
-            .sorted { $0.dateCreated > $1.dateCreated }
+        var filtered: [LogbookModel] = []
+        for log in logs.values {
+            let logDate = await log.dateCreated
+            if logDate >= start && logDate <= end {
+                filtered.append(log)
+            }
+        }
+
+        // Extract dates and pair with logs for sorting
+        var logsWithDates: [(log: LogbookModel, date: Date)] = []
+        for log in filtered {
+            let date = await log.dateCreated
+            logsWithDates.append((log, date))
+        }
+
+        // Sort by date descending
+        logsWithDates.sort { $0.date > $1.date }
+
+        return logsWithDates.map { $0.log }
     }
 
     func getSoldLogs() async throws -> [LogbookModel] {
-        return logs.values
-            .filter { $0.status == .sold }
-            .sorted { $0.dateCreated > $1.dateCreated }
+        var filtered: [LogbookModel] = []
+        for log in logs.values {
+            let logStatus = await log.status
+            if logStatus == .sold {
+                filtered.append(log)
+            }
+        }
+
+        // Extract dates and pair with logs for sorting
+        var logsWithDates: [(log: LogbookModel, date: Date)] = []
+        for log in filtered {
+            let date = await log.dateCreated
+            logsWithDates.append((log, date))
+        }
+
+        // Sort by date descending
+        logsWithDates.sort { $0.date > $1.date }
+
+        return logsWithDates.map { $0.log }
     }
 
     func getTotalRevenue() async throws -> Decimal {
-        return logs.values
-            .compactMap { $0.pricePoint }
-            .reduce(0, +)
+        var total: Decimal = 0
+        for log in logs.values {
+            let pricePoint = await log.pricePoint
+            if let pricePoint = pricePoint {
+                total += pricePoint
+            }
+        }
+        return total
     }
 
     // MARK: - Search
 
     func searchLogs(query: String) async throws -> [LogbookModel] {
         let lowercasedQuery = query.lowercased()
-        return logs.values
-            .filter { log in
-                log.title.lowercased().contains(lowercasedQuery) ||
-                (log.notes?.lowercased().contains(lowercasedQuery) ?? false) ||
-                (log.techniquesUsed?.contains(where: { $0.lowercased().contains(lowercasedQuery) }) ?? false)
+        var filtered: [LogbookModel] = []
+
+        for log in logs.values {
+            let logTitle = await log.title
+            let logNotes = await log.notes
+            let logTechniques = await log.techniquesUsed
+
+            let titleMatch = logTitle.lowercased().contains(lowercasedQuery)
+            let notesMatch = logNotes?.lowercased().contains(lowercasedQuery) ?? false
+
+            var techniquesMatch = false
+            if let techniques = logTechniques {
+                for technique in techniques {
+                    if technique.lowercased().contains(lowercasedQuery) {
+                        techniquesMatch = true
+                        break
+                    }
+                }
             }
-            .sorted { (a: LogbookModel, b: LogbookModel) in a.dateCreated > b.dateCreated }
+
+            if titleMatch || notesMatch || techniquesMatch {
+                filtered.append(log)
+            }
+        }
+
+        // Extract dates and pair with logs for sorting
+        var logsWithDates: [(log: LogbookModel, date: Date)] = []
+        for log in filtered {
+            let date = await log.dateCreated
+            logsWithDates.append((log, date))
+        }
+
+        // Sort by date descending
+        logsWithDates.sort { $0.date > $1.date }
+
+        return logsWithDates.map { $0.log }
     }
 
     // MARK: - Test Helpers

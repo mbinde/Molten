@@ -298,12 +298,20 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     func getTotalQuantity(forItem item_stable_id: String) async throws -> Double {
         let inventoryRecords = try await fetchInventory(forItem: item_stable_id)
-        return inventoryRecords.reduce(0.0) { $0 + $1.quantity }
+        var total = 0.0
+        for record in inventoryRecords {
+            total += await record.quantity
+        }
+        return total
     }
     
     func getTotalQuantity(forItem item_stable_id: String, type: String) async throws -> Double {
         let inventoryRecords = try await fetchInventory(forItem: item_stable_id, type: type)
-        return inventoryRecords.reduce(0.0) { $0 + $1.quantity }
+        var total = 0.0
+        for record in inventoryRecords {
+            total += await record.quantity
+        }
+        return total
     }
     
     func addQuantity(_ quantity: Double, toItem item_stable_id: String, type: String) async throws -> InventoryModel {
@@ -495,16 +503,26 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
         let cleanType = InventoryModel.cleanType(type)
         let predicate = NSPredicate(format: "type == %@", cleanType)
         let inventoryRecords = try await fetchInventory(matching: predicate)
-        return Array(Set(inventoryRecords.map { $0.item_stable_id })).sorted()
+        var itemStableIds = Set<String>()
+        for record in inventoryRecords {
+            itemStableIds.insert(await record.item_stable_id)
+        }
+        return Array(itemStableIds).sorted()
     }
     
     func getItemsWithLowInventory(threshold: Double) async throws -> [(item_stable_id: String, type: String, quantity: Double)] {
         let predicate = NSPredicate(format: "quantity > 0 AND quantity < %f", threshold)
         let inventoryRecords = try await fetchInventory(matching: predicate)
-        
-        return inventoryRecords.map { record in
-            (item_stable_id: record.item_stable_id, type: record.type, quantity: record.quantity)
-        }.sorted { $0.quantity < $1.quantity }
+
+        var results: [(item_stable_id: String, type: String, quantity: Double)] = []
+        for record in inventoryRecords {
+            results.append((
+                item_stable_id: await record.item_stable_id,
+                type: await record.type,
+                quantity: await record.quantity
+            ))
+        }
+        return results.sorted { $0.quantity < $1.quantity }
     }
     
     func getItemsWithZeroInventory() async throws -> [String] {
@@ -519,11 +537,17 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     func getInventorySummary() async throws -> [InventorySummaryModel] {
         let allInventory = try await fetchInventory(matching: nil)
-        let groupedByItem = Dictionary(grouping: allInventory) { $0.item_stable_id }
-        
-        return groupedByItem.map { (naturalKey, inventories) in
-            InventorySummaryModel(item_stable_id: naturalKey, inventories: inventories)
-        }.sorted { $0.item_stable_id < $1.item_stable_id }
+        var groupedByItem: [String: [InventoryModel]] = [:]
+        for inventory in allInventory {
+            let key = await inventory.item_stable_id
+            groupedByItem[key, default: []].append(inventory)
+        }
+
+        var results: [InventorySummaryModel] = []
+        for (naturalKey, inventories) in groupedByItem {
+            results.append(InventorySummaryModel(item_stable_id: naturalKey, inventories: inventories))
+        }
+        return results.sorted { $0.item_stable_id < $1.item_stable_id }
     }
     
     func getInventorySummary(forItem item_stable_id: String) async throws -> InventorySummaryModel? {
@@ -535,12 +559,21 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     
     func estimateInventoryValue(defaultPricePerUnit: Double) async throws -> [String: Double] {
         let allInventory = try await fetchInventory(matching: nil)
-        let groupedByItem = Dictionary(grouping: allInventory) { $0.item_stable_id }
-
-        return groupedByItem.mapValues { inventories in
-            let totalQuantity = inventories.reduce(0.0) { $0 + $1.quantity }
-            return totalQuantity * defaultPricePerUnit
+        var groupedByItem: [String: [InventoryModel]] = [:]
+        for inventory in allInventory {
+            let key = await inventory.item_stable_id
+            groupedByItem[key, default: []].append(inventory)
         }
+
+        var result: [String: Double] = [:]
+        for (key, inventories) in groupedByItem {
+            var totalQuantity = 0.0
+            for inventory in inventories {
+                totalQuantity += await inventory.quantity
+            }
+            result[key] = totalQuantity * defaultPricePerUnit
+        }
+        return result
     }
 
     // MARK: - Location Operations
@@ -603,20 +636,41 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
 
     func getLocationUtilization(for location: String) async throws -> [String: Double] {
         let inventoryAtLocation = try await fetchInventory(atLocation: location)
-        let groupedByItem = Dictionary(grouping: inventoryAtLocation) { $0.item_stable_id }
-
-        return groupedByItem.mapValues { inventories in
-            inventories.reduce(0.0) { $0 + $1.quantity }
+        var groupedByItem: [String: [InventoryModel]] = [:]
+        for inventory in inventoryAtLocation {
+            let key = await inventory.item_stable_id
+            groupedByItem[key, default: []].append(inventory)
         }
+
+        var result: [String: Double] = [:]
+        for (key, inventories) in groupedByItem {
+            var total = 0.0
+            for inventory in inventories {
+                total += await inventory.quantity
+            }
+            result[key] = total
+        }
+        return result
     }
 
     func getAllLocationUtilization() async throws -> [String: Double] {
         let allInventory = try await fetchInventory(matching: NSPredicate(format: "location != nil"))
-        let groupedByLocation = Dictionary(grouping: allInventory) { $0.location! }
-
-        return groupedByLocation.mapValues { inventories in
-            inventories.reduce(0.0) { $0 + $1.quantity }
+        var groupedByLocation: [String: [InventoryModel]] = [:]
+        for inventory in allInventory {
+            if let location = await inventory.location {
+                groupedByLocation[location, default: []].append(inventory)
+            }
         }
+
+        var result: [String: Double] = [:]
+        for (location, inventories) in groupedByLocation {
+            var total = 0.0
+            for inventory in inventories {
+                total += await inventory.quantity
+            }
+            result[location] = total
+        }
+        return result
     }
 
     // MARK: - Private Helper Methods

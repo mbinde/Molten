@@ -47,9 +47,13 @@ final class MockUserNotesRepository: UserNotesRepository {
     func deleteNotes(byId id: String) async throws {
         // Find and delete by id
         let notesArray = Array(notes.values)
-        let found = notesArray.first { (note: UserNotesModel) in
-            let noteId = note.id
-            return noteId == id
+        var found: UserNotesModel? = nil
+        for note in notesArray {
+            let noteId = await note.id
+            if noteId == id {
+                found = note
+                break
+            }
         }
 
         if let foundNote = found {
@@ -80,9 +84,8 @@ final class MockUserNotesRepository: UserNotesRepository {
 
     func searchNotes(containing searchText: String) async throws -> [UserNotesModel] {
         let notesArray = Array(notes.values)
-        return notesArray.filter { (note: UserNotesModel) in
-            note.matchesSearchText(searchText)
-        }
+        // UserNotesModel.matchesSearchText is synchronous, no await needed
+        return notesArray.filter { $0.matchesSearchText(searchText) }
     }
 
     func notesExist(forItem itemStableId: String) async throws -> Bool {

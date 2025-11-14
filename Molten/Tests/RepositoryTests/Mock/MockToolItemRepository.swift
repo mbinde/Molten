@@ -22,11 +22,18 @@ final class MockToolItemRepository: ToolItemRepository {
     func fetchItems(matching predicate: NSPredicate?) async throws -> [ToolItemModel] {
         // For simplicity, ignore predicate filtering in mock
         let itemsArray = Array(items.values)
-        return itemsArray.sorted { (a: ToolItemModel, b: ToolItemModel) in
-            let aName = a.name
-            let bName = b.name
-            return aName < bName
+
+        // Extract names and pair with items for sorting
+        var itemsWithNames: [(item: ToolItemModel, name: String)] = []
+        for item in itemsArray {
+            let name = await item.name
+            itemsWithNames.append((item, name))
         }
+
+        // Sort by name ascending
+        itemsWithNames.sort { $0.name < $1.name }
+
+        return itemsWithNames.map { $0.item }
     }
 
     func fetchItem(byStableId stableId: String) async throws -> ToolItemModel? {
@@ -77,46 +84,77 @@ final class MockToolItemRepository: ToolItemRepository {
 
     func searchItems(text: String) async throws -> [ToolItemModel] {
         let lowercasedText = text.lowercased()
-        let itemsArray = Array(items.values)
-        let filtered = itemsArray.filter { (item: ToolItemModel) in
-            let name = item.name
-            let manufacturer = item.manufacturer
-            let notes = item.mfr_notes
-            return name.lowercased().contains(lowercasedText) ||
-                   manufacturer.lowercased().contains(lowercasedText) ||
-                   (notes?.lowercased().contains(lowercasedText) ?? false)
+        var filtered: [ToolItemModel] = []
+
+        for item in items.values {
+            let name = await item.name
+            let manufacturer = await item.manufacturer
+            let notes = await item.mfr_notes
+
+            if name.lowercased().contains(lowercasedText) ||
+               manufacturer.lowercased().contains(lowercasedText) ||
+               (notes?.lowercased().contains(lowercasedText) ?? false) {
+                filtered.append(item)
+            }
         }
-        return filtered.sorted { (a: ToolItemModel, b: ToolItemModel) in
-            let aName = a.name
-            let bName = b.name
-            return aName < bName
+
+        // Extract names and pair with items for sorting
+        var itemsWithNames: [(item: ToolItemModel, name: String)] = []
+        for item in filtered {
+            let name = await item.name
+            itemsWithNames.append((item, name))
         }
+
+        // Sort by name ascending
+        itemsWithNames.sort { $0.name < $1.name }
+
+        return itemsWithNames.map { $0.item }
     }
 
     func fetchItems(byManufacturer manufacturer: String) async throws -> [ToolItemModel] {
-        let itemsArray = Array(items.values)
-        let filtered = itemsArray.filter { (item: ToolItemModel) in
-            let itemManufacturer = item.manufacturer
-            return itemManufacturer == manufacturer
+        var filtered: [ToolItemModel] = []
+
+        for item in items.values {
+            let itemManufacturer = await item.manufacturer
+            if itemManufacturer == manufacturer {
+                filtered.append(item)
+            }
         }
-        return filtered.sorted { (a: ToolItemModel, b: ToolItemModel) in
-            let aName = a.name
-            let bName = b.name
-            return aName < bName
+
+        // Extract names and pair with items for sorting
+        var itemsWithNames: [(item: ToolItemModel, name: String)] = []
+        for item in filtered {
+            let name = await item.name
+            itemsWithNames.append((item, name))
         }
+
+        // Sort by name ascending
+        itemsWithNames.sort { $0.name < $1.name }
+
+        return itemsWithNames.map { $0.item }
     }
 
     func fetchItems(byStatus status: String) async throws -> [ToolItemModel] {
-        let itemsArray = Array(items.values)
-        let filtered = itemsArray.filter { (item: ToolItemModel) in
-            let itemStatus = item.mfr_status
-            return itemStatus == status
+        var filtered: [ToolItemModel] = []
+
+        for item in items.values {
+            let itemStatus = await item.mfr_status
+            if itemStatus == status {
+                filtered.append(item)
+            }
         }
-        return filtered.sorted { (a: ToolItemModel, b: ToolItemModel) in
-            let aName = a.name
-            let bName = b.name
-            return aName < bName
+
+        // Extract names and pair with items for sorting
+        var itemsWithNames: [(item: ToolItemModel, name: String)] = []
+        for item in filtered {
+            let name = await item.name
+            itemsWithNames.append((item, name))
         }
+
+        // Sort by name ascending
+        itemsWithNames.sort { $0.name < $1.name }
+
+        return itemsWithNames.map { $0.item }
     }
 
     // MARK: - Business Query Operations

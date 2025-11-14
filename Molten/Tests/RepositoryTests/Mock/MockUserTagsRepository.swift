@@ -25,10 +25,16 @@ final class MockUserTagsRepository: UserTagsRepository {
     // MARK: - Generic Tag Operations
 
     func fetchTags(ownerType: TagOwnerType, ownerId: String) async throws -> [String] {
-        return tags.values
-            .filter { $0.ownerType == ownerType && $0.ownerId == ownerId }
-            .map { $0.tag }
-            .sorted()
+        var result: [String] = []
+        for tag in tags.values {
+            let tagOwnerType = await tag.ownerType
+            let tagOwnerId = await tag.ownerId
+            if tagOwnerType == ownerType && tagOwnerId == ownerId {
+                let tagString = await tag.tag
+                result.append(tagString)
+            }
+        }
+        return result.sorted()
     }
 
     func fetchTagsForOwners(ownerType: TagOwnerType, ownerIds: [String]) async throws -> [String: [String]] {
@@ -41,8 +47,9 @@ final class MockUserTagsRepository: UserTagsRepository {
 
     func addTag(_ tag: String, ownerType: TagOwnerType, ownerId: String) async throws {
         let cleanedTag = UserTagModel.cleanTag(tag)
-        let model = UserTagModel(ownerType: ownerType, ownerId: ownerId, tag: cleanedTag)
-        tags[model.id] = model
+        let model = await UserTagModel(ownerType: ownerType, ownerId: ownerId, tag: cleanedTag)
+        let modelId = await model.id
+        tags[modelId] = model
     }
 
     func addTags(_ tags: [String], ownerType: TagOwnerType, ownerId: String) async throws {
@@ -53,13 +60,28 @@ final class MockUserTagsRepository: UserTagsRepository {
 
     func removeTag(_ tag: String, ownerType: TagOwnerType, ownerId: String) async throws {
         let cleanedTag = UserTagModel.cleanTag(tag)
-        tags = tags.filter {
-            !($0.value.ownerType == ownerType && $0.value.ownerId == ownerId && $0.value.tag == cleanedTag)
+        var newTags: [UUID: UserTagModel] = [:]
+        for (key, value) in tags {
+            let valueOwnerType = await value.ownerType
+            let valueOwnerId = await value.ownerId
+            let valueTag = await value.tag
+            if !(valueOwnerType == ownerType && valueOwnerId == ownerId && valueTag == cleanedTag) {
+                newTags[key] = value
+            }
         }
+        tags = newTags
     }
 
     func removeAllTags(ownerType: TagOwnerType, ownerId: String) async throws {
-        tags = tags.filter { !($0.value.ownerType == ownerType && $0.value.ownerId == ownerId) }
+        var newTags: [UUID: UserTagModel] = [:]
+        for (key, value) in tags {
+            let valueOwnerType = await value.ownerType
+            let valueOwnerId = await value.ownerId
+            if !(valueOwnerType == ownerType && valueOwnerId == ownerId) {
+                newTags[key] = value
+            }
+        }
+        tags = newTags
     }
 
     func setTags(_ tags: [String], ownerType: TagOwnerType, ownerId: String) async throws {
@@ -70,20 +92,38 @@ final class MockUserTagsRepository: UserTagsRepository {
     // MARK: - Tag Discovery Operations
 
     func getAllTags() async throws -> [String] {
-        let allTags = Set(tags.values.map { $0.tag })
+        var allTags: Set<String> = []
+        for tag in tags.values {
+            let tagString = await tag.tag
+            allTags.insert(tagString)
+        }
         return allTags.sorted()
     }
 
     func getAllTags(forOwnerType ownerType: TagOwnerType) async throws -> [String] {
-        let typeTags = Set(tags.values.filter { $0.ownerType == ownerType }.map { $0.tag })
+        var typeTags: Set<String> = []
+        for tag in tags.values {
+            let tagOwnerType = await tag.ownerType
+            if tagOwnerType == ownerType {
+                let tagString = await tag.tag
+                typeTags.insert(tagString)
+            }
+        }
         return typeTags.sorted()
     }
 
     func getTags(withPrefix prefix: String, ownerType: TagOwnerType?) async throws -> [String] {
-        let allTags = tags.values
-            .filter { ownerType == nil || $0.ownerType == ownerType }
-            .map { $0.tag }
-            .filter { $0.hasPrefix(prefix.lowercased()) }
+        var allTags: [String] = []
+        let lowercasedPrefix = prefix.lowercased()
+        for tag in tags.values {
+            let tagOwnerType = await tag.ownerType
+            if ownerType == nil || tagOwnerType == ownerType {
+                let tagString = await tag.tag
+                if tagString.hasPrefix(lowercasedPrefix) {
+                    allTags.append(tagString)
+                }
+            }
+        }
         return Array(Set(allTags)).sorted()
     }
 
@@ -99,39 +139,56 @@ final class MockUserTagsRepository: UserTagsRepository {
 
     func fetchOwners(withTag tag: String, ownerType: TagOwnerType) async throws -> [String] {
         let cleanedTag = UserTagModel.cleanTag(tag)
-        let owners = tags.values
-            .filter { (tagModel: UserTagModel) in tagModel.ownerType == ownerType && tagModel.tag == cleanedTag }
-            .map { (tagModel: UserTagModel) in tagModel.ownerId }
+        var owners: [String] = []
+        for tagModel in tags.values {
+            let tagModelOwnerType = await tagModel.ownerType
+            let tagModelTag = await tagModel.tag
+            if tagModelOwnerType == ownerType && tagModelTag == cleanedTag {
+                let tagModelOwnerId = await tagModel.ownerId
+                owners.append(tagModelOwnerId)
+            }
+        }
         return Array(Set(owners)).sorted()
     }
 
     func fetchOwners(withAllTags tags: [String], ownerType: TagOwnerType) async throws -> [String] {
         let cleanedTags = Set(tags.map { UserTagModel.cleanTag($0) })
+
+        // Collect all owner IDs for the given owner type
+        var ownerIds: Set<String> = []
+        for tag in self.tags.values {
+            let tagOwnerType = await tag.ownerType
+            if tagOwnerType == ownerType {
+                let tagOwnerId = await tag.ownerId
+                ownerIds.insert(tagOwnerId)
+            }
+        }
+
         let ownerTags = try await fetchTagsForOwners(
             ownerType: ownerType,
-            ownerIds: Array(Set(self.tags.values
-                .filter { (tag: UserTagModel) in tag.ownerType == ownerType }
-                .map { (tag: UserTagModel) in tag.ownerId }))
+            ownerIds: Array(ownerIds)
         )
 
-        return ownerTags
-            .filter { cleanedTags.isSubset(of: Set($0.value)) }
-            .map { $0.key }
-            .sorted()
+        // Filter owners that have all tags
+        var result: [String] = []
+        for (ownerId, ownerTagList) in ownerTags {
+            if cleanedTags.isSubset(of: Set(ownerTagList)) {
+                result.append(ownerId)
+            }
+        }
+        return result.sorted()
     }
 
     func fetchOwners(withAnyTags tags: [String], ownerType: TagOwnerType) async throws -> [String] {
         let cleanedTags = Set(tags.map { UserTagModel.cleanTag($0) })
-        let tagsArray = Array(self.tags.values)
-        let filtered = tagsArray.filter { (tag: UserTagModel) in
-            let tagOwnerType = tag.ownerType
-            let tagString = tag.tag
-            return tagOwnerType == ownerType && cleanedTags.contains(tagString)
-        }
         var owners: [String] = []
-        for tag in filtered {
-            let ownerId = tag.ownerId
-            owners.append(ownerId)
+        for tag in self.tags.values {
+            let tagOwnerType = await tag.ownerType
+            let tagString = await tag.tag
+            if tagOwnerType == ownerType && cleanedTags.contains(tagString) {
+                let ownerId = await tag.ownerId
+                owners.append(ownerId)
+            }
         }
         return Array(Set(owners)).sorted()
     }
@@ -140,17 +197,13 @@ final class MockUserTagsRepository: UserTagsRepository {
 
     func getTagUsageCounts(ownerType: TagOwnerType?) async throws -> [String: Int] {
         var counts: [String: Int] = [:]
-        let tagsArray = Array(tags.values)
-        let filteredTags = tagsArray.filter { (tag: UserTagModel) in
-            let tagOwnerType = tag.ownerType
-            return ownerType == nil || tagOwnerType == ownerType
+        for tag in tags.values {
+            let tagOwnerType = await tag.ownerType
+            if ownerType == nil || tagOwnerType == ownerType {
+                let tagString = await tag.tag
+                counts[tagString, default: 0] += 1
+            }
         }
-
-        for tagModel in filteredTags {
-            let tagString = tagModel.tag
-            counts[tagString, default: 0] += 1
-        }
-
         return counts
     }
 
@@ -164,12 +217,14 @@ final class MockUserTagsRepository: UserTagsRepository {
 
     func tagExists(_ tag: String, ownerType: TagOwnerType?) async throws -> Bool {
         let cleanedTag = UserTagModel.cleanTag(tag)
-        let tagsArray = Array(tags.values)
-        return tagsArray.contains { (tagModel: UserTagModel) in
-            let modelTag = tagModel.tag
-            let modelOwnerType = tagModel.ownerType
-            return modelTag == cleanedTag && (ownerType == nil || modelOwnerType == ownerType)
+        for tagModel in tags.values {
+            let modelTag = await tagModel.tag
+            let modelOwnerType = await tagModel.ownerType
+            if modelTag == cleanedTag && (ownerType == nil || modelOwnerType == ownerType) {
+                return true
+            }
         }
+        return false
     }
 
     // MARK: - Legacy Support (for backward compatibility with glass items)

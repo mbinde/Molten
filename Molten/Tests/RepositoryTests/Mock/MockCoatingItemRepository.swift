@@ -20,7 +20,8 @@ final class MockCoatingItemRepository: CoatingItemRepository {
 
     func fetchItems(matching predicate: NSPredicate?) async throws -> [CoatingItemModel] {
         // For simplicity, ignore predicate filtering in mock
-        return Array(items.values).sorted { $0.name < $1.name }
+        let itemsArray = Array(items.values)
+        return itemsArray.sorted { $0.name < $1.name }
     }
 
     func fetchItem(byStableId stableId: String) async throws -> CoatingItemModel? {
@@ -28,20 +29,21 @@ final class MockCoatingItemRepository: CoatingItemRepository {
     }
 
     func createItem(_ item: CoatingItemModel) async throws -> CoatingItemModel {
-        let stableId = await item.stable_id; items[stableId] = item
+        let stableId = item.stable_id
+        items[stableId] = item
         return item
     }
 
     func createItems(_ items: [CoatingItemModel]) async throws -> [CoatingItemModel] {
         for item in items {
-            let stableId = await item.stable_id
+            let stableId = item.stable_id
             self.items[stableId] = item
         }
         return items
     }
 
     func updateItem(_ item: CoatingItemModel) async throws -> CoatingItemModel {
-        let stableId = await item.stable_id
+        let stableId = item.stable_id
         guard items[stableId] != nil else {
             throw NSError(domain: "MockCoatingItemRepository", code: 404, userInfo: [
                 NSLocalizedDescriptionKey: "Item not found: \(stableId)"
@@ -71,61 +73,81 @@ final class MockCoatingItemRepository: CoatingItemRepository {
     func searchItems(text: String) async throws -> [CoatingItemModel] {
         let lowercasedText = text.lowercased()
         let itemsArray = Array(items.values)
-        return itemsArray.filter { (item: CoatingItemModel) in
-            let name = await item.name
-            let manufacturer = await item.manufacturer
-            let notes = await item.mfr_notes
-            return name.lowercased().contains(lowercasedText) ||
-                   manufacturer.lowercased().contains(lowercasedText) ||
-                   (notes?.lowercased().contains(lowercasedText) ?? false)
-        }.sorted { (a: CoatingItemModel, b: CoatingItemModel) in
-            let aName = await a.name
-            let bName = await b.name
-            return aName < bName
+
+        // Filter items
+        var filtered: [CoatingItemModel] = []
+        for item in itemsArray {
+            let name = item.name
+            let manufacturer = item.manufacturer
+            let notes = item.mfr_notes
+            if name.lowercased().contains(lowercasedText) ||
+               manufacturer.lowercased().contains(lowercasedText) ||
+               (notes?.lowercased().contains(lowercasedText) ?? false) {
+                filtered.append(item)
+            }
         }
+
+        // Sort results
+        return filtered.sorted { $0.name < $1.name }
     }
 
     func fetchItems(byManufacturer manufacturer: String) async throws -> [CoatingItemModel] {
         let itemsArray = Array(items.values)
-        return itemsArray.filter { (item: CoatingItemModel) in
-            let itemManufacturer = await item.manufacturer
-            return itemManufacturer == manufacturer
-        }.sorted { (a: CoatingItemModel, b: CoatingItemModel) in
-            let aName = await a.name
-            let bName = await b.name
-            return aName < bName
+
+        // Filter by manufacturer
+        var filtered: [CoatingItemModel] = []
+        for item in itemsArray {
+            let itemManufacturer = item.manufacturer
+            if itemManufacturer == manufacturer {
+                filtered.append(item)
+            }
         }
+
+        // Sort results
+        return filtered.sorted { $0.name < $1.name }
     }
 
     func fetchItems(byStatus status: String) async throws -> [CoatingItemModel] {
         let itemsArray = Array(items.values)
-        return itemsArray.filter { (item: CoatingItemModel) in
-            let itemStatus = await item.mfr_status
-            return itemStatus == status
-        }.sorted { (a: CoatingItemModel, b: CoatingItemModel) in
-            let aName = await a.name
-            let bName = await b.name
-            return aName < bName
+
+        // Filter by status
+        var filtered: [CoatingItemModel] = []
+        for item in itemsArray {
+            let itemStatus = item.mfr_status
+            if itemStatus == status {
+                filtered.append(item)
+            }
         }
+
+        // Sort results
+        return filtered.sorted { $0.name < $1.name }
     }
 
     // MARK: - Business Query Operations
 
     func getDistinctManufacturers() async throws -> [String] {
         let itemsArray = Array(items.values)
-        let manufacturers = Set(itemsArray.map { (item: CoatingItemModel) in
-            let manufacturer = await item.manufacturer
-            return manufacturer
-        })
+
+        // Extract manufacturers
+        var manufacturers: Set<String> = []
+        for item in itemsArray {
+            let manufacturer = item.manufacturer
+            manufacturers.insert(manufacturer)
+        }
+
         return manufacturers.sorted()
     }
 
     func getDistinctStatuses() async throws -> [String] {
         let itemsArray = Array(items.values)
-        let statuses = Set(itemsArray.map { (item: CoatingItemModel) in
-            let status = await item.mfr_status
-            return status
-        })
+
+        // Extract statuses
+        var statuses: Set<String> = []
+        for item in itemsArray {
+            let status = item.mfr_status
+            statuses.insert(status)
+        }
+
         return statuses.sorted()
     }
 

@@ -29,37 +29,45 @@ final class MockInventoryRepository: InventoryRepository {
 
     func fetchInventory(forItem item_stable_id: String) async throws -> [InventoryModel] {
         let inventoryArray = Array(inventory.values)
-        return inventoryArray.filter { (inv: InventoryModel) in
-            let invItemId = inv.item_stable_id
-            return invItemId == item_stable_id
+        var result: [InventoryModel] = []
+        for inv in inventoryArray {
+            let invItemId = await inv.item_stable_id
+            if invItemId == item_stable_id {
+                result.append(inv)
+            }
         }
+        return result
     }
 
     func fetchInventory(forItem item_stable_id: String, type: String) async throws -> [InventoryModel] {
         let inventoryArray = Array(inventory.values)
-        return inventoryArray.filter { (inv: InventoryModel) in
-            let invItemId = inv.item_stable_id
-            let invType = inv.type
-            return invItemId == item_stable_id && invType == type
+        var result: [InventoryModel] = []
+        for inv in inventoryArray {
+            let invItemId = await inv.item_stable_id
+            let invType = await inv.type
+            if invItemId == item_stable_id && invType == type {
+                result.append(inv)
+            }
         }
+        return result
     }
 
     func createInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
-        let id = inventory.id
+        let id = await inventory.id
         self.inventory[id] = inventory
         return inventory
     }
 
     func createInventories(_ inventories: [InventoryModel]) async throws -> [InventoryModel] {
         for inventory in inventories {
-            let id = inventory.id
+            let id = await inventory.id
             self.inventory[id] = inventory
         }
         return inventories
     }
 
     func updateInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
-        let id = inventory.id
+        let id = await inventory.id
         guard self.inventory[id] != nil else {
             throw NSError(domain: "MockInventoryRepository", code: 404)
         }
@@ -74,7 +82,7 @@ final class MockInventoryRepository: InventoryRepository {
     func deleteInventory(forItem item_stable_id: String) async throws {
         let inventoryArray = Array(inventory)
         for (id, inv) in inventoryArray {
-            let invItemId = inv.item_stable_id
+            let invItemId = await inv.item_stable_id
             if invItemId == item_stable_id {
                 inventory.removeValue(forKey: id)
             }
@@ -84,8 +92,8 @@ final class MockInventoryRepository: InventoryRepository {
     func deleteInventory(forItem item_stable_id: String, type: String) async throws {
         let inventoryArray = Array(inventory)
         for (id, inv) in inventoryArray {
-            let invItemId = inv.item_stable_id
-            let invType = inv.type
+            let invItemId = await inv.item_stable_id
+            let invType = await inv.type
             if invItemId == item_stable_id && invType == type {
                 inventory.removeValue(forKey: id)
             }
@@ -96,27 +104,31 @@ final class MockInventoryRepository: InventoryRepository {
 
     func getTotalQuantity(forItem item_stable_id: String) async throws -> Double {
         let items = try await fetchInventory(forItem: item_stable_id)
-        return items.reduce(0.0) { (sum, inv) in
-            let qty = inv.quantity
-            return sum + qty
+        var total = 0.0
+        for inv in items {
+            let qty = await inv.quantity
+            total += qty
         }
+        return total
     }
 
     func getTotalQuantity(forItem item_stable_id: String, type: String) async throws -> Double {
         let items = try await fetchInventory(forItem: item_stable_id, type: type)
-        return items.reduce(0.0) { (sum, inv) in
-            let qty = inv.quantity
-            return sum + qty
+        var total = 0.0
+        for inv in items {
+            let qty = await inv.quantity
+            total += qty
         }
+        return total
     }
 
     func addQuantity(_ quantity: Double, toItem item_stable_id: String, type: String) async throws -> InventoryModel {
         let existing = try await fetchInventory(forItem: item_stable_id, type: type).first
 
         if let existing = existing {
-            let existingQty = existing.quantity
-            let existingId = existing.id
-            let existingLocation = existing.location
+            let existingQty = await existing.quantity
+            let existingId = await existing.id
+            let existingLocation = await existing.location
             let updated = InventoryModel(
                 id: existingId,
                 item_stable_id: item_stable_id,
@@ -142,16 +154,16 @@ final class MockInventoryRepository: InventoryRepository {
             throw NSError(domain: "MockInventoryRepository", code: 404)
         }
 
-        let existingQty = existing.quantity
+        let existingQty = await existing.quantity
         let newQty = existingQty - quantity
 
         if newQty <= 0 {
-            let existingId = existing.id
+            let existingId = await existing.id
             try await deleteInventory(id: existingId)
             return nil
         } else {
-            let existingId = existing.id
-            let existingLocation = existing.location
+            let existingId = await existing.id
+            let existingLocation = await existing.location
             let updated = InventoryModel(
                 id: existingId,
                 item_stable_id: item_stable_id,
@@ -172,8 +184,8 @@ final class MockInventoryRepository: InventoryRepository {
         let existing = try await fetchInventory(forItem: item_stable_id, type: type).first
 
         if let existing = existing {
-            let existingId = existing.id
-            let existingLocation = existing.location
+            let existingId = await existing.id
+            let existingLocation = await existing.location
             let updated = InventoryModel(
                 id: existingId,
                 item_stable_id: item_stable_id,
@@ -198,44 +210,61 @@ final class MockInventoryRepository: InventoryRepository {
 
     func getDistinctTypes() async throws -> [String] {
         let inventoryArray = Array(inventory.values)
-        let types = Set(inventoryArray.map { (inv: InventoryModel) in inv.type })
+        var types: Set<String> = []
+        for inv in inventoryArray {
+            let type = await inv.type
+            types.insert(type)
+        }
         return types.sorted()
     }
 
     func getItemsWithInventory() async throws -> [String] {
         let inventoryArray = Array(inventory.values)
-        let items = Set(inventoryArray.map { (inv: InventoryModel) in inv.item_stable_id })
+        var items: Set<String> = []
+        for inv in inventoryArray {
+            let itemId = await inv.item_stable_id
+            items.insert(itemId)
+        }
         return items.sorted()
     }
 
     func getItemsWithInventory(ofType type: String) async throws -> [String] {
         let inventoryArray = Array(inventory.values)
-        let items = Set(inventoryArray.filter { (inv: InventoryModel) in
-            let invType = inv.type
-            return invType == type
-        }.map { (inv: InventoryModel) in inv.item_stable_id })
+        var items: Set<String> = []
+        for inv in inventoryArray {
+            let invType = await inv.type
+            if invType == type {
+                let itemId = await inv.item_stable_id
+                items.insert(itemId)
+            }
+        }
         return items.sorted()
     }
 
     func getItemsWithLowInventory(threshold: Double) async throws -> [(item_stable_id: String, type: String, quantity: Double)] {
         let inventoryArray = Array(inventory.values)
-        return inventoryArray.filter { (inv: InventoryModel) in
-            let qty = inv.quantity
-            return qty > 0 && qty < threshold
-        }.map { (inv: InventoryModel) in
-            let itemId = inv.item_stable_id
-            let type = inv.type
-            let qty = inv.quantity
-            return (item_stable_id: itemId, type: type, quantity: qty)
+        var results: [(item_stable_id: String, type: String, quantity: Double)] = []
+        for inv in inventoryArray {
+            let qty = await inv.quantity
+            if qty > 0 && qty < threshold {
+                let itemId = await inv.item_stable_id
+                let type = await inv.type
+                results.append((item_stable_id: itemId, type: type, quantity: qty))
+            }
         }
+        return results
     }
 
     func getItemsWithZeroInventory() async throws -> [String] {
         let inventoryArray = Array(inventory.values)
-        let items = Set(inventoryArray.filter { (inv: InventoryModel) in
-            let qty = inv.quantity
-            return qty == 0
-        }.map { (inv: InventoryModel) in inv.item_stable_id })
+        var items: Set<String> = []
+        for inv in inventoryArray {
+            let qty = await inv.quantity
+            if qty == 0 {
+                let itemId = await inv.item_stable_id
+                items.insert(itemId)
+            }
+        }
         return items.sorted()
     }
 
@@ -246,7 +275,7 @@ final class MockInventoryRepository: InventoryRepository {
 
         let inventoryArray = Array(inventory.values)
         for inv in inventoryArray {
-            let itemId = inv.item_stable_id
+            let itemId = await inv.item_stable_id
             if summaries[itemId] == nil {
                 summaries[itemId] = []
             }
@@ -273,8 +302,8 @@ final class MockInventoryRepository: InventoryRepository {
 
         let inventoryArray = Array(inventory.values)
         for inv in inventoryArray {
-            let itemId = inv.item_stable_id
-            let qty = inv.quantity
+            let itemId = await inv.item_stable_id
+            let qty = await inv.quantity
             values[itemId] = (values[itemId] ?? 0) + (qty * defaultPricePerUnit)
         }
 
@@ -285,20 +314,25 @@ final class MockInventoryRepository: InventoryRepository {
 
     func fetchInventory(atLocation location: String) async throws -> [InventoryModel] {
         let inventoryArray = Array(inventory.values)
-        let filtered = inventoryArray.filter { (inv: InventoryModel) in
-            let invLocation = inv.location
-            return invLocation == location
+        var filtered: [InventoryModel] = []
+        for inv in inventoryArray {
+            let invLocation = await inv.location
+            if invLocation == location {
+                filtered.append(inv)
+            }
         }
         return filtered
     }
 
     func getDistinctLocations() async throws -> [String] {
         let inventoryArray = Array(inventory.values)
-        let locationArray = inventoryArray.compactMap { (inv: InventoryModel) -> String? in
-            let location = inv.location
-            return location
+        var locations: Set<String> = []
+        for inv in inventoryArray {
+            let location = await inv.location
+            if let location = location {
+                locations.insert(location)
+            }
         }
-        let locations = Set(locationArray)
         return locations.sorted()
     }
 
@@ -312,8 +346,8 @@ final class MockInventoryRepository: InventoryRepository {
         var utilization: [String: Double] = [:]
 
         for inv in items {
-            let itemId = inv.item_stable_id
-            let qty = inv.quantity
+            let itemId = await inv.item_stable_id
+            let qty = await inv.quantity
             utilization[itemId] = (utilization[itemId] ?? 0) + qty
         }
 
@@ -325,8 +359,8 @@ final class MockInventoryRepository: InventoryRepository {
 
         let inventoryArray = Array(inventory.values)
         for inv in inventoryArray {
-            let location = inv.location
-            let qty = inv.quantity
+            let location = await inv.location
+            let qty = await inv.quantity
             if let location = location {
                 utilization[location] = (utilization[location] ?? 0) + qty
             }

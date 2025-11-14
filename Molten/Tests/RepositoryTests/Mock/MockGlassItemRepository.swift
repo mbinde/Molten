@@ -21,11 +21,7 @@ final class MockGlassItemRepository: GlassItemRepository {
     func fetchItems(matching predicate: NSPredicate?) async throws -> [GlassItemModel] {
         // For simplicity, ignore predicate filtering in mock
         let itemsArray = Array(items.values)
-        return itemsArray.sorted { (a: GlassItemModel, b: GlassItemModel) in
-            let aName = a.name
-            let bName = b.name
-            return aName < bName
-        }
+        return itemsArray.sorted { $0.name < $1.name }
     }
 
     func fetchItem(byStableId stableId: String) async throws -> GlassItemModel? {
@@ -77,82 +73,110 @@ final class MockGlassItemRepository: GlassItemRepository {
     func searchItems(text: String) async throws -> [GlassItemModel] {
         let lowercasedText = text.lowercased()
         let itemsArray = Array(items.values)
-        return itemsArray.filter { (item: GlassItemModel) in
+
+        // Filter items
+        var filtered: [GlassItemModel] = []
+        for item in itemsArray {
             let name = item.name
             let manufacturer = item.manufacturer
-            let notes = item.notes
-            return name.lowercased().contains(lowercasedText) ||
-                   manufacturer.lowercased().contains(lowercasedText) ||
-                   (notes?.lowercased().contains(lowercasedText) ?? false)
-        }.sorted { (a: GlassItemModel, b: GlassItemModel) in
-            let aName = a.name
-            let bName = b.name
-            return aName < bName
+            let notes = item.mfr_notes
+            if name.lowercased().contains(lowercasedText) ||
+               manufacturer.lowercased().contains(lowercasedText) ||
+               (notes?.lowercased().contains(lowercasedText) ?? false) {
+                filtered.append(item)
+            }
         }
+
+        // Sort results
+        return filtered.sorted { $0.name < $1.name }
     }
 
     func fetchItems(byManufacturer manufacturer: String) async throws -> [GlassItemModel] {
         let itemsArray = Array(items.values)
-        return itemsArray.filter { (item: GlassItemModel) in
+
+        // Filter by manufacturer
+        var filtered: [GlassItemModel] = []
+        for item in itemsArray {
             let itemManufacturer = item.manufacturer
-            return itemManufacturer == manufacturer
-        }.sorted { (a: GlassItemModel, b: GlassItemModel) in
-            let aName = a.name
-            let bName = b.name
-            return aName < bName
+            if itemManufacturer == manufacturer {
+                filtered.append(item)
+            }
         }
+
+        // Sort results
+        return filtered.sorted { $0.name < $1.name }
     }
 
     func fetchItems(byCOE coe: Int32) async throws -> [GlassItemModel] {
         let itemsArray = Array(items.values)
-        return itemsArray.filter { (item: GlassItemModel) in
+
+        // Filter by COE
+        var filtered: [GlassItemModel] = []
+        for item in itemsArray {
             let itemCOE = item.coe
-            return itemCOE == coe
-        }.sorted { (a: GlassItemModel, b: GlassItemModel) in
-            let aName = a.name
-            let bName = b.name
-            return aName < bName
+            if itemCOE == coe {
+                filtered.append(item)
+            }
         }
+
+        // Sort results
+        return filtered.sorted { $0.name < $1.name }
     }
 
     func fetchItems(byStatus status: String) async throws -> [GlassItemModel] {
         let itemsArray = Array(items.values)
-        return itemsArray.filter { (item: GlassItemModel) in
+
+        // Filter by status
+        var filtered: [GlassItemModel] = []
+        for item in itemsArray {
             let itemStatus = item.mfr_status
-            return itemStatus == status
-        }.sorted { (a: GlassItemModel, b: GlassItemModel) in
-            let aName = a.name
-            let bName = b.name
-            return aName < bName
+            if itemStatus == status {
+                filtered.append(item)
+            }
         }
+
+        // Sort results
+        return filtered.sorted { $0.name < $1.name }
     }
 
     // MARK: - Business Query Operations
 
     func getDistinctManufacturers() async throws -> [String] {
         let itemsArray = Array(items.values)
-        let manufacturers = Set(itemsArray.map { (item: GlassItemModel) in
+
+        // Extract manufacturers
+        var manufacturers: Set<String> = []
+        for item in itemsArray {
             let manufacturer = item.manufacturer
-            return manufacturer
-        })
+            manufacturers.insert(manufacturer)
+        }
+
         return manufacturers.sorted()
     }
 
     func getDistinctCOEValues() async throws -> [Int32] {
         let itemsArray = Array(items.values)
-        let coes = Set(itemsArray.map { (item: GlassItemModel) in
+
+        // Extract COE values
+        var coes: Set<Int32> = []
+        for item in itemsArray {
             let coe = item.coe
-            return coe
-        })
+            coes.insert(coe)
+        }
+
         return coes.sorted()
     }
 
     func getDistinctStatuses() async throws -> [String] {
         let itemsArray = Array(items.values)
-        let statuses = Set(itemsArray.map { (item: GlassItemModel) in
+
+        // Extract statuses
+        var statuses: Set<String> = []
+        for item in itemsArray {
             let status = item.mfr_status
-            return status
-        })
+            statuses.insert(status)
+        }
+
         return statuses.sorted()
     }
 

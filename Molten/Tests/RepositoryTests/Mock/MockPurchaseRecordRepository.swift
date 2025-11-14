@@ -21,26 +21,41 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
 
     func getAllRecords() async throws -> [PurchaseRecordModel] {
         let recordsArray = Array(records.values)
-        let sorted = recordsArray.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
-            let aDate = a.datePurchased
-            let bDate = b.datePurchased
-            return aDate > bDate
+
+        // Extract dates and pair with records for sorting
+        var recordsWithDates: [(record: PurchaseRecordModel, date: Date)] = []
+        for record in recordsArray {
+            let date = await record.datePurchased
+            recordsWithDates.append((record, date))
         }
-        return sorted
+
+        // Sort by date descending
+        recordsWithDates.sort { $0.date > $1.date }
+
+        return recordsWithDates.map { $0.record }
     }
 
     func fetchRecords(from startDate: Date, to endDate: Date) async throws -> [PurchaseRecordModel] {
         let recordsArray = Array(records.values)
-        let filtered = recordsArray.filter { (record: PurchaseRecordModel) in
-            let datePurchased = record.datePurchased
-            return datePurchased >= startDate && datePurchased <= endDate
+        var filtered: [PurchaseRecordModel] = []
+        for record in recordsArray {
+            let datePurchased = await record.datePurchased
+            if datePurchased >= startDate && datePurchased <= endDate {
+                filtered.append(record)
+            }
         }
-        let sorted = filtered.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
-            let aDate = a.datePurchased
-            let bDate = b.datePurchased
-            return aDate > bDate
+
+        // Extract dates and pair with records for sorting
+        var recordsWithDates: [(record: PurchaseRecordModel, date: Date)] = []
+        for record in filtered {
+            let date = await record.datePurchased
+            recordsWithDates.append((record, date))
         }
-        return sorted
+
+        // Sort by date descending
+        recordsWithDates.sort { $0.date > $1.date }
+
+        return recordsWithDates.map { $0.record }
     }
 
     func fetchRecord(byId id: UUID) async throws -> PurchaseRecordModel? {
@@ -74,32 +89,50 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
     func searchRecords(text: String) async throws -> [PurchaseRecordModel] {
         let searchText = text.lowercased()
         let recordsArray = Array(records.values)
-        let filtered = recordsArray.filter { (record: PurchaseRecordModel) in
+        var filtered: [PurchaseRecordModel] = []
+        for record in recordsArray {
             let supplier = await record.supplier
             let notes = await record.notes
-            return supplier.lowercased().contains(searchText) ||
-                (notes?.lowercased().contains(searchText) ?? false)
+            if supplier.lowercased().contains(searchText) ||
+                (notes?.lowercased().contains(searchText) ?? false) {
+                filtered.append(record)
+            }
         }
-        let sorted = filtered.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
-            let aDate = a.datePurchased
-            let bDate = b.datePurchased
-            return aDate > bDate
+
+        // Extract dates and pair with records for sorting
+        var recordsWithDates: [(record: PurchaseRecordModel, date: Date)] = []
+        for record in filtered {
+            let date = await record.datePurchased
+            recordsWithDates.append((record, date))
         }
-        return sorted
+
+        // Sort by date descending
+        recordsWithDates.sort { $0.date > $1.date }
+
+        return recordsWithDates.map { $0.record }
     }
 
     func fetchRecords(bySupplier supplier: String) async throws -> [PurchaseRecordModel] {
         let recordsArray = Array(records.values)
-        let filtered = recordsArray.filter { (record: PurchaseRecordModel) in
-            let recordSupplier = record.supplier
-            return recordSupplier == supplier
+        var filtered: [PurchaseRecordModel] = []
+        for record in recordsArray {
+            let recordSupplier = await record.supplier
+            if recordSupplier == supplier {
+                filtered.append(record)
+            }
         }
-        let sorted = filtered.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
-            let aDate = a.datePurchased
-            let bDate = b.datePurchased
-            return aDate > bDate
+
+        // Extract dates and pair with records for sorting
+        var recordsWithDates: [(record: PurchaseRecordModel, date: Date)] = []
+        for record in filtered {
+            let date = await record.datePurchased
+            recordsWithDates.append((record, date))
         }
-        return sorted
+
+        // Sort by date descending
+        recordsWithDates.sort { $0.date > $1.date }
+
+        return recordsWithDates.map { $0.record }
     }
 
     // MARK: - Analytics
@@ -176,11 +209,12 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
         let recordsArray = Array(records.values)
         for record in recordsArray {
             let recordItems = await record.items
-            let matchingItems = recordItems.filter { (item: PurchaseRecordItemModel) in
-                let itemStableId = item.item_stable_id
-                return itemStableId == stableId
+            for item in recordItems {
+                let itemStableId = await item.item_stable_id
+                if itemStableId == stableId {
+                    items.append(item)
+                }
             }
-            items.append(contentsOf: matchingItems)
         }
 
         return items
@@ -188,15 +222,15 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
 
     func getTotalPurchasedQuantity(for stableId: String, type: String) async throws -> Double {
         let items = try await fetchItemsForGlassItem(stableId: stableId)
-        return items
-            .filter { (item: PurchaseRecordItemModel) in
-                let itemType = item.type
-                return itemType == type
+        var total: Double = 0.0
+        for item in items {
+            let itemType = await item.type
+            if itemType == type {
+                let qty = await item.quantity
+                total += qty
             }
-            .reduce(0.0) { (sum, item: PurchaseRecordItemModel) in
-                let qty = item.quantity
-                return sum + qty
-            }
+        }
+        return total
     }
 
     // MARK: - Test Helpers

@@ -19,14 +19,24 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
     // MARK: - CRUD Operations
 
     func getAllRecords() async throws -> [PurchaseRecordModel] {
-        return records.values
-            .sorted { $0.datePurchased > $1.datePurchased }
+        let recordsArray = Array(records.values)
+        return recordsArray.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
+            let aDate = a.datePurchased
+            let bDate = b.datePurchased
+            return aDate > bDate
+        }
     }
 
     func fetchRecords(from startDate: Date, to endDate: Date) async throws -> [PurchaseRecordModel] {
-        return records.values
-            .filter { $0.datePurchased >= startDate && $0.datePurchased <= endDate }
-            .sorted { $0.datePurchased > $1.datePurchased }
+        let recordsArray = Array(records.values)
+        return recordsArray.filter { (record: PurchaseRecordModel) in
+            let datePurchased = record.datePurchased
+            return datePurchased >= startDate && datePurchased <= endDate
+        }.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
+            let aDate = a.datePurchased
+            let bDate = b.datePurchased
+            return aDate > bDate
+        }
     }
 
     func fetchRecord(byId id: UUID) async throws -> PurchaseRecordModel? {
@@ -34,15 +44,17 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
     }
 
     func createRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel {
-        records[record.id] = record
+        let id = record.id
+        records[id] = record
         return record
     }
 
     func updateRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel {
-        guard records[record.id] != nil else {
-            throw PurchaseRecordRepositoryError.recordNotFound(record.id.uuidString)
+        let id = record.id
+        guard records[id] != nil else {
+            throw PurchaseRecordRepositoryError.recordNotFound(id.uuidString)
         }
-        records[record.id] = record
+        records[id] = record
         return record
     }
 
@@ -57,24 +69,39 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
 
     func searchRecords(text: String) async throws -> [PurchaseRecordModel] {
         let searchText = text.lowercased()
-        return records.values
-            .filter { record in
-                record.supplier.lowercased().contains(searchText) ||
-                (record.notes?.lowercased().contains(searchText) ?? false)
-            }
-            .sorted { $0.datePurchased > $1.datePurchased }
+        let recordsArray = Array(records.values)
+        return recordsArray.filter { (record: PurchaseRecordModel) in
+            let supplier = record.supplier
+            let notes = record.notes
+            return supplier.lowercased().contains(searchText) ||
+                (notes?.lowercased().contains(searchText) ?? false)
+        }.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
+            let aDate = a.datePurchased
+            let bDate = b.datePurchased
+            return aDate > bDate
+        }
     }
 
     func fetchRecords(bySupplier supplier: String) async throws -> [PurchaseRecordModel] {
-        return records.values
-            .filter { $0.supplier == supplier }
-            .sorted { $0.datePurchased > $1.datePurchased }
+        let recordsArray = Array(records.values)
+        return recordsArray.filter { (record: PurchaseRecordModel) in
+            let recordSupplier = record.supplier
+            return recordSupplier == supplier
+        }.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
+            let aDate = a.datePurchased
+            let bDate = b.datePurchased
+            return aDate > bDate
+        }
     }
 
     // MARK: - Analytics
 
     func getDistinctSuppliers() async throws -> [String] {
-        let suppliers = Set(records.values.map { $0.supplier })
+        let recordsArray = Array(records.values)
+        let suppliers = Set(recordsArray.map { (record: PurchaseRecordModel) in
+            let supplier = record.supplier
+            return supplier
+        })
         return suppliers.sorted()
     }
 
@@ -83,13 +110,17 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
 
         var total: Decimal = 0
         for record in filteredRecords {
-            if let subtotal = record.subtotal {
+            let subtotal = record.subtotal
+            let tax = record.tax
+            let shipping = record.shipping
+
+            if let subtotal = subtotal {
                 total += subtotal
             }
-            if let tax = record.tax {
+            if let tax = tax {
                 total += tax
             }
-            if let shipping = record.shipping {
+            if let shipping = shipping {
                 total += shipping
             }
         }
@@ -103,20 +134,25 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
         var spendingBySupplier: [String: Decimal] = [:]
 
         for record in filteredRecords {
+            let subtotal = record.subtotal
+            let tax = record.tax
+            let shipping = record.shipping
+            let supplier = record.supplier
+
             var recordTotal: Decimal = 0
 
-            if let subtotal = record.subtotal {
+            if let subtotal = subtotal {
                 recordTotal += subtotal
             }
-            if let tax = record.tax {
+            if let tax = tax {
                 recordTotal += tax
             }
-            if let shipping = record.shipping {
+            if let shipping = shipping {
                 recordTotal += shipping
             }
 
             if recordTotal > 0 {
-                spendingBySupplier[record.supplier, default: 0] += recordTotal
+                spendingBySupplier[supplier, default: 0] += recordTotal
             }
         }
 
@@ -128,8 +164,13 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
     func fetchItemsForGlassItem(stableId: String) async throws -> [PurchaseRecordItemModel] {
         var items: [PurchaseRecordItemModel] = []
 
-        for record in records.values {
-            let matchingItems = record.items.filter { $0.item_stable_id == stableId }
+        let recordsArray = Array(records.values)
+        for record in recordsArray {
+            let recordItems = record.items
+            let matchingItems = recordItems.filter { (item: PurchaseRecordItemModel) in
+                let itemStableId = item.item_stable_id
+                return itemStableId == stableId
+            }
             items.append(contentsOf: matchingItems)
         }
 
@@ -139,8 +180,14 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
     func getTotalPurchasedQuantity(for stableId: String, type: String) async throws -> Double {
         let items = try await fetchItemsForGlassItem(stableId: stableId)
         return items
-            .filter { $0.type == type }
-            .reduce(0.0) { $0 + $1.quantity }
+            .filter { (item: PurchaseRecordItemModel) in
+                let itemType = item.type
+                return itemType == type
+            }
+            .reduce(0.0) { (sum, item: PurchaseRecordItemModel) in
+                let qty = item.quantity
+                return sum + qty
+            }
     }
 
     // MARK: - Test Helpers
@@ -152,6 +199,11 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
 
     /// Clear all records (test helper)
     func clearAll() async {
+        records.removeAll()
+    }
+
+    /// Clear all data (test helper, alias for clearAll for consistency with other mocks)
+    func clearAllData() {
         records.removeAll()
     }
 }

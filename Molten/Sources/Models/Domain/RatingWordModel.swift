@@ -8,7 +8,7 @@
 import Foundation
 
 /// Business model for a rating word with its frequency and rank
-public struct RatingWordModel: Identifiable, Equatable, Codable, Sendable, Comparable {
+public nonisolated struct RatingWordModel: Identifiable, Equatable, Codable, Sendable, Comparable {
     public let id: UUID
     public let word: String
     public let frequency: Int

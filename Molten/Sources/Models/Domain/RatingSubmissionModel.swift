@@ -8,7 +8,7 @@
 import Foundation
 
 /// Business model for submitting a rating (star rating + descriptive words)
-public struct RatingSubmissionModel: Identifiable, Equatable, Codable, Sendable {
+public nonisolated struct RatingSubmissionModel: Identifiable, Equatable, Codable, Sendable {
     public let id: UUID
     public let itemStableId: String
     public let starRating: Int

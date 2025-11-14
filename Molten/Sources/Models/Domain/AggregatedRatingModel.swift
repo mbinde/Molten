@@ -8,7 +8,7 @@
 import Foundation
 
 /// Business model for aggregated rating data from the server
-public struct AggregatedRatingModel: Identifiable, Equatable, Codable, Sendable {
+public nonisolated struct AggregatedRatingModel: Identifiable, Equatable, Codable, Sendable {
     public let id: UUID
     public let itemStableId: String
     public let averageRating: Double

@@ -10,6 +10,7 @@ import Foundation
 
 /// Mock implementation of PurchaseRecordRepository for testing
 /// Stores records in memory using a dictionary
+@MainActor
 final class MockPurchaseRecordRepository: PurchaseRecordRepository {
 
     // MARK: - Storage
@@ -20,23 +21,26 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
 
     func getAllRecords() async throws -> [PurchaseRecordModel] {
         let recordsArray = Array(records.values)
-        return recordsArray.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
+        let sorted = recordsArray.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
             let aDate = a.datePurchased
             let bDate = b.datePurchased
             return aDate > bDate
         }
+        return sorted
     }
 
     func fetchRecords(from startDate: Date, to endDate: Date) async throws -> [PurchaseRecordModel] {
         let recordsArray = Array(records.values)
-        return recordsArray.filter { (record: PurchaseRecordModel) in
+        let filtered = recordsArray.filter { (record: PurchaseRecordModel) in
             let datePurchased = record.datePurchased
             return datePurchased >= startDate && datePurchased <= endDate
-        }.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
+        }
+        let sorted = filtered.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
             let aDate = a.datePurchased
             let bDate = b.datePurchased
             return aDate > bDate
         }
+        return sorted
     }
 
     func fetchRecord(byId id: UUID) async throws -> PurchaseRecordModel? {
@@ -70,38 +74,43 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
     func searchRecords(text: String) async throws -> [PurchaseRecordModel] {
         let searchText = text.lowercased()
         let recordsArray = Array(records.values)
-        return recordsArray.filter { (record: PurchaseRecordModel) in
+        let filtered = recordsArray.filter { (record: PurchaseRecordModel) in
             let supplier = record.supplier
             let notes = record.notes
             return supplier.lowercased().contains(searchText) ||
                 (notes?.lowercased().contains(searchText) ?? false)
-        }.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
+        }
+        let sorted = filtered.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
             let aDate = a.datePurchased
             let bDate = b.datePurchased
             return aDate > bDate
         }
+        return sorted
     }
 
     func fetchRecords(bySupplier supplier: String) async throws -> [PurchaseRecordModel] {
         let recordsArray = Array(records.values)
-        return recordsArray.filter { (record: PurchaseRecordModel) in
+        let filtered = recordsArray.filter { (record: PurchaseRecordModel) in
             let recordSupplier = record.supplier
             return recordSupplier == supplier
-        }.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
+        }
+        let sorted = filtered.sorted { (a: PurchaseRecordModel, b: PurchaseRecordModel) in
             let aDate = a.datePurchased
             let bDate = b.datePurchased
             return aDate > bDate
         }
+        return sorted
     }
 
     // MARK: - Analytics
 
     func getDistinctSuppliers() async throws -> [String] {
         let recordsArray = Array(records.values)
-        let suppliers = Set(recordsArray.map { (record: PurchaseRecordModel) in
+        var suppliers: Set<String> = []
+        for record in recordsArray {
             let supplier = record.supplier
-            return supplier
-        })
+            suppliers.insert(supplier)
+        }
         return suppliers.sorted()
     }
 

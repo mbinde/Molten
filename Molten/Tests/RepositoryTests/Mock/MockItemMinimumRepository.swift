@@ -145,40 +145,51 @@ final class MockItemMinimumRepository: ItemMinimumRepository {
     // MARK: - Store Management Operations
 
     func getDistinctStores() async throws -> [String] {
-        let stores = Set(minimums.values.map { $0.store })
+        let minimumsArray = Array(minimums.values)
+        let stores = Set(minimumsArray.map { (minimum: ItemMinimumModel) in
+            minimum.store
+        })
         return stores.sorted()
     }
 
     func getStores(withPrefix prefix: String) async throws -> [String] {
-        let stores = Set(minimums.values.map { $0.store })
+        let minimumsArray = Array(minimums.values)
+        let stores = Set(minimumsArray.map { (minimum: ItemMinimumModel) in
+            minimum.store
+        })
         return stores.filter { $0.hasPrefix(prefix) }.sorted()
     }
 
     func getStoreUtilization() async throws -> [String: Int] {
         var utilization: [String: Int] = [:]
-        for minimum in minimums.values {
-            utilization[minimum.store, default: 0] += 1
+        let minimumsArray = Array(minimums.values)
+        for minimum in minimumsArray {
+            let store = minimum.store
+            utilization[store, default: 0] += 1
         }
         return utilization
     }
 
     func updateStoreName(from oldStoreName: String, to newStoreName: String) async throws {
         let minimumsArray = Array(minimums)
-        for (key, minimum) in minimumsArray where minimum.store == oldStoreName {
-            // Extract values outside to avoid actor isolation issues
-            let minId = minimum.id
-            let minItemId = minimum.item_stable_id
-            let minQty = minimum.quantity
-            let minType = minimum.type
+        for (key, minimum) in minimumsArray {
+            // Extract values first to avoid actor isolation issues
+            let minStore = minimum.store
+            if minStore == oldStoreName {
+                let minId = minimum.id
+                let minItemId = minimum.item_stable_id
+                let minQty = minimum.quantity
+                let minType = minimum.type
 
-            let updated = ItemMinimumModel(
-                id: minId,
-                item_stable_id: minItemId,
-                quantity: minQty,
-                type: minType,
-                store: newStoreName
-            )
-            minimums[key] = updated
+                let updated = ItemMinimumModel(
+                    id: minId,
+                    item_stable_id: minItemId,
+                    quantity: minQty,
+                    type: minType,
+                    store: newStoreName
+                )
+                minimums[key] = updated
+            }
         }
     }
 

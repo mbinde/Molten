@@ -363,6 +363,11 @@ class PersistenceController {
     /// Asynchronously initialize the persistent stores
     /// Call this from your app startup code to load stores without blocking the main thread
     /// IMPORTANT: This must be called before using the container!
+    ///
+    /// NOTE: DO NOT add @MainActor to this method - it causes a deadlock when called from
+    /// AppDependencies.init() which blocks the main thread waiting for initialization.
+    /// This method is thread-safe: uses NSLock, stateLock.withLock, and CheckedContinuation.
+    /// Core Data's loadPersistentStores runs its completion on a background queue anyway.
     func initialize() async {
         // Only initialize once - thread-safe check
         let alreadyInitialized = stateLock.withLock { $0.isInitialized }

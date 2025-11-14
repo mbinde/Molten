@@ -89,7 +89,7 @@ final class MockLogbookRepository: LogbookRepository {
                 log.notes.lowercased().contains(lowercasedQuery) ||
                 log.techniques.contains(where: { $0.lowercased().contains(lowercasedQuery) })
             }
-            .sorted { $0.dateAdded > $1.dateAdded }
+            .sorted { (a: LogbookModel, b: LogbookModel) in a.dateAdded > b.dateAdded }
     }
 
     // MARK: - Test Helpers

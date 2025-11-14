@@ -227,7 +227,7 @@ final class MockItemTagsRepository: ItemTagsRepository {
     }
 
     /// Clear all data (test helper, alias for clearAll for consistency with other mocks)
-    func clearAllData() {
+    nonisolated func clearAllData() {
         tags.removeAll()
     }
 }

@@ -27,8 +27,8 @@ struct IntegrationTests {
     
     // MARK: - Repository Pattern Integration
     
-    @Test("Should integrate MockCatalogRepository with comprehensive operations")
-    func testMockCatalogRepositoryIntegration() async throws {
+    @Test("Should integrate MockGlassItemRepository with comprehensive operations")
+    func testMockGlassItemRepositoryIntegration() async throws {
         // Arrange - Clean repository pattern integration without Core Data dependencies
         let repos = TestConfiguration.createIsolatedMockRepositories()
         let mockRepository = repos.glassItem
@@ -169,22 +169,22 @@ struct IntegrationTests {
     @Test("Should integrate repository pattern with SearchUtilities")
     func testRepositoryPatternSearchIntegration() async throws {
         // Arrange - Test repository pattern integration with search utilities
-        let mockRepository = MockCatalogRepository()
-        
+        let mockRepository = MockGlassItemRepository()
+
         // Add diverse test data
-        mockRepository.addTestItems([
-            CatalogItemModel(name: "Red Glass Rod", rawCode: "RGR-001", manufacturer: "Effetre Glass"),
-            CatalogItemModel(name: "Blue Glass Sheet", rawCode: "BGS-002", manufacturer: "Bullseye Glass"),
-            CatalogItemModel(name: "Clear Frit", rawCode: "CF-003", manufacturer: "Effetre Glass"),
-            CatalogItemModel(name: "Yellow Stringer", rawCode: "YS-004", manufacturer: "Vetrofond")
+        _ = try await mockRepository.createItems([
+            GlassItemModel(stable_id: "rgr001", name: "Red Glass Rod", sku: "RGR-001", manufacturer: "Effetre Glass", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: "bgs002", name: "Blue Glass Sheet", sku: "BGS-002", manufacturer: "Bullseye Glass", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: "cf0003", name: "Clear Frit", sku: "CF-003", manufacturer: "Effetre Glass", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: "ys0004", name: "Yellow Stringer", sku: "YS-004", manufacturer: "Vetrofond", coe: 104, mfr_status: "available")
         ])
-        
+
         // Act - Repository pattern search
         let repositoryGlassResults = try await mockRepository.searchItems(text: "Glass")
         let repositoryEffetreResults = try await mockRepository.searchItems(text: "Effetre")
-        
+
         // Act - SearchUtilities integration (simulate what would happen in UI layer)
-        let allItems = try await mockRepository.getAllItems()
+        let allItems = try await mockRepository.fetchItems(matching: nil)
         let searchUtilityGlassResults = SearchUtilities.filter(allItems, with: "Glass")
         
         // Assert - Repository search works correctly
@@ -210,45 +210,47 @@ struct IntegrationTests {
     @Test("Should integrate repository pattern with ImageHelpers")
     func testRepositoryPatternImageHelpersIntegration() async throws {
         // Arrange - Test repository pattern integration with image utilities
-        let mockRepository = MockCatalogRepository()
-        
+        let mockRepository = MockGlassItemRepository()
+
         // Add test items with various code formats to test sanitization
-        mockRepository.addTestItems([
-            CatalogItemModel(name: "Standard Code Item", rawCode: "STD-001", manufacturer: "TestCorp"),
-            CatalogItemModel(name: "Slash Code Item", rawCode: "SLS/002", manufacturer: "TestCorp"),
-            CatalogItemModel(name: "Complex Code Item", rawCode: "CPX-A/B-003", manufacturer: "TestCorp")
+        _ = try await mockRepository.createItems([
+            GlassItemModel(stable_id: "std001", name: "Standard Code Item", sku: "STD-001", manufacturer: "TestCorp", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: "sls002", name: "Slash Code Item", sku: "SLS/002", manufacturer: "TestCorp", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: "cpx003", name: "Complex Code Item", sku: "CPX-A/B-003", manufacturer: "TestCorp", coe: 96, mfr_status: "available")
         ])
-        
+
         // Act - Fetch items through repository pattern
-        let allItems = try await mockRepository.getAllItems()
+        let allItems = try await mockRepository.fetchItems(matching: nil)
         
         // Test image helper integration with repository data
-        var imageResults: [(item: CatalogItemModel, imageExists: Bool)] = []
+        var imageResults: [(item: GlassItemModel, imageExists: Bool)] = []
         
         for item in allItems {
             // Act - Test image loading for each item from repository
-            let imageExists = ImageHelpers.productImageExists(for: item.code, manufacturer: item.manufacturer)
-            let loadedImage = ImageHelpers.loadProductImage(for: item.code, manufacturer: item.manufacturer)
-            
+            let sku = item.sku ?? ""
+            let imageExists = ImageHelpers.productImageExists(for: sku, manufacturer: item.manufacturer)
+            let loadedImage = ImageHelpers.loadProductImage(for: sku, manufacturer: item.manufacturer)
+
             imageResults.append((item: item, imageExists: imageExists))
-            
+
             // Assert - Should handle all code formats gracefully
-            #expect(loadedImage == nil, "Should handle non-existent images gracefully for \(item.code)")
+            #expect(loadedImage == nil, "Should handle non-existent images gracefully for \(sku)")
             // Image existence check should work without errors regardless of code format
         }
-        
+
         // Assert - Repository integration provides clean data for image operations
         #expect(imageResults.count == 3, "Should process all items from repository")
-        #expect(allItems.allSatisfy { !$0.code.isEmpty }, "Repository should provide valid codes for image lookup")
+        #expect(allItems.allSatisfy { !($0.sku ?? "").isEmpty }, "Repository should provide valid SKUs for image lookup")
         #expect(allItems.allSatisfy { !$0.manufacturer.isEmpty }, "Repository should provide valid manufacturers for image lookup")
-        
+
         // Verify that complex codes are handled by ImageHelpers
-        let slashItem = allItems.first { $0.code.contains("/") }
+        let slashItem = allItems.first { ($0.sku ?? "").contains("/") }
         #expect(slashItem != nil, "Should have item with slash in code")
         
         if let slashItem = slashItem {
             // This should work without throwing errors due to ImageHelpers sanitization
-            let exists = ImageHelpers.productImageExists(for: slashItem.code, manufacturer: slashItem.manufacturer)
+            let sku = slashItem.sku ?? ""
+            let exists = ImageHelpers.productImageExists(for: sku, manufacturer: slashItem.manufacturer)
             #expect(!exists || exists, "Image existence check should complete without error")
         }
     }
@@ -258,7 +260,7 @@ struct IntegrationTests {
     @Test("Should integrate repository pattern with form validation workflows")
     func testRepositoryPatternFormValidationIntegration() async throws {
         // Arrange - Repository pattern with validation workflow
-        let mockRepository = MockCatalogRepository()
+        let mockRepository = MockGlassItemRepository()
         
         // Test form data scenarios
         struct FormSubmissionData {
@@ -281,7 +283,7 @@ struct IntegrationTests {
         ]
         
         var validationResults: [Bool] = []
-        var successfulCreations: [CatalogItemModel] = []
+        var successfulCreations: [GlassItemModel] = []
         var validationErrors: [String] = []
         
         // Act - Process form submissions through validation + repository pattern
@@ -297,11 +299,14 @@ struct IntegrationTests {
             if isValid {
                 if case .success(let validName) = nameValidation,
                    case .success(let validCode) = codeValidation {
-                    
-                    let catalogItem = CatalogItemModel(
+
+                    let catalogItem = GlassItemModel(
+                        stable_id: validCode.lowercased().replacingOccurrences(of: " ", with: "-"),
                         name: validName,
-                        rawCode: validCode,
-                        manufacturer: submission.manufacturer
+                        sku: validCode,
+                        manufacturer: submission.manufacturer,
+                        coe: 96,
+                        mfr_status: "available"
                     )
                     
                     do {
@@ -325,7 +330,7 @@ struct IntegrationTests {
         }
         
         // Step 3: Verify integration results through repository
-        let allItemsFromRepository = try await mockRepository.getAllItems()
+        let allItemsFromRepository = try await mockRepository.fetchItems(matching: nil)
         let searchResults = try await mockRepository.searchItems(text: "Glass")
         
         // Assert - Validation integration works correctly
@@ -341,19 +346,19 @@ struct IntegrationTests {
         // Assert - Repository contains only validated data
         for item in successfulCreations {
             #expect(!item.name.isEmpty, "Created items should have non-empty names")
-            #expect(!item.code.isEmpty, "Created items should have non-empty codes")
+            #expect(!(item.sku ?? "").isEmpty, "Created items should have non-empty codes")
             #expect(!item.manufacturer.isEmpty, "Created items should have non-empty manufacturers")
-            #expect(!item.id.isEmpty, "Created items should have generated IDs")
+            #expect(!item.stable_id.isEmpty, "Created items should have generated IDs")
         }
-        
+
         // Assert - Search works on validated repository data
         #expect(searchResults.count >= 0, "Search should work on repository data")
         let expectedGlassItems = successfulCreations.filter { $0.name.contains("Glass") }.count
         #expect(searchResults.count == expectedGlassItems, "Should find correct number of glass items")
-        
+
         // Assert - Validation prevented invalid data from reaching repository
         let allNames = allItemsFromRepository.map { $0.name }
-        let allCodes = allItemsFromRepository.map { $0.code }
+        let allCodes = allItemsFromRepository.map { $0.sku ?? "" }
         
         #expect(!allNames.contains(""), "Repository should not contain empty names")
         #expect(!allNames.contains("   "), "Repository should not contain whitespace-only names")  
@@ -366,7 +371,7 @@ struct IntegrationTests {
     @Test("Should support coordinated workflow using repository pattern")
     func testRepositoryPatternCoordinatedWorkflow() async throws {
         // Arrange - Set up repository pattern components with state management
-        let mockRepository = MockCatalogRepository()
+        let mockRepository = MockGlassItemRepository()
         let loadingManager = LoadingStateManager()
         
         var workflowSteps: [String] = []
@@ -377,29 +382,32 @@ struct IntegrationTests {
         #expect(loadingManager.isLoading, "Should be loading")
         
         // Step 2: Create data through repository pattern
-        let newItem = CatalogItemModel(
+        let newItem = GlassItemModel(
+            stable_id: "workflowcorp-wti-001-0",
             name: "Workflow Test Item",
-            rawCode: "WTI-001",
-            manufacturer: "WorkflowCorp"
+            sku: "WTI-001",
+            manufacturer: "WorkflowCorp",
+            coe: 96,
+            mfr_status: "available"
         )
         let createdItem = try await mockRepository.createItem(newItem)
         workflowSteps.append("data_created_via_repository")
-        
+
         // Step 3: Complete loading
         loadingManager.completeLoading()
         workflowSteps.append("loading_completed")
         #expect(!loadingManager.isLoading, "Should complete loading")
-        
+
         // Step 4: Verify data through repository
-        let allItems = try await mockRepository.getAllItems()
+        let allItems = try await mockRepository.fetchItems(matching: nil)
         let searchResults = try await mockRepository.searchItems(text: "Workflow")
         workflowSteps.append("data_verified_via_repository")
-        
+
         // Assert - Repository pattern workflow completed successfully
         let expectedSteps = ["loading_started", "data_created_via_repository", "loading_completed", "data_verified_via_repository"]
         #expect(workflowSteps == expectedSteps, "Should complete repository pattern workflow in order")
-        
-        #expect(createdItem.code == "WORKFLOWCORP-WTI-001", "Should create item correctly through repository")
+
+        #expect((createdItem.sku ?? "") == "WTI-001", "Should create item correctly through repository")
         #expect(allItems.count == 1, "Should have created item in repository")
         #expect(searchResults.count == 1, "Should find created item through search")
         #expect(searchResults.first?.name == "Workflow Test Item", "Should find correct item")
@@ -410,40 +418,44 @@ struct IntegrationTests {
     @Test("Should achieve good performance with repository pattern integration")
     func testRepositoryPatternPerformanceIntegration() async throws {
         // Arrange - Repository pattern with realistic performance expectations
-        let mockRepository = MockCatalogRepository()
+        let mockRepository = MockGlassItemRepository()
         
         let startTime = Date()
         
         // Act - Repository pattern operations
-        var createdItems: [CatalogItemModel] = []
+        var createdItems: [GlassItemModel] = []
         
         for i in 1...10 {
-            let item = CatalogItemModel(
+            let sku = "PTI-\(String(format: "%03d", i))"
+            let item = GlassItemModel(
+                stable_id: "perfcorp-pti-\(String(format: "%03d", i))-0",
                 name: "Performance Test Item \(i)",
-                rawCode: "PTI-\(String(format: "%03d", i))",
-                manufacturer: "PerfCorp"
+                sku: sku,
+                manufacturer: "PerfCorp",
+                coe: 96,
+                mfr_status: "available"
             )
             let created = try await mockRepository.createItem(item)
             createdItems.append(created)
         }
-        
-        let allItems = try await mockRepository.getAllItems()
+
+        let allItems = try await mockRepository.fetchItems(matching: nil)
         let searchResults = try await mockRepository.searchItems(text: "Performance")
-        
+
         let totalTime = Date().timeIntervalSince(startTime)
-        
+
         // Assert - Repository pattern provides good performance (more realistic expectations)
         #expect(totalTime < 1.0, "Repository pattern should be reasonably fast (< 1 second)")
         #expect(allItems.count == 10, "Should create all items through repository pattern")
         #expect(searchResults.count == 10, "Should find all items through repository search")
-        
+
         // Verify data integrity through repository pattern
         for (index, item) in allItems.enumerated() {
             #expect(!item.name.isEmpty, "Item \(index) should have valid name")
-            #expect(!item.code.isEmpty, "Item \(index) should have valid code")
+            #expect(!(item.sku ?? "").isEmpty, "Item \(index) should have valid code")
             #expect(item.manufacturer == "PerfCorp", "Item \(index) should have correct manufacturer")
-            #expect(!item.id.isEmpty, "Item \(index) should have generated ID")
-            #expect(item.code.hasPrefix("PERFCORP-"), "Item \(index) should have properly formatted code")
+            #expect(!item.stable_id.isEmpty, "Item \(index) should have generated ID")
+            #expect((item.sku ?? "").hasPrefix("PTI-"), "Item \(index) should have properly formatted code")
         }
         
         // Verify search functionality performance and accuracy
@@ -457,7 +469,7 @@ struct IntegrationTests {
     @Test("Should handle errors gracefully with repository pattern")
     func testRepositoryPatternErrorRecoveryIntegration() async throws {
         // Arrange - Repository pattern with mixed success/failure scenarios
-        let mockRepository = MockCatalogRepository()
+        let mockRepository = MockGlassItemRepository()
         
         // Test scenarios with validation integration
         let testCases = [
@@ -468,7 +480,7 @@ struct IntegrationTests {
             ("Valid Item 4", "VALID-004", "GoodCorp", true)
         ]
         
-        var successfulItems: [CatalogItemModel] = []
+        var successfulItems: [GlassItemModel] = []
         var validationErrors: [String] = []
         
         // Act - Process items with validation before repository operations
@@ -482,13 +494,16 @@ struct IntegrationTests {
             if isValid && expectedSuccess {
                 if case .success(let validName) = nameValidation,
                    case .success(let validCode) = codeValidation {
-                    
-                    let item = CatalogItemModel(
+
+                    let item = GlassItemModel(
+                        stable_id: "\(manufacturer.lowercased())-\(validCode.lowercased())-0",
                         name: validName,
-                        rawCode: validCode,
-                        manufacturer: manufacturer
+                        sku: validCode,
+                        manufacturer: manufacturer,
+                        coe: 96,
+                        mfr_status: "available"
                     )
-                    
+
                     do {
                         let created = try await mockRepository.createItem(item)
                         successfulItems.append(created)
@@ -510,7 +525,7 @@ struct IntegrationTests {
         }
         
         // Verify repository state after error recovery
-        let allItemsFromRepository = try await mockRepository.getAllItems()
+        let allItemsFromRepository = try await mockRepository.fetchItems(matching: nil)
         let searchResults = try await mockRepository.searchItems(text: "Valid")
         
         // Assert - Error recovery with repository pattern
@@ -523,19 +538,22 @@ struct IntegrationTests {
         // Assert - Repository contains only valid data
         for item in successfulItems {
             #expect(!item.name.isEmpty, "Repository should only contain items with valid names")
-            #expect(!item.code.isEmpty, "Repository should only contain items with valid codes")
+            #expect(!(item.sku ?? "").isEmpty, "Repository should only contain items with valid codes")
             #expect(!item.manufacturer.isEmpty, "Repository should only contain items with valid manufacturers")
         }
-        
+
         // Assert - System continues working after partial failures
-        let recoveryItem = CatalogItemModel(
+        let recoveryItem = GlassItemModel(
+            stable_id: "recoverycorp-recovery-001-0",
             name: "Recovery Test Item",
-            rawCode: "RECOVERY-001",
-            manufacturer: "RecoveryCorp"
+            sku: "RECOVERY-001",
+            manufacturer: "RecoveryCorp",
+            coe: 96,
+            mfr_status: "available"
         )
         
         let recoveryCreated = try await mockRepository.createItem(recoveryItem)
-        let finalItems = try await mockRepository.getAllItems()
+        let finalItems = try await mockRepository.fetchItems(matching: nil)
         
         #expect(recoveryCreated.name == "Recovery Test Item", "Should continue working after partial failures")
         #expect(finalItems.count == expectedSuccessCount + 1, "Repository should contain recovery item")
@@ -546,17 +564,17 @@ struct IntegrationTests {
     @Test("Should handle complex state transitions with repository pattern")
     func testRepositoryPatternStateTransitionsIntegration() async throws {
         // Arrange - Repository pattern with complex UI state management
-        let mockRepository = MockCatalogRepository()
+        let mockRepository = MockGlassItemRepository()
         let loadingManager = LoadingStateManager()
         let selectionManager = SelectionStateManager<String>()
         let filterManager = FilterStateManager()
         
         // Create test dataset through repository
         let testItems = [
-            CatalogItemModel(name: "Glass Rod 1", rawCode: "GR-001", manufacturer: "PremiumCorp"),
-            CatalogItemModel(name: "Glass Rod 2", rawCode: "GR-002", manufacturer: "StandardCorp"),
-            CatalogItemModel(name: "Tool Item 1", rawCode: "TI-001", manufacturer: "PremiumCorp"),
-            CatalogItemModel(name: "Tool Item 2", rawCode: "TI-002", manufacturer: "StandardCorp")
+            GlassItemModel(stable_id: "premiumcorp-gr-001-0", name: "Glass Rod 1", sku: "GR-001", manufacturer: "PremiumCorp", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: "standardcorp-gr-002-0", name: "Glass Rod 2", sku: "GR-002", manufacturer: "StandardCorp", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: "premiumcorp-ti-001-0", name: "Tool Item 1", sku: "TI-001", manufacturer: "PremiumCorp", coe: 96, mfr_status: "available"),
+            GlassItemModel(stable_id: "standardcorp-ti-002-0", name: "Tool Item 2", sku: "TI-002", manufacturer: "StandardCorp", coe: 96, mfr_status: "available")
         ]
         
         for item in testItems {
@@ -588,7 +606,7 @@ struct IntegrationTests {
         workflowSteps.append("filter_applied")
         
         // Step 3: Fetch and filter data through repository
-        let allItems = try await mockRepository.getAllItems()
+        let allItems = try await mockRepository.fetchItems(matching: nil)
         let filteredItems = try await mockRepository.searchItems(text: filterManager.textFilter ?? "")
         workflowSteps.append("data_fetched_and_filtered")
         

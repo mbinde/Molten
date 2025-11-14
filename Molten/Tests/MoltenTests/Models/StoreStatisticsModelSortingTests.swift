@@ -47,9 +47,12 @@ struct StoreStatisticsModelSortingTests {
         var stores = [medium, low, high]
         stores.sort() // Uses Comparable conformance
 
-        #expect(stores[0].storeName == "High Needs")
-        #expect(stores[1].storeName == "Medium Needs")
-        #expect(stores[2].storeName == "Low Needs")
+        let name0 = stores[0].storeName
+        let name1 = stores[1].storeName
+        let name2 = stores[2].storeName
+        #expect(name0 == "High Needs")
+        #expect(name1 == "Medium Needs")
+        #expect(name2 == "Low Needs")
     }
 
     @Test("Should handle equal currentNeedsCount gracefully")
@@ -72,9 +75,12 @@ struct StoreStatisticsModelSortingTests {
 
         let sorted = stores.sorted() // Should use Comparable
 
-        #expect(sorted[0].currentNeedsCount == 7)
-        #expect(sorted[1].currentNeedsCount == 3)
-        #expect(sorted[2].currentNeedsCount == 1)
+        let count0 = sorted[0].currentNeedsCount
+        let count1 = sorted[1].currentNeedsCount
+        let count2 = sorted[2].currentNeedsCount
+        #expect(count0 == 7)
+        #expect(count1 == 3)
+        #expect(count2 == 1)
     }
 
     @Test("Less than operator should compare currentNeedsCount")
@@ -83,8 +89,10 @@ struct StoreStatisticsModelSortingTests {
         let larger = createStoreStatistics(storeName: "Larger", minimumCount: 10, currentNeedsCount: 8)
 
         // Business rule: higher currentNeedsCount is "less than" for descending sort
-        #expect(larger < smaller)
-        #expect(!(smaller < larger))
+        let largerIsLess = larger < smaller
+        let smallerIsNotLess = !(smaller < larger)
+        #expect(largerIsLess)
+        #expect(smallerIsNotLess)
     }
 
     @Test("Should prioritize by needs regardless of minimumCount")

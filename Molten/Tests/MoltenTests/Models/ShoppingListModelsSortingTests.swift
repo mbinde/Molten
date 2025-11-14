@@ -154,9 +154,12 @@ struct DetailedMinimumModelSortingTests {
         var items = [tube, rod, frit]
         items.sort() // Uses Comparable conformance
 
-        #expect(items[0].minimum.type == "frit")
-        #expect(items[1].minimum.type == "rod")
-        #expect(items[2].minimum.type == "tube")
+        let type0 = items[0].minimum.type
+        let type1 = items[1].minimum.type
+        let type2 = items[2].minimum.type
+        #expect(type0 == "frit")
+        #expect(type1 == "rod")
+        #expect(type2 == "tube")
     }
 
     @Test("Should handle equal types gracefully")
@@ -179,9 +182,12 @@ struct DetailedMinimumModelSortingTests {
 
         let sorted = items.sorted() // Should use Comparable
 
-        #expect(sorted[0].minimum.type == "frit")
-        #expect(sorted[1].minimum.type == "rod")
-        #expect(sorted[2].minimum.type == "tube")
+        let type0 = sorted[0].minimum.type
+        let type1 = sorted[1].minimum.type
+        let type2 = sorted[2].minimum.type
+        #expect(type0 == "frit")
+        #expect(type1 == "rod")
+        #expect(type2 == "tube")
     }
 
     @Test("Less than operator should compare types alphabetically")
@@ -204,7 +210,9 @@ struct DetailedMinimumModelSortingTests {
         items.sort()
 
         // Should still sort by type, not quantity
-        #expect(items[0].minimum.type == "frit")
-        #expect(items[1].minimum.type == "rod")
+        let type0 = items[0].minimum.type
+        let type1 = items[1].minimum.type
+        #expect(type0 == "frit")
+        #expect(type1 == "rod")
     }
 }

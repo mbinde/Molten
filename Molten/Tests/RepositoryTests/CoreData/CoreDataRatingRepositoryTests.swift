@@ -6,20 +6,25 @@
 //  Tests actual Core Data persistence with isolated test contexts
 //
 
-import XCTest
+import Testing
 import CoreData
 @testable import Molten
 
-final class CoreDataRatingRepositoryTests: XCTestCase {
+@Suite("CoreDataRatingRepository Tests")
+@MainActor
+struct CoreDataRatingRepositoryTests {
 
-    var persistenceController: PersistenceController!
-    var repository: CoreDataRatingRepository!
+    let repository: CoreDataRatingRepository
+    let persistenceController: PersistenceController
 
-    override func setUp() async throws {
-        try await super.setUp()
-
+    init() throws {
         // Create isolated test controller
         persistenceController = PersistenceController.createTestController()
+
+        // Verify test controller loaded successfully
+        if let error = persistenceController.storeLoadingError {
+            throw error
+        }
 
         // Create repository with test contexts
         repository = CoreDataRatingRepository(
@@ -28,15 +33,10 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         )
     }
 
-    override func tearDown() async throws {
-        repository = nil
-        persistenceController = nil
-        try await super.tearDown()
-    }
-
     // MARK: - Aggregated Ratings Tests
 
-    func testSaveAndFetchAggregatedRating() async throws {
+    @Test("Save and fetch aggregated rating")
+    func saveAndFetchAggregatedRating() async throws {
         // Given
         let rating = AggregatedRatingModel(
             itemStableId: "bullseye-001-0",
@@ -54,23 +54,25 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         let fetched = try await repository.fetchAggregatedRating(forItem: "bullseye-001-0")
 
         // Then
-        XCTAssertNotNil(fetched)
-        XCTAssertEqual(fetched?.itemStableId, "bullseye-001-0")
-        XCTAssertEqual(fetched?.averageRating, 4.5)
-        XCTAssertEqual(fetched?.totalRatings, 10)
-        XCTAssertEqual(fetched?.topWords.count, 2)
-        XCTAssertEqual(fetched?.topWords.first?.word, "beautiful")
+        #expect(fetched != nil)
+        #expect(fetched?.itemStableId == "bullseye-001-0")
+        #expect(fetched?.averageRating == 4.5)
+        #expect(fetched?.totalRatings == 10)
+        #expect(fetched?.topWords.count == 2)
+        #expect(fetched?.topWords.first?.word == "beautiful")
     }
 
-    func testFetchNonExistentRating() async throws {
+    @Test("Fetch non-existent rating returns nil")
+    func fetchNonExistentRating() async throws {
         // When
         let rating = try await repository.fetchAggregatedRating(forItem: "nonexistent-item")
 
         // Then
-        XCTAssertNil(rating)
+        #expect(rating == nil)
     }
 
-    func testBatchFetchAggregatedRatings() async throws {
+    @Test("Batch fetch aggregated ratings")
+    func batchFetchAggregatedRatings() async throws {
         // Given
         let rating1 = AggregatedRatingModel(
             itemStableId: "bullseye-001-0",
@@ -97,13 +99,14 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         )
 
         // Then
-        XCTAssertEqual(ratings.count, 2)
-        XCTAssertNotNil(ratings["bullseye-001-0"])
-        XCTAssertNotNil(ratings["cim-412-0"])
-        XCTAssertNil(ratings["nonexistent-0"])
+        #expect(ratings.count == 2)
+        #expect(ratings["bullseye-001-0"] != nil)
+        #expect(ratings["cim-412-0"] != nil)
+        #expect(ratings["nonexistent-0"] == nil)
     }
 
-    func testUpdateAggregatedRating() async throws {
+    @Test("Update aggregated rating replaces old data")
+    func updateAggregatedRating() async throws {
         // Given - Save initial rating
         let initialRating = AggregatedRatingModel(
             itemStableId: "bullseye-001-0",
@@ -130,12 +133,13 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         let fetched = try await repository.fetchAggregatedRating(forItem: "bullseye-001-0")
 
         // Then - Should have updated values
-        XCTAssertEqual(fetched?.averageRating, 4.5)
-        XCTAssertEqual(fetched?.totalRatings, 10)
-        XCTAssertEqual(fetched?.topWords.count, 1)
+        #expect(fetched?.averageRating == 4.5)
+        #expect(fetched?.totalRatings == 10)
+        #expect(fetched?.topWords.count == 1)
     }
 
-    func testDeleteAggregatedRating() async throws {
+    @Test("Delete aggregated rating")
+    func deleteAggregatedRating() async throws {
         // Given
         let rating = AggregatedRatingModel(
             itemStableId: "bullseye-001-0",
@@ -152,10 +156,11 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         let fetched = try await repository.fetchAggregatedRating(forItem: "bullseye-001-0")
 
         // Then
-        XCTAssertNil(fetched)
+        #expect(fetched == nil)
     }
 
-    func testClearAllRatings() async throws {
+    @Test("Clear all ratings")
+    func clearAllRatings() async throws {
         // Given - Save multiple ratings
         let rating1 = AggregatedRatingModel(
             itemStableId: "bullseye-001-0",
@@ -183,13 +188,14 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         let fetched1 = try await repository.fetchAggregatedRating(forItem: "bullseye-001-0")
         let fetched2 = try await repository.fetchAggregatedRating(forItem: "cim-412-0")
 
-        XCTAssertNil(fetched1)
-        XCTAssertNil(fetched2)
+        #expect(fetched1 == nil)
+        #expect(fetched2 == nil)
     }
 
     // MARK: - Rating Words Tests
 
-    func testSaveAndFetchRatingWords() async throws {
+    @Test("Save and fetch rating words")
+    func saveAndFetchRatingWords() async throws {
         // Given
         let words = [
             RatingWordModel(word: "beautiful", frequency: 10, rank: 1),
@@ -202,22 +208,24 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         let fetched = try await repository.fetchRatingWords(forItem: "bullseye-001-0")
 
         // Then
-        XCTAssertEqual(fetched.count, 3)
-        XCTAssertEqual(fetched[0].word, "beautiful")
-        XCTAssertEqual(fetched[0].frequency, 10)
-        XCTAssertEqual(fetched[1].word, "vibrant")
-        XCTAssertEqual(fetched[2].word, "smooth")
+        #expect(fetched.count == 3)
+        #expect(fetched[0].word == "beautiful")
+        #expect(fetched[0].frequency == 10)
+        #expect(fetched[1].word == "vibrant")
+        #expect(fetched[2].word == "smooth")
     }
 
-    func testFetchNonExistentWords() async throws {
+    @Test("Fetch non-existent words returns empty")
+    func fetchNonExistentWords() async throws {
         // When
         let words = try await repository.fetchRatingWords(forItem: "nonexistent-item")
 
         // Then
-        XCTAssertTrue(words.isEmpty)
+        #expect(words.isEmpty)
     }
 
-    func testUpdateRatingWords() async throws {
+    @Test("Update rating words replaces old list")
+    func updateRatingWords() async throws {
         // Given - Initial words
         let initialWords = [
             RatingWordModel(word: "beautiful", frequency: 5, rank: 1)
@@ -235,12 +243,13 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         let fetched = try await repository.fetchRatingWords(forItem: "bullseye-001-0")
 
         // Then - Should have new words only
-        XCTAssertEqual(fetched.count, 2)
-        XCTAssertEqual(fetched[0].word, "excellent")
-        XCTAssertEqual(fetched[1].word, "stunning")
+        #expect(fetched.count == 2)
+        #expect(fetched[0].word == "excellent")
+        #expect(fetched[1].word == "stunning")
     }
 
-    func testDeleteRatingWords() async throws {
+    @Test("Delete rating words")
+    func deleteRatingWords() async throws {
         // Given
         let words = [
             RatingWordModel(word: "beautiful", frequency: 10, rank: 1)
@@ -253,12 +262,13 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         let fetched = try await repository.fetchRatingWords(forItem: "bullseye-001-0")
 
         // Then
-        XCTAssertTrue(fetched.isEmpty)
+        #expect(fetched.isEmpty)
     }
 
     // MARK: - Pending Submissions Tests
 
-    func testAddAndFetchPendingSubmission() async throws {
+    @Test("Add and fetch pending submission")
+    func addAndFetchPendingSubmission() async throws {
         // Given
         let submission = RatingSubmissionModel(
             itemStableId: "bullseye-001-0",
@@ -271,13 +281,14 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         let pending = try await repository.fetchPendingSubmissions()
 
         // Then
-        XCTAssertEqual(pending.count, 1)
-        XCTAssertEqual(pending[0].itemStableId, "bullseye-001-0")
-        XCTAssertEqual(pending[0].starRating, 5)
-        XCTAssertEqual(pending[0].words.count, 5)
+        #expect(pending.count == 1)
+        #expect(pending[0].itemStableId == "bullseye-001-0")
+        #expect(pending[0].starRating == 5)
+        #expect(pending[0].words.count == 5)
     }
 
-    func testAddMultiplePendingSubmissions() async throws {
+    @Test("Add multiple pending submissions")
+    func addMultiplePendingSubmissions() async throws {
         // Given
         let submission1 = RatingSubmissionModel(
             itemStableId: "bullseye-001-0",
@@ -297,10 +308,11 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         let pending = try await repository.fetchPendingSubmissions()
 
         // Then
-        XCTAssertEqual(pending.count, 2)
+        #expect(pending.count == 2)
     }
 
-    func testRemovePendingSubmission() async throws {
+    @Test("Remove pending submission")
+    func removePendingSubmission() async throws {
         // Given
         let submission = RatingSubmissionModel(
             itemStableId: "bullseye-001-0",
@@ -315,10 +327,11 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         let pending = try await repository.fetchPendingSubmissions()
 
         // Then
-        XCTAssertTrue(pending.isEmpty)
+        #expect(pending.isEmpty)
     }
 
-    func testUpdatePendingSubmissionAttempts() async throws {
+    @Test("Update pending submission attempts")
+    func updatePendingSubmissionAttempts() async throws {
         // Given
         let submission = RatingSubmissionModel(
             itemStableId: "bullseye-001-0",
@@ -335,10 +348,11 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         // Then
         // Note: We can't directly verify attempts without exposing it in the model,
         // but we verify the operation doesn't throw
-        XCTAssertEqual(pending.count, 1)
+        #expect(pending.count == 1)
     }
 
-    func testClearPendingSubmissions() async throws {
+    @Test("Clear pending submissions")
+    func clearPendingSubmissions() async throws {
         // Given
         let submission1 = RatingSubmissionModel(
             itemStableId: "bullseye-001-0",
@@ -360,12 +374,13 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         let pending = try await repository.fetchPendingSubmissions()
 
         // Then
-        XCTAssertTrue(pending.isEmpty)
+        #expect(pending.isEmpty)
     }
 
     // MARK: - Staleness Check Tests
 
-    func testIsRatingStale_NoRating() async throws {
+    @Test("Non-existent rating is stale")
+    func isRatingStaleNoRating() async throws {
         // When - No rating exists
         let isStale = try await repository.isRatingStale(
             forItem: "nonexistent-item",
@@ -373,10 +388,11 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         )
 
         // Then - Should be stale
-        XCTAssertTrue(isStale)
+        #expect(isStale == true)
     }
 
-    func testIsRatingStale_Fresh() async throws {
+    @Test("Fresh rating is not stale")
+    func isRatingFresh() async throws {
         // Given - Fresh rating (just saved)
         let rating = AggregatedRatingModel(
             itemStableId: "bullseye-001-0",
@@ -395,10 +411,11 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         )
 
         // Then - Should not be stale
-        XCTAssertFalse(isStale)
+        #expect(isStale == false)
     }
 
-    func testIsRatingStale_Old() async throws {
+    @Test("Old rating is stale")
+    func isRatingOld() async throws {
         // Given - Old rating (2 hours ago)
         let twoHoursAgo = Date().addingTimeInterval(-7200)
         let rating = AggregatedRatingModel(
@@ -418,12 +435,13 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         )
 
         // Then - Should be stale
-        XCTAssertTrue(isStale)
+        #expect(isStale == true)
     }
 
     // MARK: - Integration Tests (Combined Operations)
 
-    func testSaveAggregatedRatingWithWords() async throws {
+    @Test("Saving aggregated rating also saves words")
+    func saveAggregatedRatingWithWords() async throws {
         // Given - Rating with words
         let words = [
             RatingWordModel(word: "beautiful", frequency: 10, rank: 1),
@@ -445,11 +463,12 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         let fetchedRating = try await repository.fetchAggregatedRating(forItem: "bullseye-001-0")
         let fetchedWords = try await repository.fetchRatingWords(forItem: "bullseye-001-0")
 
-        XCTAssertNotNil(fetchedRating)
-        XCTAssertEqual(fetchedWords.count, 2)
+        #expect(fetchedRating != nil)
+        #expect(fetchedWords.count == 2)
     }
 
-    func testDeleteAggregatedRatingAlsoDeletesWords() async throws {
+    @Test("Deleting aggregated rating also deletes words")
+    func deleteAggregatedRatingAlsoDeletesWords() async throws {
         // Given - Rating with words
         let words = [
             RatingWordModel(word: "beautiful", frequency: 10, rank: 1)
@@ -472,7 +491,7 @@ final class CoreDataRatingRepositoryTests: XCTestCase {
         let fetchedRating = try await repository.fetchAggregatedRating(forItem: "bullseye-001-0")
         let fetchedWords = try await repository.fetchRatingWords(forItem: "bullseye-001-0")
 
-        XCTAssertNil(fetchedRating)
-        XCTAssertTrue(fetchedWords.isEmpty)
+        #expect(fetchedRating == nil)
+        #expect(fetchedWords.isEmpty)
     }
 }

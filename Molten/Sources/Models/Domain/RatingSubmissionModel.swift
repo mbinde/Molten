@@ -70,17 +70,12 @@ public nonisolated struct RatingSubmissionModel: Identifiable, Equatable, Codabl
 
     // MARK: - Profanity Filter
 
-    /// Check if any word contains profanity
+    /// Check if any word contains profanity (client-side filtering)
+    ///
+    /// This provides first-line defense using a comprehensive word list.
+    /// Server-side batch moderation with ML provides second-line defense.
     public nonisolated var containsProfanity: Bool {
-        let profanityList: Set<String> = [
-            "damn", "hell", "shit", "fuck", "ass", "bitch",
-            "bastard", "crap", "piss", "dick", "cock", "pussy",
-            "fag", "slut", "whore", "nigger", "cunt"
-        ]
-
-        return words.contains { word in
-            profanityList.contains(word)
-        }
+        return ProfanityList.containsProfanity(in: words)
     }
 
     // MARK: - Business Logic

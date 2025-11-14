@@ -10,6 +10,7 @@ import Foundation
 
 /// Mock implementation of ShoppingListRepository for testing
 /// Stores shopping list items in memory using a dictionary
+@MainActor
 final class MockShoppingListRepository: ShoppingListRepository {
 
     // MARK: - Storage
@@ -19,7 +20,13 @@ final class MockShoppingListRepository: ShoppingListRepository {
     // MARK: - CRUD Operations
 
     func fetchAllItems() async throws -> [ItemShoppingModel] {
-        return Array(items.values).sorted { $0.dateAdded > $1.dateAdded }
+        let itemsArray = Array(items.values)
+        let sorted = itemsArray.sorted { (a: ItemShoppingModel, b: ItemShoppingModel) in
+            let aDate = a.dateAdded
+            let bDate = b.dateAdded
+            return aDate > bDate
+        }
+        return sorted
     }
 
     func fetchItems(matching predicate: NSPredicate?) async throws -> [ItemShoppingModel] {
@@ -32,13 +39,26 @@ final class MockShoppingListRepository: ShoppingListRepository {
     }
 
     func fetchItem(forItem item_stable_id: String) async throws -> ItemShoppingModel? {
-        return items.values.first { $0.item_stable_id == item_stable_id }
+        let itemsArray = Array(items.values)
+        let found = itemsArray.first { (item: ItemShoppingModel) in
+            let itemId = item.item_stable_id
+            return itemId == item_stable_id
+        }
+        return found
     }
 
     func fetchItems(forStore store: String) async throws -> [ItemShoppingModel] {
-        return items.values
-            .filter { $0.store == store }
-            .sorted { $0.dateAdded > $1.dateAdded }
+        let itemsArray = Array(items.values)
+        let filtered = itemsArray.filter { (item: ItemShoppingModel) in
+            let itemStore = item.store
+            return itemStore == store
+        }
+        let sorted = filtered.sorted { (a: ItemShoppingModel, b: ItemShoppingModel) in
+            let aDate = a.dateAdded
+            let bDate = b.dateAdded
+            return aDate > bDate
+        }
+        return sorted
     }
 
     func createItem(_ item: ItemShoppingModel) async throws -> ItemShoppingModel {
@@ -78,24 +98,33 @@ final class MockShoppingListRepository: ShoppingListRepository {
             throw NSError(domain: "MockShoppingListRepository", code: 404)
         }
 
+        let existingId = existing.id
+        let existingItemId = existing.item_stable_id
+        let existingStore = existing.store
+        let existingType = existing.type
+        let existingSubtype = existing.subtype
+        let existingSubsubtype = existing.subsubtype
+        let existingDate = existing.dateAdded
+
         let updated = ItemShoppingModel(
-            id: existing.id,
-            item_stable_id: existing.item_stable_id,
+            id: existingId,
+            item_stable_id: existingItemId,
             quantity: quantity,
-            store: existing.store,
-            type: existing.type,
-            subtype: existing.subtype,
-            subsubtype: existing.subsubtype,
-            dateAdded: existing.dateAdded
+            store: existingStore,
+            type: existingType,
+            subtype: existingSubtype,
+            subsubtype: existingSubsubtype,
+            dateAdded: existingDate
         )
 
-        items[existing.id] = updated
+        items[existingId] = updated
         return updated
     }
 
     func addQuantity(_ quantity: Double, toItem item_stable_id: String, store: String?) async throws -> ItemShoppingModel {
         if let existing = try await fetchItem(forItem: item_stable_id) {
-            let newQuantity = existing.quantity + quantity
+            let existingQty = existing.quantity
+            let newQuantity = existingQty + quantity
             return try await updateQuantity(newQuantity, forItem: item_stable_id)
         } else {
             let newItem = ItemShoppingModel(
@@ -114,30 +143,47 @@ final class MockShoppingListRepository: ShoppingListRepository {
             throw NSError(domain: "MockShoppingListRepository", code: 404)
         }
 
+        let existingId = existing.id
+        let existingItemId = existing.item_stable_id
+        let existingQty = existing.quantity
+        let existingType = existing.type
+        let existingSubtype = existing.subtype
+        let existingSubsubtype = existing.subsubtype
+        let existingDate = existing.dateAdded
+
         let updated = ItemShoppingModel(
-            id: existing.id,
-            item_stable_id: existing.item_stable_id,
-            quantity: existing.quantity,
+            id: existingId,
+            item_stable_id: existingItemId,
+            quantity: existingQty,
             store: store,
-            type: existing.type,
-            subtype: existing.subtype,
-            subsubtype: existing.subsubtype,
-            dateAdded: existing.dateAdded
+            type: existingType,
+            subtype: existingSubtype,
+            subsubtype: existingSubsubtype,
+            dateAdded: existingDate
         )
 
-        items[existing.id] = updated
+        items[existingId] = updated
         return updated
     }
 
     func getDistinctStores() async throws -> [String] {
-        let stores = Set(items.values.compactMap { $0.store })
+        let itemsArray = Array(items.values)
+        var stores: Set<String> = []
+        for item in itemsArray {
+            let store = item.store
+            if let store = store {
+                stores.insert(store)
+            }
+        }
         return stores.sorted()
     }
 
     func getItemCountByStore() async throws -> [String: Int] {
         var counts: [String: Int] = [:]
-        for item in items.values {
-            if let store = item.store {
+        let itemsArray = Array(items.values)
+        for item in itemsArray {
+            let store = item.store
+            if let store = store {
                 counts[store, default: 0] += 1
             }
         }
@@ -155,22 +201,49 @@ final class MockShoppingListRepository: ShoppingListRepository {
     }
 
     func getItemCount(forStore store: String) async throws -> Int {
-        return items.values.filter { $0.store == store }.count
+        let itemsArray = Array(items.values)
+        let filtered = itemsArray.filter { (item: ItemShoppingModel) in
+            let itemStore = item.store
+            return itemStore == store
+        }
+        return filtered.count
     }
 
     func getItemsSortedByDate(ascending: Bool) async throws -> [ItemShoppingModel] {
+        let itemsArray = Array(items.values)
         if ascending {
-            return items.values.sorted { $0.dateAdded < $1.dateAdded }
+            let sorted = itemsArray.sorted { (a: ItemShoppingModel, b: ItemShoppingModel) in
+                let aDate = a.dateAdded
+                let bDate = b.dateAdded
+                return aDate < bDate
+            }
+            return sorted
         } else {
-            return items.values.sorted { $0.dateAdded > $1.dateAdded }
+            let sorted = itemsArray.sorted { (a: ItemShoppingModel, b: ItemShoppingModel) in
+                let aDate = a.dateAdded
+                let bDate = b.dateAdded
+                return aDate > bDate
+            }
+            return sorted
         }
     }
 
     func getItemsSortedByQuantity(ascending: Bool) async throws -> [ItemShoppingModel] {
+        let itemsArray = Array(items.values)
         if ascending {
-            return items.values.sorted { $0.quantity < $1.quantity }
+            let sorted = itemsArray.sorted { (a: ItemShoppingModel, b: ItemShoppingModel) in
+                let aQty = a.quantity
+                let bQty = b.quantity
+                return aQty < bQty
+            }
+            return sorted
         } else {
-            return items.values.sorted { $0.quantity > $1.quantity }
+            let sorted = itemsArray.sorted { (a: ItemShoppingModel, b: ItemShoppingModel) in
+                let aQty = a.quantity
+                let bQty = b.quantity
+                return aQty > bQty
+            }
+            return sorted
         }
     }
 
@@ -190,7 +263,15 @@ final class MockShoppingListRepository: ShoppingListRepository {
     }
 
     func deleteItems(forStore store: String) async throws {
-        items = items.filter { $0.value.store != store }
+        let itemsArray = Array(items)
+        var newItems: [UUID: ItemShoppingModel] = [:]
+        for (key, value) in itemsArray {
+            let itemStore = value.store
+            if itemStore != store {
+                newItems[key] = value
+            }
+        }
+        items = newItems
     }
 
     // MARK: - Test Helpers

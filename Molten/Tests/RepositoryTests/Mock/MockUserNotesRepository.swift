@@ -10,6 +10,7 @@ import Foundation
 
 /// Mock implementation of UserNotesRepository for testing
 /// Stores notes in memory using a dictionary
+@MainActor
 final class MockUserNotesRepository: UserNotesRepository {
 
     // MARK: - Storage
@@ -45,8 +46,15 @@ final class MockUserNotesRepository: UserNotesRepository {
 
     func deleteNotes(byId id: String) async throws {
         // Find and delete by id
-        if let foundKey = notes.first(where: { (pair: (key: String, value: UserNotesModel)) in pair.value.id == id })?.key {
-            notes.removeValue(forKey: foundKey)
+        let notesArray = Array(notes.values)
+        let found = notesArray.first { (note: UserNotesModel) in
+            let noteId = note.id
+            return noteId == id
+        }
+
+        if let foundNote = found {
+            let foundItemId = foundNote.item_stable_id
+            notes.removeValue(forKey: foundItemId)
         } else {
             throw NSError(domain: "MockUserNotesRepository", code: 404, userInfo: [
                 NSLocalizedDescriptionKey: "Notes not found with id: \(id)"
@@ -71,7 +79,10 @@ final class MockUserNotesRepository: UserNotesRepository {
     }
 
     func searchNotes(containing searchText: String) async throws -> [UserNotesModel] {
-        return notes.values.filter { $0.matchesSearchText(searchText) }
+        let notesArray = Array(notes.values)
+        return notesArray.filter { (note: UserNotesModel) in
+            note.matchesSearchText(searchText)
+        }
     }
 
     func notesExist(forItem itemStableId: String) async throws -> Bool {

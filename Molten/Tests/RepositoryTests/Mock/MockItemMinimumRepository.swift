@@ -163,7 +163,8 @@ final class MockItemMinimumRepository: ItemMinimumRepository {
     }
 
     func updateStoreName(from oldStoreName: String, to newStoreName: String) async throws {
-        for (key, minimum) in minimums where minimum.store == oldStoreName {
+        let minimumsArray = Array(minimums)
+        for (key, minimum) in minimumsArray where minimum.store == oldStoreName {
             // Extract values outside to avoid actor isolation issues
             let minId = minimum.id
             let minItemId = minimum.item_stable_id
@@ -189,15 +190,21 @@ final class MockItemMinimumRepository: ItemMinimumRepository {
     }
 
     func getHighestMinimums(limit: Int) async throws -> [ItemMinimumModel] {
-        return minimums.values
-            .sorted { (a: ItemMinimumModel, b: ItemMinimumModel) in a.quantity > b.quantity }
+        let minimumsArray = Array(minimums.values)
+        return minimumsArray
+            .sorted { (a: ItemMinimumModel, b: ItemMinimumModel) in
+                let aQty = a.quantity
+                let bQty = b.quantity
+                return aQty > bQty
+            }
             .prefix(limit)
             .map { $0 }
     }
 
     func getMostCommonTypes() async throws -> [String: Int] {
         var typeCounts: [String: Int] = [:]
-        for minimum in Array(minimums.values) {
+        let minimumsArray = Array(minimums.values)
+        for minimum in minimumsArray {
             let typeString = minimum.type
             typeCounts[typeString, default: 0] += 1
         }
@@ -205,7 +212,11 @@ final class MockItemMinimumRepository: ItemMinimumRepository {
     }
 
     func validateMinimumRecords(validItemKeys: Set<String>) async throws -> [ItemMinimumModel] {
-        return minimums.values.filter { (minimum: ItemMinimumModel) in !validItemKeys.contains(minimum.item_stable_id) }
+        let minimumsArray = Array(minimums.values)
+        return minimumsArray.filter { (minimum: ItemMinimumModel) in
+            let itemId = minimum.item_stable_id
+            return !validItemKeys.contains(itemId)
+        }
     }
 
     // MARK: - Test Helpers

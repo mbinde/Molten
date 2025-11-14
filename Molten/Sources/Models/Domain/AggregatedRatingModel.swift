@@ -94,7 +94,7 @@ public struct AggregatedRatingModel: Identifiable, Equatable, Codable, Sendable 
     }
 
     /// Check if data is stale (older than specified interval)
-    public func isStale(threshold: TimeInterval) -> Bool {
+    public nonisolated func isStale(threshold: TimeInterval) -> Bool {
         return Date().timeIntervalSince(lastAggregated) > threshold
     }
 }

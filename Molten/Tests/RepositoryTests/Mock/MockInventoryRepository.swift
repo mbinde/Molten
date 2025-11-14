@@ -253,12 +253,11 @@ final class MockInventoryRepository: InventoryRepository {
             summaries[itemId]?.append(inv)
         }
 
-        return summaries.map { (key, value) in
+        let summaryArray = summaries.map { (key, value) in
             InventorySummaryModel(item_stable_id: key, inventories: value)
-        }.sorted { (a, b) in
-            let aId = a.item_stable_id
-            let bId = b.item_stable_id
-            return aId < bId
+        }
+        return summaryArray.sorted { (a, b) in
+            a.item_stable_id < b.item_stable_id
         }
     }
 
@@ -286,18 +285,20 @@ final class MockInventoryRepository: InventoryRepository {
 
     func fetchInventory(atLocation location: String) async throws -> [InventoryModel] {
         let inventoryArray = Array(inventory.values)
-        return inventoryArray.filter { (inv: InventoryModel) in
+        let filtered = inventoryArray.filter { (inv: InventoryModel) in
             let invLocation = inv.location
             return invLocation == location
         }
+        return filtered
     }
 
     func getDistinctLocations() async throws -> [String] {
         let inventoryArray = Array(inventory.values)
-        let locations = Set(inventoryArray.compactMap { (inv: InventoryModel) in
+        let locationArray = inventoryArray.compactMap { (inv: InventoryModel) -> String? in
             let location = inv.location
             return location
-        })
+        }
+        let locations = Set(locationArray)
         return locations.sorted()
     }
 
@@ -325,8 +326,8 @@ final class MockInventoryRepository: InventoryRepository {
         let inventoryArray = Array(inventory.values)
         for inv in inventoryArray {
             let location = inv.location
+            let qty = inv.quantity
             if let location = location {
-                let qty = inv.quantity
                 utilization[location] = (utilization[location] ?? 0) + qty
             }
         }

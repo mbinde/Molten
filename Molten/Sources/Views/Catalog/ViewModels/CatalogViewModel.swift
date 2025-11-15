@@ -23,7 +23,7 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
     // MARK: - Dependencies
 
-    private let catalogService: CatalogService
+    let catalogService: CatalogService  // Internal for cache refresh on rating changes
 
     // MARK: - Constants
 

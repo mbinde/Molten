@@ -29,34 +29,13 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
 
         // For now, fetch all items (predicate support can be added later)
         let query = "SELECT * FROM glass_items ORDER BY manufacturer, code"
-
-        let items = try await executeQuery(db: db, query: query)
-
-        // Debug: Check if "50 Shades" is in the results
-        if let fiftyShades = items.first(where: { $0.name.contains("50 Shades") }) {
-            print("🔍 [SQLite.fetchItems] Found '50 Shades' with stable_id: '\(fiftyShades.stable_id)'")
-        }
-
-        // Debug: Check if stableId '5bfSaX' exists
-        if let item = items.first(where: { $0.stable_id == "5bfSaX" }) {
-            print("🔍 [SQLite.fetchItems] Found stableId '5bfSaX': '\(item.name)'")
-        }
-
-        return items
+        return try await executeQuery(db: db, query: query)
     }
 
     func fetchItem(byStableId stableId: String) async throws -> GlassItemModel? {
-        print("🔍 [SQLite] fetchItem called with stableId: '\(stableId)'")
         let db = try databaseManager.getDatabaseConnection()
         let query = "SELECT * FROM glass_items WHERE stable_id = ?"
-
         let items = try await executeQuery(db: db, query: query, parameters: [stableId])
-        print("🔍 [SQLite] Query returned \(items.count) items")
-        if let item = items.first {
-            print("✅ [SQLite] Found: '\(item.name)' with stable_id '\(item.stable_id)'")
-        } else {
-            print("❌ [SQLite] No item found for stable_id: '\(stableId)'")
-        }
         return items.first
     }
 

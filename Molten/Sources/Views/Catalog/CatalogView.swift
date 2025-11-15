@@ -51,6 +51,7 @@ struct CatalogView: View {
     @State private var isRefreshing = false
     @State private var lastRefreshTime: Date = Date.distantPast
     @State private var listRefreshTrigger = 0  // Force list rebuild when ratings change
+    @State private var savedScrollPosition: String?  // Track scroll position to restore after refresh
 
     // Repository pattern - single source of truth for data
     private let catalogService: CatalogService
@@ -413,17 +414,38 @@ struct CatalogView: View {
     }
     
     private var catalogListView: some View {
-        List {
-            ForEach(sortedFilteredItems, id: \.id) { item in
-                NavigationLink(value: CatalogNavigationDestination.catalogItemDetail(itemModel: item)) {
-                    GlassItemRowView.catalog(item: item)
+        ScrollViewReader { proxy in
+            List {
+                ForEach(sortedFilteredItems, id: \.id) { item in
+                    let rowId = "\(item.id)-\(item.rating?.totalRatings ?? 0)-\(item.rating?.averageRating ?? 0)"
+                    NavigationLink(value: CatalogNavigationDestination.catalogItemDetail(itemModel: item)) {
+                        GlassItemRowView.catalog(item: item)
+                    }
+                    .id(rowId)  // Force re-render when rating changes
+                    .accessibilityIdentifier("catalog.item.\(item.glassItem.stable_id)")
+                    .onAppear {
+                        // Track the last visible item's stable_id (not rating-dependent) for scroll restoration
+                        savedScrollPosition = item.id
+                    }
                 }
-                .id("\(item.id)-\(item.rating?.totalRatings ?? 0)-\(item.rating?.averageRating ?? 0)")  // Force re-render when rating changes
-                .accessibilityIdentifier("catalog.item.\(item.glassItem.stable_id)")
+            }
+            .id(listRefreshTrigger)  // Force entire list to rebuild when ratings change
+            .accessibilityIdentifier("catalog.list")
+            .onChange(of: listRefreshTrigger) { old, new in
+                // Restore scroll position after list rebuilds
+                if let scrollToItemId = savedScrollPosition {
+                    // Find the new row ID for this item (may have updated rating)
+                    if let item = sortedFilteredItems.first(where: { $0.id == scrollToItemId }) {
+                        let newRowId = "\(item.id)-\(item.rating?.totalRatings ?? 0)-\(item.rating?.averageRating ?? 0)"
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            withAnimation {
+                                proxy.scrollTo(newRowId, anchor: .center)
+                            }
+                        }
+                    }
+                }
             }
         }
-        .id(listRefreshTrigger)  // Force entire list to rebuild when ratings change
-        .accessibilityIdentifier("catalog.list")
     }
 }
 

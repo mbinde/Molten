@@ -17,7 +17,7 @@ struct AlphaDisclaimerView: View {
                     // Header
                     VStack(spacing: DesignSystem.Spacing.xs) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 60))
+                            .font(.largeTitle)
                             .foregroundColor(.orange)
                             .padding(.bottom, DesignSystem.Spacing.sm)
 

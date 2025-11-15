@@ -317,7 +317,7 @@ struct CatalogView: View {
                 }
                 if viewModel.selectedManufacturers.isEmpty {
                     Image(systemName: "chevron.down")
-                        .font(Font.system(size: 10))
+                        .font(.caption2)
                 }
             }
             .foregroundColor(viewModel.selectedManufacturers.isEmpty ? .secondary : .white)
@@ -362,7 +362,7 @@ struct CatalogView: View {
                 }
                 if viewModel.selectedCOEs.isEmpty {
                     Image(systemName: "chevron.down")
-                        .font(Font.system(size: 10))
+                        .font(.caption2)
                 }
             }
             .foregroundColor(viewModel.selectedCOEs.isEmpty ? .secondary : .white)
@@ -407,7 +407,7 @@ struct CatalogView: View {
                 }
                 if viewModel.selectedTags.isEmpty {
                     Image(systemName: "chevron.down")
-                        .font(Font.system(size: 10))
+                        .font(.caption2)
                 }
             }
             .foregroundColor(viewModel.selectedTags.isEmpty ? .secondary : .white)
@@ -457,7 +457,7 @@ struct CatalogView: View {
 
                 // Always show dropdown arrow
                 Image(systemName: "chevron.down")
-                    .font(Font.system(size: 10))
+                    .font(.caption2)
             }
             .foregroundColor(DesignSystem.Colors.textSecondary)
             .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)
@@ -632,7 +632,7 @@ struct CatalogView: View {
                 Text(viewModel.selectedManufacturer != nil ? manufacturerDisplayName(viewModel.selectedManufacturer!) : "All Manufacturers")
                     .font(.system(size: 14, weight: .medium))
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 12))
+                    .font(.caption)
             }
             .foregroundColor(viewModel.selectedManufacturer != nil ? .white : .primary)
             .padding(.horizontal, 12)
@@ -687,7 +687,7 @@ struct CatalogView: View {
         ScrollView {
             VStack(spacing: 20) {
                 Image(systemName: "text.justify")
-                    .font(.system(size: 60))
+                    .font(.largeTitle)
                     .foregroundColor(.secondary)
 
                 Text("No Catalog Items")
@@ -901,7 +901,7 @@ struct TagFilterView: View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.secondary)
-                .font(.system(size: 16))
+                .font(.body)
             
             TextField("Search tags...", text: $searchText)
                 .focused($isSearchFieldFocused)
@@ -920,7 +920,7 @@ struct TagFilterView: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.secondary)
-                        .font(.system(size: 16))
+                        .font(.body)
                 }
                 .buttonStyle(.plain)
             }

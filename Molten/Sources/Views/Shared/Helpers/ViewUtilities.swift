@@ -40,7 +40,7 @@ nonisolated struct EmptyStateView: View {
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: icon)
-                .font(.system(size: 60))
+                .font(.largeTitle)
                 .foregroundColor(.secondary)
             
             Text(title)

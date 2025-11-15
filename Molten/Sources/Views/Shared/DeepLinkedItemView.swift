@@ -176,7 +176,7 @@ struct DeepLinkedItemView: View {
     private func errorView(_ message: String) -> some View {
         VStack(spacing: 20) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 60))
+                .font(.largeTitle)
                 .foregroundColor(.orange)
 
             Text(message)

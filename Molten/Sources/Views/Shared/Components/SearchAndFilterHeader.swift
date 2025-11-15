@@ -386,7 +386,7 @@ struct SearchAndFilterHeader: View {
 
                 if selectedManufacturers.isEmpty {
                     Image(systemName: "chevron.down")
-                        .font(Font.system(size: 10))
+                        .font(.caption2)
                 }
             }
             .foregroundColor(selectedManufacturers.isEmpty ? DesignSystem.Colors.textSecondary : .white)
@@ -477,7 +477,7 @@ struct SearchAndFilterHeader: View {
 
                 if selectedCOEs.isEmpty {
                     Image(systemName: "chevron.down")
-                        .font(Font.system(size: 10))
+                        .font(.caption2)
                 }
             }
             .foregroundColor(selectedCOEs.isEmpty ? DesignSystem.Colors.textSecondary : .white)
@@ -541,7 +541,7 @@ struct SearchAndFilterHeader: View {
 
                 if selectedTags.isEmpty {
                     Image(systemName: "chevron.down")
-                        .font(Font.system(size: 10))
+                        .font(.caption2)
                 }
             }
             .foregroundColor(selectedTags.isEmpty ? DesignSystem.Colors.textSecondary : .white)
@@ -597,7 +597,7 @@ struct SearchAndFilterHeader: View {
 
                 // Always show dropdown arrow
                 Image(systemName: "chevron.down")
-                    .font(Font.system(size: 10))
+                    .font(.caption2)
             }
             .foregroundColor(DesignSystem.Colors.textSecondary)
             .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)

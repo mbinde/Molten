@@ -483,6 +483,14 @@ struct InventoryView: View {
         ToolbarItem(placement: .confirmationAction) {
             Menu {
                 Button {
+                    showingAddItem = true
+                } label: {
+                    Label("Add Inventory", systemImage: "plus")
+                }
+
+                Divider()
+
+                Button {
                     showingSharing = true
                 } label: {
                     Label("Inventory Sharing", systemImage: "person.2")

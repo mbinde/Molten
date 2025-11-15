@@ -139,11 +139,10 @@ struct ImageHelpers {
                 let ext = String(pathComponents.last!)
 
                 // Files in Molten/Resources/ are flattened to bundle root
-                if let path = Bundle.main.path(forResource: resourceName, ofType: ext) {
-                    if let image = loadImageWithoutColorProfile(from: path) {
-                        imageCache.setObject(image, forKey: cacheKeyNS)
-                        return image
-                    }
+                if let path = Bundle.main.path(forResource: resourceName, ofType: ext),
+                   let image = loadImageWithoutColorProfile(from: path) {
+                    imageCache.setObject(image, forKey: cacheKeyNS)
+                    return image
                 }
             }
         }
@@ -171,82 +170,11 @@ struct ImageHelpers {
             return nil
         }
 
-        // PRIORITY 2.5: Check for bundled thumbnail (AFTER permission check)
-        // Thumbnails are named like "{stableId}_thumb.jpg" (e.g., "000NCe_thumb.jpg")
-        // These are pre-generated 400px thumbnails bundled with the app for offline access
-        if let stableId = stableId, !stableId.isEmpty {
-            let thumbnailExtensions = ["jpg", "jpeg"]
-            for ext in thumbnailExtensions {
-                let thumbnailName = "\(stableId)_thumb"
-
-                // Files in Molten/Resources/ are flattened to bundle root
-                if let path = Bundle.main.path(forResource: thumbnailName, ofType: ext) {
-                    if let image = loadImageWithoutColorProfile(from: path) {
-                        imageCache.setObject(image, forKey: cacheKeyNS)
-                        return image
-                    }
-                }
-            }
-        }
-
-        let sanitizedCode = sanitizeItemCodeForFilename(itemCode)
-
-        // Common image extensions to try (including webp for modern web images)
-        let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
-
-        // Try with manufacturer prefix first if provided (and we have permission)
-        if let manufacturer = manufacturer, !manufacturer.isEmpty {
-            let sanitizedManufacturer = sanitizeItemCodeForFilename(manufacturer)
-
-            // Try multiple case variations since images might be uppercase/lowercase/mixed
-            let manufacturerVariations = [
-                sanitizedManufacturer.uppercased(),  // Try uppercase first (most common)
-                sanitizedManufacturer.lowercased(),  // Then lowercase
-                sanitizedManufacturer.capitalized,   // Then capitalized
-                sanitizedManufacturer                // Finally original case
-            ]
-
-            for mfrVariation in manufacturerVariations {
-                for ext in extensions {
-                    // Check if itemCode already starts with manufacturer prefix to avoid duplication
-                    // (e.g., itemCode="OC-6023-83CC-F" already has "OC-" prefix)
-                    let imageName: String
-                    if sanitizedCode.uppercased().hasPrefix("\(mfrVariation.uppercased())-") {
-                        // ItemCode already includes manufacturer prefix, use as-is
-                        imageName = "\(productImagePathPrefix)\(sanitizedCode)"
-                    } else {
-                        // Add manufacturer prefix
-                        imageName = "\(productImagePathPrefix)\(mfrVariation)-\(sanitizedCode)"
-                    }
-
-                    // Try bundle file with color profile handling
-                    if let path = Bundle.main.path(forResource: imageName, ofType: ext) {
-                        if let image = loadImageWithoutColorProfile(from: path) {
-                            // Cache the successful result
-                            imageCache.setObject(image, forKey: cacheKeyNS)
-                            return image
-                        }
-                    }
-                }
-            }
-        }
-
-        // Fallback: try without manufacturer prefix (for backward compatibility)
-        for ext in extensions {
-            let imageName = "\(productImagePathPrefix)\(sanitizedCode)"
-
-            // Try bundle file with color profile handling
-            if let path = Bundle.main.path(forResource: imageName, ofType: ext),
-               let image = loadImageWithoutColorProfile(from: path) {
-                // Cache the successful result
-                imageCache.setObject(image, forKey: cacheKeyNS)
-                return image
-            }
-        }
-
-        // Final fallback: try manufacturer default image
+        // PRIORITY 3: Try manufacturer default image
+        // No more guessing filenames - if we don't have imagePath from catalog, go straight to default
         if let manufacturer = manufacturer,
            let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
+            let extensions = ["webp", "jpg", "jpeg", "png"]
             for ext in extensions {
                 // Files in Molten/Resources/ are flattened to bundle root
                 if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext),
@@ -377,6 +305,7 @@ struct ProductImageView: View {
     let manufacturer: String?
     let stableId: String?
     let imagePath: String?
+    let imageThumbPath: String?
     let size: CGFloat
 
     @State private var loadedImage: UIImage?
@@ -386,11 +315,12 @@ struct ProductImageView: View {
     // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
     private static let sharedUserImageRepository = AppDependencies.shared.userImageRepository
 
-    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, size: CGFloat = 60) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, size: CGFloat = 60) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.stableId = stableId
         self.imagePath = imagePath
+        self.imageThumbPath = imageThumbPath
         self.size = size
     }
 
@@ -422,7 +352,6 @@ struct ProductImageView: View {
         .onAppear {
             // Skip image loading if disabled via debug flag
             if DebugConfig.disableImageLoading {
-                print("🚫 [ImageHelpers] Image loading disabled via DebugConfig")
                 isLoading = false
                 return
             }
@@ -470,19 +399,28 @@ struct ProductImageView: View {
         // ProductImageView uses thumbnails by default for faster loading in lists (unless user enabled full-size)
         if let imagePath = imagePath, !imagePath.isEmpty {
             let useThumbnail = !UserSettings.shared.downloadFullSizeImages
-            if let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath, useThumbnail: useThumbnail) {
+            if let cdnImage = await ImageDownloadService.loadImage(
+                itemCode: itemCode,
+                manufacturer: manufacturer,
+                exactFilename: imagePath,
+                exactThumbnailFilename: imageThumbPath,
+                useThumbnail: useThumbnail
+            ) {
                 loadedImage = cdnImage
                 isLoading = false
                 return
             }
         }
 
+        // FIXME: TEMPORARILY DISABLED - Testing R2/CDN image loading
         // PRIORITY 2: Load bundle/manufacturer images with low priority to avoid blocking UI
+        /*
         let image = await Task.detached(priority: .background) {
             ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: imagePath)
         }.value
 
         loadedImage = image
+        */
         isLoading = false
     }
 }
@@ -492,6 +430,7 @@ struct ProductImageDetail: View {
     let manufacturer: String?
     let stableId: String?
     let imagePath: String?
+    let imageThumbPath: String?
     let maxSize: CGFloat
     let allowImageUpload: Bool
     let onImageUploaded: (() -> Void)?
@@ -504,11 +443,12 @@ struct ProductImageDetail: View {
     // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
     private static let sharedUserImageRepository = AppDependencies.shared.userImageRepository
 
-    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, onImageUploaded: (() -> Void)? = nil) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, onImageUploaded: (() -> Void)? = nil) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.stableId = stableId
         self.imagePath = imagePath
+        self.imageThumbPath = imageThumbPath
         self.maxSize = maxSize
         self.allowImageUpload = allowImageUpload
         self.onImageUploaded = onImageUploaded
@@ -577,7 +517,6 @@ struct ProductImageDetail: View {
         .task {
             // Skip image loading if disabled via debug flag
             if DebugConfig.disableImageLoading {
-                print("🚫 [ImageHelpers] ProductImageDetail - Image loading disabled via DebugConfig")
                 isLoading = false
                 return
             }
@@ -609,19 +548,28 @@ struct ProductImageDetail: View {
         // ProductImageDetail respects user preference for image quality
         if let imagePath = imagePath, !imagePath.isEmpty {
             let useThumbnail = !UserSettings.shared.downloadFullSizeImages
-            if let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath, useThumbnail: useThumbnail) {
+            if let cdnImage = await ImageDownloadService.loadImage(
+                itemCode: itemCode,
+                manufacturer: manufacturer,
+                exactFilename: imagePath,
+                exactThumbnailFilename: imageThumbPath,
+                useThumbnail: useThumbnail
+            ) {
                 loadedImage = cdnImage
                 isLoading = false
                 return
             }
         }
 
+        // FIXME: TEMPORARILY DISABLED - Testing R2/CDN image loading
         // PRIORITY 2: Load bundle/manufacturer images
+        /*
         let image = await Task.detached(priority: .utility) {
             ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: imagePath)
         }.value
 
         loadedImage = image
+        */
         isLoading = false
     }
 
@@ -750,19 +698,21 @@ struct ProductImageThumbnail: View {
     let manufacturer: String?
     let stableId: String?
     let imagePath: String?
+    let imageThumbPath: String?
     let size: CGFloat
 
-    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, size: CGFloat = 40) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, size: CGFloat = 40) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.stableId = stableId
         self.imagePath = imagePath
+        self.imageThumbPath = imageThumbPath
         self.size = size
     }
 
     var body: some View {
         #if canImport(UIKit)
-        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, stableId: stableId, imagePath: imagePath, size: size)
+        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, stableId: stableId, imagePath: imagePath, imageThumbPath: imageThumbPath, size: size)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(Color(.systemGray4), lineWidth: 0.5)

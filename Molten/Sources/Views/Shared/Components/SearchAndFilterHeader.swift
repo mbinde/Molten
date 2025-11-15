@@ -14,6 +14,7 @@ struct SearchAndFilterHeader: View {
     @Binding var searchText: String
     @State private var localSearchText: String = ""  // Local copy for immediate UI updates
     @Binding var searchTitlesOnly: Bool
+    @FocusState private var isSearchFieldFocused: Bool  // Proper keyboard management
 
     // Filter state
     @Binding var selectedTags: Set<String>
@@ -290,6 +291,7 @@ struct SearchAndFilterHeader: View {
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
                     #endif
+                    .focused($isSearchFieldFocused)
                     .accessibilityIdentifier("searchField")
                     .onChange(of: localSearchText) { oldValue, newValue in
                         // Debounce search text updates (300ms delay)
@@ -307,7 +309,7 @@ struct SearchAndFilterHeader: View {
                 Button {
                     localSearchText = ""
                     searchText = ""
-                    hideKeyboard()
+                    isSearchFieldFocused = false  // Dismiss keyboard properly
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(localSearchText.isEmpty ? DesignSystem.Colors.textSecondary.opacity(DesignSystem.Colors.opacityInteractive) : DesignSystem.Colors.textSecondary)
@@ -620,11 +622,6 @@ struct SearchAndFilterHeader: View {
         }
     }
 
-    private func hideKeyboard() {
-        #if canImport(UIKit)
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-        #endif
-    }
 
     private func displayName(for type: String) -> String {
         switch type.lowercased() {

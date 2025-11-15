@@ -369,6 +369,13 @@ struct InventoryView: View {
                     await loadData()
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { _ in
+                Task {
+                    // Invalidate cache to force fresh data load when ratings change
+                    await CatalogDataCache.shared.reload(catalogService: catalogService)
+                    await loadData()
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .resetInventoryNavigation)) { _ in
                 // Reset navigation when user taps Inventory tab while already on Inventory
                 navigationPath = NavigationPath()

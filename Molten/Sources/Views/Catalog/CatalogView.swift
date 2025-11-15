@@ -683,6 +683,13 @@ struct LifecycleModifiers: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: .resetCatalogNavigation)) { _ in
                 resetNavigation()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { _ in
+                // Reload catalog data when ratings are submitted or deleted
+                Task {
+                    await CatalogDataCache.shared.reload(catalogService: viewModel.catalogService)
+                    await viewModel.loadData()
+                }
+            }
             .onAppear {
                 // Load settings from safe UserDefaults (isolated during testing)
                 defaultSortOptionRawValue = userDefaults.string(forKey: "defaultSortOption") ?? SortOption.name.rawValue

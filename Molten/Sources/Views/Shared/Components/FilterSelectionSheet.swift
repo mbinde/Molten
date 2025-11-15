@@ -101,7 +101,7 @@ struct FilterSelectionSheet<Item: Hashable>: View {
                             // Checkmark for selected items
                             if selectedItems.contains(item) {
                                 Image(systemName: "checkmark")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                     }

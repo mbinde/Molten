@@ -129,7 +129,7 @@ struct ExportPlanView: View {
                             Text(sizeInfo.formatted)
                                 .font(.caption)
                                 .fontWeight(.semibold)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
 
                             Text("•")
                                 .font(.caption)
@@ -147,13 +147,13 @@ struct ExportPlanView: View {
 
                 if selectedQuality == quality {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                         .padding(.top, 2)
                 }
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
-            .background(selectedQuality == quality ? Color.blue.opacity(0.12) : Color.clear)
+            .background(selectedQuality == quality ? .accentColor.opacity(0.12) : Color.clear)
             .cornerRadius(8)
             .contentShape(Rectangle())
         }

@@ -212,26 +212,45 @@ struct InventoryDetailView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
             #endif
+            .toolbar {
+                if !isEditing {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Menu {
+                            Button {
+                                checkLimitAndShowAddInventory()
+                            } label: {
+                                Label("Add Inventory", systemImage: "archivebox.fill")
+                            }
 
-            // Floating Action Button
-            if !isEditing {
-                FloatingActionButton(actions: [
-                    FABAction(title: "Add Inventory", icon: "archivebox.fill") {
-                        checkLimitAndShowAddInventory()
-                    },
-                    FABAction(title: "Add to Shopping List", icon: "cart.fill") {
-                        showingShoppingListOptions = true
-                    },
-                    FABAction(title: "Add Image", icon: "photo.fill") {
-                        showingImagePicker = true
-                    },
-                    FABAction(title: "Add Note", icon: "note.text") {
-                        showingUserNotesEditor = true
-                    },
-                    FABAction(title: "Manage Tags", icon: "tag.fill") {
-                        showingUserTagsEditor = true
+                            Button {
+                                showingShoppingListOptions = true
+                            } label: {
+                                Label("Add to Shopping List", systemImage: "cart.fill")
+                            }
+
+                            Button {
+                                showingImagePicker = true
+                            } label: {
+                                Label("Add Image", systemImage: "photo.fill")
+                            }
+
+                            Button {
+                                showingUserNotesEditor = true
+                            } label: {
+                                Label("Add Note", systemImage: "note.text")
+                            }
+
+                            Button {
+                                showingUserTagsEditor = true
+                            } label: {
+                                Label("Manage Tags", systemImage: "tag.fill")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                                .accessibilityLabel("Actions")
+                        }
                     }
-                ])
+                }
             }
         }
         .sheet(isPresented: $showingShoppingListOptions, onDismiss: {
@@ -673,7 +692,7 @@ struct InventoryDetailView: View {
                             Text("Edit")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                         }
                     }
 
@@ -692,16 +711,16 @@ struct InventoryDetailView: View {
                             Text(isUserNotesExpanded ? "Show Less" : "Show More")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                         }
                         .buttonStyle(.plain)
                     }
                 }
                 .padding()
-                .background(Color.blue.opacity(0.05))
+                .background(.accentColor.opacity(0.05))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                        .stroke(.accentColor.opacity(0.2), lineWidth: 1)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .id("user-notes") // Anchor for scrolling
@@ -1019,7 +1038,7 @@ struct InventoryDetailView: View {
                 Text(isManufacturerNotesExpanded ? "Show Less" : "Show More")
                     .font(.caption)
                     .fontWeight(.medium)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
             }
             .buttonStyle(.plain)
         }
@@ -1064,7 +1083,7 @@ struct ExpandableSection<Content: View>: View {
             Button(action: onToggle) {
                 HStack {
                     Image(systemName: systemImage)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                     Text(title)
                         .font(.headline)
                         .fontWeight(.semibold)
@@ -1128,7 +1147,7 @@ struct InventoryDetailTypeRow: View {
                     Text(formatQuantity(quantity))
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                     Text("units")
                         .font(.caption2)
                         .foregroundColor(.secondary)
@@ -1399,7 +1418,7 @@ struct InventoryStorageDetailView: View {
                                 Text(formatQuantity(totalQuantity))
                                     .font(.title3)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
 
@@ -1642,7 +1661,7 @@ struct InventoryRecordRow: View {
             Text(formatQuantity(record.quantity))
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundColor(.blue)
+                .foregroundColor(.accentColor)
         }
 
         if let onTap = onTap {

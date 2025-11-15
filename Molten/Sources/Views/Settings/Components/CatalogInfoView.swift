@@ -159,7 +159,7 @@ struct CatalogInfoView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "arrow.down.circle.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
                 Text("Update Available")
                     .font(.headline)
             }

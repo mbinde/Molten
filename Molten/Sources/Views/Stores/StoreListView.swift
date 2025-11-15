@@ -297,7 +297,7 @@ struct StoreListView: View {
     private var emptyStateView: some View {
         VStack(spacing: DesignSystem.Spacing.lg) {
             Image(systemName: "storefront")
-                .font(.system(size: 60))
+                .font(.largeTitle)
                 .foregroundStyle(.secondary)
 
             Text("No Stores Found")
@@ -325,7 +325,7 @@ struct StoreListView: View {
     private func errorView(_ message: String) -> some View {
         VStack(spacing: DesignSystem.Spacing.lg) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 60))
+                .font(.largeTitle)
                 .foregroundStyle(.orange)
 
             Text("Error Loading Stores")

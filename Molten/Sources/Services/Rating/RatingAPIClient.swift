@@ -139,14 +139,13 @@ public class RatingAPIClient: RatingAPIClientProtocol {
             throw RatingAPIError.serverError("HTTP \(httpResponse.statusCode)")
         }
 
-        // Parse response
-        let json = try JSONDecoder().decode(FetchRatingsResponse.self, from: data)
+        // Parse response directly to models
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        decoder.dateDecodingStrategy = .secondsSince1970
 
-        // Convert to models
-        return json.ratings.compactMap { dict in
-            let anyDict = dict.mapValues { $0.value }
-            return AggregatedRatingModel.from(dictionary: anyDict)
-        }
+        let json = try decoder.decode(FetchRatingsResponse.self, from: data)
+        return json.ratings
     }
 
     // MARK: - Delete All Ratings
@@ -195,5 +194,5 @@ public class RatingAPIClient: RatingAPIClientProtocol {
 // MARK: - Response Types
 
 private struct FetchRatingsResponse: Codable {
-    let ratings: [[String: AnyCodable]]
+    let ratings: [AggregatedRatingModel]
 }

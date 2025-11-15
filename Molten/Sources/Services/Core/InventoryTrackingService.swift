@@ -204,8 +204,26 @@ actor InventoryTrackingService {
     ) async throws -> InventoryModel {
 
         // 1. Verify the glass item exists (keep reference for error messages)
-        guard let glassItem = try await glassItemRepository.fetchItem(byStableId: stableId) else {
-            throw InventoryTrackingServiceError.itemNotFound(stableId)
+        print("🔍 [INVENTORY] Looking up glass item with stableId: '\(stableId)'")
+
+        let glassItem: GlassItemModel
+        do {
+            if let item = try await glassItemRepository.fetchItem(byStableId: stableId) {
+                glassItem = item
+                print("✅ [INVENTORY] Found glass item: '\(item.name)' (\(item.stable_id))")
+            } else {
+                print("❌ [INVENTORY] Glass item not found in repository for stableId: '\(stableId)'")
+                print("❌ [INVENTORY] StableId length: \(stableId.count), characters: \(Array(stableId))")
+                throw InventoryTrackingServiceError.itemNotFound(stableId)
+            }
+        } catch let error as InventoryTrackingServiceError {
+            throw error
+        } catch {
+            print("❌ [INVENTORY] Error during lookup: \(error)")
+            throw InventoryTrackingServiceError.persistenceFailed(
+                context: "Failed to lookup glass item '\(stableId)'",
+                underlyingError: error
+            )
         }
 
         // 2. Validate input parameters

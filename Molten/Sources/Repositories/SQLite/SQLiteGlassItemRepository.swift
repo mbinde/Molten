@@ -34,10 +34,17 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
     }
 
     func fetchItem(byStableId stableId: String) async throws -> GlassItemModel? {
+        print("🔍 [SQLite] fetchItem called with stableId: '\(stableId)'")
         let db = try databaseManager.getDatabaseConnection()
         let query = "SELECT * FROM glass_items WHERE stable_id = ?"
 
         let items = try await executeQuery(db: db, query: query, parameters: [stableId])
+        print("🔍 [SQLite] Query returned \(items.count) items")
+        if let item = items.first {
+            print("✅ [SQLite] Found: '\(item.name)' with stable_id '\(item.stable_id)'")
+        } else {
+            print("❌ [SQLite] No item found for stable_id: '\(stableId)'")
+        }
         return items.first
     }
 

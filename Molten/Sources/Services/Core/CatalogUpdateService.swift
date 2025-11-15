@@ -65,7 +65,6 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
         defer { isChecking = false }
 
         log.info("Checking for catalog updates...")
-        print("🔍 [CatalogUpdate] Checking for updates...")
 
         // Update last check time (even if check fails, we want to track when we attempted)
         CatalogUpdatePreferences.shared.lastUpdateCheck = Date()
@@ -78,12 +77,10 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
             let currentVersion = CatalogUpdatePreferences.shared.currentCatalogVersion
 
             log.info("Current: v\(currentVersion), Latest: v\(latestMetadata.version)")
-            print("📊 [CatalogUpdate] Current: v\(currentVersion), Latest: v\(latestMetadata.version)")
 
             // Check if update available
             guard latestMetadata.version > currentVersion else {
                 log.info("✅ Catalog is up to date")
-                print("✅ [CatalogUpdate] Catalog is up to date (v\(currentVersion))")
                 return nil
             }
 
@@ -109,7 +106,6 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
             )
 
             log.info("📦 Update available: v\(currentVersion) → v\(updateInfo.availableVersion)")
-            print("📦 [CatalogUpdate] Update available: v\(currentVersion) → v\(updateInfo.availableVersion)")
 
             // Post notification
             NotificationCenter.default.post(
@@ -121,7 +117,6 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
 
         } catch {
             log.error("Failed to check for updates: \(error.localizedDescription)")
-            print("❌ [CatalogUpdate] Check failed: \(error.localizedDescription)")
             throw error
         }
     }
@@ -162,7 +157,6 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
             }
 
             log.info("Starting catalog download: v\(updateInfo.availableVersion)")
-            print("📥 [CatalogUpdate] Starting download of v\(updateInfo.availableVersion)...")
 
             // 2. Download catalog
             let catalogData = try await apiClient.downloadFullCatalog(
@@ -220,7 +214,6 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
 
             log.info("✅ Catalog updated successfully to v\(updateInfo.availableVersion)")
             log.info("   Created: \(result.itemsCreated), Updated: \(result.itemsUpdated)")
-            print("✅ [CatalogUpdate] Success! Updated to v\(updateInfo.availableVersion) (\(result.itemsCreated) items)")
 
             // Post notification
             NotificationCenter.default.post(
@@ -232,7 +225,6 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
 
         } catch {
             log.error("Failed to download/install update: \(error.localizedDescription)")
-            print("❌ [CatalogUpdate] Download/install failed: \(error.localizedDescription)")
 
             // Post failure notification
             NotificationCenter.default.post(

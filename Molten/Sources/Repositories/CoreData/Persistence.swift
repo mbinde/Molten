@@ -323,7 +323,6 @@ class PersistenceController {
     /// Call this after bulk GlassItem loading (like JSON import) completes
     /// This only deletes persistent HISTORY, not the actual entities
     func purgeGlassItemHistory() async {
-        print("🐛🧹 purgeGlassItemHistory() called")
         let context = container.newBackgroundContext()
         await context.perform {
             do {
@@ -355,7 +354,7 @@ class PersistenceController {
                     }
                 }
             } catch {
-                print("🐛⚠️ Failed to purge GlassItem history: \(error)")
+                // Silent failure - history purging is not critical
             }
         }
     }
@@ -370,10 +369,8 @@ class PersistenceController {
     /// Core Data's loadPersistentStores runs its completion on a background queue anyway.
     /// MUST be nonisolated to avoid actor hop that would deadlock with semaphore wait.
     nonisolated func initialize() async {
-        print("🔄 PersistenceController.initialize() ENTERED")
         // Only initialize once - thread-safe check
         let alreadyInitialized = stateLock.withLock { $0.isInitialized }
-        print("🔄 PersistenceController.initialize() checked isInitialized: \(alreadyInitialized)")
         guard !alreadyInitialized else {
             log.info("✅ PersistenceController already initialized")
             return
@@ -557,30 +554,14 @@ class PersistenceController {
     static func performStartupRecoveryIfNeeded() async {
         // Check if the shared instance has loading errors
         if shared.hasStoreLoadingError {
-            print("⚠️ Core Data store loading failed, attempting automatic recovery...")
-            
             // Import the recovery utility if it exists
             #if canImport(CoreDataRecoveryUtility)
-            let success = await CoreDataRecoveryUtility.resetPersistentStore(shared)
-            if success {
-                print("✅ Core Data store recovery completed successfully")
-            } else {
-                print("❌ Core Data store recovery failed")
-            }
+            let _ = await CoreDataRecoveryUtility.resetPersistentStore(shared)
             #else
             // Fallback recovery without the utility
-            print("🔧 Attempting manual store recovery...")
             shared.deletePersistentStore()
             await shared.reloadPersistentStore()
-            
-            if shared.isReady {
-                print("✅ Manual Core Data store recovery completed successfully")
-            } else {
-                print("❌ Manual Core Data store recovery failed")
-            }
             #endif
-        } else {
-            print("✅ Core Data store loaded successfully, no recovery needed")
         }
     }
     
@@ -769,14 +750,7 @@ extension PersistenceController {
     
     /// Manual recovery approach - deletes and recreates the store
     private static func performManualRecovery() async {
-        print("🔧 Performing manual Core Data recovery...")
         shared.deletePersistentStore()
         await shared.reloadPersistentStore()
-        
-        if shared.isReady {
-            print("✅ Manual Core Data recovery completed successfully")
-        } else {
-            print("❌ Manual Core Data recovery failed - check console for details")
-        }
     }
 }

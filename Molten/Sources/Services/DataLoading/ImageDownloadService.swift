@@ -87,7 +87,6 @@ final class ImageDownloadService: Sendable {
         }
 
         let manifest = try JSONDecoder().decode(ImageManifest.self, from: data)
-        print("📋 [ImageDownloadService] Fetched manifest: \(manifest.totalCount) images available")
         return manifest
     }
 
@@ -175,7 +174,7 @@ final class ImageDownloadService: Sendable {
                 try? FileManager.default.removeItem(at: file)
             }
         } catch {
-            print("❌ [ImageDownloadService] Failed to clear cache: \(error)")
+            // Silent failure - not critical
         }
     }
 
@@ -195,7 +194,7 @@ final class ImageDownloadService: Sendable {
                 }
             }
         } catch {
-            print("❌ [ImageDownloadService] Failed to calculate cache size: \(error)")
+            // Silent failure - return 0
         }
 
         return totalSize
@@ -225,11 +224,8 @@ final class ImageDownloadService: Sendable {
     private nonisolated static func downloadImage(filename: String) async -> (image: UIImage, etag: String)? {
         let urlString = "\(imageBaseURL)/\(filename)"
         guard let url = URL(string: urlString) else {
-            print("❌ [ImageDownloadService] Invalid URL: \(urlString)")
             return nil
         }
-
-//        print("🌐 [ImageDownloadService] Fetching: \(urlString)")
 
         do {
             let (data, response) = try await urlSession.data(from: url)
@@ -251,11 +247,6 @@ final class ImageDownloadService: Sendable {
             return (image: image, etag: etag)
         } catch {
             // Silently fail for missing images (expected for many items)
-            // Only log unexpected errors
-            if (error as? URLError)?.code != .fileDoesNotExist &&
-               (error as? URLError)?.code != .cancelled {
-                print("⚠️ [ImageDownloadService] Failed to download \(filename): \(error)")
-            }
             return nil
         }
     }
@@ -300,7 +291,7 @@ final class ImageDownloadService: Sendable {
                 storeETag(etag, for: filename)
             }
         } catch {
-            print("❌ [ImageDownloadService] Failed to save to cache: \(error)")
+            // Silent failure - cache write is not critical
         }
     }
 
@@ -338,7 +329,7 @@ final class ImageDownloadService: Sendable {
         do {
             try etag.write(to: path, atomically: true, encoding: .utf8)
         } catch {
-            print("⚠️ [ImageDownloadService] Failed to store ETag for \(filename): \(error)")
+            // Silent failure - ETag storage is not critical
         }
     }
 

@@ -351,11 +351,9 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
         entity.setValue(model.dateModified, forKey: "date_modified")
         entity.setValue(model.heroImageId, forKey: "hero_image_id")
 
-        // CRITICAL: Must explicitly set kilnSchedule to nil to satisfy Core Data inverse relationship
-        // The relationship exists in schema with inverse "projects" on KilnScheduleEntity
-        // Not setting it leaves relationship in undefined state causing save() crash
-        // kilnScheduleId is stored in model as UUID for lookups (attribute-based pattern)
-        entity.setValue(nil, forKey: "kilnSchedule")
+        // NOTE: kilnSchedule relationship not managed here - causes doesNotRecognizeSelector
+        // Auto-generated Core Data class may not include this relationship
+        // kilnScheduleId stored in model as UUID for lookups (attribute-based pattern)
 
         // Clear existing relationships
         // Note: Tags are now managed through UserTagsRepository, not as a relationship

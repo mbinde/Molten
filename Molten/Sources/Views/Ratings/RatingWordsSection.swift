@@ -24,20 +24,14 @@ struct RatingWordsSection: View {
     }
 
     var body: some View {
-        if !words.isEmpty {
-            VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
+            if !words.isEmpty {
                 CompactWordChipsView(words: words)
                     .padding(.horizontal)
             }
-            .task {
-                await loadWords()
-            }
-        } else {
-            // Empty view that still triggers loading
-            EmptyView()
-                .task {
-                    await loadWords()
-                }
+        }
+        .task {
+            await loadWords()
         }
     }
 

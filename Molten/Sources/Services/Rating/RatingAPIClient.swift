@@ -153,9 +153,16 @@ public class RatingAPIClient: RatingAPIClientProtocol {
                 return Date(timeIntervalSince1970: timestamp)
             }
 
-            // Try ISO8601
+            // Try ISO8601 with fractional seconds
             if let dateString = try? container.decode(String.self) {
                 let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                if let date = formatter.date(from: dateString) {
+                    return date
+                }
+
+                // Fallback: try without fractional seconds
+                formatter.formatOptions = [.withInternetDateTime]
                 if let date = formatter.date(from: dateString) {
                     return date
                 }

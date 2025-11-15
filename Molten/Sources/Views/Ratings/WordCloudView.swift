@@ -11,8 +11,6 @@ import SwiftUI
 struct WordCloudView: View {
     let words: [RatingWordModel]
 
-    @State private var showingAllWords = false
-
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -25,15 +23,8 @@ struct WordCloudView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                showingAllWords = true
-            }
         }
         .frame(height: 180)
-        .sheet(isPresented: $showingAllWords) {
-            AllWordsSheet(words: words)
-        }
     }
 
     private func wordView(word: RatingWordModel, index: Int, totalWords: Int) -> some View {
@@ -86,28 +77,51 @@ struct WordCloudView: View {
 struct AllWordsSheet: View {
     let words: [RatingWordModel]
     @Environment(\.dismiss) private var dismiss
+    @State private var isCloudView = false
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 12) {
-                    Text("All rating words sorted by frequency")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal)
-
-                    WordChipsFlowLayout(spacing: 8) {
-                        ForEach(words) { word in
-                            wordChip(word: word)
-                        }
+            Group {
+                if isCloudView {
+                    ScrollView {
+                        WordCloudView(words: words)
+                            .padding()
                     }
-                    .padding(.horizontal)
+                } else {
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 12) {
+                            Text("All rating words sorted by frequency")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal)
+
+                            WordChipsFlowLayout(spacing: 8) {
+                                ForEach(words) { word in
+                                    wordChip(word: word)
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                        .padding(.vertical)
+                    }
                 }
-                .padding(.vertical)
             }
             .navigationTitle("Rating Words")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            isCloudView.toggle()
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: isCloudView ? "list.bullet" : "cloud")
+                            Text(isCloudView ? "List" : "Cloud")
+                        }
+                    }
+                }
+
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         dismiss()

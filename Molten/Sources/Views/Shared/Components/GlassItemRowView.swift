@@ -15,6 +15,8 @@ struct GlassItemRowView: View {
     let badgeContent: AnyView?
     let showFullCode: Bool
 
+    @AppStorage("showRatingsInCatalog") private var showRatingsInCatalog = true
+
     /// Data required to display a glass item row
     struct GlassItemRowData {
         let name: String
@@ -127,8 +129,8 @@ struct GlassItemRowView: View {
                             .foregroundColor(.secondary)
                     }
 
-                    // Show rating inline if available and has enough ratings
-                    if let rating = item.rating, rating.hasEnoughRatings {
+                    // Show rating inline if available, has enough ratings, and setting is enabled
+                    if showRatingsInCatalog, let rating = item.rating, rating.hasEnoughRatings {
                         Text("•")
                             .font(.caption)
                             .foregroundColor(.secondary)

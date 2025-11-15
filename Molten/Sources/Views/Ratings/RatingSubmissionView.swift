@@ -154,7 +154,9 @@ struct RatingSubmissionView: View {
                     words: [word1, word2, word3, word4, word5]
                 )
 
+                print("🔍 [RatingSubmissionView] Submitting rating for stable_id: \(itemStableId)")
                 try await service.submitRating(submission)
+                print("✅ [RatingSubmissionView] Successfully submitted rating for \(itemStableId)")
                 showingSuccess = true
 
             } catch RatingServiceError.queuedForLater {

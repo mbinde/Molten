@@ -129,6 +129,11 @@ class AddInventoryItemViewModel {
                 setError("Failed to load glass items: \(error.localizedDescription)")
             }
         }
+
+        // If we have a prefilled stable_id, retry the lookup now that items are loaded
+        if !stableId.isEmpty && selectedGlassItem == nil {
+            lookupGlassItem(stableId: stableId)
+        }
     }
 
     /// Select a glass item

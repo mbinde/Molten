@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+// MARK: - Notification Extension
+
+extension Notification.Name {
+    static let ratingSubmitted = Notification.Name("ratingSubmitted")
+}
+
 struct RatingSubmissionView: View {
     // MARK: - Properties
 
@@ -157,6 +163,10 @@ struct RatingSubmissionView: View {
                 print("🔍 [RatingSubmissionView] Submitting rating for stable_id: \(itemStableId)")
                 try await service.submitRating(submission)
                 print("✅ [RatingSubmissionView] Successfully submitted rating for \(itemStableId)")
+
+                // Notify that rating was submitted
+                NotificationCenter.default.post(name: .ratingSubmitted, object: itemStableId)
+
                 showingSuccess = true
 
             } catch RatingServiceError.queuedForLater {

@@ -16,6 +16,7 @@ struct CompactRatingView: View {
     @State private var rating: AggregatedRatingModel?
     @State private var isLoading = false
     @State private var showingSubmission = false
+    @State private var refreshTrigger = 0
 
     init(
         itemStableId: String,
@@ -78,14 +79,23 @@ struct CompactRatingView: View {
                 .controlSize(.mini)
             }
         }
-        .task {
+        .task(id: refreshTrigger) {
             await loadRating()
         }
-        .sheet(isPresented: $showingSubmission) {
+        .sheet(isPresented: $showingSubmission, onDismiss: {
+            // Refresh rating after submission
+            refreshTrigger += 1
+        }) {
             RatingSubmissionView(
                 itemStableId: itemStableId,
                 itemName: itemName ?? itemStableId
             )
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
+            // Check if this is for our item
+            if let submittedItemId = notification.object as? String, submittedItemId == itemStableId {
+                refreshTrigger += 1
+            }
         }
     }
 

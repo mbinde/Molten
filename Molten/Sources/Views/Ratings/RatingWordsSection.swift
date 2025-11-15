@@ -14,6 +14,7 @@ struct RatingWordsSection: View {
 
     @State private var words: [RatingWordModel] = []
     @State private var isLoading = false
+    @State private var refreshTrigger = 0
 
     init(
         itemStableId: String,
@@ -30,8 +31,14 @@ struct RatingWordsSection: View {
                     .padding(.horizontal)
             }
         }
-        .task {
+        .task(id: refreshTrigger) {
             await loadWords()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
+            // Check if this is for our item
+            if let submittedItemId = notification.object as? String, submittedItemId == itemStableId {
+                refreshTrigger += 1
+            }
         }
     }
 

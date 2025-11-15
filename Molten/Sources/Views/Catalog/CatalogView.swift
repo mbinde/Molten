@@ -218,8 +218,11 @@ struct CatalogView: View {
 
     private var mainContentView: some View {
         VStack(spacing: 0) {
-            // Search and filter controls using shared component
-            searchAndFilterHeader
+            // Filter controls (no search - using native .searchable() instead)
+            filterChipsRow
+                .padding(.horizontal, DesignSystem.Padding.standard)
+                .padding(.vertical, DesignSystem.Spacing.sm)
+                .background(DesignSystem.Colors.background)
 
             // Main content
             Group {
@@ -236,6 +239,146 @@ struct CatalogView: View {
         }
     }
 
+    /// Filter chips row - shows active filters and allows quick access to filter sheets
+    private var filterChipsRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                // Search titles only toggle
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    Toggle("", isOn: $viewModel.searchTitlesOnly)
+                        .labelsHidden()
+                    Text("Titles only")
+                        .font(DesignSystem.Typography.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+
+                Divider()
+                    .frame(height: 20)
+
+                // Sort menu
+                Menu {
+                    ForEach(SortOption.allCases, id: \.self) { option in
+                        Button {
+                            viewModel.sortOption = option
+                            updateSorting(option)
+                        } label: {
+                            Label(option.rawValue, systemImage: option.sortIcon)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: DesignSystem.Spacing.xs) {
+                        Image(systemName: "arrow.up.arrow.down")
+                            .font(DesignSystem.Typography.caption)
+                        Text("Sort")
+                            .font(DesignSystem.Typography.caption)
+                            .fontWeight(DesignSystem.FontWeight.medium)
+                    }
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                }
+
+                // Manufacturer filter chip
+                manufacturerFilterChip
+
+                // COE filter chip
+                coeFilterChip
+
+                // Tag filter chip
+                tagFilterChip
+
+                // Product type filter chip
+                productTypeFilterChip
+            }
+            .padding(.horizontal, DesignSystem.Padding.compact)
+        }
+    }
+
+    private var manufacturerFilterChip: some View {
+        Button {
+            showingManufacturerFilterSelection = true
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                Image(systemName: "building.2")
+                    .font(DesignSystem.Typography.captionSmall)
+                if viewModel.selectedManufacturers.isEmpty {
+                    Text("Mfr")
+                        .font(DesignSystem.Typography.caption)
+                } else {
+                    Text("\(viewModel.selectedManufacturers.count)")
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                }
+            }
+            .foregroundColor(viewModel.selectedManufacturers.isEmpty ? .secondary : .white)
+            .padding(.horizontal, DesignSystem.Padding.chip)
+            .padding(.vertical, DesignSystem.Padding.chipVertical)
+            .background(viewModel.selectedManufacturers.isEmpty ? Color(.systemGray6) : .accentColor)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        }
+    }
+
+    private var coeFilterChip: some View {
+        Button {
+            showingCOESelection = true
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                Text("COE")
+                    .font(DesignSystem.Typography.captionSmall)
+                if !viewModel.selectedCOEs.isEmpty {
+                    Text("\(viewModel.selectedCOEs.count)")
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                }
+            }
+            .foregroundColor(viewModel.selectedCOEs.isEmpty ? .secondary : .white)
+            .padding(.horizontal, DesignSystem.Padding.chip)
+            .padding(.vertical, DesignSystem.Padding.chipVertical)
+            .background(viewModel.selectedCOEs.isEmpty ? Color(.systemGray6) : .accentColor)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        }
+    }
+
+    private var tagFilterChip: some View {
+        Button {
+            showingAllTags = true
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                Image(systemName: "tag")
+                    .font(DesignSystem.Typography.captionSmall)
+                if !viewModel.selectedTags.isEmpty {
+                    Text("\(viewModel.selectedTags.count)")
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                }
+            }
+            .foregroundColor(viewModel.selectedTags.isEmpty ? .secondary : .white)
+            .padding(.horizontal, DesignSystem.Padding.chip)
+            .padding(.vertical, DesignSystem.Padding.chipVertical)
+            .background(viewModel.selectedTags.isEmpty ? Color(.systemGray6) : .accentColor)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        }
+    }
+
+    private var productTypeFilterChip: some View {
+        Button {
+            showingProductTypeSelection = true
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                Image(systemName: "square.grid.2x2")
+                    .font(DesignSystem.Typography.captionSmall)
+                if !viewModel.selectedProductTypes.isEmpty {
+                    Text("\(viewModel.selectedProductTypes.count)")
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                }
+            }
+            .foregroundColor(viewModel.selectedProductTypes.isEmpty ? .secondary : .white)
+            .padding(.horizontal, DesignSystem.Padding.chip)
+            .padding(.vertical, DesignSystem.Padding.chipVertical)
+            .background(viewModel.selectedProductTypes.isEmpty ? Color(.systemGray6) : .accentColor)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        }
+    }
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
             contentWithModifiers
@@ -248,14 +391,23 @@ struct CatalogView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    HStack {
-                        Text("Catalog")
-                            .font(.headline)
-                            .fontWeight(.bold)
-
-                        Spacer()
+            .navigationTitle("Catalog")
+            .searchable(
+                text: $viewModel.searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "Search colors, codes, manufacturers..."
+            )
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .onChange(of: viewModel.searchText) { oldValue, newValue in
+                // Debounce search text updates (300ms delay)
+                // This prevents expensive filtering on every keystroke
+                Task {
+                    try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
+                    // Only update if the value hasn't changed (user stopped typing)
+                    if viewModel.searchText == newValue {
+                        viewModel.debouncedSearchText = newValue
+                        viewModel.applyFilters()
                     }
                 }
             }

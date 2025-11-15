@@ -318,12 +318,16 @@ class PersistenceController {
                     // Check if it's a CKError
                     if let ckError = error as? CKError {
                         self.log.error("   CKError code: \(ckError.code.rawValue)")
-                        self.log.error("   CKError domain: \(ckError.domain)")
 
                         if ckError.code == .zoneNotFound {
                             self.log.error("   ⚠️ ZONE_NOT_FOUND - CloudKit zone needs to be created")
                         }
                     }
+
+                    // Log NSError details
+                    let nsError = error as NSError
+                    self.log.error("   Error domain: \(nsError.domain)")
+                    self.log.error("   Error code: \(nsError.code)")
                 } else {
                     self.log.info("   ✅ Event succeeded")
                 }

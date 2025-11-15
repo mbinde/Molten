@@ -131,6 +131,17 @@ struct GlassItemRowView: View {
                     }
                 }
                 .lineLimit(1)
+                .onAppear {
+                    // Debug logging
+                    print("🔍 [GlassItemRowView] Item: \(item.name)")
+                    print("   showRatingsInCatalog: \(showRatingsInCatalog)")
+                    print("   item.rating: \(item.rating != nil ? "present" : "nil")")
+                    if let rating = item.rating {
+                        print("   rating.averageRating: \(rating.averageRating)")
+                        print("   rating.totalRatings: \(rating.totalRatings)")
+                        print("   rating.hasEnoughRatings: \(rating.hasEnoughRatings)")
+                    }
+                }
 
                 // Manufacturer and SKU/natural key
                 HStack(spacing: 4) {

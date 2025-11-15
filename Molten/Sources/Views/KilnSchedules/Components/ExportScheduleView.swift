@@ -27,19 +27,16 @@ struct ExportScheduleView: View {
             Form {
                 Section {
                     VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Image(systemName: "flame.fill")
-                                .foregroundColor(techniqueColor)
-                            Text(displaySchedule.name)
-                                .font(.headline)
-                        }
+                        IconTextBadge.flame(
+                            displaySchedule.name,
+                            color: techniqueColor
+                        )
+                        .font(.headline)
 
                         HStack(spacing: 16) {
-                            DetailItem(icon: "chart.line.uptrend.xyaxis", text: "\(displaySchedule.segments.count) segments")
-                            DetailItem(icon: "clock.fill", text: displaySchedule.formattedDuration)
+                            IconTextBadge.chart("\(displaySchedule.segments.count) segments")
+                            IconTextBadge.time(displaySchedule.formattedDuration)
                         }
-                        .font(.caption)
-                        .foregroundColor(.secondary)
                     }
                     .padding(.vertical, 4)
                 } header: {
@@ -107,19 +104,6 @@ struct ExportScheduleView: View {
                     showingError = true
                 }
             }
-        }
-    }
-}
-
-struct DetailItem: View {
-    let icon: String
-    let text: String
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.caption2)
-            Text(text)
         }
     }
 }

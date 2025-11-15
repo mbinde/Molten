@@ -156,11 +156,45 @@ final class MockShoppingListRepository: ShoppingListRepository {
     }
 
     func addQuantity(_ quantity: Double, toItem item_stable_id: String, store: String?) async throws -> ItemShoppingModel {
-        if let existing = try await fetchItem(forItem: item_stable_id) {
+        // Look for existing item with BOTH same item_stable_id AND same store
+        // Shopping list items are unique per (item_stable_id, store) tuple
+        let itemsArray = lock.withLock { Array(items.values) }
+        var existing: ItemShoppingModel? = nil
+        for item in itemsArray {
+            let itemStableId = await item.item_stable_id
+            let itemStore = await item.store
+            if itemStableId == item_stable_id && itemStore == store {
+                existing = item
+                break
+            }
+        }
+
+        if let existing = existing {
+            // Found exact match (same item + same store) - add to existing quantity
+            let existingId = await existing.id
             let existingQty = await existing.quantity
-            let newQuantity = existingQty + quantity
-            return try await updateQuantity(newQuantity, forItem: item_stable_id)
+            let existingItemId = await existing.item_stable_id
+            let existingStore = await existing.store
+            let existingType = await existing.type
+            let existingSubtype = await existing.subtype
+            let existingSubsubtype = await existing.subsubtype
+            let existingDate = await existing.dateAdded
+
+            let updated = ItemShoppingModel(
+                id: existingId,
+                item_stable_id: existingItemId,
+                quantity: existingQty + quantity,
+                store: existingStore,
+                type: existingType,
+                subtype: existingSubtype,
+                subsubtype: existingSubsubtype,
+                dateAdded: existingDate
+            )
+
+            lock.withLock { items[existingId] = updated }
+            return updated
         } else {
+            // No match found - create new item
             let newItem = ItemShoppingModel(
                 item_stable_id: item_stable_id,
                 quantity: quantity,

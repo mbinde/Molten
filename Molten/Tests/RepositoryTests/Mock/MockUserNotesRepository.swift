@@ -21,6 +21,12 @@ final class MockUserNotesRepository: UserNotesRepository {
 
     func createNotes(_ notes: UserNotesModel) async throws -> UserNotesModel {
         let key = await notes.item_stable_id
+        // Check if notes already exist for this item
+        guard self.notes[key] == nil else {
+            throw NSError(domain: "MockUserNotesRepository", code: 409, userInfo: [
+                NSLocalizedDescriptionKey: "Notes already exist for item: \(key)"
+            ])
+        }
         self.notes[key] = notes
         return notes
     }

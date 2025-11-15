@@ -33,6 +33,35 @@ public nonisolated struct AggregatedRatingModel: Identifiable, Equatable, Codabl
         self.lastAggregated = lastAggregated
     }
 
+    // MARK: - Codable
+
+    enum CodingKeys: String, CodingKey {
+        case itemStableId
+        case averageRating
+        case totalRatings
+        case topWords
+        case lastAggregated
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = UUID() // Generate new ID on decode
+        self.itemStableId = try container.decode(String.self, forKey: .itemStableId)
+        self.averageRating = try container.decode(Double.self, forKey: .averageRating)
+        self.totalRatings = try container.decode(Int.self, forKey: .totalRatings)
+        self.topWords = try container.decode([RatingWordModel].self, forKey: .topWords).sorted()
+        self.lastAggregated = try container.decode(Date.self, forKey: .lastAggregated)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(itemStableId, forKey: .itemStableId)
+        try container.encode(averageRating, forKey: .averageRating)
+        try container.encode(totalRatings, forKey: .totalRatings)
+        try container.encode(topWords, forKey: .topWords)
+        try container.encode(lastAggregated, forKey: .lastAggregated)
+    }
+
     // MARK: - Validation
 
     /// Validate that the aggregated rating has required data

@@ -33,11 +33,6 @@ struct GlassItemRowView: View {
             self.imagePath = completeItem.glassItem.image_path
             self.imageThumbPath = completeItem.glassItem.image_thumb_path
             self.tags = completeItem.allTags
-
-            // DEBUG: Log what we're receiving
-            if ["2HC89p", "5bfSaX", "6pXaLx"].contains(self.stableId) {
-                print("🔍 [GlassItemRowData] Creating for \(self.stableId): imagePath=\(self.imagePath ?? "nil"), imageThumbPath=\(self.imageThumbPath ?? "nil")")
-            }
         }
 
         init(from detailedShoppingItem: DetailedShoppingListItemModel) {

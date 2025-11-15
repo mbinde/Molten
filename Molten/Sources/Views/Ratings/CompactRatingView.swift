@@ -111,37 +111,6 @@ struct CompactRatingView: View {
         isLoading = true
         defer { isLoading = false }
 
-        // FIXME: Remove this mock data - just for UI testing
-        let mockRating = Double.random(in: 3.0...5.0)
-        let mockCount = Int.random(in: 5...50)
-
-        // Generate at least 20 random words with frequencies
-        let wordList = [
-            "beautiful", "vibrant", "rich", "smooth", "stunning", "brilliant",
-            "gorgeous", "intense", "deep", "striking", "elegant", "lovely",
-            "vivid", "saturated", "bold", "subtle", "delicate", "lustrous",
-            "translucent", "opaque", "clear", "bright", "warm", "cool",
-            "versatile", "unique", "consistent", "workable", "reactive", "stable"
-        ]
-
-        let mockWords = wordList.enumerated().map { index, word in
-            RatingWordModel(
-                word: word,
-                frequency: Int.random(in: 1...15),
-                rank: index + 1
-            )
-        }.sorted { $0.frequency > $1.frequency }
-
-        rating = AggregatedRatingModel(
-            itemStableId: itemStableId,
-            averageRating: mockRating,
-            totalRatings: mockCount,
-            topWords: mockWords,
-            lastAggregated: Date()
-        )
-        return
-        // END FIXME
-
         do {
             let ratings = try await service.fetchRatings(forItems: [itemStableId])
             rating = ratings.first

@@ -207,7 +207,7 @@ struct ImportInventoryView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Image(systemName: "info.circle")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                         Text("Import Details")
                             .font(.subheadline)
                             .fontWeight(.medium)

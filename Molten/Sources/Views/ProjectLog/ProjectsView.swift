@@ -150,7 +150,7 @@ struct ProjectsView: View {
             VStack(spacing: 20) {
                 Image(systemName: "pencil.and.list.clipboard")
                     .font(.system(size: 70))
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
 
                 Text("No Project Plans Yet")
                     .font(.title2)
@@ -426,8 +426,8 @@ struct AddProjectView: View {
                                     .font(.caption)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
-                                    .background(Color.blue.opacity(0.1))
-                                    .foregroundColor(.blue)
+                                    .background(.accentColor.opacity(0.1))
+                                    .foregroundColor(.accentColor)
                                     .cornerRadius(6)
                             }
                         }
@@ -1122,8 +1122,8 @@ struct ProjectDetailView: View {
                             .font(.caption)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Color.blue.opacity(0.1))
-                            .foregroundColor(.blue)
+                            .background(.accentColor.opacity(0.1))
+                            .foregroundColor(.accentColor)
                             .cornerRadius(6)
                     }
                 }
@@ -1149,8 +1149,8 @@ struct ProjectDetailView: View {
                                 .font(.caption)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(Color.blue.opacity(0.1))
-                                .foregroundColor(.blue)
+                                .background(.accentColor.opacity(0.1))
+                                .foregroundColor(.accentColor)
                                 .cornerRadius(6)
                         }
                     }
@@ -1270,7 +1270,7 @@ struct ProjectDetailView: View {
             }
         }
         .padding(8)
-        .background(Color.blue.opacity(0.05))
+        .background(.accentColor.opacity(0.05))
         .cornerRadius(6)
     }
 
@@ -1429,7 +1429,7 @@ struct ProjectDetailView: View {
                     }
                     Link(url.url, destination: URL(string: url.url)!)
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                     if let description = url.description {
                         Text(description)
                             .font(.caption)
@@ -1467,7 +1467,7 @@ struct ProjectDetailView: View {
                 }
                 .padding(.vertical, 8)
                 .padding(.horizontal, 8)
-                .background(Color.blue.opacity(0.05))
+                .background(.accentColor.opacity(0.05))
                 .cornerRadius(8)
             }
 

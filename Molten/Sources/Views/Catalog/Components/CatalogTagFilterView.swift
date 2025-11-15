@@ -24,13 +24,13 @@ struct CatalogTagFilterView: View {
                         selectedTags.removeAll()
                     }
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
                 }
                 Button("All Tags") {
                     showingAllTags = true
                 }
                 .font(.caption)
-                .foregroundColor(.blue)
+                .foregroundColor(.accentColor)
             }
             
             // Show selected tags
@@ -51,8 +51,8 @@ struct CatalogTagFilterView: View {
                             }
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Color.blue.opacity(0.2))
-                            .foregroundColor(.blue)
+                            .background(.accentColor.opacity(0.2))
+                            .foregroundColor(.accentColor)
                             .clipShape(Capsule())
                         }
                     }
@@ -80,7 +80,7 @@ struct CatalogTagFilterView: View {
                         .font(.caption)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(selectedTags.contains(tag) ? Color.blue.opacity(0.2) : Color.gray.opacity(0.1))
+                        .background(selectedTags.contains(tag) ? .accentColor.opacity(0.2) : Color.gray.opacity(0.1))
                         .foregroundColor(selectedTags.contains(tag) ? .blue : .secondary)
                         .clipShape(Capsule())
                     }

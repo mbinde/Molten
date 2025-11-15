@@ -49,19 +49,18 @@ public nonisolated struct RatingSubmissionModel: Identifiable, Equatable, Codabl
             errors.append("Star rating must be between 1 and 5")
         }
 
-        if words.count != 5 {
-            errors.append("Exactly 5 words are required")
+        // Words are optional, any number from 0-5 is valid
+        let nonEmptyWords = words.filter { !$0.isEmpty }
+        if nonEmptyWords.count > 5 {
+            errors.append("Maximum 5 words allowed")
         }
 
-        if words.contains(where: { $0.isEmpty }) {
-            errors.append("All words must be non-empty")
-        }
-
-        if words.contains(where: { $0.count > 30 }) {
+        if words.contains(where: { !$0.isEmpty && $0.count > 30 }) {
             errors.append("Words must be 30 characters or less")
         }
 
-        if Set(words).count != words.count {
+        // Check for duplicates only among non-empty words
+        if Set(nonEmptyWords).count != nonEmptyWords.count {
             errors.append("Words must be unique")
         }
 
@@ -75,7 +74,8 @@ public nonisolated struct RatingSubmissionModel: Identifiable, Equatable, Codabl
     /// This provides first-line defense using a comprehensive word list.
     /// Server-side batch moderation with ML provides second-line defense.
     public nonisolated var containsProfanity: Bool {
-        return ProfanityList.containsProfanity(in: words)
+        let nonEmptyWords = words.filter { !$0.isEmpty }
+        return ProfanityList.containsProfanity(in: nonEmptyWords)
     }
 
     // MARK: - Business Logic

@@ -23,6 +23,10 @@ public nonisolated protocol RatingRepository: Sendable {
     /// - Returns: Dictionary mapping stable ID to aggregated rating
     func fetchAggregatedRatings(forItems itemStableIds: [String]) async throws -> [String: AggregatedRatingModel]
 
+    /// Fetch ALL aggregated ratings from cache (for bulk operations)
+    /// - Returns: Dictionary mapping stable ID to aggregated rating
+    func fetchAllAggregatedRatings() async throws -> [String: AggregatedRatingModel]
+
     /// Save aggregated rating (from server) to local cache
     /// - Parameter rating: The aggregated rating to save
     func saveAggregatedRating(_ rating: AggregatedRatingModel) async throws

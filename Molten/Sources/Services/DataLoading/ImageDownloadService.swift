@@ -100,63 +100,47 @@ final class ImageDownloadService: Sendable {
     ///   - useThumbnail: If true, try thumbnail version first (default: true)
     /// - Returns: UIImage if found/downloaded, nil otherwise
     nonisolated static func loadImage(itemCode: String, manufacturer: String?, exactFilename: String? = nil, exactThumbnailFilename: String? = nil, useThumbnail: Bool = true) async -> UIImage? {
-        print("🔍 [ImageDownloadService] loadImage called - itemCode: \(itemCode), manufacturer: \(manufacturer ?? "nil"), exactFilename: \(exactFilename ?? "nil"), exactThumbnailFilename: \(exactThumbnailFilename ?? "nil")")
-
         guard let manufacturer = manufacturer, !manufacturer.isEmpty else {
-            print("❌ [ImageDownloadService] No manufacturer provided")
             return nil
         }
 
         // Check if we have permission to use product-specific images for this manufacturer
         guard GlassManufacturers.hasProductImagePermission(for: manufacturer) else {
-            print("⚠️ [ImageDownloadService] No image permission for manufacturer: \(manufacturer)")
             return nil
         }
 
         // PRIORITY 1: If exact thumbnail filename provided (from catalog image_thumb_path), try it first
         if useThumbnail, let thumbnailFilename = exactThumbnailFilename, !thumbnailFilename.isEmpty {
-            print("📸 [ImageDownloadService] Trying exact thumbnail: \(thumbnailFilename)")
-
             // First check local cache
             if let cachedImage = await loadFromCache(filename: thumbnailFilename) {
-                print("✅ [ImageDownloadService] Found thumbnail in cache: \(thumbnailFilename)")
                 return cachedImage
             }
 
             // If not cached, try to download
             if let result = await downloadImage(filename: thumbnailFilename) {
-                print("✅ [ImageDownloadService] Downloaded thumbnail from CDN: \(thumbnailFilename)")
                 await saveToCache(image: result.image, filename: thumbnailFilename, etag: result.etag)
                 return result.image
             }
 
-            print("❌ [ImageDownloadService] Failed to load thumbnail: \(thumbnailFilename)")
             // Fall through to try full-size image
         }
 
         // PRIORITY 2: If exact filename provided (from catalog image_path), try it
         if let filename = exactFilename, !filename.isEmpty {
-            print("📸 [ImageDownloadService] Trying exact filename: \(filename)")
-
             // First check local cache
             if let cachedImage = await loadFromCache(filename: filename) {
-                print("✅ [ImageDownloadService] Found in cache: \(filename)")
                 return cachedImage
             }
 
             // If not cached, try to download
             if let result = await downloadImage(filename: filename) {
-                print("✅ [ImageDownloadService] Downloaded from CDN: \(filename)")
                 await saveToCache(image: result.image, filename: filename, etag: result.etag)
                 return result.image
             }
-
-            print("❌ [ImageDownloadService] Failed to load: \(filename)")
         }
 
         // No exact filename provided or download failed - return nil
         // The caller (ProductImageView) will fall back to bundled images or manufacturer default
-        print("❌ [ImageDownloadService] No image found for itemCode: \(itemCode)")
         return nil
     }
 

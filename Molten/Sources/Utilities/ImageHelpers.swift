@@ -112,20 +112,16 @@ struct ImageHelpers {
     nonisolated static func loadProductImage(for itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil) -> UIImage? {
         guard !itemCode.isEmpty else { return nil }
 
-        print("🖼️ [ImageHelpers] loadProductImage called - itemCode: \(itemCode), manufacturer: \(manufacturer ?? "nil"), imagePath: \(imagePath ?? "nil")")
-
         let cacheKey = "\(manufacturer ?? "nil")-\(itemCode)"
         let cacheKeyNS = cacheKey as NSString
 
         // Check positive cache first
         if let cachedImage = imageCache.object(forKey: cacheKeyNS) {
-            print("✅ [ImageHelpers] Found in cache: \(cacheKey)")
             return cachedImage
         }
 
         // Check negative cache (items we know don't have images)
         if negativeCache.object(forKey: cacheKeyNS) != nil {
-            print("❌ [ImageHelpers] In negative cache (previously not found): \(cacheKey)")
             return nil
         }
 
@@ -136,28 +132,18 @@ struct ImageHelpers {
 
         // PRIORITY 2: Use exact image path if provided (skips extension guessing)
         if let imagePath = imagePath, !imagePath.isEmpty {
-            print("🖼️ [ImageHelpers] Using imagePath: \(imagePath)")
             // Extract resource name and extension from path
             let pathComponents = imagePath.split(separator: ".")
             if pathComponents.count >= 2 {
                 let resourceName = pathComponents.dropLast().joined(separator: ".")
                 let ext = String(pathComponents.last!)
 
-                print("🖼️ [ImageHelpers] Looking for resource: \(resourceName), type: \(ext)")
                 // Files in Molten/Resources/ are flattened to bundle root
-                if let path = Bundle.main.path(forResource: resourceName, ofType: ext) {
-                    print("✅ [ImageHelpers] Found imagePath at: \(path)")
-                    if let image = loadImageWithoutColorProfile(from: path) {
-                        imageCache.setObject(image, forKey: cacheKeyNS)
-                        return image
-                    } else {
-                        print("❌ [ImageHelpers] Failed to load image from imagePath")
-                    }
-                } else {
-                    print("❌ [ImageHelpers] imagePath not found in bundle")
+                if let path = Bundle.main.path(forResource: resourceName, ofType: ext),
+                   let image = loadImageWithoutColorProfile(from: path) {
+                    imageCache.setObject(image, forKey: cacheKeyNS)
+                    return image
                 }
-            } else {
-                print("❌ [ImageHelpers] Invalid imagePath format (no extension): \(imagePath)")
             }
         }
 
@@ -186,7 +172,6 @@ struct ImageHelpers {
 
         // PRIORITY 3: Try manufacturer default image
         // No more guessing filenames - if we don't have imagePath from catalog, go straight to default
-        print("🖼️ [ImageHelpers] No imagePath or not found, trying manufacturer default")
         if let manufacturer = manufacturer,
            let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
             let extensions = ["webp", "jpg", "jpeg", "png"]
@@ -367,7 +352,6 @@ struct ProductImageView: View {
         .onAppear {
             // Skip image loading if disabled via debug flag
             if DebugConfig.disableImageLoading {
-                print("🚫 [ImageHelpers] Image loading disabled via DebugConfig")
                 isLoading = false
                 return
             }
@@ -413,9 +397,7 @@ struct ProductImageView: View {
 
         // PRIORITY 1.5: Try to download from CDN (only if we have an exact image_path from catalog)
         // ProductImageView uses thumbnails by default for faster loading in lists (unless user enabled full-size)
-        print("🔍 [ProductImageView] imagePath: \(imagePath ?? "nil"), imageThumbPath: \(imageThumbPath ?? "nil"), manufacturer: \(manufacturer ?? "nil")")
         if let imagePath = imagePath, !imagePath.isEmpty {
-            print("🌐 [ProductImageView] Attempting CDN download for \(imagePath)")
             let useThumbnail = !UserSettings.shared.downloadFullSizeImages
             if let cdnImage = await ImageDownloadService.loadImage(
                 itemCode: itemCode,
@@ -424,15 +406,10 @@ struct ProductImageView: View {
                 exactThumbnailFilename: imageThumbPath,
                 useThumbnail: useThumbnail
             ) {
-                print("✅ [ProductImageView] CDN download succeeded")
                 loadedImage = cdnImage
                 isLoading = false
                 return
-            } else {
-                print("❌ [ProductImageView] CDN download failed")
             }
-        } else {
-            print("⚠️ [ProductImageView] Skipping CDN - no imagePath")
         }
 
         // FIXME: TEMPORARILY DISABLED - Testing R2/CDN image loading
@@ -540,7 +517,6 @@ struct ProductImageDetail: View {
         .task {
             // Skip image loading if disabled via debug flag
             if DebugConfig.disableImageLoading {
-                print("🚫 [ImageHelpers] ProductImageDetail - Image loading disabled via DebugConfig")
                 isLoading = false
                 return
             }

@@ -287,11 +287,6 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
         let image_thumb_path = getText(17)
         let image_url = getText(18)
 
-        // DEBUG: Log what we're reading for a few items
-        if ["2HC89p", "5bfSaX", "6pXaLx"].contains(stable_id) {
-            print("🔍 [SQLiteRepo] Parsing \(stable_id): image_path=\(image_path ?? "nil"), image_thumb_path=\(image_thumb_path ?? "nil")")
-        }
-
         return GlassItemModel(
             stable_id: stable_id,
             name: name,

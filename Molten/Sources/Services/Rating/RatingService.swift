@@ -84,7 +84,46 @@ public class RatingService: RatingServiceProtocol {
 
     // MARK: - Fetch Ratings
 
-    /// Fetch ratings for items (from cache or server)
+    /// Fetch all ratings in bulk and cache locally (optimized for catalog loading)
+    public func fetchAllRatingsBulk(forceRefresh: Bool = false) async throws -> [AggregatedRatingModel] {
+        // Check if we have a fresh bulk cache
+        if !forceRefresh {
+            let allCached = try await repository.fetchAllAggregatedRatings()
+
+            // If we have cached data and it's fresh, return it
+            if !allCached.isEmpty {
+                // Check if any are stale (if at least one is fresh, use the cache)
+                let hasAnythingFresh = allCached.values.contains { !$0.isStale(threshold: updateInterval) }
+                if hasAnythingFresh {
+                    print("✅ [RatingService] Using cached bulk ratings (\(allCached.count) items)")
+                    return Array(allCached.values)
+                }
+            }
+        }
+
+        // Fetch all ratings from server in one request
+        do {
+            // IMPORTANT: Use cache busting when forceRefresh=true to bypass Cloudflare CDN cache
+            let freshRatings = try await apiClient.fetchAllRatingsBulk(cacheBust: forceRefresh)
+
+            // Save to cache
+            try await repository.saveAggregatedRatings(freshRatings)
+
+            print("✅ [RatingService] Fetched and cached \(freshRatings.count) ratings in bulk\(forceRefresh ? " (cache busted)" : "")")
+            return freshRatings
+        } catch {
+            // If network error and we have some cached data, return cached (even if stale)
+            let allCached = try await repository.fetchAllAggregatedRatings()
+            if isNetworkError(error) && !allCached.isEmpty {
+                print("⚠️ [RatingService] Network error, returning stale cache (\(allCached.count) items)")
+                return Array(allCached.values)
+            }
+            throw error
+        }
+    }
+
+    /// Fetch ratings for specific items (from cache or server)
+    /// Note: For large batches, consider using fetchAllRatingsBulk() instead
     public func fetchRatings(
         forItems itemStableIds: [String],
         forceRefresh: Bool = false

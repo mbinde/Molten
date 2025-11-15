@@ -16,6 +16,10 @@ struct CompactRatingView: View {
     @State private var rating: AggregatedRatingModel?
     @State private var isLoading = false
     @State private var showingSubmission = false
+    @State private var refreshTrigger = 0
+    @State private var hasLoaded = false
+    @State private var showingSuccessToast = false
+    @AppStorage("showRatingsInCatalog") private var showRatingsInCatalog = true
 
     init(
         itemStableId: String,
@@ -28,6 +32,16 @@ struct CompactRatingView: View {
     }
 
     var body: some View {
+        Group {
+            if !showRatingsInCatalog {
+                EmptyView()
+            } else {
+                ratingContent
+            }
+        }
+    }
+
+    private var ratingContent: some View {
         HStack(spacing: 8) {
             if isLoading {
                 ProgressView()
@@ -79,14 +93,39 @@ struct CompactRatingView: View {
             }
         }
         .task {
+            // Only load once on initial appearance and if ratings are enabled
+            guard !hasLoaded && showRatingsInCatalog else { return }
             await loadRating()
+            hasLoaded = true
         }
-        .sheet(isPresented: $showingSubmission) {
+        .onChange(of: refreshTrigger) { _, _ in
+            // Reload when explicitly triggered (after rating submission) and if ratings are enabled
+            guard showRatingsInCatalog else { return }
+            Task {
+                await loadRating()
+            }
+        }
+        .sheet(isPresented: $showingSubmission, onDismiss: {
+            // Refresh rating after submission
+            refreshTrigger += 1
+        }) {
             RatingSubmissionView(
                 itemStableId: itemStableId,
                 itemName: itemName ?? itemStableId
             )
         }
+        .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
+            // Check if this is for our item and if ratings are enabled
+            guard showRatingsInCatalog else { return }
+            if let submittedItemId = notification.object as? String, submittedItemId == itemStableId {
+                refreshTrigger += 1
+                // Show success toast
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    showingSuccessToast = true
+                }
+            }
+        }
+        .successToast(message: "Your rating has been submitted!", isShowing: $showingSuccessToast)
     }
 
     // Expose the rating for external use
@@ -116,7 +155,6 @@ struct CompactRatingView: View {
             rating = ratings.first
         } catch {
             // Silently fail for compact view
-            print("Failed to load rating: \(error)")
         }
     }
 }

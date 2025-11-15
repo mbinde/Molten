@@ -37,12 +37,3 @@ struct LoadingStateView: View {
 #Preview("Custom Message") {
     LoadingStateView(message: "Syncing data...")
 }
-
-#Preview("With Modifier") {
-    List {
-        Text("Item 1")
-        Text("Item 2")
-        Text("Item 3")
-    }
-    .loadingOverlay(isLoading: true, message: "Loading items...")
-}

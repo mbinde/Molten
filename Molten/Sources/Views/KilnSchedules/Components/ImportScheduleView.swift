@@ -53,9 +53,9 @@ struct ImportScheduleView: View {
                             }
 
                             HStack(spacing: 16) {
-                                DetailItem(icon: "chart.line.uptrend.xyaxis", text: "\(schedule.segments.count) segments")
-                                DetailItem(icon: "clock.fill", text: schedule.formattedDuration)
-                                DetailItem(icon: "thermometer", text: "\(schedule.temperatureUnit.symbol)")
+                                IconTextBadge(systemImage: "chart.line.uptrend.xyaxis", text: "\(schedule.segments.count) segments")
+                                IconTextBadge(systemImage: "clock.fill", text: schedule.formattedDuration)
+                                IconTextBadge(systemImage: "thermometer", text: "\(schedule.temperatureUnit.symbol)")
                             }
                             .secondaryCaptionStyle()
 

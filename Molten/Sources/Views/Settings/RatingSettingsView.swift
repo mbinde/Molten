@@ -77,34 +77,34 @@ struct RatingSettingsView: View {
                                 .controlSize(.small)
                             Text("Deleting...")
                         } else {
-                            Label("Delete All My Ratings", systemImage: "trash")
+                            Label("Delete All My Ratings and Words", systemImage: "trash")
                         }
                     }
                 }
                 .disabled(isDeleting)
 
                 if let count = deletedCount {
-                    Text("Successfully deleted \(count) rating\(count == 1 ? "" : "s")")
+                    Text("Successfully deleted \(count) rating\(count == 1 ? "" : "s") and words")
                         .font(.caption)
                         .foregroundColor(.green)
                 }
             } header: {
                 Text("Privacy")
             } footer: {
-                Text("Permanently delete all your rating submissions from the server. This action cannot be undone and is GDPR-compliant.")
+                Text("Permanently delete all your rating submissions and words from the server. This action cannot be undone and is GDPR-compliant.")
             }
         }
         .navigationTitle("Rating Settings")
         .task {
             await loadPendingCount()
         }
-        .alert("Delete All Ratings?", isPresented: $showingDeleteAlert) {
+        .alert("Delete All Ratings and Words?", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Delete All", role: .destructive) {
                 deleteAllRatings()
             }
         } message: {
-            Text("This will permanently delete all your rating submissions from the server. This action cannot be undone.")
+            Text("This will permanently delete all your rating submissions and words from the server. This action cannot be undone.")
         }
         .alert("Error", isPresented: $showingError) {
             Button("OK") { }
@@ -153,8 +153,15 @@ struct RatingSettingsView: View {
 
             do {
                 let count = try await service.deleteAllRatings()
+
+                // Force a fresh fetch of ratings from server (which are now empty)
+                _ = try? await service.fetchAllRatingsBulk(forceRefresh: true)
+
                 await MainActor.run {
                     deletedCount = count
+
+                    // Trigger catalog/inventory refresh to update UI
+                    NotificationCenter.default.post(name: .ratingSubmitted, object: nil)
                 }
             } catch {
                 await MainActor.run {

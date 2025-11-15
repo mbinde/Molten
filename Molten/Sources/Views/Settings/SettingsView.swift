@@ -120,6 +120,7 @@ struct SettingsView: View {
     @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
     @AppStorage("defaultInventorySortOption") private var defaultInventorySortOptionRawValue = "Name"
     @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.pounds.rawValue
+    @AppStorage("showRatingsInCatalog") private var showRatingsInCatalog = true
     @Environment(EntitlementService.self) private var entitlementService
     @Environment(SubscriptionManager.self) private var subscriptionManager
 
@@ -423,6 +424,9 @@ struct SettingsView: View {
 
                 // Ratings section
                 Section("Ratings") {
+                    Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
+                        .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
+
                     NavigationLink {
                         RatingSettingsView()
                     } label: {
@@ -841,6 +845,8 @@ extension SortOption {
             return "Manufacturer"
         case .code:
             return "Code"
+        case .rating:
+            return "Rating"
         }
     }
 }

@@ -393,10 +393,23 @@ struct ProductImageView: View {
             }
         }
 
-        // PRIORITY 1.5: Try to download from CDN (only if we have an exact image_path from catalog)
+        // PRIORITY 1.5: Try to load thumbnail from local bundle first (saves bandwidth)
+        let useThumbnail = !UserSettings.shared.downloadFullSizeImages
+        if useThumbnail, let imageThumbPath = imageThumbPath, !imageThumbPath.isEmpty {
+            let thumbImage = await Task.detached(priority: .background) {
+                ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: imageThumbPath)
+            }.value
+
+            if let thumbImage = thumbImage {
+                loadedImage = thumbImage
+                isLoading = false
+                return
+            }
+        }
+
+        // PRIORITY 2: Try to download from CDN (only if local bundle doesn't have it)
         // ProductImageView uses thumbnails by default for faster loading in lists (unless user enabled full-size)
         if let imagePath = imagePath, !imagePath.isEmpty {
-            let useThumbnail = !UserSettings.shared.downloadFullSizeImages
             if let cdnImage = await ImageDownloadService.loadImage(
                 itemCode: itemCode,
                 manufacturer: manufacturer,
@@ -410,7 +423,7 @@ struct ProductImageView: View {
             }
         }
 
-        // PRIORITY 2: Load bundle/manufacturer images (fallback)
+        // PRIORITY 3: Load bundle/manufacturer images (fallback)
         // This will load manufacturer logos for manufacturers where we don't have product image permission
         let image = await Task.detached(priority: .background) {
             ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: imagePath)

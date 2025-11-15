@@ -119,11 +119,18 @@ struct DetailedLowStockItemModel {
 }
 
 extension DetailedLowStockItemModel: Comparable {
-    /// Business Logic: Sort by shortfall descending (highest shortfall first)
+    /// Business Logic: Sort by shortfall descending (highest shortfall first), then by item_stable_id for stable ordering
     /// Business rule: Items with highest shortfall are most urgent and should appear first
     nonisolated static func < (lhs: DetailedLowStockItemModel, rhs: DetailedLowStockItemModel) -> Bool {
         // Higher shortfall = "less than" (sorts first)
-        return lhs.lowStockItem.shortfall > rhs.lowStockItem.shortfall
+        if lhs.lowStockItem.shortfall != rhs.lowStockItem.shortfall {
+            return lhs.lowStockItem.shortfall > rhs.lowStockItem.shortfall
+        }
+        // Tiebreaker: sort by item_stable_id then type for stable ordering
+        if lhs.lowStockItem.item_stable_id != rhs.lowStockItem.item_stable_id {
+            return lhs.lowStockItem.item_stable_id < rhs.lowStockItem.item_stable_id
+        }
+        return lhs.lowStockItem.type < rhs.lowStockItem.type
     }
 
     nonisolated static func == (lhs: DetailedLowStockItemModel, rhs: DetailedLowStockItemModel) -> Bool {
@@ -192,11 +199,15 @@ enum UrgencyLevel: String, CaseIterable {
 // MARK: - Sorting Logic (Business Rules)
 
 extension DetailedShoppingListItemModel: Comparable {
-    /// Sort shopping list items by neededQuantity (descending)
+    /// Sort shopping list items by neededQuantity (descending), then by item_stable_id (ascending) for stable ordering
     /// Business rule: Items with highest need should appear first
     nonisolated static func < (lhs: DetailedShoppingListItemModel, rhs: DetailedShoppingListItemModel) -> Bool {
         // Higher neededQuantity is "less than" for descending sort
-        return lhs.shoppingListItem.neededQuantity > rhs.shoppingListItem.neededQuantity
+        if lhs.shoppingListItem.neededQuantity != rhs.shoppingListItem.neededQuantity {
+            return lhs.shoppingListItem.neededQuantity > rhs.shoppingListItem.neededQuantity
+        }
+        // Tiebreaker: sort by item_stable_id alphabetically for stable ordering
+        return lhs.shoppingListItem.item_stable_id < rhs.shoppingListItem.item_stable_id
     }
 
     nonisolated static func == (lhs: DetailedShoppingListItemModel, rhs: DetailedShoppingListItemModel) -> Bool {
@@ -205,10 +216,15 @@ extension DetailedShoppingListItemModel: Comparable {
 }
 
 extension DetailedMinimumModel: Comparable {
-    /// Sort minimums by type (alphabetically ascending)
+    /// Sort minimums by type (alphabetically ascending), then by item_stable_id for stable ordering
     /// Business rule: Alphabetical ordering for consistent display
     nonisolated static func < (lhs: DetailedMinimumModel, rhs: DetailedMinimumModel) -> Bool {
-        lhs.minimum.type < rhs.minimum.type
+        // Sort by type first
+        if lhs.minimum.type != rhs.minimum.type {
+            return lhs.minimum.type < rhs.minimum.type
+        }
+        // Tiebreaker: sort by item_stable_id for stable ordering
+        return lhs.minimum.item_stable_id < rhs.minimum.item_stable_id
     }
 
     nonisolated static func == (lhs: DetailedMinimumModel, rhs: DetailedMinimumModel) -> Bool {
@@ -217,11 +233,15 @@ extension DetailedMinimumModel: Comparable {
 }
 
 extension StoreStatisticsModel: Comparable {
-    /// Sort stores by currentNeedsCount (descending)
+    /// Sort stores by currentNeedsCount (descending), then by storeName (ascending) for stable ordering
     /// Business rule: Stores with highest needs should appear first (priority ordering)
     nonisolated static func < (lhs: StoreStatisticsModel, rhs: StoreStatisticsModel) -> Bool {
         // Higher currentNeedsCount is "less than" for descending sort
-        return lhs.currentNeedsCount > rhs.currentNeedsCount
+        if lhs.currentNeedsCount != rhs.currentNeedsCount {
+            return lhs.currentNeedsCount > rhs.currentNeedsCount
+        }
+        // Tiebreaker: sort by storeName alphabetically for stable ordering
+        return lhs.storeName < rhs.storeName
     }
 
     nonisolated static func == (lhs: StoreStatisticsModel, rhs: StoreStatisticsModel) -> Bool {

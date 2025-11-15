@@ -548,6 +548,9 @@ struct CatalogView: View {
             .onChange(of: viewModel.searchText) { oldValue, newValue in
                 // Debounce search text updates (300ms delay)
                 // This prevents expensive filtering on every keystroke
+                // TODO: Replace Task.sleep debouncing with Combine publisher for proper cancellation
+                // Current implementation creates zombie tasks that can't be cancelled
+                // Use .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main) instead
                 Task {
                     try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
                     // Only update if the value hasn't changed (user stopped typing)

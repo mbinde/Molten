@@ -416,7 +416,6 @@ struct CatalogView: View {
                 NavigationLink(value: CatalogNavigationDestination.catalogItemDetail(itemModel: item)) {
                     GlassItemRowView.catalog(item: item)
                 }
-                .id("\(item.id)-\(item.rating?.totalRatings ?? 0)-\(item.rating?.averageRating ?? 0)")  // Force re-render when rating changes
                 .accessibilityIdentifier("catalog.item.\(item.glassItem.stable_id)")
             }
         }

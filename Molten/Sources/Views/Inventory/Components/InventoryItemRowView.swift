@@ -68,15 +68,12 @@ struct InventoryItemRowView: View {
     private var itemDetails: some View {
         HStack {
             if completeItem.totalQuantity > 0 {
-                HStack(spacing: 4) {
-                    Image(systemName: inventoryTypeIcon)
-                        .foregroundColor(inventoryTypeColor)
-                        .font(.caption)
-                    
-                    Text(formattedQuantity)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                }
+                IconTextBadge.inventory(
+                    icon: inventoryTypeIcon,
+                    text: formattedQuantity,
+                    color: inventoryTypeColor
+                )
+                .fontWeight(.medium)
             }
             
             // Show manufacturer and COE

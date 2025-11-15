@@ -298,31 +298,42 @@ class PersistenceController {
         // We need proper persistent history token management instead.
 
         // Track persistent store remote changes (CloudKit imports)
-        // var remoteChangeCount = 0
-        // NotificationCenter.default.addObserver(
-        //     forName: .NSPersistentStoreRemoteChange,
-        //     object: nil,
-        //     queue: nil
-        // ) { [weak container] notification in
-        //     remoteChangeCount += 1
-        //     print("📡📡📡 PERSISTENT STORE REMOTE CHANGE #\(remoteChangeCount) detected!")
-        //
-        //     // Try to fetch persistent history to see what changed
-        //     if let container = container {
-        //         let context = container.newBackgroundContext()
-        //         context.perform {
-        //             // Fetch count of GlassItems to see if it's growing
-        //             let request = NSFetchRequest<NSFetchRequestResult>(entityName: "GlassItem")
-        //             request.resultType = .countResultType
-        //             do {
-        //                 let count = try context.count(for: request)
-        //                 print("📡     GlassItem count in store: \(count)")
-        //             } catch {
-        //                 print("📡     Error counting GlassItems: \(error)")
-        //             }
-        //         }
-        //     }
-        // }
+        // DISABLED: This observer was causing a feedback loop
+
+        // Track CloudKit sync events and errors
+        NotificationCenter.default.addObserver(
+            forName: NSPersistentCloudKitContainer.eventChangedNotification,
+            object: nil,
+            queue: nil
+        ) { [weak self] notification in
+            guard let self = self else { return }
+
+            if let cloudKitEvent = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey] as? NSPersistentCloudKitContainer.Event {
+
+                self.log.info("☁️ [CloudKit Event] Type: \(String(describing: cloudKitEvent.type.rawValue))")
+
+                if let error = cloudKitEvent.error {
+                    self.log.error("❌ [CloudKit Event] Error: \(error.localizedDescription)")
+
+                    // Check if it's a CKError
+                    if let ckError = error as? CKError {
+                        self.log.error("   CKError code: \(ckError.code.rawValue)")
+                        self.log.error("   CKError domain: \(ckError.domain)")
+
+                        if ckError.code == .zoneNotFound {
+                            self.log.error("   ⚠️ ZONE_NOT_FOUND - CloudKit zone needs to be created")
+                        }
+                    }
+                } else {
+                    self.log.info("   ✅ Event succeeded")
+                }
+
+                self.log.info("   Start: \(cloudKitEvent.startDate)")
+                if let endDate = cloudKitEvent.endDate {
+                    self.log.info("   End: \(endDate)")
+                }
+            }
+        }
     }
 
     /// Purge GlassItem persistent history transactions to prevent replay
@@ -402,6 +413,20 @@ class PersistenceController {
                         self.log.info("☁️ CloudKit enabled for this store:")
                         self.log.info("   - Container: \(cloudKitOptions.containerIdentifier)")
                         self.log.info("   - Database scope: \(cloudKitOptions.databaseScope.rawValue)")
+
+                        // Check if this is a CloudKit container
+                        if let ckContainer = self.container as? NSPersistentCloudKitContainer {
+                            self.log.info("   ✅ Container type: NSPersistentCloudKitContainer")
+
+                            // Try to get the actual loaded store
+                            if let loadedStore = self.container.persistentStoreCoordinator.persistentStores.first(where: { $0.url == storeDescription.url }) {
+                                self.log.info("   ✅ Store is loaded in coordinator")
+                                self.log.info("   - Store type: \(loadedStore.type)")
+                                self.log.info("   - Store URL: \(loadedStore.url?.path ?? "nil")")
+                            } else {
+                                self.log.error("   ❌ Store not found in coordinator!")
+                            }
+                        }
                     } else {
                         self.log.info("📁 No CloudKit for this store (local only)")
                     }

@@ -248,7 +248,10 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
 
         // Bind parameters
         for (index, parameter) in parameters.enumerated() {
-            sqlite3_bind_text(statement, Int32(index + 1), parameter, -1, nil)
+            // Use SQLITE_TRANSIENT to tell SQLite to make its own copy of the string
+            // This prevents issues where Swift deallocates the string before SQLite uses it
+            let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+            sqlite3_bind_text(statement, Int32(index + 1), parameter, -1, SQLITE_TRANSIENT)
         }
 
         // Execute query and collect results

@@ -186,11 +186,11 @@ class InventoryImportService {
     /// Erase all existing inventory (including locations)
     private func eraseAllInventory() async throws {
         // Get all inventory records
-        let allInventory = try await inventoryTrackingService.inventoryRepository.fetchInventory(matching: nil)
+        let allInventory = try await inventoryTrackingService.fetchAllInventory(matching: nil)
 
         // Delete each inventory record (this should cascade delete locations)
         for inventory in allInventory {
-            try await inventoryTrackingService.inventoryRepository.deleteInventory(id: inventory.id)
+            try await inventoryTrackingService.deleteInventory(id: inventory.id)
         }
     }
 
@@ -206,7 +206,7 @@ class InventoryImportService {
         }
 
         // Check if inventory already exists for this item with this type
-        let existingInventory = try await inventoryTrackingService.inventoryRepository
+        let existingInventory = try await inventoryTrackingService
             .fetchInventory(forItem: glassItem.stable_id)
             .first { $0.type == item.type }
 
@@ -231,8 +231,8 @@ class InventoryImportService {
             return false
 
         case .addAndIncrease:
-            // Increase quantity using repository method
-            _ = try await inventoryTrackingService.inventoryRepository.addQuantity(
+            // Increase quantity using service facade
+            _ = try await inventoryTrackingService.addQuantityToInventory(
                 Double(item.quantity),
                 toItem: glassItem.stable_id,
                 type: item.type
@@ -262,12 +262,12 @@ class InventoryImportService {
 
             case .replace:
                 // Delete existing and create new
-                try await inventoryTrackingService.inventoryRepository.deleteInventory(id: existing.id)
+                try await inventoryTrackingService.deleteInventory(id: existing.id)
                 return try await createNewInventory(item, glassItem: glassItem)
 
             case .increase:
-                // Same as addAndIncrease mode - use repository method
-                _ = try await inventoryTrackingService.inventoryRepository.addQuantity(
+                // Same as addAndIncrease mode - use service facade
+                _ = try await inventoryTrackingService.addQuantityToInventory(
                     Double(item.quantity),
                     toItem: glassItem.stable_id,
                     type: item.type
@@ -286,26 +286,13 @@ class InventoryImportService {
 
     /// Create new inventory record for an item
     private func createNewInventory(_ item: ImportItem, glassItem: GlassItemModel) async throws -> Bool {
-        // Create inventory record with type and quantity from import
-        let inventoryModel = InventoryModel(
-            id: UUID(),
-            item_stable_id: glassItem.stable_id,
-            type: item.type,
+        // Use service facade to create inventory with optional location
+        _ = try await inventoryTrackingService.addInventory(
             quantity: Double(item.quantity),
-            date_added: Date(),
-            date_modified: Date()
+            type: item.type,
+            toItem: glassItem.stable_id,
+            atLocation: item.location
         )
-
-        // Save using inventory tracking service
-        let createdInventory = try await inventoryTrackingService.inventoryRepository.createInventory(inventoryModel)
-
-        // Associate location if provided
-        if let location = item.location, !location.isEmpty {
-            try await locationRepository.setLocations(
-                [(location: location, quantity: Double(item.quantity))],
-                forInventory: createdInventory.id
-            )
-        }
 
         return true
     }

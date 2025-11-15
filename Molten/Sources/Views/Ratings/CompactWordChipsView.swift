@@ -46,16 +46,19 @@ struct CompactWordChipsView: View {
         HStack(spacing: 2) {
             Text(word.word)
                 .font(.caption2)
+                .fixedSize()
 
             Text("×\(word.frequency)")
                 .font(.system(size: 9))
                 .foregroundStyle(.secondary)
+                .fixedSize()
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
         .background(.blue.opacity(0.1))
         .foregroundStyle(.blue)
         .clipShape(Capsule())
+        .fixedSize()
     }
 }
 
@@ -98,16 +101,19 @@ private struct AllWordsSheet: View {
         HStack(spacing: 4) {
             Text(word.word)
                 .font(.caption)
+                .fixedSize()
 
             Text("×\(word.frequency)")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+                .fixedSize()
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(.blue.opacity(0.1))
         .foregroundStyle(.blue)
         .clipShape(Capsule())
+        .fixedSize()
     }
 }
 

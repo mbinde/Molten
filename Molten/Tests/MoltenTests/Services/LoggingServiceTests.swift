@@ -35,7 +35,7 @@ final class LoggingServiceTests: XCTestCase {
     func testMockLoggerCapturesLogs() {
         let logger = MockLogger()
 
-        logger.log(level: .info, message: "Test message", context: ["key": "value"])
+        logger.log(level: .info, message: "Test message", context: ["key": "value"], error: nil, file: "", function: "", line: 0)
 
         XCTAssertEqual(logger.logs.count, 1)
         XCTAssertEqual(logger.logs[0].level, .info)
@@ -64,7 +64,7 @@ final class LoggingServiceTests: XCTestCase {
         let logger = MockLogger()
         let testError = NSError(domain: "test", code: 123)
 
-        logger.logError(testError, message: "Test error", context: ["source": "test"])
+        logger.logError(testError, message: "Test error", context: ["source": "test"], file: "", function: "", line: 0)
 
         XCTAssertEqual(logger.logs.count, 1)
         XCTAssertEqual(logger.logs[0].level, .error)

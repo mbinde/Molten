@@ -156,7 +156,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
 
     // MARK: - Mapping Helpers
 
-    private nonisolated func mapModelToEntity(_ model: LogbookModel, entity: Logbook) {
+    private func mapModelToEntity(_ model: LogbookModel, entity: Logbook) {
         entity.setValue(model.id, forKey: "id")
         entity.setValue(model.title, forKey: "title")
         entity.setValue(model.dateCreated, forKey: "date_created")
@@ -246,7 +246,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
         }
     }
 
-    private nonisolated func mapEntityToModel(_ entity: Logbook) throws -> LogbookModel {
+    private func mapEntityToModel(_ entity: Logbook) throws -> LogbookModel {
         guard let id = entity.value(forKey: "id") as? UUID,
               let title = entity.value(forKey: "title") as? String,
               let dateCreated = entity.value(forKey: "date_created") as? Date,

@@ -73,55 +73,32 @@ struct WordCloudView: View {
     }
 }
 
-/// Sheet showing all rating words (shared with CompactWordChipsView)
+/// Sheet showing all rating words
 struct AllWordsSheet: View {
     let words: [RatingWordModel]
     @Environment(\.dismiss) private var dismiss
-    @State private var isCloudView = false
 
     var body: some View {
         NavigationStack {
-            Group {
-                if isCloudView {
-                    ScrollView {
-                        WordCloudView(words: words)
-                            .padding()
-                    }
-                } else {
-                    ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 12) {
-                            Text("All rating words sorted by frequency")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal)
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 12) {
+                    Text("All rating words sorted by frequency")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal)
 
-                            WordChipsFlowLayout(spacing: 8) {
-                                ForEach(words) { word in
-                                    wordChip(word: word)
-                                }
-                            }
-                            .padding(.horizontal)
+                    WordChipsFlowLayout(spacing: 8) {
+                        ForEach(words) { word in
+                            gradientWordChip(word: word, maxFrequency: words.first?.frequency ?? 1, minFrequency: words.last?.frequency ?? 1)
                         }
-                        .padding(.vertical)
                     }
+                    .padding(.horizontal)
                 }
+                .padding(.vertical)
             }
             .navigationTitle("Rating Words")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            isCloudView.toggle()
-                        }
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: isCloudView ? "list.bullet" : "cloud")
-                            Text(isCloudView ? "List" : "Cloud")
-                        }
-                    }
-                }
-
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         dismiss()
@@ -131,10 +108,22 @@ struct AllWordsSheet: View {
         }
     }
 
-    private func wordChip(word: RatingWordModel) -> some View {
-        HStack(spacing: 4) {
+    private func gradientWordChip(word: RatingWordModel, maxFrequency: Int, minFrequency: Int) -> some View {
+        // Calculate proportional position between min and max
+        let range = Double(maxFrequency - minFrequency)
+        let position = range > 0 ? Double(word.frequency - minFrequency) / range : 1.0
+
+        // Font size: 11pt (smallest) to 17pt (largest)
+        let minFontSize: CGFloat = 11
+        let maxFontSize: CGFloat = 17
+        let fontSize = minFontSize + (maxFontSize - minFontSize) * position
+
+        // Color intensity: lighter to darker blue
+        let colorOpacity = 0.3 + (0.7 * position) // 0.3 to 1.0
+
+        return HStack(spacing: 4) {
             Text(word.word)
-                .font(.caption)
+                .font(.system(size: fontSize, weight: .medium))
                 .fixedSize()
 
             Text("×\(word.frequency)")
@@ -145,7 +134,7 @@ struct AllWordsSheet: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(.blue.opacity(0.1))
-        .foregroundStyle(.blue)
+        .foregroundStyle(.blue.opacity(colorOpacity))
         .clipShape(Capsule())
         .fixedSize()
     }

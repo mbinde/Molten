@@ -42,24 +42,12 @@ struct StoreRowView: View {
 
                     // Distance (if available)
                     if showDistance, let userLocation = userLocation, let distance = store.distance(from: userLocation) {
-                        HStack(spacing: DesignSystem.Spacing.xs) {
-                            Image(systemName: "location.fill")
-                                .font(.caption)
-                            Text(store.formattedDistance(from: userLocation) ?? "")
-                                .font(DesignSystem.Typography.caption)
-                        }
-                        .foregroundStyle(.secondary)
+                        IconTextBadge.location(store.formattedDistance(from: userLocation) ?? "")
                     }
 
                     // Phone (if available)
                     if let phone = store.phone {
-                        HStack(spacing: DesignSystem.Spacing.xs) {
-                            Image(systemName: "phone.fill")
-                                .font(.caption)
-                            Text(phone)
-                                .font(DesignSystem.Typography.caption)
-                        }
-                        .foregroundStyle(.secondary)
+                        IconTextBadge.phone(phone)
                     }
                 }
             },

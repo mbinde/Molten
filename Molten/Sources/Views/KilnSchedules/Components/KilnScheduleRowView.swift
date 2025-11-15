@@ -67,25 +67,13 @@ struct KilnScheduleRowView: View {
         HStack(spacing: 12) {
             // Technique badge
             if let technique = displaySchedule.technique {
-                HStack(spacing: 4) {
-                    Image(systemName: "flame.fill")
-                        .font(.caption2)
-                    Text(technique.displayName)
-                        .font(.caption)
-                }
-                .foregroundColor(techniqueColor)
+                IconTextBadge.flame(technique.displayName, color: techniqueColor)
             }
 
             Spacer()
 
             // Segment count
-            HStack(spacing: 4) {
-                Image(systemName: "chart.line.uptrend.xyaxis")
-                    .font(.caption2)
-                Text("\(displaySchedule.segments.count) segments")
-                    .font(.caption)
-            }
-            .foregroundColor(.secondary)
+            IconTextBadge.chart("\(displaySchedule.segments.count) segments")
 
             // Temperature unit
             Text(displaySchedule.temperatureUnit.symbol)

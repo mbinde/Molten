@@ -32,7 +32,6 @@ struct RatingSubmissionView: View {
     @State private var isSubmitting = false
     @State private var showingError = false
     @State private var errorMessage = ""
-    @State private var showingSuccessToast = false
 
     // MARK: - Initialization
 
@@ -120,7 +119,6 @@ struct RatingSubmissionView: View {
             } message: {
                 Text(errorMessage)
             }
-            .successToast(message: "Your rating has been submitted!", isShowing: $showingSuccessToast)
         }
         .task {
             await loadExistingRating()
@@ -158,29 +156,24 @@ struct RatingSubmissionView: View {
                 try await service.submitRating(submission)
                 print("✅ [RatingSubmissionView] Successfully submitted rating for \(itemStableId)")
 
-                // Notify that rating was submitted
-                NotificationCenter.default.post(name: .ratingSubmitted, object: itemStableId)
-
-                // Show toast and auto-dismiss
-                await MainActor.run {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        showingSuccessToast = true
-                    }
-                }
-
-                // Dismiss view after toast appears (give it time to show)
-                try? await Task.sleep(nanoseconds: 2_500_000_000) // 2.5 seconds
+                // Dismiss sheet FIRST, before notifying
                 dismiss()
+
+                // Small delay to ensure sheet is dismissed
+                try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+
+                // THEN notify (triggers refresh + shows toast on parent view)
+                await MainActor.run {
+                    NotificationCenter.default.post(name: .ratingSubmitted, object: itemStableId)
+                }
 
             } catch RatingServiceError.queuedForLater {
-                // Queued for later - show success anyway
-                await MainActor.run {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        showingSuccessToast = true
-                    }
-                }
-                try? await Task.sleep(nanoseconds: 2_500_000_000)
+                // Queued for later - dismiss and notify
                 dismiss()
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                await MainActor.run {
+                    NotificationCenter.default.post(name: .ratingSubmitted, object: itemStableId)
+                }
 
             } catch RatingServiceError.profanityDetected {
                 errorMessage = "Please use appropriate language in your words."

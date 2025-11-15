@@ -41,7 +41,7 @@ extension CoreDataUserTagsRepository {
 
     /// Migrate all unmigrated UserTags records (runs in background on init)
     static func migrateAllRecordsIfNeeded(context: NSManagedObjectContext) async throws {
-        let log = Logger(subsystem: "com.flameworker.app", category: "usertags-migration")
+        let log = Logger(subsystem: "com.motleywoods.molten", category: "usertags-migration")
 
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             context.perform {

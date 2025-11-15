@@ -78,7 +78,7 @@ struct DeepLinkedItemView: View {
                 // Main content
                 Group {
                     if isLoading {
-                        ProgressView("Loading item...")
+                        LoadingStateView(message: "Loading item...")
                     } else if let error = errorMessage {
                         errorView(error)
                     } else if let item = item {

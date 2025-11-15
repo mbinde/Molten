@@ -51,12 +51,7 @@ struct PurchasesView: View {
                 .padding(.top, 8)
 
                 if viewModel.isLoading {
-                    // Loading state
-                    VStack {
-                        Spacer()
-                        ProgressView("Loading purchases...")
-                        Spacer()
-                    }
+                    LoadingStateView(message: "Loading purchases...")
                 } else if filteredPurchases.isEmpty {
                     if viewModel.purchases.isEmpty {
                         // Empty state when no purchases exist

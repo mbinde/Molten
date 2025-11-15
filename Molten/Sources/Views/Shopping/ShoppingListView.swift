@@ -355,9 +355,7 @@ struct ShoppingListView: View {
 
                 // Main content
                 if viewModel.isLoading {
-                    ProgressView()
-                        .scaleEffect(1.5)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    LoadingStateView()
                 } else if filteredShoppingLists.isEmpty {
                     if shouldShowSearchEmptyState {
                         searchEmptyStateView

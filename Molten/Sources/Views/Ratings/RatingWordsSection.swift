@@ -39,27 +39,6 @@ struct RatingWordsSection: View {
         isLoading = true
         defer { isLoading = false }
 
-        // FIXME: Remove this mock data - just for UI testing
-        let wordList = [
-            "beautiful", "vibrant", "rich", "smooth", "stunning", "brilliant",
-            "gorgeous", "intense", "deep", "striking", "elegant", "lovely",
-            "vivid", "saturated", "bold", "subtle", "delicate", "lustrous",
-            "translucent", "opaque", "clear", "bright", "warm", "cool",
-            "versatile", "unique", "consistent", "workable", "reactive", "stable"
-        ]
-
-        let mockWords = wordList.enumerated().map { index, word in
-            RatingWordModel(
-                word: word,
-                frequency: Int.random(in: 1...15),
-                rank: index + 1
-            )
-        }.sorted { $0.frequency > $1.frequency }
-
-        words = mockWords
-        return
-        // END FIXME
-
         do {
             let ratings = try await service.fetchRatings(forItems: [itemStableId])
             if let rating = ratings.first {

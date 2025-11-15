@@ -28,54 +28,61 @@ struct CompactRatingView: View {
     }
 
     var body: some View {
-        HStack(spacing: 8) {
-            if isLoading {
-                ProgressView()
-                    .scaleEffect(0.6)
-            } else if let rating = rating {
-                // Stars
-                starsView(rating: rating.averageRating)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 8) {
+                if isLoading {
+                    ProgressView()
+                        .scaleEffect(0.6)
+                } else if let rating = rating {
+                    // Stars
+                    starsView(rating: rating.averageRating)
 
-                // Average + count
-                Text("\(rating.formattedAverageRating) (\(rating.totalRatings))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Spacer()
-
-                // Rate button
-                Button {
-                    showingSubmission = true
-                } label: {
-                    Label("Rate", systemImage: "star")
-                        .font(.caption)
-                        .labelStyle(.titleOnly)
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.mini)
-            } else {
-                // No ratings - very compact
-                HStack(spacing: 4) {
-                    Image(systemName: "star")
+                    // Average + count
+                    Text("\(rating.formattedAverageRating) (\(rating.totalRatings))")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Text("No ratings")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                    Spacer()
 
-                Spacer()
+                    // Rate button
+                    Button {
+                        showingSubmission = true
+                    } label: {
+                        Label("Rate", systemImage: "star")
+                            .font(.caption)
+                            .labelStyle(.titleOnly)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.mini)
+                } else {
+                    // No ratings - very compact
+                    HStack(spacing: 4) {
+                        Image(systemName: "star")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
 
-                Button {
-                    showingSubmission = true
-                } label: {
-                    Label("Rate", systemImage: "star.fill")
-                        .font(.caption)
-                        .labelStyle(.titleOnly)
+                        Text("No ratings")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        showingSubmission = true
+                    } label: {
+                        Label("Rate", systemImage: "star.fill")
+                            .font(.caption)
+                            .labelStyle(.titleOnly)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.mini)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.mini)
+            }
+
+            // Word chips (only show if we have words)
+            if let rating = rating, !rating.topWords.isEmpty {
+                CompactWordChipsView(words: rating.topWords)
             }
         }
         .task {
@@ -105,6 +112,37 @@ struct CompactRatingView: View {
     private func loadRating() async {
         isLoading = true
         defer { isLoading = false }
+
+        // FIXME: Remove this mock data - just for UI testing
+        let mockRating = Double.random(in: 3.0...5.0)
+        let mockCount = Int.random(in: 5...50)
+
+        // Generate at least 20 random words with frequencies
+        let wordList = [
+            "beautiful", "vibrant", "rich", "smooth", "stunning", "brilliant",
+            "gorgeous", "intense", "deep", "striking", "elegant", "lovely",
+            "vivid", "saturated", "bold", "subtle", "delicate", "lustrous",
+            "translucent", "opaque", "clear", "bright", "warm", "cool",
+            "versatile", "unique", "consistent", "workable", "reactive", "stable"
+        ]
+
+        let mockWords = wordList.enumerated().map { index, word in
+            RatingWordModel(
+                word: word,
+                frequency: Int.random(in: 1...15),
+                rank: index + 1
+            )
+        }.sorted { $0.frequency > $1.frequency }
+
+        rating = AggregatedRatingModel(
+            itemStableId: itemStableId,
+            averageRating: mockRating,
+            totalRatings: mockCount,
+            topWords: mockWords,
+            lastAggregated: Date()
+        )
+        return
+        // END FIXME
 
         do {
             let ratings = try await service.fetchRatings(forItems: [itemStableId])

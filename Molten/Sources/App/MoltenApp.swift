@@ -56,7 +56,6 @@ struct MoltenApp: App {
     @State private var showFirstRunDataLoading = false
     @State private var firstRunDataLoadingComplete = false
     @State private var showAlphaDisclaimer = false
-    @State private var userSettings = UserSettings.shared
     @State private var syncMonitor: CloudKitSyncMonitor?
     @State private var importPlanURL: URL?
     @State private var showingImportPlan = false
@@ -105,7 +104,7 @@ struct MoltenApp: App {
             .modifier(DependenciesEnvironmentModifier(dependencies: dependencies))
             .environment(dependencies.entitlementService)
             .modifier(SubscriptionEnvironmentModifier(subscriptionManager: subscriptionManager))
-            .preferredColorScheme(userSettings.colorScheme)
+            .preferredColorScheme(UserSettings.shared.colorScheme)
             .tint(DesignSystem.Colors.accentSecondary)
         }
     }

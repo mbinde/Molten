@@ -37,6 +37,7 @@ public enum RatingAPIError: Error, LocalizedError {
 /// Protocol for rating API operations (for testing)
 public protocol RatingAPIClientProtocol {
     func submitRating(_ submission: RatingSubmissionModel, userIdHash: String, attestToken: String) async throws
+    func fetchAllRatingsBulk() async throws -> [AggregatedRatingModel]
     func fetchRatings(itemStableIds: [String]) async throws -> [AggregatedRatingModel]
     func deleteAllRatings(userIdHash: String, attestToken: String) async throws -> Int
 }
@@ -116,6 +117,39 @@ public class RatingAPIClient: RatingAPIClientProtocol {
 
     // MARK: - Fetch Ratings
 
+    /// Fetch all ratings in bulk (single optimized request)
+    public func fetchAllRatingsBulk() async throws -> [AggregatedRatingModel] {
+        guard let url = URL(string: "\(baseURL)/api/v1/ratings/bulk") else {
+            throw RatingAPIError.invalidURL
+        }
+
+        // Build request (allow caching since server sends Cache-Control headers)
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+
+        // Execute request
+        let (data, response) = try await session.data(for: request)
+
+        // Check response
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw RatingAPIError.invalidResponse
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            throw RatingAPIError.serverError("HTTP \(httpResponse.statusCode)")
+        }
+
+        // Parse response
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        decoder.dateDecodingStrategy = .iso8601
+
+        let json = try decoder.decode(BulkRatingsResponse.self, from: data)
+        print("✅ [RatingAPIClient] Fetched \(json.count) ratings in bulk")
+        return json.ratings
+    }
+
+    /// Fetch specific ratings by item IDs (deprecated - use fetchAllRatingsBulk instead)
     public func fetchRatings(itemStableIds: [String]) async throws -> [AggregatedRatingModel] {
         // Build URL with query parameters
         let itemsParam = itemStableIds.joined(separator: ",")
@@ -195,4 +229,10 @@ public class RatingAPIClient: RatingAPIClientProtocol {
 
 private struct FetchRatingsResponse: Codable {
     let ratings: [AggregatedRatingModel]
+}
+
+private struct BulkRatingsResponse: Codable {
+    let ratings: [AggregatedRatingModel]
+    let generatedAt: Date
+    let count: Int
 }

@@ -90,7 +90,8 @@ final class MockLogbookRepository: LogbookRepository {
         for log in logs.values {
             // Use startDate if available, otherwise fall back to dateCreated
             let logStartDate = await log.startDate
-            let logDate = logStartDate ?? (await log.dateCreated)
+            let logDateCreated = await log.dateCreated
+            let logDate = logStartDate ?? logDateCreated
             if logDate >= start && logDate <= end {
                 filtered.append(log)
             }

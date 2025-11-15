@@ -290,4 +290,16 @@ final class MockShoppingListRepository: ShoppingListRepository {
     func clearAll() async {
         items.removeAll()
     }
+
+    /// Clear all items (test helper - alternate name for compatibility)
+    func clearAllData() async {
+        items.removeAll()
+    }
+}
+
+// MARK: - Mock Errors
+
+enum MockShoppingListRepositoryError: Error {
+    case itemNotFound
+    case invalidOperation
 }

@@ -101,5 +101,16 @@ final class MockUserImageRepository: UserImageRepository {
         let ocrTexts = ownerImages.compactMap { $0.ocrText }
         return ocrTexts.joined(separator: " ")
     }
+
+    // MARK: - Test Helpers
+
+    func reset() {
+        images.removeAll()
+        imageData.removeAll()
+    }
+
+    func getImageCount() -> Int {
+        return images.count
+    }
 }
 #endif

@@ -83,10 +83,21 @@ final class MockGlassItemRepository: GlassItemRepository {
     // MARK: - Search & Filter Operations
 
     func searchItems(text: String) async throws -> [GlassItemModel] {
-        let lowercasedText = text.lowercased()
         let itemsArray = lock.withLock { Array(items.values) }
 
-        // Filter items
+        // Empty search returns all items
+        if text.isEmpty {
+            var itemsWithNames: [(item: GlassItemModel, name: String)] = []
+            for item in itemsArray {
+                let name = await item.name
+                itemsWithNames.append((item, name))
+            }
+            itemsWithNames.sort { $0.name < $1.name }
+            return itemsWithNames.map { $0.item }
+        }
+
+        // Filter items by search text
+        let lowercasedText = text.lowercased()
         var filtered: [GlassItemModel] = []
         for item in itemsArray {
             let name = await item.name

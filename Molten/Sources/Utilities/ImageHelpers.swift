@@ -125,28 +125,9 @@ struct ImageHelpers {
             return nil
         }
 
-        // PRIORITY 1: Check for user-uploaded primary image
-        // NOTE: This is called from a sync context, so we can't await here
-        // User images are loaded separately in ProductImageView/ProductImageDetail
-        // which are async and can properly await the actor calls
-
-        // PRIORITY 2: Use exact image path if provided (skips extension guessing)
-        if let imagePath = imagePath, !imagePath.isEmpty {
-            // Extract resource name and extension from path
-            let pathComponents = imagePath.split(separator: ".")
-            if pathComponents.count >= 2 {
-                let resourceName = pathComponents.dropLast().joined(separator: ".")
-                let ext = String(pathComponents.last!)
-
-                // Files in Molten/Resources/ are flattened to bundle root
-                if let path = Bundle.main.path(forResource: resourceName, ofType: ext),
-                   let image = loadImageWithoutColorProfile(from: path) {
-                    imageCache.setObject(image, forKey: cacheKeyNS)
-                    return image
-                }
-            }
-        }
-
+        // CRITICAL LEGAL CHECK: Check manufacturer image permissions FIRST
+        // This MUST happen before ANY image loading attempts to avoid legal issues
+        // ⚠️ DO NOT MOVE THIS CHECK BELOW ANY IMAGE LOADING CODE ⚠️
         // Check if we have permission to use product-specific images for this manufacturer
         // If not, skip directly to default manufacturer image
         if let manufacturer = manufacturer,
@@ -168,6 +149,23 @@ struct ImageHelpers {
             // Cache the negative result
             negativeCache.setObject(NSNumber(booleanLiteral: true), forKey: cacheKeyNS)
             return nil
+        }
+
+        // PRIORITY 2: Use exact image path if provided (we have permission if we got here)
+        if let imagePath = imagePath, !imagePath.isEmpty {
+            // Extract resource name and extension from path
+            let pathComponents = imagePath.split(separator: ".")
+            if pathComponents.count >= 2 {
+                let resourceName = pathComponents.dropLast().joined(separator: ".")
+                let ext = String(pathComponents.last!)
+
+                // Files in Molten/Resources/ are flattened to bundle root
+                if let path = Bundle.main.path(forResource: resourceName, ofType: ext),
+                   let image = loadImageWithoutColorProfile(from: path) {
+                    imageCache.setObject(image, forKey: cacheKeyNS)
+                    return image
+                }
+            }
         }
 
         // PRIORITY 3: Try manufacturer default image
@@ -431,6 +429,7 @@ struct ProductImageDetail: View {
     let imageThumbPath: String?
     let maxSize: CGFloat
     let allowImageUpload: Bool
+    let allowFullScreen: Bool
     let onImageUploaded: (() -> Void)?
 
     @State private var loadedImage: UIImage?
@@ -441,7 +440,7 @@ struct ProductImageDetail: View {
     // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
     private static let sharedUserImageRepository = AppDependencies.shared.userImageRepository
 
-    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, onImageUploaded: (() -> Void)? = nil) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, allowFullScreen: Bool = true, onImageUploaded: (() -> Void)? = nil) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.stableId = stableId
@@ -449,6 +448,7 @@ struct ProductImageDetail: View {
         self.imageThumbPath = imageThumbPath
         self.maxSize = maxSize
         self.allowImageUpload = allowImageUpload
+        self.allowFullScreen = allowFullScreen
         self.onImageUploaded = onImageUploaded
     }
 
@@ -456,15 +456,21 @@ struct ProductImageDetail: View {
         VStack(spacing: DesignSystem.Spacing.sm) {
             Group {
                 if let loadedImage = loadedImage {
-                    Image(uiImage: loadedImage)
+                    let imageView = Image(uiImage: loadedImage)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(maxWidth: maxSize, maxHeight: maxSize)
                         .cornerRadius(12)
                         .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-                        .onTapGesture {
-                            showingFullScreen = true
-                        }
+
+                    if allowFullScreen {
+                        imageView
+                            .onTapGesture {
+                                showingFullScreen = true
+                            }
+                    } else {
+                        imageView
+                    }
                 } else {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color(.systemGray6))

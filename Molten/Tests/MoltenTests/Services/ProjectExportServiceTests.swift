@@ -13,6 +13,7 @@ import UIKit
 @testable import Molten
 
 @Suite("Project Plan Export Service Tests")
+@MainActor
 struct ProjectExportServiceTests {
 
     #if canImport(UIKit)

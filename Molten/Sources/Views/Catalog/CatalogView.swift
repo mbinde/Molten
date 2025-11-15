@@ -50,6 +50,7 @@ struct CatalogView: View {
     @State private var navigationPath = NavigationPath()
     @State private var isRefreshing = false
     @State private var lastRefreshTime: Date = Date.distantPast
+    @State private var catalogUpdateToast: String?  // Toast message for catalog updates
 
     // Repository pattern - single source of truth for data
     private let catalogService: CatalogService
@@ -280,8 +281,30 @@ struct CatalogView: View {
                 sortOption: $viewModel.sortOption,
                 viewModel: viewModel,
                 clearSearch: clearSearch,
-                resetNavigation: resetNavigation
+                resetNavigation: resetNavigation,
+                catalogUpdateToast: $catalogUpdateToast
             ))
+            .overlay(alignment: .top) {
+                if let message = catalogUpdateToast {
+                    VStack {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                            Text(message)
+                                .font(.subheadline)
+                                .foregroundColor(.primary)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(Color(uiColor: .systemBackground))
+                        .cornerRadius(10)
+                        .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+                        .padding(.top, 8)
+                    }
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .animation(.easeInOut(duration: 0.3), value: catalogUpdateToast)
+                }
+            }
             .navigationDestination(for: CatalogNavigationDestination.self) { destination in
                 switch destination {
                 case .addInventoryItem(let naturalKey):
@@ -674,6 +697,7 @@ struct LifecycleModifiers: ViewModifier {
     let viewModel: CatalogViewModel
     let clearSearch: () -> Void
     let resetNavigation: () -> Void
+    @Binding var catalogUpdateToast: String?
 
     func body(content: Content) -> some View {
         content
@@ -682,6 +706,25 @@ struct LifecycleModifiers: ViewModifier {
             }
             .onReceive(NotificationCenter.default.publisher(for: .resetCatalogNavigation)) { _ in
                 resetNavigation()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .catalogUpdateCompleted)) { notification in
+                // Reload catalog data when update completes
+                Task {
+                    await viewModel.loadData()
+
+                    // Show toast notification
+                    if let result = notification.object as? CatalogUpdateResult {
+                        catalogUpdateToast = "Catalog updated to v\(result.version)"
+
+                        // Auto-dismiss after 3 seconds
+                        Task {
+                            try? await Task.sleep(nanoseconds: 3_000_000_000)
+                            withAnimation {
+                                catalogUpdateToast = nil
+                            }
+                        }
+                    }
+                }
             }
             .onAppear {
                 // Load settings from safe UserDefaults (isolated during testing)

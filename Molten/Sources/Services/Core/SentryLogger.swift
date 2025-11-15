@@ -19,7 +19,7 @@ public enum SentryEnvironment: String, Sendable {
     case test = "test"
 
     /// Current environment based on build configuration
-    static var current: SentryEnvironment {
+    public static var current: SentryEnvironment {
         #if DEBUG
         return .debug
         #else

@@ -110,7 +110,7 @@ final class SentryLoggerTests: XCTestCase {
         let logger = SentryLogger(dsn: "test-dsn", environment: .test)
 
         // In test mode, Sentry should not actually send events
-        logger.log(level: .error, message: "Test error", context: nil)
+        logger.log(level: .error, message: "Test error", context: nil, error: nil, file: "", function: "", line: 0)
 
         // This test passes if no crash occurs and no network calls are made
         // In a real implementation, we'd mock the Sentry SDK and verify no calls
@@ -131,7 +131,7 @@ final class SentryLoggerTests: XCTestCase {
         // Logger should extract structured data from AppError
         logger.logError(appError, message: "Catalog operation failed", context: [
             "operation": "catalog-download"
-        ])
+        ], file: "", function: "", line: 0)
 
         // Verify the error was captured (in a real test, we'd mock Sentry SDK)
         // For now, this verifies the method doesn't crash

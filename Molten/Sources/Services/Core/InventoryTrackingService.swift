@@ -15,7 +15,7 @@ actor InventoryTrackingService {
     // MARK: - Dependencies
 
     private let glassItemRepository: GlassItemRepository
-    private let inventoryRepository: InventoryRepository
+    let inventoryRepository: InventoryRepository
     private let itemTagsRepository: ItemTagsRepository
 
     // MARK: - Initialization

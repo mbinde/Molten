@@ -47,7 +47,13 @@ class CatalogViewModel: CatalogViewModelProtocol {
         }
     }
 
-    var searchTitlesOnly = true
+    var searchTitlesOnly = true {
+        didSet {
+            if searchTitlesOnly != oldValue {
+                applyFilters()
+            }
+        }
+    }
 
     var selectedTags: Set<String> = [] {
         didSet {

@@ -42,8 +42,16 @@ final class BackgroundUpdateService {
             return
         }
 
-        // Check network connectivity
-        guard networkMonitor.isConnected else {
+        // Check network connectivity (with retry for network monitor initialization)
+        // NWPathMonitor needs a moment to determine actual network status
+        var isConnected = networkMonitor.isConnected
+        if !isConnected {
+            log.debug("📡 Network not ready, waiting 2 seconds for monitor to stabilize...")
+            try? await Task.sleep(for: .seconds(2))
+            isConnected = networkMonitor.isConnected
+        }
+
+        guard isConnected else {
             log.debug("📡 No network connection, skipping update check")
             return
         }

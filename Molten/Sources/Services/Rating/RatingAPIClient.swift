@@ -139,10 +139,30 @@ public class RatingAPIClient: RatingAPIClientProtocol {
             throw RatingAPIError.serverError("HTTP \(httpResponse.statusCode)")
         }
 
-        // Parse response
+        // Parse response with custom date decoding
+        // The response has ISO8601 generatedAt but Unix timestamp lastAggregated in ratings
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
-        decoder.dateDecodingStrategy = .iso8601
+
+        // Custom date decoder to handle both formats
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+
+            // Try Unix timestamp first
+            if let timestamp = try? container.decode(Double.self) {
+                return Date(timeIntervalSince1970: timestamp)
+            }
+
+            // Try ISO8601
+            if let dateString = try? container.decode(String.self) {
+                let formatter = ISO8601DateFormatter()
+                if let date = formatter.date(from: dateString) {
+                    return date
+                }
+            }
+
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date")
+        }
 
         let json = try decoder.decode(BulkRatingsResponse.self, from: data)
         print("✅ [RatingAPIClient] Fetched \(json.count) ratings in bulk")

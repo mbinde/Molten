@@ -18,6 +18,7 @@ struct CompactRatingView: View {
     @State private var showingSubmission = false
     @State private var refreshTrigger = 0
     @State private var hasLoaded = false
+    @State private var showingSuccessToast = false
     @AppStorage("showRatingsInCatalog") private var showRatingsInCatalog = true
 
     init(
@@ -118,8 +119,13 @@ struct CompactRatingView: View {
             guard showRatingsInCatalog else { return }
             if let submittedItemId = notification.object as? String, submittedItemId == itemStableId {
                 refreshTrigger += 1
+                // Show success toast
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    showingSuccessToast = true
+                }
             }
         }
+        .successToast(message: "Your rating has been submitted!", isShowing: $showingSuccessToast)
     }
 
     // Expose the rating for external use

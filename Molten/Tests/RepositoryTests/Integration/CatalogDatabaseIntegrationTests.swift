@@ -67,16 +67,16 @@ struct CatalogDatabaseIntegrationTests {
             // Initialize database
             try await CatalogDatabaseManager.shared.initialize()
 
-            // Create catalog service (uses SQLiteGlassItemRepository via AppDependencies)
-            let deps = AppDependencies(persistenceController: .createTestController())
-            let catalogService = deps.catalogService
+            // Use shared dependencies (which will use SQLite in non-test mode)
+            // Note: Can't use test persistence controller here because it switches to Core Data
+            let repository = SQLiteGlassItemRepository()
 
-            // Fetch items through service
-            let items = try await catalogService.getAllGlassItems()
+            // Fetch items directly through repository
+            let items = try await repository.fetchItems(matching: nil)
 
-            // Verify service returns data
+            // Verify repository returns data
             #expect(items.count > 0)
-            print("✅ CatalogService loaded \(items.count) items")
+            print("✅ SQLiteGlassItemRepository loaded \(items.count) items")
 
         } catch {
             print("⚠️  Skipping test - catalog.sqlite not found: \(error)")

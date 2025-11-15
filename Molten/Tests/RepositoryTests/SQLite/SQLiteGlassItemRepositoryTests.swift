@@ -211,12 +211,21 @@ struct SQLiteGlassItemRepositoryTests {
         let repository = SQLiteGlassItemRepository()
 
         do {
-            let results = try await repository.searchItems(text: "clear")
+            // Get a real item name to search for
+            let allItems = try await repository.fetchItems(matching: nil)
+            guard let firstItem = allItems.first else {
+                print("Skipping test - no items in database")
+                return
+            }
+
+            // Search for part of the first item's name
+            let searchTerm = String(firstItem.name.prefix(4)).lowercased()
+            let results = try await repository.searchItems(text: searchTerm)
             #expect(results.count > 0)
             #expect(results.allSatisfy { item in
-                item.name.localizedCaseInsensitiveContains("clear") ||
-                item.manufacturer.localizedCaseInsensitiveContains("clear") ||
-                (item.sku?.localizedCaseInsensitiveContains("clear") ?? false)
+                item.name.localizedCaseInsensitiveContains(searchTerm) ||
+                item.manufacturer.localizedCaseInsensitiveContains(searchTerm) ||
+                (item.sku?.localizedCaseInsensitiveContains(searchTerm) ?? false)
             })
         } catch {
             print("Skipping test - database not initialized")
@@ -242,9 +251,16 @@ struct SQLiteGlassItemRepositoryTests {
         let repository = SQLiteGlassItemRepository()
 
         do {
-            let items = try await repository.fetchItems(byManufacturer: "bullseye")
+            // Get a real manufacturer from the database
+            let manufacturers = try await repository.getDistinctManufacturers()
+            guard let firstManufacturer = manufacturers.first else {
+                print("Skipping test - no manufacturers in database")
+                return
+            }
+
+            let items = try await repository.fetchItems(byManufacturer: firstManufacturer)
             #expect(items.count > 0)
-            #expect(items.allSatisfy { $0.manufacturer == "bullseye" })
+            #expect(items.allSatisfy { $0.manufacturer == firstManufacturer })
         } catch {
             print("Skipping test - database not initialized")
         }
@@ -269,9 +285,16 @@ struct SQLiteGlassItemRepositoryTests {
         let repository = SQLiteGlassItemRepository()
 
         do {
-            let items = try await repository.fetchItems(byCOE: 90)
+            // Get a real COE value from the database
+            let coeValues = try await repository.getDistinctCOEValues()
+            guard let firstCOE = coeValues.first else {
+                print("Skipping test - no COE values in database")
+                return
+            }
+
+            let items = try await repository.fetchItems(byCOE: firstCOE)
             #expect(items.count > 0)
-            #expect(items.allSatisfy { $0.coe == 90 })
+            #expect(items.allSatisfy { $0.coe == firstCOE })
         } catch {
             print("Skipping test - database not initialized")
         }
@@ -296,9 +319,16 @@ struct SQLiteGlassItemRepositoryTests {
         let repository = SQLiteGlassItemRepository()
 
         do {
-            let items = try await repository.fetchItems(byStatus: "available")
+            // Get a real status from the database
+            let statuses = try await repository.getDistinctStatuses()
+            guard let firstStatus = statuses.first else {
+                print("Skipping test - no statuses in database")
+                return
+            }
+
+            let items = try await repository.fetchItems(byStatus: firstStatus)
             #expect(items.count > 0)
-            #expect(items.allSatisfy { $0.mfr_status == "available" })
+            #expect(items.allSatisfy { $0.mfr_status == firstStatus })
         } catch {
             print("Skipping test - database not initialized")
         }

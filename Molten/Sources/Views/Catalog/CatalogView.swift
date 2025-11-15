@@ -289,7 +289,6 @@ struct CatalogView: View {
             .toast(
                 message: catalogUpdateMessage,
                 style: .info,
-                duration: 3.0,
                 isShowing: $showCatalogUpdateToast
             )
             .navigationDestination(for: CatalogNavigationDestination.self) { destination in

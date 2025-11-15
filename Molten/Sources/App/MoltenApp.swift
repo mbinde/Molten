@@ -422,15 +422,10 @@ extension MoltenApp {
         // Small delay to avoid competing with initial data load
         try? await Task.sleep(for: .seconds(2))
 
-        // FIXME: TEMPORARILY DISABLED - Need to implement API endpoint first
-        // The /v1/catalog/version endpoint doesn't exist yet on moltenglass.app
-        // Re-enable once API is deployed
-        /*
         print("📦 Starting background catalog update check...")
         let backgroundUpdateService = dependencies.backgroundUpdateService
         await backgroundUpdateService.checkForUpdatesIfNeeded()
         print("✅ Background catalog update check completed")
-        */
     }
 
     /// Configure environment for UI testing

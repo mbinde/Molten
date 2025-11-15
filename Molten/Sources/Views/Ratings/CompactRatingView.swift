@@ -18,6 +18,7 @@ struct CompactRatingView: View {
     @State private var showingSubmission = false
     @State private var refreshTrigger = 0
     @State private var hasLoaded = false
+    @AppStorage("showRatingsInCatalog") private var showRatingsInCatalog = true
 
     init(
         itemStableId: String,
@@ -30,6 +31,16 @@ struct CompactRatingView: View {
     }
 
     var body: some View {
+        Group {
+            if !showRatingsInCatalog {
+                EmptyView()
+            } else {
+                ratingContent
+            }
+        }
+    }
+
+    private var ratingContent: some View {
         HStack(spacing: 8) {
             if isLoading {
                 ProgressView()
@@ -81,13 +92,14 @@ struct CompactRatingView: View {
             }
         }
         .task {
-            // Only load once on initial appearance
-            guard !hasLoaded else { return }
+            // Only load once on initial appearance and if ratings are enabled
+            guard !hasLoaded && showRatingsInCatalog else { return }
             await loadRating()
             hasLoaded = true
         }
         .onChange(of: refreshTrigger) { _, _ in
-            // Reload when explicitly triggered (after rating submission)
+            // Reload when explicitly triggered (after rating submission) and if ratings are enabled
+            guard showRatingsInCatalog else { return }
             Task {
                 await loadRating()
             }
@@ -102,7 +114,8 @@ struct CompactRatingView: View {
             )
         }
         .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
-            // Check if this is for our item
+            // Check if this is for our item and if ratings are enabled
+            guard showRatingsInCatalog else { return }
             if let submittedItemId = notification.object as? String, submittedItemId == itemStableId {
                 refreshTrigger += 1
             }

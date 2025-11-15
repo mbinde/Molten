@@ -120,6 +120,7 @@ struct SettingsView: View {
     @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
     @AppStorage("defaultInventorySortOption") private var defaultInventorySortOptionRawValue = "Name"
     @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.pounds.rawValue
+    @AppStorage("showRatingsInCatalog") private var showRatingsInCatalog = true
     @Environment(EntitlementService.self) private var entitlementService
     @Environment(SubscriptionManager.self) private var subscriptionManager
 
@@ -284,6 +285,9 @@ struct SettingsView: View {
                         set: { UserSettings.shared.expandUserNotesByDefault = $0 }
                     ))
                     .help("When enabled, your personal notes in item detail views will be fully expanded by default")
+
+                    Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
+                        .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
 
                     Picker("Project Thumbnail Style", selection: Binding(
                         get: { UserSettings.shared.thumbnailDisplayMode },

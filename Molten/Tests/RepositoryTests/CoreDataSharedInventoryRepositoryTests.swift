@@ -563,8 +563,9 @@ struct CoreDataSharedInventoryRepositoryTests {
     // MARK: - Helper Methods
 
     private func createTestRepositories(controller: PersistenceController) async throws -> (CoreDataSharedInventoryRepository, GlassItemRepository) {
-        let deps = AppDependencies(persistenceController: .createTestController())
-        let glassRepo = deps.glassItemRepository
+        // Create a writable Core Data glass item repository for tests
+        // (AppDependencies uses read-only SQLiteGlassItemRepository)
+        let glassRepo = CoreDataGlassItemRepository(context: controller.container.viewContext)
         let sharedRepo = CoreDataSharedInventoryRepository(
             context: controller.container.viewContext,
             catalogRepository: glassRepo

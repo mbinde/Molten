@@ -171,8 +171,8 @@ struct ImportPlanView: View {
                                         .font(.caption)
                                         .padding(.horizontal, 8)
                                         .padding(.vertical, 4)
-                                        .background(Color.blue.opacity(0.1))
-                                        .foregroundColor(.blue)
+                                        .background(.accentColor.opacity(0.1))
+                                        .foregroundColor(.accentColor)
                                         .cornerRadius(6)
                                 }
                             }

@@ -637,7 +637,7 @@ struct CatalogView: View {
             .foregroundColor(viewModel.selectedManufacturer != nil ? .white : .primary)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(viewModel.selectedManufacturer != nil ? Color.blue : DesignSystem.Colors.backgroundInput)
+            .background(viewModel.selectedManufacturer != nil ? .accentColor : DesignSystem.Colors.backgroundInput)
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
@@ -651,7 +651,7 @@ struct CatalogView: View {
                 .foregroundColor(viewModel.selectedTags.isEmpty ? .primary : .white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(viewModel.selectedTags.isEmpty ? DesignSystem.Colors.backgroundInput : Color.blue)
+                .background(viewModel.selectedTags.isEmpty ? DesignSystem.Colors.backgroundInput : .accentColor)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
@@ -856,7 +856,7 @@ struct TagFilterView: View {
                                 Spacer()
                                 if selectedTags.contains(tag) {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.accentColor)
                                 } else {
                                     Image(systemName: "circle")
                                         .foregroundColor(.secondary)
@@ -1075,7 +1075,7 @@ struct CatalogManufacturerFilterView: View {
                             Spacer()
                             if selectedManufacturer == manufacturer {
                                 Image(systemName: "checkmark")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                     }

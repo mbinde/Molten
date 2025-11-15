@@ -17,6 +17,7 @@ struct CompactRatingView: View {
     @State private var isLoading = false
     @State private var showingSubmission = false
     @State private var refreshTrigger = 0
+    @State private var hasLoaded = false
 
     init(
         itemStableId: String,
@@ -79,8 +80,17 @@ struct CompactRatingView: View {
                 .controlSize(.mini)
             }
         }
-        .task(id: refreshTrigger) {
+        .task {
+            // Only load once on initial appearance
+            guard !hasLoaded else { return }
             await loadRating()
+            hasLoaded = true
+        }
+        .onChange(of: refreshTrigger) { _, _ in
+            // Reload when explicitly triggered (after rating submission)
+            Task {
+                await loadRating()
+            }
         }
         .sheet(isPresented: $showingSubmission, onDismiss: {
             // Refresh rating after submission

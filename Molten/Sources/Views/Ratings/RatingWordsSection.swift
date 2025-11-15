@@ -15,6 +15,7 @@ struct RatingWordsSection: View {
     @State private var words: [RatingWordModel] = []
     @State private var isLoading = false
     @State private var refreshTrigger = 0
+    @State private var hasLoaded = false
 
     init(
         itemStableId: String,
@@ -31,8 +32,17 @@ struct RatingWordsSection: View {
                     .padding(.horizontal)
             }
         }
-        .task(id: refreshTrigger) {
+        .task {
+            // Only load once on initial appearance
+            guard !hasLoaded else { return }
             await loadWords()
+            hasLoaded = true
+        }
+        .onChange(of: refreshTrigger) { _, _ in
+            // Reload when explicitly triggered (after rating submission)
+            Task {
+                await loadWords()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
             // Check if this is for our item

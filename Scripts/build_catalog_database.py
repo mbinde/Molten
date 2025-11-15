@@ -34,7 +34,7 @@ TOOLS_JSON = TOOLS_DIR / "tools.json"
 OUTPUT_DB = RESOURCES_DIR / "catalog.sqlite"
 
 # Database version (increment this when schema or data changes)
-DB_VERSION = 1
+DB_VERSION = 2
 
 
 def create_schema(conn):

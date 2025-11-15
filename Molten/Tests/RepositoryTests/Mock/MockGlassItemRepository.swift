@@ -15,12 +15,13 @@ final class MockGlassItemRepository: GlassItemRepository {
     // MARK: - Storage
 
     nonisolated(unsafe) private var items: [String: GlassItemModel] = [:] // Key: stable_id
+    private let lock = NSLock() // Protect concurrent access
 
     // MARK: - CRUD Operations
 
     func fetchItems(matching predicate: NSPredicate?) async throws -> [GlassItemModel] {
         // For simplicity, ignore predicate filtering in mock
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
         // Extract-pair-sort-map pattern for async property access
         var itemsWithNames: [(item: GlassItemModel, name: String)] = []
         for item in itemsArray {
@@ -32,46 +33,50 @@ final class MockGlassItemRepository: GlassItemRepository {
     }
 
     func fetchItem(byStableId stableId: String) async throws -> GlassItemModel? {
-        return items[stableId]
+        return lock.withLock { items[stableId] }
     }
 
     func createItem(_ item: GlassItemModel) async throws -> GlassItemModel {
         let key = await item.stable_id
-        items[key] = item
+        lock.withLock { items[key] = item }
         return item
     }
 
     func createItems(_ items: [GlassItemModel]) async throws -> [GlassItemModel] {
         for item in items {
             let key = await item.stable_id
-            self.items[key] = item
+            lock.withLock { self.items[key] = item }
         }
         return items
     }
 
     func updateItem(_ item: GlassItemModel) async throws -> GlassItemModel {
         let key = await item.stable_id
-        guard items[key] != nil else {
+        let exists = lock.withLock { items[key] != nil }
+        guard exists else {
             throw NSError(domain: "MockGlassItemRepository", code: 404, userInfo: [
                 NSLocalizedDescriptionKey: "Item not found: \(key)"
             ])
         }
-        items[key] = item
+        lock.withLock { items[key] = item }
         return item
     }
 
     func deleteItem(stableId: String) async throws {
-        guard items[stableId] != nil else {
+        let exists = lock.withLock { items[stableId] != nil }
+        guard exists else {
             throw NSError(domain: "MockGlassItemRepository", code: 404, userInfo: [
                 NSLocalizedDescriptionKey: "Item not found: \(stableId)"
             ])
         }
-        items.removeValue(forKey: stableId)
+        lock.withLock { items.removeValue(forKey: stableId) }
     }
 
     func deleteItems(stableIds: [String]) async throws {
-        for stableId in stableIds {
-            items.removeValue(forKey: stableId)
+        lock.withLock {
+            for stableId in stableIds {
+                items.removeValue(forKey: stableId)
+            }
         }
     }
 
@@ -79,7 +84,7 @@ final class MockGlassItemRepository: GlassItemRepository {
 
     func searchItems(text: String) async throws -> [GlassItemModel] {
         let lowercasedText = text.lowercased()
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
 
         // Filter items
         var filtered: [GlassItemModel] = []
@@ -105,7 +110,7 @@ final class MockGlassItemRepository: GlassItemRepository {
     }
 
     func fetchItems(byManufacturer manufacturer: String) async throws -> [GlassItemModel] {
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
 
         // Filter by manufacturer
         var filtered: [GlassItemModel] = []
@@ -127,7 +132,7 @@ final class MockGlassItemRepository: GlassItemRepository {
     }
 
     func fetchItems(byCOE coe: Int32) async throws -> [GlassItemModel] {
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
 
         // Filter by COE
         var filtered: [GlassItemModel] = []
@@ -149,7 +154,7 @@ final class MockGlassItemRepository: GlassItemRepository {
     }
 
     func fetchItems(byStatus status: String) async throws -> [GlassItemModel] {
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
 
         // Filter by status
         var filtered: [GlassItemModel] = []
@@ -173,7 +178,7 @@ final class MockGlassItemRepository: GlassItemRepository {
     // MARK: - Business Query Operations
 
     func getDistinctManufacturers() async throws -> [String] {
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
 
         // Extract manufacturers
         var manufacturers: Set<String> = []
@@ -186,7 +191,7 @@ final class MockGlassItemRepository: GlassItemRepository {
     }
 
     func getDistinctCOEValues() async throws -> [Int32] {
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
 
         // Extract COE values
         var coes: Set<Int32> = []
@@ -199,7 +204,7 @@ final class MockGlassItemRepository: GlassItemRepository {
     }
 
     func getDistinctStatuses() async throws -> [String] {
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
 
         // Extract statuses
         var statuses: Set<String> = []
@@ -212,7 +217,7 @@ final class MockGlassItemRepository: GlassItemRepository {
     }
 
     func stableIdExists(_ stableId: String) async throws -> Bool {
-        return items[stableId] != nil
+        return lock.withLock { items[stableId] != nil }
     }
 
     func generateNextNaturalKey(manufacturer: String, sku: String?) async throws -> String {
@@ -230,20 +235,24 @@ final class MockGlassItemRepository: GlassItemRepository {
     nonisolated(unsafe) private var recommendedSchedules: [String: [UUID]] = [:] // Key: stable_id
 
     func getRecommendedSchedules(forGlassItem stableId: String) async throws -> [UUID] {
-        return recommendedSchedules[stableId] ?? []
+        return lock.withLock { recommendedSchedules[stableId] ?? [] }
     }
 
     func addRecommendedSchedule(scheduleId: UUID, toGlassItem stableId: String) async throws {
-        if recommendedSchedules[stableId] == nil {
-            recommendedSchedules[stableId] = []
-        }
-        if !recommendedSchedules[stableId]!.contains(scheduleId) {
-            recommendedSchedules[stableId]!.append(scheduleId)
+        lock.withLock {
+            if recommendedSchedules[stableId] == nil {
+                recommendedSchedules[stableId] = []
+            }
+            if !recommendedSchedules[stableId]!.contains(scheduleId) {
+                recommendedSchedules[stableId]!.append(scheduleId)
+            }
         }
     }
 
     func removeRecommendedSchedule(scheduleId: UUID, fromGlassItem stableId: String) async throws {
-        recommendedSchedules[stableId]?.removeAll { $0 == scheduleId }
+        lock.withLock {
+            recommendedSchedules[stableId]?.removeAll { $0 == scheduleId }
+        }
     }
 
     // MARK: - Test Helpers
@@ -255,18 +264,22 @@ final class MockGlassItemRepository: GlassItemRepository {
 
     /// Get count of stored items (test helper)
     func getItemCount() async -> Int {
-        return items.count
+        return lock.withLock { items.count }
     }
 
     /// Clear all items (test helper)
     func clearAll() async {
-        items.removeAll()
-        recommendedSchedules.removeAll()
+        lock.withLock {
+            items.removeAll()
+            recommendedSchedules.removeAll()
+        }
     }
 
     /// Clear all data (test helper, alias for clearAll for consistency with other mocks)
     func clearAllData() {
-        items.removeAll()
-        recommendedSchedules.removeAll()
+        lock.withLock {
+            items.removeAll()
+            recommendedSchedules.removeAll()
+        }
     }
 }

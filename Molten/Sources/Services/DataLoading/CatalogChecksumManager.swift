@@ -14,7 +14,7 @@ final class CatalogChecksumManager: Sendable {
 
     // MARK: - Properties
 
-    private let checksumKey = "com.flameworker.json.checksum"
+    private let checksumKey = "com.motleywoods.molten.json.checksum"
     private let resourceName: String
     private let resourceType: String
 

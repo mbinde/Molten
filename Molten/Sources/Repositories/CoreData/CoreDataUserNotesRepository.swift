@@ -17,7 +17,7 @@ class CoreDataUserNotesRepository: @unchecked Sendable, UserNotesRepository {
 
     private let context: NSManagedObjectContext
     private let backgroundContext: NSManagedObjectContext
-    private let log = Logger(subsystem: "com.flameworker.app", category: "usernotes-repository")
+    private let log = Logger(subsystem: "com.motleywoods.molten", category: "usernotes-repository")
 
     // MARK: - Initialization
 

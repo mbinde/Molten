@@ -37,8 +37,8 @@ class ShoppingModeState: ObservableObject {
 
     // MARK: - UserDefaults Keys
 
-    private let shoppingModeEnabledKey = "com.flameworker.shoppingMode.enabled"
-    private let basketItemsKey = "com.flameworker.shoppingMode.basketItems"
+    private let shoppingModeEnabledKey = "com.motleywoods.molten.shoppingMode.enabled"
+    private let basketItemsKey = "com.motleywoods.molten.shoppingMode.basketItems"
 
     // MARK: - Initialization
 

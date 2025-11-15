@@ -203,12 +203,33 @@ actor InventoryTrackingService {
         atLocation location: String? = nil
     ) async throws -> InventoryModel {
 
-        // 1. Verify the glass item exists
-        guard let _ = try await glassItemRepository.fetchItem(byStableId: stableId) else {
-            throw InventoryTrackingServiceError.itemNotFound(stableId)
+        // 1. Verify the glass item exists (keep reference for error messages)
+        let glassItem: GlassItemModel
+        do {
+            if let item = try await glassItemRepository.fetchItem(byStableId: stableId) {
+                glassItem = item
+            } else {
+                throw InventoryTrackingServiceError.itemNotFound(stableId)
+            }
+        } catch let error as InventoryTrackingServiceError {
+            throw error
+        } catch {
+            throw InventoryTrackingServiceError.persistenceFailed(
+                context: "Failed to lookup glass item '\(stableId)'",
+                underlyingError: error
+            )
         }
 
-        // 2. Create new inventory record with location
+        // 2. Validate input parameters
+        guard quantity > 0 else {
+            throw InventoryTrackingServiceError.invalidOperation("Quantity must be positive (got \(quantity))")
+        }
+
+        guard !type.isEmpty else {
+            throw InventoryTrackingServiceError.invalidOperation("Inventory type cannot be empty")
+        }
+
+        // 3. Create new inventory record with location
         let newInventory = InventoryModel(
             item_stable_id: stableId,
             type: type,
@@ -216,7 +237,16 @@ actor InventoryTrackingService {
             location: location
         )
 
-        return try await self.inventoryRepository.createInventory(newInventory)
+        // 4. Attempt to save with proper error context
+        do {
+            return try await self.inventoryRepository.createInventory(newInventory)
+        } catch {
+            // Provide context about what failed, including the glass item name for user clarity
+            throw InventoryTrackingServiceError.persistenceFailed(
+                context: "Failed to save inventory for '\(glassItem.name)' (\(stableId))",
+                underlyingError: error
+            )
+        }
     }
     
     /// Get inventory summary for an item
@@ -396,7 +426,8 @@ enum InventoryTrackingServiceError: Error, LocalizedError {
     case itemNotFound(String)
     case inconsistentData(String)
     case invalidOperation(String)
-    
+    case persistenceFailed(context: String, underlyingError: Error)
+
     var errorDescription: String? {
         switch self {
         case .itemNotFound(let stableId):
@@ -405,6 +436,8 @@ enum InventoryTrackingServiceError: Error, LocalizedError {
             return "Data inconsistency detected: \(message)"
         case .invalidOperation(let message):
             return "Invalid operation: \(message)"
+        case .persistenceFailed(let context, let underlyingError):
+            return "\(context)\n\nUnderlying error: \(underlyingError.localizedDescription)"
         }
     }
 }

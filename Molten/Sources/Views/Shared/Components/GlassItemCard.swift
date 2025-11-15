@@ -52,6 +52,7 @@ struct GlassItemCard: View {
                     imagePath: item.image_path,
                     maxSize: variant.imageSize,
                     allowImageUpload: variant == .large,
+                    allowFullScreen: variant == .large,
                     onImageUploaded: nil
                 )
                 #else

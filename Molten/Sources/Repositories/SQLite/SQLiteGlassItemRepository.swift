@@ -29,14 +29,12 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
 
         // For now, fetch all items (predicate support can be added later)
         let query = "SELECT * FROM glass_items ORDER BY manufacturer, code"
-
         return try await executeQuery(db: db, query: query)
     }
 
     func fetchItem(byStableId stableId: String) async throws -> GlassItemModel? {
         let db = try databaseManager.getDatabaseConnection()
         let query = "SELECT * FROM glass_items WHERE stable_id = ?"
-
         let items = try await executeQuery(db: db, query: query, parameters: [stableId])
         return items.first
     }
@@ -229,7 +227,10 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
 
         // Bind parameters
         for (index, parameter) in parameters.enumerated() {
-            sqlite3_bind_text(statement, Int32(index + 1), parameter, -1, nil)
+            // Use SQLITE_TRANSIENT to tell SQLite to make its own copy of the string
+            // This prevents issues where Swift deallocates the string before SQLite uses it
+            let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+            sqlite3_bind_text(statement, Int32(index + 1), parameter, -1, SQLITE_TRANSIENT)
         }
 
         // Execute query and collect results

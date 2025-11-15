@@ -16,7 +16,7 @@ class CoreDataItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
     // MARK: - Dependencies
 
     private let backgroundContext: NSManagedObjectContext
-    private let log = Logger(subsystem: "com.flameworker.app", category: "itemtags-repository")
+    private let log = Logger(subsystem: "com.motleywoods.molten", category: "itemtags-repository")
 
     // MARK: - Initialization
 

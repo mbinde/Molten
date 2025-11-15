@@ -9,6 +9,8 @@ import SwiftUI
 import CoreData
 import CryptoKit
 import RevenueCat
+import CloudKit
+import OSLog
 
 @main
 struct MoltenApp: App {
@@ -371,6 +373,9 @@ extension MoltenApp {
     /// - NO blocking operations before showing UI
     @MainActor
     private func performQuickStartupChecks() async {
+        // Check CloudKit account status for diagnostics
+        await checkCloudKitStatus()
+
         // Show launch screen VERY briefly - just enough for smooth transition
         // Core Data initialization will happen DURING the loading screen!
         do {
@@ -385,6 +390,67 @@ extension MoltenApp {
         withAnimation(.easeInOut(duration: 0.3)) {
             isLaunching = false
             showFirstRunDataLoading = true
+        }
+    }
+
+    /// Check CloudKit account status and log diagnostics
+    @MainActor
+    private func checkCloudKitStatus() async {
+        let log = Logger(subsystem: "com.motleywoods.molten", category: "cloudkit-diagnostics")
+
+        log.info("🔍 [CloudKit Diagnostics] Starting CloudKit account status check...")
+
+        let container = CKContainer(identifier: "iCloud.com.motleywoods.molten")
+
+        do {
+            let status = try await container.accountStatus()
+
+            switch status {
+            case .available:
+                log.info("✅ [CloudKit Diagnostics] iCloud account is AVAILABLE")
+
+                // Try to fetch user record ID to verify access
+                do {
+                    let userRecordID = try await container.userRecordID()
+                    log.info("✅ [CloudKit Diagnostics] User Record ID: \(userRecordID.recordName)")
+                } catch {
+                    log.error("❌ [CloudKit Diagnostics] Failed to fetch user record ID: \(error.localizedDescription)")
+                }
+
+            case .noAccount:
+                log.warning("⚠️ [CloudKit Diagnostics] No iCloud account signed in")
+
+            case .restricted:
+                log.warning("⚠️ [CloudKit Diagnostics] iCloud account is RESTRICTED")
+
+            case .couldNotDetermine:
+                log.warning("⚠️ [CloudKit Diagnostics] Could not determine iCloud account status")
+
+            case .temporarilyUnavailable:
+                log.warning("⚠️ [CloudKit Diagnostics] iCloud is TEMPORARILY UNAVAILABLE")
+
+            @unknown default:
+                log.warning("⚠️ [CloudKit Diagnostics] Unknown account status")
+            }
+        } catch {
+            log.error("❌ [CloudKit Diagnostics] Error checking account status: \(error.localizedDescription)")
+        }
+
+        // Check if NSPersistentCloudKitContainer is actually being used
+        if let cloudKitContainer = dependencies.persistenceController.container as? NSPersistentCloudKitContainer {
+            log.info("✅ [CloudKit Diagnostics] Using NSPersistentCloudKitContainer")
+
+            // Log store descriptions
+            for (index, store) in cloudKitContainer.persistentStoreDescriptions.enumerated() {
+                log.info("📦 [CloudKit Diagnostics] Store \(index): \(store.url?.lastPathComponent ?? "unknown")")
+                if let cloudKitOptions = store.cloudKitContainerOptions {
+                    log.info("   ☁️ CloudKit: \(cloudKitOptions.containerIdentifier) (scope: \(cloudKitOptions.databaseScope.rawValue))")
+                } else {
+                    log.info("   📁 No CloudKit (local only)")
+                }
+            }
+        } else {
+            log.error("❌ [CloudKit Diagnostics] NOT using NSPersistentCloudKitContainer!")
         }
     }
 

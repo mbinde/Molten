@@ -212,26 +212,45 @@ struct InventoryDetailView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
             #endif
+            .toolbar {
+                if !isEditing {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Menu {
+                            Button {
+                                checkLimitAndShowAddInventory()
+                            } label: {
+                                Label("Add Inventory", systemImage: "archivebox.fill")
+                            }
 
-            // Floating Action Button
-            if !isEditing {
-                FloatingActionButton(actions: [
-                    FABAction(title: "Add Inventory", icon: "archivebox.fill") {
-                        checkLimitAndShowAddInventory()
-                    },
-                    FABAction(title: "Add to Shopping List", icon: "cart.fill") {
-                        showingShoppingListOptions = true
-                    },
-                    FABAction(title: "Add Image", icon: "photo.fill") {
-                        showingImagePicker = true
-                    },
-                    FABAction(title: "Add Note", icon: "note.text") {
-                        showingUserNotesEditor = true
-                    },
-                    FABAction(title: "Manage Tags", icon: "tag.fill") {
-                        showingUserTagsEditor = true
+                            Button {
+                                showingShoppingListOptions = true
+                            } label: {
+                                Label("Add to Shopping List", systemImage: "cart.fill")
+                            }
+
+                            Button {
+                                showingImagePicker = true
+                            } label: {
+                                Label("Add Image", systemImage: "photo.fill")
+                            }
+
+                            Button {
+                                showingUserNotesEditor = true
+                            } label: {
+                                Label("Add Note", systemImage: "note.text")
+                            }
+
+                            Button {
+                                showingUserTagsEditor = true
+                            } label: {
+                                Label("Manage Tags", systemImage: "tag.fill")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                                .accessibilityLabel("Actions")
+                        }
                     }
-                ])
+                }
             }
         }
         .sheet(isPresented: $showingShoppingListOptions, onDismiss: {

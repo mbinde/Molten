@@ -156,7 +156,7 @@ struct PurchaseListRowView: View {
         HStack(spacing: 12) {
             // Icon
             Image(systemName: "creditcard.fill")
-                .foregroundColor(.blue)
+                .foregroundColor(.accentColor)
                 .frame(width: 24, height: 24)
             
             // Purchase details

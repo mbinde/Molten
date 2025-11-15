@@ -317,7 +317,7 @@ struct CatalogView: View {
                 }
                 if viewModel.selectedManufacturers.isEmpty {
                     Image(systemName: "chevron.down")
-                        .font(Font.system(size: 10))
+                        .font(.caption2)
                 }
             }
             .foregroundColor(viewModel.selectedManufacturers.isEmpty ? .secondary : .white)
@@ -362,7 +362,7 @@ struct CatalogView: View {
                 }
                 if viewModel.selectedCOEs.isEmpty {
                     Image(systemName: "chevron.down")
-                        .font(Font.system(size: 10))
+                        .font(.caption2)
                 }
             }
             .foregroundColor(viewModel.selectedCOEs.isEmpty ? .secondary : .white)
@@ -407,7 +407,7 @@ struct CatalogView: View {
                 }
                 if viewModel.selectedTags.isEmpty {
                     Image(systemName: "chevron.down")
-                        .font(Font.system(size: 10))
+                        .font(.caption2)
                 }
             }
             .foregroundColor(viewModel.selectedTags.isEmpty ? .secondary : .white)
@@ -457,7 +457,7 @@ struct CatalogView: View {
 
                 // Always show dropdown arrow
                 Image(systemName: "chevron.down")
-                    .font(Font.system(size: 10))
+                    .font(.caption2)
             }
             .foregroundColor(DesignSystem.Colors.textSecondary)
             .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)
@@ -548,6 +548,9 @@ struct CatalogView: View {
             .onChange(of: viewModel.searchText) { oldValue, newValue in
                 // Debounce search text updates (300ms delay)
                 // This prevents expensive filtering on every keystroke
+                // TODO: Replace Task.sleep debouncing with Combine publisher for proper cancellation
+                // Current implementation creates zombie tasks that can't be cancelled
+                // Use .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main) instead
                 Task {
                     try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
                     // Only update if the value hasn't changed (user stopped typing)
@@ -632,12 +635,12 @@ struct CatalogView: View {
                 Text(viewModel.selectedManufacturer != nil ? manufacturerDisplayName(viewModel.selectedManufacturer!) : "All Manufacturers")
                     .font(.system(size: 14, weight: .medium))
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 12))
+                    .font(.caption)
             }
             .foregroundColor(viewModel.selectedManufacturer != nil ? .white : .primary)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(viewModel.selectedManufacturer != nil ? Color.blue : DesignSystem.Colors.backgroundInput)
+            .background(viewModel.selectedManufacturer != nil ? .accentColor : DesignSystem.Colors.backgroundInput)
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
@@ -651,7 +654,7 @@ struct CatalogView: View {
                 .foregroundColor(viewModel.selectedTags.isEmpty ? .primary : .white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(viewModel.selectedTags.isEmpty ? DesignSystem.Colors.backgroundInput : Color.blue)
+                .background(viewModel.selectedTags.isEmpty ? DesignSystem.Colors.backgroundInput : .accentColor)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
@@ -687,7 +690,7 @@ struct CatalogView: View {
         ScrollView {
             VStack(spacing: 20) {
                 Image(systemName: "text.justify")
-                    .font(.system(size: 60))
+                    .font(.largeTitle)
                     .foregroundColor(.secondary)
 
                 Text("No Catalog Items")
@@ -856,7 +859,7 @@ struct TagFilterView: View {
                                 Spacer()
                                 if selectedTags.contains(tag) {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.accentColor)
                                 } else {
                                     Image(systemName: "circle")
                                         .foregroundColor(.secondary)
@@ -901,7 +904,7 @@ struct TagFilterView: View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.secondary)
-                .font(.system(size: 16))
+                .font(.body)
             
             TextField("Search tags...", text: $searchText)
                 .focused($isSearchFieldFocused)
@@ -920,7 +923,7 @@ struct TagFilterView: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.secondary)
-                        .font(.system(size: 16))
+                        .font(.body)
                 }
                 .buttonStyle(.plain)
             }
@@ -1123,7 +1126,7 @@ struct CatalogManufacturerFilterView: View {
                             Spacer()
                             if selectedManufacturer == manufacturer {
                                 Image(systemName: "checkmark")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                     }

@@ -57,7 +57,8 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
             url: catalogItem.url,
             mfr_status: catalogItem.mfr_status,
             image_url: catalogItem.image_url,
-            image_path: catalogItem.image_path
+            image_path: catalogItem.image_path,
+            image_thumb_path: catalogItem.image_thumb_path
         )
     }
 

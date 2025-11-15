@@ -84,6 +84,11 @@ struct GlassItemCard: View {
                     // Details section
                     detailsSection
 
+                    // Compact rating (large variant only)
+                    if variant == .large {
+                        CompactRatingView(itemStableId: item.stable_id, itemName: item.name)
+                    }
+
                     // Manufacturer link (large variant only)
                     if variant == .large {
                         manufacturerLink

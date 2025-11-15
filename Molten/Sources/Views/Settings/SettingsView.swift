@@ -421,6 +421,15 @@ struct SettingsView: View {
                     }
                 }
 
+                // Ratings section
+                Section("Ratings") {
+                    NavigationLink {
+                        RatingSettingsView()
+                    } label: {
+                        Label("Manage Ratings", systemImage: "star")
+                    }
+                }
+
                 // Advanced filtering settings - feature gated for release
                 // Note: This legacy section is replaced by the new Manufacturer Filter section above
                 /*

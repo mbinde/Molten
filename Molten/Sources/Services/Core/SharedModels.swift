@@ -29,13 +29,14 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     let mfr_status: String
     let image_url: String?
     let image_path: String?
+    let image_thumb_path: String?
 
     nonisolated var id: String { stable_id }
 
     /// Initialize with computed URI
     nonisolated init(stable_id: String, name: String, sku: String?, manufacturer: String,
          mfr_notes: String? = nil, coe: Int32, url: String? = nil, mfr_status: String,
-         image_url: String? = nil, image_path: String? = nil) {
+         image_url: String? = nil, image_path: String? = nil, image_thumb_path: String? = nil) {
         self.stable_id = stable_id
         self.name = name
         self.sku = sku
@@ -47,6 +48,7 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
         self.mfr_status = mfr_status
         self.image_url = image_url
         self.image_path = image_path
+        self.image_thumb_path = image_thumb_path
     }
 
     // Equatable conformance - based on business key (manufacturer + SKU when available, else stable_id)
@@ -332,6 +334,7 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
     let mfr_status: String
     let image_url: String?
     let image_path: String?
+    let image_thumb_path: String?
     let itemType: CatalogItemType
     let coe: Int32?  // Only for glass items
 
@@ -349,6 +352,7 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.mfr_status = glassItem.mfr_status
         self.image_url = glassItem.image_url
         self.image_path = glassItem.image_path
+        self.image_thumb_path = glassItem.image_thumb_path
         self.itemType = .glass
         self.coe = glassItem.coe
     }
@@ -365,6 +369,7 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.mfr_status = coatingItem.mfr_status
         self.image_url = coatingItem.image_url
         self.image_path = coatingItem.image_path
+        self.image_thumb_path = nil  // Coatings don't have thumbnails yet
         self.itemType = .coating
         self.coe = nil  // Coatings don't have COE
     }
@@ -381,6 +386,7 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.mfr_status = toolItem.mfr_status
         self.image_url = toolItem.image_url
         self.image_path = toolItem.image_path
+        self.image_thumb_path = nil  // Tools don't have thumbnails yet
         self.itemType = .tool
         self.coe = nil  // Tools don't have COE
     }

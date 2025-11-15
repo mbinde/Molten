@@ -218,7 +218,7 @@ class PersistenceController {
 
             // Enable CloudKit sync for cloud store
             cloudDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
-                containerIdentifier: "iCloud.com.melissabinde.molten"
+                containerIdentifier: "iCloud.com.motleywoods.molten"
             )
             Logger(subsystem: "com.flameworker.app", category: "persistence").info("☁️ Cloud store: \(cloudDescription.url?.path ?? "unknown")")
 

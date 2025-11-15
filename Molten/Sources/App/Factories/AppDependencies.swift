@@ -150,7 +150,12 @@ class AppDependencies {
         let cloudContext = persistenceController.cloudContext
 
         // Create repositories (catalog data from bundled SQLite, user data from cloud store)
-        self.glassItemRepository = SQLiteGlassItemRepository(databaseManager: .shared)
+        // In test mode, use writable Core Data repository instead of read-only SQLite
+        if self.mode == .mock {
+            self.glassItemRepository = CoreDataGlassItemRepository(context: localContext)
+        } else {
+            self.glassItemRepository = SQLiteGlassItemRepository(databaseManager: .shared)
+        }
         self.coatingItemRepository = CoreDataCoatingItemRepository(persistentContainer: persistenceController.container)
         self.toolItemRepository = CoreDataToolItemRepository(context: localContext)
         self.inventoryRepository = CoreDataInventoryRepository(context: cloudContext)

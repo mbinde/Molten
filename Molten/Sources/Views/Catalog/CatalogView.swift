@@ -50,6 +50,7 @@ struct CatalogView: View {
     @State private var navigationPath = NavigationPath()
     @State private var isRefreshing = false
     @State private var lastRefreshTime: Date = Date.distantPast
+    @State private var listRefreshTrigger = 0  // Force list rebuild when ratings change
 
     // Repository pattern - single source of truth for data
     private let catalogService: CatalogService
@@ -278,6 +279,7 @@ struct CatalogView: View {
                 searchTitlesOnly: $viewModel.searchTitlesOnly,
                 selectedProductTypes: $selectedProductTypes,
                 sortOption: $viewModel.sortOption,
+                listRefreshTrigger: $listRefreshTrigger,
                 viewModel: viewModel,
                 clearSearch: clearSearch,
                 resetNavigation: resetNavigation
@@ -420,6 +422,7 @@ struct CatalogView: View {
                 .accessibilityIdentifier("catalog.item.\(item.glassItem.stable_id)")
             }
         }
+        .id(listRefreshTrigger)  // Force entire list to rebuild when ratings change
         .accessibilityIdentifier("catalog.list")
     }
 }
@@ -672,6 +675,7 @@ struct LifecycleModifiers: ViewModifier {
     @Binding var searchTitlesOnly: Bool
     @Binding var selectedProductTypes: Set<String>
     @Binding var sortOption: SortOption
+    @Binding var listRefreshTrigger: Int
     let viewModel: CatalogViewModel
     let clearSearch: () -> Void
     let resetNavigation: () -> Void
@@ -729,6 +733,12 @@ struct LifecycleModifiers: ViewModifier {
                     if let itemId = itemId {
                         let itemInVM = viewModel.items.first(where: { $0.id == itemId })
                         print("🎯 [CatalogView] Item \(itemId) in ViewModel: rating = \(itemInVM?.rating?.averageRating ?? 0) stars, \(itemInVM?.rating?.totalRatings ?? 0) ratings")
+                    }
+
+                    // CRITICAL: Force List to rebuild by changing its identity
+                    await MainActor.run {
+                        listRefreshTrigger += 1
+                        print("🔄 [CatalogView] Incremented listRefreshTrigger to \(listRefreshTrigger)")
                     }
                 }
             }

@@ -72,6 +72,7 @@ struct ProjectsView: View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
                 // Search bar at top (only show when we have projects)
+                // TODO: Migrate to native .searchable() with FilterChipsRow component (see CatalogView)
                 if !projects.isEmpty {
                     StandardSearchAndFilterHeader(
                         searchText: $searchText,

@@ -122,17 +122,28 @@ struct DebugSettingsView: View {
     }
 
     private func loadActualCatalogVersion() async {
-        // Read version directly from the catalog database
-        let dbManager = CatalogDatabaseManager.shared
-        if let dbPath = dbManager.getDatabasePath(),
-           let db = try? dbManager.openDatabase(at: dbPath) {
-            defer { try? db.close() }
+        // Read version directly from the catalog database using SQLite.swift
+        do {
+            let db = try CatalogDatabaseManager.shared.getDatabaseConnection()
+            defer { sqlite3_close(db) }
 
             let query = "SELECT value FROM metadata WHERE key = 'version'"
-            if let versionString = try? db.scalar(query) as? String,
-               let version = Int(versionString) {
-                actualCatalogVersion = version
+            var statement: OpaquePointer?
+
+            if sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK {
+                defer { sqlite3_finalize(statement) }
+
+                if sqlite3_step(statement) == SQLITE_ROW {
+                    if let versionCString = sqlite3_column_text(statement, 0) {
+                        let versionString = String(cString: versionCString)
+                        if let version = Int(versionString) {
+                            actualCatalogVersion = version
+                        }
+                    }
+                }
             }
+        } catch {
+            print("Failed to read catalog version: \(error)")
         }
     }
 }

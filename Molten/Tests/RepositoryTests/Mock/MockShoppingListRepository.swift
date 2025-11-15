@@ -74,6 +74,23 @@ final class MockShoppingListRepository: ShoppingListRepository {
 
     func createItem(_ item: ItemShoppingModel) async throws -> ItemShoppingModel {
         let itemId = await item.id
+        let itemStableId = await item.item_stable_id
+        let quantity = await item.quantity
+
+        // Validate item data
+        guard !itemStableId.isEmpty else {
+            throw MockShoppingListRepositoryError.invalidData("Item stable ID cannot be empty")
+        }
+
+        guard quantity > 0 else {
+            throw MockShoppingListRepositoryError.invalidData("Quantity must be greater than zero")
+        }
+
+        // Check for duplicates
+        if try await fetchItem(forItem: itemStableId) != nil {
+            throw MockShoppingListRepositoryError.itemAlreadyExists(itemStableId)
+        }
+
         items[itemId] = item
         return item
     }
@@ -81,7 +98,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
     func updateItem(_ item: ItemShoppingModel) async throws -> ItemShoppingModel {
         let itemId = await item.id
         guard items[itemId] != nil else {
-            throw NSError(domain: "MockShoppingListRepository", code: 404)
+            throw MockShoppingListRepositoryError.itemNotFound
         }
         items[itemId] = item
         return item
@@ -89,7 +106,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
 
     func deleteItem(id: UUID) async throws {
         guard items[id] != nil else {
-            throw NSError(domain: "MockShoppingListRepository", code: 404)
+            throw MockShoppingListRepositoryError.itemNotFound
         }
         items.removeValue(forKey: id)
     }
@@ -108,7 +125,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
 
     func updateQuantity(_ quantity: Double, forItem item_stable_id: String) async throws -> ItemShoppingModel {
         guard let existing = try await fetchItem(forItem: item_stable_id) else {
-            throw NSError(domain: "MockShoppingListRepository", code: 404)
+            throw MockShoppingListRepositoryError.itemNotFound
         }
 
         let existingId = await existing.id
@@ -153,7 +170,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
 
     func updateStore(_ store: String?, forItem item_stable_id: String) async throws -> ItemShoppingModel {
         guard let existing = try await fetchItem(forItem: item_stable_id) else {
-            throw NSError(domain: "MockShoppingListRepository", code: 404)
+            throw MockShoppingListRepositoryError.itemNotFound
         }
 
         let existingId = await existing.id
@@ -292,7 +309,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
     }
 
     /// Clear all items (test helper - alternate name for compatibility)
-    func clearAllData() async {
+    func clearAllData() {
         items.removeAll()
     }
 }
@@ -302,4 +319,6 @@ final class MockShoppingListRepository: ShoppingListRepository {
 enum MockShoppingListRepositoryError: Error {
     case itemNotFound
     case invalidOperation
+    case itemAlreadyExists(String)
+    case invalidData(String)
 }

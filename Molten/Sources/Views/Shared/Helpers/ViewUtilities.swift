@@ -299,13 +299,6 @@ extension View {
                 }
             }
     }
-    
-    /// Apply loading overlay
-    func loadingOverlay(isLoading: Bool, message: String = "Loading...") -> some View {
-        self.overlay {
-            LoadingOverlay(isLoading: isLoading, message: message)
-        }
-    }
 }
 
 // MARK: - Bundle Utilities

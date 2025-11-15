@@ -40,12 +40,14 @@ struct WordCloudView: View {
     private func fontSize(for word: RatingWordModel, totalWords: Int) -> CGFloat {
         guard let maxFrequency = words.first?.frequency else { return 12 }
 
-        // Scale from 12pt to 28pt based on frequency
-        let minSize: CGFloat = 12
-        let maxSize: CGFloat = 28
+        // Much larger size range: 10pt to 40pt with exponential scaling
+        let minSize: CGFloat = 10
+        let maxSize: CGFloat = 40
 
         let ratio = Double(word.frequency) / Double(maxFrequency)
-        return minSize + (maxSize - minSize) * ratio
+        // Use power curve to exaggerate differences
+        let curved = pow(ratio, 0.6)
+        return minSize + (maxSize - minSize) * curved
     }
 
     private func wordColor(for index: Int) -> Color {
@@ -53,23 +55,21 @@ struct WordCloudView: View {
         return colors[index % colors.count]
     }
 
-    // Simple scatter layout with deterministic positioning
+    // Spiral positioning from center outward
     private func calculateX(for index: Int, in width: CGFloat) -> CGFloat {
-        let columns = 4
-        let col = index % columns
-        let spacing = width / CGFloat(columns)
-        let jitter = CGFloat((index * 37) % 20 - 10) // Deterministic jitter
+        let centerX = width / 2
+        let angle = Double(index) * 2.4 // Golden angle in radians
+        let radius = sqrt(Double(index + 1)) * 20.0
 
-        return spacing * (CGFloat(col) + 0.5) + jitter
+        return centerX + CGFloat(cos(angle) * radius)
     }
 
     private func calculateY(for index: Int, in height: CGFloat) -> CGFloat {
-        let rows = 5
-        let row = (index / 4) % rows
-        let spacing = height / CGFloat(rows)
-        let jitter = CGFloat((index * 23) % 20 - 10) // Deterministic jitter
+        let centerY = height / 2
+        let angle = Double(index) * 2.4 // Golden angle in radians
+        let radius = sqrt(Double(index + 1)) * 20.0
 
-        return spacing * (CGFloat(row) + 0.5) + jitter
+        return centerY + CGFloat(sin(angle) * radius)
     }
 }
 

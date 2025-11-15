@@ -101,7 +101,7 @@ public enum ProfanityList {
     /// Check if a word is in the profanity list
     /// - Parameter word: The word to check (case-insensitive)
     /// - Returns: True if the word is profane
-    public static func isProfane(_ word: String) -> Bool {
+    public nonisolated static func isProfane(_ word: String) -> Bool {
         let normalized = word.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
 
         // Exact match
@@ -123,7 +123,7 @@ public enum ProfanityList {
     /// Check if any word in a collection is profane
     /// - Parameter words: Array of words to check
     /// - Returns: True if any word is profane
-    public static func containsProfanity(in words: [String]) -> Bool {
+    public nonisolated static func containsProfanity(in words: [String]) -> Bool {
         return words.contains { isProfane($0) }
     }
 }

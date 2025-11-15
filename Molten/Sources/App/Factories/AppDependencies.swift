@@ -91,6 +91,7 @@ class AppDependencies {
 
     // MARK: - Services
 
+    let loggingService: LoggingService
     let inventoryTrackingService: InventoryTrackingService
     let catalogService: CatalogService
     let shoppingListService: ShoppingListService
@@ -174,6 +175,9 @@ class AppDependencies {
         self.userImageRepository = CoreDataUserImageRepository(context: cloudContext)
         #endif
 
+        // Create logging service first (needed by other services)
+        self.loggingService = Self.createLoggingService(isTestMode: self.mode == .mock)
+
         // Create services (using helper to avoid duplication)
         (
             self.inventoryTrackingService,
@@ -208,6 +212,42 @@ class AppDependencies {
     }
 
     // MARK: - Service Setup Helper
+
+    /// Create logging service with appropriate backends
+    /// - Parameter isTestMode: Whether running in test mode (uses MockLogger instead of Sentry)
+    private static func createLoggingService(isTestMode: Bool) -> LoggingService {
+        if isTestMode {
+            // In test mode, use mock logger only
+            let mockLogger = MockLogger()
+            return LoggingService(
+                backends: [mockLogger],
+                minimumLocalLevel: .debug,
+                minimumRemoteLevel: .error
+            )
+        } else {
+            // In production, configure Sentry
+            // TODO: Replace with your actual Sentry DSN
+            let sentryDSN = ProcessInfo.processInfo.environment["SENTRY_DSN"] ?? ""
+
+            var backends: [LoggerBackend] = []
+
+            // Only add Sentry if DSN is configured
+            if !sentryDSN.isEmpty {
+                let sentryLogger = SentryLogger(
+                    dsn: sentryDSN,
+                    environment: SentryEnvironment.current,
+                    maxBreadcrumbs: 100
+                )
+                backends.append(sentryLogger)
+            }
+
+            return LoggingService(
+                backends: backends,
+                minimumLocalLevel: .debug,     // Log everything locally
+                minimumRemoteLevel: .error     // Only send errors/critical to Sentry
+            )
+        }
+    }
 
     /// Create all services with the provided repositories
     /// This eliminates duplication between production and test inits

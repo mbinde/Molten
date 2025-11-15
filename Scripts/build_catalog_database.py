@@ -70,6 +70,7 @@ def create_schema(conn):
             type TEXT,
             manufacturer_url TEXT,
             image_path TEXT,
+            image_thumb_path TEXT,
             image_url TEXT,
             stock_type TEXT
         )
@@ -140,8 +141,8 @@ def import_glass_items(conn, json_file):
                 stable_id, status, added_date, last_seen, discontinued_date,
                 manufacturer, code, name, start_date, end_date,
                 manufacturer_description, tags, synonyms, coe, type,
-                manufacturer_url, image_path, image_url, stock_type
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                manufacturer_url, image_path, image_thumb_path, image_url, stock_type
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             item['stable_id'],
             item['status'],
@@ -160,6 +161,7 @@ def import_glass_items(conn, json_file):
             item.get('type'),
             item.get('manufacturer_url'),
             item.get('image_path'),
+            item.get('image_thumb_path'),
             item.get('image_url'),
             item.get('stock_type')
         ))

@@ -62,7 +62,7 @@ class EntityCoordinator {
         }
 
         // Get inventory for this item
-        let inventoryRecords = try await inventoryTrackingService.inventoryRepository.fetchInventory(forItem: stableId)
+        let inventoryRecords = try await inventoryTrackingService.fetchInventory(forItem: stableId)
         let totalQuantityInInventory = inventoryRecords.reduce(0.0) { $0 + $1.quantity }
 
         // Get purchase records (simplified - in reality would need better correlation)

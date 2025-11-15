@@ -96,6 +96,24 @@ Technical reference for working with the Molten codebase.
 3. NEVER create Transformable attributes (causes CloudKit conflicts)
 4. Let CloudKit manage its own history tokens
 
+**🛡️ Runtime Enforcement** (`CoreDataSafetyGuards.swift`):
+```swift
+// DEBUG builds crash if you try to delete history
+extension NSPersistentContainer {
+    func safeExecute(_ request: NSPersistentStoreRequest,
+                     with context: NSManagedObjectContext) throws -> NSPersistentStoreResult {
+        if let historyRequest = request as? NSPersistentHistoryChangeRequest {
+            if case .deleteHistory = historyRequest.requestType {
+                fatalError("❌ NEVER delete persistent history - breaks CloudKit sync!")
+            }
+        }
+        return try context.execute(request)
+    }
+}
+```
+
+This makes the mistake **impossible to ship** - it will crash during development if anyone tries to purge history.
+
 ---
 
 ## Dependency Injection Pattern
@@ -139,7 +157,7 @@ struct MyView: View {
 }
 ```
 
-**✅ CORRECT**:
+**✅ CORRECT (Option 1 - Traditional Pattern)**:
 ```swift
 struct MyView: View {
     private let service: MyService  // NOT @State, NOT optional
@@ -155,7 +173,25 @@ struct MyView: View {
 }
 ```
 
-**Rule**: Create services in `init()` with default parameters, store as `private let`.
+**✅ CORRECT (Option 2 - Property Wrapper Enforcement)**:
+```swift
+struct MyView: View {
+    @Service var catalog = AppDependencies.shared.catalogService
+
+    var body: some View {
+        Text("Content")
+            .task { await loadData() }  // ✅ Use service, never create
+    }
+
+    func loadData() async {
+        let items = try? await catalog.fetchAllItems()
+    }
+}
+```
+
+The `@Service` property wrapper (defined in `CoreDataSafetyGuards.swift`) uses `@autoclosure` to evaluate the service creation expression **exactly once** during property initialization. This makes it **impossible** to create services in `.task` - the wrapper enforces single creation at compile-time.
+
+**Rule**: Create services in `init()` with default parameters OR use `@Service` property wrapper. Both ensure single creation.
 
 ---
 

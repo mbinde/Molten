@@ -121,12 +121,19 @@ class AppDependencies {
 
         // Initialize persistence controller if not already initialized (production only)
         if self.mode == .coreData && !persistenceController.isReady {
+            print("🔧 AppDependencies: Core Data not ready, starting initialization...")
             // Need to initialize - use a semaphore to wait for async init
             let semaphore = DispatchSemaphore(value: 0)
             Task.detached {
-                await PersistenceController.shared.initialize()
+                print("🔧 AppDependencies: Task.detached started")
+                print("🔧 AppDependencies: About to access PersistenceController.shared")
+                let controller = PersistenceController.shared
+                print("🔧 AppDependencies: Got controller, about to call initialize()")
+                await controller.initialize()
+                print("🔧 AppDependencies: initialize() completed, signaling semaphore")
                 semaphore.signal()
             }
+            print("🔧 AppDependencies: Waiting for semaphore...")
             let result = semaphore.wait(timeout: .now() + .seconds(30))
 
             // If initialization timed out, we cannot safely continue

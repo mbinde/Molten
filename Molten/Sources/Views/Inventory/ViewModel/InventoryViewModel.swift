@@ -161,7 +161,7 @@ class InventoryViewModel: InventoryViewModelProtocol {
     
     func updateInventory(_ inventory: InventoryModel) async {
         do {
-            _ = try await inventoryTrackingService.inventoryRepository.updateInventory(inventory)
+            _ = try await inventoryTrackingService.updateInventory(inventory)
             await loadInventoryItems() // Refresh data
         } catch {
             errorMessage = "Failed to update inventory: \(error.localizedDescription)"
@@ -170,7 +170,7 @@ class InventoryViewModel: InventoryViewModelProtocol {
     
     func deleteInventory(id: UUID) async {
         do {
-            try await inventoryTrackingService.inventoryRepository.deleteInventory(id: id)
+            try await inventoryTrackingService.deleteInventory(id: id)
             await loadInventoryItems() // Refresh data
         } catch {
             errorMessage = "Failed to delete inventory: \(error.localizedDescription)"
@@ -180,7 +180,7 @@ class InventoryViewModel: InventoryViewModelProtocol {
     func deleteInventories(ids: [UUID]) async {
         do {
             for id in ids {
-                try await inventoryTrackingService.inventoryRepository.deleteInventory(id: id)
+                try await inventoryTrackingService.deleteInventory(id: id)
             }
             await loadInventoryItems() // Refresh data
         } catch {

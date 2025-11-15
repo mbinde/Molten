@@ -106,10 +106,10 @@ public nonisolated struct AggregatedRatingModel: Identifiable, Equatable, Codabl
         }
     }
 
-    /// Check if there are enough ratings to be statistically significant
-    /// (minimum 5 ratings)
+    /// Check if there are enough ratings to display
+    /// (minimum 1 rating - show any ratings that exist)
     public var hasEnoughRatings: Bool {
-        return totalRatings >= 5
+        return totalRatings >= 1
     }
 
     /// Get top N words for display (default 10)

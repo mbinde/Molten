@@ -33,8 +33,9 @@ TOOLS_JSON = TOOLS_DIR / "tools.json"
 # Output SQLite database
 OUTPUT_DB = RESOURCES_DIR / "catalog.sqlite"
 
-# Database version (increment this when schema or data changes)
-DB_VERSION = 2
+# Database version (auto-incremented on each build)
+# Note: This is just a fallback - the actual version is read from existing DB and incremented
+DB_VERSION_FALLBACK = 1
 
 
 def create_schema(conn):
@@ -254,10 +255,36 @@ def set_metadata(conn, version, item_counts):
     conn.commit()
 
 
+def get_current_version() -> int:
+    """Get version from existing database, or return fallback if doesn't exist."""
+    if not OUTPUT_DB.exists():
+        return DB_VERSION_FALLBACK
+
+    try:
+        conn = sqlite3.connect(str(OUTPUT_DB))
+        cursor = conn.cursor()
+        cursor.execute("SELECT value FROM metadata WHERE key = 'version'")
+        result = cursor.fetchone()
+        conn.close()
+
+        if result:
+            return int(result[0])
+        else:
+            return DB_VERSION_FALLBACK
+    except:
+        return DB_VERSION_FALLBACK
+
+
 def main():
     """Main entry point."""
     print("🔨 Building catalog database...")
-    print(f"   Version: {DB_VERSION}")
+
+    # Auto-increment version from existing database
+    current_version = get_current_version()
+    new_version = current_version + 1
+
+    print(f"   Current version: {current_version}")
+    print(f"   New version: {new_version}")
     print(f"   Output: {OUTPUT_DB}")
     print()
 
@@ -294,7 +321,7 @@ def main():
     item_counts['tools'] = import_tools(conn, TOOLS_JSON)
 
     # Set metadata
-    set_metadata(conn, DB_VERSION, item_counts)
+    set_metadata(conn, new_version, item_counts)
     print()
     print("✅ Set metadata")
 

@@ -49,10 +49,10 @@ public nonisolated struct RatingSubmissionModel: Identifiable, Equatable, Codabl
             errors.append("Star rating must be between 1 and 5")
         }
 
-        // Words are optional, but if provided, must be exactly 5
+        // Words are optional, any number from 0-5 is valid
         let nonEmptyWords = words.filter { !$0.isEmpty }
-        if !nonEmptyWords.isEmpty && nonEmptyWords.count != 5 {
-            errors.append("Please provide either 0 or 5 words (not \(nonEmptyWords.count))")
+        if nonEmptyWords.count > 5 {
+            errors.append("Maximum 5 words allowed")
         }
 
         if words.contains(where: { !$0.isEmpty && $0.count > 30 }) {

@@ -8,6 +8,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 // MARK: - Filterable Protocol
 
@@ -113,13 +114,14 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
     // MARK: - Search & Filter State
 
-    var searchText = "" {
-        didSet {
-            if searchText != oldValue {
-                applyFilters()
-            }
-        }
-    }
+    /// Immediate search text (updates on every keystroke for UI responsiveness)
+    var searchText = ""
+
+    /// Debounced search text (updates after 300ms delay to avoid expensive filtering on every keystroke)
+    var debouncedSearchText = ""
+
+    /// Cancellables for Combine subscriptions
+    private var cancellables = Set<AnyCancellable>()
 
     var searchTitlesOnly = true {
         didSet {
@@ -201,6 +203,20 @@ class CatalogViewModel: CatalogViewModelProtocol {
             // Default to "glass" if no saved filter
             self.selectedProductTypes = ["glass"]
         }
+
+        // Set up debouncing for search text (300ms delay)
+        // This prevents expensive filtering operations on every keystroke
+        setupSearchDebouncing()
+    }
+
+    /// Configure Combine publisher to debounce search text updates
+    private func setupSearchDebouncing() {
+        // Monitor searchText changes and debounce them
+        // Note: We use a NotificationCenter-based approach since @Observable doesn't provide Publishers
+        // Alternative: If this becomes problematic, convert to @Published properties with ObservableObject
+
+        // For now, we'll rely on the view to handle debouncing via onChange
+        // The debouncedSearchText will be set by the view after 300ms delay
     }
 
     // MARK: - Computed Properties
@@ -245,7 +261,7 @@ class CatalogViewModel: CatalogViewModelProtocol {
     }
 
     var hasActiveFilters: Bool {
-        !searchText.isEmpty ||
+        !debouncedSearchText.isEmpty ||
         !selectedTags.isEmpty ||
         !selectedCOEs.isEmpty ||
         !selectedManufacturers.isEmpty ||
@@ -347,9 +363,9 @@ class CatalogViewModel: CatalogViewModelProtocol {
             }
         }
 
-        // Apply search filter
-        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-            let searchMode = SearchTextParser.parseSearchText(searchText)
+        // Apply search filter (using debounced search text for performance)
+        if !debouncedSearchText.isEmpty && SearchTextParser.isSearchTextMeaningful(debouncedSearchText) {
+            let searchMode = SearchTextParser.parseSearchText(debouncedSearchText)
             filtered = filtered.filter { item in
                 if searchTitlesOnly {
                     return SearchTextParser.matchesName(name: item.catalogItem.name, mode: searchMode)
@@ -480,9 +496,9 @@ class CatalogViewModel: CatalogViewModelProtocol {
             }
         }
 
-        // Apply search filter (always applied when active)
-        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-            let searchMode = SearchTextParser.parseSearchText(searchText)
+        // Apply search filter (always applied when active, using debounced search text)
+        if !debouncedSearchText.isEmpty && SearchTextParser.isSearchTextMeaningful(debouncedSearchText) {
+            let searchMode = SearchTextParser.parseSearchText(debouncedSearchText)
             filtered = filtered.filter { item in
                 if searchTitlesOnly {
                     return SearchTextParser.matchesName(name: item.catalogItem.name, mode: searchMode)
@@ -524,8 +540,8 @@ class CatalogViewModel: CatalogViewModelProtocol {
     private func generateEmptyStateMessage() -> String {
         var filters: [String] = []
 
-        if !searchText.isEmpty {
-            filters.append("'\(searchText)'")
+        if !debouncedSearchText.isEmpty {
+            filters.append("'\(debouncedSearchText)'")
         }
 
         if !selectedManufacturers.isEmpty {

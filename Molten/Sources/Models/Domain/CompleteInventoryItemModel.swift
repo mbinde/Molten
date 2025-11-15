@@ -22,24 +22,26 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     let tags: [String]  // Manufacturer/system tags
     let userTags: [String]  // User-created tags
     let allTags: [String]  // Pre-computed combined tags for performance
+    let rating: AggregatedRatingModel?  // Optional rating data (loaded on-demand for sorting)
 
     nonisolated var id: String { catalogItem.stable_id }
 
     // MARK: - Initializers
 
     /// Initialize with automatic allTags computation
-    nonisolated init(catalogItem: UnifiedCatalogItem, inventory: [InventoryModel], tags: [String], userTags: [String]) {
+    nonisolated init(catalogItem: UnifiedCatalogItem, inventory: [InventoryModel], tags: [String], userTags: [String], rating: AggregatedRatingModel? = nil) {
         self.catalogItem = catalogItem
         self.inventory = inventory
         self.tags = tags
         self.userTags = userTags
+        self.rating = rating
         // Pre-compute allTags for performance (avoid repeated computation in views)
         self.allTags = Array(Set(tags + userTags)).sorted()
     }
 
     /// Convenience initializer from GlassItemModel (for backward compatibility)
-    nonisolated init(glassItem: GlassItemModel, inventory: [InventoryModel], tags: [String], userTags: [String]) {
-        self.init(catalogItem: UnifiedCatalogItem(glassItem: glassItem), inventory: inventory, tags: tags, userTags: userTags)
+    nonisolated init(glassItem: GlassItemModel, inventory: [InventoryModel], tags: [String], userTags: [String], rating: AggregatedRatingModel? = nil) {
+        self.init(catalogItem: UnifiedCatalogItem(glassItem: glassItem), inventory: inventory, tags: tags, userTags: userTags, rating: rating)
     }
 
     // MARK: - Backward Compatibility

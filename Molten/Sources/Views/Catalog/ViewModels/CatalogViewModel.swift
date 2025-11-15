@@ -299,6 +299,30 @@ class CatalogViewModel: CatalogViewModelProtocol {
                 return item1.catalogItem.manufacturer.localizedCaseInsensitiveCompare(item2.catalogItem.manufacturer) == .orderedAscending
             case .code:
                 return item1.catalogItem.stable_id.localizedCaseInsensitiveCompare(item2.catalogItem.stable_id) == .orderedAscending
+            case .rating:
+                // Sort by rating (highest first), items without ratings at the end
+                switch (item1.rating, item2.rating) {
+                case (.some(let r1), .some(let r2)):
+                    // Both have ratings - sort by average rating (descending)
+                    if r1.averageRating != r2.averageRating {
+                        return r1.averageRating > r2.averageRating
+                    }
+                    // Same rating - sort by total number of ratings (descending)
+                    if r1.totalRatings != r2.totalRatings {
+                        return r1.totalRatings > r2.totalRatings
+                    }
+                    // Same rating and count - sort by name
+                    return item1.catalogItem.name.localizedCaseInsensitiveCompare(item2.catalogItem.name) == .orderedAscending
+                case (.some, .none):
+                    // item1 has rating, item2 doesn't - item1 comes first
+                    return true
+                case (.none, .some):
+                    // item2 has rating, item1 doesn't - item2 comes first
+                    return false
+                case (.none, .none):
+                    // Neither has rating - sort by name
+                    return item1.catalogItem.name.localizedCaseInsensitiveCompare(item2.catalogItem.name) == .orderedAscending
+                }
             }
         }
     }

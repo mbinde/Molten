@@ -364,6 +364,13 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
                 entity.managedObjectContext!.delete(step)
             }
         }
+        // Note: images relationship exists in schema but not managed here
+        // Images are managed through UserImageRepository, not as Core Data relationship
+        if let existingImages = entity.value(forKey: "images") as? Set<NSManagedObject> {
+            for image in existingImages {
+                entity.managedObjectContext!.delete(image)
+            }
+        }
 
         // Note: Tags are now managed through UserTagsRepository, not created here
 

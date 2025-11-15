@@ -286,9 +286,6 @@ struct SettingsView: View {
                     ))
                     .help("When enabled, your personal notes in item detail views will be fully expanded by default")
 
-                    Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
-                        .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
-
                     Picker("Project Thumbnail Style", selection: Binding(
                         get: { UserSettings.shared.thumbnailDisplayMode },
                         set: { UserSettings.shared.thumbnailDisplayMode = $0 }
@@ -427,6 +424,9 @@ struct SettingsView: View {
 
                 // Ratings section
                 Section("Ratings") {
+                    Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
+                        .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
+
                     NavigationLink {
                         RatingSettingsView()
                     } label: {

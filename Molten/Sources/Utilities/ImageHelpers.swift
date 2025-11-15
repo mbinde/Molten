@@ -184,88 +184,12 @@ struct ImageHelpers {
             return nil
         }
 
-        // FIXME: TEMPORARILY DISABLED - Testing R2/CDN image loading
-        // PRIORITY 2.5: Check for bundled thumbnail (AFTER permission check)
-        // Thumbnails are named like "{stableId}_thumb.jpg" (e.g., "000NCe_thumb.jpg")
-        // These are pre-generated 400px thumbnails bundled with the app for offline access
-        /*
-        if let stableId = stableId, !stableId.isEmpty {
-            let thumbnailExtensions = ["jpg", "jpeg"]
-            for ext in thumbnailExtensions {
-                let thumbnailName = "\(stableId)_thumb"
-
-                // Files in Molten/Resources/ are flattened to bundle root
-                if let path = Bundle.main.path(forResource: thumbnailName, ofType: ext) {
-                    if let image = loadImageWithoutColorProfile(from: path) {
-                        imageCache.setObject(image, forKey: cacheKeyNS)
-                        return image
-                    }
-                }
-            }
-        }
-        */
-
-        let sanitizedCode = sanitizeItemCodeForFilename(itemCode)
-
-        // Common image extensions to try (including webp for modern web images)
-        let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
-
-        // Try with manufacturer prefix first if provided (and we have permission)
-        if let manufacturer = manufacturer, !manufacturer.isEmpty {
-            let sanitizedManufacturer = sanitizeItemCodeForFilename(manufacturer)
-
-            // Try multiple case variations since images might be uppercase/lowercase/mixed
-            let manufacturerVariations = [
-                sanitizedManufacturer.uppercased(),  // Try uppercase first (most common)
-                sanitizedManufacturer.lowercased(),  // Then lowercase
-                sanitizedManufacturer.capitalized,   // Then capitalized
-                sanitizedManufacturer                // Finally original case
-            ]
-
-            for mfrVariation in manufacturerVariations {
-                for ext in extensions {
-                    // Check if itemCode already starts with manufacturer prefix to avoid duplication
-                    // (e.g., itemCode="OC-6023-83CC-F" already has "OC-" prefix)
-                    let imageName: String
-                    if sanitizedCode.uppercased().hasPrefix("\(mfrVariation.uppercased())-") {
-                        // ItemCode already includes manufacturer prefix, use as-is
-                        imageName = "\(productImagePathPrefix)\(sanitizedCode)"
-                    } else {
-                        // Add manufacturer prefix
-                        imageName = "\(productImagePathPrefix)\(mfrVariation)-\(sanitizedCode)"
-                    }
-
-                    // Try bundle file with color profile handling
-                    if let path = Bundle.main.path(forResource: imageName, ofType: ext) {
-                        if let image = loadImageWithoutColorProfile(from: path) {
-                            // Cache the successful result
-                            imageCache.setObject(image, forKey: cacheKeyNS)
-                            return image
-                        }
-                    }
-                }
-            }
-        }
-
-        // Fallback: try without manufacturer prefix (for backward compatibility)
-        print("🖼️ [ImageHelpers] Trying fallback without manufacturer prefix for: \(sanitizedCode)")
-        for ext in extensions {
-            let imageName = "\(productImagePathPrefix)\(sanitizedCode)"
-
-            // Try bundle file with color profile handling
-            print("🖼️ [ImageHelpers] Fallback looking for: \(imageName).\(ext)")
-            if let path = Bundle.main.path(forResource: imageName, ofType: ext),
-               let image = loadImageWithoutColorProfile(from: path) {
-                print("✅ [ImageHelpers] Fallback found: \(path)")
-                // Cache the successful result
-                imageCache.setObject(image, forKey: cacheKeyNS)
-                return image
-            }
-        }
-
-        // Final fallback: try manufacturer default image
+        // PRIORITY 3: Try manufacturer default image
+        // No more guessing filenames - if we don't have imagePath from catalog, go straight to default
+        print("🖼️ [ImageHelpers] No imagePath or not found, trying manufacturer default")
         if let manufacturer = manufacturer,
            let defaultImageName = GlassManufacturers.defaultImageName(for: manufacturer) {
+            let extensions = ["webp", "jpg", "jpeg", "png"]
             for ext in extensions {
                 // Files in Molten/Resources/ are flattened to bundle root
                 if let path = Bundle.main.path(forResource: defaultImageName, ofType: ext),

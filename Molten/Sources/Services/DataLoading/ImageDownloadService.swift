@@ -152,71 +152,11 @@ final class ImageDownloadService: Sendable {
             }
 
             print("❌ [ImageDownloadService] Failed to load: \(filename)")
-            // Fall through to variation logic below
         }
 
-        // PRIORITY 3: Try variations if no exact filename or exact filename failed
-        // Sanitize filename (replace slashes with dashes)
-        let sanitizedCode = itemCode.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: "\\", with: "-")
-        let sanitizedManufacturer = manufacturer.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: "\\", with: "-")
-
-        // Try multiple case variations (matching ImageHelpers.swift logic)
-        let manufacturerVariations = [
-            sanitizedManufacturer.uppercased(),  // Try uppercase first (most common)
-            sanitizedManufacturer.lowercased(),  // Then lowercase
-            sanitizedManufacturer.capitalized,   // Then capitalized
-            sanitizedManufacturer                // Finally original case
-        ]
-
-        // Common image extensions to try
-        let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
-
-        // Try with manufacturer prefix variations
-        for mfrVariation in manufacturerVariations {
-            for ext in extensions {
-                // Check if itemCode already starts with manufacturer prefix to avoid duplication
-                let imageName: String
-                if sanitizedCode.uppercased().hasPrefix("\(mfrVariation.uppercased())-") {
-                    // ItemCode already includes manufacturer prefix, use as-is
-                    imageName = sanitizedCode
-                } else {
-                    // Add manufacturer prefix
-                    imageName = "\(mfrVariation)-\(sanitizedCode)"
-                }
-
-                let filenameWithExt = "\(imageName).\(ext)"
-
-                // First check local cache
-                if let cachedImage = await loadFromCache(filename: filenameWithExt) {
-                    return cachedImage
-                }
-
-                // If not cached, try to download
-                if let result = await downloadImage(filename: filenameWithExt) {
-                    // Save to cache for next time with ETag for checksum validation
-                    await saveToCache(image: result.image, filename: filenameWithExt, etag: result.etag)
-                    return result.image
-                }
-            }
-        }
-
-        // Fallback: try without manufacturer prefix (for backward compatibility)
-        for ext in extensions {
-            let filenameWithExt = "\(sanitizedCode).\(ext)"
-
-            // First check local cache
-            if let cachedImage = await loadFromCache(filename: filenameWithExt) {
-                return cachedImage
-            }
-
-            // If not cached, try to download
-            if let result = await downloadImage(filename: filenameWithExt) {
-                // Save to cache for next time with ETag for checksum validation
-                await saveToCache(image: result.image, filename: filenameWithExt, etag: result.etag)
-                return result.image
-            }
-        }
-
+        // No exact filename provided or download failed - return nil
+        // The caller (ProductImageView) will fall back to bundled images or manufacturer default
+        print("❌ [ImageDownloadService] No image found for itemCode: \(itemCode)")
         return nil
     }
 

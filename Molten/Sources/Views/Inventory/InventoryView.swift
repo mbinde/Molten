@@ -401,9 +401,6 @@ struct InventoryView: View {
                     // Invalidate cache to force fresh data load when ratings change
                     await CatalogDataCache.shared.reload(catalogService: catalogService)
                     await loadData()
-
-                    // CRITICAL: Force List to rebuild by changing its identity
-                    refreshTrigger += 1
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .resetInventoryNavigation)) { _ in

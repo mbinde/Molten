@@ -14,6 +14,7 @@ struct RatingWordsSection: View {
 
     @State private var words: [RatingWordModel] = []
     @State private var isLoading = false
+    @State private var isCloudView = false
 
     init(
         itemStableId: String,
@@ -24,10 +25,39 @@ struct RatingWordsSection: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 8) {
             if !words.isEmpty {
-                CompactWordChipsView(words: words)
-                    .padding(.horizontal)
+                HStack {
+                    Text(isCloudView ? "Word Cloud" : "Top Words")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            isCloudView.toggle()
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: isCloudView ? "list.bullet" : "cloud")
+                                .font(.caption2)
+                            Text(isCloudView ? "List" : "Cloud")
+                                .font(.caption2)
+                        }
+                        .foregroundStyle(.blue)
+                    }
+                }
+                .padding(.horizontal)
+
+                if isCloudView {
+                    WordCloudView(words: words)
+                        .transition(.opacity)
+                } else {
+                    CompactWordChipsView(words: words)
+                        .padding(.horizontal)
+                        .transition(.opacity)
+                }
             }
         }
         .task {

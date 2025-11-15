@@ -100,63 +100,8 @@ struct CompactWordChipsView: View {
     }
 }
 
-/// Sheet showing all rating words
-private struct AllWordsSheet: View {
-    let words: [RatingWordModel]
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 12) {
-                    Text("All rating words sorted by frequency")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal)
-
-                    WordChipsFlowLayout(spacing: 8) {
-                        ForEach(words) { word in
-                            wordChip(word: word)
-                        }
-                    }
-                    .padding(.horizontal)
-                }
-                .padding(.vertical)
-            }
-            .navigationTitle("Rating Words")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-
-    private func wordChip(word: RatingWordModel) -> some View {
-        HStack(spacing: 4) {
-            Text(word.word)
-                .font(.caption)
-                .fixedSize()
-
-            Text("×\(word.frequency)")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .fixedSize()
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(.blue.opacity(0.1))
-        .foregroundStyle(.blue)
-        .clipShape(Capsule())
-        .fixedSize()
-    }
-}
-
 /// Simple flow layout for wrapping chips
-private struct WordChipsFlowLayout: Layout {
+struct WordChipsFlowLayout: Layout {
     var spacing: CGFloat = 8
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {

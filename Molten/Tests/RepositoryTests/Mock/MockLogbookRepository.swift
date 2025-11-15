@@ -88,7 +88,9 @@ final class MockLogbookRepository: LogbookRepository {
     func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
         var filtered: [LogbookModel] = []
         for log in logs.values {
-            let logDate = await log.dateCreated
+            // Use startDate if available, otherwise fall back to dateCreated
+            let logStartDate = await log.startDate
+            let logDate = logStartDate ?? (await log.dateCreated)
             if logDate >= start && logDate <= end {
                 filtered.append(log)
             }
@@ -132,8 +134,10 @@ final class MockLogbookRepository: LogbookRepository {
     func getTotalRevenue() async throws -> Decimal {
         var total: Decimal = 0
         for log in logs.values {
+            let logStatus = await log.status
             let pricePoint = await log.pricePoint
-            if let pricePoint = pricePoint {
+            // Only sum prices for sold items
+            if logStatus == .sold, let pricePoint = pricePoint {
                 total += pricePoint
             }
         }

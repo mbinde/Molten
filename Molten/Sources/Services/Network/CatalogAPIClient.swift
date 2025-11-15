@@ -167,13 +167,20 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
             // Read downloaded file
             var data = try Data(contentsOf: localURL)
 
+            // DEBUG: Print first 16 bytes to verify format
+            let firstBytes = data.prefix(16).map { String(format: "%02x", $0) }.joined(separator: " ")
+            print("🔍 [CatalogAPI] First 16 bytes: \(firstBytes)")
+            print("🔍 [CatalogAPI] isGzipped: \(data.isGzipped), size: \(data.count) bytes")
+
             // Decompress if gzipped
             if let contentEncoding = httpResponse.value(forHTTPHeaderField: "Content-Encoding"),
                contentEncoding.lowercased() == "gzip" {
                 log.debug("Decompressing gzipped catalog data")
+                print("🔍 [CatalogAPI] Decompressing with Content-Encoding header")
                 data = try data.gunzipped()
             } else if data.isGzipped {
                 log.debug("Detected gzipped data, decompressing")
+                print("🔍 [CatalogAPI] Decompressing with isGzipped detection")
                 data = try data.gunzipped()
             }
 

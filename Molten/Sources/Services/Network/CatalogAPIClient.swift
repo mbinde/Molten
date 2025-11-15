@@ -49,7 +49,6 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
     func getLatestVersion() async throws -> CatalogVersionMetadata {
         let url = baseURL.appendingPathComponent("v1/catalog/version")
         log.debug("📡 Fetching version from: \(url.absoluteString)")
-        print("📡 [CatalogAPI] GET \(url.absoluteString)")
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -72,35 +71,14 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
 
         switch httpResponse.statusCode {
         case 200:
-            // Debug: Log raw response
-            if let responseString = String(data: data, encoding: .utf8) {
-                log.debug("📥 API Response: \(responseString)")
-                print("✅ [CatalogAPI] Version response: \(responseString)")
-            }
-
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
 
             do {
                 let metadata = try decoder.decode(CatalogVersionMetadata.self, from: data)
-                print("✅ [CatalogAPI] Decoded version \(metadata.version)")
                 return metadata
             } catch {
-                print("❌ [CatalogAPI] Decoding error: \(error)")
-                if let decodingError = error as? DecodingError {
-                    switch decodingError {
-                    case .keyNotFound(let key, let context):
-                        print("❌ Missing key '\(key.stringValue)' - \(context.debugDescription)")
-                    case .typeMismatch(let type, let context):
-                        print("❌ Type mismatch for type '\(type)' - \(context.debugDescription)")
-                    case .valueNotFound(let type, let context):
-                        print("❌ Value not found for type '\(type)' - \(context.debugDescription)")
-                    case .dataCorrupted(let context):
-                        print("❌ Data corrupted - \(context.debugDescription)")
-                    @unknown default:
-                        print("❌ Unknown decoding error")
-                    }
-                }
+                log.error("Failed to decode version metadata: \(error)")
                 throw error
             }
 
@@ -152,7 +130,6 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
         try await addAttestation(to: &request)
 
         log.info("Downloading catalog (version: \(version?.description ?? "latest"))")
-        print("📥 [CatalogAPI] GET \(url.absoluteString)")
 
         // Use download task for progress tracking and large files
         let delegate = DownloadProgressDelegate(progressHandler: progressHandler)
@@ -178,7 +155,6 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
             }
 
             log.info("Downloaded catalog database: \(data.count) bytes (decompressed)")
-            print("✅ [CatalogAPI] Downloaded \(data.count) bytes (decompressed)")
 
             // Verify SQLite file signature (magic number)
             guard data.count >= 16 else {
@@ -201,22 +177,18 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
 
         case 401, 403:
             log.error("Authentication failed (\(httpResponse.statusCode))")
-            print("❌ [CatalogAPI] Authentication failed: HTTP \(httpResponse.statusCode)")
             throw CatalogUpdateError.serverError(statusCode: httpResponse.statusCode)
 
         case 404:
             log.error("Catalog version not found")
-            print("❌ [CatalogAPI] Catalog not found: HTTP 404")
             throw CatalogUpdateError.updateNotAvailable
 
         case 429:
             log.warning("Rate limit exceeded")
-            print("⚠️ [CatalogAPI] Rate limit exceeded: HTTP 429")
             throw CatalogUpdateError.serverError(statusCode: 429)
 
         default:
             log.error("Server error: \(httpResponse.statusCode)")
-            print("❌ [CatalogAPI] Server error: HTTP \(httpResponse.statusCode)")
             throw CatalogUpdateError.serverError(statusCode: httpResponse.statusCode)
         }
     }

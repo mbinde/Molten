@@ -19,8 +19,7 @@ struct CatalogBundleDebugView: View {
                         Text("Bundle Path:")
                             .fontWeight(.medium)
                         Text(bundlePath)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .secondaryCaption()
                     }
                 }
                 

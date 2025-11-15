@@ -260,12 +260,7 @@ struct KilnSchedulesView: View {
     }
 
     private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-            Text("Loading schedules...")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
+        LoadingStateView(message: "Loading schedules...")
     }
 
     private var errorView: some View {

@@ -14,63 +14,51 @@ struct StoreRowView: View {
     var showDistance: Bool = true
 
     var body: some View {
-        HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {
-            // Store icon
-            ZStack {
-                Circle()
-                    .fill(Color.accentColor.opacity(0.1))
-                    .frame(width: 44, height: 44)
+        ListRowContainer(
+            leading: {
+                ZStack {
+                    Circle()
+                        .fill(Color.accentColor.opacity(0.1))
+                        .frame(width: 44, height: 44)
 
-                Image(systemName: "storefront")
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color.accentColor)
-            }
-
-            // Store info
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                // Store name
+                    Image(systemName: "storefront")
+                        .font(.system(size: 20))
+                        .foregroundStyle(Color.accentColor)
+                }
+            },
+            header: {
                 Text(store.name)
                     .font(DesignSystem.Typography.rowTitle)
                     .foregroundStyle(.primary)
-
-                // Address
-                if let address = store.compactAddress {
-                    Text(address)
-                        .font(DesignSystem.Typography.label)
-                        .foregroundStyle(.secondary)
-                }
-
-                // Distance (if available)
-                if showDistance, let userLocation = userLocation, let distance = store.distance(from: userLocation) {
-                    HStack(spacing: DesignSystem.Spacing.xs) {
-                        Image(systemName: "location.fill")
-                            .font(.caption)
-                        Text(store.formattedDistance(from: userLocation) ?? "")
-                            .font(DesignSystem.Typography.caption)
+            },
+            details: {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                    // Address
+                    if let address = store.compactAddress {
+                        Text(address)
+                            .font(DesignSystem.Typography.label)
+                            .foregroundStyle(.secondary)
                     }
-                    .foregroundStyle(.secondary)
-                }
 
-                // Phone (if available)
-                if let phone = store.phone {
-                    HStack(spacing: DesignSystem.Spacing.xs) {
-                        Image(systemName: "phone.fill")
-                            .font(.caption)
-                        Text(phone)
-                            .font(DesignSystem.Typography.caption)
+                    // Distance (if available)
+                    if showDistance, let userLocation = userLocation, let distance = store.distance(from: userLocation) {
+                        IconTextBadge.location(store.formattedDistance(from: userLocation) ?? "")
                     }
-                    .foregroundStyle(.secondary)
+
+                    // Phone (if available)
+                    if let phone = store.phone {
+                        IconTextBadge.phone(phone)
+                    }
                 }
-            }
-
-            Spacer()
-
-            // Chevron
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-        }
-        .padding(.vertical, DesignSystem.Padding.rowVertical)
+            },
+            trailing: {
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            },
+            spacing: DesignSystem.Spacing.xs,
+            verticalPadding: DesignSystem.Padding.rowVertical
+        )
     }
 }
 

@@ -50,6 +50,8 @@ struct CatalogView: View {
     @State private var navigationPath = NavigationPath()
     @State private var isRefreshing = false
     @State private var lastRefreshTime: Date = Date.distantPast
+    @State private var catalogUpdateMessage = ""
+    @State private var showCatalogUpdateToast = false
 
     // Repository pattern - single source of truth for data
     private let catalogService: CatalogService
@@ -280,8 +282,15 @@ struct CatalogView: View {
                 sortOption: $viewModel.sortOption,
                 viewModel: viewModel,
                 clearSearch: clearSearch,
-                resetNavigation: resetNavigation
+                resetNavigation: resetNavigation,
+                catalogUpdateMessage: $catalogUpdateMessage,
+                showCatalogUpdateToast: $showCatalogUpdateToast
             ))
+            .toast(
+                message: catalogUpdateMessage,
+                style: .info,
+                isShowing: $showCatalogUpdateToast
+            )
             .navigationDestination(for: CatalogNavigationDestination.self) { destination in
                 switch destination {
                 case .addInventoryItem(let naturalKey):
@@ -674,6 +683,8 @@ struct LifecycleModifiers: ViewModifier {
     let viewModel: CatalogViewModel
     let clearSearch: () -> Void
     let resetNavigation: () -> Void
+    @Binding var catalogUpdateMessage: String
+    @Binding var showCatalogUpdateToast: Bool
 
     func body(content: Content) -> some View {
         content
@@ -728,6 +739,20 @@ struct LifecycleModifiers: ViewModifier {
                     if let itemId = itemId {
                         let itemInVM = viewModel.items.first(where: { $0.id == itemId })
                         print("🎯 [CatalogView] Item \(itemId) in ViewModel: rating = \(itemInVM?.rating?.averageRating ?? 0) stars, \(itemInVM?.rating?.totalRatings ?? 0) ratings")
+                    }
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .catalogUpdateCompleted)) { notification in
+                // Reload catalog data when update completes
+                Task {
+                    await viewModel.loadData()
+
+                    // Show toast notification
+                    if let result = notification.object as? CatalogUpdateResult {
+                        catalogUpdateMessage = "Catalog updated to v\(result.version)"
+                        withAnimation {
+                            showCatalogUpdateToast = true
+                        }
                     }
                 }
             }

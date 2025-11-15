@@ -39,10 +39,6 @@ struct MoltenApp: App {
         // Initialize subscription manager with proper entitlement service
         _subscriptionManager = State(initialValue: SubscriptionManager(entitlementService: _dependencies.wrappedValue.entitlementService))
 
-        print(String(repeating: "=", count: 80))
-        print("🚀 MoltenApp.init() STARTING")
-        print(String(repeating: "=", count: 80))
-
         // Note: AppDependencies automatically detects test environment
         // and provides appropriate dependencies (mocks for tests, Core Data for production)
 
@@ -56,7 +52,6 @@ struct MoltenApp: App {
     @State private var showFirstRunDataLoading = false
     @State private var firstRunDataLoadingComplete = false
     @State private var showAlphaDisclaimer = false
-    @State private var userSettings = UserSettings.shared
     @State private var syncMonitor: CloudKitSyncMonitor?
     @State private var importPlanURL: URL?
     @State private var showingImportPlan = false
@@ -105,7 +100,7 @@ struct MoltenApp: App {
             .modifier(DependenciesEnvironmentModifier(dependencies: dependencies))
             .environment(dependencies.entitlementService)
             .modifier(SubscriptionEnvironmentModifier(subscriptionManager: subscriptionManager))
-            .preferredColorScheme(userSettings.colorScheme)
+            .preferredColorScheme(UserSettings.shared.colorScheme)
             .tint(DesignSystem.Colors.accentSecondary)
         }
     }

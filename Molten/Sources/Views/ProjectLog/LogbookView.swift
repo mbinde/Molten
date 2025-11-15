@@ -72,9 +72,7 @@ struct LogbookView: View {
 
                 // Main content
                 if viewModel.isLoading {
-                    ProgressView()
-                        .scaleEffect(1.5)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    LoadingStateView()
                 } else if viewModel.logEntries.isEmpty && viewModel.searchText.isEmpty {
                     emptyStateView
                 } else {

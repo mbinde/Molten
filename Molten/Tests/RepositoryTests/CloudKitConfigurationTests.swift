@@ -15,6 +15,7 @@ import CoreData
 /// IMPORTANT: These tests verify configuration only, not actual CloudKit sync
 /// (CloudKit sync requires a physical device with iCloud account)
 @Suite("CloudKit Configuration Tests")
+@MainActor
 struct CloudKitConfigurationTests {
 
     /// Validates that the CloudKit container identifier in code matches entitlements

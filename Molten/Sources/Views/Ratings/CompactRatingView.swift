@@ -151,13 +151,10 @@ struct CompactRatingView: View {
         defer { isLoading = false }
 
         do {
-            print("🔍 [CompactRatingView] Fetching rating for stable_id: \(itemStableId)")
             let ratings = try await service.fetchRatings(forItems: [itemStableId])
             rating = ratings.first
-            print("🔍 [CompactRatingView] Got \(ratings.count) ratings for \(itemStableId)")
         } catch {
             // Silently fail for compact view
-            print("❌ [CompactRatingView] Failed to load rating for \(itemStableId): \(error)")
         }
     }
 }

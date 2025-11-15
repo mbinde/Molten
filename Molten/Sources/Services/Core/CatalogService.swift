@@ -135,17 +135,13 @@ actor CatalogService {
             // Try bulk endpoint first (more efficient)
             let allRatings = try await ratingService.fetchAllRatingsBulk(forceRefresh: false)
             ratingsByItem = Dictionary(uniqueKeysWithValues: allRatings.map { ($0.itemStableId, $0) })
-            print("✅ [CatalogService] Loaded \(allRatings.count) ratings in bulk")
-            print("🔍 [CatalogService] Rating stable_ids: \(allRatings.map { $0.itemStableId }.joined(separator: ", "))")
         } catch {
             // Bulk endpoint not available, fall back to per-item fetch
-            print("⚠️ [CatalogService] Bulk fetch failed, trying per-item: \(error)")
             do {
                 let ratings = try await ratingService.fetchRatings(forItems: allItemKeys, forceRefresh: false)
                 ratingsByItem = Dictionary(uniqueKeysWithValues: ratings.map { ($0.itemStableId, $0) })
-                print("✅ [CatalogService] Loaded \(ratings.count) ratings per-item")
             } catch {
-                print("⚠️ [CatalogService] Failed to load ratings: \(error)")
+                // Silently fail - ratings are optional
             }
         }
 
@@ -156,11 +152,6 @@ actor CatalogService {
             let tags = tagsByItem[catalogItem.stable_id] ?? []
             let userTags = userTagsByItem[catalogItem.stable_id] ?? []
             let rating = ratingsByItem[catalogItem.stable_id]
-
-            // Debug: log when we find a rating
-            if let rating = rating {
-                print("🔍 [CatalogService] Attaching rating to item \(catalogItem.stable_id): \(rating.averageRating) stars, \(rating.totalRatings) ratings")
-            }
 
             let completeItem = CompleteInventoryItemModel(
                 catalogItem: catalogItem,

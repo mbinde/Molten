@@ -432,6 +432,7 @@ struct InventoryView: View {
                 NavigationLink(value: item) {
                     GlassItemRowView.inventory(item: item)
                 }
+                .id("\(item.id)-\(item.rating?.totalRatings ?? 0)-\(item.rating?.averageRating ?? 0)")  // Force re-render when rating changes
                 .accessibilityIdentifier("inventory.item.\(item.glassItem.stable_id)")
             }
         }

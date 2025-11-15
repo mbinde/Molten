@@ -416,6 +416,7 @@ struct CatalogView: View {
                 NavigationLink(value: CatalogNavigationDestination.catalogItemDetail(itemModel: item)) {
                     GlassItemRowView.catalog(item: item)
                 }
+                .id("\(item.id)-\(item.rating?.totalRatings ?? 0)-\(item.rating?.averageRating ?? 0)")  // Force re-render when rating changes
                 .accessibilityIdentifier("catalog.item.\(item.glassItem.stable_id)")
             }
         }
@@ -685,20 +686,14 @@ struct LifecycleModifiers: ViewModifier {
             }
             .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
                 // Reload catalog data when ratings are submitted or deleted
-                print("🔔 [CatalogView] Received .ratingSubmitted notification: \(notification.object ?? "nil")")
                 Task {
                     // IMPORTANT: Clear ratings cache and force fresh fetch from server
-                    print("🔄 [CatalogView] Force refreshing ratings from server...")
                     let ratingService = AppDependencies.shared.ratingService
-                    let freshRatings = try? await ratingService.fetchAllRatingsBulk(forceRefresh: true)
-                    print("✅ [CatalogView] Got \(freshRatings?.count ?? 0) fresh ratings")
+                    _ = try? await ratingService.fetchAllRatingsBulk(forceRefresh: true)
 
                     // Then reload catalog with fresh ratings
-                    print("🔄 [CatalogView] Reloading catalog cache...")
                     await CatalogDataCache.shared.reload(catalogService: viewModel.catalogService)
-                    print("🔄 [CatalogView] Loading catalog data into view model...")
                     await viewModel.loadData()
-                    print("✅ [CatalogView] Catalog refresh complete - items count: \(viewModel.items.count)")
                 }
             }
             .onAppear {

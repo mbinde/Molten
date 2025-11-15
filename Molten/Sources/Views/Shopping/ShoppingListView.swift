@@ -687,53 +687,37 @@ struct ShoppingListView: View {
     }
 
     private func storeHeader(store: String, itemCount: Int) -> some View {
-        Button(action: {
-            withAnimation {
-                if expandedStores.contains(store) {
-                    expandedStores.remove(store)
-                } else {
-                    expandedStores.insert(store)
+        CollapsibleSectionHeader.withItemCount(
+            title: store,
+            itemCount: itemCount,
+            isExpanded: expandedStores.contains(store),
+            onToggle: {
+                withAnimation {
+                    if expandedStores.contains(store) {
+                        expandedStores.remove(store)
+                    } else {
+                        expandedStores.insert(store)
+                    }
                 }
             }
-        }) {
-            HStack {
-                Image(systemName: expandedStores.contains(store) ? "chevron.down" : "chevron.right")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Text(store)
-                    .font(.headline)
-                Spacer()
-                Text("\(itemCount) item\(itemCount == 1 ? "" : "s")")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-        }
-        .buttonStyle(.plain)
+        )
     }
 
     private func manufacturerHeader(manufacturer: String, itemCount: Int) -> some View {
-        Button(action: {
-            withAnimation {
-                if expandedManufacturers.contains(manufacturer) {
-                    expandedManufacturers.remove(manufacturer)
-                } else {
-                    expandedManufacturers.insert(manufacturer)
+        CollapsibleSectionHeader.withItemCount(
+            title: manufacturer,
+            itemCount: itemCount,
+            isExpanded: expandedManufacturers.contains(manufacturer),
+            onToggle: {
+                withAnimation {
+                    if expandedManufacturers.contains(manufacturer) {
+                        expandedManufacturers.remove(manufacturer)
+                    } else {
+                        expandedManufacturers.insert(manufacturer)
+                    }
                 }
             }
-        }) {
-            HStack {
-                Image(systemName: expandedManufacturers.contains(manufacturer) ? "chevron.down" : "chevron.right")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Text(manufacturer)
-                    .font(.headline)
-                Spacer()
-                Text("\(itemCount) item\(itemCount == 1 ? "" : "s")")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-        }
-        .buttonStyle(.plain)
+        )
     }
 
     private var shoppingModeInstructions: some View {

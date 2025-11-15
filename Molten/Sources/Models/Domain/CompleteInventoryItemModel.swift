@@ -67,10 +67,14 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     // MARK: - Protocol Conformance
 
     nonisolated static func == (lhs: CompleteInventoryItemModel, rhs: CompleteInventoryItemModel) -> Bool {
-        return lhs.catalogItem.stable_id == rhs.catalogItem.stable_id
+        return lhs.catalogItem.stable_id == rhs.catalogItem.stable_id &&
+               lhs.rating?.averageRating == rhs.rating?.averageRating &&
+               lhs.rating?.totalRatings == rhs.rating?.totalRatings
     }
 
     nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(catalogItem.stable_id)
+        hasher.combine(rating?.averageRating)
+        hasher.combine(rating?.totalRatings)
     }
 }

@@ -587,8 +587,7 @@ struct ProductImageDetail: View {
             // Post notification so all ProductImageView instances reload
             NotificationCenter.default.post(name: .userImageUploaded, object: stableId)
         } catch {
-            // TODO: Show error to user in UI
-            print("Failed to upload image: \(error)")
+            // TODO: Show error to user in UI (silently fail for now)
         }
     }
 }

@@ -116,7 +116,7 @@ struct ImportInventoryView: View {
     private func errorView(_ error: Error) -> some View {
         VStack(spacing: 20) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 60))
+                .font(.largeTitle)
                 .foregroundColor(.orange)
 
             VStack(spacing: 8) {
@@ -238,11 +238,11 @@ struct ImportInventoryView: View {
                 VStack(spacing: 16) {
                     if result.hasFailures {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 60))
+                            .font(.largeTitle)
                             .foregroundColor(.orange)
                     } else {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 60))
+                            .font(.largeTitle)
                             .foregroundColor(.green)
                     }
 

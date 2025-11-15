@@ -77,7 +77,7 @@ struct LocationRow: View {
 
             // White icon(s)
             iconImage
-                .font(.system(size: 12))
+                .font(.caption)
                 .foregroundStyle(.white)
         }
     }
@@ -94,9 +94,9 @@ struct LocationRow: View {
             // Both icons for mixed locations
             HStack(spacing: 1) {
                 Image(systemName: "storefront.fill")
-                    .font(.system(size: 8))
+                    .font(.caption2)
                 Image(systemName: "graduationcap.fill")
-                    .font(.system(size: 8))
+                    .font(.caption2)
             }
         } else if location.hasEducation {
             Image(systemName: "graduationcap.fill")

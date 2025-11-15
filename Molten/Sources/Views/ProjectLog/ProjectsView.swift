@@ -182,7 +182,7 @@ struct ProjectsView: View {
 
             VStack(spacing: 16) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 60))
+                    .font(.largeTitle)
                     .foregroundColor(.secondary)
 
                 Text("No Results Found")

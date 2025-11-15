@@ -178,7 +178,7 @@ struct TabBarPreview: View {
                 .font(.system(size: 18, weight: .medium))
                 .foregroundColor(.blue)
             Text(tab.displayName)
-                .font(.system(size: 9))
+                .font(.caption2)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -190,7 +190,7 @@ struct TabBarPreview: View {
                 .font(.system(size: 18, weight: .medium))
                 .foregroundColor(.secondary)
             Text("More")
-                .font(.system(size: 9))
+                .font(.caption2)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

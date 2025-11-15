@@ -69,28 +69,8 @@ class CatalogSearchCache: ObservableObject {
 
         do {
             let loadedItems = try await catalogService.getGlassItemsLightweight()
-
             items = loadedItems
             isLoaded = true
-
-            // Debug: Check if "50 Shades" is in the loaded items
-            if let fiftyShades = loadedItems.first(where: { $0.name.contains("50 Shades") }) {
-                print("🔍 [CACHE] Found '50 Shades' with stable_id: '\(fiftyShades.stable_id)'")
-            } else {
-                print("❌ [CACHE] '50 Shades' NOT found in loaded items")
-            }
-
-            // Debug: Check if stableId '5bfSaX' exists
-            if let item = loadedItems.first(where: { $0.stable_id == "5bfSaX" }) {
-                print("🔍 [CACHE] Found stableId '5bfSaX': '\(item.name)'")
-            } else {
-                print("❌ [CACHE] StableId '5bfSaX' NOT found in loaded items")
-                // Show a few sample stableIds
-                print("📋 [CACHE] Sample stableIds from cache:")
-                loadedItems.prefix(5).forEach { item in
-                    print("   - '\(item.stable_id)' → '\(item.name)'")
-                }
-            }
         } catch {
             // Keep cache in "not loaded" state so it will retry
             items = []

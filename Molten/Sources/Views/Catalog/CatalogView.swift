@@ -218,11 +218,8 @@ struct CatalogView: View {
 
     private var mainContentView: some View {
         VStack(spacing: 0) {
-            // Filter controls (no search - using native .searchable() instead)
-            filterChipsRow
-                .padding(.horizontal, DesignSystem.Padding.standard)
-                .padding(.vertical, DesignSystem.Spacing.sm)
-                .background(DesignSystem.Colors.background)
+            // Filter controls (using SearchAndFilterHeader but without built-in search)
+            filterHeader
 
             // Main content
             Group {
@@ -239,73 +236,85 @@ struct CatalogView: View {
         }
     }
 
-    /// Filter chips row - shows active filters and allows quick access to filter sheets
-    private var filterChipsRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                // Search titles only toggle
+    /// Filter header - uses SearchAndFilterHeader component but without the search field (now using native .searchable())
+    private var filterHeader: some View {
+        VStack(spacing: DesignSystem.Spacing.none) {
+            // Top row: Search titles only toggle
+            HStack {
+                // Compact search titles only toggle
                 HStack(spacing: DesignSystem.Spacing.sm) {
                     Toggle("", isOn: $viewModel.searchTitlesOnly)
                         .labelsHidden()
-                    Text("Titles only")
+                    Text("Search titles only")
                         .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
 
-                Divider()
-                    .frame(height: 20)
-
-                // Sort menu
-                Menu {
-                    ForEach(SortOption.allCases, id: \.self) { option in
-                        Button {
-                            viewModel.sortOption = option
-                            updateSorting(option)
-                        } label: {
-                            Label(option.rawValue, systemImage: option.sortIcon)
-                        }
-                    }
-                } label: {
-                    HStack(spacing: DesignSystem.Spacing.xs) {
-                        Image(systemName: "arrow.up.arrow.down")
-                            .font(DesignSystem.Typography.caption)
-                        Text("Sort")
-                            .font(DesignSystem.Typography.caption)
-                            .fontWeight(DesignSystem.FontWeight.medium)
-                    }
-                    .foregroundColor(DesignSystem.Colors.textPrimary)
-                }
-
-                // Manufacturer filter chip
-                manufacturerFilterChip
-
-                // COE filter chip
-                coeFilterChip
-
-                // Tag filter chip
-                tagFilterChip
-
-                // Product type filter chip
-                productTypeFilterChip
+                Spacer()
             }
-            .padding(.horizontal, DesignSystem.Padding.compact)
+            .padding(.horizontal, DesignSystem.Padding.standard)
+            .padding(.top, DesignSystem.Spacing.md)
+            .padding(.bottom, DesignSystem.Spacing.xs)
+
+            // Bottom row: Filter chips
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    // Manufacturer filter chip
+                    compactManufacturerFilterButton
+
+                    // COE filter chip
+                    compactCOEFilterButton
+
+                    // Tag filter chip
+                    compactTagFilterButton
+
+                    // Product type filter chip
+                    compactProductTypeFilterButton
+                }
+                .padding(.horizontal, DesignSystem.Padding.standard)
+                .padding(.bottom, DesignSystem.Spacing.md)
+            }
         }
+        .background(DesignSystem.Colors.background)
     }
 
-    private var manufacturerFilterChip: some View {
+    // MARK: - Compact Filter Buttons
+
+    private var compactManufacturerFilterButton: some View {
         Button {
             showingManufacturerFilterSelection = true
         } label: {
             HStack(spacing: DesignSystem.Spacing.sm) {
-                Image(systemName: "building.2")
-                    .font(DesignSystem.Typography.captionSmall)
                 if viewModel.selectedManufacturers.isEmpty {
+                    Image(systemName: "building.2")
+                        .font(DesignSystem.Typography.captionSmall)
                     Text("Mfr")
                         .font(DesignSystem.Typography.caption)
-                } else {
-                    Text("\(viewModel.selectedManufacturers.count)")
-                        .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
+                } else {
+                    // Show first 2 manufacturers inline (abbreviated)
+                    let sortedMfrs = viewModel.selectedManufacturers.sorted()
+                    ForEach(Array(sortedMfrs.prefix(2)), id: \.self) { mfr in
+                        Text(mfr.uppercased())
+                            .font(DesignSystem.Typography.captionSmall)
+                            .fontWeight(DesignSystem.FontWeight.bold)
+                    }
+                    if viewModel.selectedManufacturers.count > 2 {
+                        Text("+\(viewModel.selectedManufacturers.count - 2)")
+                            .font(DesignSystem.Typography.captionSmall)
+                            .fontWeight(DesignSystem.FontWeight.medium)
+                    }
+                    // X button to clear
+                    Image(systemName: "xmark.circle.fill")
+                        .font(DesignSystem.Typography.captionSmall)
+                        .onTapGesture {
+                            viewModel.selectedManufacturers.removeAll()
+                        }
+                }
+                if viewModel.selectedManufacturers.isEmpty {
+                    Image(systemName: "chevron.down")
+                        .font(Font.system(size: 10))
                 }
             }
             .foregroundColor(viewModel.selectedManufacturers.isEmpty ? .secondary : .white)
@@ -314,19 +323,43 @@ struct CatalogView: View {
             .background(viewModel.selectedManufacturers.isEmpty ? Color(.systemGray6) : .accentColor)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
+        .sheet(isPresented: $showingManufacturerFilterSelection) {
+            manufacturerMultiSelectSheet
+        }
     }
 
-    private var coeFilterChip: some View {
+    private var compactCOEFilterButton: some View {
         Button {
             showingCOESelection = true
         } label: {
             HStack(spacing: DesignSystem.Spacing.sm) {
-                Text("COE")
-                    .font(DesignSystem.Typography.captionSmall)
-                if !viewModel.selectedCOEs.isEmpty {
-                    Text("\(viewModel.selectedCOEs.count)")
+                if viewModel.selectedCOEs.isEmpty {
+                    Text("COE")
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
+                } else {
+                    // Show selected COEs inline
+                    let sortedCOEs = viewModel.selectedCOEs.sorted()
+                    ForEach(Array(sortedCOEs.prefix(2)), id: \.self) { coe in
+                        Text(String(coe))
+                            .font(DesignSystem.Typography.captionSmall)
+                            .fontWeight(DesignSystem.FontWeight.bold)
+                    }
+                    if viewModel.selectedCOEs.count > 2 {
+                        Text("+\(viewModel.selectedCOEs.count - 2)")
+                            .font(DesignSystem.Typography.captionSmall)
+                            .fontWeight(DesignSystem.FontWeight.medium)
+                    }
+                    // X button to clear
+                    Image(systemName: "xmark.circle.fill")
+                        .font(DesignSystem.Typography.captionSmall)
+                        .onTapGesture {
+                            viewModel.selectedCOEs.removeAll()
+                        }
+                }
+                if viewModel.selectedCOEs.isEmpty {
+                    Image(systemName: "chevron.down")
+                        .font(Font.system(size: 10))
                 }
             }
             .foregroundColor(viewModel.selectedCOEs.isEmpty ? .secondary : .white)
@@ -337,17 +370,41 @@ struct CatalogView: View {
         }
     }
 
-    private var tagFilterChip: some View {
+    private var compactTagFilterButton: some View {
         Button {
             showingAllTags = true
         } label: {
             HStack(spacing: DesignSystem.Spacing.sm) {
-                Image(systemName: "tag")
-                    .font(DesignSystem.Typography.captionSmall)
-                if !viewModel.selectedTags.isEmpty {
-                    Text("\(viewModel.selectedTags.count)")
+                if viewModel.selectedTags.isEmpty {
+                    Image(systemName: "tag")
+                        .font(DesignSystem.Typography.captionSmall)
+                    Text("Tags")
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
+                } else {
+                    // Show first 2 tags inline
+                    let sortedTags = viewModel.selectedTags.sorted()
+                    ForEach(Array(sortedTags.prefix(2)), id: \.self) { tag in
+                        Text(tag)
+                            .font(DesignSystem.Typography.captionSmall)
+                            .fontWeight(DesignSystem.FontWeight.bold)
+                            .lineLimit(1)
+                    }
+                    if viewModel.selectedTags.count > 2 {
+                        Text("+\(viewModel.selectedTags.count - 2)")
+                            .font(DesignSystem.Typography.captionSmall)
+                            .fontWeight(DesignSystem.FontWeight.medium)
+                    }
+                    // X button to clear
+                    Image(systemName: "xmark.circle.fill")
+                        .font(DesignSystem.Typography.captionSmall)
+                        .onTapGesture {
+                            viewModel.selectedTags.removeAll()
+                        }
+                }
+                if viewModel.selectedTags.isEmpty {
+                    Image(systemName: "chevron.down")
+                        .font(Font.system(size: 10))
                 }
             }
             .foregroundColor(viewModel.selectedTags.isEmpty ? .secondary : .white)
@@ -358,24 +415,106 @@ struct CatalogView: View {
         }
     }
 
-    private var productTypeFilterChip: some View {
-        Button {
-            showingProductTypeSelection = true
+    private var compactProductTypeFilterButton: some View {
+        Menu {
+            ForEach(["glass", "coating", "tool"], id: \.self) { type in
+                Button {
+                    withAnimation {
+                        if viewModel.selectedProductTypes.contains(type) {
+                            viewModel.selectedProductTypes.remove(type)
+                        } else {
+                            viewModel.selectedProductTypes.insert(type)
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Text(displayNameForProductType(type))
+                        Spacer()
+                        if viewModel.selectedProductTypes.contains(type) {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
         } label: {
             HStack(spacing: DesignSystem.Spacing.sm) {
-                Image(systemName: "square.grid.2x2")
-                    .font(DesignSystem.Typography.captionSmall)
-                if !viewModel.selectedProductTypes.isEmpty {
-                    Text("\(viewModel.selectedProductTypes.count)")
+                if let selectedType = viewModel.selectedProductTypes.first {
+                    Text(displayNameForProductType(selectedType))
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                        .lineLimit(1)
+                } else {
+                    Image(systemName: "square.stack.3d.up")
+                        .font(DesignSystem.Typography.captionSmall)
+                    Text("Type")
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
                 }
+                Image(systemName: "chevron.down")
+                    .font(Font.system(size: 10))
             }
-            .foregroundColor(viewModel.selectedProductTypes.isEmpty ? .secondary : .white)
-            .padding(.horizontal, DesignSystem.Padding.chip)
-            .padding(.vertical, DesignSystem.Padding.chipVertical)
-            .background(viewModel.selectedProductTypes.isEmpty ? Color(.systemGray6) : .accentColor)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
+            .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)
+            .padding(.vertical, DesignSystem.Padding.buttonVertical)
+            .background(Color(.systemGray6))
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        }
+    }
+
+    private func displayNameForProductType(_ type: String) -> String {
+        switch type {
+        case "glass": return "Glass"
+        case "coating": return "Coating"
+        case "tool": return "Tool"
+        default: return type.capitalized
+        }
+    }
+
+    // Manufacturer multi-select sheet
+    private var manufacturerMultiSelectSheet: some View {
+        NavigationStack {
+            List {
+                ForEach(availableManufacturers, id: \.self) { mfr in
+                    Button {
+                        withAnimation {
+                            if viewModel.selectedManufacturers.contains(mfr) {
+                                viewModel.selectedManufacturers.remove(mfr)
+                            } else {
+                                viewModel.selectedManufacturers.insert(mfr)
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Text(manufacturerDisplayName(mfr))
+                            Spacer()
+                            if viewModel.selectedManufacturers.contains(mfr) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.accentColor)
+                            }
+                            if let count = manufacturerCounts[mfr] {
+                                Text("(\(count))")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .foregroundColor(.primary)
+                }
+            }
+            .navigationTitle("Filter by Manufacturer")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        showingManufacturerFilterSelection = false
+                    }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Clear") {
+                        viewModel.selectedManufacturers.removeAll()
+                    }
+                    .disabled(viewModel.selectedManufacturers.isEmpty)
+                }
+            }
         }
     }
 
@@ -408,6 +547,23 @@ struct CatalogView: View {
                     if viewModel.searchText == newValue {
                         viewModel.debouncedSearchText = newValue
                         viewModel.applyFilters()
+                    }
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        ForEach(SortOption.allCases, id: \.self) { option in
+                            Button {
+                                viewModel.sortOption = option
+                                updateSorting(option)
+                            } label: {
+                                Label(option.rawValue, systemImage: option.sortIcon)
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                            .accessibilityLabel("Sort")
                     }
                 }
             }

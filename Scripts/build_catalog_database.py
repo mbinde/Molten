@@ -278,14 +278,15 @@ def get_current_version() -> int:
 def main():
     """Main entry point."""
     print("🔨 Building catalog database...")
+    print(f"   Output: {OUTPUT_DB}")
+    print()
 
-    # Auto-increment version from existing database
+    # IMPORTANT: Read version BEFORE deleting the database
     current_version = get_current_version()
     new_version = current_version + 1
 
     print(f"   Current version: {current_version}")
     print(f"   New version: {new_version}")
-    print(f"   Output: {OUTPUT_DB}")
     print()
 
     # Verify input files exist
@@ -303,10 +304,10 @@ def main():
             print(f"   - {f}")
         sys.exit(1)
 
-    # Remove existing database
+    # Remove existing database (AFTER reading version)
     if OUTPUT_DB.exists():
+        print(f"🗑️  Removing existing database (version {current_version})")
         OUTPUT_DB.unlink()
-        print(f"🗑️  Removed existing database")
 
     # Create database and schema
     conn = sqlite3.connect(str(OUTPUT_DB))

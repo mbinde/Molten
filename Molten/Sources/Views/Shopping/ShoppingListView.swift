@@ -736,8 +736,7 @@ struct ShoppingListView: View {
                         .foregroundColor(.primary)
                     Spacer()
                     Image(systemName: shoppingModeInstructionsExpanded ? "chevron.up" : "chevron.down")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .secondaryCaptionStyle()
                 }
             }
             .buttonStyle(.plain)
@@ -1020,8 +1019,7 @@ struct CheckoutSheet: View {
                                     Text(item.glassItem.name)
                                         .font(.headline)
                                     Text(item.glassItem.stable_id)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .secondaryCaption()
                                 }
 
                                 Spacer()

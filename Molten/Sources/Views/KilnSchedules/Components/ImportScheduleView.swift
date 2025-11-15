@@ -57,13 +57,11 @@ struct ImportScheduleView: View {
                                 DetailItem(icon: "clock.fill", text: schedule.formattedDuration)
                                 DetailItem(icon: "thermometer", text: "\(schedule.temperatureUnit.symbol)")
                             }
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .secondaryCaptionStyle()
 
                             if let description = schedule.description {
                                 Text(description)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .secondaryCaption()
                                     .lineLimit(3)
                             }
                         }

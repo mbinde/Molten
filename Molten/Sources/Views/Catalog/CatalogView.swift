@@ -257,24 +257,27 @@ struct CatalogView: View {
             .padding(.top, DesignSystem.Spacing.md)
             .padding(.bottom, DesignSystem.Spacing.xs)
 
-            // Bottom row: Filter chips
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: DesignSystem.Spacing.sm) {
-                    // Manufacturer filter chip
-                    compactManufacturerFilterButton
+            // Bottom row: Product type (left) and filter chips (right)
+            HStack(spacing: DesignSystem.Spacing.md) {
+                // Left: Product type filter (radio button style, single select)
+                compactProductTypeFilterButton
 
+                Spacer()
+
+                // Right: Filter chips (COE, Tags, Mfr from left to right)
+                HStack(spacing: DesignSystem.Spacing.sm) {
                     // COE filter chip
                     compactCOEFilterButton
 
                     // Tag filter chip
                     compactTagFilterButton
 
-                    // Product type filter chip
-                    compactProductTypeFilterButton
+                    // Manufacturer filter chip (far right)
+                    compactManufacturerFilterButton
                 }
-                .padding(.horizontal, DesignSystem.Padding.standard)
-                .padding(.bottom, DesignSystem.Spacing.md)
             }
+            .padding(.horizontal, DesignSystem.Padding.standard)
+            .padding(.bottom, DesignSystem.Spacing.md)
         }
         .background(DesignSystem.Colors.background)
     }
@@ -416,49 +419,21 @@ struct CatalogView: View {
     }
 
     private var compactProductTypeFilterButton: some View {
-        Menu {
-            ForEach(["glass", "coating", "tool"], id: \.self) { type in
-                Button {
-                    withAnimation {
-                        if viewModel.selectedProductTypes.contains(type) {
-                            viewModel.selectedProductTypes.remove(type)
-                        } else {
-                            viewModel.selectedProductTypes.insert(type)
-                        }
-                    }
-                } label: {
-                    HStack {
-                        Text(displayNameForProductType(type))
-                        Spacer()
-                        if viewModel.selectedProductTypes.contains(type) {
-                            Image(systemName: "checkmark")
-                        }
-                    }
+        // Radio button style segmented control for product type (single select)
+        Picker("Product Type", selection: Binding(
+            get: { viewModel.selectedProductTypes.first ?? "glass" },
+            set: { newValue in
+                withAnimation {
+                    viewModel.selectedProductTypes = [newValue]
                 }
             }
-        } label: {
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                if let selectedType = viewModel.selectedProductTypes.first {
-                    Text(displayNameForProductType(selectedType))
-                        .font(DesignSystem.Typography.caption)
-                        .fontWeight(DesignSystem.FontWeight.medium)
-                        .lineLimit(1)
-                } else {
-                    Image(systemName: "square.stack.3d.up")
-                        .font(DesignSystem.Typography.captionSmall)
-                    Text("Type")
-                        .font(DesignSystem.Typography.caption)
-                        .fontWeight(DesignSystem.FontWeight.medium)
-                }
-                Image(systemName: "chevron.down")
-                    .font(Font.system(size: 10))
-            }
-            .foregroundColor(DesignSystem.Colors.textSecondary)
-            .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)
-            .padding(.vertical, DesignSystem.Padding.buttonVertical)
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        )) {
+            Text("Glass").tag("glass")
+            Text("Coating").tag("coating")
+            Text("Tool").tag("tool")
         }
+        .pickerStyle(.segmented)
+        .frame(maxWidth: 250) // Constrain width so it doesn't stretch too much
     }
 
     private func displayNameForProductType(_ type: String) -> String {

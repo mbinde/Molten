@@ -845,6 +845,8 @@ extension SortOption {
             return "Manufacturer"
         case .code:
             return "Code"
+        case .rating:
+            return "Rating"
         }
     }
 }

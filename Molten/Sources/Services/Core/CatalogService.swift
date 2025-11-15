@@ -26,6 +26,7 @@ actor CatalogService {
     private let itemMinimumRepository: ItemMinimumRepository
     private let itemTagsRepository: ItemTagsRepository
     private let userTagsRepository: UserTagsRepository
+    private let ratingService: RatingService
 
     // MARK: - Initialization
 
@@ -37,7 +38,8 @@ actor CatalogService {
         inventoryTrackingService: InventoryTrackingService,
         itemMinimumRepository: ItemMinimumRepository,
         itemTagsRepository: ItemTagsRepository,
-        userTagsRepository: UserTagsRepository
+        userTagsRepository: UserTagsRepository,
+        ratingService: RatingService
     ) {
         self.glassItemRepository = glassItemRepository
         self.coatingItemRepository = coatingItemRepository
@@ -46,6 +48,7 @@ actor CatalogService {
         self.itemMinimumRepository = itemMinimumRepository
         self.itemTagsRepository = itemTagsRepository
         self.userTagsRepository = userTagsRepository
+        self.ratingService = ratingService
     }
     
     // MARK: - GlassItem System Support
@@ -79,6 +82,9 @@ actor CatalogService {
             }
         case .totalQuantity:
             // Can't sort by quantity in lightweight mode, fall back to name
+            return glassItems.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        case .rating:
+            // Can't sort by rating in lightweight mode, fall back to name
             return glassItems.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         }
     }
@@ -123,18 +129,32 @@ actor CatalogService {
         // OPTIMIZED: Batch fetch user tags for all items
         let userTagsByItem = try await userTagsRepository.fetchTagsForItems(allItemKeys)
 
+        // OPTIMIZED: Batch fetch ratings if sorting by rating
+        var ratingsByItem: [String: AggregatedRatingModel] = [:]
+        if case .rating = sortBy {
+            do {
+                let ratings = try await ratingService.fetchRatings(forItems: allItemKeys, forceRefresh: false)
+                ratingsByItem = Dictionary(uniqueKeysWithValues: ratings.map { ($0.itemStableId, $0) })
+            } catch {
+                // If ratings fail to load, continue without them (items will sort by name)
+                print("⚠️ [CatalogService] Failed to load ratings for sort: \(error)")
+            }
+        }
+
         // Convert to complete models using batch-fetched data
         var completeItems: [CompleteInventoryItemModel] = []
         for catalogItem in filteredItems {
             let inventory = inventoryByItem[catalogItem.stable_id] ?? []
             let tags = tagsByItem[catalogItem.stable_id] ?? []
             let userTags = userTagsByItem[catalogItem.stable_id] ?? []
+            let rating = ratingsByItem[catalogItem.stable_id]
 
             let completeItem = CompleteInventoryItemModel(
                 catalogItem: catalogItem,
                 inventory: inventory,
                 tags: tags,
-                userTags: userTags
+                userTags: userTags,
+                rating: rating
             )
             completeItems.append(completeItem)
         }

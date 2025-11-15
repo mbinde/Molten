@@ -123,8 +123,8 @@ public class RatingAPIClient: RatingAPIClientProtocol {
             throw RatingAPIError.invalidURL
         }
 
-        // Build request
-        var request = URLRequest(url: url)
+        // Build request (disable cache to always get fresh data)
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData)
         request.httpMethod = "GET"
 
         // Execute request

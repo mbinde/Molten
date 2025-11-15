@@ -371,6 +371,10 @@ struct InventoryView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { _ in
                 Task {
+                    // IMPORTANT: Clear ratings cache and force fresh fetch from server
+                    let ratingService = AppDependencies.shared.ratingService
+                    _ = try? await ratingService.fetchAllRatingsBulk(forceRefresh: true)
+
                     // Invalidate cache to force fresh data load when ratings change
                     await CatalogDataCache.shared.reload(catalogService: catalogService)
                     await loadData()

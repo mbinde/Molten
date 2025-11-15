@@ -686,6 +686,11 @@ struct LifecycleModifiers: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { _ in
                 // Reload catalog data when ratings are submitted or deleted
                 Task {
+                    // IMPORTANT: Clear ratings cache and force fresh fetch from server
+                    let ratingService = AppDependencies.shared.ratingService
+                    _ = try? await ratingService.fetchAllRatingsBulk(forceRefresh: true)
+
+                    // Then reload catalog with fresh ratings
                     await CatalogDataCache.shared.reload(catalogService: viewModel.catalogService)
                     await viewModel.loadData()
                 }

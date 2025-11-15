@@ -40,6 +40,7 @@ struct LogbookView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Search bar at top (only show when we have entries)
+                // TODO: Migrate to native .searchable() with FilterChipsRow component (see CatalogView)
                 if !viewModel.logEntries.isEmpty {
                     StandardSearchAndFilterHeader(
                         searchText: $viewModel.searchText,

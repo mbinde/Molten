@@ -5,6 +5,13 @@
 //  Reusable filter row component for use with native .searchable()
 //  Based on CatalogView implementation
 //
+//  TODO: Migrate remaining views to use this component with native .searchable():
+//  - InventoryView (currently uses StandardSearchAndFilterHeader)
+//  - ShoppingListView (currently uses StandardSearchAndFilterHeader)
+//  - ProjectsView (currently uses StandardSearchAndFilterHeader)
+//  - LogbookView (currently uses StandardSearchAndFilterHeader)
+//  Once migrated, deprecate/remove StandardSearchAndFilterHeader and SearchAndFilterHeader
+//
 
 import SwiftUI
 

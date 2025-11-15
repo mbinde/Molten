@@ -233,6 +233,7 @@ struct InventoryView: View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
                 // Search and filter controls using shared component
+                // TODO: Migrate to native .searchable() with FilterChipsRow component (see CatalogView)
                 StandardSearchAndFilterHeader(
                     searchText: $viewModel.searchText,
                     searchTitlesOnly: $viewModel.searchTitlesOnly,

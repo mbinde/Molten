@@ -135,23 +135,31 @@ actor CatalogService {
             // Try bulk endpoint first (more efficient)
             let allRatings = try await ratingService.fetchAllRatingsBulk(forceRefresh: false)
             ratingsByItem = Dictionary(uniqueKeysWithValues: allRatings.map { ($0.itemStableId, $0) })
+            print("📊 [CatalogService] Loaded \(allRatings.count) ratings from service")
         } catch {
             // Bulk endpoint not available, fall back to per-item fetch
             do {
                 let ratings = try await ratingService.fetchRatings(forItems: allItemKeys, forceRefresh: false)
                 ratingsByItem = Dictionary(uniqueKeysWithValues: ratings.map { ($0.itemStableId, $0) })
+                print("📊 [CatalogService] Loaded \(ratings.count) ratings per-item")
             } catch {
-                // Silently fail - ratings are optional
+                print("⚠️ [CatalogService] Failed to load ratings")
             }
         }
 
         // Convert to complete models using batch-fetched data
         var completeItems: [CompleteInventoryItemModel] = []
+        var attachedCount = 0
         for catalogItem in filteredItems {
             let inventory = inventoryByItem[catalogItem.stable_id] ?? []
             let tags = tagsByItem[catalogItem.stable_id] ?? []
             let userTags = userTagsByItem[catalogItem.stable_id] ?? []
             let rating = ratingsByItem[catalogItem.stable_id]
+
+            if rating != nil {
+                attachedCount += 1
+                print("🔗 [CatalogService] Attaching rating to \(catalogItem.stable_id): \(rating!.averageRating) stars")
+            }
 
             let completeItem = CompleteInventoryItemModel(
                 catalogItem: catalogItem,
@@ -162,6 +170,7 @@ actor CatalogService {
             )
             completeItems.append(completeItem)
         }
+        print("✅ [CatalogService] Attached \(attachedCount) ratings to \(completeItems.count) items")
 
         // Apply sorting
         let sortedItems = sortItems(completeItems, by: sortBy)

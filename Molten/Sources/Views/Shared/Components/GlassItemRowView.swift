@@ -124,6 +124,9 @@ struct GlassItemRowView: View {
                         Text(rating.formattedAverageRating)
                             .font(.subheadline)
                             .fontWeight(.medium)
+                            .onAppear {
+                                print("⭐ [GlassItemRowView] RENDERING rating for \(item.stableId): \(rating.averageRating) stars")
+                            }
 
                         Text("(\(rating.totalRatings))")
                             .font(.caption2)

@@ -28,61 +28,54 @@ struct CompactRatingView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 8) {
-                if isLoading {
-                    ProgressView()
-                        .scaleEffect(0.6)
-                } else if let rating = rating {
-                    // Stars
-                    starsView(rating: rating.averageRating)
+        HStack(spacing: 8) {
+            if isLoading {
+                ProgressView()
+                    .scaleEffect(0.6)
+            } else if let rating = rating {
+                // Stars
+                starsView(rating: rating.averageRating)
 
-                    // Average + count
-                    Text("\(rating.formattedAverageRating) (\(rating.totalRatings))")
+                // Average + count
+                Text("\(rating.formattedAverageRating) (\(rating.totalRatings))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                // Rate button
+                Button {
+                    showingSubmission = true
+                } label: {
+                    Label("Rate", systemImage: "star")
+                        .font(.caption)
+                        .labelStyle(.titleOnly)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
+            } else {
+                // No ratings - very compact
+                HStack(spacing: 4) {
+                    Image(systemName: "star")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Spacer()
-
-                    // Rate button
-                    Button {
-                        showingSubmission = true
-                    } label: {
-                        Label("Rate", systemImage: "star")
-                            .font(.caption)
-                            .labelStyle(.titleOnly)
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.mini)
-                } else {
-                    // No ratings - very compact
-                    HStack(spacing: 4) {
-                        Image(systemName: "star")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-
-                        Text("No ratings")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-
-                    Button {
-                        showingSubmission = true
-                    } label: {
-                        Label("Rate", systemImage: "star.fill")
-                            .font(.caption)
-                            .labelStyle(.titleOnly)
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.mini)
+                    Text("No ratings")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
-            }
 
-            // Word chips (only show if we have words)
-            if let rating = rating, !rating.topWords.isEmpty {
-                CompactWordChipsView(words: rating.topWords)
+                Spacer()
+
+                Button {
+                    showingSubmission = true
+                } label: {
+                    Label("Rate", systemImage: "star.fill")
+                        .font(.caption)
+                        .labelStyle(.titleOnly)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
             }
         }
         .task {
@@ -94,6 +87,11 @@ struct CompactRatingView: View {
                 itemName: itemName ?? itemStableId
             )
         }
+    }
+
+    // Expose the rating for external use
+    var topWords: [RatingWordModel] {
+        rating?.topWords ?? []
     }
 
     private func starsView(rating: Double) -> some View {

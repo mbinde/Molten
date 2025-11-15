@@ -120,13 +120,16 @@ final class MockLogbookRepository: LogbookRepository {
         }
 
         // Extract dates and pair with logs for sorting
+        // Use saleDate if available, otherwise fall back to dateCreated
         var logsWithDates: [(log: LogbookModel, date: Date)] = []
         for log in filtered {
-            let date = await log.dateCreated
+            let saleDate = await log.saleDate
+            let dateCreated = await log.dateCreated
+            let date = saleDate ?? dateCreated
             logsWithDates.append((log, date))
         }
 
-        // Sort by date descending
+        // Sort by date descending (saleDate takes precedence over dateCreated)
         logsWithDates.sort { $0.date > $1.date }
 
         return logsWithDates.map { $0.log }

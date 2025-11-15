@@ -33,8 +33,9 @@ TOOLS_JSON = TOOLS_DIR / "tools.json"
 # Output SQLite database
 OUTPUT_DB = RESOURCES_DIR / "catalog.sqlite"
 
-# Database version (increment this when schema or data changes)
-DB_VERSION = 1
+# Database version (auto-incremented on each build)
+# Note: This is just a fallback - the actual version is read from existing DB and incremented
+DB_VERSION_FALLBACK = 1
 
 
 def create_schema(conn):
@@ -69,6 +70,7 @@ def create_schema(conn):
             type TEXT,
             manufacturer_url TEXT,
             image_path TEXT,
+            image_thumb_path TEXT,
             image_url TEXT,
             stock_type TEXT
         )
@@ -139,8 +141,8 @@ def import_glass_items(conn, json_file):
                 stable_id, status, added_date, last_seen, discontinued_date,
                 manufacturer, code, name, start_date, end_date,
                 manufacturer_description, tags, synonyms, coe, type,
-                manufacturer_url, image_path, image_url, stock_type
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                manufacturer_url, image_path, image_thumb_path, image_url, stock_type
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             item['stable_id'],
             item['status'],
@@ -159,6 +161,7 @@ def import_glass_items(conn, json_file):
             item.get('type'),
             item.get('manufacturer_url'),
             item.get('image_path'),
+            item.get('image_thumb_path'),
             item.get('image_url'),
             item.get('stock_type')
         ))
@@ -254,11 +257,38 @@ def set_metadata(conn, version, item_counts):
     conn.commit()
 
 
+def get_current_version() -> int:
+    """Get version from existing database, or return fallback if doesn't exist."""
+    if not OUTPUT_DB.exists():
+        return DB_VERSION_FALLBACK
+
+    try:
+        conn = sqlite3.connect(str(OUTPUT_DB))
+        cursor = conn.cursor()
+        cursor.execute("SELECT value FROM metadata WHERE key = 'version'")
+        result = cursor.fetchone()
+        conn.close()
+
+        if result:
+            return int(result[0])
+        else:
+            return DB_VERSION_FALLBACK
+    except:
+        return DB_VERSION_FALLBACK
+
+
 def main():
     """Main entry point."""
     print("🔨 Building catalog database...")
-    print(f"   Version: {DB_VERSION}")
     print(f"   Output: {OUTPUT_DB}")
+    print()
+
+    # IMPORTANT: Read version BEFORE deleting the database
+    current_version = get_current_version()
+    new_version = current_version + 1
+
+    print(f"   Current version: {current_version}")
+    print(f"   New version: {new_version}")
     print()
 
     # Verify input files exist
@@ -276,10 +306,10 @@ def main():
             print(f"   - {f}")
         sys.exit(1)
 
-    # Remove existing database
+    # Remove existing database (AFTER reading version)
     if OUTPUT_DB.exists():
+        print(f"🗑️  Removing existing database (version {current_version})")
         OUTPUT_DB.unlink()
-        print(f"🗑️  Removed existing database")
 
     # Create database and schema
     conn = sqlite3.connect(str(OUTPUT_DB))
@@ -294,7 +324,7 @@ def main():
     item_counts['tools'] = import_tools(conn, TOOLS_JSON)
 
     # Set metadata
-    set_metadata(conn, DB_VERSION, item_counts)
+    set_metadata(conn, new_version, item_counts)
     print()
     print("✅ Set metadata")
 

@@ -283,8 +283,9 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
 
         let url = getText(15)  // manufacturer_url -> url
         let mfr_status = getText(1) ?? "available"  // status -> mfr_status
-        let image_url = getText(17)
         let image_path = getText(16)
+        let image_thumb_path = getText(17)
+        let image_url = getText(18)
 
         return GlassItemModel(
             stable_id: stable_id,
@@ -296,7 +297,8 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
             url: url,
             mfr_status: mfr_status,
             image_url: image_url,
-            image_path: image_path
+            image_path: image_path,
+            image_thumb_path: image_thumb_path
         )
     }
 }

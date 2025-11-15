@@ -96,122 +96,51 @@ final class ImageDownloadService: Sendable {
     ///   - itemCode: The item code (e.g., "650001" or "BB-650001")
     ///   - manufacturer: The manufacturer abbreviation (e.g., "BB", "CiM")
     ///   - exactFilename: If provided, try this exact filename first (from catalog's image_path field)
-    ///   - useThumbnail: If true, automatically try thumbnail version (_thumb.jpg) first (default: true)
+    ///   - exactThumbnailFilename: If provided, use this as the thumbnail filename (from catalog's image_thumb_path field)
+    ///   - useThumbnail: If true, try thumbnail version first (default: true)
     /// - Returns: UIImage if found/downloaded, nil otherwise
-    nonisolated static func loadImage(itemCode: String, manufacturer: String?, exactFilename: String? = nil, useThumbnail: Bool = true) async -> UIImage? {
+    nonisolated static func loadImage(itemCode: String, manufacturer: String?, exactFilename: String? = nil, exactThumbnailFilename: String? = nil, useThumbnail: Bool = true) async -> UIImage? {
         guard let manufacturer = manufacturer, !manufacturer.isEmpty else {
             return nil
         }
 
         // Check if we have permission to use product-specific images for this manufacturer
         guard GlassManufacturers.hasProductImagePermission(for: manufacturer) else {
-            print("⚠️ [ImageDownloadService] No image permission for manufacturer: \(manufacturer)")
             return nil
         }
 
-        // PRIORITY 1: If exact filename provided (from catalog image_path), try it first
+        // PRIORITY 1: If exact thumbnail filename provided (from catalog image_thumb_path), try it first
+        if useThumbnail, let thumbnailFilename = exactThumbnailFilename, !thumbnailFilename.isEmpty {
+            // First check local cache
+            if let cachedImage = await loadFromCache(filename: thumbnailFilename) {
+                return cachedImage
+            }
+
+            // If not cached, try to download
+            if let result = await downloadImage(filename: thumbnailFilename) {
+                await saveToCache(image: result.image, filename: thumbnailFilename, etag: result.etag)
+                return result.image
+            }
+
+            // Fall through to try full-size image
+        }
+
+        // PRIORITY 2: If exact filename provided (from catalog image_path), try it
         if let filename = exactFilename, !filename.isEmpty {
-            // Convert to thumbnail version if requested
-            let targetFilename = useThumbnail ? thumbnailFilename(from: filename) : filename
-            print("📸 [ImageDownloadService] Trying exact filename: \(targetFilename)\(useThumbnail ? " (thumbnail)" : "")")
-
             // First check local cache
-            if let cachedImage = await loadFromCache(filename: targetFilename) {
-                print("✅ [ImageDownloadService] Found in cache: \(targetFilename)")
+            if let cachedImage = await loadFromCache(filename: filename) {
                 return cachedImage
             }
 
             // If not cached, try to download
-            if let result = await downloadImage(filename: targetFilename) {
-                print("✅ [ImageDownloadService] Downloaded from CDN: \(targetFilename)")
-                // Save to cache for next time with ETag for checksum validation
-                await saveToCache(image: result.image, filename: targetFilename, etag: result.etag)
-                return result.image
-            }
-
-            print("❌ [ImageDownloadService] Failed to load: \(targetFilename)")
-
-            // If thumbnail failed and we were looking for thumbnail, try full-size as fallback
-            if useThumbnail && targetFilename != filename {
-                print("📸 [ImageDownloadService] Thumbnail failed, trying full-size: \(filename)")
-
-                if let cachedImage = await loadFromCache(filename: filename) {
-                    print("✅ [ImageDownloadService] Found full-size in cache: \(filename)")
-                    return cachedImage
-                }
-
-                if let result = await downloadImage(filename: filename) {
-                    print("✅ [ImageDownloadService] Downloaded full-size from CDN: \(filename)")
-                    await saveToCache(image: result.image, filename: filename, etag: result.etag)
-                    return result.image
-                }
-            }
-
-            // If exact filename failed, fall through to variation logic below
-        }
-
-        // PRIORITY 2: Try variations if no exact filename or exact filename failed
-        // Sanitize filename (replace slashes with dashes)
-        let sanitizedCode = itemCode.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: "\\", with: "-")
-        let sanitizedManufacturer = manufacturer.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: "\\", with: "-")
-
-        // Try multiple case variations (matching ImageHelpers.swift logic)
-        let manufacturerVariations = [
-            sanitizedManufacturer.uppercased(),  // Try uppercase first (most common)
-            sanitizedManufacturer.lowercased(),  // Then lowercase
-            sanitizedManufacturer.capitalized,   // Then capitalized
-            sanitizedManufacturer                // Finally original case
-        ]
-
-        // Common image extensions to try
-        let extensions = ["webp", "jpg", "jpeg", "png", "PNG", "JPG", "JPEG", "WEBP"]
-
-        // Try with manufacturer prefix variations
-        for mfrVariation in manufacturerVariations {
-            for ext in extensions {
-                // Check if itemCode already starts with manufacturer prefix to avoid duplication
-                let imageName: String
-                if sanitizedCode.uppercased().hasPrefix("\(mfrVariation.uppercased())-") {
-                    // ItemCode already includes manufacturer prefix, use as-is
-                    imageName = sanitizedCode
-                } else {
-                    // Add manufacturer prefix
-                    imageName = "\(mfrVariation)-\(sanitizedCode)"
-                }
-
-                let filenameWithExt = "\(imageName).\(ext)"
-
-                // First check local cache
-                if let cachedImage = await loadFromCache(filename: filenameWithExt) {
-                    return cachedImage
-                }
-
-                // If not cached, try to download
-                if let result = await downloadImage(filename: filenameWithExt) {
-                    // Save to cache for next time with ETag for checksum validation
-                    await saveToCache(image: result.image, filename: filenameWithExt, etag: result.etag)
-                    return result.image
-                }
-            }
-        }
-
-        // Fallback: try without manufacturer prefix (for backward compatibility)
-        for ext in extensions {
-            let filenameWithExt = "\(sanitizedCode).\(ext)"
-
-            // First check local cache
-            if let cachedImage = await loadFromCache(filename: filenameWithExt) {
-                return cachedImage
-            }
-
-            // If not cached, try to download
-            if let result = await downloadImage(filename: filenameWithExt) {
-                // Save to cache for next time with ETag for checksum validation
-                await saveToCache(image: result.image, filename: filenameWithExt, etag: result.etag)
+            if let result = await downloadImage(filename: filename) {
+                await saveToCache(image: result.image, filename: filename, etag: result.etag)
                 return result.image
             }
         }
 
+        // No exact filename provided or download failed - return nil
+        // The caller (ProductImageView) will fall back to bundled images or manufacturer default
         return nil
     }
 

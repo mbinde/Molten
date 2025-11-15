@@ -406,13 +406,7 @@ struct LocationsView: View {
     // MARK: - Loading & Empty States
 
     private var loadingView: some View {
-        VStack(spacing: DesignSystem.Spacing.lg) {
-            ProgressView()
-            Text("Loading locations...")
-                .font(DesignSystem.Typography.caption)
-                .foregroundStyle(DesignSystem.Colors.textSecondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        LoadingStateView(message: "Loading locations...")
     }
 
     private var shouldShowSearchEmptyState: Bool {

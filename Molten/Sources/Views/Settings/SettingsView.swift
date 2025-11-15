@@ -786,12 +786,8 @@ struct ManufacturerFilterView: View {
             
             Section {
                 if isLoading {
-                    HStack {
-                        Spacer()
-                        ProgressView("Loading manufacturers...")
-                        Spacer()
-                    }
-                    .padding()
+                    LoadingStateView(message: "Loading manufacturers...")
+                        .padding()
                 } else if allManufacturers.isEmpty {
                     Text("No manufacturers found")
                         .foregroundColor(.secondary)

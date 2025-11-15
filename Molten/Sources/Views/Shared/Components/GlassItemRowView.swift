@@ -137,13 +137,7 @@ struct GlassItemRowView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 4) {
                             ForEach(item.tags, id: \.self) { tag in
-                                Text(tag)
-                                    .font(.caption2)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.gray.opacity(0.15))
-                                    .foregroundColor(.secondary)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                BadgeLabel.tag(tag)
                             }
                         }
                         .padding(.horizontal, 1)

@@ -683,16 +683,22 @@ struct LifecycleModifiers: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: .resetCatalogNavigation)) { _ in
                 resetNavigation()
             }
-            .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
                 // Reload catalog data when ratings are submitted or deleted
+                print("🔔 [CatalogView] Received .ratingSubmitted notification: \(notification.object ?? "nil")")
                 Task {
                     // IMPORTANT: Clear ratings cache and force fresh fetch from server
+                    print("🔄 [CatalogView] Force refreshing ratings from server...")
                     let ratingService = AppDependencies.shared.ratingService
-                    _ = try? await ratingService.fetchAllRatingsBulk(forceRefresh: true)
+                    let freshRatings = try? await ratingService.fetchAllRatingsBulk(forceRefresh: true)
+                    print("✅ [CatalogView] Got \(freshRatings?.count ?? 0) fresh ratings")
 
                     // Then reload catalog with fresh ratings
+                    print("🔄 [CatalogView] Reloading catalog cache...")
                     await CatalogDataCache.shared.reload(catalogService: viewModel.catalogService)
+                    print("🔄 [CatalogView] Loading catalog data into view model...")
                     await viewModel.loadData()
+                    print("✅ [CatalogView] Catalog refresh complete - items count: \(viewModel.items.count)")
                 }
             }
             .onAppear {

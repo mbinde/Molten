@@ -369,11 +369,34 @@ struct InventoryView: View {
                     await loadData()
                 }
             }
-            .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
                 Task {
-                    // IMPORTANT: Clear ratings cache and force fresh fetch from server
                     let ratingService = AppDependencies.shared.ratingService
-                    _ = try? await ratingService.fetchAllRatingsBulk(forceRefresh: true)
+                    let itemId = notification.object as? String
+
+                    // IMPORTANT: Server needs time to rebuild bulk cache after invalidation.
+                    // Retry fetching until we find the new rating or timeout after 3 seconds.
+                    var attempts = 0
+                    let maxAttempts = 6  // 6 attempts × 500ms = 3 seconds max
+
+                    while attempts < maxAttempts {
+                        let freshRatings = try? await ratingService.fetchAllRatingsBulk(forceRefresh: true)
+
+                        // If we're looking for a specific item, check if it's in the results
+                        if let itemId = itemId {
+                            let itemRating = freshRatings?.first(where: { $0.itemStableId == itemId })
+                            if itemRating != nil {
+                                break  // Success! Found the new rating
+                            } else {
+                                attempts += 1
+                                if attempts < maxAttempts {
+                                    try? await Task.sleep(nanoseconds: 500_000_000)  // Wait 500ms before retry
+                                }
+                            }
+                        } else {
+                            break  // No specific item to check for, just use what we got
+                        }
+                    }
 
                     // Invalidate cache to force fresh data load when ratings change
                     await CatalogDataCache.shared.reload(catalogService: catalogService)

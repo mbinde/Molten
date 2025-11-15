@@ -384,8 +384,6 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
         // Note: Tags are now managed through UserTagsRepository, not created here
 
         // Create new glass item entities
-        // Use parent's mutableSetValue to add children, letting Core Data handle inverse relationship
-        let glassItemsSet = entity.mutableSetValue(forKey: "glassItems")
         for (index, glassItem) in model.glassItems.enumerated() {
             let glassItemEntity = ProjectGlassItemEntity(context: entity.managedObjectContext!)
             glassItemEntity.setValue(UUID(), forKey: "id")
@@ -395,15 +393,10 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
             glassItemEntity.setValue(glassItem.unit, forKey: "unit")
             glassItemEntity.setValue(glassItem.notes, forKey: "notes")
             glassItemEntity.setValue(Int32(index), forKey: "orderIndex")
-
-            // Add to parent's collection instead of setting child's parent property
-            // This avoids KVC issues with auto-generated Core Data classes
-            glassItemsSet.add(glassItemEntity)
+            glassItemEntity.setValue(entity, forKey: "plan")
         }
 
         // Create new reference URL entities
-        // Use parent's mutableSetValue to add children, letting Core Data handle inverse relationship
-        let referenceUrlsSet = entity.mutableSetValue(forKey: "referenceUrls")
         for (index, url) in model.referenceUrls.enumerated() {
             let urlEntity = ProjectReferenceUrlEntity(context: entity.managedObjectContext!)
             urlEntity.setValue(url.id, forKey: "id")
@@ -412,18 +405,14 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
             urlEntity.setValue(url.description, forKey: "urlDescription")
             urlEntity.setValue(url.dateAdded, forKey: "dateAdded")
             urlEntity.setValue(Int32(index), forKey: "orderIndex")
-
-            // Add to parent's collection instead of setting child's parent property
-            // This avoids KVC issues with auto-generated Core Data classes
-            referenceUrlsSet.add(urlEntity)
+            urlEntity.setValue(entity, forKey: "plan")
         }
 
         // Create new step entities
-        // Use parent's mutableSetValue to add children, letting Core Data handle inverse relationship
-        let stepsSet = entity.mutableSetValue(forKey: "steps")
         for step in model.steps {
             let stepEntity = ProjectStep(context: entity.managedObjectContext!)
             stepEntity.setValue(step.id, forKey: "id")
+            stepEntity.setValue(entity, forKey: "plan")
             stepEntity.setValue(Int32(step.order), forKey: "order_index")
             stepEntity.setValue(step.title, forKey: "title")
             stepEntity.setValue(step.description, forKey: "step_description")
@@ -431,7 +420,6 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
 
             // Add glass items for this step
             if let glassItems = step.glassItemsNeeded {
-                let stepGlassItemsSet = stepEntity.mutableSetValue(forKey: "glassItems")
                 for (index, glassItem) in glassItems.enumerated() {
                     let glassEntity = ProjectStepGlassItem(context: entity.managedObjectContext!)
                     glassEntity.setValue(glassItem.id, forKey: "id")
@@ -441,14 +429,9 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
                     glassEntity.setValue(glassItem.unit, forKey: "unit")
                     glassEntity.setValue(glassItem.notes, forKey: "notes")
                     glassEntity.setValue(Int32(index), forKey: "orderIndex")
-
-                    // Add to step's collection instead of setting child's parent property
-                    stepGlassItemsSet.add(glassEntity)
+                    glassEntity.setValue(stepEntity, forKey: "step")
                 }
             }
-
-            // Add to parent's collection instead of setting child's parent property
-            stepsSet.add(stepEntity)
         }
 
         // Encode price range

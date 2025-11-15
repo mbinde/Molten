@@ -10,7 +10,7 @@ import CloudKit
 import CryptoKit
 
 /// Protocol for CloudKit container operations (for testing)
-public protocol CKContainerProtocol {
+public protocol CKContainerProtocol: Sendable {
     func fetchUserRecordID() async throws -> CKRecord.ID
 }
 
@@ -50,7 +50,11 @@ public class CloudKitIdentityService: CloudKitIdentityServiceProtocol {
 
     // MARK: - Properties
 
-    private let container: CKContainerProtocol
+    /// CloudKit container for fetching user identity
+    /// Marked nonisolated because CKContainer is thread-safe and this reference is only used
+    /// in async methods that properly isolate to MainActor. This prevents deallocation issues
+    /// when the service is deallocated from MainActor context.
+    nonisolated private let container: CKContainerProtocol
     private var cachedHashedID: String?
 
     // MARK: - Initialization
@@ -98,6 +102,13 @@ public class CloudKitIdentityService: CloudKitIdentityServiceProtocol {
     /// Clear cached hashed user ID
     /// Call this if user signs out or switches iCloud accounts
     public func clearCache() {
+        cachedHashedID = nil
+    }
+
+    // MARK: - Deinitialization
+
+    deinit {
+        // Explicitly clear cache before deallocation
         cachedHashedID = nil
     }
 

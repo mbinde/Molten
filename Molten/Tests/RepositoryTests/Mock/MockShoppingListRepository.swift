@@ -77,6 +77,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
         let itemId = await item.id
         let itemStableId = await item.item_stable_id
         let quantity = await item.quantity
+        let store = await item.store
 
         // Validate item data
         guard !itemStableId.isEmpty else {
@@ -87,9 +88,15 @@ final class MockShoppingListRepository: ShoppingListRepository {
             throw MockShoppingListRepositoryError.invalidData("Quantity must be greater than zero")
         }
 
-        // Check for duplicates
-        if try await fetchItem(forItem: itemStableId) != nil {
-            throw MockShoppingListRepositoryError.itemAlreadyExists(itemStableId)
+        // Check for duplicates - shopping list items are unique per (item_stable_id, store) tuple
+        // Same item can exist in different stores
+        let itemsArray = lock.withLock { Array(items.values) }
+        for existingItem in itemsArray {
+            let existingStableId = await existingItem.item_stable_id
+            let existingStore = await existingItem.store
+            if existingStableId == itemStableId && existingStore == store {
+                throw MockShoppingListRepositoryError.itemAlreadyExists(itemStableId)
+            }
         }
 
         lock.withLock { items[itemId] = item }
@@ -156,16 +163,26 @@ final class MockShoppingListRepository: ShoppingListRepository {
     }
 
     func addQuantity(_ quantity: Double, toItem item_stable_id: String, store: String?) async throws -> ItemShoppingModel {
-        // Look for existing item with BOTH same item_stable_id AND same store
-        // Shopping list items are unique per (item_stable_id, store) tuple
+        // Look for existing item
+        // - If store is specified: match BOTH item_stable_id AND store (exact match)
+        // - If store is nil: match ANY item with this item_stable_id (wildcard match)
         let itemsArray = lock.withLock { Array(items.values) }
         var existing: ItemShoppingModel? = nil
         for item in itemsArray {
             let itemStableId = await item.item_stable_id
-            let itemStore = await item.store
-            if itemStableId == item_stable_id && itemStore == store {
-                existing = item
-                break
+            if store == nil {
+                // Wildcard match: find ANY item with this stable_id
+                if itemStableId == item_stable_id {
+                    existing = item
+                    break
+                }
+            } else {
+                // Exact match: find item with same stable_id AND same store
+                let itemStore = await item.store
+                if itemStableId == item_stable_id && itemStore == store {
+                    existing = item
+                    break
+                }
             }
         }
 

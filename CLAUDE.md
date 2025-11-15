@@ -212,6 +212,8 @@ The `@Service` property wrapper (defined in `CoreDataSafetyGuards.swift`) uses `
 
 ## Build & Test Commands
 
+**NOTE**: If you encounter mysterious Core Data crashes (`NSRelationshipDescription`, `objc_msgSend`) that don't make sense given the code has been stable, the issue is likely stale Derived Data. Aggressively delete ALL Derived Data directories: `sudo rm -rf ~/Library/Developer/Xcode/DerivedData/Molten-*` and clean build.
+
 ### Build
 ```bash
 xcodebuild -project Molten.xcodeproj -scheme Molten -configuration Debug build

@@ -66,6 +66,9 @@ class NetworkMonitor: NetworkMonitorProtocol {
         isExpensive = path.isExpensive
         isConstrained = path.isConstrained
 
+        // Debug logging
+        print("📡 NetworkMonitor: status=\(path.status), isConnected=\(isConnected), isOnWiFi=\(isOnWiFi)")
+
         // Determine connection type
         if path.usesInterfaceType(.wifi) {
             connectionType = .wifi

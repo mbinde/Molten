@@ -215,7 +215,8 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             }
         }
         // Clear images relationship (managed through UserImageRepository)
-        if let existingImages = entity.value(forKey: "images") as? Set<NSManagedObject> {
+        // Use try? to safely handle if relationship doesn't exist or is inaccessible
+        if let existingImages = try? entity.value(forKey: "images") as? Set<NSManagedObject> {
             for image in existingImages {
                 self.context.delete(image)
             }

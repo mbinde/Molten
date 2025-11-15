@@ -26,7 +26,17 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
             let entity = Project(context: self.context)
             self.mapModelToEntity(project, entity: entity)
 
-            try self.context.save()
+            do {
+                try self.context.save()
+            } catch let error as NSError {
+                // Log detailed error before re-throwing
+                print("❌ Core Data save failed: \(error.localizedDescription)")
+                print("   Domain: \(error.domain), Code: \(error.code)")
+                if let userInfo = error.userInfo as? [String: Any] {
+                    print("   UserInfo: \(userInfo)")
+                }
+                throw error
+            }
             return project
         }
     }
@@ -366,7 +376,8 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
         }
         // Note: images relationship exists in schema but not managed here
         // Images are managed through UserImageRepository, not as Core Data relationship
-        if let existingImages = entity.value(forKey: "images") as? Set<NSManagedObject> {
+        // Use try? to safely handle if relationship doesn't exist or is inaccessible
+        if let existingImages = try? entity.value(forKey: "images") as? Set<NSManagedObject> {
             for image in existingImages {
                 entity.managedObjectContext!.delete(image)
             }

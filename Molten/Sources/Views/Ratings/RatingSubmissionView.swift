@@ -32,7 +32,7 @@ struct RatingSubmissionView: View {
     @State private var isSubmitting = false
     @State private var showingError = false
     @State private var errorMessage = ""
-    @State private var showingSuccess = false
+    @State private var showingSuccessToast = false
 
     // MARK: - Initialization
 
@@ -120,13 +120,7 @@ struct RatingSubmissionView: View {
             } message: {
                 Text(errorMessage)
             }
-            .alert("Success", isPresented: $showingSuccess) {
-                Button("OK") {
-                    dismiss()
-                }
-            } message: {
-                Text("Your rating has been submitted!")
-            }
+            .successToast(message: "Your rating has been submitted!", isShowing: $showingSuccessToast)
         }
         .task {
             await loadExistingRating()
@@ -167,12 +161,26 @@ struct RatingSubmissionView: View {
                 // Notify that rating was submitted
                 NotificationCenter.default.post(name: .ratingSubmitted, object: itemStableId)
 
-                showingSuccess = true
+                // Show toast and auto-dismiss
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showingSuccessToast = true
+                    }
+                }
+
+                // Dismiss view after toast appears (give it time to show)
+                try? await Task.sleep(nanoseconds: 2_500_000_000) // 2.5 seconds
+                dismiss()
 
             } catch RatingServiceError.queuedForLater {
                 // Queued for later - show success anyway
-                errorMessage = "Rating queued for submission when online."
-                showingSuccess = true
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showingSuccessToast = true
+                    }
+                }
+                try? await Task.sleep(nanoseconds: 2_500_000_000)
+                dismiss()
 
             } catch RatingServiceError.profanityDetected {
                 errorMessage = "Please use appropriate language in your words."

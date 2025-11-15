@@ -124,7 +124,7 @@ class AppDependencies {
             print("🔧 AppDependencies: Core Data not ready, starting initialization...")
             // Need to initialize - use a semaphore to wait for async init
             let semaphore = DispatchSemaphore(value: 0)
-            Task.detached {
+            Task.detached(priority: .userInitiated) {
                 print("🔧 AppDependencies: Task.detached started")
                 print("🔧 AppDependencies: About to access PersistenceController.shared")
                 let controller = PersistenceController.shared

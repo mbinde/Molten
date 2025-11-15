@@ -60,13 +60,14 @@ struct RatingSubmissionView: View {
                                     .font(.title)
                                     .foregroundStyle(star <= starRating ? .yellow : .gray)
                             }
+                            .buttonStyle(.plain)
                         }
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
                 }
 
-                Section("Describe with 5 Words") {
+                Section {
                     VStack(spacing: 12) {
                         WordTextField(number: 1, text: $word1)
                         WordTextField(number: 2, text: $word2)
@@ -74,6 +75,10 @@ struct RatingSubmissionView: View {
                         WordTextField(number: 4, text: $word4)
                         WordTextField(number: 5, text: $word5)
                     }
+                } header: {
+                    Text("Describe with 5 Words (Optional)")
+                } footer: {
+                    Text("Provide either 0 or 5 words. Words help others understand your rating.")
                 }
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
@@ -117,16 +122,25 @@ struct RatingSubmissionView: View {
                 Text("Your rating has been submitted!")
             }
         }
+        .task {
+            await loadExistingRating()
+        }
     }
 
     // MARK: - Helpers
 
+    private func loadExistingRating() async {
+        // TODO: Load user's existing rating for this item (if any)
+        // This would require:
+        // 1. RatingService method to fetch user's own rating for an item
+        // 2. Server endpoint to return user's rating (not just aggregated)
+        // For now, users always start fresh
+    }
+
     private var isFormValid: Bool {
-        return !word1.isEmpty &&
-               !word2.isEmpty &&
-               !word3.isEmpty &&
-               !word4.isEmpty &&
-               !word5.isEmpty
+        // Valid if: all words empty (star rating only) OR all words filled (5 words)
+        let nonEmptyCount = [word1, word2, word3, word4, word5].filter { !$0.isEmpty }.count
+        return nonEmptyCount == 0 || nonEmptyCount == 5
     }
 
     private func submitRating() {

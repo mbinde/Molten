@@ -341,17 +341,11 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
         entity.setValue(model.dateModified, forKey: "date_modified")
         entity.setValue(model.heroImageId, forKey: "hero_image_id")
 
-        // Set kiln schedule relationship if provided
-        if let kilnScheduleId = model.kilnScheduleId {
-            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "KilnScheduleEntity")
-            fetchRequest.predicate = NSPredicate(format: "id == %@", kilnScheduleId as CVarArg)
-            fetchRequest.fetchLimit = 1
-            if let scheduleEntity = try? entity.managedObjectContext?.fetch(fetchRequest).first {
-                entity.setValue(scheduleEntity, forKey: "kilnSchedule")
-            }
-        } else {
-            entity.setValue(nil, forKey: "kilnSchedule")
-        }
+        // NOTE: kilnSchedule relationship handling removed due to crashes
+        // The kilnScheduleId is stored in the model as a UUID for lookup
+        // Similar pattern to Logbook which uses attribute-based reference
+        // If relationship is needed, it should be set using proper Core Data APIs
+        // not KVC which causes doesNotRecognizeSelector crashes
 
         // Clear existing relationships
         // Note: Tags are now managed through UserTagsRepository, not as a relationship

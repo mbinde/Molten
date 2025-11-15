@@ -103,12 +103,13 @@ public class RatingService: RatingServiceProtocol {
 
         // Fetch all ratings from server in one request
         do {
-            let freshRatings = try await apiClient.fetchAllRatingsBulk()
+            // IMPORTANT: Use cache busting when forceRefresh=true to bypass Cloudflare CDN cache
+            let freshRatings = try await apiClient.fetchAllRatingsBulk(cacheBust: forceRefresh)
 
             // Save to cache
             try await repository.saveAggregatedRatings(freshRatings)
 
-            print("✅ [RatingService] Fetched and cached \(freshRatings.count) ratings in bulk")
+            print("✅ [RatingService] Fetched and cached \(freshRatings.count) ratings in bulk\(forceRefresh ? " (cache busted)" : "")")
             return freshRatings
         } catch {
             // If network error and we have some cached data, return cached (even if stale)

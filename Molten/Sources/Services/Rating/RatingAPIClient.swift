@@ -37,7 +37,7 @@ public enum RatingAPIError: Error, LocalizedError {
 /// Protocol for rating API operations (for testing)
 public protocol RatingAPIClientProtocol {
     func submitRating(_ submission: RatingSubmissionModel, userIdHash: String, attestToken: String) async throws
-    func fetchAllRatingsBulk() async throws -> [AggregatedRatingModel]
+    func fetchAllRatingsBulk(cacheBust: Bool) async throws -> [AggregatedRatingModel]
     func fetchRatings(itemStableIds: [String]) async throws -> [AggregatedRatingModel]
     func deleteAllRatings(userIdHash: String, attestToken: String) async throws -> Int
 }
@@ -118,8 +118,16 @@ public class RatingAPIClient: RatingAPIClientProtocol {
     // MARK: - Fetch Ratings
 
     /// Fetch all ratings in bulk (single optimized request)
-    public func fetchAllRatingsBulk() async throws -> [AggregatedRatingModel] {
-        guard let url = URL(string: "\(baseURL)/api/v1/ratings/bulk") else {
+    public func fetchAllRatingsBulk(cacheBust: Bool = false) async throws -> [AggregatedRatingModel] {
+        var urlString = "\(baseURL)/api/v1/ratings/bulk"
+
+        // Add cache-busting timestamp if requested (to bypass Cloudflare CDN cache)
+        if cacheBust {
+            let timestamp = Int(Date().timeIntervalSince1970 * 1000)  // milliseconds
+            urlString += "?t=\(timestamp)"
+        }
+
+        guard let url = URL(string: urlString) else {
             throw RatingAPIError.invalidURL
         }
 

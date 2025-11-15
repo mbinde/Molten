@@ -47,6 +47,12 @@ class NetworkMonitor: NetworkMonitorProtocol {
             }
         }
         monitor.start(queue: queue)
+
+        // Get initial path state immediately to avoid race condition
+        // where app checks isConnected before first update arrives
+        Task { @MainActor in
+            self.updateConnectionState(monitor.currentPath)
+        }
     }
 
     deinit {

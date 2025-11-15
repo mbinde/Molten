@@ -129,15 +129,23 @@ actor CatalogService {
         // OPTIMIZED: Batch fetch user tags for all items
         let userTagsByItem = try await userTagsRepository.fetchTagsForItems(allItemKeys)
 
-        // OPTIMIZED: Fetch ALL ratings in bulk (single request + local cache)
+        // OPTIMIZED: Fetch ALL ratings (bulk if available, otherwise per-item)
         var ratingsByItem: [String: AggregatedRatingModel] = [:]
         do {
+            // Try bulk endpoint first (more efficient)
             let allRatings = try await ratingService.fetchAllRatingsBulk(forceRefresh: false)
             ratingsByItem = Dictionary(uniqueKeysWithValues: allRatings.map { ($0.itemStableId, $0) })
             print("✅ [CatalogService] Loaded \(allRatings.count) ratings in bulk")
         } catch {
-            // If ratings fail to load, continue without them
-            print("⚠️ [CatalogService] Failed to load ratings: \(error)")
+            // Bulk endpoint not available, fall back to per-item fetch
+            print("⚠️ [CatalogService] Bulk fetch failed, trying per-item: \(error)")
+            do {
+                let ratings = try await ratingService.fetchRatings(forItems: allItemKeys, forceRefresh: false)
+                ratingsByItem = Dictionary(uniqueKeysWithValues: ratings.map { ($0.itemStableId, $0) })
+                print("✅ [CatalogService] Loaded \(ratings.count) ratings per-item")
+            } catch {
+                print("⚠️ [CatalogService] Failed to load ratings: \(error)")
+            }
         }
 
         // Convert to complete models using batch-fetched data

@@ -316,6 +316,8 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
         }
 
         // Create new ingredients
+        // Use parent's mutableSetValue to add children, letting Core Data handle inverse relationship
+        let ingredientsSet = coreDataRecipe.mutableSetValue(forKey: "ingredients")
         for ingredientModel in model.ingredients {
             guard let entity = NSEntityDescription.entity(forEntityName: "RecipeIngredient", in: context) else {
                 log.error("FritIngredient entity not found")
@@ -325,7 +327,10 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
             coreDataIngredient.setValue(ingredientModel.id, forKey: "id")
             coreDataIngredient.setValue(ingredientModel.stableId, forKey: "stable_id")
             coreDataIngredient.setValue(ingredientModel.amount, forKey: "amount")
-            coreDataIngredient.setValue(coreDataRecipe, forKey: "recipe")
+
+            // Add to parent's collection instead of setting child's parent property
+            // This avoids KVC issues with auto-generated Core Data classes
+            ingredientsSet.add(coreDataIngredient)
         }
     }
 }

@@ -152,6 +152,8 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
         }
 
         // Create new segment entities (normalize segment temperatures to Celsius)
+        // Use parent's mutableSetValue to add children, letting Core Data handle inverse relationship
+        let segmentsSet = entity.mutableSetValue(forKey: "segments")
         for (index, segment) in model.segments.enumerated() {
             let segmentEntity = KilnSegmentEntity(context: self.context)
             segmentEntity.setValue(segment.id, forKey: "id")
@@ -162,7 +164,10 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
             segmentEntity.setValue(segment.rampRate as NSDecimalNumber?, forKey: "ramp_rate")
             segmentEntity.setValue(segment.holdTime as NSDecimalNumber?, forKey: "hold_time")
             segmentEntity.setValue(Int32(index), forKey: "order_index")
-            segmentEntity.setValue(entity, forKey: "schedule")
+
+            // Add to parent's collection instead of setting child's parent property
+            // This avoids KVC issues with auto-generated Core Data classes
+            segmentsSet.add(segmentEntity)
         }
     }
 

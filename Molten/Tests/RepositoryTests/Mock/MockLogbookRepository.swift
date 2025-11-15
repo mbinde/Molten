@@ -71,18 +71,14 @@ final class MockLogbookRepository: LogbookRepository {
     func updateLog(_ log: LogbookModel) async throws {
         let logId = await log.id
         guard logs[logId] != nil else {
-            throw NSError(domain: "MockLogbookRepository", code: 404, userInfo: [
-                NSLocalizedDescriptionKey: "Log not found with id: \(logId)"
-            ])
+            throw ProjectRepositoryError.logNotFound
         }
         logs[logId] = log
     }
 
     func deleteLog(id: UUID) async throws {
         guard logs[id] != nil else {
-            throw NSError(domain: "MockLogbookRepository", code: 404, userInfo: [
-                NSLocalizedDescriptionKey: "Log not found with id: \(id)"
-            ])
+            throw ProjectRepositoryError.logNotFound
         }
         logs.removeValue(forKey: id)
     }

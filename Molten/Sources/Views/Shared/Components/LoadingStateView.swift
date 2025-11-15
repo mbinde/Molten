@@ -28,24 +28,6 @@ struct LoadingStateView: View {
     }
 }
 
-// MARK: - Convenience Modifiers
-
-extension View {
-    /// Shows a loading overlay when the condition is true
-    /// - Parameters:
-    ///   - isLoading: Binding that controls visibility
-    ///   - message: Optional loading message
-    func loadingOverlay(isLoading: Bool, message: String = "Loading...") -> some View {
-        ZStack {
-            self
-
-            if isLoading {
-                LoadingStateView(message: message)
-            }
-        }
-    }
-}
-
 // MARK: - Previews
 
 #Preview("Default") {

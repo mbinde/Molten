@@ -16,15 +16,20 @@ struct KilnScheduleRowView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            scheduleHeader
-            scheduleDetails
+        Group {
             if let description = schedule.description, !description.isEmpty {
-                scheduleNotes
+                ListRowContainer(
+                    header: { scheduleHeader },
+                    details: { scheduleDetails },
+                    footer: { scheduleNotes }
+                )
+            } else {
+                ListRowContainer(
+                    header: { scheduleHeader },
+                    details: { scheduleDetails }
+                )
             }
         }
-        .padding(.vertical, 4)
-        .contentShape(Rectangle()) // Makes the entire row tappable
     }
 
     // MARK: - View Components

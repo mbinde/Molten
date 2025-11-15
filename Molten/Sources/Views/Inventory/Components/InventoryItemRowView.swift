@@ -26,13 +26,11 @@ struct InventoryItemRowView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            itemHeader
-            itemDetails
-            itemNotes
-        }
-        .padding(.vertical, 4)
-        .contentShape(Rectangle()) // Makes the entire row tappable
+        ListRowContainer(
+            header: { itemHeader },
+            details: { itemDetails },
+            footer: { itemNotes }
+        )
     }
     
     // MARK: - View Components

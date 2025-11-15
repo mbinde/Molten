@@ -419,28 +419,60 @@ struct CatalogView: View {
     }
 
     private var compactProductTypeFilterButton: some View {
-        // Radio button style segmented control for product type (single select)
-        Picker("Product Type", selection: Binding(
-            get: { viewModel.selectedProductTypes.first ?? "glass" },
-            set: { newValue in
-                withAnimation {
-                    viewModel.selectedProductTypes = [newValue]
+        Menu {
+            // Single-select product type options
+            ForEach(["glass", "coating", "tool"], id: \.self) { type in
+                Button {
+                    withAnimation {
+                        // Single-select: replace all selections with this one type
+                        viewModel.selectedProductTypes.removeAll()
+                        viewModel.selectedProductTypes.insert(type)
+                    }
+                } label: {
+                    HStack {
+                        Text(displayNameForProductType(type))
+                        Spacer()
+                        if viewModel.selectedProductTypes.contains(type) {
+                            Image(systemName: "checkmark")
+                        }
+                    }
                 }
             }
-        )) {
-            Text("Glass").tag("glass")
-            Text("Coating").tag("coating")
-            Text("Tool").tag("tool")
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                // Show selected type (always has a selection)
+                if let selectedType = viewModel.selectedProductTypes.first {
+                    Text(displayNameForProductType(selectedType))
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                        .lineLimit(1)
+                } else {
+                    // Fallback if somehow empty
+                    Image(systemName: "square.stack.3d.up")
+                        .font(DesignSystem.Typography.captionSmall)
+                    Text("Type")
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                }
+
+                // Always show dropdown arrow
+                Image(systemName: "chevron.down")
+                    .font(Font.system(size: 10))
+            }
+            .foregroundColor(DesignSystem.Colors.textSecondary)
+            .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)
+            .padding(.vertical, DesignSystem.Padding.buttonVertical)
+            .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
-        .pickerStyle(.segmented)
-        .frame(maxWidth: 250) // Constrain width so it doesn't stretch too much
+        .accessibilityIdentifier("productTypeFilterButton")
     }
 
     private func displayNameForProductType(_ type: String) -> String {
-        switch type {
+        switch type.lowercased() {
         case "glass": return "Glass"
-        case "coating": return "Coating"
-        case "tool": return "Tool"
+        case "coating": return "Coatings"
+        case "tool": return "Tools"
         default: return type.capitalized
         }
     }

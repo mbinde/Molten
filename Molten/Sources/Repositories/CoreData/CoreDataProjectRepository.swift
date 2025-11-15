@@ -384,6 +384,8 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
         // Note: Tags are now managed through UserTagsRepository, not created here
 
         // Create new glass item entities
+        // Use parent's mutableSetValue to add children, letting Core Data handle inverse relationship
+        let glassItemsSet = entity.mutableSetValue(forKey: "glassItems")
         for (index, glassItem) in model.glassItems.enumerated() {
             let glassItemEntity = ProjectGlassItemEntity(context: entity.managedObjectContext!)
             glassItemEntity.setValue(UUID(), forKey: "id")
@@ -393,10 +395,15 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
             glassItemEntity.setValue(glassItem.unit, forKey: "unit")
             glassItemEntity.setValue(glassItem.notes, forKey: "notes")
             glassItemEntity.setValue(Int32(index), forKey: "orderIndex")
-            glassItemEntity.setValue(entity, forKey: "plan")
+
+            // Add to parent's collection instead of setting child's parent property
+            // This avoids KVC issues with auto-generated Core Data classes
+            glassItemsSet.add(glassItemEntity)
         }
 
         // Create new reference URL entities
+        // Use parent's mutableSetValue to add children, letting Core Data handle inverse relationship
+        let referenceUrlsSet = entity.mutableSetValue(forKey: "referenceUrls")
         for (index, url) in model.referenceUrls.enumerated() {
             let urlEntity = ProjectReferenceUrlEntity(context: entity.managedObjectContext!)
             urlEntity.setValue(url.id, forKey: "id")
@@ -405,7 +412,10 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
             urlEntity.setValue(url.description, forKey: "urlDescription")
             urlEntity.setValue(url.dateAdded, forKey: "dateAdded")
             urlEntity.setValue(Int32(index), forKey: "orderIndex")
-            urlEntity.setValue(entity, forKey: "plan")
+
+            // Add to parent's collection instead of setting child's parent property
+            // This avoids KVC issues with auto-generated Core Data classes
+            referenceUrlsSet.add(urlEntity)
         }
 
         // Create new step entities

@@ -518,7 +518,7 @@ struct ShoppingListView: View {
     private var emptyStateView: some View {
         VStack(spacing: 20) {
             Image(systemName: "cart")
-                .font(.system(size: 80))
+                .font(.system(size: 80, weight: .regular))
                 .foregroundColor(.secondary)
 
             Text("No items on your shopping list yet")

@@ -224,7 +224,7 @@ struct InventoryTypeRow: View {
                     Text(formatQuantity(quantity))
                         .font(.headline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                     
                     Text("units")
                         .font(.caption)

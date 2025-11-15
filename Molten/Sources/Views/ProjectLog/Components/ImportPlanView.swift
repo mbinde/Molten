@@ -107,7 +107,7 @@ struct ImportPlanView: View {
     private func errorView(_ error: Error) -> some View {
         VStack(spacing: 20) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 60))
+                .font(.largeTitle)
                 .foregroundColor(.orange)
 
             VStack(spacing: 8) {
@@ -171,8 +171,8 @@ struct ImportPlanView: View {
                                         .font(.caption)
                                         .padding(.horizontal, 8)
                                         .padding(.vertical, 4)
-                                        .background(Color.blue.opacity(0.1))
-                                        .foregroundColor(.blue)
+                                        .background(.accentColor.opacity(0.1))
+                                        .foregroundColor(.accentColor)
                                         .cornerRadius(6)
                                 }
                             }
@@ -223,7 +223,7 @@ struct ImportPlanView: View {
     private var successView: some View {
         VStack(spacing: 20) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 60))
+                .font(.largeTitle)
                 .foregroundColor(.green)
 
             VStack(spacing: 8) {

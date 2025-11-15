@@ -222,7 +222,7 @@ extension View {
 #Preview("Badge Overlay") {
     VStack(spacing: 20) {
         RoundedRectangle(cornerRadius: 12)
-            .fill(Color.blue.opacity(0.2))
+            .fill(.accentColor.opacity(0.2))
             .frame(width: 200, height: 100)
             .badge(BadgeLabel.quantity(5))
 

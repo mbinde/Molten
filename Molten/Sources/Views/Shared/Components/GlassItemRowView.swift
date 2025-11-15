@@ -212,7 +212,7 @@ extension GlassItemRowView {
                 Text("\(item.totalQuantity, specifier: "%.1f")")
                     .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
 
                 if !item.inventoryByType.isEmpty {
                     Text("•")
@@ -241,7 +241,7 @@ extension GlassItemRowView {
                     Text("\(item.snapshot.quantity, specifier: "%.1f")")
                         .font(.caption)
                         .fontWeight(.semibold)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
 
                     Text(item.snapshot.unit)
                         .font(.caption)

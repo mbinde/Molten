@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SQLite3
 
 struct DebugSettingsView: View {
     @AppStorage("showDebugInfo") private var showDebugInfo = false

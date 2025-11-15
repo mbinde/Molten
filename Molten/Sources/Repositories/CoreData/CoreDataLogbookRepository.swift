@@ -214,6 +214,12 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
                 self.context.delete(item)
             }
         }
+        // Clear images relationship (managed through UserImageRepository)
+        if let existingImages = entity.value(forKey: "images") as? Set<NSManagedObject> {
+            for image in existingImages {
+                self.context.delete(image)
+            }
+        }
 
         // Create new UserTags entries for this logbook
         for tagString in model.tags {

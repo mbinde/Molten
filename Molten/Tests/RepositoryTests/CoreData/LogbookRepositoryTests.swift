@@ -319,18 +319,19 @@ struct LogbookRepositoryTests {
 
         try await Task.sleep(nanoseconds: 10_000_000) // 0.01 seconds
 
-        let log2 = createTestLog(title: "Sold 2", status: .sold, saleDate: Date())
-        _ = try await repository.createLog(log2)
+        let log3 = createTestLog(title: "Sold 3", status: .sold, saleDate: nil)
+        _ = try await repository.createLog(log3)
 
         try await Task.sleep(nanoseconds: 10_000_000)
 
-        let log3 = createTestLog(title: "Sold 3", status: .sold, saleDate: nil)
-        _ = try await repository.createLog(log3)
+        // Create Sold 2 last but with a saleDate, ensuring it's the most recent
+        let log2 = createTestLog(title: "Sold 2", status: .sold, saleDate: Date())
+        _ = try await repository.createLog(log2)
 
         let soldLogs = try await repository.getSoldLogs()
 
         #expect(soldLogs.count == 3)
-        // Log with sale date should be first
+        // Log with most recent sale date should be first
         #expect(soldLogs[0].title == "Sold 2")
     }
 

@@ -90,7 +90,19 @@ class CatalogViewModel: CatalogViewModelProtocol {
     var sortOption: SortOption = .name {
         didSet {
             if sortOption != oldValue {
-                applySorting()
+                // If switching to/from rating sort, reload data to fetch/clear ratings
+                let needsRatingData = sortOption == .rating
+                let hadRatingData = oldValue == .rating
+
+                if needsRatingData != hadRatingData {
+                    // Reload data to ensure rating data is loaded/unloaded
+                    Task {
+                        await loadData()
+                    }
+                } else {
+                    // Just re-sort existing data
+                    applySorting()
+                }
             }
         }
     }
@@ -179,8 +191,9 @@ class CatalogViewModel: CatalogViewModelProtocol {
         errorMessage = nil
 
         do {
-            // Load all glass items from catalog service
-            items = try await catalogService.getAllGlassItems()
+            // Load all glass items from catalog service with current sort option
+            // This ensures ratings are loaded if sorting by rating
+            items = try await catalogService.getAllGlassItems(sortBy: sortOption.asGlassItemSortOption)
 
             // Update caches
             updateCaches()

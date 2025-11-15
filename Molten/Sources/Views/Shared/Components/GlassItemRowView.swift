@@ -105,10 +105,32 @@ struct GlassItemRowView: View {
 
             // Item details
             VStack(alignment: .leading, spacing: 4) {
-                // Item name
-                Text(item.name)
-                    .font(.headline)
-                    .lineLimit(1)
+                // Item name with rating
+                HStack(spacing: 4) {
+                    Text(item.name)
+                        .font(.headline)
+                        .lineLimit(1)
+
+                    // Show rating inline after name if available, has enough ratings, and setting is enabled
+                    if showRatingsInCatalog, let rating = item.rating, rating.hasEnoughRatings {
+                        Text("•")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Image(systemName: "star.fill")
+                            .font(.caption)
+                            .foregroundStyle(.yellow)
+
+                        Text(rating.formattedAverageRating)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+
+                        Text("(\(rating.totalRatings))")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .lineLimit(1)
 
                 // Manufacturer and SKU/natural key
                 HStack(spacing: 4) {
@@ -127,26 +149,6 @@ struct GlassItemRowView: View {
                         Text(showFullCode ? item.stableId : (item.sku ?? ""))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                    }
-
-                    // Show rating inline if available, has enough ratings, and setting is enabled
-                    if showRatingsInCatalog, let rating = item.rating, rating.hasEnoughRatings {
-                        Text("•")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        Image(systemName: "star.fill")
-                            .font(.caption)
-                            .foregroundStyle(.yellow)
-
-                        Text(rating.formattedAverageRating)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(.secondary)
-
-                        Text("(\(rating.totalRatings))")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
                     }
                 }
                 .lineLimit(1)

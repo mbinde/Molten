@@ -10,6 +10,7 @@ import SwiftUI
 struct DebugSettingsView: View {
     @AppStorage("showDebugInfo") private var showDebugInfo = false
     @State private var showingResetDisclaimerAlert = false
+    @State private var actualCatalogVersion: Int = 0
     @ObservedObject private var catalogPreferences = CatalogUpdatePreferences.shared
 
     private let deps: AppDependencies
@@ -30,27 +31,20 @@ struct DebugSettingsView: View {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("Glass Catalog:")
+                        Text("Catalog Version:")
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text("v\(catalogPreferences.glassCatalogVersion)")
+                        Text("v\(actualCatalogVersion)")
                             .fontWeight(.medium)
                     }
 
                     HStack {
-                        Text("Tools Catalog:")
+                        Text("Source:")
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text("v\(catalogPreferences.toolsCatalogVersion)")
-                            .fontWeight(.medium)
-                    }
-
-                    HStack {
-                        Text("Coatings Catalog:")
+                        Text(catalogPreferences.catalogSource.rawValue)
+                            .font(.caption)
                             .foregroundColor(.secondary)
-                        Spacer()
-                        Text("v\(catalogPreferences.coatingsCatalogVersion)")
-                            .fontWeight(.medium)
                     }
 
                     if let lastUpdate = catalogPreferences.lastSuccessfulUpdate {
@@ -66,9 +60,9 @@ struct DebugSettingsView: View {
                     }
                 }
             } header: {
-                Text("Catalog Versions")
+                Text("Catalog Version")
             } footer: {
-                Text("Catalog versions currently loaded in the app. Glass catalog v0 means bundled catalog is being used.")
+                Text("Current version of the catalog database in use.")
             }
 
             Section {
@@ -109,6 +103,9 @@ struct DebugSettingsView: View {
             }
         }
         .navigationTitle("Debug Settings")
+        .task {
+            await loadActualCatalogVersion()
+        }
         .alert("Reset Alpha Disclaimer", isPresented: $showingResetDisclaimerAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Reset", role: .destructive) {
@@ -122,6 +119,14 @@ struct DebugSettingsView: View {
     private func resetAlphaDisclaimer() {
         UserDefaults.standard.removeObject(forKey: "hasAcknowledgedAlphaDisclaimer")
         print("✅ Reset alpha disclaimer - will show on next launch")
+    }
+
+    private func loadActualCatalogVersion() async {
+        // Read version from the actual catalog database
+        let repository = SQLiteGlassItemRepository()
+        if let version = try? await repository.getCatalogVersion() {
+            actualCatalogVersion = version
+        }
     }
 }
 

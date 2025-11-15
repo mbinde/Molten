@@ -16,11 +16,12 @@ final class MockShoppingListRepository: ShoppingListRepository {
     // MARK: - Storage
 
     nonisolated(unsafe) private var items: [UUID: ItemShoppingModel] = [:]
+    private let lock = NSLock() // Protect concurrent access
 
     // MARK: - CRUD Operations
 
     func fetchAllItems() async throws -> [ItemShoppingModel] {
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
         // Extract-pair-sort-map pattern for async property
         var itemsWithDates: [(item: ItemShoppingModel, date: Date)] = []
         for item in itemsArray {
@@ -37,11 +38,11 @@ final class MockShoppingListRepository: ShoppingListRepository {
     }
 
     func fetchItem(byId id: UUID) async throws -> ItemShoppingModel? {
-        return items[id]
+        return lock.withLock { items[id] }
     }
 
     func fetchItem(forItem item_stable_id: String) async throws -> ItemShoppingModel? {
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
         // Use for loop to await actor-isolated property
         for item in itemsArray {
             let itemStableId = await item.item_stable_id
@@ -53,7 +54,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
     }
 
     func fetchItems(forStore store: String) async throws -> [ItemShoppingModel] {
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
         // Filter by store
         var filtered: [ItemShoppingModel] = []
         for item in itemsArray {
@@ -91,34 +92,37 @@ final class MockShoppingListRepository: ShoppingListRepository {
             throw MockShoppingListRepositoryError.itemAlreadyExists(itemStableId)
         }
 
-        items[itemId] = item
+        lock.withLock { items[itemId] = item }
         return item
     }
 
     func updateItem(_ item: ItemShoppingModel) async throws -> ItemShoppingModel {
         let itemId = await item.id
-        guard items[itemId] != nil else {
+        let exists = lock.withLock { items[itemId] != nil }
+        guard exists else {
             throw MockShoppingListRepositoryError.itemNotFound
         }
-        items[itemId] = item
+        lock.withLock { items[itemId] = item }
         return item
     }
 
     func deleteItem(id: UUID) async throws {
-        guard items[id] != nil else {
+        let exists = lock.withLock { items[id] != nil }
+        guard exists else {
             throw MockShoppingListRepositoryError.itemNotFound
         }
-        items.removeValue(forKey: id)
+        lock.withLock { items.removeValue(forKey: id) }
     }
 
     func deleteItem(forItem item_stable_id: String) async throws {
         if let item = try await fetchItem(forItem: item_stable_id) {
-            let itemId = await item.id; items.removeValue(forKey: itemId)
+            let itemId = await item.id
+            lock.withLock { items.removeValue(forKey: itemId) }
         }
     }
 
     func deleteAllItems() async throws {
-        items.removeAll()
+        lock.withLock { items.removeAll() }
     }
 
     // MARK: - Quantity Operations
@@ -147,7 +151,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
             dateAdded: existingDate
         )
 
-        items[existingId] = updated
+        lock.withLock { items[existingId] = updated }
         return updated
     }
 
@@ -192,12 +196,12 @@ final class MockShoppingListRepository: ShoppingListRepository {
             dateAdded: existingDate
         )
 
-        items[existingId] = updated
+        lock.withLock { items[existingId] = updated }
         return updated
     }
 
     func getDistinctStores() async throws -> [String] {
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
         var stores: Set<String> = []
         for item in itemsArray {
             let store = await item.store
@@ -210,7 +214,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
 
     func getItemCountByStore() async throws -> [String: Int] {
         var counts: [String: Int] = [:]
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
         for item in itemsArray {
             let store = await item.store
             if let store = store {
@@ -227,12 +231,13 @@ final class MockShoppingListRepository: ShoppingListRepository {
     }
 
     func getItemCount() async throws -> Int {
-        return items.count
+        return lock.withLock { items.count }
     }
 
     func getItemCount(forStore store: String) async throws -> Int {
         var count = 0
-        for item in items.values {
+        let itemsArray = lock.withLock { Array(items.values) }
+        for item in itemsArray {
             let itemStore = await item.store
             if itemStore == store {
                 count += 1
@@ -242,7 +247,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
     }
 
     func getItemsSortedByDate(ascending: Bool) async throws -> [ItemShoppingModel] {
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
         // Extract-pair-sort-map pattern for async property
         var itemsWithDates: [(item: ItemShoppingModel, date: Date)] = []
         for item in itemsArray {
@@ -256,7 +261,7 @@ final class MockShoppingListRepository: ShoppingListRepository {
     }
 
     func getItemsSortedByQuantity(ascending: Bool) async throws -> [ItemShoppingModel] {
-        let itemsArray = Array(items.values)
+        let itemsArray = lock.withLock { Array(items.values) }
         // Extract-pair-sort-map pattern for async property
         var itemsWithQuantities: [(item: ItemShoppingModel, quantity: Double)] = []
         for item in itemsArray {
@@ -273,19 +278,22 @@ final class MockShoppingListRepository: ShoppingListRepository {
 
     func addItems(_ items: [ItemShoppingModel]) async throws -> [ItemShoppingModel] {
         for item in items {
-            let itemId = await item.id; self.items[itemId] = item
+            let itemId = await item.id
+            lock.withLock { self.items[itemId] = item }
         }
         return items
     }
 
     func deleteItems(ids: [UUID]) async throws {
-        for id in ids {
-            items.removeValue(forKey: id)
+        lock.withLock {
+            for id in ids {
+                items.removeValue(forKey: id)
+            }
         }
     }
 
     func deleteItems(forStore store: String) async throws {
-        let itemsArray = Array(items)
+        let itemsArray = lock.withLock { Array(items) }
         var newItems: [UUID: ItemShoppingModel] = [:]
         for (key, value) in itemsArray {
             let itemStore = await value.store
@@ -293,24 +301,24 @@ final class MockShoppingListRepository: ShoppingListRepository {
                 newItems[key] = value
             }
         }
-        items = newItems
+        lock.withLock { items = newItems }
     }
 
     // MARK: - Test Helpers
 
     /// Get count of stored items (test helper)
     func getStoredItemCount() async -> Int {
-        return items.count
+        return lock.withLock { items.count }
     }
 
     /// Clear all items (test helper)
     func clearAll() async {
-        items.removeAll()
+        lock.withLock { items.removeAll() }
     }
 
     /// Clear all items (test helper - alternate name for compatibility)
     func clearAllData() {
-        items.removeAll()
+        lock.withLock { items.removeAll() }
     }
 }
 

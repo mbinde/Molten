@@ -73,7 +73,7 @@ private struct AllWordsSheet: View {
                         .foregroundStyle(.secondary)
                         .padding(.horizontal)
 
-                    FlowLayout(spacing: 8) {
+                    WordChipsFlowLayout(spacing: 8) {
                         ForEach(words) { word in
                             wordChip(word: word)
                         }
@@ -112,7 +112,7 @@ private struct AllWordsSheet: View {
 }
 
 /// Simple flow layout for wrapping chips
-private struct FlowLayout: Layout {
+private struct WordChipsFlowLayout: Layout {
     var spacing: CGFloat = 8
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {

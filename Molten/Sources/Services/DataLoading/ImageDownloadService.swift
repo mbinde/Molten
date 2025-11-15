@@ -99,7 +99,10 @@ final class ImageDownloadService: Sendable {
     ///   - useThumbnail: If true, automatically try thumbnail version (_thumb.jpg) first (default: true)
     /// - Returns: UIImage if found/downloaded, nil otherwise
     nonisolated static func loadImage(itemCode: String, manufacturer: String?, exactFilename: String? = nil, useThumbnail: Bool = true) async -> UIImage? {
+        print("🔍 [ImageDownloadService] loadImage called - itemCode: \(itemCode), manufacturer: \(manufacturer ?? "nil"), exactFilename: \(exactFilename ?? "nil")")
+
         guard let manufacturer = manufacturer, !manufacturer.isEmpty else {
+            print("❌ [ImageDownloadService] No manufacturer provided")
             return nil
         }
 

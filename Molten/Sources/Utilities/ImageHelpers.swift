@@ -112,16 +112,20 @@ struct ImageHelpers {
     nonisolated static func loadProductImage(for itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil) -> UIImage? {
         guard !itemCode.isEmpty else { return nil }
 
+        print("🖼️ [ImageHelpers] loadProductImage called - itemCode: \(itemCode), manufacturer: \(manufacturer ?? "nil"), imagePath: \(imagePath ?? "nil")")
+
         let cacheKey = "\(manufacturer ?? "nil")-\(itemCode)"
         let cacheKeyNS = cacheKey as NSString
 
         // Check positive cache first
         if let cachedImage = imageCache.object(forKey: cacheKeyNS) {
+            print("✅ [ImageHelpers] Found in cache: \(cacheKey)")
             return cachedImage
         }
 
         // Check negative cache (items we know don't have images)
         if negativeCache.object(forKey: cacheKeyNS) != nil {
+            print("❌ [ImageHelpers] In negative cache (previously not found): \(cacheKey)")
             return nil
         }
 
@@ -132,19 +136,28 @@ struct ImageHelpers {
 
         // PRIORITY 2: Use exact image path if provided (skips extension guessing)
         if let imagePath = imagePath, !imagePath.isEmpty {
+            print("🖼️ [ImageHelpers] Using imagePath: \(imagePath)")
             // Extract resource name and extension from path
             let pathComponents = imagePath.split(separator: ".")
             if pathComponents.count >= 2 {
                 let resourceName = pathComponents.dropLast().joined(separator: ".")
                 let ext = String(pathComponents.last!)
 
+                print("🖼️ [ImageHelpers] Looking for resource: \(resourceName), type: \(ext)")
                 // Files in Molten/Resources/ are flattened to bundle root
                 if let path = Bundle.main.path(forResource: resourceName, ofType: ext) {
+                    print("✅ [ImageHelpers] Found imagePath at: \(path)")
                     if let image = loadImageWithoutColorProfile(from: path) {
                         imageCache.setObject(image, forKey: cacheKeyNS)
                         return image
+                    } else {
+                        print("❌ [ImageHelpers] Failed to load image from imagePath")
                     }
+                } else {
+                    print("❌ [ImageHelpers] imagePath not found in bundle")
                 }
+            } else {
+                print("❌ [ImageHelpers] Invalid imagePath format (no extension): \(imagePath)")
             }
         }
 
@@ -171,9 +184,11 @@ struct ImageHelpers {
             return nil
         }
 
+        // FIXME: TEMPORARILY DISABLED - Testing R2/CDN image loading
         // PRIORITY 2.5: Check for bundled thumbnail (AFTER permission check)
         // Thumbnails are named like "{stableId}_thumb.jpg" (e.g., "000NCe_thumb.jpg")
         // These are pre-generated 400px thumbnails bundled with the app for offline access
+        /*
         if let stableId = stableId, !stableId.isEmpty {
             let thumbnailExtensions = ["jpg", "jpeg"]
             for ext in thumbnailExtensions {
@@ -188,6 +203,7 @@ struct ImageHelpers {
                 }
             }
         }
+        */
 
         let sanitizedCode = sanitizeItemCodeForFilename(itemCode)
 
@@ -232,12 +248,15 @@ struct ImageHelpers {
         }
 
         // Fallback: try without manufacturer prefix (for backward compatibility)
+        print("🖼️ [ImageHelpers] Trying fallback without manufacturer prefix for: \(sanitizedCode)")
         for ext in extensions {
             let imageName = "\(productImagePathPrefix)\(sanitizedCode)"
 
             // Try bundle file with color profile handling
+            print("🖼️ [ImageHelpers] Fallback looking for: \(imageName).\(ext)")
             if let path = Bundle.main.path(forResource: imageName, ofType: ext),
                let image = loadImageWithoutColorProfile(from: path) {
+                print("✅ [ImageHelpers] Fallback found: \(path)")
                 // Cache the successful result
                 imageCache.setObject(image, forKey: cacheKeyNS)
                 return image
@@ -468,21 +487,31 @@ struct ProductImageView: View {
 
         // PRIORITY 1.5: Try to download from CDN (only if we have an exact image_path from catalog)
         // ProductImageView uses thumbnails by default for faster loading in lists (unless user enabled full-size)
+        print("🔍 [ProductImageView] imagePath: \(imagePath ?? "nil"), manufacturer: \(manufacturer ?? "nil")")
         if let imagePath = imagePath, !imagePath.isEmpty {
+            print("🌐 [ProductImageView] Attempting CDN download for \(imagePath)")
             let useThumbnail = !UserSettings.shared.downloadFullSizeImages
             if let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath, useThumbnail: useThumbnail) {
+                print("✅ [ProductImageView] CDN download succeeded")
                 loadedImage = cdnImage
                 isLoading = false
                 return
+            } else {
+                print("❌ [ProductImageView] CDN download failed")
             }
+        } else {
+            print("⚠️ [ProductImageView] Skipping CDN - no imagePath")
         }
 
+        // FIXME: TEMPORARILY DISABLED - Testing R2/CDN image loading
         // PRIORITY 2: Load bundle/manufacturer images with low priority to avoid blocking UI
+        /*
         let image = await Task.detached(priority: .background) {
             ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: imagePath)
         }.value
 
         loadedImage = image
+        */
         isLoading = false
     }
 }
@@ -616,12 +645,15 @@ struct ProductImageDetail: View {
             }
         }
 
+        // FIXME: TEMPORARILY DISABLED - Testing R2/CDN image loading
         // PRIORITY 2: Load bundle/manufacturer images
+        /*
         let image = await Task.detached(priority: .utility) {
             ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: imagePath)
         }.value
 
         loadedImage = image
+        */
         isLoading = false
     }
 

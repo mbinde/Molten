@@ -126,7 +126,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
 
     // MARK: - Mapping Helpers
 
-    private nonisolated func mapModelToEntity(_ model: KilnSchedule, entity: KilnScheduleEntity) {
+    private func mapModelToEntity(_ model: KilnSchedule, entity: KilnScheduleEntity) {
         // Ensure segments array is not empty
         guard !model.segments.isEmpty else {
             fatalError("Cannot save KilnSchedule with no segments. Schedule: \(model.name), segments count: \(model.segments.count)")
@@ -166,7 +166,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
         }
     }
 
-    private nonisolated func mapEntityToModel(_ entity: KilnScheduleEntity) throws -> KilnSchedule {
+    private func mapEntityToModel(_ entity: KilnScheduleEntity) throws -> KilnSchedule {
         guard let id = entity.value(forKey: "id") as? UUID,
               let name = entity.value(forKey: "name") as? String,
               let dateCreated = entity.value(forKey: "date_created") as? Date,

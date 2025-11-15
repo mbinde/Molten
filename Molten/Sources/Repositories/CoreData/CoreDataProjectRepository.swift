@@ -325,7 +325,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
 
     // MARK: - Mapping Functions
 
-    private nonisolated func mapModelToEntity(_ model: ProjectModel, entity: Project) {
+    private func mapModelToEntity(_ model: ProjectModel, entity: Project) {
         entity.setValue(model.id, forKey: "id")
         entity.setValue(model.title, forKey: "title")
         entity.setValue(model.type.rawValue, forKey: "project_type")
@@ -436,7 +436,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
         }
     }
 
-    private nonisolated func mapEntityToModel(_ entity: Project) -> ProjectModel? {
+    private func mapEntityToModel(_ entity: Project) -> ProjectModel? {
         guard let id = entity.value(forKey: "id") as? UUID,
               let title = entity.value(forKey: "title") as? String,
               let typeString = entity.value(forKey: "project_type") as? String,

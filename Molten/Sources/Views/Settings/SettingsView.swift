@@ -243,7 +243,7 @@ struct SettingsView: View {
                             if let updateMessage = catalogUpdateViewModel.updateAvailableMessage {
                                 Text(updateMessage)
                                     .font(.caption)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             } else {
                                 Text("v\(catalogUpdateViewModel.currentVersion)")
                                     .font(.caption)
@@ -1032,7 +1032,7 @@ struct SubscriptionManagementView: View {
                     } else {
                         Image(systemName: "star.circle")
                             .font(.largeTitle)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                     }
 
                     VStack(alignment: .leading, spacing: 4) {

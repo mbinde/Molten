@@ -183,7 +183,7 @@ struct FilterChipsRow: View {
                 }
                 if selectedManufacturers.isEmpty {
                     Image(systemName: "chevron.down")
-                        .font(Font.system(size: 10))
+                        .font(.caption2)
                 }
             }
             .foregroundColor(selectedManufacturers.isEmpty ? .secondary : .white)
@@ -225,7 +225,7 @@ struct FilterChipsRow: View {
                 }
                 if selectedCOEs.isEmpty {
                     Image(systemName: "chevron.down")
-                        .font(Font.system(size: 10))
+                        .font(.caption2)
                 }
             }
             .foregroundColor(selectedCOEs.isEmpty ? .secondary : .white)
@@ -270,7 +270,7 @@ struct FilterChipsRow: View {
                 }
                 if selectedTags.isEmpty {
                     Image(systemName: "chevron.down")
-                        .font(Font.system(size: 10))
+                        .font(.caption2)
                 }
             }
             .foregroundColor(selectedTags.isEmpty ? .secondary : .white)
@@ -320,7 +320,7 @@ struct FilterChipsRow: View {
 
                 // Always show dropdown arrow
                 Image(systemName: "chevron.down")
-                    .font(Font.system(size: 10))
+                    .font(.caption2)
             }
             .foregroundColor(DesignSystem.Colors.textSecondary)
             .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)

@@ -396,6 +396,7 @@ struct ProductImageView: View {
     let manufacturer: String?
     let stableId: String?
     let imagePath: String?
+    let imageThumbPath: String?
     let size: CGFloat
 
     @State private var loadedImage: UIImage?
@@ -405,11 +406,12 @@ struct ProductImageView: View {
     // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
     private static let sharedUserImageRepository = AppDependencies.shared.userImageRepository
 
-    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, size: CGFloat = 60) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, size: CGFloat = 60) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.stableId = stableId
         self.imagePath = imagePath
+        self.imageThumbPath = imageThumbPath
         self.size = size
     }
 
@@ -487,11 +489,17 @@ struct ProductImageView: View {
 
         // PRIORITY 1.5: Try to download from CDN (only if we have an exact image_path from catalog)
         // ProductImageView uses thumbnails by default for faster loading in lists (unless user enabled full-size)
-        print("🔍 [ProductImageView] imagePath: \(imagePath ?? "nil"), manufacturer: \(manufacturer ?? "nil")")
+        print("🔍 [ProductImageView] imagePath: \(imagePath ?? "nil"), imageThumbPath: \(imageThumbPath ?? "nil"), manufacturer: \(manufacturer ?? "nil")")
         if let imagePath = imagePath, !imagePath.isEmpty {
             print("🌐 [ProductImageView] Attempting CDN download for \(imagePath)")
             let useThumbnail = !UserSettings.shared.downloadFullSizeImages
-            if let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath, useThumbnail: useThumbnail) {
+            if let cdnImage = await ImageDownloadService.loadImage(
+                itemCode: itemCode,
+                manufacturer: manufacturer,
+                exactFilename: imagePath,
+                exactThumbnailFilename: imageThumbPath,
+                useThumbnail: useThumbnail
+            ) {
                 print("✅ [ProductImageView] CDN download succeeded")
                 loadedImage = cdnImage
                 isLoading = false
@@ -521,6 +529,7 @@ struct ProductImageDetail: View {
     let manufacturer: String?
     let stableId: String?
     let imagePath: String?
+    let imageThumbPath: String?
     let maxSize: CGFloat
     let allowImageUpload: Bool
     let onImageUploaded: (() -> Void)?
@@ -533,11 +542,12 @@ struct ProductImageDetail: View {
     // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
     private static let sharedUserImageRepository = AppDependencies.shared.userImageRepository
 
-    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, onImageUploaded: (() -> Void)? = nil) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, onImageUploaded: (() -> Void)? = nil) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.stableId = stableId
         self.imagePath = imagePath
+        self.imageThumbPath = imageThumbPath
         self.maxSize = maxSize
         self.allowImageUpload = allowImageUpload
         self.onImageUploaded = onImageUploaded
@@ -638,7 +648,13 @@ struct ProductImageDetail: View {
         // ProductImageDetail respects user preference for image quality
         if let imagePath = imagePath, !imagePath.isEmpty {
             let useThumbnail = !UserSettings.shared.downloadFullSizeImages
-            if let cdnImage = await ImageDownloadService.loadImage(itemCode: itemCode, manufacturer: manufacturer, exactFilename: imagePath, useThumbnail: useThumbnail) {
+            if let cdnImage = await ImageDownloadService.loadImage(
+                itemCode: itemCode,
+                manufacturer: manufacturer,
+                exactFilename: imagePath,
+                exactThumbnailFilename: imageThumbPath,
+                useThumbnail: useThumbnail
+            ) {
                 loadedImage = cdnImage
                 isLoading = false
                 return
@@ -782,19 +798,21 @@ struct ProductImageThumbnail: View {
     let manufacturer: String?
     let stableId: String?
     let imagePath: String?
+    let imageThumbPath: String?
     let size: CGFloat
 
-    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, size: CGFloat = 40) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, size: CGFloat = 40) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.stableId = stableId
         self.imagePath = imagePath
+        self.imageThumbPath = imageThumbPath
         self.size = size
     }
 
     var body: some View {
         #if canImport(UIKit)
-        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, stableId: stableId, imagePath: imagePath, size: size)
+        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, stableId: stableId, imagePath: imagePath, imageThumbPath: imageThumbPath, size: size)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(Color(.systemGray4), lineWidth: 0.5)

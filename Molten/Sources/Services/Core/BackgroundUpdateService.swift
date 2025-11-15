@@ -36,11 +36,14 @@ final class BackgroundUpdateService {
             return
         }
 
+        // FIXME: TEMPORARILY DISABLED - Testing catalog updates
         // Check if enough time has passed since last check
+        /*
         guard shouldCheckForUpdates() else {
             log.debug("⏰ Not enough time has passed since last update check")
             return
         }
+        */
 
         // Check network connectivity (with retry for network monitor initialization)
         // NWPathMonitor needs a moment to determine actual network status

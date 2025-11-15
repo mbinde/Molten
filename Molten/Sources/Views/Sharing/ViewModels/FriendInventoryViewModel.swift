@@ -215,6 +215,7 @@ class FriendInventoryViewModel {
                     catalogData: CatalogData(
                         name: catalogItem.glassItem.name,
                         imagePath: catalogItem.glassItem.image_path,
+                        imageThumbPath: catalogItem.glassItem.image_thumb_path,
                         tags: catalogItem.allTags,
                         coe: catalogItem.glassItem.coe
                     )
@@ -371,6 +372,7 @@ class FriendInventoryViewModel {
                     catalogData: CatalogData(
                         name: myItem.catalogItem.name,
                         imagePath: myItem.catalogItem.image_path,
+                        imageThumbPath: myItem.catalogItem.image_thumb_path,
                         tags: myItem.allTags,
                         coe: myItem.catalogItem.coe ?? 0
                     )
@@ -620,6 +622,7 @@ struct EnrichedFriendInventoryItem: Identifiable {
 struct CatalogData {
     let name: String
     let imagePath: String?
+    let imageThumbPath: String?
     let tags: [String]
     let coe: Int32
 }

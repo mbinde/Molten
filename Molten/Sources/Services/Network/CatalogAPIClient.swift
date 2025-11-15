@@ -48,6 +48,7 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
     /// Get latest catalog version metadata
     func getLatestVersion() async throws -> CatalogVersionMetadata {
         let url = baseURL.appendingPathComponent("v1/catalog/version")
+        log.debug("📡 Fetching version from: \(url.absoluteString)")
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -70,6 +71,11 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
 
         switch httpResponse.statusCode {
         case 200:
+            // Debug: Log raw response
+            if let responseString = String(data: data, encoding: .utf8) {
+                log.debug("📥 API Response: \(responseString)")
+            }
+
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             return try decoder.decode(CatalogVersionMetadata.self, from: data)

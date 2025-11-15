@@ -84,23 +84,32 @@ final class MockProjectRepository: ProjectRepository {
     }
 
     func archiveProject(id: UUID, isArchived: Bool) async throws {
-        guard var project = projects[id] else {
+        guard let project = projects[id] else {
             throw NSError(domain: "MockProjectRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Project not found"])
         }
         // Create updated project with new archived status
         let updated = ProjectModel(
             id: project.id,
-            type: project.type,
             title: project.title,
-            summary: project.summary,
-            notes: project.notes,
-            steps: project.steps,
-            referenceUrls: project.referenceUrls,
-            tags: project.tags,
-            isArchived: isArchived,
+            type: project.type,
             dateCreated: project.dateCreated,
             dateModified: Date(),
-            dateArchived: isArchived ? Date() : nil
+            isArchived: isArchived,
+            coe: project.coe,
+            techniqueType: project.techniqueType,
+            summary: project.summary,
+            steps: project.steps,
+            estimatedTime: project.estimatedTime,
+            difficultyLevel: project.difficultyLevel,
+            proposedPriceRange: project.proposedPriceRange,
+            images: project.images,
+            heroImageId: project.heroImageId,
+            glassItems: project.glassItems,
+            referenceUrls: project.referenceUrls,
+            kilnScheduleId: project.kilnScheduleId,
+            author: project.author,
+            timesUsed: project.timesUsed,
+            lastUsedDate: project.lastUsedDate
         )
         projects[id] = updated
     }
@@ -114,22 +123,32 @@ final class MockProjectRepository: ProjectRepository {
     func addStep(_ step: ProjectStepModel) async throws -> ProjectStepModel {
         steps[step.id] = step
         // Add step to its project
-        if let projectId = step.projectId, var project = projects[projectId] {
+        let projectId = step.projectId
+        if let project = projects[projectId] {
             var updatedSteps = project.steps
             updatedSteps.append(step)
             let updated = ProjectModel(
                 id: project.id,
-                type: project.type,
                 title: project.title,
-                summary: project.summary,
-                notes: project.notes,
-                steps: updatedSteps,
-                referenceUrls: project.referenceUrls,
-                tags: project.tags,
-                isArchived: project.isArchived,
+                type: project.type,
                 dateCreated: project.dateCreated,
                 dateModified: Date(),
-                dateArchived: project.dateArchived
+                isArchived: project.isArchived,
+                coe: project.coe,
+                techniqueType: project.techniqueType,
+                summary: project.summary,
+                steps: updatedSteps,
+                estimatedTime: project.estimatedTime,
+                difficultyLevel: project.difficultyLevel,
+                proposedPriceRange: project.proposedPriceRange,
+                images: project.images,
+                heroImageId: project.heroImageId,
+                glassItems: project.glassItems,
+                referenceUrls: project.referenceUrls,
+                kilnScheduleId: project.kilnScheduleId,
+                author: project.author,
+                timesUsed: project.timesUsed,
+                lastUsedDate: project.lastUsedDate
             )
             projects[projectId] = updated
         }
@@ -142,24 +161,34 @@ final class MockProjectRepository: ProjectRepository {
         }
         steps[step.id] = step
         // Update step in its project
-        if let projectId = step.projectId, var project = projects[projectId] {
+        let projectId = step.projectId
+        if let project = projects[projectId] {
             var updatedSteps = project.steps
             if let index = updatedSteps.firstIndex(where: { $0.id == step.id }) {
                 updatedSteps[index] = step
             }
             let updated = ProjectModel(
                 id: project.id,
-                type: project.type,
                 title: project.title,
-                summary: project.summary,
-                notes: project.notes,
-                steps: updatedSteps,
-                referenceUrls: project.referenceUrls,
-                tags: project.tags,
-                isArchived: project.isArchived,
+                type: project.type,
                 dateCreated: project.dateCreated,
                 dateModified: Date(),
-                dateArchived: project.dateArchived
+                isArchived: project.isArchived,
+                coe: project.coe,
+                techniqueType: project.techniqueType,
+                summary: project.summary,
+                steps: updatedSteps,
+                estimatedTime: project.estimatedTime,
+                difficultyLevel: project.difficultyLevel,
+                proposedPriceRange: project.proposedPriceRange,
+                images: project.images,
+                heroImageId: project.heroImageId,
+                glassItems: project.glassItems,
+                referenceUrls: project.referenceUrls,
+                kilnScheduleId: project.kilnScheduleId,
+                author: project.author,
+                timesUsed: project.timesUsed,
+                lastUsedDate: project.lastUsedDate
             )
             projects[projectId] = updated
         }
@@ -171,28 +200,38 @@ final class MockProjectRepository: ProjectRepository {
         }
         steps.removeValue(forKey: id)
         // Remove step from its project
-        if let projectId = step.projectId, var project = projects[projectId] {
-            var updatedSteps = project.steps.filter { $0.id != id }
+        let projectId = step.projectId
+        if let project = projects[projectId] {
+            let updatedSteps = project.steps.filter { $0.id != id }
             let updated = ProjectModel(
                 id: project.id,
-                type: project.type,
                 title: project.title,
-                summary: project.summary,
-                notes: project.notes,
-                steps: updatedSteps,
-                referenceUrls: project.referenceUrls,
-                tags: project.tags,
-                isArchived: project.isArchived,
+                type: project.type,
                 dateCreated: project.dateCreated,
                 dateModified: Date(),
-                dateArchived: project.dateArchived
+                isArchived: project.isArchived,
+                coe: project.coe,
+                techniqueType: project.techniqueType,
+                summary: project.summary,
+                steps: updatedSteps,
+                estimatedTime: project.estimatedTime,
+                difficultyLevel: project.difficultyLevel,
+                proposedPriceRange: project.proposedPriceRange,
+                images: project.images,
+                heroImageId: project.heroImageId,
+                glassItems: project.glassItems,
+                referenceUrls: project.referenceUrls,
+                kilnScheduleId: project.kilnScheduleId,
+                author: project.author,
+                timesUsed: project.timesUsed,
+                lastUsedDate: project.lastUsedDate
             )
             projects[projectId] = updated
         }
     }
 
     func reorderSteps(projectId: UUID, stepIds: [UUID]) async throws {
-        guard var project = projects[projectId] else {
+        guard let project = projects[projectId] else {
             throw NSError(domain: "MockProjectRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Project not found"])
         }
         // Reorder steps according to stepIds
@@ -204,17 +243,26 @@ final class MockProjectRepository: ProjectRepository {
         }
         let updated = ProjectModel(
             id: project.id,
-            type: project.type,
             title: project.title,
-            summary: project.summary,
-            notes: project.notes,
-            steps: reorderedSteps,
-            referenceUrls: project.referenceUrls,
-            tags: project.tags,
-            isArchived: project.isArchived,
+            type: project.type,
             dateCreated: project.dateCreated,
             dateModified: Date(),
-            dateArchived: project.dateArchived
+            isArchived: project.isArchived,
+            coe: project.coe,
+            techniqueType: project.techniqueType,
+            summary: project.summary,
+            steps: reorderedSteps,
+            estimatedTime: project.estimatedTime,
+            difficultyLevel: project.difficultyLevel,
+            proposedPriceRange: project.proposedPriceRange,
+            images: project.images,
+            heroImageId: project.heroImageId,
+            glassItems: project.glassItems,
+            referenceUrls: project.referenceUrls,
+            kilnScheduleId: project.kilnScheduleId,
+            author: project.author,
+            timesUsed: project.timesUsed,
+            lastUsedDate: project.lastUsedDate
         )
         projects[projectId] = updated
     }
@@ -222,30 +270,39 @@ final class MockProjectRepository: ProjectRepository {
     // MARK: - Reference URLs Management
 
     func addReferenceUrl(_ url: ProjectReferenceUrl, to projectId: UUID) async throws {
-        guard var project = projects[projectId] else {
+        guard let project = projects[projectId] else {
             throw NSError(domain: "MockProjectRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Project not found"])
         }
         var updatedUrls = project.referenceUrls
         updatedUrls.append(url)
         let updated = ProjectModel(
             id: project.id,
-            type: project.type,
             title: project.title,
-            summary: project.summary,
-            notes: project.notes,
-            steps: project.steps,
-            referenceUrls: updatedUrls,
-            tags: project.tags,
-            isArchived: project.isArchived,
+            type: project.type,
             dateCreated: project.dateCreated,
             dateModified: Date(),
-            dateArchived: project.dateArchived
+            isArchived: project.isArchived,
+            coe: project.coe,
+            techniqueType: project.techniqueType,
+            summary: project.summary,
+            steps: project.steps,
+            estimatedTime: project.estimatedTime,
+            difficultyLevel: project.difficultyLevel,
+            proposedPriceRange: project.proposedPriceRange,
+            images: project.images,
+            heroImageId: project.heroImageId,
+            glassItems: project.glassItems,
+            referenceUrls: updatedUrls,
+            kilnScheduleId: project.kilnScheduleId,
+            author: project.author,
+            timesUsed: project.timesUsed,
+            lastUsedDate: project.lastUsedDate
         )
         projects[projectId] = updated
     }
 
     func updateReferenceUrl(_ url: ProjectReferenceUrl, in projectId: UUID) async throws {
-        guard var project = projects[projectId] else {
+        guard let project = projects[projectId] else {
             throw NSError(domain: "MockProjectRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Project not found"])
         }
         var updatedUrls = project.referenceUrls
@@ -254,39 +311,57 @@ final class MockProjectRepository: ProjectRepository {
         }
         let updated = ProjectModel(
             id: project.id,
-            type: project.type,
             title: project.title,
-            summary: project.summary,
-            notes: project.notes,
-            steps: project.steps,
-            referenceUrls: updatedUrls,
-            tags: project.tags,
-            isArchived: project.isArchived,
+            type: project.type,
             dateCreated: project.dateCreated,
             dateModified: Date(),
-            dateArchived: project.dateArchived
+            isArchived: project.isArchived,
+            coe: project.coe,
+            techniqueType: project.techniqueType,
+            summary: project.summary,
+            steps: project.steps,
+            estimatedTime: project.estimatedTime,
+            difficultyLevel: project.difficultyLevel,
+            proposedPriceRange: project.proposedPriceRange,
+            images: project.images,
+            heroImageId: project.heroImageId,
+            glassItems: project.glassItems,
+            referenceUrls: updatedUrls,
+            kilnScheduleId: project.kilnScheduleId,
+            author: project.author,
+            timesUsed: project.timesUsed,
+            lastUsedDate: project.lastUsedDate
         )
         projects[projectId] = updated
     }
 
     func deleteReferenceUrl(id: UUID, from projectId: UUID) async throws {
-        guard var project = projects[projectId] else {
+        guard let project = projects[projectId] else {
             throw NSError(domain: "MockProjectRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Project not found"])
         }
-        var updatedUrls = project.referenceUrls.filter { $0.id != id }
+        let updatedUrls = project.referenceUrls.filter { $0.id != id }
         let updated = ProjectModel(
             id: project.id,
-            type: project.type,
             title: project.title,
-            summary: project.summary,
-            notes: project.notes,
-            steps: project.steps,
-            referenceUrls: updatedUrls,
-            tags: project.tags,
-            isArchived: project.isArchived,
+            type: project.type,
             dateCreated: project.dateCreated,
             dateModified: Date(),
-            dateArchived: project.dateArchived
+            isArchived: project.isArchived,
+            coe: project.coe,
+            techniqueType: project.techniqueType,
+            summary: project.summary,
+            steps: project.steps,
+            estimatedTime: project.estimatedTime,
+            difficultyLevel: project.difficultyLevel,
+            proposedPriceRange: project.proposedPriceRange,
+            images: project.images,
+            heroImageId: project.heroImageId,
+            glassItems: project.glassItems,
+            referenceUrls: updatedUrls,
+            kilnScheduleId: project.kilnScheduleId,
+            author: project.author,
+            timesUsed: project.timesUsed,
+            lastUsedDate: project.lastUsedDate
         )
         projects[projectId] = updated
     }
@@ -304,16 +379,12 @@ final class MockProjectRepository: ProjectRepository {
             if let summary = project.summary, summary.lowercased().contains(queryLower) {
                 return true
             }
-            // Search in notes
-            if let notes = project.notes, notes.lowercased().contains(queryLower) {
-                return true
-            }
             // Search in steps
             for step in project.steps {
-                if step.description.lowercased().contains(queryLower) {
+                if step.title.lowercased().contains(queryLower) {
                     return true
                 }
-                if let notes = step.notes, notes.lowercased().contains(queryLower) {
+                if let description = step.description, description.lowercased().contains(queryLower) {
                     return true
                 }
             }

@@ -47,6 +47,11 @@ class NetworkMonitor: NetworkMonitorProtocol {
             }
         }
         monitor.start(queue: queue)
+
+        // Get initial path state synchronously to avoid race condition
+        // where app checks isConnected before first update arrives
+        // Safe to call directly since NetworkMonitor is @MainActor
+        updateConnectionState(monitor.currentPath)
     }
 
     deinit {
@@ -60,6 +65,9 @@ class NetworkMonitor: NetworkMonitorProtocol {
         isOnWiFi = path.usesInterfaceType(.wifi)
         isExpensive = path.isExpensive
         isConstrained = path.isConstrained
+
+        // Debug logging
+        print("📡 NetworkMonitor: status=\(path.status), isConnected=\(isConnected), isOnWiFi=\(isOnWiFi)")
 
         // Determine connection type
         if path.usesInterfaceType(.wifi) {

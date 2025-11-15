@@ -22,6 +22,7 @@ struct GlassItemRowView: View {
         let sku: String?  // Optional - some manufacturers don't use SKUs
         let stableId: String
         let imagePath: String?
+        let imageThumbPath: String?
         let tags: [String]
 
         init(from completeItem: CompleteInventoryItemModel) {
@@ -30,6 +31,7 @@ struct GlassItemRowView: View {
             self.sku = completeItem.glassItem.sku
             self.stableId = completeItem.glassItem.stable_id
             self.imagePath = completeItem.glassItem.image_path
+            self.imageThumbPath = completeItem.glassItem.image_thumb_path
             self.tags = completeItem.allTags
         }
 
@@ -39,6 +41,7 @@ struct GlassItemRowView: View {
             self.sku = detailedShoppingItem.glassItem.sku
             self.stableId = detailedShoppingItem.glassItem.stable_id
             self.imagePath = detailedShoppingItem.glassItem.image_path
+            self.imageThumbPath = detailedShoppingItem.glassItem.image_thumb_path
             self.tags = detailedShoppingItem.allTags
         }
 
@@ -49,15 +52,17 @@ struct GlassItemRowView: View {
             self.sku = enrichedItem.snapshot.sku
             self.stableId = enrichedItem.snapshot.stableId
             self.imagePath = enrichedItem.catalogData?.imagePath
+            self.imageThumbPath = enrichedItem.catalogData?.imageThumbPath
             self.tags = enrichedItem.catalogData?.tags ?? []
         }
 
-        init(name: String, manufacturer: String, sku: String?, stableId: String, imagePath: String? = nil, tags: [String]) {
+        init(name: String, manufacturer: String, sku: String?, stableId: String, imagePath: String? = nil, imageThumbPath: String? = nil, tags: [String]) {
             self.name = name
             self.manufacturer = manufacturer
             self.sku = sku
             self.stableId = stableId
             self.imagePath = imagePath
+            self.imageThumbPath = imageThumbPath
             self.tags = tags
         }
     }
@@ -87,6 +92,7 @@ struct GlassItemRowView: View {
                 manufacturer: item.manufacturer,
                 stableId: item.stableId,
                 imagePath: item.imagePath,
+                imageThumbPath: item.imageThumbPath,
                 size: 60
             )
 
@@ -122,6 +128,9 @@ struct GlassItemRowView: View {
                 if let badge = badgeContent {
                     badge
                 }
+
+                // Rating badge
+                RatingBadgeView(itemStableId: item.stableId)
 
                 // Tags if available
                 if !item.tags.isEmpty {

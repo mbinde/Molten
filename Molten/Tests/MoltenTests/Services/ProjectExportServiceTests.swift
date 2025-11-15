@@ -31,7 +31,7 @@ struct ProjectExportServiceTests {
         )
 
         // Act
-        let exportURL = try await service.exportPlan(plan, quality: .optimized)
+        let exportURL = try await service.exportPlan(plan, quality: ExportQuality.optimized)
 
         // Assert
         #expect(FileManager.default.fileExists(atPath: exportURL.path), "Export file should exist")
@@ -54,9 +54,9 @@ struct ProjectExportServiceTests {
         // Add image to mock repository
         let imageModel = try await mockImageRepo.saveImage(
             testImage,
-            ownerType: .projectPlan,
+            ownerType: ImageOwnerType.projectPlan,
             ownerId: planId.uuidString,
-            type: .primary
+            type: UserImageType.primary
         )
 
         let plan = ProjectModel(
@@ -75,9 +75,9 @@ struct ProjectExportServiceTests {
         let service = ProjectExportService(userImageRepository: mockImageRepo)
 
         // Act - Export with different qualities (using skipCompression to get directories)
-        let fullURL = try await service.exportPlan(plan, quality: .full, skipCompression: true)
-        let optimizedURL = try await service.exportPlan(plan, quality: .optimized, skipCompression: true)
-        let compactURL = try await service.exportPlan(plan, quality: .compact, skipCompression: true)
+        let fullURL = try await service.exportPlan(plan, quality: ExportQuality.full, skipCompression: true)
+        let optimizedURL = try await service.exportPlan(plan, quality: ExportQuality.optimized, skipCompression: true)
+        let compactURL = try await service.exportPlan(plan, quality: ExportQuality.compact, skipCompression: true)
 
         // Get image file sizes from the images directory
         let fullImageURL = fullURL.appendingPathComponent("images").appendingPathComponent("\(imageModel.id.uuidString).jpg")
@@ -124,8 +124,8 @@ struct ProjectExportServiceTests {
         )
 
         // Act
-        let emptyEstimate = await service.estimateExportSize(emptyPlan, quality: .optimized)
-        let withImagesEstimate = await service.estimateExportSize(planWithImages, quality: .optimized)
+        let emptyEstimate = await service.estimateExportSize(emptyPlan, quality: ExportQuality.optimized)
+        let withImagesEstimate = await service.estimateExportSize(planWithImages, quality: ExportQuality.optimized)
 
         // Assert
         #expect(emptyEstimate < 50_000, "Empty plan should be under 50KB")
@@ -161,8 +161,8 @@ struct ProjectExportServiceTests {
         )
 
         // Act
-        let smallSize = await service.formattedEstimatedSize(smallPlan, quality: .optimized)
-        let largeSize = await service.formattedEstimatedSize(largePlan, quality: .optimized)
+        let smallSize = await service.formattedEstimatedSize(smallPlan, quality: ExportQuality.optimized)
+        let largeSize = await service.formattedEstimatedSize(largePlan, quality: ExportQuality.optimized)
 
         // Assert
         #expect(smallSize.contains("KB") || smallSize.contains("bytes"), "Small plan should show KB or bytes")
@@ -182,7 +182,7 @@ struct ProjectExportServiceTests {
         )
 
         // Act
-        let exportURL = try await service.exportPlan(plan, quality: .optimized)
+        let exportURL = try await service.exportPlan(plan, quality: ExportQuality.optimized)
 
         // Assert
         #expect(!exportURL.lastPathComponent.contains("/"), "Filename should not contain /")
@@ -231,7 +231,7 @@ struct ProjectExportServiceTests {
         )
 
         // Act
-        let exportURL = try await service.exportPlan(plan, quality: .optimized)
+        let exportURL = try await service.exportPlan(plan, quality: ExportQuality.optimized)
 
         // Verify the file exists
         #expect(FileManager.default.fileExists(atPath: exportURL.path), "Export file should exist")

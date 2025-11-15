@@ -91,10 +91,13 @@ final class CatalogDatabaseManager: Sendable {
         let documentsVersion = try await getDocumentsVersion()
         let bundleVersion = try await getBundleVersion()
 
+        print("📊 Database versions - Documents: \(documentsVersion), Bundle: \(bundleVersion)")
+
         // For now, only handle bundle updates (OTA updates to be added later)
         if bundleVersion > documentsVersion {
-            print("🔄 Bundle has newer version (\(bundleVersion) > \(documentsVersion))")
+            print("🔄 Bundle has newer version (\(bundleVersion) > \(documentsVersion)) - Replacing local database")
             try await copyBundleToDocuments()
+            print("✅ Database replaced successfully")
         } else {
             print("✅ Database is up to date (version \(documentsVersion))")
         }

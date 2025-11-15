@@ -84,6 +84,7 @@ class AppDependencies {
     let kilnScheduleRepository: KilnScheduleRepository
     let recipeRepository: RecipeRepository
     let unifiedLocationRepository: UnifiedLocationRepository
+    let ratingRepository: RatingRepository
     #if canImport(UIKit)
     let userImageRepository: UserImageRepository
     #endif
@@ -100,6 +101,7 @@ class AppDependencies {
     let unifiedLocationService: UnifiedLocationService
     let entitlementService: EntitlementService
     let subscriptionService: SubscriptionServiceProtocol
+    let ratingService: RatingService
 
     // Background services (created lazily)
     private var _catalogUpdateService: CatalogUpdateService?
@@ -122,7 +124,7 @@ class AppDependencies {
             print("🔧 AppDependencies: Core Data not ready, starting initialization...")
             // Need to initialize - use a semaphore to wait for async init
             let semaphore = DispatchSemaphore(value: 0)
-            Task.detached {
+            Task.detached(priority: .userInitiated) {
                 print("🔧 AppDependencies: Task.detached started")
                 print("🔧 AppDependencies: About to access PersistenceController.shared")
                 let controller = PersistenceController.shared
@@ -172,6 +174,7 @@ class AppDependencies {
         self.kilnScheduleRepository = CoreDataKilnScheduleRepository(context: cloudContext)
         self.recipeRepository = CoreDataRecipeRepository(context: cloudContext)
         self.unifiedLocationRepository = CoreDataUnifiedLocationRepository(persistenceController: persistenceController)
+        self.ratingRepository = CoreDataRatingRepository(localContext: localContext, cloudContext: cloudContext)
         #if canImport(UIKit)
         self.userImageRepository = CoreDataUserImageRepository(context: cloudContext)
         #endif
@@ -187,7 +190,8 @@ class AppDependencies {
             self.recipeService,
             self.unifiedLocationService,
             self.entitlementService,
-            self.subscriptionService
+            self.subscriptionService,
+            self.ratingService
         ) = Self.setupServices(
             glassItemRepository: glassItemRepository,
             coatingItemRepository: coatingItemRepository,
@@ -203,6 +207,7 @@ class AppDependencies {
             kilnScheduleRepository: kilnScheduleRepository,
             recipeRepository: recipeRepository,
             unifiedLocationRepository: unifiedLocationRepository,
+            ratingRepository: ratingRepository,
             subscriptionService: RevenueCatSubscriptionService()
         )
     }
@@ -226,6 +231,7 @@ class AppDependencies {
         kilnScheduleRepository: KilnScheduleRepository,
         recipeRepository: RecipeRepository,
         unifiedLocationRepository: UnifiedLocationRepository,
+        ratingRepository: RatingRepository,
         subscriptionService: SubscriptionServiceProtocol
     ) -> (
         InventoryTrackingService,
@@ -237,7 +243,8 @@ class AppDependencies {
         RecipeService,
         UnifiedLocationService,
         EntitlementService,
-        SubscriptionServiceProtocol
+        SubscriptionServiceProtocol,
+        RatingService
     ) {
         // Create inventory tracking service first (needed by catalog service)
         let inventoryTrackingService = InventoryTrackingService(
@@ -297,6 +304,9 @@ class AppDependencies {
         // Create entitlement service
         let entitlementService = EntitlementService()
 
+        // Create rating service
+        let ratingService = RatingService(repository: ratingRepository)
+
         return (
             inventoryTrackingService,
             catalogService,
@@ -307,7 +317,8 @@ class AppDependencies {
             recipeService,
             unifiedLocationService,
             entitlementService,
-            subscriptionService
+            subscriptionService,
+            ratingService
         )
     }
 

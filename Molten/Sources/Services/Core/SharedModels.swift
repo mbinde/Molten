@@ -756,11 +756,15 @@ struct ManufacturerStatisticsModel: Identifiable, Sendable {
 // MARK: - Sorting Logic (Business Rules)
 
 extension ManufacturerStatisticsModel: Comparable {
-    /// Sort manufacturers by itemCount (descending)
+    /// Sort manufacturers by itemCount (descending), then by name (ascending) for stable ordering
     /// Business rule: Manufacturers with most items should appear first
     nonisolated static func < (lhs: ManufacturerStatisticsModel, rhs: ManufacturerStatisticsModel) -> Bool {
         // Higher itemCount is "less than" for descending sort
-        return lhs.itemCount > rhs.itemCount
+        if lhs.itemCount != rhs.itemCount {
+            return lhs.itemCount > rhs.itemCount
+        }
+        // Tiebreaker: sort by name alphabetically for stable ordering
+        return lhs.name < rhs.name
     }
 
     nonisolated static func == (lhs: ManufacturerStatisticsModel, rhs: ManufacturerStatisticsModel) -> Bool {

@@ -108,12 +108,12 @@ actor CatalogService {
         if includeWithoutInventory {
             filteredItems = allCatalogItems
         } else {
-            let itemsWithInventory = Set(try await trackingService.inventoryRepository.getItemsWithInventory())
+            let itemsWithInventory = Set(try await trackingService.getItemsWithInventory())
             filteredItems = allCatalogItems.filter { itemsWithInventory.contains($0.stable_id) }
         }
 
         // OPTIMIZED: Batch fetch inventory for all items instead of individual calls
-        let allInventory = try await trackingService.inventoryRepository.fetchInventory(matching: nil)
+        let allInventory = try await trackingService.fetchAllInventory(matching: nil)
         let inventoryByItem = Dictionary(grouping: allInventory) { $0.item_stable_id }
 
         // OPTIMIZED: Batch fetch tags for all items instead of individual calls
@@ -159,7 +159,7 @@ actor CatalogService {
         }
 
         // OPTIMIZED: Batch fetch inventory for all items
-        let allInventory = try await trackingService.inventoryRepository.fetchInventory(matching: nil)
+        let allInventory = try await trackingService.fetchAllInventory(matching: nil)
         let inventoryByItem = Dictionary(grouping: allInventory) { $0.item_stable_id }
 
         // OPTIMIZED: Batch fetch tags for all items
@@ -363,7 +363,7 @@ actor CatalogService {
     func deleteGlassItem(stableId: String) async throws {
         // Cascade delete all related data
         // 1. Delete all inventory for this item (this will also cascade to locations)
-        try await inventoryTrackingService.inventoryRepository.deleteInventory(forItem: stableId)
+        try await inventoryTrackingService.deleteInventory(forItem: stableId)
 
         // 2. Remove all tags for this item
         try await itemTagsRepository.removeAllTags(fromItem: stableId)
@@ -380,7 +380,7 @@ actor CatalogService {
         // Cascade delete all related data for each item
         for naturalKey in naturalKeys {
             // 1. Delete all inventory for this item (this will also cascade to locations)
-            try await inventoryTrackingService.inventoryRepository.deleteInventory(forItem: naturalKey)
+            try await inventoryTrackingService.deleteInventory(forItem: naturalKey)
 
             // 2. Remove all tags for this item
             try await itemTagsRepository.removeAllTags(fromItem: naturalKey)
@@ -463,7 +463,7 @@ actor CatalogService {
         
         for item in allItems {
             // Check for inventory
-            let inventory = try await trackingService.inventoryRepository.fetchInventory(forItem: item.stable_id)
+            let inventory = try await trackingService.fetchInventory(forItem: item.stable_id)
             if inventory.isEmpty {
                 itemsWithoutInventory.append(item)
             }
@@ -505,7 +505,7 @@ actor CatalogService {
         let totalItems = try await glassItemRepository.fetchItems(matching: nil).count
         let totalManufacturers = try await glassItemRepository.getDistinctManufacturers().count
         let totalTags = try await tagsRepository.getAllTags().count
-        let itemsWithInventory = try await trackingService.inventoryRepository.getItemsWithInventory().count
+        let itemsWithInventory = try await trackingService.getItemsWithInventory().count
         let lowStockItems = try await trackingService.getLowStockItems(threshold: 5.0).count
 
         // Use business logic from model

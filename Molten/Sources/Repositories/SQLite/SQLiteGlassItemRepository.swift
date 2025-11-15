@@ -228,8 +228,13 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
         }
 
         // Bind parameters
+        // Use SQLITE_TRANSIENT to tell SQLite to make its own copy of the string
+        let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
         for (index, parameter) in parameters.enumerated() {
-            sqlite3_bind_text(statement, Int32(index + 1), parameter, -1, nil)
+            let result = sqlite3_bind_text(statement, Int32(index + 1), parameter, -1, SQLITE_TRANSIENT)
+            guard result == SQLITE_OK else {
+                throw SQLiteError.queryFailed("Failed to bind parameter \(index): \(String(cString: sqlite3_errmsg(db)))")
+            }
         }
 
         // Execute query and collect results

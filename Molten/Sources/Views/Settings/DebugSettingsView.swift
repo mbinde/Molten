@@ -122,10 +122,17 @@ struct DebugSettingsView: View {
     }
 
     private func loadActualCatalogVersion() async {
-        // Read version from the actual catalog database
-        let repository = SQLiteGlassItemRepository()
-        if let version = try? await repository.getCatalogVersion() {
-            actualCatalogVersion = version
+        // Read version directly from the catalog database
+        let dbManager = CatalogDatabaseManager.shared
+        if let dbPath = dbManager.getDatabasePath(),
+           let db = try? dbManager.openDatabase(at: dbPath) {
+            defer { try? db.close() }
+
+            let query = "SELECT value FROM metadata WHERE key = 'version'"
+            if let versionString = try? db.scalar(query) as? String,
+               let version = Int(versionString) {
+                actualCatalogVersion = version
+            }
         }
     }
 }

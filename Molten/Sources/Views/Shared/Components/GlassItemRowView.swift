@@ -24,6 +24,7 @@ struct GlassItemRowView: View {
         let imagePath: String?
         let imageThumbPath: String?
         let tags: [String]
+        let rating: AggregatedRatingModel?  // Optional rating data
 
         init(from completeItem: CompleteInventoryItemModel) {
             self.name = completeItem.glassItem.name
@@ -33,6 +34,7 @@ struct GlassItemRowView: View {
             self.imagePath = completeItem.glassItem.image_path
             self.imageThumbPath = completeItem.glassItem.image_thumb_path
             self.tags = completeItem.allTags
+            self.rating = completeItem.rating
         }
 
         init(from detailedShoppingItem: DetailedShoppingListItemModel) {
@@ -43,6 +45,7 @@ struct GlassItemRowView: View {
             self.imagePath = detailedShoppingItem.glassItem.image_path
             self.imageThumbPath = detailedShoppingItem.glassItem.image_thumb_path
             self.tags = detailedShoppingItem.allTags
+            self.rating = nil  // Shopping list items don't include ratings
         }
 
         init(from enrichedItem: EnrichedFriendInventoryItem) {
@@ -54,9 +57,10 @@ struct GlassItemRowView: View {
             self.imagePath = enrichedItem.catalogData?.imagePath
             self.imageThumbPath = enrichedItem.catalogData?.imageThumbPath
             self.tags = enrichedItem.catalogData?.tags ?? []
+            self.rating = nil  // Friend inventory items don't include ratings
         }
 
-        init(name: String, manufacturer: String, sku: String?, stableId: String, imagePath: String? = nil, imageThumbPath: String? = nil, tags: [String]) {
+        init(name: String, manufacturer: String, sku: String?, stableId: String, imagePath: String? = nil, imageThumbPath: String? = nil, tags: [String], rating: AggregatedRatingModel? = nil) {
             self.name = name
             self.manufacturer = manufacturer
             self.sku = sku
@@ -64,6 +68,7 @@ struct GlassItemRowView: View {
             self.imagePath = imagePath
             self.imageThumbPath = imageThumbPath
             self.tags = tags
+            self.rating = rating
         }
     }
 
@@ -104,7 +109,7 @@ struct GlassItemRowView: View {
                     .lineLimit(1)
 
                 // Manufacturer and SKU/natural key
-                HStack {
+                HStack(spacing: 4) {
                     // Show full manufacturer name instead of abbreviation
                     Text(GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer)
                         .font(.subheadline)
@@ -121,6 +126,26 @@ struct GlassItemRowView: View {
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
+
+                    // Show rating inline if available and has enough ratings
+                    if let rating = item.rating, rating.hasEnoughRatings {
+                        Text("•")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Image(systemName: "star.fill")
+                            .font(.caption)
+                            .foregroundStyle(.yellow)
+
+                        Text(rating.formattedAverageRating)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+
+                        Text("(\(rating.totalRatings))")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .lineLimit(1)
 
@@ -128,9 +153,6 @@ struct GlassItemRowView: View {
                 if let badge = badgeContent {
                     badge
                 }
-
-                // Rating badge
-                RatingBadgeView(itemStableId: item.stableId)
 
                 // Tags if available
                 if !item.tags.isEmpty {

@@ -47,7 +47,8 @@ struct DeepLinkedItemView: View {
     @State private var showingActionConfirmation = false
     @State private var showingActionMenu = false
     @State private var actionInProgress = false
-    @State private var actionSuccessMessage: String?
+    @State private var actionSuccessMessage = ""
+    @State private var showActionSuccessToast = false
 
     // Services from AppDependencies (NOT @State - services are stable)
     private let deps: AppDependencies
@@ -77,32 +78,14 @@ struct DeepLinkedItemView: View {
                 // Main content
                 Group {
                     if isLoading {
-                        ProgressView("Loading item...")
+                        LoadingStateView(message: "Loading item...")
                     } else if let error = errorMessage {
                         errorView(error)
                     } else if let item = item {
-                        // Show success message overlay if action succeeded
-                        ZStack {
-                            InventoryDetailView(
-                                item: item,
-                                deps: deps
-                            )
-
-                            if let successMessage = actionSuccessMessage {
-                                VStack {
-                                    Spacer()
-                                    Text(successMessage)
-                                        .font(.headline)
-                                        .foregroundColor(.white)
-                                        .padding()
-                                        .background(Color.green)
-                                        .cornerRadius(10)
-                                        .padding()
-                                    Spacer().frame(height: 100)
-                                }
-                                .transition(.move(edge: .bottom).combined(with: .opacity))
-                            }
-                        }
+                        InventoryDetailView(
+                            item: item,
+                            deps: deps
+                        )
                     } else {
                         errorView("Item not found")
                     }
@@ -140,6 +123,12 @@ struct DeepLinkedItemView: View {
                     Text("Are you sure you want to \(selectedAction.rawValue.lowercased()) for \(item.glassItem.name)?")
                 }
             }
+            .toast(
+                message: actionSuccessMessage,
+                style: .success,
+                placement: .bottom,
+                isShowing: $showActionSuccessToast
+            )
         }
     }
 
@@ -329,16 +318,9 @@ struct DeepLinkedItemView: View {
     }
 
     private func showSuccessMessage(_ message: String) {
+        actionSuccessMessage = message
         withAnimation {
-            actionSuccessMessage = message
-        }
-
-        // Hide after 2 seconds
-        Task {
-            try? await Task.sleep(for: .seconds(2))
-            withAnimation {
-                actionSuccessMessage = nil
-            }
+            showActionSuccessToast = true
         }
     }
 }

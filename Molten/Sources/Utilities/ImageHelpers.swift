@@ -412,15 +412,13 @@ struct ProductImageView: View {
             }
         }
 
-        // FIXME: TEMPORARILY DISABLED - Testing R2/CDN image loading
-        // PRIORITY 2: Load bundle/manufacturer images with low priority to avoid blocking UI
-        /*
+        // PRIORITY 2: Load bundle/manufacturer images (fallback)
+        // This will load manufacturer logos for manufacturers where we don't have product image permission
         let image = await Task.detached(priority: .background) {
             ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: imagePath)
         }.value
 
         loadedImage = image
-        */
         isLoading = false
     }
 }
@@ -561,15 +559,13 @@ struct ProductImageDetail: View {
             }
         }
 
-        // FIXME: TEMPORARILY DISABLED - Testing R2/CDN image loading
-        // PRIORITY 2: Load bundle/manufacturer images
-        /*
+        // PRIORITY 2: Load bundle/manufacturer images (fallback)
+        // This will load manufacturer logos for manufacturers where we don't have product image permission
         let image = await Task.detached(priority: .utility) {
             ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: imagePath)
         }.value
 
         loadedImage = image
-        */
         isLoading = false
     }
 
@@ -591,8 +587,7 @@ struct ProductImageDetail: View {
             // Post notification so all ProductImageView instances reload
             NotificationCenter.default.post(name: .userImageUploaded, object: stableId)
         } catch {
-            // TODO: Show error to user in UI
-            print("Failed to upload image: \(error)")
+            // TODO: Show error to user in UI (silently fail for now)
         }
     }
 }

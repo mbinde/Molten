@@ -42,9 +42,7 @@ struct StoreListView: View {
 
                 // Content (Split view: Map + List)
                 if viewModel.isLoading {
-                    ProgressView("Loading stores...")
-                        .padding()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    LoadingStateView(message: "Loading stores...")
                 } else if let error = viewModel.errorMessage {
                     errorView(error)
                 } else {

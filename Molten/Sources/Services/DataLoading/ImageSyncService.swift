@@ -63,16 +63,13 @@ actor ImageSyncService {
         if path.status == .satisfied {
             if path.usesInterfaceType(.wifi) {
                 currentNetworkStatus = .wifi
-                print("📶 [ImageSyncService] Network: WiFi")
             } else if path.usesInterfaceType(.cellular) {
                 currentNetworkStatus = .cellular
-                print("📶 [ImageSyncService] Network: Cellular")
             } else {
                 currentNetworkStatus = .wifi // Assume WiFi for wired connections
             }
         } else {
             currentNetworkStatus = .offline
-            print("📶 [ImageSyncService] Network: Offline")
         }
     }
 
@@ -106,10 +103,7 @@ actor ImageSyncService {
     /// Called when downloading a new catalog
     /// Downloads thumbnails for new/changed items, respecting network conditions
     func syncThumbnailsAfterCatalogUpdate(catalogItems: [CatalogItemData]) async throws {
-        print("🔄 [ImageSyncService] Starting thumbnail sync for catalog update")
-
         guard shouldDownloadImages() else {
-            print("⚠️ [ImageSyncService] Skipping sync - network conditions not suitable")
             return
         }
 
@@ -132,7 +126,6 @@ actor ImageSyncService {
 
             // Find this image in the manifest
             guard let manifestEntry = manifest.images.first(where: { $0.filename == thumbFilename }) else {
-                print("⚠️ [ImageSyncService] Image not in manifest: \(thumbFilename)")
                 continue
             }
 
@@ -157,8 +150,6 @@ actor ImageSyncService {
                 }
             }
         }
-
-        print("✅ [ImageSyncService] Sync complete: \(downloadCount) downloaded, \(skipCount) up to date")
     }
 
     // MARK: - On-Demand Workflow
@@ -178,7 +169,6 @@ actor ImageSyncService {
 
         // If not cached, only download on WiFi
         guard currentNetworkStatus == .wifi else {
-            print("⚠️ [ImageSyncService] Not downloading full image - not on WiFi")
             return nil
         }
 
@@ -196,17 +186,13 @@ actor ImageSyncService {
     /// Performs a background check for updated images
     /// Should be called periodically (e.g., daily background task)
     func performBackgroundImageRefresh() async throws {
-        print("🔄 [ImageSyncService] Starting background image refresh")
-
         // Only on WiFi for background tasks
         guard currentNetworkStatus == .wifi else {
-            print("⚠️ [ImageSyncService] Skipping background refresh - not on WiFi")
             return
         }
 
         // Check if we need to refresh
         guard shouldCheckForUpdates() else {
-            print("⏭️ [ImageSyncService] Skipping - checked recently")
             return
         }
 
@@ -222,8 +208,6 @@ actor ImageSyncService {
                 needsUpdate.append((imageEntry.filename, imageEntry.etag))
             }
         }
-
-        print("📊 [ImageSyncService] Found \(needsUpdate.count) images needing update")
 
         // Download updated images (thumbnails only for background refresh)
         for (index, update) in needsUpdate.enumerated() {
@@ -254,8 +238,6 @@ actor ImageSyncService {
                 }
             }
         }
-
-        print("✅ [ImageSyncService] Background refresh complete")
     }
 
     // MARK: - Helpers

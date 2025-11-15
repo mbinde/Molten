@@ -9,6 +9,80 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Filterable Protocol
+
+/// Protocol for filters that can compute available values and counts
+protocol Filterable {
+    associatedtype FilterKey: Hashable
+
+    /// Extract the filter key(s) from an item
+    func extractFilterKeys(_ item: CompleteInventoryItemModel) -> [FilterKey]
+
+    /// Whether this filter is currently active (should be excluded from count computation)
+    func isActive(in viewModel: CatalogViewModel) -> Bool
+
+    /// Apply this specific filter to items
+    func applyFilter(to items: [CompleteInventoryItemModel], viewModel: CatalogViewModel) -> [CompleteInventoryItemModel]
+}
+
+// MARK: - Concrete Filters
+
+struct ManufacturerFilter: Filterable {
+    func extractFilterKeys(_ item: CompleteInventoryItemModel) -> [String] {
+        let mfr = item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+        return mfr.isEmpty ? [] : [mfr]
+    }
+
+    func isActive(in viewModel: CatalogViewModel) -> Bool {
+        return !viewModel.selectedManufacturers.isEmpty
+    }
+
+    func applyFilter(to items: [CompleteInventoryItemModel], viewModel: CatalogViewModel) -> [CompleteInventoryItemModel] {
+        guard !viewModel.selectedManufacturers.isEmpty else { return items }
+        return items.filter { item in
+            viewModel.selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+    }
+}
+
+struct COEFilter: Filterable {
+    func extractFilterKeys(_ item: CompleteInventoryItemModel) -> [Int32] {
+        guard let coe = item.catalogItem.coe else { return [] }
+        return [coe]
+    }
+
+    func isActive(in viewModel: CatalogViewModel) -> Bool {
+        return !viewModel.selectedCOEs.isEmpty
+    }
+
+    func applyFilter(to items: [CompleteInventoryItemModel], viewModel: CatalogViewModel) -> [CompleteInventoryItemModel] {
+        guard !viewModel.selectedCOEs.isEmpty else { return items }
+        return items.filter { item in
+            if let coe = item.catalogItem.coe {
+                return viewModel.selectedCOEs.contains(coe)
+            }
+            return false
+        }
+    }
+}
+
+struct TagFilter: Filterable {
+    func extractFilterKeys(_ item: CompleteInventoryItemModel) -> [String] {
+        return item.allTags
+    }
+
+    func isActive(in viewModel: CatalogViewModel) -> Bool {
+        return !viewModel.selectedTags.isEmpty
+    }
+
+    func applyFilter(to items: [CompleteInventoryItemModel], viewModel: CatalogViewModel) -> [CompleteInventoryItemModel] {
+        guard !viewModel.selectedTags.isEmpty else { return items }
+        return items.filter { item in
+            !viewModel.selectedTags.isDisjoint(with: Set(item.allTags))
+        }
+    }
+}
+
 /// ViewModel for the Catalog view
 ///
 /// Manages presentation logic for:
@@ -47,7 +121,13 @@ class CatalogViewModel: CatalogViewModelProtocol {
         }
     }
 
-    var searchTitlesOnly = true
+    var searchTitlesOnly = true {
+        didSet {
+            if searchTitlesOnly != oldValue {
+                applyFilters()
+            }
+        }
+    }
 
     var selectedTags: Set<String> = [] {
         didSet {
@@ -363,32 +443,44 @@ class CatalogViewModel: CatalogViewModelProtocol {
         }
     }
 
-    private func computeManufacturerCounts() -> [String: Int] {
+    // MARK: - Generic Filter Computation
+
+    /// Generic method to compute available filter values and their counts
+    /// Applies all filters EXCEPT the one being computed to show accurate counts
+    private func computeAvailableValues<F: Filterable>(_ filter: F) -> [F.FilterKey: Int] {
         var filtered = items
 
-        // Apply all filters EXCEPT manufacturer
-        // Apply product type filter
+        // Apply product type filter (always applied)
         if !selectedProductTypes.isEmpty {
             filtered = filtered.filter { item in
                 selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
             }
         }
 
-        if !selectedTags.isEmpty {
-            filtered = filtered.filter { item in
-                !selectedTags.isDisjoint(with: Set(item.allTags))
+        // Apply all OTHER filters (not the one we're computing)
+        let allFilters: [any Filterable] = [
+            ManufacturerFilter(),
+            COEFilter(),
+            TagFilter()
+        ]
+
+        for otherFilter in allFilters {
+            // Skip the filter we're computing counts for
+            if type(of: otherFilter) == type(of: filter) {
+                continue
+            }
+
+            // Apply filters that are active
+            if type(of: otherFilter) == ManufacturerFilter.self {
+                filtered = ManufacturerFilter().applyFilter(to: filtered, viewModel: self)
+            } else if type(of: otherFilter) == COEFilter.self {
+                filtered = COEFilter().applyFilter(to: filtered, viewModel: self)
+            } else if type(of: otherFilter) == TagFilter.self {
+                filtered = TagFilter().applyFilter(to: filtered, viewModel: self)
             }
         }
 
-        if !selectedCOEs.isEmpty {
-            filtered = filtered.filter { item in
-                if let coe = item.catalogItem.coe {
-                    return selectedCOEs.contains(coe)
-                }
-                return false
-            }
-        }
-
+        // Apply search filter (always applied when active)
         if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
             let searchMode = SearchTextParser.parseSearchText(searchText)
             filtered = filtered.filter { item in
@@ -407,116 +499,26 @@ class CatalogViewModel: CatalogViewModelProtocol {
             }
         }
 
-        var counts: [String: Int] = [:]
+        // Count occurrences of each filter key
+        var counts: [F.FilterKey: Int] = [:]
         for item in filtered {
-            let mfr = item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
-            counts[mfr, default: 0] += 1
+            for key in filter.extractFilterKeys(item) {
+                counts[key, default: 0] += 1
+            }
         }
         return counts
+    }
+
+    private func computeManufacturerCounts() -> [String: Int] {
+        return computeAvailableValues(ManufacturerFilter())
     }
 
     private func computeCOECounts() -> [Int32: Int] {
-        var filtered = items
-
-        // Apply all filters EXCEPT COE
-        // Apply product type filter
-        if !selectedProductTypes.isEmpty {
-            filtered = filtered.filter { item in
-                selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
-            }
-        }
-
-        if !selectedManufacturers.isEmpty {
-            filtered = filtered.filter { item in
-                selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
-            }
-        }
-
-        if !selectedTags.isEmpty {
-            filtered = filtered.filter { item in
-                !selectedTags.isDisjoint(with: Set(item.allTags))
-            }
-        }
-
-        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-            let searchMode = SearchTextParser.parseSearchText(searchText)
-            filtered = filtered.filter { item in
-                if searchTitlesOnly {
-                    return SearchTextParser.matchesName(name: item.catalogItem.name, mode: searchMode)
-                } else {
-                    let allFields = [
-                        item.catalogItem.name,
-                        item.catalogItem.stable_id,
-                        item.catalogItem.manufacturer,
-                        item.catalogItem.sku,
-                        item.catalogItem.mfr_notes
-                    ].compactMap { $0 }
-                    return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-                }
-            }
-        }
-
-        var counts: [Int32: Int] = [:]
-        for item in filtered {
-            // Only count COE for glass items
-            if let coe = item.catalogItem.coe {
-                counts[coe, default: 0] += 1
-            }
-        }
-        return counts
+        return computeAvailableValues(COEFilter())
     }
 
     private func computeTagCounts() -> [String: Int] {
-        var filtered = items
-
-        // Apply all filters EXCEPT tags
-        // Apply product type filter
-        if !selectedProductTypes.isEmpty {
-            filtered = filtered.filter { item in
-                selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
-            }
-        }
-
-        if !selectedManufacturers.isEmpty {
-            filtered = filtered.filter { item in
-                selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
-            }
-        }
-
-        if !selectedCOEs.isEmpty {
-            filtered = filtered.filter { item in
-                if let coe = item.catalogItem.coe {
-                    return selectedCOEs.contains(coe)
-                }
-                return false
-            }
-        }
-
-        if !searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(searchText) {
-            let searchMode = SearchTextParser.parseSearchText(searchText)
-            filtered = filtered.filter { item in
-                if searchTitlesOnly {
-                    return SearchTextParser.matchesName(name: item.catalogItem.name, mode: searchMode)
-                } else {
-                    let allFields = [
-                        item.catalogItem.name,
-                        item.catalogItem.stable_id,
-                        item.catalogItem.manufacturer,
-                        item.catalogItem.sku,
-                        item.catalogItem.mfr_notes
-                    ].compactMap { $0 }
-                    return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-                }
-            }
-        }
-
-        var counts: [String: Int] = [:]
-        for item in filtered {
-            for tag in item.allTags {
-                counts[tag, default: 0] += 1
-            }
-        }
-        return counts
+        return computeAvailableValues(TagFilter())
     }
 
     private func generateEmptyStateMessage() -> String {

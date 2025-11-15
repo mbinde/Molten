@@ -82,6 +82,20 @@ def create_schema(conn):
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_glass_coe ON glass_items(coe)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_glass_type ON glass_items(type)")
 
+    # Item tags table - stores individual tags for glass items
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS item_tags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_stable_id TEXT NOT NULL,
+            tag TEXT NOT NULL,
+            FOREIGN KEY (item_stable_id) REFERENCES glass_items(stable_id),
+            UNIQUE(item_stable_id, tag)
+        )
+    """)
+
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_item_tags_stable_id ON item_tags(item_stable_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_item_tags_tag ON item_tags(tag)")
+
     # Coatings table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS coatings (
@@ -134,6 +148,7 @@ def import_glass_items(conn, json_file):
 
     cursor = conn.cursor()
     items = data.get('glassitems', [])
+    tags_count = 0
 
     for item in items:
         cursor.execute("""
@@ -166,8 +181,19 @@ def import_glass_items(conn, json_file):
             item.get('stock_type')
         ))
 
+        # Import individual tags into item_tags table
+        tags = item.get('tags', [])
+        if tags:
+            for tag in tags:
+                cursor.execute("""
+                    INSERT OR IGNORE INTO item_tags (item_stable_id, tag)
+                    VALUES (?, ?)
+                """, (item['stable_id'], tag))
+                tags_count += 1
+
     conn.commit()
     print(f"✅ Imported {len(items)} glass items")
+    print(f"✅ Imported {tags_count} item tags")
     return len(items)
 
 

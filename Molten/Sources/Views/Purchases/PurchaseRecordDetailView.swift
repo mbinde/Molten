@@ -36,37 +36,25 @@ struct PurchaseRecordDetailView: View {
                 // Header Information
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Supplier")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text(purchaseRecord.supplier)
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                        }
-                        
+                        LabeledDetailRow.prominent(
+                            label: "Supplier",
+                            value: purchaseRecord.supplier,
+                            alignment: .leading
+                        )
+
                         Spacer()
-                        
-                        VStack(alignment: .trailing, spacing: 4) {
-                            Text("Total Amount")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text(purchaseRecord.formattedPrice ?? "—")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.primary)
-                        }
+
+                        LabeledDetailRow.prominent(
+                            label: "Total Amount",
+                            value: purchaseRecord.formattedPrice ?? "—",
+                            alignment: .trailing
+                        )
                     }
-                    
-                    HStack {
-                        Text("Date")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Text(purchaseRecord.dateAdded, style: .date)
-                            .font(.body)
-                    }
-                    
+
+                    LabeledDetailRow.horizontal(
+                        label: "Date",
+                        value: purchaseRecord.dateAdded.formatted(date: .abbreviated, time: .omitted)
+                    )
                 }
                 .padding()
                 .background(Color.gray.opacity(0.05))

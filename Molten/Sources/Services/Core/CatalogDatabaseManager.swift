@@ -48,8 +48,6 @@ final class CatalogDatabaseManager: Sendable {
 
     /// Initialize the catalog database (copy from bundle if needed)
     func initialize() async throws {
-        print("📦 Initializing catalog database...")
-
         // Check if database exists in Documents
         let databaseExists = fileManager.fileExists(atPath: documentsDatabaseURL.path)
 
@@ -63,8 +61,6 @@ final class CatalogDatabaseManager: Sendable {
 
         // Open database connection
         try openDatabase()
-
-        print("✅ Catalog database ready at \(documentsDatabaseURL.path)")
     }
 
     /// Copy bundled database to Documents directory
@@ -73,8 +69,6 @@ final class CatalogDatabaseManager: Sendable {
             throw CatalogDatabaseError.bundleDatabaseNotFound
         }
 
-        print("📋 Copying bundled database to Documents...")
-
         // Remove any existing database (shouldn't exist, but be safe)
         if fileManager.fileExists(atPath: documentsDatabaseURL.path) {
             try fileManager.removeItem(at: documentsDatabaseURL)
@@ -82,8 +76,6 @@ final class CatalogDatabaseManager: Sendable {
 
         // Copy bundle to Documents
         try fileManager.copyItem(at: bundleURL, to: documentsDatabaseURL)
-
-        print("✅ Database copied from bundle")
     }
 
     /// Check if update is needed and perform update if necessary
@@ -91,15 +83,9 @@ final class CatalogDatabaseManager: Sendable {
         let documentsVersion = try await getDocumentsVersion()
         let bundleVersion = try await getBundleVersion()
 
-        print("📊 Database versions - Documents: \(documentsVersion), Bundle: \(bundleVersion)")
-
         // For now, only handle bundle updates (OTA updates to be added later)
         if bundleVersion > documentsVersion {
-            print("🔄 Bundle has newer version (\(bundleVersion) > \(documentsVersion)) - Replacing local database")
             try await copyBundleToDocuments()
-            print("✅ Database replaced successfully")
-        } else {
-            print("✅ Database is up to date (version \(documentsVersion))")
         }
     }
 
@@ -198,11 +184,8 @@ final class CatalogDatabaseManager: Sendable {
     /// Replace current database with downloaded update
     /// - Parameter tempFile: URL of the downloaded database file
     func replaceDatabaseWith(tempFile: URL) async throws {
-        print("🔄 Replacing catalog database with downloaded version...")
-
         // 1. Verify temp file is valid SQLite database
-        let tempVersion = try await getVersion(from: tempFile)
-        print("   Downloaded database version: \(tempVersion)")
+        let _ = try await getVersion(from: tempFile)
 
         // 2. Close current database connection
         closeDatabase()
@@ -217,20 +200,17 @@ final class CatalogDatabaseManager: Sendable {
 
         if fileManager.fileExists(atPath: documentsDatabaseURL.path) {
             try fileManager.moveItem(at: documentsDatabaseURL, to: backupURL)
-            print("   Created backup at \(backupURL.path)")
         }
 
         // 4. Move temp file to Documents
         do {
             try fileManager.moveItem(at: tempFile, to: documentsDatabaseURL)
-            print("   Moved downloaded database to Documents")
 
             // 5. Reopen database connection
             try openDatabase()
 
             // 6. Verify the new database works
-            let newVersion = try await getDocumentsVersion()
-            print("✅ Database replaced successfully (version \(newVersion))")
+            let _ = try await getDocumentsVersion()
 
             // 7. Remove backup on success
             if fileManager.fileExists(atPath: backupURL.path) {
@@ -238,8 +218,6 @@ final class CatalogDatabaseManager: Sendable {
             }
 
         } catch {
-            print("❌ Failed to replace database, restoring backup...")
-
             // Restore backup if replacement failed
             if fileManager.fileExists(atPath: backupURL.path) {
                 if fileManager.fileExists(atPath: documentsDatabaseURL.path) {
@@ -247,7 +225,6 @@ final class CatalogDatabaseManager: Sendable {
                 }
                 try fileManager.moveItem(at: backupURL, to: documentsDatabaseURL)
                 try openDatabase()
-                print("   Backup restored")
             }
 
             throw CatalogDatabaseError.cannotOpenDatabase("Failed to replace database: \(error.localizedDescription)")

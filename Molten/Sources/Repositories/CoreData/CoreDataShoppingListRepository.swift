@@ -120,8 +120,14 @@ class CoreDataShoppingListRepository: @unchecked Sendable, ShoppingListRepositor
                         throw CoreDataShoppingListRepositoryError.invalidData(item.validationErrors.joined(separator: ", "))
                     }
 
-                    // Check if item already exists
-                    if try self.fetchCoreDataItemSync(forItem: item.item_stable_id) != nil {
+                    // Check if item already exists - shopping list items are unique per (item_stable_id, store) tuple
+                    // Same item can exist in different stores
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
+                    fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@ AND store == %@",
+                                                         item.item_stable_id,
+                                                         item.store ?? "")
+                    fetchRequest.fetchLimit = 1
+                    if try self.backgroundContext.fetch(fetchRequest).first != nil {
                         throw CoreDataShoppingListRepositoryError.itemAlreadyExists(item.item_stable_id)
                     }
 

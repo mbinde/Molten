@@ -47,9 +47,10 @@ actor InventoryTrackingService {
         // 1. Create the glass item
         let createdGlassItem = try await glassItemRepository.createItem(glassItem)
 
-        // 2. Add tags if provided
+        // 2. Add tags if provided (deduplicate first)
         if !tags.isEmpty {
-            try await itemTagsRepository.addTags(tags, toItem: createdGlassItem.stable_id)
+            let uniqueTags = Array(Set(tags))
+            try await itemTagsRepository.addTags(uniqueTags, toItem: createdGlassItem.stable_id)
         }
 
         // 3. Create inventory records if provided

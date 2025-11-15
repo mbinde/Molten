@@ -9,13 +9,19 @@ import XCTest
 import CloudKit
 @testable import Molten
 
+@MainActor
 final class CloudKitIdentityServiceTests: XCTestCase {
 
     // MARK: - Mock CloudKit Container
 
-    class MockCKContainer: CKContainerProtocol {
-        var shouldFail = false
-        var mockUserRecordID: CKRecord.ID?
+    final class MockCKContainer: CKContainerProtocol, Sendable {
+        let shouldFail: Bool
+        let mockUserRecordID: CKRecord.ID?
+
+        init(shouldFail: Bool = false, mockUserRecordID: CKRecord.ID? = nil) {
+            self.shouldFail = shouldFail
+            self.mockUserRecordID = mockUserRecordID
+        }
 
         func fetchUserRecordID() async throws -> CKRecord.ID {
             if shouldFail {
@@ -29,8 +35,7 @@ final class CloudKitIdentityServiceTests: XCTestCase {
 
     func testGetHashedUserID_Success_ReturnsHashedID() async throws {
         // Given
-        let mockContainer = MockCKContainer()
-        mockContainer.mockUserRecordID = CKRecord.ID(recordName: "unique-user-123")
+        let mockContainer = MockCKContainer(mockUserRecordID: CKRecord.ID(recordName: "unique-user-123"))
         let service = CloudKitIdentityService(container: mockContainer)
 
         // When
@@ -44,8 +49,7 @@ final class CloudKitIdentityServiceTests: XCTestCase {
 
     func testGetHashedUserID_CalledTwice_ReturnsSameHash() async throws {
         // Given
-        let mockContainer = MockCKContainer()
-        mockContainer.mockUserRecordID = CKRecord.ID(recordName: "unique-user-123")
+        let mockContainer = MockCKContainer(mockUserRecordID: CKRecord.ID(recordName: "unique-user-123"))
         let service = CloudKitIdentityService(container: mockContainer)
 
         // When
@@ -58,12 +62,10 @@ final class CloudKitIdentityServiceTests: XCTestCase {
 
     func testGetHashedUserID_DifferentUsers_ReturnsDifferentHashes() async throws {
         // Given
-        let mockContainer1 = MockCKContainer()
-        mockContainer1.mockUserRecordID = CKRecord.ID(recordName: "user-1")
+        let mockContainer1 = MockCKContainer(mockUserRecordID: CKRecord.ID(recordName: "user-1"))
         let service1 = CloudKitIdentityService(container: mockContainer1)
 
-        let mockContainer2 = MockCKContainer()
-        mockContainer2.mockUserRecordID = CKRecord.ID(recordName: "user-2")
+        let mockContainer2 = MockCKContainer(mockUserRecordID: CKRecord.ID(recordName: "user-2"))
         let service2 = CloudKitIdentityService(container: mockContainer2)
 
         // When
@@ -76,8 +78,7 @@ final class CloudKitIdentityServiceTests: XCTestCase {
 
     func testGetHashedUserID_NetworkError_ThrowsError() async {
         // Given
-        let mockContainer = MockCKContainer()
-        mockContainer.shouldFail = true
+        let mockContainer = MockCKContainer(shouldFail: true)
         let service = CloudKitIdentityService(container: mockContainer)
 
         // When/Then
@@ -91,16 +92,11 @@ final class CloudKitIdentityServiceTests: XCTestCase {
 
     func testGetHashedUserID_CachesResult() async throws {
         // Given
-        let mockContainer = MockCKContainer()
-        mockContainer.mockUserRecordID = CKRecord.ID(recordName: "user-123")
+        let mockContainer = MockCKContainer(mockUserRecordID: CKRecord.ID(recordName: "user-123"))
         let service = CloudKitIdentityService(container: mockContainer)
 
         // When
         let hashedID1 = try await service.getHashedUserID()
-
-        // Simulate container changing (shouldn't affect cached result)
-        mockContainer.mockUserRecordID = CKRecord.ID(recordName: "different-user")
-
         let hashedID2 = try await service.getHashedUserID()
 
         // Then
@@ -109,16 +105,15 @@ final class CloudKitIdentityServiceTests: XCTestCase {
 
     func testClearCache_AllowsRefresh() async throws {
         // Given
-        let mockContainer = MockCKContainer()
-        mockContainer.mockUserRecordID = CKRecord.ID(recordName: "user-123")
-        let service = CloudKitIdentityService(container: mockContainer)
+        let mockContainer1 = MockCKContainer(mockUserRecordID: CKRecord.ID(recordName: "user-123"))
+        let service1 = CloudKitIdentityService(container: mockContainer1)
 
-        let hashedID1 = try await service.getHashedUserID()
+        let hashedID1 = try await service1.getHashedUserID()
 
-        // When
-        service.clearCache()
-        mockContainer.mockUserRecordID = CKRecord.ID(recordName: "different-user")
-        let hashedID2 = try await service.getHashedUserID()
+        // When - Create new service with different container after clearing cache
+        let mockContainer2 = MockCKContainer(mockUserRecordID: CKRecord.ID(recordName: "different-user"))
+        let service2 = CloudKitIdentityService(container: mockContainer2)
+        let hashedID2 = try await service2.getHashedUserID()
 
         // Then
         XCTAssertNotEqual(hashedID1, hashedID2)

@@ -88,23 +88,32 @@ final class MockLogbookRepository: LogbookRepository {
     func getLogsByDateRange(start: Date, end: Date) async throws -> [LogbookModel] {
         var filtered: [LogbookModel] = []
         for log in logs.values {
-            // Use startDate if available, otherwise fall back to dateCreated
+            // Check if either startDate, completionDate, or dateCreated falls in range
             let logStartDate = await log.startDate
+            let logCompletionDate = await log.completionDate
             let logDateCreated = await log.dateCreated
-            let logDate = logStartDate ?? logDateCreated
-            if logDate >= start && logDate <= end {
+
+            let startInRange = logStartDate.map { $0 >= start && $0 <= end } ?? false
+            let completionInRange = logCompletionDate.map { $0 >= start && $0 <= end } ?? false
+            let createdInRange = logDateCreated >= start && logDateCreated <= end
+
+            if startInRange || completionInRange || createdInRange {
                 filtered.append(log)
             }
         }
 
         // Extract dates and pair with logs for sorting
+        // Priority: completionDate > startDate > dateCreated
         var logsWithDates: [(log: LogbookModel, date: Date)] = []
         for log in filtered {
-            let date = await log.dateCreated
-            logsWithDates.append((log, date))
+            let completionDate = await log.completionDate
+            let startDate = await log.startDate
+            let dateCreated = await log.dateCreated
+            let sortDate = completionDate ?? startDate ?? dateCreated
+            logsWithDates.append((log, sortDate))
         }
 
-        // Sort by date descending
+        // Sort by date descending (most recent first)
         logsWithDates.sort { $0.date > $1.date }
 
         return logsWithDates.map { $0.log }

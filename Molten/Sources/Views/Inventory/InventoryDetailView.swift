@@ -143,6 +143,9 @@ struct InventoryDetailView: View {
                     headerSection
                         .id("header")
 
+                    // Rating Words Section
+                    RatingWordsSection(itemStableId: currentItem.glassItem.stable_id)
+
                     // Glass Item Details Section
                     glassItemDetailsSection
                         .id("glass-item-section")

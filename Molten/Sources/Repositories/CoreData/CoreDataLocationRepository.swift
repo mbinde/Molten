@@ -23,7 +23,7 @@ class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
     
     private let context: NSManagedObjectContext
     private let backgroundContext: NSManagedObjectContext
-    private let log = Logger(subsystem: "com.flameworker.app", category: "location-repository")
+    private let log = Logger(subsystem: "com.motleywoods.molten", category: "location-repository")
     
     // MARK: - Initialization
     

@@ -12,7 +12,7 @@ import OSLog
 /// Utility for recovering from Core Data migration issues
 /// Use when you encounter "missing mapping model" or model incompatibility errors
 struct CoreDataRecoveryUtility {
-    private static let logger = Logger(subsystem: "com.flameworker.app", category: "core-data-recovery")
+    private static let logger = Logger(subsystem: "com.motleywoods.molten", category: "core-data-recovery")
     
     /// Resets the Core Data store by deleting all persistent store files
     /// This will cause all existing data to be lost, but resolves migration issues

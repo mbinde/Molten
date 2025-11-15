@@ -26,7 +26,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     // MARK: - Dependencies
 
     let context: NSManagedObjectContext
-    let log = Logger(subsystem: "com.flameworker.app", category: "inventory-repository")
+    let log = Logger(subsystem: "com.motleywoods.molten", category: "inventory-repository")
 
     // MARK: - Initialization
 

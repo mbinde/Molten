@@ -244,7 +244,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
         try await context.perform {
             for (index, stepId) in stepIds.enumerated() {
                 let fetchRequest = ProjectStep.fetchRequest()
-                fetchRequest.predicate = NSPredicate(format: "id == %@ AND plan_id == %@", stepId as CVarArg, projectId as CVarArg)
+                fetchRequest.predicate = NSPredicate(format: "id == %@ AND plan.id == %@", stepId as CVarArg, projectId as CVarArg)
 
                 if let entity = try self.context.fetch(fetchRequest).first {
                     entity.order_index = Int32(index)

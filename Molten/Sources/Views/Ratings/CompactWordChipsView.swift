@@ -81,21 +81,9 @@ struct CompactWordChipsView: View {
     }
 
     private func wordChip(word: RatingWordModel) -> some View {
-        // Calculate proportional position based on frequency
-        let maxFrequency = words.first?.frequency ?? 1
-        let minFrequency = words.last?.frequency ?? 1
-        let range = Double(maxFrequency - minFrequency)
-        let position = range > 0 ? Double(word.frequency - minFrequency) / range : 1.0
-
-        // Font size varies from 10pt to 14pt
-        let fontSize: CGFloat = 10 + (4 * position)
-
-        // Color intensity: lighter to darker
-        let colorOpacity = 0.4 + (0.6 * position)
-
-        return HStack(spacing: 2) {
+        HStack(spacing: 2) {
             Text(word.word)
-                .font(.system(size: fontSize, weight: .medium))
+                .font(.caption2)
                 .fixedSize()
 
             Text("×\(word.frequency)")
@@ -106,7 +94,7 @@ struct CompactWordChipsView: View {
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
         .background(.blue.opacity(0.1))
-        .foregroundStyle(.blue.opacity(colorOpacity))
+        .foregroundStyle(.blue)
         .clipShape(Capsule())
         .fixedSize()
     }

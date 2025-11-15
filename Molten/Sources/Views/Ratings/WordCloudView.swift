@@ -113,9 +113,9 @@ struct AllWordsSheet: View {
         let range = Double(maxFrequency - minFrequency)
         let position = range > 0 ? Double(word.frequency - minFrequency) / range : 1.0
 
-        // Font size: 11pt (smallest) to 17pt (largest)
-        let minFontSize: CGFloat = 11
-        let maxFontSize: CGFloat = 17
+        // Font size: 10pt (smallest) to 20pt (largest)
+        let minFontSize: CGFloat = 10
+        let maxFontSize: CGFloat = 20
         let fontSize = minFontSize + (maxFontSize - minFontSize) * position
 
         // Color intensity: lighter to darker blue

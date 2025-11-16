@@ -192,7 +192,7 @@ struct AddRecipeView: View {
 
                             if ingredients.contains(where: { $0.stableId == item.glassItem.stable_id }) {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                             }
                         }
                     }

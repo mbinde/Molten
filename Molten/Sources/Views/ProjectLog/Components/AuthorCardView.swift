@@ -44,10 +44,10 @@ struct AuthorCardView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "globe")
                                     .font(.caption)
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                                 Text(website)
                                     .font(.caption)
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                             }
                         }
                     }
@@ -57,10 +57,10 @@ struct AuthorCardView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "camera")
                                     .font(.caption)
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                                 Text("@\(instagram)")
                                     .font(.caption)
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                             }
                         }
                     }
@@ -70,10 +70,10 @@ struct AuthorCardView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "f.square")
                                     .font(.caption)
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                                 Text(facebook)
                                     .font(.caption)
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                             }
                         }
                     }
@@ -83,10 +83,10 @@ struct AuthorCardView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "play.rectangle")
                                     .font(.caption)
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                                 Text("@\(youtube)")
                                     .font(.caption)
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                             }
                         }
                     }

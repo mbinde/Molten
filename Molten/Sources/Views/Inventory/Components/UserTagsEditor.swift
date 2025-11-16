@@ -107,7 +107,7 @@ struct UserTagsEditor: View {
                 Button(action: addNewTag) {
                     Image(systemName: "plus.circle.fill")
                         .font(.title2)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(Color.accentColor)
                 }
                 .disabled(newTagText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
             }
@@ -143,8 +143,8 @@ struct UserTagsEditor: View {
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(.accentColor.opacity(0.1))
-                        .foregroundColor(.accentColor)
+                        .background(Color.accentColor.opacity(0.1))
+                        .foregroundColor(Color.accentColor)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .disabled(existingTags.contains(tag) || isSaving)

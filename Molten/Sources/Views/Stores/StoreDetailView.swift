@@ -112,7 +112,7 @@ struct StoreDetailView: View {
                     latitude: store.latitude,
                     longitude: store.longitude
                 ),
-                tint: .accentColor
+                tint: Color.accentColor
             )
         }
         .frame(height: 200)

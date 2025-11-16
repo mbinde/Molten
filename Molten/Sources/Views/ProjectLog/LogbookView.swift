@@ -111,7 +111,7 @@ struct LogbookView: View {
             VStack(spacing: 20) {
                 Image(systemName: "book.pages")
                     .font(.system(size: 70))
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(Color.accentColor)
 
                 Text("No Logbook Entries Yet")
                     .font(.title2)

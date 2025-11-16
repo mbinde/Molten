@@ -240,7 +240,7 @@ struct UnifiedPickerField<T>: View where T: CaseIterable, T: Hashable, T: Identi
                         Spacer()
                         if selection == item {
                             Image(systemName: "checkmark")
-                                .foregroundColor(.accentColor)
+                                .foregroundColor(Color.accentColor)
                         }
                     }
                 }

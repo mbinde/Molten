@@ -151,7 +151,7 @@ struct ProjectsView: View {
             VStack(spacing: 20) {
                 Image(systemName: "pencil.and.list.clipboard")
                     .font(.system(size: 70))
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(Color.accentColor)
 
                 Text("No Project Plans Yet")
                     .font(.title2)
@@ -1040,7 +1040,7 @@ struct ProjectDetailView: View {
                     }
                     Link(url.url, destination: URL(string: url.url)!)
                         .font(.caption)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(Color.accentColor)
                     if let description = url.description {
                         Text(description)
                             .font(.caption)

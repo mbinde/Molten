@@ -244,7 +244,7 @@ struct SettingsView: View {
                             if let updateMessage = catalogUpdateViewModel.updateAvailableMessage {
                                 Text(updateMessage)
                                     .font(.caption)
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                             } else {
                                 Text("v\(catalogUpdateViewModel.currentVersion)")
                                     .font(.caption)
@@ -1044,7 +1044,7 @@ struct SubscriptionManagementView: View {
                     } else {
                         Image(systemName: "star.circle")
                             .font(.largeTitle)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(Color.accentColor)
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
@@ -1181,7 +1181,7 @@ struct UsageRow: View {
         HStack {
             Image(systemName: icon)
                 .frame(width: 30)
-                .foregroundColor(.accentColor)
+                .foregroundColor(Color.accentColor)
 
             Text(title)
 
@@ -1224,7 +1224,7 @@ struct FeatureRow: View {
         HStack {
             Image(systemName: icon)
                 .frame(width: 30)
-                .foregroundColor(.accentColor)
+                .foregroundColor(Color.accentColor)
 
             Text(title)
         }

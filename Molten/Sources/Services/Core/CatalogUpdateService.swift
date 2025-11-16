@@ -32,6 +32,7 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
     private let databaseManager: CatalogDatabaseManager
     private let networkMonitor: NetworkMonitorProtocol
     private let log = Logger(subsystem: "Molten", category: "CatalogUpdate")
+    private let logger: LoggingService
 
     @Published private(set) var isChecking: Bool = false
     @Published private(set) var isDownloading: Bool = false
@@ -43,12 +44,14 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
         apiClient: CatalogAPIClientProtocol,
         storageService: CatalogStorageServiceProtocol,
         databaseManager: CatalogDatabaseManager = .shared,
-        networkMonitor: NetworkMonitorProtocol
+        networkMonitor: NetworkMonitorProtocol,
+        logger: LoggingService = AppDependencies.shared.loggingService
     ) {
         self.apiClient = apiClient
         self.storageService = storageService
         self.databaseManager = databaseManager
         self.networkMonitor = networkMonitor
+        self.logger = logger
     }
 
     // MARK: - Public API
@@ -117,6 +120,10 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
 
         } catch {
             log.error("Failed to check for updates: \(error.localizedDescription)")
+            logger.error("Catalog update check failed", context: [
+                "operation": "catalog-update-check",
+                "error_type": String(describing: type(of: error))
+            ], error: error)
             throw error
         }
     }
@@ -215,6 +222,14 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
             log.info("✅ Catalog updated successfully to v\(updateInfo.availableVersion)")
             log.info("   Created: \(result.itemsCreated), Updated: \(result.itemsUpdated)")
 
+            // Log success to Sentry for pattern tracking
+            logger.info("Catalog download completed successfully", context: [
+                "operation": "catalog-download",
+                "version": updateInfo.availableVersion,
+                "item_count": result.itemsCreated,
+                "file_size_mb": Double(updateInfo.fileSize) / 1024.0 / 1024.0
+            ])
+
             // Post notification
             NotificationCenter.default.post(
                 name: .catalogUpdateCompleted,
@@ -225,6 +240,15 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
 
         } catch {
             log.error("Failed to download/install update: \(error.localizedDescription)")
+
+            // Log failure to Sentry for alerting
+            logger.error("Catalog download failed", context: [
+                "operation": "catalog-download",
+                "version": updateInfo.availableVersion,
+                "progress": downloadProgress,
+                "error_type": String(describing: type(of: error)),
+                "file_size_mb": Double(updateInfo.fileSize) / 1024.0 / 1024.0
+            ], error: error)
 
             // Post failure notification
             NotificationCenter.default.post(

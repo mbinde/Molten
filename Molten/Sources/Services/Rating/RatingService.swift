@@ -26,6 +26,7 @@ public class RatingService: RatingServiceProtocol {
     private let apiClient: RatingAPIClientProtocol
     private let identityService: CloudKitIdentityServiceProtocol
     private let updateInterval: TimeInterval
+    private let logger: LoggingService
 
     // MARK: - Initialization
 
@@ -33,12 +34,14 @@ public class RatingService: RatingServiceProtocol {
         repository: RatingRepository,
         apiClient: RatingAPIClientProtocol = RatingAPIClient(),
         identityService: CloudKitIdentityServiceProtocol = CloudKitIdentityService(),
-        updateInterval: TimeInterval = 3600 // 1 hour default
+        updateInterval: TimeInterval = 3600, // 1 hour default
+        logger: LoggingService? = nil
     ) {
         self.repository = repository
         self.apiClient = apiClient
         self.identityService = identityService
         self.updateInterval = updateInterval
+        self.logger = logger ?? AppDependencies.shared.loggingService
     }
 
     // MARK: - Submit Rating
@@ -115,12 +118,31 @@ public class RatingService: RatingServiceProtocol {
             // Save to cache
             try await repository.saveAggregatedRatings(freshRatings)
 
+            logger.info("Rating cache updated successfully", context: [
+                "operation": "rating-cache-rebuild",
+                "items_updated": freshRatings.count,
+                "forced_refresh": forceRefresh
+            ])
+
             return freshRatings
         } catch {
             // If network error and we have cached data, return cached (even if stale)
             if isNetworkError(error) && !ratings.isEmpty {
+                logger.warning("Rating fetch failed, using stale cache", context: [
+                    "operation": "rating-cache-rebuild",
+                    "items_requested": itemStableIds.count,
+                    "stale_items_returned": ratings.count
+                ])
                 return ratings
             }
+
+            logger.error("Rating cache rebuild failed", context: [
+                "operation": "rating-cache-rebuild",
+                "items_requested": itemStableIds.count,
+                "had_cached_data": !ratings.isEmpty,
+                "error_type": String(describing: type(of: error))
+            ], error: error)
+
             throw error
         }
     }

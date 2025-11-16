@@ -91,7 +91,7 @@ class AppDependencies {
 
     // MARK: - Services
 
-    let loggingService: LoggingService
+    public let loggingService: LoggingService
     let inventoryTrackingService: InventoryTrackingService
     let catalogService: CatalogService
     let shoppingListService: ShoppingListService

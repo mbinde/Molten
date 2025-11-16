@@ -169,6 +169,8 @@ final class CatalogDatabaseManager: Sendable {
     }
 
     /// Get the active database connection (for repository use)
+    /// WARNING: This is unsafe for multi-threaded access. Use performDatabaseOperation instead.
+    @available(*, deprecated, message: "Use performDatabaseOperation for thread-safe access")
     nonisolated func getDatabaseConnection() throws -> OpaquePointer {
         connectionLock.lock()
         defer { connectionLock.unlock() }
@@ -177,6 +179,20 @@ final class CatalogDatabaseManager: Sendable {
             throw CatalogDatabaseError.databaseNotInitialized
         }
         return connection
+    }
+
+    /// Perform a database operation with thread-safe access to the connection
+    /// - Parameter operation: A closure that receives the database connection and performs operations
+    /// - Returns: The result of the operation
+    nonisolated func performDatabaseOperation<T>(_ operation: (OpaquePointer) throws -> T) throws -> T {
+        connectionLock.lock()
+        defer { connectionLock.unlock() }
+
+        guard let connection = databaseConnection else {
+            throw CatalogDatabaseError.databaseNotInitialized
+        }
+
+        return try operation(connection)
     }
 
     // MARK: - OTA Updates

@@ -605,6 +605,13 @@ struct ShoppingListView: View {
                             )
                             .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
                         }
+                        .onDelete { indexSet in
+                            Task {
+                                for index in indexSet {
+                                    await deleteShoppingItem(itemsNotInBasket[index])
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -622,6 +629,13 @@ struct ShoppingListView: View {
                             )
                             .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
                         }
+                        .onDelete { indexSet in
+                            Task {
+                                for index in indexSet {
+                                    await deleteShoppingItem(itemsInBasket[index])
+                                }
+                            }
+                        }
                     }
                 }
             } else if shouldGroupByStore {
@@ -635,6 +649,14 @@ struct ShoppingListView: View {
                                         GlassItemRowView.shoppingList(item: item)
                                     }
                                     .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
+                                }
+                                .onDelete { indexSet in
+                                    Task {
+                                        let items = sortedItems(for: list)
+                                        for index in indexSet {
+                                            await deleteShoppingItem(items[index])
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -652,6 +674,14 @@ struct ShoppingListView: View {
                                     }
                                     .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
                                 }
+                                .onDelete { indexSet in
+                                    Task {
+                                        let sortedItems = sortedManufacturerItems(items)
+                                        for index in indexSet {
+                                            await deleteShoppingItem(sortedItems[index])
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -663,6 +693,13 @@ struct ShoppingListView: View {
                         GlassItemRowView.shoppingList(item: item, showStore: true)
                     }
                     .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
+                }
+                .onDelete { indexSet in
+                    Task {
+                        for index in indexSet {
+                            await deleteShoppingItem(allFlattenedItems[index])
+                        }
+                    }
                 }
             }
         }
@@ -719,6 +756,36 @@ struct ShoppingListView: View {
                 }
             }
         )
+    }
+
+    private func deleteShoppingItem(_ item: DetailedShoppingListItemModel) async {
+        do {
+            // Delete the shopping list item
+            try await shoppingListRepository.deleteItem(forItem: item.glassItem.stable_id)
+
+            // Immediately update the view model to remove the deleted item
+            // This ensures counters and other UI elements update right away
+            await MainActor.run {
+                // Remove from the view model's shopping lists by creating new filtered dictionaries
+                viewModel.shoppingLists = viewModel.shoppingLists.mapValues { list in
+                    let filteredItems = list.items.filter { $0.shoppingListItem.item_stable_id != item.glassItem.stable_id }
+                    return DetailedShoppingListModel(
+                        store: list.store,
+                        items: filteredItems,
+                        totalItems: filteredItems.count
+                    )
+                }
+            }
+
+            // Defer full reload to allow .onDelete animation to complete
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 300_000_000)  // 0.3 seconds
+                await viewModel.loadShoppingLists()
+                updateCaches()
+            }
+        } catch {
+            print("❌ Failed to delete shopping item: \(error)")
+        }
     }
 
     private var shoppingModeInstructions: some View {

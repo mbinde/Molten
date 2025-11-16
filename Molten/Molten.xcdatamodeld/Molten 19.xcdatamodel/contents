@@ -136,6 +136,19 @@
         <attribute name="target_temperature" optional="YES" attributeType="Decimal" defaultValueString="0"/>
         <relationship name="schedule" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="KilnScheduleEntity" inverseName="segments" inverseEntity="KilnScheduleEntity"/>
     </entity>
+    <entity name="LabelPresetEntity" representedClassName="LabelPresetEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="created_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="desc" optional="YES" attributeType="String"/>
+        <attribute name="field_formats" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="manufacturer_image_size" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="modified_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="qr_position" optional="YES" attributeType="String"/>
+        <attribute name="qr_size" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="text_alignment" optional="YES" attributeType="String"/>
+        <attribute name="text_fields_order" optional="YES" attributeType="String"/>
+    </entity>
     <entity name="Location" representedClassName="Location" syncable="YES" codeGenerationType="class">
         <attribute name="address_line1" optional="YES" attributeType="String"/>
         <attribute name="address_line2" optional="YES" attributeType="String"/>
@@ -416,6 +429,7 @@
         <memberEntity name="UserNotes"/>
         <memberEntity name="UserTags"/>
         <memberEntity name="PendingRatingSubmission"/>
+        <memberEntity name="LabelPresetEntity"/>
     </configuration>
     <configuration name="Local">
         <memberEntity name="CatalogItem"/>

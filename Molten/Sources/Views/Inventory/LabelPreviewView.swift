@@ -33,6 +33,47 @@ struct LabelPreviewView: View {
         return targetWidth / format.labelWidth
     }
 
+    /// Effective QR size (preset override or format default)
+    private var effectiveQRSize: CGFloat {
+        return config.qrSize ?? format.defaultQRSize
+    }
+
+    /// Effective manufacturer image size (config override or default 0.6)
+    private var effectiveManufacturerImageSize: CGFloat {
+        return config.manufacturerImageSize ?? 0.6
+    }
+
+    /// Manufacturer image view (if enabled and not overlapping)
+    @ViewBuilder
+    private func manufacturerImageView(size: CGFloat) -> some View {
+        if config.manufacturerImagePosition != .none && !config.manufacturerImageOverlapsQR() {
+            if let manufacturer = sampleData.manufacturer {
+                // Manufacturer codes are uppercase (e.g., "EF", "BE"), but files are lowercase
+                let imageName = "\(manufacturer.lowercased())_print.png"
+                let _ = print("🖼️ Looking for manufacturer image: \(imageName)")
+
+                if let image = UIImage(named: imageName) {
+                    let _ = print("✅ Found manufacturer image: \(imageName)")
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(height: size * effectiveManufacturerImageSize)
+                } else {
+                    let _ = print("❌ Failed to load manufacturer image: \(imageName)")
+                    // Debug: Show a placeholder to verify the space is there
+                    Rectangle()
+                        .fill(Color.red.opacity(0.3))
+                        .frame(height: size * effectiveManufacturerImageSize)
+                        .overlay(
+                            Text("IMG?")
+                                .font(.caption2)
+                                .foregroundColor(.white)
+                        )
+                }
+            }
+        }
+    }
+
     private var previewWidth: CGFloat {
         format.labelWidth * scaleFactor
     }
@@ -43,10 +84,21 @@ struct LabelPreviewView: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Text("Label Preview")
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundColor(.secondary)
+            HStack(spacing: 6) {
+                Text("Label Preview")
+                    .fontWeight(.semibold)
+                Text("•")
+                    .foregroundColor(.secondary)
+                Text(format.name)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                Text("•")
+                    .foregroundColor(.secondary)
+                Text(formattedDimensions)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
 
             // Label preview with border
             ZStack {
@@ -64,11 +116,6 @@ struct LabelPreviewView: View {
                     .offset(x: offsetX * scaleFactor, y: offsetY * scaleFactor)
             }
             .frame(width: previewWidth, height: previewHeight)
-
-            // Dimensions
-            Text("\(format.name) - \(formattedDimensions)")
-                .font(.caption2)
-                .foregroundColor(.secondary)
         }
         .padding()
         .background(Color(.systemGray6))
@@ -86,22 +133,42 @@ struct LabelPreviewView: View {
     private func buildLabelContent() -> some View {
         switch config.qrPosition {
         case .none:
-            // No QR code - text only
+            // No QR code, optional manufacturer images on sides, text in middle
             HStack(alignment: .top, spacing: 0) {
+                // Manufacturer image on left (if enabled and left/both position)
+                if config.manufacturerImagePosition == .left || config.manufacturerImagePosition == .both {
+                    VStack {
+                        Spacer()
+                        manufacturerImageView(size: previewHeight)
+                            .padding(.leading, 4)
+                        Spacer()
+                    }
+                }
+
                 VStack(alignment: alignmentFromConfig, spacing: 0) {
                     Spacer()
                     buildTextContent()
-                        .padding(.horizontal, 8)
+                        .padding(.horizontal, 4)
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, alignment: frameAlignmentFromConfig)
+
+                // Manufacturer image on right (if enabled and right/both position)
+                if config.manufacturerImagePosition == .right || config.manufacturerImagePosition == .both {
+                    VStack {
+                        Spacer()
+                        manufacturerImageView(size: previewHeight)
+                            .padding(.trailing, 4)
+                        Spacer()
+                    }
+                }
             }
 
         case .left:
-            // QR code on left, text on right
+            // QR code on left, text on right, optional manufacturer image on right
             HStack(alignment: .top, spacing: 0) {
                 if let service = labelService {
-                    let qrSize = previewHeight * config.qrSize
+                    let qrSize = previewHeight * effectiveQRSize
                     VStack {
                         Spacer()
                         QRCodeView(stableId: sampleData.stableId, service: service)
@@ -119,22 +186,42 @@ struct LabelPreviewView: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, alignment: frameAlignmentFromConfig)
+
+                // Manufacturer image on right (if enabled and right/both position)
+                if config.manufacturerImagePosition == .right || config.manufacturerImagePosition == .both {
+                    VStack {
+                        Spacer()
+                        manufacturerImageView(size: previewHeight)
+                            .padding(.trailing, 4)
+                        Spacer()
+                    }
+                }
             }
 
         case .right:
-            // Text on left, QR code on right
+            // Optional manufacturer image on left, text in middle, QR code on right
             HStack(alignment: .top, spacing: 0) {
+                // Manufacturer image on left (if enabled and left/both position)
+                if config.manufacturerImagePosition == .left || config.manufacturerImagePosition == .both {
+                    VStack {
+                        Spacer()
+                        manufacturerImageView(size: previewHeight)
+                            .padding(.leading, 4)
+                        Spacer()
+                    }
+                }
+
                 VStack(alignment: alignmentFromConfig, spacing: 0) {
                     Spacer()
                     buildTextContent()
-                        .padding(.leading, 8)
+                        .padding(.leading, 4)
                         .padding(.trailing, 4)
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, alignment: frameAlignmentFromConfig)
 
                 if let service = labelService {
-                    let qrSize = previewHeight * config.qrSize
+                    let qrSize = previewHeight * effectiveQRSize
                     VStack {
                         Spacer()
                         QRCodeView(stableId: sampleData.stableId, service: service)
@@ -149,7 +236,7 @@ struct LabelPreviewView: View {
             // QR codes on both sides, text in middle
             HStack(alignment: .top, spacing: 0) {
                 if let service = labelService {
-                    let qrSize = previewHeight * config.qrSize
+                    let qrSize = previewHeight * effectiveQRSize
                     VStack {
                         Spacer()
                         QRCodeView(stableId: sampleData.stableId, service: service)
@@ -169,7 +256,7 @@ struct LabelPreviewView: View {
                 .frame(maxWidth: .infinity, alignment: frameAlignmentFromConfig)
 
                 if let service = labelService {
-                    let qrSize = previewHeight * config.qrSize
+                    let qrSize = previewHeight * effectiveQRSize
                     VStack {
                         Spacer()
                         QRCodeView(stableId: sampleData.stableId, service: service)
@@ -197,25 +284,30 @@ struct LabelPreviewView: View {
         switch field {
         case .manufacturer:
             if let manufacturer = sampleData.manufacturer {
-                // Check if SKU already starts with manufacturer (case-insensitive)
+                // Convert manufacturer abbreviation to full name first
+                let fullName = GlassManufacturers.fullName(for: manufacturer) ?? manufacturer
+
+                // Check if SKU already starts with full manufacturer name (case-insensitive)
+                // Only hide manufacturer if SKU literally starts with the full name (not just abbreviation)
                 let skuStartsWithManufacturer: Bool = {
                     guard let sku = sampleData.sku,
                           config.textFields.contains(.sku) else {
                         return false
                     }
-                    return sku.lowercased().hasPrefix(manufacturer.lowercased())
+                    return sku.lowercased().hasPrefix(fullName.lowercased())
                 }()
 
                 // Only show manufacturer if SKU doesn't already start with it
                 if !skuStartsWithManufacturer {
-                    let text = manufacturer.uppercased()
-                    let displayFontSize = 9 * scaleFactor * fontScale
-                    let actualFontSize = 9 * fontScale  // Font size on actual PDF (no scaleFactor)
-                    let actualFont = UIFont.boldSystemFont(ofSize: actualFontSize)
-                    let willTruncate = textWillTruncate(text, font: actualFont)
+                    let fieldFormat = config.format(for: .manufacturer)
+                    let displayFontSize = fieldFormat.fontSize * scaleFactor * fontScale
+                    let actualFontSize = fieldFormat.fontSize * fontScale  // Font size on actual PDF (no scaleFactor)
+                    let actualFont = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
+                    let willTruncate = textWillTruncate(fullName, font: actualFont)
 
-                    Text(text)
-                        .font(.system(size: displayFontSize, weight: .bold))
+                    Text(fullName)
+                        .font(.system(size: displayFontSize, weight: fieldFormat.bold ? .bold : .regular))
+                        .italic(fieldFormat.italic)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
@@ -224,13 +316,15 @@ struct LabelPreviewView: View {
 
         case .sku:
             if let sku = sampleData.sku {
-                let displayFontSize = 9 * scaleFactor * fontScale
-                let actualFontSize = 9 * fontScale
-                let actualFont = UIFont.boldSystemFont(ofSize: actualFontSize)
+                let fieldFormat = config.format(for: .sku)
+                let displayFontSize = fieldFormat.fontSize * scaleFactor * fontScale
+                let actualFontSize = fieldFormat.fontSize * fontScale
+                let actualFont = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(sku, font: actualFont)
 
                 Text(sku)
-                    .font(.system(size: displayFontSize, weight: .bold))
+                    .font(.system(size: displayFontSize, weight: fieldFormat.bold ? .bold : .regular))
+                    .italic(fieldFormat.italic)
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
@@ -238,13 +332,15 @@ struct LabelPreviewView: View {
 
         case .colorName:
             if let colorName = sampleData.colorName {
-                let displayFontSize = 8 * scaleFactor * fontScale
-                let actualFontSize = 8 * fontScale
-                let actualFont = UIFont.systemFont(ofSize: actualFontSize)
+                let fieldFormat = config.format(for: .colorName)
+                let displayFontSize = fieldFormat.fontSize * scaleFactor * fontScale
+                let actualFontSize = fieldFormat.fontSize * fontScale
+                let actualFont = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(colorName, font: actualFont)
 
                 Text(colorName)
-                    .font(.system(size: displayFontSize))
+                    .font(.system(size: displayFontSize, weight: fieldFormat.bold ? .bold : .regular))
+                    .italic(fieldFormat.italic)
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
@@ -253,13 +349,15 @@ struct LabelPreviewView: View {
         case .coe:
             if let coe = sampleData.coe {
                 let text = "COE \(coe)"
-                let displayFontSize = 7 * scaleFactor * fontScale
-                let actualFontSize = 7 * fontScale
-                let actualFont = UIFont.systemFont(ofSize: actualFontSize)
+                let fieldFormat = config.format(for: .coe)
+                let displayFontSize = fieldFormat.fontSize * scaleFactor * fontScale
+                let actualFontSize = fieldFormat.fontSize * fontScale
+                let actualFont = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(text, font: actualFont)
 
                 Text(text)
-                    .font(.system(size: displayFontSize))
+                    .font(.system(size: displayFontSize, weight: fieldFormat.bold ? .bold : .regular))
+                    .italic(fieldFormat.italic)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -269,13 +367,15 @@ struct LabelPreviewView: View {
         case .location:
             if let location = sampleData.location {
                 let text = "📍 \(location)"
-                let displayFontSize = 7 * scaleFactor * fontScale
-                let actualFontSize = 7 * fontScale
-                let actualFont = UIFont.systemFont(ofSize: actualFontSize)
+                let fieldFormat = config.format(for: .location)
+                let displayFontSize = fieldFormat.fontSize * scaleFactor * fontScale
+                let actualFontSize = fieldFormat.fontSize * fontScale
+                let actualFont = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(text, font: actualFont)
 
                 Text(text)
-                    .font(.system(size: displayFontSize))
+                    .font(.system(size: displayFontSize, weight: fieldFormat.bold ? .bold : .regular))
+                    .italic(fieldFormat.italic)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -284,13 +384,15 @@ struct LabelPreviewView: View {
 
         case .owner:
             if let owner = sampleData.owner {
-                let displayFontSize = 7 * scaleFactor * fontScale
-                let actualFontSize = 7 * fontScale
-                let actualFont = UIFont.systemFont(ofSize: actualFontSize)
+                let fieldFormat = config.format(for: .owner)
+                let displayFontSize = fieldFormat.fontSize * scaleFactor * fontScale
+                let actualFontSize = fieldFormat.fontSize * fontScale
+                let actualFont = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(owner, font: actualFont)
 
                 Text(owner)
-                    .font(.system(size: displayFontSize))
+                    .font(.system(size: displayFontSize, weight: fieldFormat.bold ? .bold : .regular))
+                    .italic(fieldFormat.italic)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -301,18 +403,33 @@ struct LabelPreviewView: View {
 
     /// Check if text will be truncated given the available width
     private func textWillTruncate(_ text: String, font: UIFont) -> Bool {
-        // Calculate available width based on QR position
+        // Calculate available width based on QR position and manufacturer image
         let padding: CGFloat = 4
         var availableWidth = format.labelWidth - (padding * 2)
 
+        // Account for QR code space
         if config.qrPosition != .none {
-            let qrSize = format.labelHeight * config.qrSize
+            let qrSize = format.labelHeight * effectiveQRSize
 
             switch config.qrPosition {
             case .left, .right:
                 availableWidth -= (qrSize + padding)
             case .both:
                 availableWidth -= (2 * qrSize + 2 * padding)
+            case .none:
+                break
+            }
+        }
+
+        // Account for manufacturer image space (if enabled and not overlapping)
+        if config.manufacturerImagePosition != .none && !config.manufacturerImageOverlapsQR() {
+            let imageSize = format.labelHeight * effectiveManufacturerImageSize
+
+            switch config.manufacturerImagePosition {
+            case .left, .right:
+                availableWidth -= (imageSize + padding)
+            case .both:
+                availableWidth -= (2 * imageSize + 2 * padding)
             case .none:
                 break
             }

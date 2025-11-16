@@ -21,11 +21,17 @@ import XCTest
 @MainActor
 struct ResourceManagementTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
     // MARK: - Test Infrastructure
 
     @MainActor
     private func createTestServices() async -> (CatalogService, InventoryTrackingService, InventoryViewModel) {
-        let deps = AppDependencies(persistenceController: .createTestController())
         
         let catalogService = deps.catalogService
         let inventoryTrackingService = deps.inventoryTrackingService

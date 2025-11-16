@@ -14,6 +14,14 @@ import Foundation
 @MainActor
 struct EntityCoordinatorTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
+
     // MARK: - Setup Helpers
 
     /// Create test glass item and add to catalog
@@ -52,7 +60,6 @@ struct EntityCoordinatorTests {
 
     @Test("Get inventory for valid glass item")
     func testGetInventoryForValidGlassItem() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
@@ -76,7 +83,6 @@ struct EntityCoordinatorTests {
 
     @Test("Get inventory for non-existent glass item throws error")
     func testGetInventoryForNonExistentItem() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
@@ -95,7 +101,6 @@ struct EntityCoordinatorTests {
 
     @Test("Get inventory for item with zero quantity")
     func testGetInventoryWithZeroQuantity() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
@@ -116,7 +121,6 @@ struct EntityCoordinatorTests {
 
     @Test("Get inventory for item with multiple locations")
     func testGetInventoryWithMultipleLocations() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
@@ -151,7 +155,6 @@ struct EntityCoordinatorTests {
 
     @Test("GlassItemInventoryCoordination convenience accessors work correctly")
     func testInventoryCoordinationAccessors() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
@@ -177,7 +180,6 @@ struct EntityCoordinatorTests {
 
     @Test("Correlate purchases with inventory")
     func testCorrelatePurchasesWithInventory() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let purchaseService = deps.purchaseRecordService
@@ -225,7 +227,6 @@ struct EntityCoordinatorTests {
 
     @Test("Calculate average price per unit")
     func testCalculateAveragePricePerUnit() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let purchaseService = deps.purchaseRecordService
@@ -260,7 +261,6 @@ struct EntityCoordinatorTests {
 
     @Test("Handle no purchase records for item")
     func testNoPurchaseRecords() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let purchaseService = deps.purchaseRecordService
@@ -285,7 +285,6 @@ struct EntityCoordinatorTests {
 
     @Test("Handle no inventory records for item")
     func testNoInventoryRecords() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let purchaseService = deps.purchaseRecordService
@@ -308,7 +307,6 @@ struct EntityCoordinatorTests {
 
     @Test("PurchaseInventoryCorrelation convenience accessors work correctly")
     func testCorrelationAccessors() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let purchaseService = deps.purchaseRecordService
@@ -334,7 +332,6 @@ struct EntityCoordinatorTests {
 
     @Test("Search glass items with inventory context")
     func testSearchWithInventoryContext() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
@@ -355,7 +352,6 @@ struct EntityCoordinatorTests {
 
     @Test("Search with multiple matches")
     func testSearchWithMultipleMatches() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
@@ -378,7 +374,6 @@ struct EntityCoordinatorTests {
 
     @Test("Search with no matches returns empty")
     func testSearchNoMatches() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
@@ -394,7 +389,6 @@ struct EntityCoordinatorTests {
 
     @Test("Search includes items without inventory")
     func testSearchIncludesItemsWithoutInventory() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
@@ -418,7 +412,6 @@ struct EntityCoordinatorTests {
 
     @Test("Missing catalog service throws error")
     func testMissingCatalogService() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
             catalogService: nil,
@@ -435,7 +428,6 @@ struct EntityCoordinatorTests {
 
     @Test("Missing inventory service throws error")
     func testMissingInventoryService() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
@@ -452,7 +444,6 @@ struct EntityCoordinatorTests {
 
     @Test("Missing purchase service throws error")
     func testMissingPurchaseService() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(
@@ -474,7 +465,6 @@ struct EntityCoordinatorTests {
 
     @Test("Catalog item not found error")
     func testCatalogItemNotFoundError() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
         let coordinator = EntityCoordinator(

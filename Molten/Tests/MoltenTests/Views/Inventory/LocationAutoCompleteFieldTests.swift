@@ -20,6 +20,13 @@ import SwiftUI
 @Suite("LocationAutoCompleteField Repository Pattern Tests", .serialized)
 @MainActor
 struct LocationAutoCompleteFieldTests {
+
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
     
     @Test("LocationAutoCompleteField should accept LocationRepository via dependency injection")
     func testLocationAutoCompleteFieldUsesLocationRepository() {
@@ -41,7 +48,6 @@ struct LocationAutoCompleteFieldTests {
     @Test("LocationAutoCompleteField should work with AppDependencies pattern")
     func testLocationAutoCompleteFieldWorksWithAppDependencies() {
         // Arrange: Configure factory for testing
-        let deps = AppDependencies(persistenceController: .createTestController())
         let locationRepository = deps.locationRepository
 
         @State var testLocation = "Workshop"

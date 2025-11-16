@@ -123,9 +123,14 @@ class CoreDataShoppingListRepository: @unchecked Sendable, ShoppingListRepositor
                     // Check if item already exists - shopping list items are unique per (item_stable_id, store) tuple
                     // Same item can exist in different stores
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@ AND store == %@",
-                                                         item.item_stable_id,
-                                                         item.store ?? "")
+                    if let store = item.store {
+                        fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@ AND store == %@",
+                                                             item.item_stable_id,
+                                                             store)
+                    } else {
+                        fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@ AND store == NULL",
+                                                             item.item_stable_id)
+                    }
                     fetchRequest.fetchLimit = 1
                     if try self.backgroundContext.fetch(fetchRequest).first != nil {
                         throw CoreDataShoppingListRepositoryError.itemAlreadyExists(item.item_stable_id)

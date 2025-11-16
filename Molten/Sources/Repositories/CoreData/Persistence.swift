@@ -81,14 +81,10 @@ class PersistenceController {
 
     /// Create a fresh in-memory PersistenceController for tests
     /// Each test should create its own instance to avoid sharing state between tests
-    /// - Returns: A new PersistenceController with an isolated in-memory store
+    /// - Returns: A new PersistenceController with an isolated in-memory store AND isolated model
     nonisolated static func createTestController() -> PersistenceController {
         Logger(subsystem: "com.flameworker.app", category: "persistence").debug("🧪 Creating test PersistenceController (in-memory, isolated)")
-        // Use inMemory=true, forceCloudKit=false for fast test isolation
-        // Each call creates a NEW in-memory store (not shared)
-        // In-memory stores are immediately ready, no async initialization needed
         let controller = PersistenceController(inMemory: true, forceCloudKit: false)
-
         Logger(subsystem: "com.flameworker.app", category: "persistence").debug("✅ Test controller ready")
         return controller
     }
@@ -181,8 +177,23 @@ class PersistenceController {
         }
 
         if inMemory {
-            // For in-memory stores (tests), use default single store
-            container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
+            // TWO-STORE ARCHITECTURE for tests (same as production)
+            // The Core Data model has entities explicitly assigned to "Local" and "Cloud" configurations
+            // Tests MUST use two stores to match production, otherwise Core Data crashes with configuration mismatch
+
+            // STORE 1: Local (in-memory)
+            let localDescription = NSPersistentStoreDescription()
+            localDescription.url = URL(fileURLWithPath: "/dev/null/local")  // Different path for each store
+            localDescription.configuration = "Local"
+
+            // STORE 2: Cloud (in-memory)
+            let cloudDescription = NSPersistentStoreDescription()
+            cloudDescription.url = URL(fileURLWithPath: "/dev/null/cloud")  // Different path for each store
+            cloudDescription.configuration = "Cloud"
+
+            // Set both store descriptions
+            container.persistentStoreDescriptions = [localDescription, cloudDescription]
+
             // For in-memory stores (tests), load synchronously since they're fast
             loadStoresSynchronously()
         } else {
@@ -500,20 +511,39 @@ class PersistenceController {
 
         semaphore.wait()
 
-        // For in-memory tests, use viewContext for both local and cloud
-        // (simpler than configuring two separate in-memory stores)
-        let context = self.container.viewContext
-
-        // Update all state atomically
+        // Update error state atomically
         errorLock.lock()
         let finalError = capturedError
         errorLock.unlock()
 
+        // Check for errors
+        if let error = finalError {
+            self.log.error("❌ In-memory store load failed: \(error)")
+            stateLock.withLock {
+                $0.storeLoadingError = error
+                $0.isInitialized = true
+            }
+            return
+        }
+
+        // Create separate contexts for local and cloud stores (same as production)
+        // This is required because entities are explicitly assigned to "Local" and "Cloud" configurations
+        let local = container.newBackgroundContext()
+        local.automaticallyMergesChangesFromParent = true
+        local.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        local.transactionAuthor = "MoltenTest-Local"
+
+        let cloud = container.newBackgroundContext()
+        cloud.automaticallyMergesChangesFromParent = true
+        cloud.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        cloud.transactionAuthor = "MoltenTest-Cloud"
+
+        // Store contexts atomically
         stateLock.withLock {
-            $0.storeLoadingError = finalError
+            $0.storeLoadingError = nil
             $0.isInitialized = true
-            $0.localContext = context
-            $0.cloudContext = context
+            $0.localContext = local
+            $0.cloudContext = cloud
         }
     }
 

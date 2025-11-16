@@ -26,12 +26,19 @@ import XCTest
 @MainActor
 struct CrossEntityIntegrationTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
+
     @Test("Should coordinate glass item and inventory data using new architecture")
     func testGlassItemInventoryCoordination() async throws {
         // Arrange: Use isolated mock repositories to ensure clean state
         // NOTE: Mock repositories create new instances via AppDependencies
         // Each test gets fresh repositories, but Xcode may cache between runs
-        let deps = AppDependencies(persistenceController: .createTestController())
 
         // Create services with new instances to avoid data pollution
         let catalogService = deps.catalogService
@@ -94,7 +101,6 @@ struct CrossEntityIntegrationTests {
     @Test("Should handle purchase and inventory correlation using new architecture")
     func testPurchaseInventoryCorrelation() async throws {
         // Arrange: Configure and create services
-        let deps = AppDependencies(persistenceController: .createTestController())
         let inventoryTrackingService = deps.inventoryTrackingService
         let mockPurchaseRepo = MockPurchaseRecordRepository()
         let purchaseService = PurchaseRecordService(repository: mockPurchaseRepo)

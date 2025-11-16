@@ -114,6 +114,66 @@ extension NSPersistentContainer {
 
 This makes the mistake **impossible to ship** - it will crash during development if anyone tries to purge history.
 
+**🚨 CRITICAL: Tests MUST Use Two-Store Architecture**
+
+**THE PROBLEM**: The Core Data model has entities **explicitly assigned** to "Local" and "Cloud" configurations:
+- **Local configuration**: GlassItem, CoatingItem, ToolItem, ItemTags, ItemRating (catalog data)
+- **Cloud configuration**: Project, Inventory, PurchaseRecord, KilnScheduleEntity, UserTags, UserNotes (user data)
+
+When entities are explicitly assigned to configurations, Core Data **cannot use a single store** with `configuration = nil`. Attempting this causes zombie object crashes in `NSRelationshipDescription.description` when the model layer deallocates due to configuration mismatch.
+
+**THE FIX** (`Persistence.swift`): Tests MUST create two separate in-memory stores, just like production:
+
+```swift
+if inMemory {
+    // TWO-STORE ARCHITECTURE for tests (same as production)
+    // The Core Data model has entities explicitly assigned to "Local" and "Cloud" configurations
+    // Tests MUST use two stores to match production, otherwise Core Data crashes with configuration mismatch
+
+    // STORE 1: Local (in-memory)
+    let localDescription = NSPersistentStoreDescription()
+    localDescription.url = URL(fileURLWithPath: "/dev/null")
+    localDescription.configuration = "Local"
+
+    // STORE 2: Cloud (in-memory)
+    let cloudDescription = NSPersistentStoreDescription()
+    cloudDescription.url = URL(fileURLWithPath: "/dev/null")
+    cloudDescription.configuration = "Cloud"
+
+    // Set both store descriptions
+    container.persistentStoreDescriptions = [localDescription, cloudDescription]
+    loadStoresSynchronously()
+}
+```
+
+Then in `loadStoresSynchronously()`, create **separate contexts for each store**:
+```swift
+// Create separate contexts for local and cloud stores (same as production)
+let local = container.newBackgroundContext()
+local.automaticallyMergesChangesFromParent = true
+local.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+
+let cloud = container.newBackgroundContext()
+cloud.automaticallyMergesChangesFromParent = true
+cloud.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+
+stateLock.withLock {
+    $0.localContext = local
+    $0.cloudContext = cloud
+}
+```
+
+**Why this works**:
+- Entities assigned to "Local" configuration can ONLY be accessed through a store with `configuration = "Local"`
+- Entities assigned to "Cloud" configuration can ONLY be accessed through a store with `configuration = "Cloud"`
+- Setting `configuration = nil` does NOT work when entities are explicitly assigned to configurations
+- Tests must mirror production's two-store architecture to access all entities
+
+**Red herrings that DON'T fix this**:
+- Setting `configuration = nil` (doesn't work when entities are explicitly assigned)
+- Using a single in-memory store (Core Data requires matching store configurations)
+- Storing PersistenceController/contexts as properties (already required, but not the issue)
+
 ---
 
 ## Dependency Injection Pattern
@@ -192,6 +252,46 @@ struct MyView: View {
 The `@Service` property wrapper (defined in `CoreDataSafetyGuards.swift`) uses `@autoclosure` to evaluate the service creation expression **exactly once** during property initialization. This makes it **impossible** to create services in `.task` - the wrapper enforces single creation at compile-time.
 
 **Rule**: Create services in `init()` with default parameters OR use `@Service` property wrapper. Both ensure single creation.
+
+### 🚨 SAME ANTI-PATTERN APPLIES TO TESTS!
+
+**THE PROBLEM IN TESTS**: Test helper methods that create `AppDependencies`, extract services, then return those services cause the **EXACT SAME BUG**. When the helper method returns, `AppDependencies` and `PersistenceController` get deallocated, leaving services with **zombie Core Data objects** → intermittent `objc_msgSend` crashes in `NSRelationshipDescription`.
+
+**❌ WRONG (Test Anti-Pattern)**:
+```swift
+@Suite("My Tests")
+struct MyTests {
+    func createTestService() -> MyService {
+        let deps = AppDependencies(persistenceController: .createTestController())
+        return deps.myService  // ❌ deps deallocates → zombie Core Data objects!
+    }
+
+    @Test func testSomething() async throws {
+        let service = createTestService()  // Gets service with zombie objects
+        try await service.doSomething()    // ❌ CRASH (intermittent, ARC timing-dependent)
+    }
+}
+```
+
+**✅ CORRECT (Test Pattern)**:
+```swift
+@Suite("My Tests")
+struct MyTests {
+    // ✅ Store AppDependencies at struct level (lives for entire test suite)
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
+    private var testService: MyService {
+        deps.myService  // ✅ PersistenceController stays alive
+    }
+
+    @Test func testSomething() async throws {
+        let service = testService  // ✅ No crash - Core Data objects still valid
+        try await service.doSomething()
+    }
+}
+```
+
+**Why This Matters**: This bug caused intermittent Core Data crashes that only appeared after multiple builds (memory reuse patterns). Clearing DerivedData would fix it temporarily because it reset the memory allocator. The crash was in Apple's Core Data framework (`NSRelationshipDescription.description`), making it extremely difficult to diagnose without understanding the ARC lifecycle issue.
 
 ---
 

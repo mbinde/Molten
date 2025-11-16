@@ -14,6 +14,16 @@ public nonisolated struct RatingWordModel: Identifiable, Equatable, Codable, Sen
     public let frequency: Int
     public let rank: Int
 
+    // MARK: - Equatable
+
+    /// Custom Equatable implementation that compares semantic data (excludes id)
+    /// Two words are equal if they have the same data, regardless of ID
+    public static func == (lhs: RatingWordModel, rhs: RatingWordModel) -> Bool {
+        return lhs.word == rhs.word &&
+               lhs.frequency == rhs.frequency &&
+               lhs.rank == rhs.rank
+    }
+
     /// Initialize with business logic validation
     public nonisolated init(
         id: UUID = UUID(),

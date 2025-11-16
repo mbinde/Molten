@@ -22,7 +22,16 @@ import XCTest
 #if canImport(Testing)
 
 @Suite("Store to Shopping List Navigation Tests")
+@MainActor
 struct StoreToShoppingListNavigationTests {
+
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
 
     // MARK: - Notification Tests
 
@@ -152,7 +161,6 @@ struct StoreToShoppingListNavigationTests {
     @MainActor
     func testNavigateFromStoreWithItems() async throws {
         // Arrange
-        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
 
         let storeName = "Frantz Art Glass"
@@ -201,7 +209,6 @@ struct StoreToShoppingListNavigationTests {
     @MainActor
     func testNoNavigationWhenNoItems() async throws {
         // Arrange
-        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
 
         let storeName = "Empty Store"

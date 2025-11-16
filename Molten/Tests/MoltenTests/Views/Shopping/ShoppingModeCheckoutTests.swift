@@ -16,11 +16,17 @@ import CryptoKit
 @MainActor
 struct ShoppingModeCheckoutTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
     // MARK: - Add to Inventory Tests
 
     @Test("Can add basket items to inventory")
     func testAddBasketItemsToInventory() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let inventoryService = deps.inventoryTrackingService
 
         // Create a test glass item
@@ -61,7 +67,6 @@ struct ShoppingModeCheckoutTests {
 
     @Test("Can add multiple basket items to inventory in batch")
     func testAddMultipleItemsToInventory() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let inventoryService = deps.inventoryTrackingService
 
         // Create multiple test items
@@ -100,7 +105,6 @@ struct ShoppingModeCheckoutTests {
 
     @Test("Can remove item from shopping list")
     func testRemoveItemFromShoppingList() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
 
         // Create a test glass item
@@ -137,7 +141,6 @@ struct ShoppingModeCheckoutTests {
 
     @Test("Can remove multiple items from shopping list")
     func testRemoveMultipleItemsFromShoppingList() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
         let inventoryService = deps.inventoryTrackingService
 
@@ -181,7 +184,6 @@ struct ShoppingModeCheckoutTests {
 
     @Test("Complete checkout flow: add to inventory and remove from list")
     func testCompleteCheckoutFlow() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let inventoryService = deps.inventoryTrackingService
         let shoppingListService = deps.shoppingListService
 
@@ -237,7 +239,6 @@ struct ShoppingModeCheckoutTests {
 
     @Test("Checkout with partial quantity (user bought less than needed)")
     func testCheckoutWithPartialQuantity() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let inventoryService = deps.inventoryTrackingService
         let shoppingListService = deps.shoppingListService
 
@@ -285,7 +286,6 @@ struct ShoppingModeCheckoutTests {
 
     @Test("Checkout with extra quantity (user bought more than needed)")
     func testCheckoutWithExtraQuantity() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let inventoryService = deps.inventoryTrackingService
         let shoppingListService = deps.shoppingListService
 

@@ -21,9 +21,15 @@ import SwiftUI
 @MainActor
 struct LogbookViewTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
     // Helper to create LogbookView with test dependencies
     private func createLogbookView() -> LogbookView {
-        let deps = AppDependencies(persistenceController: .createTestController())
         return LogbookView(logbookRepository: deps.logbookRepository)
     }
 

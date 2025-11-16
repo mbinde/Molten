@@ -33,7 +33,12 @@ extension LowStockDetailModel: Comparable {
     }
 
     static func == (lhs: LowStockDetailModel, rhs: LowStockDetailModel) -> Bool {
-        lhs.glassItem.stable_id == rhs.glassItem.stable_id && lhs.type == rhs.type
+        // For Comparable conformance, equal quantities means equal for sorting
+        // This ensures trichotomy: exactly one of (<, ==, >) is always true
+        if lhs.currentQuantity == rhs.currentQuantity {
+            return true
+        }
+        return lhs.glassItem.stable_id == rhs.glassItem.stable_id && lhs.type == rhs.type
     }
 }
 

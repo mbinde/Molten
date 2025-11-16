@@ -15,10 +15,16 @@ import CryptoKit
 @MainActor
 struct ShoppingListItemCreationTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
     @Test("Create shopping list item with minimal fields")
     func testCreateMinimalShoppingListItem() async throws {
         // Configure for testing
-        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
         let catalogService = deps.catalogService
 
@@ -46,7 +52,6 @@ struct ShoppingListItemCreationTests {
 
     @Test("Create shopping list item with all optional fields")
     func testCreateFullShoppingListItem() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
         let catalogService = deps.catalogService
 
@@ -73,7 +78,6 @@ struct ShoppingListItemCreationTests {
 
     @Test("Create shopping list item with type and subtype")
     func testCreateWithTypeAndSubtype() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
         let catalogService = deps.catalogService
 
@@ -96,7 +100,6 @@ struct ShoppingListItemCreationTests {
 
     @Test("Create multiple shopping list items for same glass item")
     func testCreateMultipleItemsSameGlass() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
         let catalogService = deps.catalogService
 
@@ -132,7 +135,6 @@ struct ShoppingListItemCreationTests {
 
     @Test("Create shopping list item validates quantity")
     func testQuantityValidation() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
 
         let glassItem = try await createTestGlassItem(catalogService: catalogService)
@@ -152,7 +154,6 @@ struct ShoppingListItemCreationTests {
 
     @Test("Retrieve shopping list items by store")
     func testRetrieveByStore() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
         let catalogService = deps.catalogService
 
@@ -179,7 +180,6 @@ struct ShoppingListItemCreationTests {
 
     @Test("Type and subtype consistency")
     func testTypeSubtypeConsistency() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
 
         let glassItem = try await createTestGlassItem(catalogService: catalogService)

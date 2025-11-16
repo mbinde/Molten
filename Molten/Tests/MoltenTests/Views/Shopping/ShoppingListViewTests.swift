@@ -14,6 +14,13 @@ import CryptoKit
 @MainActor
 struct ShoppingListViewTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
     // MARK: - Helper Functions
 
     func createMockShoppingListService() -> ShoppingListService {
@@ -71,7 +78,6 @@ struct ShoppingListViewTests {
 
     @Test("ShoppingListView initializes with default state")
     func testInitialization() {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let view = ShoppingListView(deps: deps)
 
         #expect(view != nil)
@@ -458,7 +464,6 @@ struct ShoppingListViewTests {
         @Test("Checkout posts inventory notification when adding to inventory")
         func testCheckoutPostsInventoryNotification() async throws {
             // Configure for testing
-            let deps = AppDependencies(persistenceController: .createTestController())
 
             // Create shared repositories
             let glassItemRepository = MockGlassItemRepository()
@@ -522,7 +527,6 @@ struct ShoppingListViewTests {
         @Test("Checkout does not post inventory notification when not adding to inventory")
         func testCheckoutDoesNotPostInventoryNotificationWhenSkipped() async throws {
             // Configure for testing
-        let deps = AppDependencies(persistenceController: .createTestController())
 
             // Set up notification expectation
             var notificationReceived = false

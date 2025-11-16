@@ -13,10 +13,17 @@ import Foundation
 @MainActor
 struct InventoryRepositoryLocationTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
+
     @Test("fetchInventory(atLocation:) returns inventory at specific location")
     func testFetchInventoryAtLocation() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         // Create inventory at different locations
@@ -43,7 +50,6 @@ struct InventoryRepositoryLocationTests {
     @Test("fetchInventory(atLocation:) handles whitespace normalization")
     func testFetchInventoryAtLocationNormalization() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         _ = try await repository.createInventory(
@@ -61,7 +67,6 @@ struct InventoryRepositoryLocationTests {
     @Test("getDistinctLocations returns unique location names")
     func testGetDistinctLocations() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         // Create inventory at various locations
@@ -91,7 +96,6 @@ struct InventoryRepositoryLocationTests {
     @Test("getLocationNames(withPrefix:) filters by prefix")
     func testGetLocationNamesWithPrefix() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         // Create inventory at various locations
@@ -118,7 +122,6 @@ struct InventoryRepositoryLocationTests {
     @Test("getLocationNames(withPrefix:) is case-insensitive")
     func testGetLocationNamesWithPrefixCaseInsensitive() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         _ = try await repository.createInventory(
@@ -136,7 +139,6 @@ struct InventoryRepositoryLocationTests {
     @Test("getLocationUtilization(for:) calculates quantities per item")
     func testGetLocationUtilization() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         // Create inventory for multiple items at same location
@@ -162,7 +164,6 @@ struct InventoryRepositoryLocationTests {
     @Test("getAllLocationUtilization returns totals for all locations")
     func testGetAllLocationUtilization() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         // Create inventory at various locations
@@ -191,7 +192,6 @@ struct InventoryRepositoryLocationTests {
     @Test("createInventory preserves location field")
     func testCreateInventoryPreservesLocation() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         // Test
@@ -210,7 +210,6 @@ struct InventoryRepositoryLocationTests {
     @Test("updateInventory preserves location field")
     func testUpdateInventoryPreservesLocation() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         let created = try await repository.createInventory(
@@ -238,7 +237,6 @@ struct InventoryRepositoryLocationTests {
     @Test("Multiple inventory records for same item at different locations")
     func testMultipleRecordsDifferentLocations() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         // Test - same item, same type, different locations
@@ -263,7 +261,6 @@ struct InventoryRepositoryLocationTests {
     @Test("Multiple inventory records for same item/location with different types")
     func testMultipleRecordsSameLocationDifferentTypes() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         // Test - same item, same location, different types

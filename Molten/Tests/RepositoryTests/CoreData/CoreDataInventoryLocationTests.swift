@@ -15,10 +15,16 @@ import CryptoKit
 @MainActor
 struct CoreDataInventoryLocationTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
     @Test("Core Data persists location field")
     func testCoreDataPersistsLocation() async throws {
         // Setup - use isolated test controller
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         // Test
@@ -38,7 +44,6 @@ struct CoreDataInventoryLocationTests {
     @Test("Core Data handles nil location")
     func testCoreDataHandlesNilLocation() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         // Test
@@ -56,7 +61,6 @@ struct CoreDataInventoryLocationTests {
     @Test("Core Data fetchInventory(atLocation:) works correctly")
     func testCoreDataFetchAtLocation() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         // Create inventory at different locations
@@ -82,7 +86,6 @@ struct CoreDataInventoryLocationTests {
     @Test("Core Data getDistinctLocations works correctly")
     func testCoreDataGetDistinctLocations() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         // Create inventory
@@ -108,7 +111,6 @@ struct CoreDataInventoryLocationTests {
     @Test("Core Data getLocationNames(withPrefix:) case-insensitive search")
     func testCoreDataGetLocationNamesWithPrefix() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         _ = try await repository.createInventory(
@@ -133,7 +135,6 @@ struct CoreDataInventoryLocationTests {
     @Test("Core Data getLocationUtilization calculates correctly")
     func testCoreDataGetLocationUtilization() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         // Create multiple items at same location
@@ -158,7 +159,6 @@ struct CoreDataInventoryLocationTests {
     @Test("Core Data getAllLocationUtilization works correctly")
     func testCoreDataGetAllLocationUtilization() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         _ = try await repository.createInventory(
@@ -182,7 +182,6 @@ struct CoreDataInventoryLocationTests {
     @Test("Core Data update preserves location")
     func testCoreDataUpdatePreservesLocation() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         let created = try await repository.createInventory(
@@ -213,7 +212,6 @@ struct CoreDataInventoryLocationTests {
     @Test("Core Data handles multiple records same item different locations")
     func testCoreDataMultipleLocationsSameItem() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         // Create same item/type at different locations
@@ -242,7 +240,6 @@ struct CoreDataInventoryLocationTests {
     @Test("Core Data delete removes location data")
     func testCoreDataDeleteRemovesLocation() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         let created = try await repository.createInventory(
@@ -267,7 +264,6 @@ struct CoreDataInventoryLocationTests {
     @Test("Core Data batch create preserves locations")
     func testCoreDataBatchCreateWithLocations() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let repository = deps.inventoryRepository
 
         let inventories = [

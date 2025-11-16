@@ -71,13 +71,12 @@ extension CachedDataDeletion {
             //    This ensures counters and other UI elements update right away
             await removeFromCache(item)
 
-            // 3. Defer full reload to allow .onDelete animation to complete
-            //    The view model uses @Observable, but we load data through a cache
-            //    rather than direct Core Data observation, so we must manually trigger a reload.
-            //    Delaying prevents SwiftUI collection view crashes from competing updates during animation.
-            Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 300_000_000)  // 0.3 seconds
-                await reloadData()
+            // 3. Update derived caches immediately (no deferred reload)
+            //    We skip the full reload because:
+            //    - The cache system doesn't support atomic updates during animation
+            //    - Reloading during/after animation causes UICollectionView crashes
+            //    - Our in-place update is sufficient - next natural reload will sync
+            await MainActor.run {
                 updateDerivedCaches()
             }
         } catch {

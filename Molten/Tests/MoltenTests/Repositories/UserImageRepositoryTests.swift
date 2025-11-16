@@ -200,14 +200,14 @@ struct UserImageRepositoryTests {
         let repository = MockUserImageRepository()
         let naturalKey = "bullseye-clear-001"
 
-        // When - save images with slight delays to ensure different timestamps
+        // When - save images with delays to ensure different timestamps
         let first = try await repository.saveImage(
             createTestImage(color: .red),
             ownerType: .glassItem,
             ownerId: naturalKey,
             type: .alternate
         )
-        try await Task.sleep(for: .milliseconds(10))
+        try await Task.sleep(for: .milliseconds(100))  // Increased from 10ms to 100ms for reliable timestamps
 
         let second = try await repository.saveImage(
             createTestImage(color: .blue),
@@ -215,7 +215,7 @@ struct UserImageRepositoryTests {
             ownerId: naturalKey,
             type: .alternate
         )
-        try await Task.sleep(for: .milliseconds(10))
+        try await Task.sleep(for: .milliseconds(100))  // Increased from 10ms to 100ms for reliable timestamps
 
         let third = try await repository.saveImage(
             createTestImage(color: .green),

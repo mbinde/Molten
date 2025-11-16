@@ -91,9 +91,15 @@ struct DetailedShoppingListItemModelSortingTests {
 
         let sorted = items.sorted() // Should use Comparable
 
+        // Verify descending order by neededQuantity (highest first)
         #expect(sorted[0].shoppingListItem.neededQuantity == 7.0)
         #expect(sorted[1].shoppingListItem.neededQuantity == 3.0)
         #expect(sorted[2].shoppingListItem.neededQuantity == 1.0)
+
+        // Also verify the minimumQuantity values (current + needed)
+        #expect(sorted[0].shoppingListItem.minimumQuantity == 12.0) // 5 + 7
+        #expect(sorted[1].shoppingListItem.minimumQuantity == 8.0)  // 5 + 3
+        #expect(sorted[2].shoppingListItem.minimumQuantity == 6.0)  // 5 + 1
     }
 
     @Test("Less than operator should compare neededQuantity")

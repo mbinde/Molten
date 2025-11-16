@@ -571,18 +571,30 @@ struct InventoryView: View, CachedDataDeletion {
 
     func removeFromCache(_ item: CompleteInventoryItemModel) async {
         await MainActor.run {
-            let beforeCount = viewModel.completeItems.count
-            viewModel.completeItems.removeAll { $0.id == item.id }
-            let afterCount = viewModel.completeItems.count
-            log.info("🗑️ removeFromCache: \(beforeCount) → \(afterCount) items (removed: \(beforeCount - afterCount))")
+            // DON'T remove the catalog item - just update it to have no inventory
+            // The catalog should always contain all items
+            if let index = viewModel.completeItems.firstIndex(where: { $0.id == item.id }) {
+                let existing = viewModel.completeItems[index]
+                // Create new item with empty inventory (all properties are immutable)
+                let updatedItem = CompleteInventoryItemModel(
+                    catalogItem: existing.catalogItem,
+                    inventory: [],  // Clear inventory records
+                    tags: existing.tags,
+                    userTags: existing.userTags,
+                    rating: existing.rating
+                )
+                viewModel.completeItems[index] = updatedItem
+                log.info("🗑️ removeFromCache: Cleared inventory for item \(item.glassItem.stable_id)")
+            }
             refreshTrigger += 1  // Force SwiftUI to refresh (updates counters, UI)
         }
     }
 
     func reloadData() async {
         log.info("🔄 reloadData: Starting deferred reload...")
-        // Force cache reload to get fresh data from Core Data (including deleted items)
-        await CatalogDataCache.shared.reload(catalogService: catalogService)
+        // Note: We don't need to reload the entire catalog anymore!
+        // removeFromCache() already updated the item's inventory to empty.
+        // This reload is just for safety to pick up any other changes (tags, etc.)
         await viewModel.loadInventoryItems()
         log.info("🔄 reloadData: Reload complete - \(viewModel.completeItems.count) items")
     }

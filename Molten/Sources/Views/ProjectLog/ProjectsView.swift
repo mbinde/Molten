@@ -133,7 +133,7 @@ struct ProjectsView: View {
             .task {
                 await loadProjects()
             }
-            .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.willBecomeActiveNotification)) { _ in
                 // Refresh projects when app becomes active (e.g., returning from share extension)
                 Task {
                     await loadProjects()
@@ -280,7 +280,7 @@ struct ProjectRow: View {
     var body: some View {
         HStack(spacing: DesignSystem.Spacing.md) {
             // Thumbnail on the left
-            #if canImport(UIKit)
+            #if canImport(PhotosUI)
             ProjectThumbnail(
                 heroImageId: plan.heroImageId,
                 projectId: plan.id,
@@ -686,7 +686,7 @@ struct ProjectDetailView: View {
     @State private var pdfFileURL: IdentifiableURL?  // Changed to IdentifiableURL
     @State private var exportedPlanURL: IdentifiableURL?  // For .moltenplan exports
     @State private var glassItemLookup: [String: GlassItemModel] = [:]
-    @State private var loadedImages: [UUID: UIImage] = [:]  // Cache of loaded images
+    @State private var loadedImages: [UUID: NSImage] = [:]  // Cache of loaded images
     @State private var isEditing = false
 
     // Edit mode fields
@@ -1353,7 +1353,7 @@ struct ProjectDetailView: View {
 
     @ViewBuilder
     private func primaryImageSection(for plan: ProjectModel) -> some View {
-        #if canImport(UIKit)
+        #if canImport(PhotosUI)
         Section {
             PrimaryImageSelector(
                 images: plan.images,
@@ -1789,7 +1789,7 @@ struct ProjectDetailView: View {
     }
 
     private func loadPlanImages(for plan: ProjectModel) async {
-        #if canImport(UIKit)
+        #if canImport(PhotosUI)
         let userImageRepository = deps.userImageRepository
 
         do {
@@ -1800,7 +1800,7 @@ struct ProjectDetailView: View {
             )
 
             // Load each image
-            var imageCache: [UUID: UIImage] = [:]
+            var imageCache: [UUID: NSImage] = [:]
             for imageModel in allImages {
                 if let image = try? await userImageRepository.loadImage(imageModel) {
                     imageCache[imageModel.id] = image
@@ -1870,13 +1870,13 @@ struct ProjectDetailView: View {
             do {
                 // Load the image data
                 guard let data = try await item.loadTransferable(type: Data.self),
-                      let uiImage = UIImage(data: data) else {
+                      let nsImage = NSImage(data: data) else {
                     continue
                 }
 
                 // Save image to UserImageRepository
                 let userImageModel = try await userImageRepository.saveImage(
-                    uiImage,
+                    nsImage,
                     ownerType: .projectPlan,
                     ownerId: plan.id.uuidString,
                     type: .primary
@@ -1905,7 +1905,7 @@ struct ProjectDetailView: View {
 
                 // Cache the loaded image
                 await MainActor.run {
-                    loadedImages[newProjectImage.id] = uiImage
+                    loadedImages[newProjectImage.id] = nsImage
                 }
             } catch {
                 print("Error loading image: \(error)")

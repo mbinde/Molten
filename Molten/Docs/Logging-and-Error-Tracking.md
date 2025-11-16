@@ -84,28 +84,36 @@ dependencies: [
 2. Create new project → Select "iOS / Swift"
 3. Copy your DSN (looks like: `https://abc123@o123.ingest.sentry.io/456`)
 
-### 3. Configure Environment Variable
+### 3. Configure Sentry DSN
 
-**Option A: Xcode Scheme (Recommended)**
+**The DSN is NOT a secret** - it's safe to commit. See [Sentry's DSN documentation](https://docs.sentry.io/product/sentry-basics/dsn-explainer/).
 
-1. Edit Scheme → Run → Arguments → Environment Variables
-2. Add: `SENTRY_DSN` = `your-dsn-here`
+**Option A: Hardcode in AppDependencies.swift (Recommended - simplest)**
+
+Edit `AppDependencies.swift:233`:
+
+```swift
+let sentryDSN = "https://your-actual-dsn@your-org.ingest.sentry.io/your-project-id"
+```
 
 **Option B: Info.plist**
 
+Add to `Info.plist`:
 ```xml
 <key>SentryDSN</key>
-<string>$(SENTRY_DSN)</string>
+<string>https://your-dsn@your-org.ingest.sentry.io/your-project-id</string>
 ```
 
-Then set in build settings: `SENTRY_DSN = your-dsn`
-
-**Option C: Hardcode (NOT recommended for production)**
-
-Edit `AppDependencies.swift:230`:
-
+Uncomment in `AppDependencies.swift:237`:
 ```swift
-let sentryDSN = "https://your-dsn-here"
+let sentryDSN = Bundle.main.infoDictionary?["SentryDSN"] as? String ?? ""
+```
+
+**Option C: Environment Variable (for CI/CD only)**
+
+Uncomment in `AppDependencies.swift:240`:
+```swift
+let sentryDSN = ProcessInfo.processInfo.environment["SENTRY_DSN"] ?? ""
 ```
 
 ### 4. Initialize Sentry SDK (Required)

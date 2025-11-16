@@ -226,13 +226,23 @@ class AppDependencies {
             )
         } else {
             // In production, configure Sentry
-            // TODO: Replace with your actual Sentry DSN
-            let sentryDSN = ProcessInfo.processInfo.environment["SENTRY_DSN"] ?? ""
+            // Sentry DSN is not a secret - it's safe to commit
+            // See: https://docs.sentry.io/product/sentry-basics/dsn-explainer/
+
+            // Option 1: Hardcode (simplest)
+            let sentryDSN = "https://your-dsn@your-org.ingest.sentry.io/your-project-id"
+
+            // Option 2: Read from Info.plist (if you prefer)
+            // Add <key>SentryDSN</key><string>your-dsn</string> to Info.plist
+            // let sentryDSN = Bundle.main.infoDictionary?["SentryDSN"] as? String ?? ""
+
+            // Option 3: Environment variable (fallback for CI/CD)
+            // let sentryDSN = ProcessInfo.processInfo.environment["SENTRY_DSN"] ?? "https://your-dsn..."
 
             var backends: [LoggerBackend] = []
 
             // Only add Sentry if DSN is configured
-            if !sentryDSN.isEmpty {
+            if !sentryDSN.isEmpty && !sentryDSN.contains("your-dsn") {
                 let sentryLogger = SentryLogger(
                     dsn: sentryDSN,
                     environment: SentryEnvironment.current,

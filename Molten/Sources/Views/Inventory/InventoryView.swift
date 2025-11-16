@@ -571,13 +571,18 @@ struct InventoryView: View, CachedDataDeletion {
 
     func removeFromCache(_ item: CompleteInventoryItemModel) async {
         await MainActor.run {
+            let beforeCount = viewModel.completeItems.count
             viewModel.completeItems.removeAll { $0.id == item.id }
+            let afterCount = viewModel.completeItems.count
+            log.info("🗑️ removeFromCache: \(beforeCount) → \(afterCount) items (removed: \(beforeCount - afterCount))")
             refreshTrigger += 1  // Force SwiftUI to refresh (updates counters, UI)
         }
     }
 
     func reloadData() async {
+        log.info("🔄 reloadData: Starting deferred reload...")
         await viewModel.loadInventoryItems()
+        log.info("🔄 reloadData: Reload complete - \(viewModel.completeItems.count) items")
     }
 
     func updateDerivedCaches() {

@@ -48,18 +48,13 @@ final class MockGlassItemRepository: GlassItemRepository {
                 name: item.name,
                 sku: item.sku,
                 manufacturer: item.manufacturer,
-                color_name: item.color_name,
-                color_code: item.color_code,
+                mfr_notes: item.mfr_notes,
                 coe: item.coe,
-                base_color: item.base_color,
-                color_family: item.color_family,
-                finish: item.finish,
-                opacity: item.opacity,
-                product_line: item.product_line,
+                url: item.url,
                 mfr_status: item.mfr_status,
-                mfr_updated: item.mfr_updated,
-                notes: item.notes,
-                image_path: item.image_path
+                image_url: item.image_url,
+                image_path: item.image_path,
+                image_thumb_path: item.image_thumb_path
             )
         }
 

@@ -9,6 +9,9 @@
 
 import SwiftUI
 import PhotosUI
+#if canImport(AppKit)
+import AppKit
+#endif
 
 /// Wrapper to make String identifiable for sheet presentation
 private struct InventoryTypeSelection: Identifiable {
@@ -61,8 +64,13 @@ struct InventoryDetailView: View {
 
     // User images state
     @State private var userImages: [UserImageModel] = []
+    #if os(macOS)
     @State private var loadedImages: [UUID: NSImage] = [:]
     @State private var manufacturerImage: NSImage?
+    #else
+    @State private var loadedImages: [UUID: UIImage] = [:]
+    @State private var manufacturerImage: UIImage?
+    #endif
     @State private var showingImagePicker = false
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var isLoadingImages = false
@@ -479,10 +487,17 @@ struct InventoryDetailView: View {
     private func handleImageSelection(_ items: [PhotosPickerItem]) {
         Task {
             for item in items {
+                #if os(macOS)
                 guard let data = try? await item.loadTransferable(type: Data.self),
                       let image = NSImage(data: data) else {
                     continue
                 }
+                #else
+                guard let data = try? await item.loadTransferable(type: Data.self),
+                      let image = UIImage(data: data) else {
+                    continue
+                }
+                #endif
 
                 // No need to resize - UserImageRepository handles this automatically
                 let imageToSave = image
@@ -717,10 +732,10 @@ struct InventoryDetailView: View {
                     }
                 }
                 .padding()
-                .background(.accentColor.opacity(0.05))
+                .background(Color.accentColor.opacity(0.05))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(.accentColor.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.accentColor.opacity(0.2), lineWidth: 1)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .id("user-notes") // Anchor for scrolling

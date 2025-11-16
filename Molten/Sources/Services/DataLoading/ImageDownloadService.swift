@@ -7,8 +7,12 @@
 //
 
 import Foundation
-#if canImport(AppKit)
+#if canImport(UIKit)
+import UIKit
+typealias PlatformImage = UIImage
+#elseif canImport(AppKit)
 import AppKit
+typealias PlatformImage = NSImage
 #endif
 
 // MARK: - Manifest Types
@@ -97,8 +101,8 @@ final class ImageDownloadService: Sendable {
     ///   - exactFilename: If provided, try this exact filename first (from catalog's image_path field)
     ///   - exactThumbnailFilename: If provided, use this as the thumbnail filename (from catalog's image_thumb_path field)
     ///   - useThumbnail: If true, try thumbnail version first (default: true)
-    /// - Returns: NSImage if found/downloaded, nil otherwise
-    nonisolated static func loadImage(itemCode: String, manufacturer: String?, exactFilename: String? = nil, exactThumbnailFilename: String? = nil, useThumbnail: Bool = true) async -> NSImage? {
+    /// - Returns: PlatformImage if found/downloaded, nil otherwise
+    nonisolated static func loadImage(itemCode: String, manufacturer: String?, exactFilename: String? = nil, exactThumbnailFilename: String? = nil, useThumbnail: Bool = true) async -> PlatformImage? {
         guard let manufacturer = manufacturer, !manufacturer.isEmpty else {
             return nil
         }
@@ -203,7 +207,7 @@ final class ImageDownloadService: Sendable {
     // MARK: - Private Helpers
 
     /// Loads image from local cache
-    private nonisolated static func loadFromCache(filename: String) async -> NSImage? {
+    private nonisolated static func loadFromCache(filename: String) async -> PlatformImage? {
         guard let cacheDir = cacheDirectory else {
             return nil
         }
@@ -212,7 +216,7 @@ final class ImageDownloadService: Sendable {
 
         guard FileManager.default.fileExists(atPath: fileURL.path),
               let data = try? Data(contentsOf: fileURL),
-              let image = NSImage(data: data) else {
+              let image = PlatformImage(data: data) else {
             return nil
         }
 
@@ -220,8 +224,8 @@ final class ImageDownloadService: Sendable {
     }
 
     /// Downloads image from CDN and returns both the image and its ETag for checksum validation
-    /// - Returns: Tuple of (NSImage, ETag) if successful, nil otherwise
-    private nonisolated static func downloadImage(filename: String) async -> (image: NSImage, etag: String)? {
+    /// - Returns: Tuple of (PlatformImage, ETag) if successful, nil otherwise
+    private nonisolated static func downloadImage(filename: String) async -> (image: PlatformImage, etag: String)? {
         let urlString = "\(imageBaseURL)/\(filename)"
         guard let url = URL(string: urlString) else {
             return nil
@@ -239,8 +243,8 @@ final class ImageDownloadService: Sendable {
             // Extract ETag from response headers (for checksum validation)
             let etag = httpResponse.value(forHTTPHeaderField: "ETag") ?? ""
 
-            // Convert data to NSImage
-            guard let image = NSImage(data: data) else {
+            // Convert data to PlatformImage
+            guard let image = PlatformImage(data: data) else {
                 return nil
             }
 
@@ -256,7 +260,7 @@ final class ImageDownloadService: Sendable {
     ///   - image: The image to save
     ///   - filename: The filename to save as
     ///   - etag: Optional ETag from server for checksum validation
-    private nonisolated static func saveToCache(image: NSImage, filename: String, etag: String? = nil) async {
+    private nonisolated static func saveToCache(image: PlatformImage, filename: String, etag: String? = nil) async {
         guard let cacheDir = cacheDirectory else {
             return
         }
@@ -267,7 +271,19 @@ final class ImageDownloadService: Sendable {
         let ext = (filename as NSString).pathExtension.lowercased()
         let data: Data?
 
-        // Convert NSImage to Data using appropriate format
+        // Convert PlatformImage to Data using appropriate format
+        #if canImport(UIKit)
+        // iOS: Use UIImage methods
+        switch ext {
+        case "png":
+            data = image.pngData()
+        case "jpg", "jpeg", "webp":
+            data = image.jpegData(compressionQuality: 0.9)
+        default:
+            data = image.jpegData(compressionQuality: 0.9)
+        }
+        #elseif canImport(AppKit)
+        // macOS: Use NSImage methods
         switch ext {
         case "png":
             data = image.tiffRepresentation.flatMap { NSBitmapImageRep(data: $0)?.representation(using: .png, properties: [:]) }
@@ -279,6 +295,7 @@ final class ImageDownloadService: Sendable {
         default:
             data = image.tiffRepresentation.flatMap { NSBitmapImageRep(data: $0)?.representation(using: .jpeg, properties: [.compressionFactor: 0.9]) }
         }
+        #endif
 
         guard let imageData = data else {
             return

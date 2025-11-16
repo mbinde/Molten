@@ -73,7 +73,7 @@ struct TabCustomizationView: View {
                                 .foregroundColor(.accentColor)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(.accentColor.opacity(0.1))
+                                .background(Color.accentColor.opacity(0.1))
                                 .cornerRadius(8)
                         } else {
                             // In More menu
@@ -105,7 +105,7 @@ struct TabCustomizationView: View {
                                 .font(.caption)
                         } icon: {
                             Circle()
-                                .fill(.accentColor.opacity(0.1))
+                                .fill(Color.accentColor.opacity(0.1))
                                 .frame(width: 8, height: 8)
                         }
 

@@ -10,7 +10,7 @@ import UIKit
 #endif
 import SwiftUI
 
-#if os(iOS)
+#if os(iOS) && canImport(UIKit)
 /// Service for generating PDF documents from project plans
 actor ProjectPDFService {
     private let userImageRepository: UserImageRepository

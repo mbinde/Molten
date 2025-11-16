@@ -54,7 +54,7 @@ struct BadgeLabel: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(backgroundColor)
-        .foregroundColor(foregroundColor)
+        .foregroundStyle(foregroundColor)
         .clipShape(RoundedRectangle(cornerRadius: 6))
         .overlay(
             RoundedRectangle(cornerRadius: 6)
@@ -222,7 +222,7 @@ extension View {
 #Preview("Badge Overlay") {
     VStack(spacing: 20) {
         RoundedRectangle(cornerRadius: 12)
-            .fill(.accentColor.opacity(0.2))
+            .fill(Color.accentColor.opacity(0.2))
             .frame(width: 200, height: 100)
             .badge(BadgeLabel.quantity(5))
 

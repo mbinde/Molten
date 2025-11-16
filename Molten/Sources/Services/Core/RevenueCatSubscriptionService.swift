@@ -1,9 +1,9 @@
 import Foundation
 #if canImport(UIKit)
 import UIKit
+import RevenueCatUI
 #endif
 import RevenueCat
-import RevenueCatUI
 
 /// Production implementation using RevenueCat SDK
 @MainActor
@@ -85,6 +85,7 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
     }
 
     public func presentPaywall() async throws {
+        #if canImport(UIKit)
         print("🔵 [RevenueCat] presentPaywall() called")
 
         // RevenueCat Paywalls (modern approach with default offering)
@@ -113,9 +114,13 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
         print("🎬 [RevenueCat] Presenting paywall from topmost view controller...")
         await topViewController.present(paywallViewController, animated: true)
         print("✅ [RevenueCat] Paywall presented")
+        #else
+        throw SubscriptionServiceError.configurationError
+        #endif
     }
 
     public func presentCustomerCenter() async throws {
+        #if canImport(UIKit)
         guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootViewController = await windowScene.windows.first?.rootViewController else {
             throw SubscriptionServiceError.configurationError
@@ -129,6 +134,9 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
 
         let customerCenterViewController = CustomerCenterViewController()
         await topViewController.present(customerCenterViewController, animated: true)
+        #else
+        throw SubscriptionServiceError.configurationError
+        #endif
     }
 
     public func restorePurchases() async throws -> CustomerInfo {
@@ -162,6 +170,7 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
 
 // MARK: - PaywallViewController Delegate Handler
 
+#if canImport(UIKit)
 @MainActor
 private class PaywallViewControllerDelegateHandler: NSObject, PaywallViewControllerDelegate {
     static let shared = PaywallViewControllerDelegateHandler()
@@ -183,6 +192,7 @@ private class PaywallViewControllerDelegateHandler: NSObject, PaywallViewControl
         print("❌ [RevenueCat] Purchase failed: \(error)")
     }
 }
+#endif
 
 // Notification for subscription status changes
 extension Notification.Name {

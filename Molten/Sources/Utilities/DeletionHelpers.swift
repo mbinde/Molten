@@ -67,7 +67,7 @@ extension CachedDataDeletion {
             // 1. Delete from database
             try await performDeletion(for: item)
 
-            // 2. Immediately update view model to remove the deleted item
+            // 2. ONLY if deletion succeeded: Immediately update view model to remove the deleted item
             //    This ensures counters and other UI elements update right away
             await removeFromCache(item)
 
@@ -82,7 +82,10 @@ extension CachedDataDeletion {
             }
         } catch {
             // On error, log and reload to restore consistency
+            // IMPORTANT: We do NOT remove from cache here - the deletion failed,
+            // so the item should stay visible
             print("❌ Failed to delete item: \(error)")
+            print("❌ Error details: \(error.localizedDescription)")
             Task { @MainActor in
                 await reloadData()
             }

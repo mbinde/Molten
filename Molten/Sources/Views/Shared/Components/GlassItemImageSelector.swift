@@ -86,6 +86,11 @@ struct GlassItemImageSelector: View {
                 .font(DesignSystem.Typography.caption)
                 .foregroundColor(DesignSystem.Colors.textSecondary)
 
+            Text("Custom images are private and visible only to you")
+                .font(DesignSystem.Typography.caption)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+                .multilineTextAlignment(.center)
+
             Button {
                 onAddImage()
             } label: {

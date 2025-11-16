@@ -71,3 +71,25 @@ Feature for generating AI images based on user's inventory color distribution.
 
 **iOS App (Molten)**:
 - TBD - Feature not yet implemented
+
+---
+
+## Tool Maintenance Schedules
+
+Feature for tracking maintenance schedules for studio tools and equipment.
+
+### Potential Features
+
+- Track tools/equipment in the studio
+- Schedule maintenance reminders (e.g., kiln element replacement, saw blade sharpening)
+- Maintenance history log
+- Cost tracking for repairs and replacements
+- Alert notifications when maintenance is due
+
+### Use Cases
+
+- Kiln maintenance (element replacement, thermocouple calibration)
+- Saw blade sharpening schedules
+- Grinder wheel replacements
+- Tool calibration reminders
+- Equipment warranty tracking

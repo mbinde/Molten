@@ -20,7 +20,7 @@ class DataExportService {
     private let projectRepository: ProjectRepository
     private let logbookRepository: LogbookRepository
     private let purchaseRecordRepository: PurchaseRecordRepository
-    #if canImport(UIKit)
+    #if os(iOS)
     private let userImageRepository: UserImageRepository
     #endif
     private let userNotesRepository: UserNotesRepository
@@ -40,7 +40,7 @@ class DataExportService {
         self.logbookRepository = logbookRepository
         self.purchaseRecordRepository = purchaseRecordRepository
         self.userNotesRepository = userNotesRepository
-        #if canImport(UIKit)
+        #if os(iOS)
         if let userImageRepository = userImageRepository {
             self.userImageRepository = userImageRepository
         } else {
@@ -364,7 +364,7 @@ class DataExportService {
     }
 
     private func exportUserImages(to directory: URL, currentCounts: ExportEntityCounts) async throws -> ExportEntityCounts {
-        #if canImport(UIKit)
+        #if os(iOS)
         // Get all standalone images and images for all owner types
         let standaloneImages = try await userImageRepository.getStandaloneImages()
 

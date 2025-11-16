@@ -133,12 +133,21 @@ struct ProjectsView: View {
             .task {
                 await loadProjects()
             }
+            #if os(macOS)
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.willBecomeActiveNotification)) { _ in
                 // Refresh projects when app becomes active (e.g., returning from share extension)
                 Task {
                     await loadProjects()
                 }
             }
+            #else
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                // Refresh projects when app becomes active (e.g., returning from share extension)
+                Task {
+                    await loadProjects()
+                }
+            }
+            #endif
         }
     }
 
@@ -265,7 +274,7 @@ struct ProjectsView: View {
 
 // MARK: - Supporting Views
 
-struct ProjectRow: View {
+private struct OldProjectRow: View {
     let plan: ProjectModel
     @State private var tags: [String] = []
 
@@ -342,7 +351,7 @@ struct ProjectRow: View {
     }
 }
 
-struct AddProjectView: View {
+private struct OldAddProjectView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(EntitlementService.self) private var entitlementService
 
@@ -428,7 +437,7 @@ struct AddProjectView: View {
                                     .font(.caption)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
-                                    .background(.accentColor.opacity(0.1))
+                                    .background(Color.accentColor.opacity(0.1))
                                     .foregroundColor(.accentColor)
                                     .cornerRadius(6)
                             }
@@ -603,7 +612,7 @@ struct AddProjectView: View {
 
 // MARK: - Tag Editor Sheet
 
-struct TagEditorSheet: View {
+private struct OldTagEditorSheet: View {
     @Binding var tags: [String]
     @State private var newTag: String = ""
     @Environment(\.dismiss) private var dismiss
@@ -687,7 +696,11 @@ struct ProjectDetailView: View {
     @State private var pdfFileURL: IdentifiableURL?  // Changed to IdentifiableURL
     @State private var exportedPlanURL: IdentifiableURL?  // For .moltenplan exports
     @State private var glassItemLookup: [String: GlassItemModel] = [:]
-    @State private var loadedImages: [UUID: NSImage] = [:]  // Cache of loaded images
+    #if os(macOS)
+    @State private var loadedImages: [UUID: UIImage] = [:]  // Cache of loaded images
+    #else
+    @State private var loadedImages: [UUID: UIImage] = [:]  // Cache of loaded images
+    #endif
     @State private var isEditing = false
 
     // Edit mode fields
@@ -1124,7 +1137,7 @@ struct ProjectDetailView: View {
                             .font(.caption)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(.accentColor.opacity(0.1))
+                            .background(Color.accentColor.opacity(0.1))
                             .foregroundColor(.accentColor)
                             .cornerRadius(6)
                     }
@@ -1151,7 +1164,7 @@ struct ProjectDetailView: View {
                                 .font(.caption)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(.accentColor.opacity(0.1))
+                                .background(Color.accentColor.opacity(0.1))
                                 .foregroundColor(.accentColor)
                                 .cornerRadius(6)
                         }
@@ -1272,7 +1285,7 @@ struct ProjectDetailView: View {
             }
         }
         .padding(8)
-        .background(.accentColor.opacity(0.05))
+        .background(Color.accentColor.opacity(0.05))
         .cornerRadius(6)
     }
 
@@ -1469,7 +1482,7 @@ struct ProjectDetailView: View {
                 }
                 .padding(.vertical, 8)
                 .padding(.horizontal, 8)
-                .background(.accentColor.opacity(0.05))
+                .background(Color.accentColor.opacity(0.05))
                 .cornerRadius(8)
             }
 
@@ -1801,7 +1814,7 @@ struct ProjectDetailView: View {
             )
 
             // Load each image
-            var imageCache: [UUID: NSImage] = [:]
+            var imageCache: [UUID: UIImage] = [:]
             for imageModel in allImages {
                 if let image = try? await userImageRepository.loadImage(imageModel) {
                     imageCache[imageModel.id] = image
@@ -1871,7 +1884,7 @@ struct ProjectDetailView: View {
             do {
                 // Load the image data
                 guard let data = try await item.loadTransferable(type: Data.self),
-                      let nsImage = NSImage(data: data) else {
+                      let nsImage = UIImage(data: data) else {
                     continue
                 }
 

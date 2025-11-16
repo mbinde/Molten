@@ -9,6 +9,9 @@ import SwiftUI
 #if canImport(UIKit)
 import PhotosUI
 #endif
+#if canImport(AppKit)
+import AppKit
+#endif
 
 struct AddLogbookEntryView: View {
     @Environment(\.dismiss) private var dismiss
@@ -23,7 +26,11 @@ struct AddLogbookEntryView: View {
     private let kilnScheduleService: KilnScheduleService
 
     // Image state (kept in view since it's AppKit-specific)
-    @State private var loadedImages: [UUID: NSImage] = [:]
+    #if os(macOS)
+    @State private var loadedImages: [UUID: UIImage] = [:]
+    #else
+    @State private var loadedImages: [UUID: UIImage] = [:]
+    #endif
 
     #if canImport(PhotosUI)
     @State private var showingImagePicker = false
@@ -434,7 +441,7 @@ struct AddLogbookEntryView: View {
                                 .font(.caption)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(.accentColor.opacity(0.1))
+                                .background(Color.accentColor.opacity(0.1))
                                 .foregroundColor(.accentColor)
                                 .cornerRadius(6)
                         }
@@ -527,7 +534,7 @@ struct AddLogbookEntryView: View {
     private func loadSelectedImages(_ items: [PhotosPickerItem]) async {
         for item in items {
             guard let data = try? await item.loadTransferable(type: Data.self),
-                  let image = NSImage(data: data) else {
+                  let image = UIImage(data: data) else {
                 continue
             }
 

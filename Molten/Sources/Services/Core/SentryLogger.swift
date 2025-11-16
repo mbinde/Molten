@@ -7,8 +7,13 @@
 //
 
 import Foundation
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
 import AppKit
+#endif
 import Sentry
+import Network
 
 // MARK: - Environment
 
@@ -244,11 +249,16 @@ public final class SentryLogger: LoggerBackend, @unchecked Sendable {
 
         enriched["environment"] = environment.rawValue
 
-        // Add device metadata (macOS)
+        // Add device metadata
         let processInfo = ProcessInfo.processInfo
-        enriched["device_model"] = getMacModel()
         enriched["os_version"] = processInfo.operatingSystemVersionString
+        #if canImport(UIKit)
+        enriched["device_model"] = UIDevice.current.model
+        enriched["device_name"] = UIDevice.current.name
+        #elseif canImport(AppKit)
+        enriched["device_model"] = getMacModel()
         enriched["device_name"] = Host.current().localizedName ?? "Unknown"
+        #endif
 
         // Add memory info
         var info = mach_task_basic_info()

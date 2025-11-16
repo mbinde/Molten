@@ -51,7 +51,7 @@ struct CatalogTagFilterView: View {
                             }
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(.accentColor.opacity(0.2))
+                            .background(Color.accentColor.opacity(0.2))
                             .foregroundColor(.accentColor)
                             .clipShape(Capsule())
                         }

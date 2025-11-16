@@ -6,7 +6,14 @@
 //
 
 import SwiftUI
+#if canImport(AppKit)
+import AppKit
+#endif
+#if canImport(UIKit)
+import UIKit
+#endif
 
+#if os(iOS)
 /// Preview component showing what a label will look like
 struct LabelPreviewView: View {
     let format: AveryFormat
@@ -64,7 +71,7 @@ struct LabelPreviewView: View {
                 .foregroundColor(.secondary)
         }
         .padding()
-        .background(Color(NSColor.controlBackgroundColor))
+        .background(Color(.systemGray6))
         .cornerRadius(8)
         .onAppear {
             if labelService == nil {
@@ -204,7 +211,7 @@ struct LabelPreviewView: View {
                     let text = manufacturer.uppercased()
                     let displayFontSize = 9 * scaleFactor * fontScale
                     let actualFontSize = 9 * fontScale  // Font size on actual PDF (no scaleFactor)
-                    let actualFont = NSFont.boldSystemFont(ofSize: actualFontSize)
+                    let actualFont = UIFont.boldSystemFont(ofSize: actualFontSize)
                     let willTruncate = textWillTruncate(text, font: actualFont)
 
                     Text(text)
@@ -219,7 +226,7 @@ struct LabelPreviewView: View {
             if let sku = sampleData.sku {
                 let displayFontSize = 9 * scaleFactor * fontScale
                 let actualFontSize = 9 * fontScale
-                let actualFont = NSFont.boldSystemFont(ofSize: actualFontSize)
+                let actualFont = UIFont.boldSystemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(sku, font: actualFont)
 
                 Text(sku)
@@ -233,7 +240,7 @@ struct LabelPreviewView: View {
             if let colorName = sampleData.colorName {
                 let displayFontSize = 8 * scaleFactor * fontScale
                 let actualFontSize = 8 * fontScale
-                let actualFont = NSFont.systemFont(ofSize: actualFontSize)
+                let actualFont = UIFont.systemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(colorName, font: actualFont)
 
                 Text(colorName)
@@ -248,7 +255,7 @@ struct LabelPreviewView: View {
                 let text = "COE \(coe)"
                 let displayFontSize = 7 * scaleFactor * fontScale
                 let actualFontSize = 7 * fontScale
-                let actualFont = NSFont.systemFont(ofSize: actualFontSize)
+                let actualFont = UIFont.systemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(text, font: actualFont)
 
                 Text(text)
@@ -264,7 +271,7 @@ struct LabelPreviewView: View {
                 let text = "📍 \(location)"
                 let displayFontSize = 7 * scaleFactor * fontScale
                 let actualFontSize = 7 * fontScale
-                let actualFont = NSFont.systemFont(ofSize: actualFontSize)
+                let actualFont = UIFont.systemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(text, font: actualFont)
 
                 Text(text)
@@ -279,7 +286,7 @@ struct LabelPreviewView: View {
             if let owner = sampleData.owner {
                 let displayFontSize = 7 * scaleFactor * fontScale
                 let actualFontSize = 7 * fontScale
-                let actualFont = NSFont.systemFont(ofSize: actualFontSize)
+                let actualFont = UIFont.systemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(owner, font: actualFont)
 
                 Text(owner)
@@ -293,7 +300,7 @@ struct LabelPreviewView: View {
     }
 
     /// Check if text will be truncated given the available width
-    private func textWillTruncate(_ text: String, font: NSFont) -> Bool {
+    private func textWillTruncate(_ text: String, font: UIFont) -> Bool {
         // Calculate available width based on QR position
         let padding: CGFloat = 4
         var availableWidth = format.labelWidth - (padding * 2)
@@ -364,11 +371,11 @@ private struct QRCodeView: View {
     let stableId: String
     let service: LabelPrintingService
 
-    @State private var qrImage: NSImage?
+    @State private var qrImage: UIImage?
 
     var body: some View {
         if let qrImage = qrImage {
-            Image(nsImage: qrImage)
+            Image(uiImage: qrImage)
                 .resizable()
                 .interpolation(.none)
                 .aspectRatio(contentMode: .fit)
@@ -446,3 +453,4 @@ private struct QRCodeView: View {
         )
     )
 }
+#endif

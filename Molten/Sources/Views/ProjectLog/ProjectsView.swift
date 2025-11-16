@@ -133,7 +133,7 @@ struct ProjectsView: View {
             .task {
                 await loadProjects()
             }
-            .onReceive(NotificationCenter.default.publisher(for: NSApplication.willBecomeActiveNotification)) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                 // Refresh projects when app becomes active (e.g., returning from share extension)
                 Task {
                     await loadProjects()
@@ -733,8 +733,8 @@ struct ProjectDetailView: View {
                             .font(.caption)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(.accentColor.opacity(0.1))
-                            .foregroundColor(.accentColor)
+                            .background(Color.accentColor.opacity(0.1))
+                            .foregroundColor(Color.accentColor)
                             .cornerRadius(6)
                     }
                 }
@@ -760,8 +760,8 @@ struct ProjectDetailView: View {
                                 .font(.caption)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(.accentColor.opacity(0.1))
-                                .foregroundColor(.accentColor)
+                                .background(Color.accentColor.opacity(0.1))
+                                .foregroundColor(Color.accentColor)
                                 .cornerRadius(6)
                         }
                     }
@@ -881,7 +881,7 @@ struct ProjectDetailView: View {
             }
         }
         .padding(8)
-        .background(.accentColor.opacity(0.05))
+        .background(Color.accentColor.opacity(0.05))
         .cornerRadius(6)
     }
 
@@ -1078,7 +1078,7 @@ struct ProjectDetailView: View {
                 }
                 .padding(.vertical, 8)
                 .padding(.horizontal, 8)
-                .background(.accentColor.opacity(0.05))
+                .background(Color.accentColor.opacity(0.05))
                 .cornerRadius(8)
             }
 

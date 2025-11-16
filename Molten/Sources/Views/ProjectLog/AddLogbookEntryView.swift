@@ -434,8 +434,8 @@ struct AddLogbookEntryView: View {
                                 .font(.caption)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(.accentColor.opacity(0.1))
-                                .foregroundColor(.accentColor)
+                                .background(Color.accentColor.opacity(0.1))
+                                .foregroundColor(Color.accentColor)
                                 .cornerRadius(6)
                         }
                     }

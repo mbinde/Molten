@@ -72,7 +72,8 @@ def create_schema(conn):
             image_path TEXT,
             image_thumb_path TEXT,
             image_url TEXT,
-            stock_type TEXT
+            stock_type TEXT,
+            dominant_colors TEXT
         )
     """)
 
@@ -156,8 +157,9 @@ def import_glass_items(conn, json_file):
                 stable_id, status, added_date, last_seen, discontinued_date,
                 manufacturer, code, name, start_date, end_date,
                 manufacturer_description, tags, synonyms, coe, type,
-                manufacturer_url, image_path, image_thumb_path, image_url, stock_type
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                manufacturer_url, image_path, image_thumb_path, image_url, stock_type,
+                dominant_colors
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             item['stable_id'],
             item['status'],
@@ -178,7 +180,8 @@ def import_glass_items(conn, json_file):
             item.get('image_path'),
             item.get('image_thumb_path'),
             item.get('image_url'),
-            item.get('stock_type')
+            item.get('stock_type'),
+            json.dumps(item.get('dominant_colors', []))
         ))
 
         # Import individual tags into item_tags table

@@ -7,8 +7,7 @@
 
 import SwiftUI
 
-@MainActor
-struct RecipesView: View, CachedDataDeletion {
+struct RecipesView: View {
     private let deps: AppDependencies
     private let recipeService: RecipeService
     private let recipeRepository: RecipeRepository
@@ -110,7 +109,7 @@ struct RecipesView: View, CachedDataDeletion {
             .onDelete { indexSet in
                 Task {
                     for index in indexSet {
-                        await deleteItem(filteredRecipes[index])
+                        await deleteRecipe(filteredRecipes[index])
                     }
                 }
             }
@@ -179,21 +178,43 @@ struct RecipesView: View, CachedDataDeletion {
         isLoading = false
     }
 
-    // MARK: - CachedDataDeletion Implementation
+    // MARK: - Custom Deletion Pattern
+    //
+    // ⚠️ IMPORTANT: This view does NOT use CachedDataDeletion protocol
+    // (see Molten/Sources/Utilities/DeletionHelpers.swift)
+    //
+    // WHY: Swift 6 strict concurrency issue with protocol conformance
+    //      (conformance crosses into main actor-isolated code)
+    //
+    // PATTERN: This implementation follows the SAME three-step pattern as CachedDataDeletion:
+    //   1. Delete from database (performDeletion)
+    //   2. Immediate cache removal (removeFromCache)
+    //   3. Deferred reload (reloadData) - 0.3s delay prevents animation crashes
+    //
+    // ⚠️ MAINTENANCE: If you update DeletionHelpers.swift, apply equivalent changes here:
+    //   - Timing (currently 0.3s / 300_000_000 nanoseconds)
+    //   - Error handling pattern
+    //   - Cache update sequence
+    //
+    private func deleteRecipe(_ item: RecipeModel) async {
+        do {
+            // Step 1: Delete from database
+            try await recipeRepository.deleteRecipe(id: item.id)
 
-    func performDeletion(for item: RecipeModel) async throws {
-        // Delete the recipe (Core Data will cascade delete RecipeIngredient entities)
-        try await recipeRepository.deleteRecipe(id: item.id)
-    }
+            // Step 2: Immediately update the view model to remove the deleted item
+            await MainActor.run {
+                recipes.removeAll { $0.id == item.id }
+            }
 
-    func removeFromCache(_ item: RecipeModel) async {
-        await MainActor.run {
-            recipes.removeAll { $0.id == item.id }
+            // Step 3: Defer full reload to allow .onDelete animation to complete
+            // (Same timing as DeletionHelpers.deleteItem: 0.3 seconds)
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 300_000_000)  // 0.3 seconds
+                await loadRecipes()
+            }
+        } catch {
+            print("❌ Failed to delete recipe: \(error)")
         }
-    }
-
-    func reloadData() async {
-        await loadRecipes()
     }
 }
 

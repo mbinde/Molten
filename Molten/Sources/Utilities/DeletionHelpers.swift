@@ -31,10 +31,10 @@ import SwiftUI
 /// - ProjectsView (ProjectModel)
 /// - LogbookView (LogbookModel)
 /// - KilnSchedulesView (KilnSchedule)
-/// - RecipesView (RecipeModel)
 ///
 /// ⚠️ Non-conforming (custom implementation):
 /// - ShoppingListView - uses custom deleteShoppingItem() due to complex nested data structure
+/// - RecipesView - uses custom deleteRecipe() due to Swift 6 concurrency issue
 protocol CachedDataDeletion {
     associatedtype Item: Identifiable
 

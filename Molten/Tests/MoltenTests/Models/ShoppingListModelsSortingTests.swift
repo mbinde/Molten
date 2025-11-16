@@ -43,7 +43,7 @@ struct DetailedShoppingListItemModelSortingTests {
             item_stable_id: stableId,
             type: "rod",
             currentQuantity: 5.0,
-            minimumQuantity: 10.0 + neededQuantity, // Min = current + needed
+            minimumQuantity: 5.0 + neededQuantity, // Min = current + needed
             store: "TestStore"
         )
 

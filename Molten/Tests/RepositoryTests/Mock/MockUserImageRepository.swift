@@ -24,6 +24,18 @@ final class MockUserImageRepository: UserImageRepository {
     // MARK: - New Generic Methods
 
     func saveImage(_ image: UIImage, ownerType: ImageOwnerType, ownerId: String?, type: UserImageType) async throws -> UserImageModel {
+        // If saving a primary image, demote existing primary to alternate
+        if type == .primary, let ownerId = ownerId {
+            let existing = images.values.filter {
+                $0.ownerType == ownerType &&
+                $0.ownerId == ownerId &&
+                $0.imageType == .primary
+            }
+            for existingPrimary in existing {
+                try await updateImageType(existingPrimary.id, type: .alternate)
+            }
+        }
+
         let model = UserImageModel(
             id: UUID(),
             ownerType: ownerType,
@@ -72,6 +84,9 @@ final class MockUserImageRepository: UserImageRepository {
     }
 
     func deleteImage(_ id: UUID) async throws {
+        guard images[id] != nil else {
+            throw UserImageError.imageNotFound
+        }
         images.removeValue(forKey: id)
         imageData.removeValue(forKey: id)
     }
@@ -80,6 +95,30 @@ final class MockUserImageRepository: UserImageRepository {
         guard var model = images[id] else {
             throw UserImageError.imageNotFound
         }
+
+        // If promoting to primary, demote existing primary to alternate
+        if type == .primary, let ownerId = model.ownerId {
+            let existing = images.values.filter {
+                $0.ownerType == model.ownerType &&
+                $0.ownerId == ownerId &&
+                $0.imageType == .primary &&
+                $0.id != id  // Don't demote ourselves
+            }
+            for existingPrimary in existing {
+                let demoted = UserImageModel(
+                    id: existingPrimary.id,
+                    ownerType: existingPrimary.ownerType,
+                    ownerId: existingPrimary.ownerId,
+                    imageType: .alternate,
+                    fileExtension: existingPrimary.fileExtension,
+                    dateCreated: existingPrimary.dateCreated,
+                    dateModified: Date(),
+                    ocrText: existingPrimary.ocrText
+                )
+                images[existingPrimary.id] = demoted
+            }
+        }
+
         // Create updated model with new type
         let updated = UserImageModel(
             id: model.id,

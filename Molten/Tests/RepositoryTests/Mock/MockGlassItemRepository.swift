@@ -37,17 +37,44 @@ final class MockGlassItemRepository: GlassItemRepository {
     }
 
     func createItem(_ item: GlassItemModel) async throws -> GlassItemModel {
-        let key = await item.stable_id
-        lock.withLock { items[key] = item }
-        return item
+        var itemToCreate = item
+
+        // Generate stable_id if it's "AUTO_ID"
+        if await item.stable_id == "AUTO_ID" {
+            // Generate a 6-character unique ID
+            let generatedId = String(UUID().uuidString.prefix(6))
+            itemToCreate = GlassItemModel(
+                stable_id: generatedId,
+                name: item.name,
+                sku: item.sku,
+                manufacturer: item.manufacturer,
+                color_name: item.color_name,
+                color_code: item.color_code,
+                coe: item.coe,
+                base_color: item.base_color,
+                color_family: item.color_family,
+                finish: item.finish,
+                opacity: item.opacity,
+                product_line: item.product_line,
+                mfr_status: item.mfr_status,
+                mfr_updated: item.mfr_updated,
+                notes: item.notes,
+                image_path: item.image_path
+            )
+        }
+
+        let key = await itemToCreate.stable_id
+        lock.withLock { items[key] = itemToCreate }
+        return itemToCreate
     }
 
     func createItems(_ items: [GlassItemModel]) async throws -> [GlassItemModel] {
+        var createdItems: [GlassItemModel] = []
         for item in items {
-            let key = await item.stable_id
-            lock.withLock { self.items[key] = item }
+            let createdItem = try await createItem(item)
+            createdItems.append(createdItem)
         }
-        return items
+        return createdItems
     }
 
     func updateItem(_ item: GlassItemModel) async throws -> GlassItemModel {

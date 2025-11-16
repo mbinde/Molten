@@ -9,6 +9,9 @@ import SwiftUI
 #if canImport(UIKit)
 import PhotosUI
 #endif
+#if canImport(AppKit)
+import AppKit
+#endif
 
 struct AddLogbookEntryView: View {
     @Environment(\.dismiss) private var dismiss
@@ -22,8 +25,12 @@ struct AddLogbookEntryView: View {
     private let userImageRepository: UserImageRepository
     private let kilnScheduleService: KilnScheduleService
 
-    // Image state (kept in view since it's UIKit-specific)
+    // Image state (kept in view since it's AppKit-specific)
+    #if os(macOS)
     @State private var loadedImages: [UUID: UIImage] = [:]
+    #else
+    @State private var loadedImages: [UUID: UIImage] = [:]
+    #endif
 
     #if canImport(PhotosUI)
     @State private var showingImagePicker = false
@@ -218,7 +225,7 @@ struct AddLogbookEntryView: View {
 
                             if viewModel.selectedProjectIds.contains(project.id) {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(Color.accentColor)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                     }
@@ -435,7 +442,7 @@ struct AddLogbookEntryView: View {
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
                                 .background(Color.accentColor.opacity(0.1))
-                                .foregroundColor(Color.accentColor)
+                                .foregroundColor(.accentColor)
                                 .cornerRadius(6)
                         }
                     }

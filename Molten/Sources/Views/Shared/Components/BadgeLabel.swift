@@ -54,7 +54,7 @@ struct BadgeLabel: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(backgroundColor)
-        .foregroundColor(foregroundColor)
+        .foregroundStyle(foregroundColor)
         .clipShape(RoundedRectangle(cornerRadius: 6))
         .overlay(
             RoundedRectangle(cornerRadius: 6)

@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if canImport(AppKit)
+import AppKit
+#endif
 
 /// Quick actions available when scanning QR codes
 enum QRQuickAction: String, CaseIterable, Codable {
@@ -72,7 +75,11 @@ struct DeepLinkedItemView: View {
                 if !isLoading && item != nil {
                     quickActionToolbar
                         .padding()
-                        .background(Color(UIColor.systemGray6))
+                        #if os(macOS)
+                        .background(Color(NSColor.controlBackgroundColor))
+                        #else
+                        .background(Color(.systemGray6))
+                        #endif
                 }
 
                 // Main content

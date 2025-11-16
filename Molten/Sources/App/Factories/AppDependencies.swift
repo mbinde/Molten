@@ -418,15 +418,26 @@ class AppDependencies {
         if let service = _dataExportService {
             return service
         }
+        #if canImport(UIKit)
         let service = DataExportService(
             catalogService: catalogService,
             inventoryService: inventoryTrackingService,
             projectRepository: projectRepository,
             logbookRepository: logbookRepository,
             purchaseRecordRepository: purchaseRecordRepository,
-            userImageRepository: userImageRepository,
+            userNotesRepository: userNotesRepository,
+            userImageRepository: userImageRepository
+        )
+        #else
+        let service = DataExportService(
+            catalogService: catalogService,
+            inventoryService: inventoryTrackingService,
+            projectRepository: projectRepository,
+            logbookRepository: logbookRepository,
+            purchaseRecordRepository: purchaseRecordRepository,
             userNotesRepository: userNotesRepository
         )
+        #endif
         _dataExportService = service
         return service
     }

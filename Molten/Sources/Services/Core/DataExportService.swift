@@ -20,7 +20,9 @@ class DataExportService {
     private let projectRepository: ProjectRepository
     private let logbookRepository: LogbookRepository
     private let purchaseRecordRepository: PurchaseRecordRepository
+    #if canImport(UIKit)
     private let userImageRepository: UserImageRepository
+    #endif
     private let userNotesRepository: UserNotesRepository
 
     init(
@@ -29,16 +31,22 @@ class DataExportService {
         projectRepository: ProjectRepository,
         logbookRepository: LogbookRepository,
         purchaseRecordRepository: PurchaseRecordRepository,
-        userImageRepository: UserImageRepository,
-        userNotesRepository: UserNotesRepository
+        userNotesRepository: UserNotesRepository,
+        userImageRepository: UserImageRepository? = nil
     ) {
         self.catalogService = catalogService
         self.inventoryService = inventoryService
         self.projectRepository = projectRepository
         self.logbookRepository = logbookRepository
         self.purchaseRecordRepository = purchaseRecordRepository
-        self.userImageRepository = userImageRepository
         self.userNotesRepository = userNotesRepository
+        #if canImport(UIKit)
+        if let userImageRepository = userImageRepository {
+            self.userImageRepository = userImageRepository
+        } else {
+            fatalError("userImageRepository required on iOS")
+        }
+        #endif
     }
 
     // MARK: - Public API
@@ -356,6 +364,7 @@ class DataExportService {
     }
 
     private func exportUserImages(to directory: URL, currentCounts: ExportEntityCounts) async throws -> ExportEntityCounts {
+        #if canImport(UIKit)
         // Get all standalone images and images for all owner types
         let standaloneImages = try await userImageRepository.getStandaloneImages()
 
@@ -394,6 +403,9 @@ class DataExportService {
             userImages: exportImages.count,
             userNotes: currentCounts.userNotes
         )
+        #else
+        return currentCounts
+        #endif
     }
 
     private func exportUserNotes(to directory: URL, currentCounts: ExportEntityCounts) async throws -> ExportEntityCounts {

@@ -188,13 +188,21 @@ extension CollapsibleSectionHeader {
             }
         )
         .padding()
-        .background(Color(.systemGroupedBackground))
+        #if canImport(AppKit)
+        .background(Color(NSColor.controlBackgroundColor))
+        #else
+        .background(Color(.systemGray6))
+        #endif
 
         if isExpanded {
             Text("Content goes here...")
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color(.secondarySystemGroupedBackground))
+                #if os(macOS)
+                .background(Color(NSColor.windowBackgroundColor))
+                #else
+                .background(Color(.systemBackground))
+                #endif
         }
     }
     .padding()

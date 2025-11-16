@@ -133,12 +133,21 @@ struct ProjectsView: View {
             .task {
                 await loadProjects()
             }
+            #if os(macOS)
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.willBecomeActiveNotification)) { _ in
+                // Refresh projects when app becomes active (e.g., returning from share extension)
+                Task {
+                    await loadProjects()
+                }
+            }
+            #else
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                 // Refresh projects when app becomes active (e.g., returning from share extension)
                 Task {
                     await loadProjects()
                 }
             }
+            #endif
         }
     }
 
@@ -151,7 +160,7 @@ struct ProjectsView: View {
             VStack(spacing: 20) {
                 Image(systemName: "pencil.and.list.clipboard")
                     .font(.system(size: 70))
-                    .foregroundColor(Color.accentColor)
+                    .foregroundColor(.accentColor)
 
                 Text("No Project Plans Yet")
                     .font(.title2)
@@ -265,10 +274,401 @@ struct ProjectsView: View {
 
 // MARK: - Supporting Views
 
+private struct OldProjectRow: View {
+    let plan: ProjectModel
+    @State private var tags: [String] = []
 
+    private let deps: AppDependencies
+    private let projectService: ProjectService
+
+    init(plan: ProjectModel, deps: AppDependencies = AppDependencies()) {
+        self.plan = plan
+        self.deps = deps
+        self.projectService = deps.projectService
+    }
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.md) {
+            // Thumbnail on the left
+            #if canImport(PhotosUI)
+            ProjectThumbnail(
+                heroImageId: plan.heroImageId,
+                projectId: plan.id,
+                projectCategory: .plan,
+                size: 60
+            )
+            #endif
+
+            // Content
+            VStack(alignment: .leading, spacing: 4) {
+                Text(plan.title)
+                    .font(.headline)
+
+                if let summary = plan.summary, !summary.isEmpty {
+                    Text(summary)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+
+                HStack {
+                    Text(plan.dateCreated, style: .date)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    if !tags.isEmpty {
+                        Text("•")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Text(tags.joined(separator: ", "))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+            }
+
+            Spacer()
+        }
+        .padding(.vertical, 4)
+        .task {
+            // Load tags asynchronously
+            await loadTags()
+        }
+    }
+
+    private func loadTags() async {
+        do {
+            let loadedTags = try await projectService.getTags(forProject: plan.id)
+            await MainActor.run {
+                self.tags = loadedTags
+            }
+        } catch {
+            // Silently fail - tags are optional
+            print("Failed to load tags for project \(plan.id): \(error)")
+        }
+    }
+}
+
+private struct OldAddProjectView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(EntitlementService.self) private var entitlementService
+
+    // Basic info
+    @State private var title = ""
+    @State private var summary = ""
+    @State private var type: ProjectType = .recipe
+    @State private var coe: String = "any"
+
+    // Categorization
+    @State private var tags: [String] = []
+    @State private var showingTagEditor = false
+
+    // Optional metadata
+    @State private var difficultyLevel: DifficultyLevel?
+    @State private var estimatedHours: String = ""
+    @State private var priceMin: String = ""
+    @State private var priceMax: String = ""
+    @State private var showingOptionalDetails = false
+    @State private var showingUpgradePrompt = false
+    @State private var projectCount = 0
+    @State private var projectLimit = 0
+    @State private var kilnScheduleId: UUID?
+
+    private let deps: AppDependencies
+    private let projectPlanRepository: ProjectRepository
+    private let projectService: ProjectService
+    private let kilnScheduleService: KilnScheduleService
+    private let onSave: ((ProjectModel) -> Void)?
+
+    init(
+        deps: AppDependencies = AppDependencies(),
+        onSave: ((ProjectModel) -> Void)? = nil
+    ) {
+        self.deps = deps
+        self.projectPlanRepository = deps.projectRepository
+        self.projectService = deps.projectService
+        self.kilnScheduleService = deps.kilnScheduleService
+        self.onSave = onSave
+    }
+
+    var body: some View {
+        Form {
+            Section("Basic Information") {
+                TextField("Title", text: $title)
+                    .font(.body)
+
+                Picker("Type", selection: $type) {
+                    ForEach([ProjectType.recipe, .tutorial, .idea, .technique, .commission], id: \.self) { type in
+                        Text(type.displayName).tag(type)
+                    }
+                }
+
+                TextField("Summary (optional)", text: $summary, axis: .vertical)
+                    .lineLimit(2...4)
+            }
+
+            Section("Categorization") {
+                HStack {
+                    Text("Tags")
+                    Spacer()
+                    if tags.isEmpty {
+                        Text("None")
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("\(tags.count) tag\(tags.count == 1 ? "" : "s")")
+                            .foregroundColor(.secondary)
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    showingTagEditor = true
+                }
+
+                if !tags.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(tags, id: \.self) { tag in
+                                Text(tag)
+                                    .font(.caption)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.accentColor.opacity(0.1))
+                                    .foregroundColor(.accentColor)
+                                    .cornerRadius(6)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Section {
+                DisclosureGroup(
+                    isExpanded: $showingOptionalDetails,
+                    content: {
+                        Picker("Glass COE", selection: $coe) {
+                            Text("Any").tag("any")
+                            Text("33").tag("33")
+                            Text("90").tag("90")
+                            Text("96").tag("96")
+                            Text("104").tag("104")
+                        }
+
+                        Picker("Difficulty", selection: $difficultyLevel) {
+                            Text("Not set").tag(nil as DifficultyLevel?)
+                            Text("Beginner").tag(DifficultyLevel.beginner as DifficultyLevel?)
+                            Text("Intermediate").tag(DifficultyLevel.intermediate as DifficultyLevel?)
+                            Text("Advanced").tag(DifficultyLevel.advanced as DifficultyLevel?)
+                            Text("Expert").tag(DifficultyLevel.expert as DifficultyLevel?)
+                        }
+
+                        HStack {
+                            Text("Estimated Time (hours)")
+                            Spacer()
+                            TextField("0", text: $estimatedHours)
+                                #if canImport(UIKit)
+                                .keyboardType(.decimalPad)
+                                #endif
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 60)
+                        }
+
+                        HStack {
+                            Text("Price Range (optional)")
+                            Spacer()
+                            Text("$")
+                            TextField("Min", text: $priceMin)
+                                #if canImport(UIKit)
+                                .keyboardType(.decimalPad)
+                                #endif
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 50)
+                            Text("-")
+                            TextField("Max", text: $priceMax)
+                                #if canImport(UIKit)
+                                .keyboardType(.decimalPad)
+                                #endif
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 50)
+                        }
+                    },
+                    label: {
+                        Text("Optional Details")
+                    }
+                )
+            }
+
+            Section("Kiln Schedule") {
+                KilnSchedulePickerView(
+                    selectedScheduleId: $kilnScheduleId,
+                    kilnScheduleService: kilnScheduleService
+                )
+            }
+
+            Section {
+                Text("You can add steps, glass, images, and reference URLs after creating the plan.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .navigationTitle("New Project")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
+                }
+            }
+
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save") {
+                    Task {
+                        await savePlan()
+                    }
+                }
+                .disabled(title.isEmpty)
+            }
+        }
+        .sheet(isPresented: $showingTagEditor) {
+            TagEditorSheet(tags: $tags)
+        }
+        .sheet(isPresented: $showingUpgradePrompt) {
+            UpgradePromptView(
+                feature: "projects",
+                currentCount: projectCount,
+                limit: projectLimit
+            )
+        }
+    }
+
+    private func savePlan() async {
+        // Parse optional values
+        let estimatedTime: TimeInterval? = {
+            guard let hours = Double(estimatedHours), hours > 0 else { return nil }
+            return hours * 3600 // Convert to seconds
+        }()
+
+        let priceRange: PriceRange? = {
+            let min = Decimal(string: priceMin)
+            let max = Decimal(string: priceMax)
+            if min != nil || max != nil {
+                return PriceRange(min: min, max: max, currency: "USD")
+            }
+            return nil
+        }()
+
+        let plan = ProjectModel(
+            title: title,
+            type: type,
+            coe: coe,
+            summary: summary.isEmpty ? nil : summary,
+            estimatedTime: estimatedTime,
+            difficultyLevel: difficultyLevel,
+            proposedPriceRange: priceRange,
+            kilnScheduleId: kilnScheduleId
+        )
+
+        do {
+            // Check subscription entitlement before creating project
+            let allProjects = try await projectPlanRepository.getActiveProjects()
+            let currentProjectCount = allProjects.count
+            let canAdd = entitlementService.canAddProject(currentCount: currentProjectCount)
+
+            if !canAdd {
+                // Hit the limit - show upgrade prompt
+                let limit = entitlementService.getProjectsLimit() ?? 0
+                await MainActor.run {
+                    projectCount = currentProjectCount
+                    projectLimit = limit
+                    showingUpgradePrompt = true
+                }
+                return
+            }
+
+            let createdPlan = try await projectPlanRepository.createProject(plan)
+
+            // Save tags separately via ProjectService if user added any
+            if !tags.isEmpty {
+                try await projectService.setTags(tags, forProject: createdPlan.id)
+            }
+
+            await MainActor.run {
+                // Call the callback with the created plan
+                onSave?(createdPlan)
+                dismiss()
+            }
+        } catch {
+            // TODO: Show error alert
+            print("Error saving plan: \(error)")
+        }
+    }
+}
 
 // MARK: - Tag Editor Sheet
 
+private struct OldTagEditorSheet: View {
+    @Binding var tags: [String]
+    @State private var newTag: String = ""
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Add Tag") {
+                    HStack {
+                        TextField("Enter tag name", text: $newTag)
+                            #if os(iOS)
+                            .textInputAutocapitalization(.never)
+                            #endif
+
+                        Button("Add") {
+                            let trimmed = newTag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                            if !trimmed.isEmpty && !tags.contains(trimmed) {
+                                tags.append(trimmed)
+                                newTag = ""
+                            }
+                        }
+                        .disabled(newTag.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                }
+
+                if !tags.isEmpty {
+                    Section("Current Tags") {
+                        ForEach(tags, id: \.self) { tag in
+                            HStack {
+                                Text(tag)
+                                Spacer()
+                                Button(action: {
+                                    tags.removeAll { $0 == tag }
+                                }) {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundColor(.red)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Edit Tags")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
 
 // MARK: - Project Plan Detail View
 
@@ -296,7 +696,11 @@ struct ProjectDetailView: View {
     @State private var pdfFileURL: IdentifiableURL?  // Changed to IdentifiableURL
     @State private var exportedPlanURL: IdentifiableURL?  // For .moltenplan exports
     @State private var glassItemLookup: [String: GlassItemModel] = [:]
+    #if os(macOS)
     @State private var loadedImages: [UUID: UIImage] = [:]  // Cache of loaded images
+    #else
+    @State private var loadedImages: [UUID: UIImage] = [:]  // Cache of loaded images
+    #endif
     @State private var isEditing = false
 
     // Edit mode fields
@@ -734,7 +1138,7 @@ struct ProjectDetailView: View {
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                             .background(Color.accentColor.opacity(0.1))
-                            .foregroundColor(Color.accentColor)
+                            .foregroundColor(.accentColor)
                             .cornerRadius(6)
                     }
                 }
@@ -761,7 +1165,7 @@ struct ProjectDetailView: View {
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
                                 .background(Color.accentColor.opacity(0.1))
-                                .foregroundColor(Color.accentColor)
+                                .foregroundColor(.accentColor)
                                 .cornerRadius(6)
                         }
                     }
@@ -1040,7 +1444,7 @@ struct ProjectDetailView: View {
                     }
                     Link(url.url, destination: URL(string: url.url)!)
                         .font(.caption)
-                        .foregroundColor(Color.accentColor)
+                        .foregroundColor(.accentColor)
                     if let description = url.description {
                         Text(description)
                             .font(.caption)

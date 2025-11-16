@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import AppKit
+import UIKit
 import Sentry
 
 // MARK: - Environment

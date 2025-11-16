@@ -581,6 +581,8 @@ struct InventoryView: View, CachedDataDeletion {
 
     func reloadData() async {
         log.info("🔄 reloadData: Starting deferred reload...")
+        // Force cache reload to get fresh data from Core Data (including deleted items)
+        await CatalogDataCache.shared.reload(catalogService: catalogService)
         await viewModel.loadInventoryItems()
         log.info("🔄 reloadData: Reload complete - \(viewModel.completeItems.count) items")
     }

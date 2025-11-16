@@ -22,6 +22,8 @@ struct GlassItemImageSelector: View {
     let onAddImage: () -> Void
     let onDeleteImage: (UUID) -> Void
 
+    @State private var showingImageSubmissionSheet = false
+
     private let columns = [
         GridItem(.adaptive(minimum: 100, maximum: 120))
     ]
@@ -35,6 +37,14 @@ struct GlassItemImageSelector: View {
                 emptyState
             } else {
                 imageGrid
+            }
+        }
+        .sheet(isPresented: $showingImageSubmissionSheet) {
+            if let mfrImage = manufacturerImage {
+                ImageSubmissionSheet(
+                    image: mfrImage,
+                    glassItem: glassItem
+                )
             }
         }
     }
@@ -53,7 +63,7 @@ struct GlassItemImageSelector: View {
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             } else {
-                Text("Tap to select primary • Tap selected to use default")
+                Text("Tap to select primary • Tap selected to use default • Tap and hold for more options")
                     .font(DesignSystem.Typography.caption)
                     .foregroundColor(DesignSystem.Colors.textSecondary)
             }
@@ -154,6 +164,16 @@ struct GlassItemImageSelector: View {
                                 .frame(width: 20, height: 20)
                         )
                         .padding(4)
+                }
+            }
+            .contextMenu {
+                // Only show "Submit to Molten" option if there are NO user images
+                if images.isEmpty {
+                    Button {
+                        showingImageSubmissionSheet = true
+                    } label: {
+                        Label("Submit Image to Molten", systemImage: "paperplane")
+                    }
                 }
             }
 

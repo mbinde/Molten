@@ -18,6 +18,7 @@ struct RatingDisplayView: View {
     @State private var showingError = false
     @State private var errorMessage = ""
     @State private var showingSubmission = false
+    @State private var showingSuccessToast = false
 
     // MARK: - Initialization
 
@@ -57,6 +58,20 @@ struct RatingDisplayView: View {
                 itemName: itemStableId
             )
         }
+        .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
+            // Check if this is for our item
+            if let submittedItemId = notification.object as? String, submittedItemId == itemStableId {
+                // Reload rating
+                Task {
+                    await loadRating()
+                }
+                // Show success toast
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    showingSuccessToast = true
+                }
+            }
+        }
+        .successToast(message: "Your rating has been submitted!", isShowing: $showingSuccessToast)
     }
 
     // MARK: - Content Views

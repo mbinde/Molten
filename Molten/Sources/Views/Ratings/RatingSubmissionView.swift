@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+// MARK: - Notification Extension
+
+extension Notification.Name {
+    static let ratingSubmitted = Notification.Name("ratingSubmitted")
+}
+
 struct RatingSubmissionView: View {
     // MARK: - Properties
 
@@ -26,7 +32,6 @@ struct RatingSubmissionView: View {
     @State private var isSubmitting = false
     @State private var showingError = false
     @State private var errorMessage = ""
-    @State private var showingSuccess = false
 
     // MARK: - Initialization
 
@@ -60,13 +65,14 @@ struct RatingSubmissionView: View {
                                     .font(.title)
                                     .foregroundStyle(star <= starRating ? .yellow : .gray)
                             }
+                            .buttonStyle(.plain)
                         }
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
                 }
 
-                Section("Describe with 5 Words") {
+                Section {
                     VStack(spacing: 12) {
                         WordTextField(number: 1, text: $word1)
                         WordTextField(number: 2, text: $word2)
@@ -74,6 +80,10 @@ struct RatingSubmissionView: View {
                         WordTextField(number: 4, text: $word4)
                         WordTextField(number: 5, text: $word5)
                     }
+                } header: {
+                    Text("Describe with Words (Optional)")
+                } footer: {
+                    Text("Add any number of words (up to 5) to help others understand your rating.")
                 }
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
@@ -109,24 +119,25 @@ struct RatingSubmissionView: View {
             } message: {
                 Text(errorMessage)
             }
-            .alert("Success", isPresented: $showingSuccess) {
-                Button("OK") {
-                    dismiss()
-                }
-            } message: {
-                Text("Your rating has been submitted!")
-            }
+        }
+        .task {
+            await loadExistingRating()
         }
     }
 
     // MARK: - Helpers
 
+    private func loadExistingRating() async {
+        // TODO: Load user's existing rating for this item (if any)
+        // This would require:
+        // 1. RatingService method to fetch user's own rating for an item
+        // 2. Server endpoint to return user's rating (not just aggregated)
+        // For now, users always start fresh
+    }
+
     private var isFormValid: Bool {
-        return !word1.isEmpty &&
-               !word2.isEmpty &&
-               !word3.isEmpty &&
-               !word4.isEmpty &&
-               !word5.isEmpty
+        // Always valid - words are optional, any number from 0-5 is fine
+        return true
     }
 
     private func submitRating() {
@@ -142,12 +153,25 @@ struct RatingSubmissionView: View {
                 )
 
                 try await service.submitRating(submission)
-                showingSuccess = true
+
+                // Dismiss sheet FIRST, before notifying
+                dismiss()
+
+                // Small delay to ensure sheet is dismissed
+                try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+
+                // THEN notify (triggers refresh + shows toast on parent view)
+                await MainActor.run {
+                    NotificationCenter.default.post(name: .ratingSubmitted, object: itemStableId)
+                }
 
             } catch RatingServiceError.queuedForLater {
-                // Queued for later - show success anyway
-                errorMessage = "Rating queued for submission when online."
-                showingSuccess = true
+                // Queued for later - dismiss and notify
+                dismiss()
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                await MainActor.run {
+                    NotificationCenter.default.post(name: .ratingSubmitted, object: itemStableId)
+                }
 
             } catch RatingServiceError.profanityDetected {
                 errorMessage = "Please use appropriate language in your words."

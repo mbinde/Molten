@@ -28,7 +28,7 @@ class CoreDataUserTagsRepository: @unchecked Sendable, UserTagsRepository {
 
     let context: NSManagedObjectContext
     let backgroundContext: NSManagedObjectContext
-    let log = Logger(subsystem: "com.flameworker.app", category: "usertags-repository")
+    let log = Logger(subsystem: "com.motleywoods.molten", category: "usertags-repository")
 
     // MARK: - Initialization
 

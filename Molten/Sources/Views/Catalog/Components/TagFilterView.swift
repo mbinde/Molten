@@ -210,7 +210,7 @@ struct TagFilterView: View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.secondary)
-                .font(.system(size: 16))
+                .font(.body)
             
             TextField("Search tags...", text: $localSearchText)
                 .focused($isSearchFieldFocused)
@@ -241,7 +241,7 @@ struct TagFilterView: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.secondary)
-                        .font(.system(size: 16))
+                        .font(.body)
                 }
                 .buttonStyle(.plain)
             }
@@ -274,7 +274,7 @@ struct TagFilterView: View {
             HStack {
                 Image(systemName: selectedTags.contains(tag) ? tagIconFilled(for: tag) : tagIcon(for: tag))
                     .foregroundColor(selectedTags.contains(tag) ? .blue : .secondary)
-                    .font(.system(size: 20))
+                    .font(.title3)
 
                 TagColorCircle(tag: tag, size: 12)
 
@@ -306,8 +306,8 @@ struct TagFilterView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(Color.blue.opacity(0.1))
-            .foregroundColor(.blue)
+            .background(.accentColor.opacity(0.1))
+            .foregroundColor(.accentColor)
             .clipShape(Capsule())
 
             Spacer()

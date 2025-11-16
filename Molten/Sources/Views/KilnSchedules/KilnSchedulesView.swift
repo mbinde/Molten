@@ -260,18 +260,13 @@ struct KilnSchedulesView: View {
     }
 
     private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-            Text("Loading schedules...")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
+        LoadingStateView(message: "Loading schedules...")
     }
 
     private var errorView: some View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 60))
+                .font(.largeTitle)
                 .foregroundColor(.red)
 
             Text(viewModel.errorMessage ?? "An error occurred")
@@ -291,7 +286,7 @@ struct KilnSchedulesView: View {
     private var emptyStateView: some View {
         VStack(spacing: 24) {
             Image(systemName: "fireplace.fill")
-                .font(.system(size: 80))
+                .font(.system(size: 80, weight: .regular))
                 .foregroundColor(.secondary.opacity(0.6))
 
             VStack(spacing: 8) {

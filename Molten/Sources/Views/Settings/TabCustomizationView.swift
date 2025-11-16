@@ -56,7 +56,7 @@ struct TabCustomizationView: View {
 
                         // Tab icon
                         Image(systemName: tab.systemImage)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                             .frame(width: 24)
 
                         // Tab name
@@ -70,10 +70,10 @@ struct TabCustomizationView: View {
                             // In tab bar
                             Text("Tab Bar")
                                 .font(.caption2)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(Color.blue.opacity(0.1))
+                                .background(.accentColor.opacity(0.1))
                                 .cornerRadius(8)
                         } else {
                             // In More menu
@@ -105,7 +105,7 @@ struct TabCustomizationView: View {
                                 .font(.caption)
                         } icon: {
                             Circle()
-                                .fill(Color.blue.opacity(0.1))
+                                .fill(.accentColor.opacity(0.1))
                                 .frame(width: 8, height: 8)
                         }
 
@@ -176,9 +176,9 @@ struct TabBarPreview: View {
         VStack(spacing: 3) {
             Image(systemName: tab.systemImage)
                 .font(.system(size: 18, weight: .medium))
-                .foregroundColor(.blue)
+                .foregroundColor(.accentColor)
             Text(tab.displayName)
-                .font(.system(size: 9))
+                .font(.caption2)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -190,7 +190,7 @@ struct TabBarPreview: View {
                 .font(.system(size: 18, weight: .medium))
                 .foregroundColor(.secondary)
             Text("More")
-                .font(.system(size: 9))
+                .font(.caption2)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

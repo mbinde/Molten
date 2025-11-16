@@ -44,9 +44,10 @@ struct CustomEmptyStateView: View {
 
     var body: some View {
         VStack(spacing: DesignSystem.Spacing.xl) {
-            // Icon
+            // Icon - uses relative sizing that scales with Dynamic Type
             Image(systemName: icon)
-                .font(.system(size: 80))
+                .font(.system(size: iconSize, weight: .regular))
+                .imageScale(.large)  // Respects accessibility settings
                 .foregroundStyle(DesignSystem.Colors.textSecondary)
 
             // Title

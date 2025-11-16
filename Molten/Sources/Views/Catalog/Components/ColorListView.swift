@@ -49,7 +49,7 @@ struct ColorRowView: View {
                     .font(.caption2)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color.blue.opacity(0.1))
+                    .background(.accentColor.opacity(0.1))
                     .cornerRadius(8)
             }
         }

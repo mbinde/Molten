@@ -59,9 +59,11 @@ public class CloudKitIdentityService: CloudKitIdentityServiceProtocol {
         self.container = container
     }
 
-    /// Convenience initializer using default CloudKit container
+    /// Convenience initializer using the Molten CloudKit container
     public convenience init() {
-        self.init(container: CKContainer.default())
+        // Use the explicit container identifier from entitlements
+        let container = CKContainer(identifier: "iCloud.com.motleywoods.molten")
+        self.init(container: container)
     }
 
     // MARK: - Public Methods

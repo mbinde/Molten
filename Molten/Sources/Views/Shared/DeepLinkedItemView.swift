@@ -78,7 +78,7 @@ struct DeepLinkedItemView: View {
                 // Main content
                 Group {
                     if isLoading {
-                        ProgressView("Loading item...")
+                        LoadingStateView(message: "Loading item...")
                     } else if let error = errorMessage {
                         errorView(error)
                     } else if let item = item {
@@ -176,7 +176,7 @@ struct DeepLinkedItemView: View {
     private func errorView(_ message: String) -> some View {
         VStack(spacing: 20) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 60))
+                .font(.largeTitle)
                 .foregroundColor(.orange)
 
             Text(message)

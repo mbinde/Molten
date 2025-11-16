@@ -107,10 +107,7 @@ class ServiceValidation {
             errors.append("Inventory type is required and cannot be empty")
         }
 
-        // Check quantity is not negative
-        if model.quantity < 0 {
-            errors.append("Quantity cannot be negative")
-        }
+        // Note: No quantity validation needed - InventoryModel.init enforces quantity >= 0
 
         if errors.isEmpty {
             return ValidationResult.success()

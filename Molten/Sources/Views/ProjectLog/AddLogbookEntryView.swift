@@ -22,8 +22,8 @@ struct AddLogbookEntryView: View {
     private let userImageRepository: UserImageRepository
     private let kilnScheduleService: KilnScheduleService
 
-    // Image state (kept in view since it's AppKit-specific)
-    @State private var loadedImages: [UUID: NSImage] = [:]
+    // Image state (kept in view since it's UIKit-specific)
+    @State private var loadedImages: [UUID: UIImage] = [:]
 
     #if canImport(PhotosUI)
     @State private var showingImagePicker = false
@@ -527,7 +527,7 @@ struct AddLogbookEntryView: View {
     private func loadSelectedImages(_ items: [PhotosPickerItem]) async {
         for item in items {
             guard let data = try? await item.loadTransferable(type: Data.self),
-                  let image = NSImage(data: data) else {
+                  let image = UIImage(data: data) else {
                 continue
             }
 

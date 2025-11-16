@@ -61,8 +61,8 @@ struct InventoryDetailView: View {
 
     // User images state
     @State private var userImages: [UserImageModel] = []
-    @State private var loadedImages: [UUID: NSImage] = [:]
-    @State private var manufacturerImage: NSImage?
+    @State private var loadedImages: [UUID: UIImage] = [:]
+    @State private var manufacturerImage: UIImage?
     @State private var showingImagePicker = false
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var isLoadingImages = false
@@ -480,7 +480,7 @@ struct InventoryDetailView: View {
         Task {
             for item in items {
                 guard let data = try? await item.loadTransferable(type: Data.self),
-                      let image = NSImage(data: data) else {
+                      let image = UIImage(data: data) else {
                     continue
                 }
 

@@ -687,7 +687,7 @@ struct ProjectDetailView: View {
     @State private var pdfFileURL: IdentifiableURL?  // Changed to IdentifiableURL
     @State private var exportedPlanURL: IdentifiableURL?  // For .moltenplan exports
     @State private var glassItemLookup: [String: GlassItemModel] = [:]
-    @State private var loadedImages: [UUID: NSImage] = [:]  // Cache of loaded images
+    @State private var loadedImages: [UUID: UIImage] = [:]  // Cache of loaded images
     @State private var isEditing = false
 
     // Edit mode fields
@@ -1801,7 +1801,7 @@ struct ProjectDetailView: View {
             )
 
             // Load each image
-            var imageCache: [UUID: NSImage] = [:]
+            var imageCache: [UUID: UIImage] = [:]
             for imageModel in allImages {
                 if let image = try? await userImageRepository.loadImage(imageModel) {
                     imageCache[imageModel.id] = image
@@ -1871,7 +1871,7 @@ struct ProjectDetailView: View {
             do {
                 // Load the image data
                 guard let data = try await item.loadTransferable(type: Data.self),
-                      let nsImage = NSImage(data: data) else {
+                      let nsImage = UIImage(data: data) else {
                     continue
                 }
 

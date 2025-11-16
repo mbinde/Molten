@@ -292,7 +292,7 @@ struct ProjectsView: View, CachedDataDeletion {
         )
 
         for image in images {
-            try await userImageRepository.deleteImage(id: image.id)
+            try await userImageRepository.deleteImage(image.id)
         }
 
         // Delete the project (Core Data will cascade delete ProjectImage, ProjectStep, etc.)

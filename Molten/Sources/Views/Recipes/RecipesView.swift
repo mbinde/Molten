@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 struct RecipesView: View, CachedDataDeletion {
     private let deps: AppDependencies
     private let recipeService: RecipeService

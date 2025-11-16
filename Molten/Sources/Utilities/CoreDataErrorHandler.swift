@@ -12,7 +12,7 @@ import OSLog
 
 /// Utility for reporting Core Data errors with enhanced context
 enum CoreDataErrorHandler {
-    private static let log = Logger(subsystem: "com.flameworker.app", category: "coredata-errors")
+    nonisolated(unsafe) private static let log = Logger(subsystem: "com.flameworker.app", category: "coredata-errors")
 
     /// Saves a Core Data context with enhanced error reporting
     /// - Parameters:
@@ -21,7 +21,7 @@ enum CoreDataErrorHandler {
     ///   - file: The calling file name (use #fileID)
     ///   - line: The calling line number (use #line)
     /// - Throws: The original Core Data error after logging details
-    static func save(
+    nonisolated static func save(
         context: NSManagedObjectContext,
         function: String = #function,
         file: String = #fileID,

@@ -478,8 +478,14 @@ struct SettingsView: View {
                     } label: {
                         Label("Debug Settings", systemImage: "ladybug")
                     }
+
+                    NavigationLink {
+                        SentryTestView()
+                    } label: {
+                        Label("Test Sentry Logging", systemImage: "ant.circle")
+                    }
                 }
-                
+
                 Section("About") {
                     NavigationLink {
                         AboutView()

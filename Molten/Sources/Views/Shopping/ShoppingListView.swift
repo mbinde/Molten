@@ -758,15 +758,35 @@ struct ShoppingListView: View {
         )
     }
 
+    // MARK: - Custom Deletion Pattern
+    //
+    // ⚠️ IMPORTANT: This view does NOT use CachedDataDeletion protocol
+    // (see Molten/Sources/Utilities/DeletionHelpers.swift)
+    //
+    // WHY: ShoppingListView has a complex nested data structure:
+    //      Dictionary<String, DetailedShoppingListModel> where each model contains an array of items
+    //      This requires custom cache manipulation logic (mapValues + filter)
+    //
+    // PATTERN: This implementation follows the SAME three-step pattern as CachedDataDeletion:
+    //   1. Delete from database (performDeletion)
+    //   2. Immediate cache removal (removeFromCache) - custom logic for nested structure
+    //   3. Deferred reload (reloadData) - 0.3s delay prevents animation crashes
+    //
+    // ⚠️ MAINTENANCE: If you update DeletionHelpers.swift, apply equivalent changes here:
+    //   - Timing (currently 0.3s / 300_000_000 nanoseconds)
+    //   - Error handling pattern
+    //   - Cache update sequence
+    //
     private func deleteShoppingItem(_ item: DetailedShoppingListItemModel) async {
         do {
-            // Delete the shopping list item
+            // Step 1: Delete from database
             try await shoppingListRepository.deleteItem(forItem: item.glassItem.stable_id)
 
-            // Immediately update the view model to remove the deleted item
+            // Step 2: Immediately update the view model to remove the deleted item
             // This ensures counters and other UI elements update right away
             await MainActor.run {
                 // Remove from the view model's shopping lists by creating new filtered dictionaries
+                // (Custom logic needed because of nested Dictionary<String, DetailedShoppingListModel> structure)
                 viewModel.shoppingLists = viewModel.shoppingLists.mapValues { list in
                     let filteredItems = list.items.filter { $0.shoppingListItem.item_stable_id != item.glassItem.stable_id }
                     return DetailedShoppingListModel(
@@ -777,7 +797,8 @@ struct ShoppingListView: View {
                 }
             }
 
-            // Defer full reload to allow .onDelete animation to complete
+            // Step 3: Defer full reload to allow .onDelete animation to complete
+            // (Same timing as DeletionHelpers.deleteItem: 0.3 seconds)
             Task { @MainActor in
                 try? await Task.sleep(nanoseconds: 300_000_000)  // 0.3 seconds
                 await viewModel.loadShoppingLists()

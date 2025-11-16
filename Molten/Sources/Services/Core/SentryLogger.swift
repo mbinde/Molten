@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import Sentry
 
 // MARK: - Environment
 
@@ -181,35 +182,49 @@ public final class SentryLogger: LoggerBackend, @unchecked Sendable {
         // Filter sensitive data
         enrichedContext = filterSensitiveData(enrichedContext)
 
-        // In a real implementation, this would call the Sentry SDK:
-        // import Sentry
-        //
-        // let event = Event(level: level.sentryLevel)
-        // event.message = SentryMessage(formatted: message)
-        // event.extra = enrichedContext
-        //
-        // if let error = error {
-        //     event.exceptions = [Exception(value: error)]
-        // }
-        //
-        // // Attach breadcrumbs
-        // event.breadcrumbs = breadcrumbs.map { breadcrumb in
-        //     Breadcrumb(
-        //         level: .info,
-        //         category: breadcrumb.category
-        //     ).apply {
-        //         $0.message = breadcrumb.message
-        //         $0.timestamp = breadcrumb.timestamp
-        //         $0.data = breadcrumb.data
-        //     }
-        // }
-        //
-        // SentrySDK.capture(event: event)
+        // Convert our LogLevel to Sentry's SentryLevel
+        let sentryLevel: SentryLevel = {
+            switch level {
+            case .debug: return .debug
+            case .info: return .info
+            case .warning: return .warning
+            case .error: return .error
+            case .critical: return .fatal
+            }
+        }()
 
-        // For now, just log that we would send to Sentry
-        print("📊 [Sentry] Would send to Sentry: [\(level.sentryLevel)] \(message)")
-        if let context = enrichedContext as? [String: String] {
-            print("📊 [Sentry] Context: \(context)")
+        if let error = error {
+            // Capture error with context
+            SentrySDK.capture(error: error) { scope in
+                scope.setLevel(sentryLevel)
+                scope.setContext(value: enrichedContext, key: "additional_context")
+
+                // Add breadcrumbs
+                for breadcrumb in self.breadcrumbs {
+                    let sentryBreadcrumb = Breadcrumb()
+                    sentryBreadcrumb.message = breadcrumb.message
+                    sentryBreadcrumb.category = breadcrumb.category
+                    sentryBreadcrumb.timestamp = breadcrumb.timestamp
+                    sentryBreadcrumb.data = breadcrumb.data
+                    scope.addBreadcrumb(sentryBreadcrumb)
+                }
+            }
+        } else {
+            // Capture message
+            SentrySDK.capture(message: message) { scope in
+                scope.setLevel(sentryLevel)
+                scope.setContext(value: enrichedContext, key: "additional_context")
+
+                // Add breadcrumbs
+                for breadcrumb in self.breadcrumbs {
+                    let sentryBreadcrumb = Breadcrumb()
+                    sentryBreadcrumb.message = breadcrumb.message
+                    sentryBreadcrumb.category = breadcrumb.category
+                    sentryBreadcrumb.timestamp = breadcrumb.timestamp
+                    sentryBreadcrumb.data = breadcrumb.data
+                    scope.addBreadcrumb(sentryBreadcrumb)
+                }
+            }
         }
     }
 

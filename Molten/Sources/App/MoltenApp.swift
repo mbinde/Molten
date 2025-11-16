@@ -9,6 +9,7 @@ import SwiftUI
 import CoreData
 import CryptoKit
 import RevenueCat
+import Sentry
 
 @main
 struct MoltenApp: App {
@@ -42,7 +43,8 @@ struct MoltenApp: App {
         // Note: AppDependencies automatically detects test environment
         // and provides appropriate dependencies (mocks for tests, Core Data for production)
 
-        // Configure RevenueCat SDK
+        // Configure SDKs
+        configureSentry()
         configureRevenueCat()
     }
 
@@ -645,6 +647,44 @@ extension MoltenApp {
         }
 
         return stableId
+    }
+
+    /// Configure Sentry SDK for error tracking
+    private func configureSentry() {
+        // Get DSN from AppDependencies (already configured there)
+        let sentryDSN = "https://9656fde5615b69579eb41101834237b6@o4510371843932160.ingest.us.sentry.io/4510371846356992"
+
+        // Only initialize if DSN is configured
+        guard !sentryDSN.isEmpty && !sentryDSN.contains("your-dsn") else {
+            print("⚠️ Sentry DSN not configured - error tracking disabled")
+            return
+        }
+
+        SentrySDK.start { options in
+            options.dsn = sentryDSN
+            options.environment = SentryEnvironment.current.rawValue
+
+            // Performance monitoring
+            options.tracesSampleRate = 1.0  // Capture 100% of transactions (adjust for production)
+
+            // Session tracking
+            options.enableAutoSessionTracking = true
+
+            // Breadcrumbs
+            options.maxBreadcrumbs = 100
+
+            // Enable file I/O tracking
+            options.enableFileIOTracing = true
+
+            // Enable network tracking
+            options.enableNetworkTracking = true
+
+            #if DEBUG
+            options.debug = true  // Enable debug output in development
+            #endif
+        }
+
+        print("✅ Sentry configured successfully (environment: \(SentryEnvironment.current.rawValue))")
     }
 
     /// Configure RevenueCat SDK with API key and settings

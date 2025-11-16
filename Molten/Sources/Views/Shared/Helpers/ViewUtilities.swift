@@ -61,7 +61,7 @@ nonisolated struct EmptyStateView: View {
                         .font(.headline)
                         .foregroundColor(.white)
                         .padding()
-                        .background(.accentColor)
+                        .background(Color.accentColor)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
                 .padding(.top)

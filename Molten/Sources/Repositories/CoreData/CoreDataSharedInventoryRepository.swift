@@ -62,7 +62,7 @@ class CoreDataSharedInventoryRepository {
             }
         }
 
-        try context.save()
+        try CoreDataErrorHandler.save(context: context)
     }
 
     /// Get inventory snapshot for a share

@@ -110,7 +110,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
             self.mapModelToEntity(project, entity: entity)
             entity.setValue(Date(), forKey: "date_modified")
 
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 
@@ -124,7 +124,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
             }
 
             self.context.delete(entity)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 
@@ -140,7 +140,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
             entity.setValue(isArchived, forKey: "is_archived")
             entity.setValue(Date(), forKey: "date_modified")
 
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 
@@ -182,7 +182,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
                 }
             }
 
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
             return step
         }
     }
@@ -223,7 +223,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
                 }
             }
 
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 
@@ -237,7 +237,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
             }
 
             self.context.delete(entity)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 
@@ -252,7 +252,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
                 }
             }
 
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 
@@ -281,7 +281,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
             urlEntity.plan = project
 
             project.date_modified = Date()
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 
@@ -302,7 +302,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
                 project.date_modified = Date()
             }
 
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 
@@ -320,7 +320,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
             }
 
             self.context.delete(urlEntity)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 

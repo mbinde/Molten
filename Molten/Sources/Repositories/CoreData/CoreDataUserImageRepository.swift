@@ -72,7 +72,7 @@ class CoreDataUserImageRepository: @unchecked Sendable, UserImageRepository {
             entity.dateModified = Date()
             entity.setValue(cleanedOcrText, forKey: "ocrText")
 
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
 
             return self.convertToModel(entity)
         }
@@ -134,7 +134,7 @@ class CoreDataUserImageRepository: @unchecked Sendable, UserImageRepository {
                 self.context.delete(entity)
             }
 
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 
@@ -173,7 +173,7 @@ class CoreDataUserImageRepository: @unchecked Sendable, UserImageRepository {
             }
 
             self.context.delete(entity)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 
@@ -205,7 +205,7 @@ class CoreDataUserImageRepository: @unchecked Sendable, UserImageRepository {
             entity.imageType = type.rawValue
             entity.dateModified = Date()
 
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 

@@ -67,7 +67,7 @@ class CoreDataShareRecordRepository {
             record.setValue(Date(), forKey: "date_added")
         }
 
-        try context.save()
+        try CoreDataErrorHandler.save(context: context)
     }
 
     /// Get all active share records
@@ -99,7 +99,7 @@ class CoreDataShareRecordRepository {
         }
 
         record.setValue("inactive", forKey: "status")
-        try context.save()
+        try CoreDataErrorHandler.save(context: context)
     }
 
     /// Reactivate a share record
@@ -111,7 +111,7 @@ class CoreDataShareRecordRepository {
 
         record.setValue("active", forKey: "status")
         record.setValue(Date(), forKey: "last_fetched")
-        try context.save()
+        try CoreDataErrorHandler.save(context: context)
     }
 
     /// Update last fetched timestamp
@@ -122,7 +122,7 @@ class CoreDataShareRecordRepository {
         }
 
         record.setValue(Date(), forKey: "last_fetched")
-        try context.save()
+        try CoreDataErrorHandler.save(context: context)
     }
 
     /// Permanently delete a share record
@@ -134,7 +134,7 @@ class CoreDataShareRecordRepository {
         }
 
         context.delete(record)
-        try context.save()
+        try CoreDataErrorHandler.save(context: context)
     }
 
     // MARK: - User Customization
@@ -149,7 +149,7 @@ class CoreDataShareRecordRepository {
         }
 
         record.setValue(nickname, forKey: "owner_nickname")
-        try context.save()
+        try CoreDataErrorHandler.save(context: context)
     }
 
     /// Update user's personal notes about a share
@@ -162,7 +162,7 @@ class CoreDataShareRecordRepository {
         }
 
         record.setValue(notes, forKey: "user_share_notes")
-        try context.save()
+        try CoreDataErrorHandler.save(context: context)
     }
 
     /// Update custom icon for a share
@@ -184,6 +184,6 @@ class CoreDataShareRecordRepository {
         record.setValue(symbol, forKey: "icon_symbol")
         record.setValue(backgroundHex, forKey: "icon_background_hex")
         record.setValue(foregroundHex, forKey: "icon_foreground_hex")
-        try context.save()
+        try CoreDataErrorHandler.save(context: context)
     }
 }

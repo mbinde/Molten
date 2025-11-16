@@ -71,7 +71,7 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
             let entity = PurchaseRecord(context: self.context)
             self.updateEntity(entity, from: record)
 
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
 
             return record
         }
@@ -89,7 +89,7 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
 
             self.updateEntity(entity, from: record)
 
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
 
             return record
         }
@@ -106,7 +106,7 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
             }
 
             self.context.delete(entity)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 

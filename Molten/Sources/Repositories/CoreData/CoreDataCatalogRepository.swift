@@ -38,7 +38,7 @@ class CoreDataCatalogRepository: @unchecked Sendable, CatalogItemRepository {
             
             self.updateEntity(entity, with: item)
             
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
             return self.convertToModel(entity) ?? item
         }
     }
@@ -66,7 +66,7 @@ class CoreDataCatalogRepository: @unchecked Sendable, CatalogItemRepository {
             }
             
             self.updateEntity(entity, with: item)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
             
             return self.convertToModel(entity) ?? item
         }
@@ -84,7 +84,7 @@ class CoreDataCatalogRepository: @unchecked Sendable, CatalogItemRepository {
             }
             
             self.context.delete(entity)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
     
@@ -107,7 +107,7 @@ class CoreDataCatalogRepository: @unchecked Sendable, CatalogItemRepository {
             }
             
             self.context.delete(entity)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
     
@@ -180,7 +180,7 @@ class CoreDataCatalogRepository: @unchecked Sendable, CatalogItemRepository {
                 entity.setValue(newParentId, forKey: "parent")
             }
             
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
             
             guard let updatedModel = self.convertToModel(entity) else {
                 throw CatalogItemRepositoryError.invalidItemData("Failed to convert updated entity to model")
@@ -206,7 +206,7 @@ class CoreDataCatalogRepository: @unchecked Sendable, CatalogItemRepository {
                 }
             }
             
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
             return createdItems
         }
     }
@@ -232,7 +232,7 @@ class CoreDataCatalogRepository: @unchecked Sendable, CatalogItemRepository {
                 }
             }
             
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
             return updatedItems
         }
     }
@@ -267,7 +267,7 @@ class CoreDataCatalogRepository: @unchecked Sendable, CatalogItemRepository {
                     }
                 }
                 
-                try self.context.save()
+                try CoreDataErrorHandler.save(context: self.context)
             }
             
             guard let model = self.convertToModel(entity) else {

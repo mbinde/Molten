@@ -96,7 +96,7 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
 
                     self.updateCoreDataEntity(coreDataItem, with: minimum)
 
-                    try self.context.save()
+                    try CoreDataErrorHandler.save(context: self.context)
 
                     continuation.resume(returning: minimum)
 
@@ -136,7 +136,7 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
                         createdMinimums.append(minimum)
                     }
 
-                    try self.context.save()
+                    try CoreDataErrorHandler.save(context: self.context)
                     continuation.resume(returning: createdMinimums)
 
                 } catch {
@@ -166,7 +166,7 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
 
                     self.updateCoreDataEntity(coreDataItem, with: minimum)
 
-                    try self.context.save()
+                    try CoreDataErrorHandler.save(context: self.context)
 
                     continuation.resume(returning: minimum)
 
@@ -195,7 +195,7 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
                         self.context.delete(item)
                     }
 
-                    try self.context.save()
+                    try CoreDataErrorHandler.save(context: self.context)
                     continuation.resume()
 
                 } catch {
@@ -218,7 +218,7 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
                         self.context.delete(item)
                     }
 
-                    try self.context.save()
+                    try CoreDataErrorHandler.save(context: self.context)
                     continuation.resume()
 
                 } catch {
@@ -242,7 +242,7 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
                         self.context.delete(item)
                     }
 
-                    try self.context.save()
+                    try CoreDataErrorHandler.save(context: self.context)
                     continuation.resume()
 
                 } catch {
@@ -423,7 +423,7 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
                         item.setValue(cleanNewStore, forKey: "store")
                     }
 
-                    try self.context.save()
+                    try CoreDataErrorHandler.save(context: self.context)
                     continuation.resume()
 
                 } catch {

@@ -29,14 +29,12 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
 
         // For now, fetch all items (predicate support can be added later)
         let query = "SELECT * FROM glass_items ORDER BY manufacturer, code"
-
         return try await executeQuery(db: db, query: query)
     }
 
     func fetchItem(byStableId stableId: String) async throws -> GlassItemModel? {
         let db = try databaseManager.getDatabaseConnection()
         let query = "SELECT * FROM glass_items WHERE stable_id = ?"
-
         let items = try await executeQuery(db: db, query: query, parameters: [stableId])
         return items.first
     }

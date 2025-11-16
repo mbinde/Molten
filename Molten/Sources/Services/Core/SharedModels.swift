@@ -616,6 +616,7 @@ enum GlassItemSortOption: CaseIterable, Sendable {
     case manufacturer
     case coe
     case totalQuantity
+    case rating
 
     nonisolated var displayName: String {
         switch self {
@@ -623,6 +624,7 @@ enum GlassItemSortOption: CaseIterable, Sendable {
         case .manufacturer: return "Manufacturer"
         case .coe: return "COE"
         case .totalQuantity: return "Total Quantity"
+        case .rating: return "Rating"
         }
     }
 }
@@ -662,6 +664,31 @@ extension GlassItemSortOption {
                     return item1.totalQuantity > item2.totalQuantity // Descending for quantity
                 }
                 return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
+            }
+        case .rating:
+            return items.sorted { (item1, item2) -> Bool in
+                switch (item1.rating, item2.rating) {
+                case (.some(let r1), .some(let r2)):
+                    // Both have ratings - sort by average rating (descending)
+                    if r1.averageRating != r2.averageRating {
+                        return r1.averageRating > r2.averageRating
+                    }
+                    // Same rating - sort by total number of ratings (descending)
+                    if r1.totalRatings != r2.totalRatings {
+                        return r1.totalRatings > r2.totalRatings
+                    }
+                    // Same rating and count - sort by name
+                    return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
+                case (.some, .none):
+                    // item1 has rating, item2 doesn't - item1 comes first
+                    return true
+                case (.none, .some):
+                    // item2 has rating, item1 doesn't - item2 comes first
+                    return false
+                case (.none, .none):
+                    // Neither has rating - sort by name
+                    return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
+                }
             }
         }
     }

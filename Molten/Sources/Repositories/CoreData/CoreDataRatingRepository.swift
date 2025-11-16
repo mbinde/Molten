@@ -59,6 +59,24 @@ public final class CoreDataRatingRepository: RatingRepository, @unchecked Sendab
         }
     }
 
+    public func fetchAllAggregatedRatings() async throws -> [String: AggregatedRatingModel] {
+        return try await localContext.perform {
+            let request = NSFetchRequest<NSManagedObject>(entityName: "ItemRating")
+
+            let entities = try self.localContext.fetch(request)
+            var result: [String: AggregatedRatingModel] = [:]
+
+            for entity in entities {
+                if let itemStableId = entity.value(forKey: "item_stable_id") as? String,
+                   let rating = self.aggregatedRatingFromEntity(entity, itemStableId: itemStableId) {
+                    result[itemStableId] = rating
+                }
+            }
+
+            return result
+        }
+    }
+
     public func saveAggregatedRating(_ rating: AggregatedRatingModel) async throws {
         try await localContext.perform {
             // Delete existing rating

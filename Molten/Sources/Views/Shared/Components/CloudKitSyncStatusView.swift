@@ -44,14 +44,12 @@ struct CloudKitSyncStatusView: View {
     // MARK: - UI Helpers
 
     private var shouldShow: Bool {
-        // Always show when syncing, or when there's an error
-        // Hide when idle for more than 3 seconds
+        // Only show for actionable errors that require user attention
+        // Don't show for normal syncing or temporary network issues
         switch monitor.currentStatus {
-        case .idle:
+        case .idle, .syncing, .succeeded, .offline:
             return false
-        case .syncing, .succeeded:
-            return true
-        case .failed, .quotaExceeded, .offline:
+        case .failed, .quotaExceeded:
             return true
         }
     }

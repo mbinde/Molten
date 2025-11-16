@@ -319,7 +319,7 @@ struct FriendRowView: View {
                 .frame(width: 44, height: 44)
                 .overlay(
                     Image(systemName: iconSymbol)
-                        .font(.system(size: 20))
+                        .font(.title3)
                         .foregroundStyle(iconForeground)
                 )
 

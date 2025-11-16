@@ -87,7 +87,7 @@ struct CompactWordChipsView: View {
                 .fixedSize()
 
             Text("×\(word.frequency)")
-                .font(.system(size: 9))
+                .font(.caption2)
                 .foregroundStyle(.secondary)
                 .fixedSize()
         }

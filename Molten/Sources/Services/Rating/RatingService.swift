@@ -26,6 +26,7 @@ public class RatingService: RatingServiceProtocol {
     private let apiClient: RatingAPIClientProtocol
     private let identityService: CloudKitIdentityServiceProtocol
     private let updateInterval: TimeInterval
+    private let logger: LoggingService
 
     // MARK: - Initialization
 
@@ -33,12 +34,14 @@ public class RatingService: RatingServiceProtocol {
         repository: RatingRepository,
         apiClient: RatingAPIClientProtocol = RatingAPIClient(),
         identityService: CloudKitIdentityServiceProtocol = CloudKitIdentityService(),
-        updateInterval: TimeInterval = 3600 // 1 hour default
+        updateInterval: TimeInterval = 3600, // 1 hour default
+        logger: LoggingService? = nil
     ) {
         self.repository = repository
         self.apiClient = apiClient
         self.identityService = identityService
         self.updateInterval = updateInterval
+        self.logger = logger ?? AppDependencies.shared.loggingService
     }
 
     // MARK: - Submit Rating
@@ -84,7 +87,46 @@ public class RatingService: RatingServiceProtocol {
 
     // MARK: - Fetch Ratings
 
-    /// Fetch ratings for items (from cache or server)
+    /// Fetch all ratings in bulk and cache locally (optimized for catalog loading)
+    public func fetchAllRatingsBulk(forceRefresh: Bool = false) async throws -> [AggregatedRatingModel] {
+        // Check if we have a fresh bulk cache
+        if !forceRefresh {
+            let allCached = try await repository.fetchAllAggregatedRatings()
+
+            // If we have cached data and it's fresh, return it
+            if !allCached.isEmpty {
+                // Check if any are stale (if at least one is fresh, use the cache)
+                let hasAnythingFresh = allCached.values.contains { !$0.isStale(threshold: updateInterval) }
+                if hasAnythingFresh {
+                    print("✅ [RatingService] Using cached bulk ratings (\(allCached.count) items)")
+                    return Array(allCached.values)
+                }
+            }
+        }
+
+        // Fetch all ratings from server in one request
+        do {
+            // IMPORTANT: Use cache busting when forceRefresh=true to bypass Cloudflare CDN cache
+            let freshRatings = try await apiClient.fetchAllRatingsBulk(cacheBust: forceRefresh)
+
+            // Save to cache
+            try await repository.saveAggregatedRatings(freshRatings)
+
+            print("✅ [RatingService] Fetched and cached \(freshRatings.count) ratings in bulk\(forceRefresh ? " (cache busted)" : "")")
+            return freshRatings
+        } catch {
+            // If network error and we have some cached data, return cached (even if stale)
+            let allCached = try await repository.fetchAllAggregatedRatings()
+            if isNetworkError(error) && !allCached.isEmpty {
+                print("⚠️ [RatingService] Network error, returning stale cache (\(allCached.count) items)")
+                return Array(allCached.values)
+            }
+            throw error
+        }
+    }
+
+    /// Fetch ratings for specific items (from cache or server)
+    /// Note: For large batches, consider using fetchAllRatingsBulk() instead
     public func fetchRatings(
         forItems itemStableIds: [String],
         forceRefresh: Bool = false
@@ -115,12 +157,31 @@ public class RatingService: RatingServiceProtocol {
             // Save to cache
             try await repository.saveAggregatedRatings(freshRatings)
 
+            logger.info("Rating cache updated successfully", context: [
+                "operation": "rating-cache-rebuild",
+                "items_updated": freshRatings.count,
+                "forced_refresh": forceRefresh
+            ])
+
             return freshRatings
         } catch {
             // If network error and we have cached data, return cached (even if stale)
             if isNetworkError(error) && !ratings.isEmpty {
+                logger.warning("Rating fetch failed, using stale cache", context: [
+                    "operation": "rating-cache-rebuild",
+                    "items_requested": itemStableIds.count,
+                    "stale_items_returned": ratings.count
+                ])
                 return ratings
             }
+
+            logger.error("Rating cache rebuild failed", context: [
+                "operation": "rating-cache-rebuild",
+                "items_requested": itemStableIds.count,
+                "had_cached_data": !ratings.isEmpty,
+                "error_type": String(describing: type(of: error))
+            ], error: error)
+
             throw error
         }
     }

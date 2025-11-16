@@ -9,6 +9,9 @@ import SwiftUI
 import CoreData
 import CryptoKit
 import RevenueCat
+import Sentry
+import CloudKit
+import OSLog
 
 @main
 struct MoltenApp: App {
@@ -39,14 +42,11 @@ struct MoltenApp: App {
         // Initialize subscription manager with proper entitlement service
         _subscriptionManager = State(initialValue: SubscriptionManager(entitlementService: _dependencies.wrappedValue.entitlementService))
 
-        print(String(repeating: "=", count: 80))
-        print("🚀 MoltenApp.init() STARTING")
-        print(String(repeating: "=", count: 80))
-
         // Note: AppDependencies automatically detects test environment
         // and provides appropriate dependencies (mocks for tests, Core Data for production)
 
-        // Configure RevenueCat SDK
+        // Configure SDKs
+        configureSentry()
         configureRevenueCat()
     }
 
@@ -56,7 +56,6 @@ struct MoltenApp: App {
     @State private var showFirstRunDataLoading = false
     @State private var firstRunDataLoadingComplete = false
     @State private var showAlphaDisclaimer = false
-    @State private var userSettings = UserSettings.shared
     @State private var syncMonitor: CloudKitSyncMonitor?
     @State private var importPlanURL: URL?
     @State private var showingImportPlan = false
@@ -105,7 +104,7 @@ struct MoltenApp: App {
             .modifier(DependenciesEnvironmentModifier(dependencies: dependencies))
             .environment(dependencies.entitlementService)
             .modifier(SubscriptionEnvironmentModifier(subscriptionManager: subscriptionManager))
-            .preferredColorScheme(userSettings.colorScheme)
+            .preferredColorScheme(UserSettings.shared.colorScheme)
             .tint(DesignSystem.Colors.accentSecondary)
         }
     }
@@ -376,6 +375,9 @@ extension MoltenApp {
     /// - NO blocking operations before showing UI
     @MainActor
     private func performQuickStartupChecks() async {
+        // Check CloudKit account status for diagnostics
+        await checkCloudKitStatus()
+
         // Show launch screen VERY briefly - just enough for smooth transition
         // Core Data initialization will happen DURING the loading screen!
         do {
@@ -390,6 +392,67 @@ extension MoltenApp {
         withAnimation(.easeInOut(duration: 0.3)) {
             isLaunching = false
             showFirstRunDataLoading = true
+        }
+    }
+
+    /// Check CloudKit account status and log diagnostics
+    @MainActor
+    private func checkCloudKitStatus() async {
+        let log = Logger(subsystem: "com.motleywoods.molten", category: "cloudkit-diagnostics")
+
+        log.info("🔍 [CloudKit Diagnostics] Starting CloudKit account status check...")
+
+        let container = CKContainer(identifier: "iCloud.com.motleywoods.molten")
+
+        do {
+            let status = try await container.accountStatus()
+
+            switch status {
+            case .available:
+                log.info("✅ [CloudKit Diagnostics] iCloud account is AVAILABLE")
+
+                // Try to fetch user record ID to verify access
+                do {
+                    let userRecordID = try await container.userRecordID()
+                    log.info("✅ [CloudKit Diagnostics] User Record ID: \(userRecordID.recordName)")
+                } catch {
+                    log.error("❌ [CloudKit Diagnostics] Failed to fetch user record ID: \(error.localizedDescription)")
+                }
+
+            case .noAccount:
+                log.warning("⚠️ [CloudKit Diagnostics] No iCloud account signed in")
+
+            case .restricted:
+                log.warning("⚠️ [CloudKit Diagnostics] iCloud account is RESTRICTED")
+
+            case .couldNotDetermine:
+                log.warning("⚠️ [CloudKit Diagnostics] Could not determine iCloud account status")
+
+            case .temporarilyUnavailable:
+                log.warning("⚠️ [CloudKit Diagnostics] iCloud is TEMPORARILY UNAVAILABLE")
+
+            @unknown default:
+                log.warning("⚠️ [CloudKit Diagnostics] Unknown account status")
+            }
+        } catch {
+            log.error("❌ [CloudKit Diagnostics] Error checking account status: \(error.localizedDescription)")
+        }
+
+        // Check if NSPersistentCloudKitContainer is actually being used
+        if let cloudKitContainer = dependencies.persistenceController.container as? NSPersistentCloudKitContainer {
+            log.info("✅ [CloudKit Diagnostics] Using NSPersistentCloudKitContainer")
+
+            // Log store descriptions
+            for (index, store) in cloudKitContainer.persistentStoreDescriptions.enumerated() {
+                log.info("📦 [CloudKit Diagnostics] Store \(index): \(store.url?.lastPathComponent ?? "unknown")")
+                if let cloudKitOptions = store.cloudKitContainerOptions {
+                    log.info("   ☁️ CloudKit: \(cloudKitOptions.containerIdentifier) (scope: \(cloudKitOptions.databaseScope.rawValue))")
+                } else {
+                    log.info("   📁 No CloudKit (local only)")
+                }
+            }
+        } else {
+            log.error("❌ [CloudKit Diagnostics] NOT using NSPersistentCloudKitContainer!")
         }
     }
 
@@ -650,6 +713,44 @@ extension MoltenApp {
         }
 
         return stableId
+    }
+
+    /// Configure Sentry SDK for error tracking
+    private func configureSentry() {
+        // Get DSN from AppDependencies (already configured there)
+        let sentryDSN = "https://9656fde5615b69579eb41101834237b6@o4510371843932160.ingest.us.sentry.io/4510371846356992"
+
+        // Only initialize if DSN is configured
+        guard !sentryDSN.isEmpty && !sentryDSN.contains("your-dsn") else {
+            print("⚠️ Sentry DSN not configured - error tracking disabled")
+            return
+        }
+
+        SentrySDK.start { options in
+            options.dsn = sentryDSN
+            options.environment = SentryEnvironment.current.rawValue
+
+            // Performance monitoring
+            options.tracesSampleRate = 1.0  // Capture 100% of transactions (adjust for production)
+
+            // Session tracking
+            options.enableAutoSessionTracking = true
+
+            // Breadcrumbs
+            options.maxBreadcrumbs = 100
+
+            // Enable file I/O tracking
+            options.enableFileIOTracing = true
+
+            // Enable network tracking
+            options.enableNetworkTracking = true
+
+            #if DEBUG
+            options.debug = true  // Enable debug output in development
+            #endif
+        }
+
+        print("✅ Sentry configured successfully (environment: \(SentryEnvironment.current.rawValue))")
     }
 
     /// Configure RevenueCat SDK with API key and settings

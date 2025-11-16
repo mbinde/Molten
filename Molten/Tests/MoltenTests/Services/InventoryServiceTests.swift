@@ -388,32 +388,12 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         print("DEBUG: Non-existent tag search: \(nonExistentTagResults.count) results")
         #expect(nonExistentTagResults.count == 0, "Non-existent tag search should return no items")
     }
-    
+
     // MARK: - Performance Tests
-    
-    @Test("Should perform searches efficiently")
-    func testSearchPerformance() async throws {
-        let (inventoryService, repos) = try await createInventoryServiceTestEnvironment()
-        try await addTestGlassItems(repos)
-        
-        let startTime = Date()
-        
-        // Perform multiple searches
-        for i in 0..<10 {
-            let _ = try await inventoryService.searchItems(
-                text: i % 2 == 0 ? "clear" : "red",
-                withTags: [],
-                hasInventory: false,
-                inventoryTypes: []
-            )
-        }
-        
-        let duration = Date().timeIntervalSince(startTime)
-        
-        print("DEBUG: 10 searches completed in \(String(format: "%.3f", duration))s")
-        #expect(duration < 1.0, "Search should be fast (< 1 second for 10 searches)")
-    }
-    
+    //
+    // Performance tests moved to PerformanceTests/InventorySearchPerformanceTests.swift
+    // for serial execution (avoiding timing issues in parallel test runs).
+
     // MARK: - Service Integration Tests
     
     @Test("Should integrate properly with repository layer")

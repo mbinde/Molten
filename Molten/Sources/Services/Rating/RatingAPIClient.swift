@@ -37,6 +37,7 @@ public enum RatingAPIError: Error, LocalizedError {
 /// Protocol for rating API operations (for testing)
 public protocol RatingAPIClientProtocol {
     func submitRating(_ submission: RatingSubmissionModel, userIdHash: String, attestToken: String) async throws
+    func fetchAllRatingsBulk(cacheBust: Bool) async throws -> [AggregatedRatingModel]
     func fetchRatings(itemStableIds: [String]) async throws -> [AggregatedRatingModel]
     func deleteAllRatings(userIdHash: String, attestToken: String) async throws -> Int
 }
@@ -116,14 +117,21 @@ public class RatingAPIClient: RatingAPIClientProtocol {
 
     // MARK: - Fetch Ratings
 
-    public func fetchRatings(itemStableIds: [String]) async throws -> [AggregatedRatingModel] {
-        // Build URL with query parameters
-        let itemsParam = itemStableIds.joined(separator: ",")
-        guard let url = URL(string: "\(baseURL)/api/v1/ratings/fetch?items=\(itemsParam)") else {
+    /// Fetch all ratings in bulk (single optimized request)
+    public func fetchAllRatingsBulk(cacheBust: Bool = false) async throws -> [AggregatedRatingModel] {
+        var urlString = "\(baseURL)/api/v1/ratings/bulk"
+
+        // Add cache-busting timestamp if requested (to bypass Cloudflare CDN cache)
+        if cacheBust {
+            let timestamp = Int(Date().timeIntervalSince1970 * 1000)  // milliseconds
+            urlString += "?t=\(timestamp)"
+        }
+
+        guard let url = URL(string: urlString) else {
             throw RatingAPIError.invalidURL
         }
 
-        // Build request
+        // Build request (allow caching since server sends Cache-Control headers)
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
 
@@ -139,14 +147,74 @@ public class RatingAPIClient: RatingAPIClientProtocol {
             throw RatingAPIError.serverError("HTTP \(httpResponse.statusCode)")
         }
 
-        // Parse response
-        let json = try JSONDecoder().decode(FetchRatingsResponse.self, from: data)
+        // Parse response with custom date decoding
+        // The response has ISO8601 generatedAt but Unix timestamp lastAggregated in ratings
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
 
-        // Convert to models
-        return json.ratings.compactMap { dict in
-            let anyDict = dict.mapValues { $0.value }
-            return AggregatedRatingModel.from(dictionary: anyDict)
+        // Custom date decoder to handle both formats
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+
+            // Try Unix timestamp first
+            if let timestamp = try? container.decode(Double.self) {
+                return Date(timeIntervalSince1970: timestamp)
+            }
+
+            // Try ISO8601 with fractional seconds
+            if let dateString = try? container.decode(String.self) {
+                let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                if let date = formatter.date(from: dateString) {
+                    return date
+                }
+
+                // Fallback: try without fractional seconds
+                formatter.formatOptions = [.withInternetDateTime]
+                if let date = formatter.date(from: dateString) {
+                    return date
+                }
+            }
+
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date")
         }
+
+        let json = try decoder.decode(BulkRatingsResponse.self, from: data)
+        print("✅ [RatingAPIClient] Fetched \(json.count) ratings in bulk")
+        return json.ratings
+    }
+
+    /// Fetch specific ratings by item IDs (deprecated - use fetchAllRatingsBulk instead)
+    public func fetchRatings(itemStableIds: [String]) async throws -> [AggregatedRatingModel] {
+        // Build URL with query parameters
+        let itemsParam = itemStableIds.joined(separator: ",")
+        guard let url = URL(string: "\(baseURL)/api/v1/ratings/fetch?items=\(itemsParam)") else {
+            throw RatingAPIError.invalidURL
+        }
+
+        // Build request (disable cache to always get fresh data)
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData)
+        request.httpMethod = "GET"
+
+        // Execute request
+        let (data, response) = try await session.data(for: request)
+
+        // Check response
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw RatingAPIError.invalidResponse
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            throw RatingAPIError.serverError("HTTP \(httpResponse.statusCode)")
+        }
+
+        // Parse response directly to models
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        decoder.dateDecodingStrategy = .secondsSince1970
+
+        let json = try decoder.decode(FetchRatingsResponse.self, from: data)
+        return json.ratings
     }
 
     // MARK: - Delete All Ratings
@@ -195,5 +263,11 @@ public class RatingAPIClient: RatingAPIClientProtocol {
 // MARK: - Response Types
 
 private struct FetchRatingsResponse: Codable {
-    let ratings: [[String: AnyCodable]]
+    let ratings: [AggregatedRatingModel]
+}
+
+private struct BulkRatingsResponse: Codable {
+    let ratings: [AggregatedRatingModel]
+    let generatedAt: Date
+    let count: Int
 }

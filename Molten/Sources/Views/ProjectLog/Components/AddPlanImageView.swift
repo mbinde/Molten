@@ -60,7 +60,7 @@ struct AddPlanImageView: View {
                         Button("Choose Different Image") {
                             showingPhotoPicker = true
                         }
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                     }
                 } else {
                     Button {

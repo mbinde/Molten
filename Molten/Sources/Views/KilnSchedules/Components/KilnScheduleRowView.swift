@@ -16,15 +16,20 @@ struct KilnScheduleRowView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            scheduleHeader
-            scheduleDetails
+        Group {
             if let description = schedule.description, !description.isEmpty {
-                scheduleNotes
+                ListRowContainer(
+                    header: { scheduleHeader },
+                    details: { scheduleDetails },
+                    footer: { scheduleNotes }
+                )
+            } else {
+                ListRowContainer(
+                    header: { scheduleHeader },
+                    details: { scheduleDetails }
+                )
             }
         }
-        .padding(.vertical, 4)
-        .contentShape(Rectangle()) // Makes the entire row tappable
     }
 
     // MARK: - View Components
@@ -62,25 +67,13 @@ struct KilnScheduleRowView: View {
         HStack(spacing: 12) {
             // Technique badge
             if let technique = displaySchedule.technique {
-                HStack(spacing: 4) {
-                    Image(systemName: "flame.fill")
-                        .font(.caption2)
-                    Text(technique.displayName)
-                        .font(.caption)
-                }
-                .foregroundColor(techniqueColor)
+                IconTextBadge.flame(technique.displayName, color: techniqueColor)
             }
 
             Spacer()
 
             // Segment count
-            HStack(spacing: 4) {
-                Image(systemName: "chart.line.uptrend.xyaxis")
-                    .font(.caption2)
-                Text("\(displaySchedule.segments.count) segments")
-                    .font(.caption)
-            }
-            .foregroundColor(.secondary)
+            IconTextBadge.chart("\(displaySchedule.segments.count) segments")
 
             // Temperature unit
             Text(displaySchedule.temperatureUnit.symbol)

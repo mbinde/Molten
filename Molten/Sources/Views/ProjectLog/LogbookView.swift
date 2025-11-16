@@ -40,6 +40,7 @@ struct LogbookView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Search bar at top (only show when we have entries)
+                // TODO: Migrate to native .searchable() with FilterChipsRow component (see CatalogView)
                 if !viewModel.logEntries.isEmpty {
                     StandardSearchAndFilterHeader(
                         searchText: $viewModel.searchText,
@@ -72,9 +73,7 @@ struct LogbookView: View {
 
                 // Main content
                 if viewModel.isLoading {
-                    ProgressView()
-                        .scaleEffect(1.5)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    LoadingStateView()
                 } else if viewModel.logEntries.isEmpty && viewModel.searchText.isEmpty {
                     emptyStateView
                 } else {
@@ -112,7 +111,7 @@ struct LogbookView: View {
             VStack(spacing: 20) {
                 Image(systemName: "book.pages")
                     .font(.system(size: 70))
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
 
                 Text("No Logbook Entries Yet")
                     .font(.title2)

@@ -111,7 +111,7 @@ struct PrimaryImageSelector: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
                         .stroke(
-                            currentPrimaryImageId == imageModel.id ? Color.blue : Color.clear,
+                            currentPrimaryImageId == imageModel.id ? .accentColor : Color.clear,
                             lineWidth: currentPrimaryImageId == imageModel.id ? 3 : 0
                         )
                 )
@@ -119,7 +119,7 @@ struct PrimaryImageSelector: View {
             if currentPrimaryImageId == imageModel.id {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.title3)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
                     .background(
                         Circle()
                             .fill(Color.white)

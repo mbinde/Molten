@@ -51,12 +51,7 @@ struct PurchasesView: View {
                 .padding(.top, 8)
 
                 if viewModel.isLoading {
-                    // Loading state
-                    VStack {
-                        Spacer()
-                        ProgressView("Loading purchases...")
-                        Spacer()
-                    }
+                    LoadingStateView(message: "Loading purchases...")
                 } else if filteredPurchases.isEmpty {
                     if viewModel.purchases.isEmpty {
                         // Empty state when no purchases exist
@@ -161,7 +156,7 @@ struct PurchaseListRowView: View {
         HStack(spacing: 12) {
             // Icon
             Image(systemName: "creditcard.fill")
-                .foregroundColor(.blue)
+                .foregroundColor(.accentColor)
                 .frame(width: 24, height: 24)
             
             // Purchase details

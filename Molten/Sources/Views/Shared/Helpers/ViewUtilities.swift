@@ -40,7 +40,7 @@ nonisolated struct EmptyStateView: View {
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: icon)
-                .font(.system(size: 60))
+                .font(.largeTitle)
                 .foregroundColor(.secondary)
             
             Text(title)
@@ -61,7 +61,7 @@ nonisolated struct EmptyStateView: View {
                         .font(.headline)
                         .foregroundColor(.white)
                         .padding()
-                        .background(Color.blue)
+                        .background(.accentColor)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
                 .padding(.top)
@@ -298,13 +298,6 @@ extension View {
                     }
                 }
             }
-    }
-    
-    /// Apply loading overlay
-    func loadingOverlay(isLoading: Bool, message: String = "Loading...") -> some View {
-        self.overlay {
-            LoadingOverlay(isLoading: isLoading, message: message)
-        }
     }
 }
 

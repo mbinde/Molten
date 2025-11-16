@@ -44,10 +44,10 @@ struct AuthorCardView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "globe")
                                     .font(.caption)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                                 Text(website)
                                     .font(.caption)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                     }
@@ -57,10 +57,10 @@ struct AuthorCardView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "camera")
                                     .font(.caption)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                                 Text("@\(instagram)")
                                     .font(.caption)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                     }
@@ -70,10 +70,10 @@ struct AuthorCardView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "f.square")
                                     .font(.caption)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                                 Text(facebook)
                                     .font(.caption)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                     }
@@ -83,10 +83,10 @@ struct AuthorCardView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "play.rectangle")
                                     .font(.caption)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                                 Text("@\(youtube)")
                                     .font(.caption)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                     }

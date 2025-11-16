@@ -52,6 +52,7 @@ struct GlassItemCard: View {
                     imagePath: item.image_path,
                     maxSize: variant.imageSize,
                     allowImageUpload: variant == .large,
+                    allowFullScreen: variant == .large,
                     onImageUploaded: nil
                 )
                 #else
@@ -211,7 +212,7 @@ struct GlassItemCard: View {
                         Button(action: { onManageTags?() }) {
                             HStack(spacing: 2) {
                                 Image(systemName: "person.fill")
-                                    .font(.system(size: 8))
+                                    .font(.caption2)
                                 Text("Manage")
                                     .font(DesignSystem.Typography.captionSmall)
                                     .fontWeight(DesignSystem.FontWeight.medium)
@@ -389,7 +390,7 @@ private struct TagChip: View {
 
             if isUserTag {
                 Image(systemName: "person.fill")
-                    .font(.system(size: 7))
+                    .font(.caption2)
                     .foregroundColor(.purple)
             }
             Text(tag)

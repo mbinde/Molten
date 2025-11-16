@@ -29,7 +29,7 @@ struct ConsolidatedInventoryDetailView: View {
     var body: some View {
         NavigationStack {
             if isLoading {
-                ProgressView("Loading inventory...")
+                LoadingStateView(message: "Loading inventory...")
             } else if let errorMessage = errorMessage {
                 VStack(spacing: 16) {
                     Image(systemName: "exclamationmark.triangle")
@@ -224,7 +224,7 @@ struct InventoryTypeRow: View {
                     Text(formatQuantity(quantity))
                         .font(.headline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                     
                     Text("units")
                         .font(.caption)

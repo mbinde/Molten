@@ -298,7 +298,10 @@ class AppDependencies {
             itemTagsRepository: itemTagsRepository
         )
 
-        // Create catalog service (depends on inventory tracking service)
+        // Create rating service (needed by catalog service)
+        let ratingService = RatingService(repository: ratingRepository)
+
+        // Create catalog service (depends on inventory tracking service and rating service)
         let catalogService = CatalogService(
             glassItemRepository: glassItemRepository,
             coatingItemRepository: coatingItemRepository,
@@ -306,7 +309,8 @@ class AppDependencies {
             inventoryTrackingService: inventoryTrackingService,
             itemMinimumRepository: itemMinimumRepository,
             itemTagsRepository: itemTagsRepository,
-            userTagsRepository: userTagsRepository
+            userTagsRepository: userTagsRepository,
+            ratingService: ratingService
         )
 
         // Create shopping list service
@@ -348,9 +352,6 @@ class AppDependencies {
 
         // Create entitlement service
         let entitlementService = EntitlementService()
-
-        // Create rating service
-        let ratingService = RatingService(repository: ratingRepository)
 
         return (
             inventoryTrackingService,

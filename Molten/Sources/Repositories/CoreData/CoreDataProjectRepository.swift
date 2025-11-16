@@ -668,7 +668,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
 
                 // Check OCR text from project images
                 let ocrText = try? await imageRepository.getOCRText(
-                    ownerType: .projectPlan,
+                    ownerType: ImageOwnerType.projectPlan,
                     ownerId: project.id.uuidString
                 )
 

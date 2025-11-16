@@ -72,7 +72,7 @@ struct DeepLinkedItemView: View {
                 if !isLoading && item != nil {
                     quickActionToolbar
                         .padding()
-                        .background(Color(.systemGroupedBackground))
+                        .background(Color(NSColor.controlBackgroundColor))
                 }
 
                 // Main content

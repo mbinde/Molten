@@ -188,13 +188,13 @@ extension CollapsibleSectionHeader {
             }
         )
         .padding()
-        .background(Color(.systemGroupedBackground))
+        .background(Color(NSColor.controlBackgroundColor))
 
         if isExpanded {
             Text("Content goes here...")
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color(.secondarySystemGroupedBackground))
+                .background(Color(NSColor.windowBackgroundColor))
         }
     }
     .padding()

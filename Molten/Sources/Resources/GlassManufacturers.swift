@@ -45,7 +45,7 @@ struct GlassManufacturers {
     
     nonisolated static let manufacturerImages: [String: String] = [
         "AB": "ab",
-        "EF": "effetre",
+        "EF": "ef",
         "DH": "dh",
         "BB": "bb",
         "CiM": "cim",

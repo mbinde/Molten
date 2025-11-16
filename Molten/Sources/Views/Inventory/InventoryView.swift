@@ -592,9 +592,9 @@ struct InventoryView: View, CachedDataDeletion {
 
     func reloadData() async {
         log.info("🔄 reloadData: Starting deferred reload...")
-        // Note: We don't need to reload the entire catalog anymore!
-        // removeFromCache() already updated the item's inventory to empty.
-        // This reload is just for safety to pick up any other changes (tags, etc.)
+        // CRITICAL: Force cache reload from Core Data
+        // Without this, loadInventoryItems() returns stale cache data and undoes our in-place update
+        await CatalogDataCache.shared.reload(catalogService: catalogService)
         await viewModel.loadInventoryItems()
         log.info("🔄 reloadData: Reload complete - \(viewModel.completeItems.count) items")
     }

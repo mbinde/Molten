@@ -181,14 +181,17 @@ class PersistenceController {
             // The Core Data model has entities explicitly assigned to "Local" and "Cloud" configurations
             // Tests MUST use two stores to match production, otherwise Core Data crashes with configuration mismatch
 
+            // Generate unique URLs for each test instance to prevent data pollution across parallel tests
+            let uniqueId = UUID().uuidString
+
             // STORE 1: Local (in-memory)
             let localDescription = NSPersistentStoreDescription()
-            localDescription.url = URL(fileURLWithPath: "/dev/null/local")  // Different path for each store
+            localDescription.url = URL(fileURLWithPath: "/dev/null/\(uniqueId)-local")  // Unique path per test instance
             localDescription.configuration = "Local"
 
             // STORE 2: Cloud (in-memory)
             let cloudDescription = NSPersistentStoreDescription()
-            cloudDescription.url = URL(fileURLWithPath: "/dev/null/cloud")  // Different path for each store
+            cloudDescription.url = URL(fileURLWithPath: "/dev/null/\(uniqueId)-cloud")  // Unique path per test instance
             cloudDescription.configuration = "Cloud"
 
             // Set both store descriptions

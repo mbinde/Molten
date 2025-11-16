@@ -5,6 +5,11 @@
 //  Reusable pattern for SwiftUI .onDelete with proper animation handling
 //  and immediate UI updates for cached data architectures
 //
+//  ⚠️ IMPORTANT: ShoppingListView uses its own custom implementation of this pattern
+//  due to its complex data structure (dictionary of stores with nested items).
+//  Any updates to this protocol or pattern should also be applied to ShoppingListView's
+//  deleteShoppingItem() method. See ShoppingListView.swift for details.
+//
 
 import Foundation
 import SwiftUI
@@ -20,6 +25,16 @@ import SwiftUI
 /// 1. Delete from database
 /// 2. Immediately remove from view model (updates counters, UI instantly)
 /// 3. Defer full reload (prevents animation conflicts, ensures consistency)
+///
+/// Conforming Views:
+/// - InventoryView (CompleteInventoryItemModel)
+/// - ProjectsView (ProjectModel)
+/// - LogbookView (LogbookModel)
+/// - KilnSchedulesView (KilnSchedule)
+/// - RecipesView (RecipeModel)
+///
+/// ⚠️ Non-conforming (custom implementation):
+/// - ShoppingListView - uses custom deleteShoppingItem() due to complex nested data structure
 protocol CachedDataDeletion {
     associatedtype Item: Identifiable
 
@@ -44,6 +59,9 @@ extension CachedDataDeletion {
 
     /// Complete deletion pattern with proper timing
     /// Call this from your .onDelete handler
+    ///
+    /// ⚠️ IMPORTANT: If you modify this timing or pattern, also update:
+    /// - ShoppingListView.deleteShoppingItem() - custom implementation
     func deleteItem(_ item: Item) async {
         do {
             // 1. Delete from database

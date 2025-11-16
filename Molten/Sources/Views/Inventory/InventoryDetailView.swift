@@ -9,6 +9,9 @@
 
 import SwiftUI
 import PhotosUI
+#if canImport(AppKit)
+import AppKit
+#endif
 
 /// Wrapper to make String identifiable for sheet presentation
 private struct InventoryTypeSelection: Identifiable {
@@ -61,8 +64,13 @@ struct InventoryDetailView: View {
 
     // User images state
     @State private var userImages: [UserImageModel] = []
+    #if os(macOS)
+    @State private var loadedImages: [UUID: NSImage] = [:]
+    @State private var manufacturerImage: NSImage?
+    #else
     @State private var loadedImages: [UUID: UIImage] = [:]
     @State private var manufacturerImage: UIImage?
+    #endif
     @State private var showingImagePicker = false
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var isLoadingImages = false
@@ -479,10 +487,17 @@ struct InventoryDetailView: View {
     private func handleImageSelection(_ items: [PhotosPickerItem]) {
         Task {
             for item in items {
+                #if os(macOS)
+                guard let data = try? await item.loadTransferable(type: Data.self),
+                      let image = NSImage(data: data) else {
+                    continue
+                }
+                #else
                 guard let data = try? await item.loadTransferable(type: Data.self),
                       let image = UIImage(data: data) else {
                     continue
                 }
+                #endif
 
                 // No need to resize - UserImageRepository handles this automatically
                 let imageToSave = image
@@ -692,7 +707,7 @@ struct InventoryDetailView: View {
                             Text("Edit")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .foregroundColor(Color.accentColor)
+                                .foregroundColor(.accentColor)
                         }
                     }
 
@@ -711,7 +726,7 @@ struct InventoryDetailView: View {
                             Text(isUserNotesExpanded ? "Show Less" : "Show More")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .foregroundColor(Color.accentColor)
+                                .foregroundColor(.accentColor)
                         }
                         .buttonStyle(.plain)
                     }
@@ -781,7 +796,7 @@ struct InventoryDetailView: View {
                             Text("Add More Inventory")
                         }
                         .font(.subheadline)
-                        .foregroundColor(Color.accentColor)
+                        .foregroundColor(.accentColor)
                     }
                     .padding(.top, 8)
                 }
@@ -1038,7 +1053,7 @@ struct InventoryDetailView: View {
                 Text(isManufacturerNotesExpanded ? "Show Less" : "Show More")
                     .font(.caption)
                     .fontWeight(.medium)
-                    .foregroundColor(Color.accentColor)
+                    .foregroundColor(.accentColor)
             }
             .buttonStyle(.plain)
         }
@@ -1083,7 +1098,7 @@ struct ExpandableSection<Content: View>: View {
             Button(action: onToggle) {
                 HStack {
                     Image(systemName: systemImage)
-                        .foregroundColor(Color.accentColor)
+                        .foregroundColor(.accentColor)
                     Text(title)
                         .font(.headline)
                         .fontWeight(.semibold)
@@ -1147,7 +1162,7 @@ struct InventoryDetailTypeRow: View {
                     Text(formatQuantity(quantity))
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(Color.accentColor)
+                        .foregroundColor(.accentColor)
                     Text("units")
                         .font(.caption2)
                         .foregroundColor(.secondary)
@@ -1418,7 +1433,7 @@ struct InventoryStorageDetailView: View {
                                 Text(formatQuantity(totalQuantity))
                                     .font(.title3)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(Color.accentColor)
+                                    .foregroundColor(.accentColor)
                             }
                         }
 
@@ -1661,7 +1676,7 @@ struct InventoryRecordRow: View {
             Text(formatQuantity(record.quantity))
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundColor(Color.accentColor)
+                .foregroundColor(.accentColor)
         }
 
         if let onTap = onTap {

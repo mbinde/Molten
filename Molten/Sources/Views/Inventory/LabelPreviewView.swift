@@ -6,7 +6,14 @@
 //
 
 import SwiftUI
+#if canImport(AppKit)
+import AppKit
+#endif
+#if canImport(UIKit)
+import UIKit
+#endif
 
+#if os(iOS)
 /// Preview component showing what a label will look like
 struct LabelPreviewView: View {
     let format: AveryFormat
@@ -64,7 +71,7 @@ struct LabelPreviewView: View {
                 .foregroundColor(.secondary)
         }
         .padding()
-        .background(Color(UIColor.systemGray6))
+        .background(Color(.systemGray6))
         .cornerRadius(8)
         .onAppear {
             if labelService == nil {
@@ -446,3 +453,4 @@ private struct QRCodeView: View {
         )
     )
 }
+#endif

@@ -307,7 +307,7 @@ struct TagFilterView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(Color.accentColor.opacity(0.1))
-            .foregroundColor(Color.accentColor)
+            .foregroundColor(.accentColor)
             .clipShape(Capsule())
 
             Spacer()

@@ -8,7 +8,11 @@
 
 import Foundation
 import Network
+#if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 /// Manages image synchronization with network awareness
 actor ImageSyncService {
@@ -154,7 +158,7 @@ actor ImageSyncService {
 
     /// Called when viewing an item detail
     /// Downloads full-size image if needed, WiFi only
-    func loadImageForViewing(itemCode: String, manufacturer: String?, imagePath: String?) async -> UIImage? {
+    func loadImageForViewing(itemCode: String, manufacturer: String?, imagePath: String?) async -> PlatformImage? {
         // First try to load from cache (always fast)
         if let cached = await ImageDownloadService.loadImage(
             itemCode: itemCode,

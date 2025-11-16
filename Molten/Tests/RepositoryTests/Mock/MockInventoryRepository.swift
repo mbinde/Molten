@@ -15,20 +15,21 @@ final class MockInventoryRepository: InventoryRepository {
     // MARK: - Storage
 
     nonisolated(unsafe) private var inventory: [UUID: InventoryModel] = [:] // Key: id
+    private let lock = NSLock() // Protect concurrent access
 
     // MARK: - CRUD Operations
 
     func fetchInventory(matching predicate: NSPredicate?) async throws -> [InventoryModel] {
         // For simplicity, ignore predicate filtering in mock
-        return Array(inventory.values)
+        return lock.withLock { Array(inventory.values) }
     }
 
     func fetchInventory(byId id: UUID) async throws -> InventoryModel? {
-        return inventory[id]
+        return lock.withLock { inventory[id] }
     }
 
     func fetchInventory(forItem item_stable_id: String) async throws -> [InventoryModel] {
-        let inventoryArray = Array(inventory.values)
+        let inventoryArray = lock.withLock { Array(inventory.values) }
         var result: [InventoryModel] = []
         for inv in inventoryArray {
             let invItemId = await inv.item_stable_id
@@ -40,7 +41,7 @@ final class MockInventoryRepository: InventoryRepository {
     }
 
     func fetchInventory(forItem item_stable_id: String, type: String) async throws -> [InventoryModel] {
-        let inventoryArray = Array(inventory.values)
+        let inventoryArray = lock.withLock { Array(inventory.values) }
         var result: [InventoryModel] = []
         for inv in inventoryArray {
             let invItemId = await inv.item_stable_id
@@ -54,48 +55,49 @@ final class MockInventoryRepository: InventoryRepository {
 
     func createInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
         let id = await inventory.id
-        self.inventory[id] = inventory
+        lock.withLock { self.inventory[id] = inventory }
         return inventory
     }
 
     func createInventories(_ inventories: [InventoryModel]) async throws -> [InventoryModel] {
         for inventory in inventories {
             let id = await inventory.id
-            self.inventory[id] = inventory
+            lock.withLock { self.inventory[id] = inventory }
         }
         return inventories
     }
 
     func updateInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
         let id = await inventory.id
-        guard self.inventory[id] != nil else {
+        let exists = lock.withLock { self.inventory[id] != nil }
+        guard exists else {
             throw NSError(domain: "MockInventoryRepository", code: 404)
         }
-        self.inventory[id] = inventory
+        lock.withLock { self.inventory[id] = inventory }
         return inventory
     }
 
     func deleteInventory(id: UUID) async throws {
-        inventory.removeValue(forKey: id)
+        lock.withLock { inventory.removeValue(forKey: id) }
     }
 
     func deleteInventory(forItem item_stable_id: String) async throws {
-        let inventoryArray = Array(inventory)
+        let inventoryArray = lock.withLock { Array(inventory) }
         for (id, inv) in inventoryArray {
             let invItemId = await inv.item_stable_id
             if invItemId == item_stable_id {
-                inventory.removeValue(forKey: id)
+                lock.withLock { inventory.removeValue(forKey: id) }
             }
         }
     }
 
     func deleteInventory(forItem item_stable_id: String, type: String) async throws {
-        let inventoryArray = Array(inventory)
+        let inventoryArray = lock.withLock { Array(inventory) }
         for (id, inv) in inventoryArray {
             let invItemId = await inv.item_stable_id
             let invType = await inv.type
             if invItemId == item_stable_id && invType == type {
-                inventory.removeValue(forKey: id)
+                lock.withLock { inventory.removeValue(forKey: id) }
             }
         }
     }
@@ -209,7 +211,7 @@ final class MockInventoryRepository: InventoryRepository {
     // MARK: - Discovery Operations
 
     func getDistinctTypes() async throws -> [String] {
-        let inventoryArray = Array(inventory.values)
+        let inventoryArray = lock.withLock { Array(inventory.values) }
         var types: Set<String> = []
         for inv in inventoryArray {
             let type = await inv.type
@@ -219,7 +221,7 @@ final class MockInventoryRepository: InventoryRepository {
     }
 
     func getItemsWithInventory() async throws -> [String] {
-        let inventoryArray = Array(inventory.values)
+        let inventoryArray = lock.withLock { Array(inventory.values) }
         var items: Set<String> = []
         for inv in inventoryArray {
             let itemId = await inv.item_stable_id
@@ -229,7 +231,7 @@ final class MockInventoryRepository: InventoryRepository {
     }
 
     func getItemsWithInventory(ofType type: String) async throws -> [String] {
-        let inventoryArray = Array(inventory.values)
+        let inventoryArray = lock.withLock { Array(inventory.values) }
         var items: Set<String> = []
         for inv in inventoryArray {
             let invType = await inv.type
@@ -242,7 +244,7 @@ final class MockInventoryRepository: InventoryRepository {
     }
 
     func getItemsWithLowInventory(threshold: Double) async throws -> [(item_stable_id: String, type: String, quantity: Double)] {
-        let inventoryArray = Array(inventory.values)
+        let inventoryArray = lock.withLock { Array(inventory.values) }
         var results: [(item_stable_id: String, type: String, quantity: Double)] = []
         for inv in inventoryArray {
             let qty = await inv.quantity
@@ -256,7 +258,7 @@ final class MockInventoryRepository: InventoryRepository {
     }
 
     func getItemsWithZeroInventory() async throws -> [String] {
-        let inventoryArray = Array(inventory.values)
+        let inventoryArray = lock.withLock { Array(inventory.values) }
         var items: Set<String> = []
         for inv in inventoryArray {
             let qty = await inv.quantity
@@ -273,7 +275,7 @@ final class MockInventoryRepository: InventoryRepository {
     func getInventorySummary() async throws -> [InventorySummaryModel] {
         var summaries: [String: [InventoryModel]] = [:]
 
-        let inventoryArray = Array(inventory.values)
+        let inventoryArray = lock.withLock { Array(inventory.values) }
         for inv in inventoryArray {
             let itemId = await inv.item_stable_id
             if summaries[itemId] == nil {
@@ -305,7 +307,7 @@ final class MockInventoryRepository: InventoryRepository {
     func estimateInventoryValue(defaultPricePerUnit: Double) async throws -> [String: Double] {
         var values: [String: Double] = [:]
 
-        let inventoryArray = Array(inventory.values)
+        let inventoryArray = lock.withLock { Array(inventory.values) }
         for inv in inventoryArray {
             let itemId = await inv.item_stable_id
             let qty = await inv.quantity
@@ -318,7 +320,7 @@ final class MockInventoryRepository: InventoryRepository {
     // MARK: - Location Operations
 
     func fetchInventory(atLocation location: String) async throws -> [InventoryModel] {
-        let inventoryArray = Array(inventory.values)
+        let inventoryArray = lock.withLock { Array(inventory.values) }
         var filtered: [InventoryModel] = []
         for inv in inventoryArray {
             let invLocation = await inv.location
@@ -330,7 +332,7 @@ final class MockInventoryRepository: InventoryRepository {
     }
 
     func getDistinctLocations() async throws -> [String] {
-        let inventoryArray = Array(inventory.values)
+        let inventoryArray = lock.withLock { Array(inventory.values) }
         var locations: Set<String> = []
         for inv in inventoryArray {
             let location = await inv.location
@@ -362,7 +364,7 @@ final class MockInventoryRepository: InventoryRepository {
     func getAllLocationUtilization() async throws -> [String: Double] {
         var utilization: [String: Double] = [:]
 
-        let inventoryArray = Array(inventory.values)
+        let inventoryArray = lock.withLock { Array(inventory.values) }
         for inv in inventoryArray {
             let location = await inv.location
             let qty = await inv.quantity
@@ -378,16 +380,16 @@ final class MockInventoryRepository: InventoryRepository {
 
     /// Get count of stored inventory records (test helper)
     func getInventoryCount() async -> Int {
-        return inventory.count
+        return lock.withLock { inventory.count }
     }
 
     /// Clear all inventory (test helper)
     func clearAll() async {
-        inventory.removeAll()
+        lock.withLock { inventory.removeAll() }
     }
 
     /// Clear all data (test helper, alias for clearAll for consistency with other mocks)
     func clearAllData() {
-        inventory.removeAll()
+        lock.withLock { inventory.removeAll() }
     }
 }

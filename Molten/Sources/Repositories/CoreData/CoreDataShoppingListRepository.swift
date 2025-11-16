@@ -17,7 +17,7 @@ class CoreDataShoppingListRepository: @unchecked Sendable, ShoppingListRepositor
 
     private let context: NSManagedObjectContext
     private let backgroundContext: NSManagedObjectContext
-    private let log = Logger(subsystem: "com.flameworker.app", category: "shopping-list-repository")
+    private let log = Logger(subsystem: "com.motleywoods.molten", category: "shopping-list-repository")
 
     // MARK: - Initialization
 

@@ -233,6 +233,7 @@ struct InventoryView: View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
                 // Search and filter controls using shared component
+                // TODO: Migrate to native .searchable() with FilterChipsRow component (see CatalogView)
                 StandardSearchAndFilterHeader(
                     searchText: $viewModel.searchText,
                     searchTitlesOnly: $viewModel.searchTitlesOnly,
@@ -369,6 +370,40 @@ struct InventoryView: View {
                     await loadData()
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
+                Task {
+                    let ratingService = AppDependencies.shared.ratingService
+                    let itemId = notification.object as? String
+
+                    // IMPORTANT: Server needs time to rebuild bulk cache after invalidation.
+                    // Retry fetching until we find the new rating or timeout after 3 seconds.
+                    var attempts = 0
+                    let maxAttempts = 6  // 6 attempts × 500ms = 3 seconds max
+
+                    while attempts < maxAttempts {
+                        let freshRatings = try? await ratingService.fetchAllRatingsBulk(forceRefresh: true)
+
+                        // If we're looking for a specific item, check if it's in the results
+                        if let itemId = itemId {
+                            let itemRating = freshRatings?.first(where: { $0.itemStableId == itemId })
+                            if itemRating != nil {
+                                break  // Success! Found the new rating
+                            } else {
+                                attempts += 1
+                                if attempts < maxAttempts {
+                                    try? await Task.sleep(nanoseconds: 500_000_000)  // Wait 500ms before retry
+                                }
+                            }
+                        } else {
+                            break  // No specific item to check for, just use what we got
+                        }
+                    }
+
+                    // Invalidate cache to force fresh data load when ratings change
+                    await CatalogDataCache.shared.reload(catalogService: catalogService)
+                    await loadData()
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .resetInventoryNavigation)) { _ in
                 // Reset navigation when user taps Inventory tab while already on Inventory
                 navigationPath = NavigationPath()
@@ -421,6 +456,7 @@ struct InventoryView: View {
                 NavigationLink(value: item) {
                     GlassItemRowView.inventory(item: item)
                 }
+                .id("\(item.id)-\(item.rating?.totalRatings ?? 0)-\(item.rating?.averageRating ?? 0)")  // Force re-render when rating changes
                 .accessibilityIdentifier("inventory.item.\(item.glassItem.stable_id)")
             }
         }
@@ -446,6 +482,14 @@ struct InventoryView: View {
 
         ToolbarItem(placement: .confirmationAction) {
             Menu {
+                Button {
+                    showingAddItem = true
+                } label: {
+                    Label("Add Inventory", systemImage: "plus")
+                }
+
+                Divider()
+
                 Button {
                     showingSharing = true
                 } label: {

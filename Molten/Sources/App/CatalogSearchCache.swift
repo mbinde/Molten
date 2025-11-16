@@ -69,7 +69,6 @@ class CatalogSearchCache: ObservableObject {
 
         do {
             let loadedItems = try await catalogService.getGlassItemsLightweight()
-
             items = loadedItems
             isLoaded = true
         } catch {

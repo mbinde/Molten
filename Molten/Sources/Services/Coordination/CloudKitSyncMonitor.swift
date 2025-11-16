@@ -76,11 +76,13 @@ class CloudKitSyncMonitor: ObservableObject {
 
     private let container: NSPersistentCloudKitContainer
     nonisolated(unsafe) private var cancellables = Set<AnyCancellable>()
+    private let logger: LoggingService
 
     // MARK: - Initialization
 
-    init(container: NSPersistentCloudKitContainer) {
+    init(container: NSPersistentCloudKitContainer, logger: LoggingService = AppDependencies.shared.loggingService) {
         self.container = container
+        self.logger = logger
         setupNotificationObservers()
     }
 
@@ -138,21 +140,19 @@ class CloudKitSyncMonitor: ObservableObject {
     }
 
     private func handleSyncStarted(isImport: Bool) {
-        currentStatus = .syncing
+        // Don't show UI for sync starts - CloudKit syncs automatically in background
+        // Just track that we're online
         isOnline = true
     }
 
     private func handleSyncSuccess(isImport: Bool) {
-        currentStatus = .succeeded
-        lastSyncEvent = CloudKitSyncEvent(status: .succeeded, isImport: isImport)
+        // Don't show UI for successful syncs - they happen automatically
+        // Just track that we're online and succeeded
         isOnline = true
 
-        // Auto-reset to idle after 2 seconds
-        Task {
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            if currentStatus == .succeeded {
-                currentStatus = .idle
-            }
+        // Keep status as idle (no UI update for successful background syncs)
+        if currentStatus != .idle {
+            currentStatus = .idle
         }
     }
 
@@ -160,31 +160,69 @@ class CloudKitSyncMonitor: ObservableObject {
         // Check for CloudKit-specific errors
         let nsError = error as NSError
         if nsError.domain == CKError.errorDomain {
-            // Check for quota exceeded
+            // SHOW UI: Quota exceeded - user needs to free up iCloud storage
             if nsError.code == CKError.Code.quotaExceeded.rawValue {
                 currentStatus = .quotaExceeded
                 lastSyncEvent = CloudKitSyncEvent(status: .quotaExceeded, isImport: isImport)
+
+                logger.error("CloudKit quota exceeded", context: [
+                    "operation": "cloudkit-sync",
+                    "sync_type": isImport ? "import" : "export",
+                    "error_code": CKError.Code.quotaExceeded.rawValue
+                ], error: error)
                 return
             }
 
-            // Check for network errors
+            // DON'T SHOW UI: Temporary network errors - CloudKit will retry automatically
             if nsError.code == CKError.Code.networkUnavailable.rawValue ||
                nsError.code == CKError.Code.networkFailure.rawValue {
-                currentStatus = .offline
-                lastSyncEvent = CloudKitSyncEvent(status: .offline, isImport: isImport)
+                // Just track offline status internally, don't update UI
                 isOnline = false
+
+                logger.warning("CloudKit sync offline", context: [
+                    "operation": "cloudkit-sync",
+                    "sync_type": isImport ? "import" : "export",
+                    "error_code": nsError.code
+                ])
+                return
+            }
+
+            // DON'T SHOW UI: Zone not found - CloudKit will create it automatically
+            if nsError.code == CKError.Code.zoneNotFound.rawValue {
+                // CloudKit creates zones automatically on first sync
+                return
+            }
+
+            // DON'T SHOW UI: Transient errors that CloudKit retries automatically
+            let transientErrors: [CKError.Code] = [
+                .serverResponseLost,
+                .requestRateLimited,
+                .serviceUnavailable,
+                .zoneBusy,
+                .resultsTruncated
+            ]
+            if transientErrors.contains(where: { $0.rawValue == nsError.code }) {
                 return
             }
         }
 
-        // Generic error
+        // SHOW UI: Persistent or actionable errors only
+        // Examples: not signed into iCloud, permissions issues, data conflicts
         currentStatus = .failed(error)
         lastSyncEvent = CloudKitSyncEvent(status: .failed(error), isImport: isImport)
+
+        logger.error("CloudKit sync failed", context: [
+            "operation": "cloudkit-sync",
+            "sync_type": isImport ? "import" : "export",
+            "error_domain": (error as NSError).domain,
+            "error_code": (error as NSError).code,
+            "error_type": String(describing: type(of: error))
+        ], error: error)
     }
 
     private func updateOnlineStatus() {
-        // Simple heuristic: if we're syncing or succeeded recently, we're online
-        isOnline = currentStatus == .syncing || currentStatus == .succeeded || currentStatus == .idle
+        // Simple heuristic: if we're idle (no errors), we're online
+        isOnline = currentStatus == .idle
     }
 
     // MARK: - Public Methods

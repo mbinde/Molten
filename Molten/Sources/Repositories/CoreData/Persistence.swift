@@ -7,6 +7,7 @@
 
 @preconcurrency import CoreData
 import OSLog
+import CloudKit
 
 class PersistenceController {
     // IMPORTANT: Lazy initialization to prevent blocking the main thread at app startup
@@ -15,7 +16,7 @@ class PersistenceController {
         let controller = PersistenceController(inMemory: false)
         return controller
     }()
-    private let log = Logger(subsystem: "com.flameworker.app", category: "persistence")
+    private let log = Logger(subsystem: "com.motleywoods.molten", category: "persistence")
 
     // MARK: - Synchronized State
 
@@ -41,15 +42,15 @@ class PersistenceController {
         }
 
         // Load the model (only happens once)
-        Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Loading Core Data model...")
+        Logger(subsystem: "com.motleywoods.molten", category: "persistence").info("🔄 Loading Core Data model...")
 
         let loadedModel: NSManagedObjectModel
         if let modelURL = Bundle.main.url(forResource: "Molten", withExtension: "momd"),
            let model = NSManagedObjectModel(contentsOf: modelURL) {
-            Logger(subsystem: "com.flameworker.app", category: "persistence").info("✅ Model loaded with \(model.entities.count) entities")
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").info("✅ Model loaded with \(model.entities.count) entities")
             loadedModel = model
         } else {
-            Logger(subsystem: "com.flameworker.app", category: "persistence").error("Could not load Core Data model from bundle, using fallback")
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Could not load Core Data model from bundle, using fallback")
             loadedModel = NSManagedObjectModel.mergedModel(from: [Bundle.main])!
         }
 
@@ -60,7 +61,7 @@ class PersistenceController {
 
     @MainActor
     static let preview: PersistenceController = {
-        Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Creating preview PersistenceController...")
+        Logger(subsystem: "com.motleywoods.molten", category: "persistence").info("🔄 Creating preview PersistenceController...")
         // Preview uses CloudKit container for UI compatibility (CloudKitSyncStatusView needs it)
         let result = PersistenceController(inMemory: true, forceCloudKit: true)
         let viewContext = result.container.viewContext
@@ -68,9 +69,9 @@ class PersistenceController {
 
         // Verify that the preview controller is ready before returning
         if result.storeLoadingError != nil {
-            Logger(subsystem: "com.flameworker.app", category: "persistence").error("❌ Preview controller has store loading error: \(String(describing: result.storeLoadingError))")
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("❌ Preview controller has store loading error: \(String(describing: result.storeLoadingError))")
         } else {
-            Logger(subsystem: "com.flameworker.app", category: "persistence").info("✅ Preview controller created successfully")
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").info("✅ Preview controller created successfully")
         }
 
         // For testing, we'll create preview data lazily on first access rather than during initialization
@@ -83,9 +84,13 @@ class PersistenceController {
     /// Each test should create its own instance to avoid sharing state between tests
     /// - Returns: A new PersistenceController with an isolated in-memory store AND isolated model
     nonisolated static func createTestController() -> PersistenceController {
-        Logger(subsystem: "com.flameworker.app", category: "persistence").debug("🧪 Creating test PersistenceController (in-memory, isolated)")
+        Logger(subsystem: "com.motleywoods.molten", category: "persistence").debug("🧪 Creating test PersistenceController (in-memory, isolated)")
+        // Use inMemory=true, forceCloudKit=false for fast test isolation
+        // Each call creates a NEW in-memory store (not shared)
+        // In-memory stores are immediately ready, no async initialization needed
         let controller = PersistenceController(inMemory: true, forceCloudKit: false)
-        Logger(subsystem: "com.flameworker.app", category: "persistence").debug("✅ Test controller ready")
+
+        Logger(subsystem: "com.motleywoods.molten", category: "persistence").debug("✅ Test controller ready")
         return controller
     }
     
@@ -96,7 +101,7 @@ class PersistenceController {
         
         // Check if preview data already exists with explicit entity resolution
         guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: viewContext) else {
-            Logger(subsystem: "com.flameworker.app", category: "persistence").error("Could not find CatalogItem entity in managed object model")
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Could not find CatalogItem entity in managed object model")
             return
         }
         
@@ -111,20 +116,20 @@ class PersistenceController {
                 return // Preview data already exists
             }
         } catch {
-            Logger(subsystem: "com.flameworker.app", category: "persistence").error("Error checking for existing preview data: \(error)")
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Error checking for existing preview data: \(error)")
             return
         }
         
         // Only create preview data if stores are loaded
         guard !preview.container.persistentStoreCoordinator.persistentStores.isEmpty else {
-            Logger(subsystem: "com.flameworker.app", category: "persistence").error("Cannot create preview data - no persistent stores loaded")
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Cannot create preview data - no persistent stores loaded")
             return
         }
         
         // Create preview data synchronously on main actor using safe entity creation
         for i in 0..<10 {
             guard let newItem = createCatalogItem(in: viewContext) else {
-                Logger(subsystem: "com.flameworker.app", category: "persistence").error("Failed to create preview CatalogItem at index \(i)")
+                Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Failed to create preview CatalogItem at index \(i)")
                 continue
             }
             
@@ -138,7 +143,7 @@ class PersistenceController {
         } catch {
             // Log the error but don't crash the app in production
             let nsError = error as NSError
-            Logger(subsystem: "com.flameworker.app", category: "persistence").error("Preview data creation error: \(String(describing: nsError)) userInfo=\(String(describing: nsError.userInfo))")
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Preview data creation error: \(String(describing: nsError)) userInfo=\(String(describing: nsError.userInfo))")
         }
     }
 
@@ -165,15 +170,17 @@ class PersistenceController {
 
     nonisolated init(inMemory: Bool = false, forceCloudKit: Bool = false) {
         // Use the shared model instance to prevent multiple models
-        Logger(subsystem: "com.flameworker.app", category: "persistence").info("🔄 Creating PersistenceController with shared model...")
+        Logger(subsystem: "com.motleywoods.molten", category: "persistence").info("🔄 Creating PersistenceController with shared model...")
 
         // For tests, use NSPersistentContainer (no CloudKit) to avoid initialization warnings
         // For production, use NSPersistentCloudKitContainer for CloudKit sync
         // forceCloudKit: Use CloudKit even for inMemory (for UI previews that need CloudKit features)
         if inMemory && !forceCloudKit {
             container = NSPersistentContainer(name: "Molten", managedObjectModel: Self.sharedModel)
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").info("📦 Using NSPersistentContainer (no CloudKit)")
         } else {
             container = NSPersistentCloudKitContainer(name: "Molten", managedObjectModel: Self.sharedModel)
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").info("☁️ Using NSPersistentCloudKitContainer (CloudKit enabled)")
         }
 
         if inMemory {
@@ -205,7 +212,7 @@ class PersistenceController {
             // Cloud store: User data (Inventory, Purchases, Projects) - WITH CloudKit
 
             guard let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.melissabinde.molten") else {
-                Logger(subsystem: "com.flameworker.app", category: "persistence").error("❌ Failed to get App Group container URL")
+                Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("❌ Failed to get App Group container URL")
                 return
             }
 
@@ -218,7 +225,7 @@ class PersistenceController {
             localDescription.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
             localDescription.timeout = 30
             // NO cloudKitContainerOptions = local only
-            Logger(subsystem: "com.flameworker.app", category: "persistence").info("📁 Local store: \(localDescription.url?.path ?? "unknown")")
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").info("📁 Local store: \(localDescription.url?.path ?? "unknown")")
 
             // STORE 2: Cloud (user data, with CloudKit)
             let cloudDescription = NSPersistentStoreDescription()
@@ -231,10 +238,13 @@ class PersistenceController {
             cloudDescription.timeout = 30
 
             // Enable CloudKit sync for cloud store
-            cloudDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
-                containerIdentifier: "iCloud.com.melissabinde.molten"
+            let cloudKitOptions = NSPersistentCloudKitContainerOptions(
+                containerIdentifier: "iCloud.com.motleywoods.molten"
             )
-            Logger(subsystem: "com.flameworker.app", category: "persistence").info("☁️ Cloud store: \(cloudDescription.url?.path ?? "unknown")")
+            // Enable verbose logging to diagnose sync issues
+            cloudKitOptions.databaseScope = .private
+            cloudDescription.cloudKitContainerOptions = cloudKitOptions
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").info("☁️ Cloud store: \(cloudDescription.url?.path ?? "unknown")")
 
             // Add device-specific workaround for iPhone 17 entity resolution issues
             if ProcessInfo.processInfo.isiOSAppOnMac == false {
@@ -247,7 +257,7 @@ class PersistenceController {
 
             // For production stores, DO NOT load synchronously!
             // Store loading will happen asynchronously when initialize() is called
-            Logger(subsystem: "com.flameworker.app", category: "persistence").info("⏸️ PersistenceController created - two stores will load asynchronously")
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").info("⏸️ PersistenceController created - two stores will load asynchronously")
         }
 
         // Contexts will be created in initialize() after stores load
@@ -306,38 +316,52 @@ class PersistenceController {
         // We need proper persistent history token management instead.
 
         // Track persistent store remote changes (CloudKit imports)
-        // var remoteChangeCount = 0
-        // NotificationCenter.default.addObserver(
-        //     forName: .NSPersistentStoreRemoteChange,
-        //     object: nil,
-        //     queue: nil
-        // ) { [weak container] notification in
-        //     remoteChangeCount += 1
-        //     print("📡📡📡 PERSISTENT STORE REMOTE CHANGE #\(remoteChangeCount) detected!")
-        //
-        //     // Try to fetch persistent history to see what changed
-        //     if let container = container {
-        //         let context = container.newBackgroundContext()
-        //         context.perform {
-        //             // Fetch count of GlassItems to see if it's growing
-        //             let request = NSFetchRequest<NSFetchRequestResult>(entityName: "GlassItem")
-        //             request.resultType = .countResultType
-        //             do {
-        //                 let count = try context.count(for: request)
-        //                 print("📡     GlassItem count in store: \(count)")
-        //             } catch {
-        //                 print("📡     Error counting GlassItems: \(error)")
-        //             }
-        //         }
-        //     }
-        // }
+        // DISABLED: This observer was causing a feedback loop
+
+        // Track CloudKit sync events and errors
+        NotificationCenter.default.addObserver(
+            forName: NSPersistentCloudKitContainer.eventChangedNotification,
+            object: nil,
+            queue: nil
+        ) { [weak self] notification in
+            guard let self = self else { return }
+
+            if let cloudKitEvent = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey] as? NSPersistentCloudKitContainer.Event {
+
+                self.log.info("☁️ [CloudKit Event] Type: \(String(describing: cloudKitEvent.type.rawValue))")
+
+                if let error = cloudKitEvent.error {
+                    self.log.error("❌ [CloudKit Event] Error: \(error.localizedDescription)")
+
+                    // Check if it's a CKError
+                    if let ckError = error as? CKError {
+                        self.log.error("   CKError code: \(ckError.code.rawValue)")
+
+                        if ckError.code == .zoneNotFound {
+                            self.log.error("   ⚠️ ZONE_NOT_FOUND - CloudKit zone needs to be created")
+                        }
+                    }
+
+                    // Log NSError details
+                    let nsError = error as NSError
+                    self.log.error("   Error domain: \(nsError.domain)")
+                    self.log.error("   Error code: \(nsError.code)")
+                } else {
+                    self.log.info("   ✅ Event succeeded")
+                }
+
+                self.log.info("   Start: \(cloudKitEvent.startDate)")
+                if let endDate = cloudKitEvent.endDate {
+                    self.log.info("   End: \(endDate)")
+                }
+            }
+        }
     }
 
     /// Purge GlassItem persistent history transactions to prevent replay
     /// Call this after bulk GlassItem loading (like JSON import) completes
     /// This only deletes persistent HISTORY, not the actual entities
     func purgeGlassItemHistory() async {
-        print("🐛🧹 purgeGlassItemHistory() called")
         let context = container.newBackgroundContext()
         await context.perform {
             do {
@@ -369,7 +393,7 @@ class PersistenceController {
                     }
                 }
             } catch {
-                print("🐛⚠️ Failed to purge GlassItem history: \(error)")
+                // Silent failure - history purging is not critical
             }
         }
     }
@@ -384,10 +408,8 @@ class PersistenceController {
     /// Core Data's loadPersistentStores runs its completion on a background queue anyway.
     /// MUST be nonisolated to avoid actor hop that would deadlock with semaphore wait.
     nonisolated func initialize() async {
-        print("🔄 PersistenceController.initialize() ENTERED")
         // Only initialize once - thread-safe check
         let alreadyInitialized = stateLock.withLock { $0.isInitialized }
-        print("🔄 PersistenceController.initialize() checked isInitialized: \(alreadyInitialized)")
         guard !alreadyInitialized else {
             log.info("✅ PersistenceController already initialized")
             return
@@ -407,6 +429,29 @@ class PersistenceController {
                     self.log.error("❌ Core Data load error for \(storeDescription.url?.lastPathComponent ?? "unknown"): \(error)")
                 } else {
                     self.log.info("✅ Store loaded successfully: \(storeDescription.url?.lastPathComponent ?? "unknown")")
+
+                    // Debug: Check CloudKit configuration
+                    if let cloudKitOptions = storeDescription.cloudKitContainerOptions {
+                        self.log.info("☁️ CloudKit enabled for this store:")
+                        self.log.info("   - Container: \(cloudKitOptions.containerIdentifier)")
+                        self.log.info("   - Database scope: \(cloudKitOptions.databaseScope.rawValue)")
+
+                        // Check if this is a CloudKit container
+                        if let ckContainer = self.container as? NSPersistentCloudKitContainer {
+                            self.log.info("   ✅ Container type: NSPersistentCloudKitContainer")
+
+                            // Try to get the actual loaded store
+                            if let loadedStore = self.container.persistentStoreCoordinator.persistentStores.first(where: { $0.url == storeDescription.url }) {
+                                self.log.info("   ✅ Store is loaded in coordinator")
+                                self.log.info("   - Store type: \(loadedStore.type)")
+                                self.log.info("   - Store URL: \(loadedStore.url?.path ?? "nil")")
+                            } else {
+                                self.log.error("   ❌ Store not found in coordinator!")
+                            }
+                        }
+                    } else {
+                        self.log.info("📁 No CloudKit for this store (local only)")
+                    }
                 }
 
                 // Track how many stores have completed (success or failure)
@@ -590,30 +635,14 @@ class PersistenceController {
     static func performStartupRecoveryIfNeeded() async {
         // Check if the shared instance has loading errors
         if shared.hasStoreLoadingError {
-            print("⚠️ Core Data store loading failed, attempting automatic recovery...")
-            
             // Import the recovery utility if it exists
             #if canImport(CoreDataRecoveryUtility)
-            let success = await CoreDataRecoveryUtility.resetPersistentStore(shared)
-            if success {
-                print("✅ Core Data store recovery completed successfully")
-            } else {
-                print("❌ Core Data store recovery failed")
-            }
+            let _ = await CoreDataRecoveryUtility.resetPersistentStore(shared)
             #else
             // Fallback recovery without the utility
-            print("🔧 Attempting manual store recovery...")
             shared.deletePersistentStore()
             await shared.reloadPersistentStore()
-            
-            if shared.isReady {
-                print("✅ Manual Core Data store recovery completed successfully")
-            } else {
-                print("❌ Manual Core Data store recovery failed")
-            }
             #endif
-        } else {
-            print("✅ Core Data store loaded successfully, no recovery needed")
         }
     }
     
@@ -726,7 +755,7 @@ class PersistenceController {
     /// Use this to avoid "executeFetchRequest:error: A fetch request must have an entity" errors
     static func createCatalogItemFetchRequest(in context: NSManagedObjectContext) -> NSFetchRequest<CatalogItem>? {
         guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
-            Logger(subsystem: "com.flameworker.app", category: "persistence").error("Could not find CatalogItem entity in managed object model")
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Could not find CatalogItem entity in managed object model")
             return nil
         }
         
@@ -739,7 +768,7 @@ class PersistenceController {
     /// Safely creates a CatalogItem with explicit entity resolution
     nonisolated static func createCatalogItem(in context: NSManagedObjectContext) -> CatalogItem? {
         guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
-            Logger(subsystem: "com.flameworker.app", category: "persistence").error("Could not create CatalogItem - entity not found in managed object model")
+            Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Could not create CatalogItem - entity not found in managed object model")
             return nil
         }
         
@@ -802,14 +831,7 @@ extension PersistenceController {
     
     /// Manual recovery approach - deletes and recreates the store
     private static func performManualRecovery() async {
-        print("🔧 Performing manual Core Data recovery...")
         shared.deletePersistentStore()
         await shared.reloadPersistentStore()
-        
-        if shared.isReady {
-            print("✅ Manual Core Data recovery completed successfully")
-        } else {
-            print("❌ Manual Core Data recovery failed - check console for details")
-        }
     }
 }

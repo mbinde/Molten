@@ -47,8 +47,7 @@ struct RecipesView: View {
 
                 // Content
                 if isLoading {
-                    ProgressView("Loading recipes...")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    LoadingStateView(message: "Loading recipes...")
                 } else if let error = errorMessage {
                     errorView(error)
                 } else if filteredRecipes.isEmpty {

@@ -14,50 +14,51 @@ struct LocationRow: View {
     let userLocation: CLLocationCoordinate2D?
 
     var body: some View {
-        HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {
-            // Type icon(s) based on capabilities
-            iconView
-                .font(.title2)
-                .frame(width: 32)
-
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                // Name with verification badge
+        ListRowContainer(
+            leading: {
+                iconView
+                    .font(.title2)
+                    .frame(width: 32)
+            },
+            header: {
                 Text(location.displayName)
                     .font(DesignSystem.Typography.rowTitle)
                     .foregroundStyle(DesignSystem.Colors.textPrimary)
+            },
+            details: {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                    // Address (compact)
+                    if let address = location.compactAddress {
+                        Text(address)
+                            .font(DesignSystem.Typography.caption)
+                            .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    }
 
-                // Address (compact)
-                if let address = location.compactAddress {
-                    Text(address)
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    // Distance (if user location available)
+                    if let userLoc = userLocation,
+                       let distance = location.formattedDistance(from: userLoc) {
+                        Text(distance)
+                            .font(DesignSystem.Typography.caption)
+                            .foregroundStyle(DesignSystem.Colors.textSecondary)
+                    }
+
+                    // Techniques
+                    if !location.techniques.isEmpty {
+                        Text(location.techniquesDisplay)
+                            .font(DesignSystem.Typography.caption)
+                            .foregroundStyle(DesignSystem.Colors.textSecondary)
+                            .lineLimit(1)
+                    }
                 }
-
-                // Distance (if user location available)
-                if let userLoc = userLocation,
-                   let distance = location.formattedDistance(from: userLoc) {
-                    Text(distance)
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
-                }
-
-                // Techniques
-                if !location.techniques.isEmpty {
-                    Text(location.techniquesDisplay)
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
-                        .lineLimit(1)
-                }
-            }
-
-            Spacer()
-
-            // Chevron
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(DesignSystem.Colors.textTertiary)
-        }
-        .padding(.vertical, DesignSystem.Padding.rowVertical)
+            },
+            trailing: {
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(DesignSystem.Colors.textTertiary)
+            },
+            spacing: DesignSystem.Spacing.xs,
+            verticalPadding: DesignSystem.Padding.rowVertical
+        )
     }
 
     // MARK: - Icon View
@@ -77,7 +78,7 @@ struct LocationRow: View {
 
             // White icon(s)
             iconImage
-                .font(.system(size: 12))
+                .font(.caption)
                 .foregroundStyle(.white)
         }
     }
@@ -94,9 +95,9 @@ struct LocationRow: View {
             // Both icons for mixed locations
             HStack(spacing: 1) {
                 Image(systemName: "storefront.fill")
-                    .font(.system(size: 8))
+                    .font(.caption2)
                 Image(systemName: "graduationcap.fill")
-                    .font(.system(size: 8))
+                    .font(.caption2)
             }
         } else if location.hasEducation {
             Image(systemName: "graduationcap.fill")

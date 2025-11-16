@@ -32,6 +32,7 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
     private let databaseManager: CatalogDatabaseManager
     private let networkMonitor: NetworkMonitorProtocol
     private let log = Logger(subsystem: "Molten", category: "CatalogUpdate")
+    private let logger: LoggingService
 
     @Published private(set) var isChecking: Bool = false
     @Published private(set) var isDownloading: Bool = false
@@ -43,12 +44,14 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
         apiClient: CatalogAPIClientProtocol,
         storageService: CatalogStorageServiceProtocol,
         databaseManager: CatalogDatabaseManager = .shared,
-        networkMonitor: NetworkMonitorProtocol
+        networkMonitor: NetworkMonitorProtocol,
+        logger: LoggingService = AppDependencies.shared.loggingService
     ) {
         self.apiClient = apiClient
         self.storageService = storageService
         self.databaseManager = databaseManager
         self.networkMonitor = networkMonitor
+        self.logger = logger
     }
 
     // MARK: - Public API
@@ -65,7 +68,6 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
         defer { isChecking = false }
 
         log.info("Checking for catalog updates...")
-        print("🔍 [CatalogUpdate] Checking for updates...")
 
         // Update last check time (even if check fails, we want to track when we attempted)
         CatalogUpdatePreferences.shared.lastUpdateCheck = Date()
@@ -78,12 +80,10 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
             let currentVersion = CatalogUpdatePreferences.shared.currentCatalogVersion
 
             log.info("Current: v\(currentVersion), Latest: v\(latestMetadata.version)")
-            print("📊 [CatalogUpdate] Current: v\(currentVersion), Latest: v\(latestMetadata.version)")
 
             // Check if update available
             guard latestMetadata.version > currentVersion else {
                 log.info("✅ Catalog is up to date")
-                print("✅ [CatalogUpdate] Catalog is up to date (v\(currentVersion))")
                 return nil
             }
 
@@ -109,7 +109,6 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
             )
 
             log.info("📦 Update available: v\(currentVersion) → v\(updateInfo.availableVersion)")
-            print("📦 [CatalogUpdate] Update available: v\(currentVersion) → v\(updateInfo.availableVersion)")
 
             // Post notification
             NotificationCenter.default.post(
@@ -121,7 +120,10 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
 
         } catch {
             log.error("Failed to check for updates: \(error.localizedDescription)")
-            print("❌ [CatalogUpdate] Check failed: \(error.localizedDescription)")
+            logger.error("Catalog update check failed", context: [
+                "operation": "catalog-update-check",
+                "error_type": String(describing: type(of: error))
+            ], error: error)
             throw error
         }
     }
@@ -162,7 +164,6 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
             }
 
             log.info("Starting catalog download: v\(updateInfo.availableVersion)")
-            print("📥 [CatalogUpdate] Starting download of v\(updateInfo.availableVersion)...")
 
             // 2. Download catalog
             let catalogData = try await apiClient.downloadFullCatalog(
@@ -220,7 +221,14 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
 
             log.info("✅ Catalog updated successfully to v\(updateInfo.availableVersion)")
             log.info("   Created: \(result.itemsCreated), Updated: \(result.itemsUpdated)")
-            print("✅ [CatalogUpdate] Success! Updated to v\(updateInfo.availableVersion) (\(result.itemsCreated) items)")
+
+            // Log success to Sentry for pattern tracking
+            logger.info("Catalog download completed successfully", context: [
+                "operation": "catalog-download",
+                "version": updateInfo.availableVersion,
+                "item_count": result.itemsCreated,
+                "file_size_mb": Double(updateInfo.fileSize) / 1024.0 / 1024.0
+            ])
 
             // Post notification
             NotificationCenter.default.post(
@@ -232,7 +240,15 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
 
         } catch {
             log.error("Failed to download/install update: \(error.localizedDescription)")
-            print("❌ [CatalogUpdate] Download/install failed: \(error.localizedDescription)")
+
+            // Log failure to Sentry for alerting
+            logger.error("Catalog download failed", context: [
+                "operation": "catalog-download",
+                "version": updateInfo.availableVersion,
+                "progress": downloadProgress,
+                "error_type": String(describing: type(of: error)),
+                "file_size_mb": Double(updateInfo.fileSize) / 1024.0 / 1024.0
+            ], error: error)
 
             // Post failure notification
             NotificationCenter.default.post(

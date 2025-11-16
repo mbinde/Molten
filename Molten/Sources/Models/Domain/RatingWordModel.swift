@@ -37,6 +37,29 @@ public nonisolated struct RatingWordModel: Identifiable, Equatable, Codable, Sen
         self.rank = rank
     }
 
+    // MARK: - Codable
+
+    enum CodingKeys: String, CodingKey {
+        case word
+        case frequency
+        case rank
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = UUID() // Generate new ID on decode
+        self.word = try container.decode(String.self, forKey: .word)
+        self.frequency = try container.decode(Int.self, forKey: .frequency)
+        self.rank = try container.decode(Int.self, forKey: .rank)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(word, forKey: .word)
+        try container.encode(frequency, forKey: .frequency)
+        try container.encode(rank, forKey: .rank)
+    }
+
     // MARK: - Validation
 
     /// Validate that the word has required data

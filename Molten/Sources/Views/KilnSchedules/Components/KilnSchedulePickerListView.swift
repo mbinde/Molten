@@ -38,30 +38,18 @@ struct KilnSchedulePickerListView: View {
 
                                 HStack(spacing: 12) {
                                     if let technique = schedule.technique {
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "flame.fill")
-                                                .font(.caption2)
-                                            Text(technique.displayName)
-                                                .font(.caption)
-                                        }
-                                        .foregroundColor(.orange)
+                                        IconTextBadge.flame(technique.displayName, color: .orange)
                                     }
 
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "clock.fill")
-                                            .font(.caption2)
-                                        Text(schedule.formattedDuration)
-                                            .font(.caption)
-                                    }
-                                    .foregroundColor(.secondary)
+                                    IconTextBadge.time(schedule.formattedDuration)
 
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "list.number")
-                                            .font(.caption2)
-                                        Text("\(schedule.segments.count) segments")
-                                            .font(.caption)
-                                    }
-                                    .foregroundColor(.secondary)
+                                    IconTextBadge(
+                                        systemImage: "list.number",
+                                        text: "\(schedule.segments.count) segments",
+                                        foregroundColor: .secondary,
+                                        font: .caption,
+                                        iconFont: .caption2
+                                    )
                                 }
                             }
 

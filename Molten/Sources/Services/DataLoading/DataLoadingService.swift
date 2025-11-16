@@ -25,7 +25,7 @@ import CoreData
 class DataLoadingService {
     static let shared = DataLoadingService()
 
-    private let logger = Logger(subsystem: "com.flameworker.dataLoading", category: "DataLoadingService")
+    private let logger = Logger(subsystem: "com.motleywoods.molten.dataLoading", category: "DataLoadingService")
     private let catalogService: CatalogService
 
     private init() {

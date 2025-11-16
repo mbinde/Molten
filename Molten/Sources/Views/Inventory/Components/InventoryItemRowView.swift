@@ -26,13 +26,11 @@ struct InventoryItemRowView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            itemHeader
-            itemDetails
-            itemNotes
-        }
-        .padding(.vertical, 4)
-        .contentShape(Rectangle()) // Makes the entire row tappable
+        ListRowContainer(
+            header: { itemHeader },
+            details: { itemDetails },
+            footer: { itemNotes }
+        )
     }
     
     // MARK: - View Components
@@ -70,15 +68,12 @@ struct InventoryItemRowView: View {
     private var itemDetails: some View {
         HStack {
             if completeItem.totalQuantity > 0 {
-                HStack(spacing: 4) {
-                    Image(systemName: inventoryTypeIcon)
-                        .foregroundColor(inventoryTypeColor)
-                        .font(.caption)
-                    
-                    Text(formattedQuantity)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                }
+                IconTextBadge.inventory(
+                    icon: inventoryTypeIcon,
+                    text: formattedQuantity,
+                    color: inventoryTypeColor
+                )
+                .fontWeight(.medium)
             }
             
             // Show manufacturer and COE

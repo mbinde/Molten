@@ -7,8 +7,8 @@
 //
 
 import Foundation
-#if canImport(UIKit)
-import UIKit
+#if canImport(AppKit)
+import AppKit
 #endif
 
 // MARK: - Manifest Types
@@ -87,7 +87,6 @@ final class ImageDownloadService: Sendable {
         }
 
         let manifest = try JSONDecoder().decode(ImageManifest.self, from: data)
-        print("📋 [ImageDownloadService] Fetched manifest: \(manifest.totalCount) images available")
         return manifest
     }
 
@@ -98,8 +97,8 @@ final class ImageDownloadService: Sendable {
     ///   - exactFilename: If provided, try this exact filename first (from catalog's image_path field)
     ///   - exactThumbnailFilename: If provided, use this as the thumbnail filename (from catalog's image_thumb_path field)
     ///   - useThumbnail: If true, try thumbnail version first (default: true)
-    /// - Returns: UIImage if found/downloaded, nil otherwise
-    nonisolated static func loadImage(itemCode: String, manufacturer: String?, exactFilename: String? = nil, exactThumbnailFilename: String? = nil, useThumbnail: Bool = true) async -> UIImage? {
+    /// - Returns: NSImage if found/downloaded, nil otherwise
+    nonisolated static func loadImage(itemCode: String, manufacturer: String?, exactFilename: String? = nil, exactThumbnailFilename: String? = nil, useThumbnail: Bool = true) async -> NSImage? {
         guard let manufacturer = manufacturer, !manufacturer.isEmpty else {
             return nil
         }
@@ -175,7 +174,7 @@ final class ImageDownloadService: Sendable {
                 try? FileManager.default.removeItem(at: file)
             }
         } catch {
-            print("❌ [ImageDownloadService] Failed to clear cache: \(error)")
+            // Silent failure - not critical
         }
     }
 
@@ -195,7 +194,7 @@ final class ImageDownloadService: Sendable {
                 }
             }
         } catch {
-            print("❌ [ImageDownloadService] Failed to calculate cache size: \(error)")
+            // Silent failure - return 0
         }
 
         return totalSize
@@ -204,7 +203,7 @@ final class ImageDownloadService: Sendable {
     // MARK: - Private Helpers
 
     /// Loads image from local cache
-    private nonisolated static func loadFromCache(filename: String) async -> UIImage? {
+    private nonisolated static func loadFromCache(filename: String) async -> NSImage? {
         guard let cacheDir = cacheDirectory else {
             return nil
         }
@@ -213,7 +212,7 @@ final class ImageDownloadService: Sendable {
 
         guard FileManager.default.fileExists(atPath: fileURL.path),
               let data = try? Data(contentsOf: fileURL),
-              let image = UIImage(data: data) else {
+              let image = NSImage(data: data) else {
             return nil
         }
 
@@ -221,15 +220,12 @@ final class ImageDownloadService: Sendable {
     }
 
     /// Downloads image from CDN and returns both the image and its ETag for checksum validation
-    /// - Returns: Tuple of (UIImage, ETag) if successful, nil otherwise
-    private nonisolated static func downloadImage(filename: String) async -> (image: UIImage, etag: String)? {
+    /// - Returns: Tuple of (NSImage, ETag) if successful, nil otherwise
+    private nonisolated static func downloadImage(filename: String) async -> (image: NSImage, etag: String)? {
         let urlString = "\(imageBaseURL)/\(filename)"
         guard let url = URL(string: urlString) else {
-            print("❌ [ImageDownloadService] Invalid URL: \(urlString)")
             return nil
         }
-
-//        print("🌐 [ImageDownloadService] Fetching: \(urlString)")
 
         do {
             let (data, response) = try await urlSession.data(from: url)
@@ -243,19 +239,14 @@ final class ImageDownloadService: Sendable {
             // Extract ETag from response headers (for checksum validation)
             let etag = httpResponse.value(forHTTPHeaderField: "ETag") ?? ""
 
-            // Convert data to UIImage
-            guard let image = UIImage(data: data) else {
+            // Convert data to NSImage
+            guard let image = NSImage(data: data) else {
                 return nil
             }
 
             return (image: image, etag: etag)
         } catch {
             // Silently fail for missing images (expected for many items)
-            // Only log unexpected errors
-            if (error as? URLError)?.code != .fileDoesNotExist &&
-               (error as? URLError)?.code != .cancelled {
-                print("⚠️ [ImageDownloadService] Failed to download \(filename): \(error)")
-            }
             return nil
         }
     }
@@ -265,7 +256,7 @@ final class ImageDownloadService: Sendable {
     ///   - image: The image to save
     ///   - filename: The filename to save as
     ///   - etag: Optional ETag from server for checksum validation
-    private nonisolated static func saveToCache(image: UIImage, filename: String, etag: String? = nil) async {
+    private nonisolated static func saveToCache(image: NSImage, filename: String, etag: String? = nil) async {
         guard let cacheDir = cacheDirectory else {
             return
         }
@@ -276,16 +267,17 @@ final class ImageDownloadService: Sendable {
         let ext = (filename as NSString).pathExtension.lowercased()
         let data: Data?
 
+        // Convert NSImage to Data using appropriate format
         switch ext {
         case "png":
-            data = image.pngData()
+            data = image.tiffRepresentation.flatMap { NSBitmapImageRep(data: $0)?.representation(using: .png, properties: [:]) }
         case "jpg", "jpeg":
-            data = image.jpegData(compressionQuality: 0.9)
+            data = image.tiffRepresentation.flatMap { NSBitmapImageRep(data: $0)?.representation(using: .jpeg, properties: [.compressionFactor: 0.9]) }
         case "webp":
-            // For webp, save as JPEG (iOS doesn't have native webp encoding)
-            data = image.jpegData(compressionQuality: 0.9)
+            // For webp, save as JPEG (macOS doesn't have native webp encoding)
+            data = image.tiffRepresentation.flatMap { NSBitmapImageRep(data: $0)?.representation(using: .jpeg, properties: [.compressionFactor: 0.9]) }
         default:
-            data = image.jpegData(compressionQuality: 0.9)
+            data = image.tiffRepresentation.flatMap { NSBitmapImageRep(data: $0)?.representation(using: .jpeg, properties: [.compressionFactor: 0.9]) }
         }
 
         guard let imageData = data else {
@@ -300,7 +292,7 @@ final class ImageDownloadService: Sendable {
                 storeETag(etag, for: filename)
             }
         } catch {
-            print("❌ [ImageDownloadService] Failed to save to cache: \(error)")
+            // Silent failure - cache write is not critical
         }
     }
 
@@ -338,7 +330,7 @@ final class ImageDownloadService: Sendable {
         do {
             try etag.write(to: path, atomically: true, encoding: .utf8)
         } catch {
-            print("⚠️ [ImageDownloadService] Failed to store ETag for \(filename): \(error)")
+            // Silent failure - ETag storage is not critical
         }
     }
 

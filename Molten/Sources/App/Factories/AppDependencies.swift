@@ -98,6 +98,7 @@ class AppDependencies {
 
     // MARK: - Services
 
+    public let loggingService: LoggingService
     let inventoryTrackingService: InventoryTrackingService
     let catalogService: CatalogService
     let shoppingListService: ShoppingListService
@@ -189,6 +190,9 @@ class AppDependencies {
         self.userImageRepository = CoreDataUserImageRepository(context: self.cloudContext)
         #endif
 
+        // Create logging service first (needed by other services)
+        self.loggingService = Self.createLoggingService(isTestMode: self.mode == .mock)
+
         // Create services (using helper to avoid duplication)
         (
             self.inventoryTrackingService,
@@ -223,6 +227,52 @@ class AppDependencies {
     }
 
     // MARK: - Service Setup Helper
+
+    /// Create logging service with appropriate backends
+    /// - Parameter isTestMode: Whether running in test mode (uses MockLogger instead of Sentry)
+    private static func createLoggingService(isTestMode: Bool) -> LoggingService {
+        if isTestMode {
+            // In test mode, use mock logger only
+            let mockLogger = MockLogger()
+            return LoggingService(
+                backends: [mockLogger],
+                minimumLocalLevel: .debug,
+                minimumRemoteLevel: .error
+            )
+        } else {
+            // In production, configure Sentry
+            // Sentry DSN is not a secret - it's safe to commit
+            // See: https://docs.sentry.io/product/sentry-basics/dsn-explainer/
+
+            // Option 1: Hardcode (simplest)
+            let sentryDSN = "https://9656fde5615b69579eb41101834237b6@o4510371843932160.ingest.us.sentry.io/4510371846356992"
+
+            // Option 2: Read from Info.plist (if you prefer)
+            // Add <key>SentryDSN</key><string>your-dsn</string> to Info.plist
+            // let sentryDSN = Bundle.main.infoDictionary?["SentryDSN"] as? String ?? ""
+
+            // Option 3: Environment variable (fallback for CI/CD)
+            // let sentryDSN = ProcessInfo.processInfo.environment["SENTRY_DSN"] ?? "https://your-dsn..."
+
+            var backends: [LoggerBackend] = []
+
+            // Only add Sentry if DSN is configured
+            if !sentryDSN.isEmpty && !sentryDSN.contains("your-dsn") {
+                let sentryLogger = SentryLogger(
+                    dsn: sentryDSN,
+                    environment: SentryEnvironment.current,
+                    maxBreadcrumbs: 100
+                )
+                backends.append(sentryLogger)
+            }
+
+            return LoggingService(
+                backends: backends,
+                minimumLocalLevel: .debug,     // Log everything locally
+                minimumRemoteLevel: .error     // Only send errors/critical to Sentry
+            )
+        }
+    }
 
     /// Create all services with the provided repositories
     /// This eliminates duplication between production and test inits
@@ -263,7 +313,10 @@ class AppDependencies {
             itemTagsRepository: itemTagsRepository
         )
 
-        // Create catalog service (depends on inventory tracking service)
+        // Create rating service (needed by catalog service)
+        let ratingService = RatingService(repository: ratingRepository)
+
+        // Create catalog service (depends on inventory tracking service and rating service)
         let catalogService = CatalogService(
             glassItemRepository: glassItemRepository,
             coatingItemRepository: coatingItemRepository,
@@ -271,7 +324,8 @@ class AppDependencies {
             inventoryTrackingService: inventoryTrackingService,
             itemMinimumRepository: itemMinimumRepository,
             itemTagsRepository: itemTagsRepository,
-            userTagsRepository: userTagsRepository
+            userTagsRepository: userTagsRepository,
+            ratingService: ratingService
         )
 
         // Create shopping list service
@@ -313,9 +367,6 @@ class AppDependencies {
 
         // Create entitlement service
         let entitlementService = EntitlementService()
-
-        // Create rating service
-        let ratingService = RatingService(repository: ratingRepository)
 
         return (
             inventoryTrackingService,

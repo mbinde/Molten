@@ -13,7 +13,7 @@ import Foundation
 /// Helper utilities for safely creating Core Data entities and fetch requests
 /// Use these methods instead of direct NSFetchRequest and entity creation to avoid entity resolution issues
 struct CoreDataEntityHelpers {
-    private static let log = Logger(subsystem: "com.flameworker.app", category: "core-data-helpers")
+    private static let log = Logger(subsystem: "com.motleywoods.molten", category: "core-data-helpers")
     
     // MARK: - Safe Fetch Request Creation
     

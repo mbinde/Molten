@@ -22,10 +22,10 @@ struct AddLogbookEntryView: View {
     private let userImageRepository: UserImageRepository
     private let kilnScheduleService: KilnScheduleService
 
-    // Image state (kept in view since it's UIKit-specific)
-    @State private var loadedImages: [UUID: UIImage] = [:]
+    // Image state (kept in view since it's AppKit-specific)
+    @State private var loadedImages: [UUID: NSImage] = [:]
 
-    #if canImport(UIKit)
+    #if canImport(PhotosUI)
     @State private var showingImagePicker = false
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     #endif
@@ -218,7 +218,7 @@ struct AddLogbookEntryView: View {
 
                             if viewModel.selectedProjectIds.contains(project.id) {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                     }
@@ -374,7 +374,7 @@ struct AddLogbookEntryView: View {
 
     @ViewBuilder
     private var imagesSection: some View {
-        #if canImport(UIKit)
+        #if canImport(PhotosUI)
         Section {
             PrimaryImageSelector(
                 images: viewModel.images,
@@ -434,8 +434,8 @@ struct AddLogbookEntryView: View {
                                 .font(.caption)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(Color.blue.opacity(0.1))
-                                .foregroundColor(.blue)
+                                .background(.accentColor.opacity(0.1))
+                                .foregroundColor(.accentColor)
                                 .cornerRadius(6)
                         }
                     }
@@ -523,11 +523,11 @@ struct AddLogbookEntryView: View {
     // MARK: - Helpers
     // (filteredProjects and loadProjects now handled by ViewModel)
 
-    #if canImport(UIKit)
+    #if canImport(PhotosUI)
     private func loadSelectedImages(_ items: [PhotosPickerItem]) async {
         for item in items {
             guard let data = try? await item.loadTransferable(type: Data.self),
-                  let image = UIImage(data: data) else {
+                  let image = NSImage(data: data) else {
                 continue
             }
 
@@ -595,7 +595,7 @@ struct AddLogbookEntryView: View {
 
         if success {
             // Save images after successful log creation
-            #if canImport(UIKit)
+            #if canImport(PhotosUI)
             // Note: We would need the created log's ID to save images
             // For now, keeping the images save in the view since it requires the logbookRepository
             if let repository = logbookRepository {

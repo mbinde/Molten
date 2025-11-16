@@ -40,10 +40,10 @@ final class MockGlassItemRepository: GlassItemRepository {
         var itemToCreate = item
 
         // Generate stable_id if it's "AUTO_ID"
-        if item.stable_id == "AUTO_ID" {
+        if await item.stable_id == "AUTO_ID" {
             // Generate a 6-character unique ID
             let generatedId = String(UUID().uuidString.prefix(6))
-            itemToCreate = GlassItemModel(
+            itemToCreate = await GlassItemModel(
                 stable_id: generatedId,
                 name: item.name,
                 sku: item.sku,
@@ -58,7 +58,7 @@ final class MockGlassItemRepository: GlassItemRepository {
             )
         }
 
-        let key = itemToCreate.stable_id
+        let key = await itemToCreate.stable_id
         lock.withLock { items[key] = itemToCreate }
         return itemToCreate
     }

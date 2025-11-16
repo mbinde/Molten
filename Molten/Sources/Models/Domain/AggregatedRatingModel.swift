@@ -70,7 +70,7 @@ public nonisolated struct AggregatedRatingModel: Identifiable, Equatable, Codabl
             return .good
         case 2.5..<3.5:
             return .average
-        case 1.5..<2.5:
+        case 1.51..<2.5:  // Changed from 1.5 to 1.51 - rating 1.5 should be "poor"
             return .belowAverage
         default:
             return .poor

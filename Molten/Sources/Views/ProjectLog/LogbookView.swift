@@ -176,12 +176,12 @@ struct LogbookView: View, CachedDataDeletion {
     func performDeletion(for item: LogbookModel) async throws {
         // Delete all images associated with this logbook entry
         let images = try await userImageRepository.getImages(
-            ownerType: .logbook,
+            ownerType: .projectLog,
             ownerId: item.id.uuidString
         )
 
         for image in images {
-            try await userImageRepository.deleteImage(id: image.id)
+            try await userImageRepository.deleteImage(image.id)
         }
 
         // Delete the logbook entry (Core Data will cascade delete related entities)

@@ -40,9 +40,17 @@ struct ImageSubmissionSheet: View {
                             .font(DesignSystem.Typography.title2)
                             .fontWeight(.bold)
 
-                        Text("Help improve the catalog by sharing this image")
+                        Text("Help improve the catalog by sharing this manufacturer image with other users")
                             .font(DesignSystem.Typography.body)
                             .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                        Text("Note: Custom images you upload are private and visible only to you. This submission shares the manufacturer's default image.")
+                            .font(DesignSystem.Typography.caption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                            .padding(.vertical, DesignSystem.Spacing.xs)
+                            .padding(.horizontal, DesignSystem.Spacing.sm)
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(DesignSystem.CornerRadius.small)
                     }
 
                     // Image preview

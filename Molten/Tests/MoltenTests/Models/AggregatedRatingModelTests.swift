@@ -200,7 +200,7 @@ struct AggregatedRatingModelTests {
         // Given
         let model = AggregatedRatingModel(
             itemStableId: "bullseye-001-0",
-            averageRating: 2.5,
+            averageRating: 2.3,
             totalRatings: 100,
             topWords: []
         )

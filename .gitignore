@@ -53,3 +53,5 @@ env/
 Molten/Tools/Scraping Tools/combined_glass_products_temp.csv
 Molten/Tools/Scraping Tools/glassitems-new.json
 Molten/Tools/Scraping Tools/*.log
+Molten/Sources/Resources/glass_catalog.json
+Molten/Sources/Resources/glassitems.json

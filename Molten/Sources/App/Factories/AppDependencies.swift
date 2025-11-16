@@ -92,7 +92,7 @@ class AppDependencies {
     let recipeRepository: RecipeRepository
     let unifiedLocationRepository: UnifiedLocationRepository
     let ratingRepository: RatingRepository
-    #if canImport(UIKit)
+    #if os(iOS)
     let userImageRepository: UserImageRepository
     #endif
 
@@ -186,7 +186,7 @@ class AppDependencies {
         self.recipeRepository = CoreDataRecipeRepository(context: self.cloudContext)
         self.unifiedLocationRepository = CoreDataUnifiedLocationRepository(persistenceController: persistenceController)
         self.ratingRepository = CoreDataRatingRepository(localContext: self.localContext, cloudContext: self.cloudContext)
-        #if canImport(UIKit)
+        #if os(iOS)
         self.userImageRepository = CoreDataUserImageRepository(context: self.cloudContext)
         #endif
 
@@ -222,7 +222,8 @@ class AppDependencies {
             recipeRepository: recipeRepository,
             unifiedLocationRepository: unifiedLocationRepository,
             ratingRepository: ratingRepository,
-            subscriptionService: RevenueCatSubscriptionService()
+            subscriptionService: RevenueCatSubscriptionService(),
+            loggingService: self.loggingService
         )
     }
 
@@ -292,7 +293,8 @@ class AppDependencies {
         recipeRepository: RecipeRepository,
         unifiedLocationRepository: UnifiedLocationRepository,
         ratingRepository: RatingRepository,
-        subscriptionService: SubscriptionServiceProtocol
+        subscriptionService: SubscriptionServiceProtocol,
+        loggingService: LoggingService
     ) -> (
         InventoryTrackingService,
         CatalogService,
@@ -314,7 +316,7 @@ class AppDependencies {
         )
 
         // Create rating service (needed by catalog service)
-        let ratingService = RatingService(repository: ratingRepository)
+        let ratingService = RatingService(repository: ratingRepository, logger: loggingService)
 
         // Create catalog service (depends on inventory tracking service and rating service)
         let catalogService = CatalogService(
@@ -418,7 +420,7 @@ class AppDependencies {
         if let service = _dataExportService {
             return service
         }
-        #if canImport(UIKit)
+        #if os(iOS)
         let service = DataExportService(
             catalogService: catalogService,
             inventoryService: inventoryTrackingService,

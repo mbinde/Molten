@@ -32,7 +32,7 @@ struct BadgeLabel: View {
     init(
         text: String,
         icon: String? = nil,
-        color: Color = .accentColor,
+        color: Color = Color.accentColor,
         style: BadgeStyle = .tinted
     ) {
         self.text = text
@@ -183,7 +183,7 @@ extension View {
             BadgeLabel(text: "Purple", color: .purple, style: .tinted)
             BadgeLabel(text: "Pink", color: .pink, style: .tinted)
             BadgeLabel(text: "Gray", color: .gray, style: .tinted)
-            BadgeLabel(text: "Accent", color: .accentColor, style: .tinted)
+            BadgeLabel(text: "Accent", color: Color.accentColor, style: .tinted)
         }
     }
     .padding()

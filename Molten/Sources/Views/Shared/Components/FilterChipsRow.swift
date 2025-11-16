@@ -196,7 +196,7 @@ struct FilterChipsRow: View {
             .foregroundColor(selectedManufacturers.isEmpty ? .secondary : .white)
             .padding(.horizontal, DesignSystem.Padding.chip)
             .padding(.vertical, DesignSystem.Padding.chipVertical)
-            .background(selectedManufacturers.isEmpty ? Color(.systemGray6) : .accentColor)
+            .background(selectedManufacturers.isEmpty ? Color(.systemGray6) : Color.accentColor)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
     }
@@ -238,7 +238,7 @@ struct FilterChipsRow: View {
             .foregroundColor(selectedCOEs.isEmpty ? .secondary : .white)
             .padding(.horizontal, DesignSystem.Padding.chip)
             .padding(.vertical, DesignSystem.Padding.chipVertical)
-            .background(selectedCOEs.isEmpty ? Color(.systemGray6) : .accentColor)
+            .background(selectedCOEs.isEmpty ? Color(.systemGray6) : Color.accentColor)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
     }
@@ -283,7 +283,7 @@ struct FilterChipsRow: View {
             .foregroundColor(selectedTags.isEmpty ? .secondary : .white)
             .padding(.horizontal, DesignSystem.Padding.chip)
             .padding(.vertical, DesignSystem.Padding.chipVertical)
-            .background(selectedTags.isEmpty ? Color(.systemGray6) : .accentColor)
+            .background(selectedTags.isEmpty ? Color(.systemGray6) : Color.accentColor)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
     }

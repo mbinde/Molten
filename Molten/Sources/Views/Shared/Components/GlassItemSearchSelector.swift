@@ -133,12 +133,12 @@ struct GlassItemSearchSelector: View {
     }
 
     private var selectedItemBackgroundColor: Color {
-        let baseColor = prefilledNaturalKey != nil ? .accentColor : Color.green
+        let baseColor = prefilledNaturalKey != nil ? Color.accentColor : Color.green
         return baseColor.opacity(0.1)
     }
 
     private var selectedItemBorder: some View {
-        let borderColor = prefilledNaturalKey != nil ? .accentColor : Color.green
+        let borderColor = prefilledNaturalKey != nil ? Color.accentColor : Color.green
         return RoundedRectangle(cornerRadius: 8)
             .stroke(borderColor, lineWidth: 1)
     }

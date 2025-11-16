@@ -229,7 +229,7 @@ struct BenefitRow: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundColor(.accentColor)
+                .foregroundColor(Color.accentColor)
                 .frame(width: 32)
 
             Text(text)

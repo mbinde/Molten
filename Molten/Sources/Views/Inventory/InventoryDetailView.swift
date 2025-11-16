@@ -692,7 +692,7 @@ struct InventoryDetailView: View {
                             Text("Edit")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .foregroundColor(.accentColor)
+                                .foregroundColor(Color.accentColor)
                         }
                     }
 
@@ -711,7 +711,7 @@ struct InventoryDetailView: View {
                             Text(isUserNotesExpanded ? "Show Less" : "Show More")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .foregroundColor(.accentColor)
+                                .foregroundColor(Color.accentColor)
                         }
                         .buttonStyle(.plain)
                     }
@@ -781,7 +781,7 @@ struct InventoryDetailView: View {
                             Text("Add More Inventory")
                         }
                         .font(.subheadline)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(Color.accentColor)
                     }
                     .padding(.top, 8)
                 }
@@ -1038,7 +1038,7 @@ struct InventoryDetailView: View {
                 Text(isManufacturerNotesExpanded ? "Show Less" : "Show More")
                     .font(.caption)
                     .fontWeight(.medium)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(Color.accentColor)
             }
             .buttonStyle(.plain)
         }
@@ -1083,7 +1083,7 @@ struct ExpandableSection<Content: View>: View {
             Button(action: onToggle) {
                 HStack {
                     Image(systemName: systemImage)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(Color.accentColor)
                     Text(title)
                         .font(.headline)
                         .fontWeight(.semibold)
@@ -1147,7 +1147,7 @@ struct InventoryDetailTypeRow: View {
                     Text(formatQuantity(quantity))
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(Color.accentColor)
                     Text("units")
                         .font(.caption2)
                         .foregroundColor(.secondary)
@@ -1418,7 +1418,7 @@ struct InventoryStorageDetailView: View {
                                 Text(formatQuantity(totalQuantity))
                                     .font(.title3)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                             }
                         }
 
@@ -1661,7 +1661,7 @@ struct InventoryRecordRow: View {
             Text(formatQuantity(record.quantity))
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundColor(.accentColor)
+                .foregroundColor(Color.accentColor)
         }
 
         if let onTap = onTap {

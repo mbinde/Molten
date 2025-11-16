@@ -114,7 +114,7 @@ struct AddGlassToStepView: View {
                                 Spacer()
                                 if selectedGlassItem?.stable_id == glass.stableId {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.accentColor)
+                                        .foregroundColor(Color.accentColor)
                                 }
                             }
                         }

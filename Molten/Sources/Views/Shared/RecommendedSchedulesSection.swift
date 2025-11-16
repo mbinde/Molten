@@ -95,7 +95,7 @@ struct RecommendedSchedulesSection: View {
                         Text("Add Kiln Schedule")
                     }
                     .font(.subheadline)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(Color.accentColor)
                 }
                 .padding(.top, 8)
             }

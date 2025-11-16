@@ -323,7 +323,7 @@ struct CatalogView: View {
             .foregroundColor(viewModel.selectedManufacturers.isEmpty ? .secondary : .white)
             .padding(.horizontal, DesignSystem.Padding.chip)
             .padding(.vertical, DesignSystem.Padding.chipVertical)
-            .background(viewModel.selectedManufacturers.isEmpty ? Color(.systemGray6) : .accentColor)
+            .background(viewModel.selectedManufacturers.isEmpty ? Color(.systemGray6) : Color.accentColor)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
         .sheet(isPresented: $showingManufacturerFilterSelection) {
@@ -368,7 +368,7 @@ struct CatalogView: View {
             .foregroundColor(viewModel.selectedCOEs.isEmpty ? .secondary : .white)
             .padding(.horizontal, DesignSystem.Padding.chip)
             .padding(.vertical, DesignSystem.Padding.chipVertical)
-            .background(viewModel.selectedCOEs.isEmpty ? Color(.systemGray6) : .accentColor)
+            .background(viewModel.selectedCOEs.isEmpty ? Color(.systemGray6) : Color.accentColor)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
     }
@@ -413,7 +413,7 @@ struct CatalogView: View {
             .foregroundColor(viewModel.selectedTags.isEmpty ? .secondary : .white)
             .padding(.horizontal, DesignSystem.Padding.chip)
             .padding(.vertical, DesignSystem.Padding.chipVertical)
-            .background(viewModel.selectedTags.isEmpty ? Color(.systemGray6) : .accentColor)
+            .background(viewModel.selectedTags.isEmpty ? Color(.systemGray6) : Color.accentColor)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
     }
@@ -496,7 +496,7 @@ struct CatalogView: View {
                             Spacer()
                             if viewModel.selectedManufacturers.contains(mfr) {
                                 Image(systemName: "checkmark")
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                             }
                             if let count = manufacturerCounts[mfr] {
                                 Text("(\(count))")
@@ -640,7 +640,7 @@ struct CatalogView: View {
             .foregroundColor(viewModel.selectedManufacturer != nil ? .white : .primary)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(viewModel.selectedManufacturer != nil ? .accentColor : DesignSystem.Colors.backgroundInput)
+            .background(viewModel.selectedManufacturer != nil ? Color.accentColor : DesignSystem.Colors.backgroundInput)
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
@@ -654,7 +654,7 @@ struct CatalogView: View {
                 .foregroundColor(viewModel.selectedTags.isEmpty ? .primary : .white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(viewModel.selectedTags.isEmpty ? DesignSystem.Colors.backgroundInput : .accentColor)
+                .background(viewModel.selectedTags.isEmpty ? DesignSystem.Colors.backgroundInput : Color.accentColor)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
@@ -859,7 +859,7 @@ struct TagFilterView: View {
                                 Spacer()
                                 if selectedTags.contains(tag) {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.accentColor)
+                                        .foregroundColor(Color.accentColor)
                                 } else {
                                     Image(systemName: "circle")
                                         .foregroundColor(.secondary)
@@ -1126,7 +1126,7 @@ struct CatalogManufacturerFilterView: View {
                             Spacer()
                             if selectedManufacturer == manufacturer {
                                 Image(systemName: "checkmark")
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                             }
                         }
                     }

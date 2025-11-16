@@ -160,7 +160,7 @@ struct CatalogItemSearchField: View {
                         searchText = ""
                     }
                     .font(.caption)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(Color.accentColor)
                 }
                 .padding(12)
                 .background(Color.gray.opacity(0.15))

@@ -56,7 +56,7 @@ struct TabCustomizationView: View {
 
                         // Tab icon
                         Image(systemName: tab.systemImage)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(Color.accentColor)
                             .frame(width: 24)
 
                         // Tab name
@@ -70,10 +70,10 @@ struct TabCustomizationView: View {
                             // In tab bar
                             Text("Tab Bar")
                                 .font(.caption2)
-                                .foregroundColor(.accentColor)
+                                .foregroundColor(Color.accentColor)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(.accentColor.opacity(0.1))
+                                .background(Color.accentColor.opacity(0.1))
                                 .cornerRadius(8)
                         } else {
                             // In More menu
@@ -105,7 +105,7 @@ struct TabCustomizationView: View {
                                 .font(.caption)
                         } icon: {
                             Circle()
-                                .fill(.accentColor.opacity(0.1))
+                                .fill(Color.accentColor.opacity(0.1))
                                 .frame(width: 8, height: 8)
                         }
 
@@ -176,7 +176,7 @@ struct TabBarPreview: View {
         VStack(spacing: 3) {
             Image(systemName: tab.systemImage)
                 .font(.system(size: 18, weight: .medium))
-                .foregroundColor(.accentColor)
+                .foregroundColor(Color.accentColor)
             Text(tab.displayName)
                 .font(.caption2)
                 .foregroundColor(.secondary)

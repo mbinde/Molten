@@ -185,7 +185,7 @@ struct GlassItemImageSelector: View {
                         .overlay(
                             RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
                                 .stroke(
-                                    currentPrimaryImageId == imageModel.id ? .accentColor : Color.clear,
+                                    currentPrimaryImageId == imageModel.id ? Color.accentColor : Color.clear,
                                     lineWidth: currentPrimaryImageId == imageModel.id ? 3 : 0
                                 )
                         )
@@ -193,7 +193,7 @@ struct GlassItemImageSelector: View {
                     if currentPrimaryImageId == imageModel.id {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.title3)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(Color.accentColor)
                             .background(
                                 Circle()
                                     .fill(Color.white)

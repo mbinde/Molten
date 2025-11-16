@@ -35,8 +35,8 @@ struct CatalogBundleDebugView: View {
                                     .font(.caption)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 2)
-                                    .background(.accentColor.opacity(0.2))
-                                    .foregroundColor(.accentColor)
+                                    .background(Color.accentColor.opacity(0.2))
+                                    .foregroundColor(Color.accentColor)
                                     .clipShape(Capsule())
                             }
                         }
@@ -52,7 +52,7 @@ struct CatalogBundleDebugView: View {
                         ForEach(jsonFiles, id: \.self) { file in
                             HStack {
                                 Image(systemName: "doc.text")
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                                 Text(file)
                                 Spacer()
                                 if BundleFileUtilities.identifyTargetFile(from: [file]) != nil {

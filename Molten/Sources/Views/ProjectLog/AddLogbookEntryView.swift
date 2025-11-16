@@ -218,7 +218,7 @@ struct AddLogbookEntryView: View {
 
                             if viewModel.selectedProjectIds.contains(project.id) {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(Color.accentColor)
                             }
                         }
                     }

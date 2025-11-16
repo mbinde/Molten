@@ -572,6 +572,7 @@ struct InventoryView: View, CachedDataDeletion {
     func removeFromCache(_ item: CompleteInventoryItemModel) async {
         await MainActor.run {
             viewModel.completeItems.removeAll { $0.id == item.id }
+            refreshTrigger += 1  // Force SwiftUI to refresh (updates counters, UI)
         }
     }
 

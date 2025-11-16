@@ -52,7 +52,9 @@ final class MockUserImageRepository: UserImageRepository {
     }
 
     func getImages(ownerType: ImageOwnerType, ownerId: String) async throws -> [UserImageModel] {
-        return images.values.filter { $0.ownerType == ownerType && $0.ownerId == ownerId }
+        return images.values
+            .filter { $0.ownerType == ownerType && $0.ownerId == ownerId }
+            .sorted { $0.dateCreated > $1.dateCreated }  // Sort by date created descending (newest first)
     }
 
     func getPrimaryImage(ownerType: ImageOwnerType, ownerId: String) async throws -> UserImageModel? {
@@ -64,7 +66,9 @@ final class MockUserImageRepository: UserImageRepository {
     }
 
     func getStandaloneImages() async throws -> [UserImageModel] {
-        return images.values.filter { $0.ownerType == .standalone }
+        return images.values
+            .filter { $0.ownerType == .standalone }
+            .sorted { $0.dateCreated > $1.dateCreated }  // Sort by date created descending (newest first)
     }
 
     func deleteAllImages(ownerType: ImageOwnerType, ownerId: String) async throws {

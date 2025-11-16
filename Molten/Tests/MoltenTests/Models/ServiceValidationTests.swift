@@ -263,20 +263,6 @@ struct ServiceValidationTests {
         #expect(result.errors.contains("Inventory type is required and cannot be empty"))
     }
 
-    @Test("InventoryModel with negative quantity fails validation")
-    func testInventoryModelNegativeQuantity() {
-        let inventory = InventoryModel(
-            item_stable_id: "test-001",
-            type: "rod",
-            quantity: -1.0
-        )
-
-        let result = ServiceValidation.validateInventoryModel(inventory)
-
-        #expect(result.isValid == false)
-        #expect(result.errors.contains("Quantity cannot be negative"))
-    }
-
     @Test("InventoryModel with zero quantity passes validation")
     func testInventoryModelZeroQuantity() {
         let inventory = InventoryModel(

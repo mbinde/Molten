@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct LogbookView: View {
+struct LogbookView: View, CachedDataDeletion {
     // MIGRATION COMPLETE: All state managed by ViewModel ✓
     @State private var showingAddEntry = false
 
@@ -23,17 +23,19 @@ struct LogbookView: View {
 
     @State private var viewModel: LogbookViewModel
     private let logbookRepository: LogbookRepository  // Keep for child views
+    private let userImageRepository: UserImageRepository
 
     // Accept ViewModel directly (protocol-based pattern)
-    init(viewModel: LogbookViewModel, logbookRepository: LogbookRepository) {
+    init(viewModel: LogbookViewModel, logbookRepository: LogbookRepository, userImageRepository: UserImageRepository) {
         self._viewModel = State(initialValue: viewModel)
         self.logbookRepository = logbookRepository
+        self.userImageRepository = userImageRepository
     }
 
     // Convenience init for production use (DI pattern)
-    init(logbookRepository: LogbookRepository) {
+    init(logbookRepository: LogbookRepository, deps: AppDependencies = AppDependencies()) {
         let viewModel = LogbookViewModel(logbookRepository: logbookRepository)
-        self.init(viewModel: viewModel, logbookRepository: logbookRepository)
+        self.init(viewModel: viewModel, logbookRepository: logbookRepository, userImageRepository: deps.userImageRepository)
     }
 
     var body: some View {
@@ -143,6 +145,13 @@ struct LogbookView: View {
                 LogbookRow(logEntry: entry)
                     .accessibilityIdentifier("logbook.entry.\(entry.id)")
             }
+            .onDelete { indexSet in
+                Task {
+                    for index in indexSet {
+                        await deleteItem(viewModel.logEntries[index])
+                    }
+                }
+            }
         }
         .accessibilityIdentifier("logbook.list")
     }
@@ -161,6 +170,33 @@ struct LogbookView: View {
     }
 
     // MIGRATION COMPLETE: loadLogEntries() removed - using viewModel.loadLogEntries() ✓
+
+    // MARK: - CachedDataDeletion Implementation
+
+    func performDeletion(for item: LogbookModel) async throws {
+        // Delete all images associated with this logbook entry
+        let images = try await userImageRepository.getImages(
+            ownerType: .logbook,
+            ownerId: item.id.uuidString
+        )
+
+        for image in images {
+            try await userImageRepository.deleteImage(id: image.id)
+        }
+
+        // Delete the logbook entry (Core Data will cascade delete related entities)
+        try await logbookRepository.deleteLog(id: item.id)
+    }
+
+    func removeFromCache(_ item: LogbookModel) async {
+        await MainActor.run {
+            viewModel.logEntries.removeAll { $0.id == item.id }
+        }
+    }
+
+    func reloadData() async {
+        await viewModel.loadLogEntries()
+    }
 }
 
 // MARK: - Logbook Row

@@ -7,9 +7,10 @@
 
 import SwiftUI
 
-struct RecipesView: View {
+struct RecipesView: View, CachedDataDeletion {
     private let deps: AppDependencies
     private let recipeService: RecipeService
+    private let recipeRepository: RecipeRepository
 
     @State private var recipes: [RecipeModel] = []
     @State private var isLoading = false
@@ -20,6 +21,7 @@ struct RecipesView: View {
     init(deps: AppDependencies = AppDependencies()) {
         self.deps = deps
         self.recipeService = deps.recipeService
+        self.recipeRepository = deps.recipeRepository
     }
 
     var body: some View {
@@ -104,6 +106,13 @@ struct RecipesView: View {
                     RecipeRow(recipe: recipe)
                 }
             }
+            .onDelete { indexSet in
+                Task {
+                    for index in indexSet {
+                        await deleteItem(filteredRecipes[index])
+                    }
+                }
+            }
         }
         .listStyle(.plain)
     }
@@ -167,6 +176,23 @@ struct RecipesView: View {
         }
 
         isLoading = false
+    }
+
+    // MARK: - CachedDataDeletion Implementation
+
+    func performDeletion(for item: RecipeModel) async throws {
+        // Delete the recipe (Core Data will cascade delete RecipeIngredient entities)
+        try await recipeRepository.deleteRecipe(id: item.id)
+    }
+
+    func removeFromCache(_ item: RecipeModel) async {
+        await MainActor.run {
+            recipes.removeAll { $0.id == item.id }
+        }
+    }
+
+    func reloadData() async {
+        await loadRecipes()
     }
 }
 

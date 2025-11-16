@@ -66,6 +66,11 @@ struct MoltenApp: App {
     @State private var pendingDeepLinkStableId: String?  // Hold the new ID during refresh
     @State private var mainTabView: MainTabView?
 
+    // Shake-to-report bug
+    #if os(iOS)
+    @State private var showingBugReport = false
+    #endif
+
     // Detect if we're running in test environment
     private var isRunningTests: Bool {
         return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
@@ -106,6 +111,17 @@ struct MoltenApp: App {
             .modifier(SubscriptionEnvironmentModifier(subscriptionManager: subscriptionManager))
             .preferredColorScheme(UserSettings.shared.colorScheme)
             .tint(DesignSystem.Colors.accentSecondary)
+            #if os(iOS)
+            .onShake {
+                // Only enable shake-to-report in beta/debug builds
+                #if DEBUG
+                showingBugReport = true
+                #endif
+            }
+            .sheet(isPresented: $showingBugReport) {
+                BugReportSheet()
+            }
+            #endif
         }
     }
 
@@ -745,8 +761,9 @@ extension MoltenApp {
             // Enable network tracking
             options.enableNetworkTracking = true
 
+            // change this to make Sentry debug more or less noisy
             #if DEBUG
-            options.debug = true  // Enable debug output in development
+            options.debug = false  // Enable debug output in development
             #endif
         }
 

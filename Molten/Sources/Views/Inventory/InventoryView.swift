@@ -13,7 +13,7 @@ import OSLog
 import CoreData
 
 /// Repository-based InventoryView that uses the new GlassItem architecture
-struct InventoryView: View {
+struct InventoryView: View, CachedDataDeletion {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data
     @State private var viewModel: InventoryViewModel
     @Environment(EntitlementService.self) private var entitlementService
@@ -50,6 +50,7 @@ struct InventoryView: View {
     private let userImageRepository: UserImageRepository
     private let kilnScheduleService: KilnScheduleService
     private let glassItemRepository: GlassItemRepository
+    private let locationRepository: LocationRepository
 
     private let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Flameworker", category: "InventoryView")
 
@@ -63,7 +64,8 @@ struct InventoryView: View {
         shoppingListRepository: ShoppingListRepository,
         userImageRepository: UserImageRepository,
         kilnScheduleService: KilnScheduleService,
-        glassItemRepository: GlassItemRepository
+        glassItemRepository: GlassItemRepository,
+        locationRepository: LocationRepository
     ) {
         self._viewModel = State(initialValue: viewModel)
         self.catalogService = catalogService
@@ -74,6 +76,7 @@ struct InventoryView: View {
         self.userImageRepository = userImageRepository
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
+        self.locationRepository = locationRepository
     }
 
     // Convenience init for production use
@@ -91,7 +94,8 @@ struct InventoryView: View {
             shoppingListRepository: deps.shoppingListRepository,
             userImageRepository: deps.userImageRepository,
             kilnScheduleService: deps.kilnScheduleService,
-            glassItemRepository: deps.glassItemRepository
+            glassItemRepository: deps.glassItemRepository,
+            locationRepository: deps.locationRepository
         )
     }
     
@@ -459,6 +463,13 @@ struct InventoryView: View {
                 .id("\(item.id)-\(item.rating?.totalRatings ?? 0)-\(item.rating?.averageRating ?? 0)")  // Force re-render when rating changes
                 .accessibilityIdentifier("inventory.item.\(item.glassItem.stable_id)")
             }
+            .onDelete { indexSet in
+                Task {
+                    for index in indexSet {
+                        await deleteInventoryItem(sortedFilteredItems[index])
+                    }
+                }
+            }
         }
         .accessibilityIdentifier("inventory.list")
         .id(refreshTrigger)  // Force list to refresh when trigger changes
@@ -517,7 +528,7 @@ struct InventoryView: View {
     }
     
     // MARK: - Helper Methods
-    
+
     private func loadData() async {
         log.info("🔄 InventoryView loadData() called")
 
@@ -532,6 +543,49 @@ struct InventoryView: View {
             updateCaches()  // PERFORMANCE: Update cached filter values
             refreshTrigger += 1  // Force SwiftUI to refresh the list
         }
+    }
+
+    // MARK: - CachedDataDeletion Protocol Implementation
+
+    func performDeletion(for item: CompleteInventoryItemModel) async throws {
+        let stableId = item.glassItem.stable_id
+
+        // Delete all inventory records and their associated storage locations
+        for inventory in item.inventory {
+            // Delete storage locations for this inventory record
+            try await locationRepository.deleteLocations(forInventory: inventory.id)
+
+            // Delete the inventory record itself
+            try await inventoryTrackingService.deleteInventory(id: inventory.id)
+        }
+
+        // Clean up orphaned user data (tags and notes)
+        // Remove all user tags for this item
+        try await userTagsRepository.removeAllTags(fromItem: stableId)
+
+        // Delete user notes for this item (if any exist)
+        try await userNotesRepository.deleteNotes(forItem: stableId)
+
+        log.info("✅ Deleted inventory and associated data for item: \(stableId)")
+    }
+
+    func removeFromCache(_ item: CompleteInventoryItemModel) async {
+        await MainActor.run {
+            viewModel.completeItems.removeAll { $0.id == item.id }
+        }
+    }
+
+    func reloadData() async {
+        await viewModel.loadInventoryItems()
+    }
+
+    func updateDerivedCaches() {
+        updateCaches()
+    }
+
+    // Convenience wrapper for .onDelete handler
+    private func deleteInventoryItem(_ item: CompleteInventoryItemModel) async {
+        await deleteItem(item)
     }
 }
 

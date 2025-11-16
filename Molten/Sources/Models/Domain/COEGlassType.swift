@@ -49,29 +49,21 @@ class COEGlassPreference {
 
     /// Selected COE types (multi-selection)
     nonisolated static var selectedCOETypes: Set<COEGlassType> {
-        print("DEBUG: Checking for data at key: \(multiSelectionStorageKey)")
         
         // Check if we have explicit data stored (including empty sets)
         if let data = userDefaults.data(forKey: multiSelectionStorageKey) {
-            print("DEBUG: Found data, decoding...")
             do {
                 let rawValues = try JSONDecoder().decode(Set<Int>.self, from: data)
-                print("DEBUG: Decoded raw values: \(rawValues)")
                 let coeTypes = rawValues.compactMap { COEGlassType(rawValue: $0) }
                 let result = Set(coeTypes)
-                print("DEBUG: Returning stored data: \(result)")
                 return result
             } catch {
                 // If decoding fails, fall through to default
-                print("DEBUG: Failed to decode COE types: \(error)")
             }
-        } else {
-            print("DEBUG: No data found at key, using default")
         }
         
         // Default: all COE types selected (only when no explicit data exists)
         let defaultResult = Set(COEGlassType.allCases)
-        print("DEBUG: Returning default: \(defaultResult)")
         return defaultResult
     }
     

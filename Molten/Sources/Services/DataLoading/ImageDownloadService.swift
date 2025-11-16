@@ -94,56 +94,63 @@ final class ImageDownloadService: Sendable {
         return manifest
     }
 
-    /// Attempts to load a product image from cache or download from CDN
+    /// Loads a product image using priority: cache → bundle → CDN download
+    /// CRITICAL: Checks permissions FIRST to prevent legal issues
     /// - Parameters:
-    ///   - itemCode: The item code (e.g., "650001" or "BB-650001")
-    ///   - manufacturer: The manufacturer abbreviation (e.g., "BB", "CiM")
-    ///   - exactFilename: If provided, try this exact filename first (from catalog's image_path field)
-    ///   - exactThumbnailFilename: If provided, use this as the thumbnail filename (from catalog's image_thumb_path field)
+    ///   - manufacturer: The manufacturer abbreviation (required for permission check)
+    ///   - exactFilename: Exact filename to load (from catalog's image_path field)
+    ///   - exactThumbnailFilename: Thumbnail filename (from catalog's image_thumb_path field)
     ///   - useThumbnail: If true, try thumbnail version first (default: true)
     /// - Returns: PlatformImage if found/downloaded, nil otherwise
-    nonisolated static func loadImage(itemCode: String, manufacturer: String?, exactFilename: String? = nil, exactThumbnailFilename: String? = nil, useThumbnail: Bool = true) async -> PlatformImage? {
+    nonisolated static func loadImage(manufacturer: String?, exactFilename: String? = nil, exactThumbnailFilename: String? = nil, useThumbnail: Bool = true) async -> PlatformImage? {
         guard let manufacturer = manufacturer, !manufacturer.isEmpty else {
             return nil
         }
 
-        // Check if we have permission to use product-specific images for this manufacturer
+        // CRITICAL LEGAL CHECK: Verify permission BEFORE any image loading
+        // ⚠️ DO NOT MOVE THIS CHECK - it must be first ⚠️
         guard GlassManufacturers.hasProductImagePermission(for: manufacturer) else {
             return nil
         }
 
-        // PRIORITY 1: If exact thumbnail filename provided (from catalog image_thumb_path), try it first
+        // Step 2→3→4: Try thumbnail first (if requested)
         if useThumbnail, let thumbnailFilename = exactThumbnailFilename, !thumbnailFilename.isEmpty {
-            // First check local cache
-            if let cachedImage = await loadFromCache(filename: thumbnailFilename) {
-                return cachedImage
+            if let image = await loadSingleImage(filename: thumbnailFilename) {
+                return image
             }
-
-            // If not cached, try to download
-            if let result = await downloadImage(filename: thumbnailFilename) {
-                await saveToCache(image: result.image, filename: thumbnailFilename, etag: result.etag)
-                return result.image
-            }
-
             // Fall through to try full-size image
         }
 
-        // PRIORITY 2: If exact filename provided (from catalog image_path), try it
+        // Step 2→3→4: Try full-size image
         if let filename = exactFilename, !filename.isEmpty {
-            // First check local cache
-            if let cachedImage = await loadFromCache(filename: filename) {
-                return cachedImage
-            }
-
-            // If not cached, try to download
-            if let result = await downloadImage(filename: filename) {
-                await saveToCache(image: result.image, filename: filename, etag: result.etag)
-                return result.image
+            if let image = await loadSingleImage(filename: filename) {
+                return image
             }
         }
 
-        // No exact filename provided or download failed - return nil
-        // The caller (ProductImageView) will fall back to bundled images or manufacturer default
+        return nil
+    }
+
+    /// Loads a single image file with priority: cache → bundle → download
+    /// - Parameter filename: The exact filename to load
+    /// - Returns: PlatformImage if found, nil otherwise
+    private nonisolated static func loadSingleImage(filename: String) async -> PlatformImage? {
+        // Step 2: Check downloaded cache first
+        if let cachedImage = await loadFromCache(filename: filename) {
+            return cachedImage
+        }
+
+        // Step 3: Check app bundle (saves bandwidth if bundled)
+        if let bundledImage = loadFromBundle(filename: filename) {
+            return bundledImage
+        }
+
+        // Step 4: Try to download from CDN
+        if let result = await downloadImage(filename: filename) {
+            await saveToCache(image: result.image, filename: filename, etag: result.etag)
+            return result.image
+        }
+
         return nil
     }
 
@@ -205,6 +212,25 @@ final class ImageDownloadService: Sendable {
     }
 
     // MARK: - Private Helpers
+
+    /// Loads image from app bundle (for bundled thumbnails)
+    /// - Parameter filename: The filename to look for in the bundle root
+    /// - Returns: PlatformImage if found in bundle, nil otherwise
+    private nonisolated static func loadFromBundle(filename: String) -> PlatformImage? {
+        // Extract the resource name and extension
+        let nsFilename = filename as NSString
+        let ext = nsFilename.pathExtension
+        let nameWithoutExt = nsFilename.deletingPathExtension
+
+        // Check if file exists in bundle
+        guard let path = Bundle.main.path(forResource: nameWithoutExt, ofType: ext),
+              let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+              let image = PlatformImage(data: data) else {
+            return nil
+        }
+
+        return image
+    }
 
     /// Loads image from local cache
     private nonisolated static func loadFromCache(filename: String) async -> PlatformImage? {

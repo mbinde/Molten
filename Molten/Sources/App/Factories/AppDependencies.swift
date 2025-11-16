@@ -230,7 +230,7 @@ class AppDependencies {
             // See: https://docs.sentry.io/product/sentry-basics/dsn-explainer/
 
             // Option 1: Hardcode (simplest)
-            let sentryDSN = "https://your-dsn@your-org.ingest.sentry.io/your-project-id"
+            let sentryDSN = "https://9656fde5615b69579eb41101834237b6@o4510371843932160.ingest.us.sentry.io/4510371846356992"
 
             // Option 2: Read from Info.plist (if you prefer)
             // Add <key>SentryDSN</key><string>your-dsn</string> to Info.plist

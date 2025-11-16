@@ -76,11 +76,13 @@ class CloudKitSyncMonitor: ObservableObject {
 
     private let container: NSPersistentCloudKitContainer
     nonisolated(unsafe) private var cancellables = Set<AnyCancellable>()
+    private let logger: LoggingService
 
     // MARK: - Initialization
 
-    init(container: NSPersistentCloudKitContainer) {
+    init(container: NSPersistentCloudKitContainer, logger: LoggingService = AppDependencies.shared.loggingService) {
         self.container = container
+        self.logger = logger
         setupNotificationObservers()
     }
 
@@ -164,6 +166,12 @@ class CloudKitSyncMonitor: ObservableObject {
             if nsError.code == CKError.Code.quotaExceeded.rawValue {
                 currentStatus = .quotaExceeded
                 lastSyncEvent = CloudKitSyncEvent(status: .quotaExceeded, isImport: isImport)
+
+                logger.error("CloudKit quota exceeded", context: [
+                    "operation": "cloudkit-sync",
+                    "sync_type": isImport ? "import" : "export",
+                    "error_code": CKError.Code.quotaExceeded.rawValue
+                ], error: error)
                 return
             }
 
@@ -173,6 +181,12 @@ class CloudKitSyncMonitor: ObservableObject {
                 currentStatus = .offline
                 lastSyncEvent = CloudKitSyncEvent(status: .offline, isImport: isImport)
                 isOnline = false
+
+                logger.warning("CloudKit sync offline", context: [
+                    "operation": "cloudkit-sync",
+                    "sync_type": isImport ? "import" : "export",
+                    "error_code": nsError.code
+                ])
                 return
             }
         }
@@ -180,6 +194,14 @@ class CloudKitSyncMonitor: ObservableObject {
         // Generic error
         currentStatus = .failed(error)
         lastSyncEvent = CloudKitSyncEvent(status: .failed(error), isImport: isImport)
+
+        logger.error("CloudKit sync failed", context: [
+            "operation": "cloudkit-sync",
+            "sync_type": isImport ? "import" : "export",
+            "error_domain": (error as NSError).domain,
+            "error_code": (error as NSError).code,
+            "error_type": String(describing: type(of: error))
+        ], error: error)
     }
 
     private func updateOnlineStatus() {

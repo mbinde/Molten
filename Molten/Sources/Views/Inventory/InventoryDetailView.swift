@@ -717,10 +717,10 @@ struct InventoryDetailView: View {
                     }
                 }
                 .padding()
-                .background(.accentColor.opacity(0.05))
+                .background(Color.accentColor.opacity(0.05))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(.accentColor.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.accentColor.opacity(0.2), lineWidth: 1)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .id("user-notes") // Anchor for scrolling

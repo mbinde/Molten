@@ -197,7 +197,8 @@ final class MockLocationRepository: LocationRepository {
 
     func getLocationNames(withPrefix prefix: String) async throws -> [String] {
         let names = try await getDistinctLocationNames()
-        return names.filter { $0.hasPrefix(prefix) }
+        let lowercasePrefix = prefix.lowercased()
+        return names.filter { $0.lowercased().hasPrefix(lowercasePrefix) }
     }
 
     func getInventoriesInLocation(_ locationName: String) async throws -> [UUID] {
@@ -275,8 +276,8 @@ final class MockLocationRepository: LocationRepository {
         let testLocations = [
             StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Workshop Shelf A", quantity: 10.0),
             StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Workshop Shelf B", quantity: 20.0),
-            StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Studio Cabinet 1", quantity: 5.0),
-            StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Studio Cabinet 2", quantity: 15.0),
+            StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Bin 1", quantity: 5.0),
+            StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Bin 2", quantity: 15.0),
             StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Storage Room", quantity: 30.0)
         ]
         _ = try await createLocations(testLocations)

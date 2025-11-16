@@ -16,14 +16,14 @@ import CoreData
 @MainActor
 struct ProjectPlanBackgroundSaveTests {
 
-    // MARK: - Test Helpers
+    // MARK: - Shared Dependencies
 
-    func createTestController() -> PersistenceController {
-        return PersistenceController.createTestController()
-    }
+    /// ✅ CRITICAL: Store PersistenceController at struct level to keep it alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let controller = PersistenceController.createTestController()
 
     func createTestRepository() -> CoreDataProjectRepository {
-        let controller = createTestController()
         return CoreDataProjectRepository(context: controller.container.viewContext)
     }
 

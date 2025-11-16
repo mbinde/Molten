@@ -15,9 +15,16 @@ import UIKit
 @MainActor  // Required: UIImage/UIGraphics are MainActor-isolated
 struct LabelPrintingServiceTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
+
     init() async {
         // Configure repository factory for testing (uses mocks)
-        let deps = AppDependencies(persistenceController: .createTestController())
     }
 
     // MARK: - QR Code Generation Tests

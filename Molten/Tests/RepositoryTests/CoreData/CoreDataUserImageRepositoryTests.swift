@@ -17,6 +17,13 @@ import UIKit
 @MainActor
 struct CoreDataUserImageRepositoryTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store PersistenceController at struct level to keep it alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let controller = PersistenceController.createTestController()
+
     // MARK: - Test Setup
 
     func createTestController() -> PersistenceController {
@@ -36,7 +43,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Save primary image persists to Core Data")
     func savePrimaryImagePersistsToCoreData() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let testImage = createTestImage(color: .blue)
         let naturalKey = "bullseye-clear-001"
@@ -65,7 +71,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Save image compresses and resizes large images")
     func saveImageCompressesAndResizesLargeImages() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         // Create a large image (over 2048px)
         let largeImage = createTestImage(color: .red, size: CGSize(width: 3000, height: 3000))
@@ -91,7 +96,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Save primary image demotes existing primary in Core Data")
     func savePrimaryImageDemotesExistingInCoreData() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let naturalKey = "bullseye-clear-001"
         let firstImage = createTestImage(color: .red)
@@ -132,7 +136,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Save image stores JPEG data with compression")
     func saveImageStoresJpegDataWithCompression() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let testImage = createTestImage(color: .green, size: CGSize(width: 500, height: 500))
         let naturalKey = "bullseye-clear-001"
@@ -164,7 +167,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Get images queries Core Data correctly")
     func getImagesQueriesCoreDataCorrectly() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let naturalKey = "bullseye-clear-001"
 
@@ -197,7 +199,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Get images sorts by type then date")
     func getImagesSortsByTypeThenDate() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let naturalKey = "bullseye-clear-001"
 
@@ -239,7 +240,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Get primary image queries Core Data with correct predicate")
     func getPrimaryImageQueriesCoreDataWithCorrectPredicate() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let naturalKey = "bullseye-clear-001"
 
@@ -268,7 +268,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Get standalone images filters correctly in Core Data")
     func getStandaloneImagesFiltersCorrectlyInCoreData() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
 
         // When - save mix of images
@@ -305,7 +304,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Delete image removes from Core Data")
     func deleteImageRemovesFromCoreData() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let naturalKey = "bullseye-clear-001"
 
@@ -331,7 +329,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Delete all images for owner removes only matching records")
     func deleteAllImagesForOwnerRemovesOnlyMatchingRecords() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
 
         // When - save images for multiple owners
@@ -371,7 +368,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Update image type persists change to Core Data")
     func updateImageTypePersistsChangeToCoreData() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let naturalKey = "bullseye-clear-001"
 
@@ -398,7 +394,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Update to primary demotes existing primary in Core Data")
     func updateToPrimaryDemotesExistingPrimaryInCoreData() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let naturalKey = "bullseye-clear-001"
 
@@ -436,7 +431,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Load image retrieves from Core Data and decodes correctly")
     func loadImageRetrievesFromCoreDataAndDecodesCorrectly() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let testImage = createTestImage(color: .red, size: CGSize(width: 200, height: 200))
         let naturalKey = "bullseye-clear-001"
@@ -461,7 +455,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Load image throws error for non-existent image")
     func loadImageThrowsErrorForNonExistentImage() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let nonExistentModel = UserImageModel(
             id: UUID(),
@@ -482,7 +475,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Concurrent saves don't conflict in Core Data")
     func concurrentSavesDontConflictInCoreData() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
 
         // When - save multiple images concurrently
@@ -510,7 +502,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Changes persist across context refreshes")
     func changesPersistAcrossContextRefreshes() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let naturalKey = "bullseye-clear-001"
 
@@ -535,7 +526,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Image data survives save and fetch cycle")
     func imageDataSurvivesSaveAndFetchCycle() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let testImage = createTestImage(color: .blue, size: CGSize(width: 300, height: 300))
         let naturalKey = "bullseye-clear-001"
@@ -563,7 +553,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Save and load images for project plans")
     func saveAndLoadProjectPlanImages() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let testImage = createTestImage(color: .purple)
         let planId = UUID().uuidString
@@ -595,7 +584,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Multiple images for project plan are isolated")
     func multipleImagesForProjectPlanAreIsolated() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let planId1 = UUID().uuidString
         let planId2 = UUID().uuidString
@@ -633,7 +621,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Project plan images work with primary demotion")
     func projectPlanImagesWorkWithPrimaryDemotion() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let planId = UUID().uuidString
 
@@ -666,7 +653,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("UserImage entity has external binary storage enabled")
     func userImageEntityHasExternalBinaryStorageEnabled() async throws {
         // Given
-        let controller = createTestController()
         let context = controller.container.viewContext
 
         // When - get entity description
@@ -686,7 +672,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("UserImage entity has all required CloudKit attributes")
     func userImageEntityHasAllRequiredCloudKitAttributes() async throws {
         // Given
-        let controller = createTestController()
         let context = controller.container.viewContext
 
         // When - get entity description
@@ -712,7 +697,6 @@ struct CoreDataUserImageRepositoryTests {
     @Test("Images sync across multiple owner types in same database")
     func imagesSyncAcrossMultipleOwnerTypesInSameDatabase() async throws {
         // Given
-        let controller = createTestController()
         let repository = CoreDataUserImageRepository(context: controller.container.viewContext)
         let glassItemKey = "bullseye-clear-001"
         let planId = UUID().uuidString

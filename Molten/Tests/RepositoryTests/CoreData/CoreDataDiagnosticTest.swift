@@ -20,12 +20,17 @@ import XCTest
 @Suite("Core Data Diagnostic - What's Actually in the Database")
 @MainActor
 struct CoreDataDiagnosticTest {
+
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
     
     @Test("DIAGNOSTIC: Show all data in Core Data")
     func showAllCoreDataContent() async throws {
         print("🔍 DIAGNOSTIC TEST: Examining Core Data content...")
-
-        let deps = AppDependencies(persistenceController: .createTestController())
 
         // Get the Core Data repository
         let glassItemRepo = deps.glassItemRepository
@@ -63,8 +68,6 @@ struct CoreDataDiagnosticTest {
     @Test("DIAGNOSTIC: Compare expected vs actual test data")
     func compareExpectedVsActualData() async throws {
         print("🔍 DIAGNOSTIC: Comparing what tests expect vs what Core Data has...")
-
-        let deps = AppDependencies(persistenceController: .createTestController())
         let glassItemRepo = deps.glassItemRepository
         
         // What the failing tests expect:
@@ -113,8 +116,6 @@ struct CoreDataDiagnosticTest {
     @Test("DIAGNOSTIC: Suggest test fixes")
     func suggestTestFixes() async throws {
         print("🔧 DIAGNOSTIC: Test fix suggestions...")
-
-        let deps = AppDependencies(persistenceController: .createTestController())
         let glassItemRepo = deps.glassItemRepository
         
         let actualTotal = try await glassItemRepo.fetchItems(matching: nil)

@@ -15,11 +15,18 @@ import CryptoKit
 @MainActor
 struct InventoryTrackingServiceTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
+
     // MARK: - Complete Item Creation Tests
 
     @Test("Create complete item with all fields")
     func testCreateCompleteItemWithAllFields() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         // Create test data with all fields
@@ -60,7 +67,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Create complete item with minimal fields")
     func testCreateCompleteItemMinimalFields() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let glassItem = GlassItemModel(
@@ -86,7 +92,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Create complete item with empty inventory array")
     func testCreateCompleteItemEmptyInventory() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let glassItem = GlassItemModel(
@@ -112,7 +117,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Add inventory with location distribution")
     func testAddInventoryWithLocations() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         // Create base item
@@ -158,7 +162,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Add inventory without locations")
     func testAddInventoryWithoutLocations() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "be", sku: "002")
@@ -185,7 +188,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Add inventory to non-existent item throws error")
     func testAddInventoryNonExistentItem() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         await #expect(throws: Error.self) {
@@ -201,7 +203,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Add multiple inventory types to same item")
     func testMultipleInventoryTypes() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "cim", sku: "multi")
@@ -230,7 +231,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Update inventory across multiple types")
     func testUpdateMultipleTypes() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "ef", sku: "update")
@@ -278,7 +278,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Get complete item with all data")
     func testGetCompleteItem() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "be", sku: "complete")
@@ -307,7 +306,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Get complete item returns nil for non-existent item")
     func testGetCompleteItemNonExistent() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let completeItem = try await service.getCompleteItem(stableId: "non-existent")
@@ -318,7 +316,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Update complete item updates glass item and tags")
     func testUpdateCompleteItem() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "cim", sku: "update")
@@ -356,7 +353,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Update complete item without changing tags")
     func testUpdateCompleteItemKeepTags() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "ef", sku: "keep")
@@ -394,7 +390,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Get inventory summary with locations")
     func testGetInventorySummaryWithLocations() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "be", sku: "summary")
@@ -433,7 +428,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Get inventory summary returns nil for non-existent item")
     func testGetInventorySummaryNonExistent() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let summary = try await service.getInventorySummary(for: "non-existent")
@@ -444,7 +438,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Search items by text")
     func testSearchItemsByText() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         // Create test items
@@ -477,7 +470,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Search items with tag filter")
     func testSearchItemsWithTags() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let item1 = GlassItemModel(
@@ -509,7 +501,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Search items with inventory filter")
     func testSearchItemsWithInventoryFilter() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
         let catalogService = deps.catalogService
 
@@ -547,7 +538,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Get low stock items below threshold")
     func testGetLowStockItems() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         // Create items with low stock
@@ -572,7 +562,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Low stock items are sorted by quantity")
     func testLowStockItemsSorted() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         // Create items with different low stock levels
@@ -616,7 +605,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Validate inventory consistency for valid item")
     func testValidateInventoryConsistency() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "be", sku: "valid")
@@ -650,7 +638,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Validate inventory consistency for non-existent item")
     func testValidateNonExistentItem() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let validation = try await service.validateInventoryConsistency(for: "non-existent")
@@ -663,7 +650,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Create item with duplicate tags removes duplicates")
     func testCreateItemDuplicateTags() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let glassItem = GlassItemModel(
@@ -686,7 +672,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Add zero quantity inventory")
     func testAddZeroQuantityInventory() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "be", sku: "zero")
@@ -712,7 +697,6 @@ struct InventoryTrackingServiceTests {
 
     @Test("Search with empty text returns results")
     func testSearchEmptyText() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let glassItem = GlassItemModel(

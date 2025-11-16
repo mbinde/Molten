@@ -549,6 +549,67 @@ grep -rn "compactMap.*value(forKey" Molten/Sources/Repositories/CoreData/ --incl
 
 Each match needs to be replaced with an explicit `for` loop.
 
+## 🚨 CRITICAL: Core Data Test Lifecycle - AppDependencies Deallocation
+
+### The Problem
+
+**NEVER create AppDependencies in test helper methods and return services:**
+
+```swift
+// ❌ WRONG - CAUSES ZOMBIE CORE DATA OBJECTS
+@Suite("My Tests")
+struct MyTests {
+    private func createTestService() -> MyService {
+        let deps = AppDependencies(persistenceController: .createTestController())
+        return deps.myService  // ❌ deps deallocates → PersistenceController deallocates → crash
+    }
+}
+```
+
+### Why It Crashes
+
+Helper creates AppDependencies → returns service → AppDependencies deallocates → PersistenceController deallocates → Core Data objects become zombies → `objc_msgSend` crash
+
+**Error:**
+```
+*** Terminating app due to uncaught exception 'NSInvalidArgumentException',
+reason: '-[__NSCFArray name]: unrecognized selector sent to instance 0x...'
+```
+
+### The Fix
+
+Store AppDependencies at test struct level to keep PersistenceController alive:
+
+```swift
+// ✅ CORRECT
+@Suite("My Tests")
+@MainActor
+struct MyTests {
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
+    @Test("Some test")
+    func testSomething() async throws {
+        let service = deps.myService  // ✅ PersistenceController stays alive
+    }
+}
+```
+
+### How to Find It
+
+```bash
+# Find helper methods that create and return services
+grep -rn "func create.*Service.*->" Molten/Tests/ --include="*.swift"
+
+# Find AppDependencies created in functions (not at struct level)
+grep -rn "let deps = AppDependencies" Molten/Tests/ --include="*.swift" | grep -v "private let deps"
+```
+
+### Prevention
+
+- ✅ Store AppDependencies at struct level: `private let deps = AppDependencies(...)`
+- ✅ Add `@MainActor` to test suite if needed
+- ❌ NEVER create AppDependencies in helper methods or test functions
+
 ## 🔥 CRITICAL: Protocol-Based DRY with Sendable and nonisolated
 
 ### The Challenge

@@ -20,6 +20,14 @@ import SwiftUI
 @Suite("Location Repository Pattern Tests", .serialized)
 @MainActor
 struct LocationServiceTests {
+
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
     
     @Test("LocationRepository should support basic CRUD operations")
     func testLocationRepositoryBasicOperations() async throws {
@@ -45,7 +53,6 @@ struct LocationServiceTests {
     @Test("InventoryTrackingService should coordinate location operations")
     func testInventoryTrackingServiceLocationOperations() {
         // Arrange: Create InventoryTrackingService using AppDependencies
-        let deps = AppDependencies(persistenceController: .createTestController())
         let inventoryTrackingService = deps.inventoryTrackingService
         
         // Assert: Service should be created successfully with location support

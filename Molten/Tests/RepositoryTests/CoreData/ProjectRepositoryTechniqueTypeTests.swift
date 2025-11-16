@@ -14,10 +14,20 @@ import CoreData
 @MainActor
 struct ProjectRepositoryTechniqueTypeTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store PersistenceController at struct level to keep it alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let controller = PersistenceController.createTestController()
+
+    func createTestRepository() -> CoreDataProjectRepository {
+        return CoreDataProjectRepository(context: controller.container.viewContext)
+    }
+
     @Test("Create project with techniqueType saves to Core Data")
     func createProjectWithTechniqueType() async throws {
-        let controller = PersistenceController.createTestController()
-        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
+        let repository = createTestRepository()
 
         let project = ProjectModel(
             title: "Flameworking Project",
@@ -41,8 +51,7 @@ struct ProjectRepositoryTechniqueTypeTests {
 
     @Test("Create project without techniqueType saves as nil")
     func createProjectWithoutTechniqueType() async throws {
-        let controller = PersistenceController.createTestController()
-        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
+        let repository = createTestRepository()
 
         let project = ProjectModel(
             title: "Project Without Technique",
@@ -64,8 +73,7 @@ struct ProjectRepositoryTechniqueTypeTests {
 
     @Test("Update project techniqueType")
     func updateProjectTechniqueType() async throws {
-        let controller = PersistenceController.createTestController()
-        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
+        let repository = createTestRepository()
 
         // Create project with one techniqueType
         let original = ProjectModel(
@@ -113,8 +121,7 @@ struct ProjectRepositoryTechniqueTypeTests {
 
     @Test("Clear project techniqueType")
     func clearProjectTechniqueType() async throws {
-        let controller = PersistenceController.createTestController()
-        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
+        let repository = createTestRepository()
 
         // Create project with techniqueType
         let original = ProjectModel(
@@ -162,8 +169,7 @@ struct ProjectRepositoryTechniqueTypeTests {
 
     @Test("All techniqueType values persist correctly")
     func allTechniqueTypesPerist() async throws {
-        let controller = PersistenceController.createTestController()
-        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
+        let repository = createTestRepository()
 
         let allTypes: [TechniqueType] = [.glassBlowing, .flameworkinghard, .flameworkingsoft, .fusing, .casting, .other]
 
@@ -188,8 +194,7 @@ struct ProjectRepositoryTechniqueTypeTests {
 
     @Test("Query projects by techniqueType")
     func queryProjectsByTechniqueType() async throws {
-        let controller = PersistenceController.createTestController()
-        let repository = CoreDataProjectRepository(context: controller.container.viewContext)
+        let repository = createTestRepository()
 
         // Create projects with different technique types
         let flameworkingProject = ProjectModel(

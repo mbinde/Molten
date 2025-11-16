@@ -20,11 +20,17 @@ import Foundation
 @MainActor
 struct CatalogServiceIntegrationTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
     // MARK: - Test Setup
 
     private func createTestService() async -> (CatalogService, PersistenceController) {
         let testController = PersistenceController.createTestController()
-        let deps = AppDependencies(persistenceController: .createTestController())
 
         let service = deps.catalogService
         return (service, testController)
@@ -61,7 +67,6 @@ struct CatalogServiceIntegrationTests {
     @Test("CatalogService integrates glass items with inventory tracking")
     func testGlassItemWithInventoryIntegration() async throws {
         let (service, _) = await createTestService()
-        let deps = AppDependencies(persistenceController: .createTestController())
         let inventoryService = deps.inventoryTrackingService
 
         // Create glass item with initial inventory
@@ -133,7 +138,6 @@ struct CatalogServiceIntegrationTests {
     @Test("CatalogService deletes cascade correctly")
     func testDeleteCascade() async throws {
         // Use single AppDependencies instance for both services
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
 

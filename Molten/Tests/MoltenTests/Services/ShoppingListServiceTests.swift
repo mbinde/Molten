@@ -22,6 +22,14 @@ import CryptoKit
 @MainActor
 struct ShoppingListServiceTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
+
     // MARK: - Helper Methods
 
     private func createTestService() -> (service: ShoppingListService, repos: TestRepositories) {
@@ -65,7 +73,6 @@ struct ShoppingListServiceTests {
 
     @Test("Generate empty shopping list when no items below minimum and no manual items")
     func testEmptyShoppingList() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let (service, _) = createTestService()
 
         let lists = try await service.generateAllShoppingLists()
@@ -75,7 +82,6 @@ struct ShoppingListServiceTests {
 
     @Test("Generate shopping list from ItemMinimum only")
     func testShoppingListFromMinimumOnly() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let (service, repos) = createTestService()
 
         // Create a glass item
@@ -112,7 +118,6 @@ struct ShoppingListServiceTests {
 
     @Test("Generate shopping list from ItemShopping only")
     func testShoppingListFromManualOnly() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let (service, repos) = createTestService()
 
         // Create a glass item
@@ -148,7 +153,6 @@ struct ShoppingListServiceTests {
 
     @Test("Combine items from both ItemMinimum and ItemShopping")
     func testCombineFromBothSources() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let (service, repos) = createTestService()
 
         // Create glass items
@@ -183,7 +187,6 @@ struct ShoppingListServiceTests {
 
     @Test("Merge duplicate items with higher needed quantity")
     func testMergeDuplicateItems() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let (service, repos) = createTestService()
 
         // Create a glass item
@@ -223,7 +226,6 @@ struct ShoppingListServiceTests {
 
     @Test("Items from different stores are kept separate")
     func testMultipleStores() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let (service, repos) = createTestService()
 
         // Create glass items
@@ -257,7 +259,6 @@ struct ShoppingListServiceTests {
 
     @Test("Manual items without store go to 'Other' store")
     func testManualItemsWithoutStore() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let (service, repos) = createTestService()
 
         // Create a glass item
@@ -292,7 +293,6 @@ struct ShoppingListServiceTests {
 
     @Test("Items with zero inventory and minimum are included")
     func testZeroInventoryWithMinimum() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let (service, repos) = createTestService()
 
         // Create a glass item
@@ -322,7 +322,6 @@ struct ShoppingListServiceTests {
 
     @Test("Items at or above minimum are excluded from shopping list")
     func testItemsAboveMinimumExcluded() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let (service, repos) = createTestService()
 
         // Create a glass item
@@ -353,7 +352,6 @@ struct ShoppingListServiceTests {
 
     @Test("Shopping list includes tags from items")
     func testShoppingListIncludesTags() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let (service, repos) = createTestService()
 
         // Create a glass item
@@ -388,7 +386,6 @@ struct ShoppingListServiceTests {
 
     @Test("completeItem creates valid CompleteInventoryItemModel")
     func testCompleteItemPropertyCreation() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let (service, repos) = createTestService()
 
         // Create a glass item
@@ -427,7 +424,6 @@ struct ShoppingListServiceTests {
 
     @Test("completeItem combines system and user tags")
     func testCompleteItemCombinesTags() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let (service, repos) = createTestService()
 
         // Create a glass item
@@ -463,7 +459,6 @@ struct ShoppingListServiceTests {
 
     @Test("completeItem is Hashable and Identifiable")
     func testCompleteItemConformsToProtocols() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let (service, repos) = createTestService()
 
         // Create glass items

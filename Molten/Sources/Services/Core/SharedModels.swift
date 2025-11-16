@@ -224,7 +224,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
         self.subtype = subtype.map { Self.cleanType($0) }
         self.subsubtype = subsubtype.map { Self.cleanType($0) }
         self.dimensions = dimensions
-        self.quantity = max(0.0, quantity) // Business rule: Ensure non-negative quantity
+        self.quantity = quantity  // Keep original value for validation
         self.location = location.map { StorageLocationModel.cleanLocationName($0) }
         self.date_added = date_added
         self.date_modified = date_modified

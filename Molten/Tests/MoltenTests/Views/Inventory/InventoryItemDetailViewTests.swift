@@ -23,6 +23,13 @@ import CryptoKit
 @MainActor
 struct InventoryItemDetailViewTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
     @Test("InventoryDetailView should accept CompleteInventoryItemModel instead of Core Data entity")
     func testInventoryDetailViewUsesBusinessModel() {
         // Arrange: Create a business model instead of Core Data entity
@@ -85,7 +92,6 @@ struct InventoryItemDetailViewTests {
         )
         
         // Use existing repository system
-        let deps = AppDependencies(persistenceController: .createTestController())
         let inventoryTrackingService = deps.inventoryTrackingService
 
         // Act: Create view with business model and service (no Core Data context needed)
@@ -122,8 +128,6 @@ struct InventoryItemDetailViewTests {
             glassItem: glassItem,
             inventory: inventory, tags: [], userTags: []
         )
-        
-        let deps = AppDependencies(persistenceController: .createTestController())
         let inventoryTrackingService = deps.inventoryTrackingService
 
         // Act: Create view with injected service
@@ -225,7 +229,6 @@ struct InventoryItemDetailViewTests {
     @Test("InventoryDetailView should use ProductImageDetail with sku field")
     func testDetailViewUsesProductImageWithSKU() {
         // Configure factory to use mocks (prevent Core Data access)
-        let deps = AppDependencies(persistenceController: .createTestController())
 
         // Arrange: Create item with known SKU and manufacturer
         let glassItem = GlassItemModel(

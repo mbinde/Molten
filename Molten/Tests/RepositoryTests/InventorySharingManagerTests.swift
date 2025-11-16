@@ -20,6 +20,13 @@ import CoreData
 @MainActor
 struct InventorySharingManagerTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
     // MARK: - Test Lifecycle
 
     init() {
@@ -361,7 +368,6 @@ struct InventorySharingManagerTests {
     private func createTestManager(coordinator: MockInventorySharingCoordinator) -> InventorySharingManager {
         // Create isolated test controller
         let testController = PersistenceController.createTestController()
-        let deps = AppDependencies(persistenceController: .createTestController())
 
         let testContext = testController.container.viewContext
         let catalogRepo = deps.glassItemRepository

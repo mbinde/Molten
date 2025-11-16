@@ -14,6 +14,22 @@ import CryptoKit
 @MainActor
 struct InventoryImportServiceTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
+    /// Service instance using shared dependencies (PersistenceController stays alive)
+    private var testService: InventoryImportService {
+        InventoryImportService(
+            catalogService: deps.catalogService,
+            inventoryTrackingService: deps.inventoryTrackingService,
+            locationRepository: deps.locationRepository
+        )
+    }
+
     // MARK: - Test Setup Helpers
 
     /// Create a test JSON file with sample inventory data
@@ -65,25 +81,10 @@ struct InventoryImportServiceTests {
         ]
     }
 
-    /// Setup service with mock repositories (assumes AppDependencies is already configured for testing)
-    func createTestService() -> InventoryImportService {
-        let deps = AppDependencies(persistenceController: .createTestController())
-        let catalogService = deps.catalogService
-        let inventoryService = deps.inventoryTrackingService
-        let locationRepo = deps.locationRepository
-
-        return InventoryImportService(
-            catalogService: catalogService,
-            inventoryTrackingService: inventoryService,
-            locationRepository: locationRepo
-        )
-    }
-
     /// Add test glass items to catalog directly to the repository for testing
     /// This ensures the items are available to all services sharing the same repository
     /// Idempotent: only creates items if they don't already exist
     func populateTestCatalog() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let glassItemRepo = deps.glassItemRepository
 
         // Create test glass items that match our import data
@@ -156,10 +157,9 @@ struct InventoryImportServiceTests {
 
     @Test("Preview import shows correct item count")
     func testPreviewImport() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         try await populateTestCatalog()
 
-        let service = createTestService()
+        let service = testService
         let items = createTestItems()
         let fileURL = try createTestImportFile(items: items)
 
@@ -176,10 +176,10 @@ struct InventoryImportServiceTests {
 
     @Test("Preview import shows manufacturer breakdown")
     func testPreviewManufacturerBreakdown() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
+        
         try await populateTestCatalog()
 
-        let service = createTestService()
+        let service = testService
         let items = createTestItems()
         let fileURL = try createTestImportFile(items: items)
 
@@ -198,7 +198,7 @@ struct InventoryImportServiceTests {
 
     @Test("Erase and replace mode deletes existing inventory")
     func testEraseAndReplaceDeletesExisting() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
+        
         try await populateTestCatalog()
 
         let inventoryRepo = deps.inventoryRepository
@@ -220,7 +220,7 @@ struct InventoryImportServiceTests {
         #expect(beforeCount == 1)
 
         // Import with erase mode
-        let service = createTestService()
+        let service = testService
         let items = createTestItems()
         let fileURL = try createTestImportFile(items: items)
 
@@ -247,7 +247,7 @@ struct InventoryImportServiceTests {
 
     @Test("Add new only mode skips existing items")
     func testAddNewOnlySkipsExisting() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
+        
         try await populateTestCatalog()
 
         let inventoryRepo = deps.inventoryRepository
@@ -265,7 +265,7 @@ struct InventoryImportServiceTests {
         _ = try await inventoryRepo.createInventory(existingInventory)
 
         // Import with add new only mode
-        let service = createTestService()
+        let service = testService
         let items = createTestItems()
         let fileURL = try createTestImportFile(items: items)
 
@@ -291,12 +291,12 @@ struct InventoryImportServiceTests {
 
     @Test("Add new only mode imports all items when none exist")
     func testAddNewOnlyImportsAllWhenEmpty() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
+        
         try await populateTestCatalog()
 
         // No existing inventory
 
-        let service = createTestService()
+        let service = testService
         let items = createTestItems()
         let fileURL = try createTestImportFile(items: items)
 
@@ -315,7 +315,7 @@ struct InventoryImportServiceTests {
 
     @Test("Add and increase mode increases existing quantities")
     func testAddAndIncreaseModeIncreasesQuantities() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
+        
         try await populateTestCatalog()
 
         let inventoryRepo = deps.inventoryRepository
@@ -333,7 +333,7 @@ struct InventoryImportServiceTests {
         _ = try await inventoryRepo.createInventory(existingInventory)
 
         // Import with add and increase mode (import has quantity 10)
-        let service = createTestService()
+        let service = testService
         let items = createTestItems()
         let fileURL = try createTestImportFile(items: items)
 
@@ -359,12 +359,12 @@ struct InventoryImportServiceTests {
 
     @Test("Add and increase mode adds new items")
     func testAddAndIncreaseModeAddsNewItems() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
+        
         try await populateTestCatalog()
 
         // No existing inventory
 
-        let service = createTestService()
+        let service = testService
         let items = createTestItems()
         let fileURL = try createTestImportFile(items: items)
 
@@ -383,7 +383,7 @@ struct InventoryImportServiceTests {
 
     @Test("Ask per item mode calls delegate for conflicts")
     func testAskPerItemModeCallsDelegate() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
+        
         try await populateTestCatalog()
 
         let inventoryRepo = deps.inventoryRepository
@@ -401,7 +401,7 @@ struct InventoryImportServiceTests {
         _ = try await inventoryRepo.createInventory(existingInventory)
 
         // Create service and set mock delegate
-        let service = createTestService()
+        let service = testService
         let mockDelegate = MockImportDelegate(action: .skip)
         service.delegate = mockDelegate
 
@@ -424,7 +424,7 @@ struct InventoryImportServiceTests {
 
     @Test("Ask per item mode replace action works")
     func testAskPerItemModeReplaceAction() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
+        
         try await populateTestCatalog()
 
         let inventoryRepo = deps.inventoryRepository
@@ -442,7 +442,7 @@ struct InventoryImportServiceTests {
         _ = try await inventoryRepo.createInventory(existingInventory)
 
         // Create service with delegate that chooses replace
-        let service = createTestService()
+        let service = testService
         let mockDelegate = MockImportDelegate(action: .replace)
         service.delegate = mockDelegate
 
@@ -466,7 +466,7 @@ struct InventoryImportServiceTests {
 
     @Test("Ask per item mode increase action works")
     func testAskPerItemModeIncreaseAction() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
+        
         try await populateTestCatalog()
 
         let inventoryRepo = deps.inventoryRepository
@@ -484,7 +484,7 @@ struct InventoryImportServiceTests {
         _ = try await inventoryRepo.createInventory(existingInventory)
 
         // Create service with delegate that chooses increase
-        let service = createTestService()
+        let service = testService
         let mockDelegate = MockImportDelegate(action: .increase)
         service.delegate = mockDelegate
 
@@ -510,9 +510,9 @@ struct InventoryImportServiceTests {
 
     @Test("Import fails with invalid JSON")
     func testImportFailsWithInvalidJSON() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
+        
 
-        let service = createTestService()
+        let service = testService
 
         // Create invalid JSON file
         let tempDir = FileManager.default.temporaryDirectory
@@ -530,10 +530,10 @@ struct InventoryImportServiceTests {
 
     @Test("Import handles item not found error")
     func testImportHandlesItemNotFound() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
+        
         // Don't populate catalog - items won't be found
 
-        let service = createTestService()
+        let service = testService
         let items = createTestItems()
         let fileURL = try createTestImportFile(items: items)
 
@@ -550,7 +550,7 @@ struct InventoryImportServiceTests {
 
     @Test("populateTestCatalog creates items that can be found by stable_id")
     func testPopulateCatalogWorks() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
+        
         try await populateTestCatalog()
 
         // Try to fetch the items we just created using the shared repository

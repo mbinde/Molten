@@ -21,11 +21,17 @@ import Foundation
 @MainActor
 struct ShoppingListServiceIntegrationTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
     // MARK: - Test Setup
 
     private func createTestEnvironment() async -> (ShoppingListService, CatalogService, InventoryTrackingService, PersistenceController) {
         let testController = PersistenceController.createTestController()
-        let deps = AppDependencies(persistenceController: .createTestController())
 
         let shoppingService = deps.shoppingListService
         let catalogService = deps.catalogService

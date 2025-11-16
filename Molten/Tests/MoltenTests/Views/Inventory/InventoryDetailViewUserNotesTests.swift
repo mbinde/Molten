@@ -22,6 +22,13 @@ import CryptoKit
 @MainActor
 struct InventoryDetailViewUserNotesTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
     @Test("InventoryDetailView should accept UserNotesRepository for managing notes")
     func testInventoryDetailViewAcceptsUserNotesRepository() {
         // Arrange: Create a business model with no notes

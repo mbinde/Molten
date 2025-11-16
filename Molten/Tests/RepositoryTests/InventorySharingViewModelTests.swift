@@ -20,6 +20,13 @@ import CoreData
 @MainActor
 struct InventorySharingViewModelTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
     // MARK: - Test Lifecycle
 
     init() {
@@ -417,11 +424,8 @@ struct InventorySharingViewModelTests {
     // MARK: - Helper Methods
 
     private func createMockSharingManager() -> InventorySharingManager {
-        // Create isolated test controller
-        let testController = PersistenceController.createTestController()
-        let deps = AppDependencies(persistenceController: .createTestController())
-
-        let testContext = testController.container.viewContext
+        // Use shared deps to keep PersistenceController alive
+        let testContext = deps.persistenceController.container.viewContext
         let catalogRepo = deps.glassItemRepository
         let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
@@ -453,11 +457,8 @@ struct InventorySharingViewModelTests {
     }
 
     private func createMockSharingManagerWithInvalidSignature() -> InventorySharingManager {
-        // Create isolated test controller
-        let testController = PersistenceController.createTestController()
-        let deps = AppDependencies(persistenceController: .createTestController())
-
-        let testContext = testController.container.viewContext
+        // Use shared deps to keep PersistenceController alive
+        let testContext = deps.persistenceController.container.viewContext
         let catalogRepo = deps.glassItemRepository
         let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
@@ -488,7 +489,6 @@ struct InventorySharingViewModelTests {
     }
 
     private func createMockCatalogService() -> CatalogService {
-        let deps = AppDependencies(persistenceController: .createTestController())
         return deps.catalogService
     }
 }

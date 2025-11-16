@@ -20,11 +20,18 @@ import Foundation
 @MainActor
 struct InventorySharingCoordinatorTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
+
     // MARK: - Test Lifecycle
 
     init() {
         KeyPairManager.deleteAllKeys()
-        let deps = AppDependencies(persistenceController: .createTestController())
     }
 
     // MARK: - Conversion Tests

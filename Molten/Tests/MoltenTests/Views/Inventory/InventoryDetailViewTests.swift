@@ -15,6 +15,13 @@ import CryptoKit
 @MainActor
 struct InventoryDetailViewTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
     // MARK: - Test Helpers
 
     func createTestItem(with inventory: [InventoryModel] = []) -> CompleteInventoryItemModel {
@@ -291,7 +298,6 @@ struct InventoryDetailViewTests {
     @Test("ShoppingListOptionsView initializes with item")
     func testShoppingListOptionsViewInit() {
         let item = createTestItem()
-        let deps = AppDependencies(persistenceController: .createTestController())
         let view = ShoppingListOptionsView(
             item: item,
             deps: deps
@@ -304,7 +310,6 @@ struct InventoryDetailViewTests {
     @Test("Shopping list validates positive quantity")
     func testShoppingListQuantityValidation() {
         let item = createTestItem()
-        let deps = AppDependencies(persistenceController: .createTestController())
         let view = ShoppingListOptionsView(item: item, deps: deps)
 
         #expect(view != nil)
@@ -571,7 +576,6 @@ struct InventoryDetailViewTests {
         ]
 
         let item = createTestItem(with: inventory)
-        let deps = AppDependencies(persistenceController: .createTestController())
         let view = InventoryStorageDetailView(item: item, inventoryType: "rod", deps: deps)
 
         #expect(view != nil)

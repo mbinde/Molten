@@ -14,11 +14,18 @@ import Foundation
 @MainActor
 struct PurchaseRecordServiceTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
+
     // MARK: - Basic CRUD Operations
 
     @Test("Create purchase record successfully")
     func testCreateRecord() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let record = PurchaseRecordModel(
@@ -39,7 +46,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get record by ID when record exists")
     func testGetRecordByIdFound() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         // Create a record first
@@ -63,7 +69,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get record by ID returns nil when record not found")
     func testGetRecordByIdNotFound() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let nonExistentId = UUID()
@@ -74,7 +79,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Update purchase record successfully")
     func testUpdateRecord() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         // Create record
@@ -106,7 +110,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Delete purchase record successfully")
     func testDeleteRecord() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         // Create record
@@ -130,7 +133,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get all records returns all created records")
     func testGetAllRecords() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         // Create multiple records
@@ -165,7 +167,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get records within date range")
     func testGetRecordsInDateRange() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let calendar = Calendar.current
@@ -203,7 +204,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get records with no matches in date range returns empty")
     func testGetRecordsInDateRangeNoMatches() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let calendar = Calendar.current
@@ -220,7 +220,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Search records by text finds matching records")
     func testSearchRecordsByText() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let record = PurchaseRecordModel(
@@ -240,7 +239,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Search records with no matches returns empty")
     func testSearchRecordsNoMatches() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let results = try await service.searchRecords(searchText: "nonexistenttext12345")
@@ -250,7 +248,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Filter records by supplier")
     func testFilterRecordsBySupplier() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let record1 = PurchaseRecordModel(
@@ -281,7 +278,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Filter records by supplier with no matches returns empty")
     func testFilterRecordsBySupplierNoMatches() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let results = try await service.getRecords(bySupplier: "Nonexistent Supplier")
@@ -293,7 +289,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Calculate total spending for date range")
     func testGetTotalSpending() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let calendar = Calendar.current
@@ -328,7 +323,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get distinct suppliers returns unique supplier names")
     func testGetDistinctSuppliers() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let record1 = PurchaseRecordModel(
@@ -368,7 +362,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get spending by supplier calculates correctly")
     func testGetSpendingBySupplier() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let calendar = Calendar.current
@@ -413,7 +406,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get spending by supplier with empty data returns empty dictionary")
     func testGetSpendingBySupplierEmptyData() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let calendar = Calendar.current
@@ -430,7 +422,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get purchase history for glass item")
     func testGetPurchaseHistory() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let stableId = "test123"
@@ -459,7 +450,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get total purchased quantity for glass item")
     func testGetTotalPurchased() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let stableId = "test456"
@@ -505,7 +495,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Get total purchased with no records returns zero")
     func testGetTotalPurchasedNoRecords() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let totalPurchased = try await service.getTotalPurchased(for: "nonexistent-id", type: "rod")
@@ -517,7 +506,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Handle purchase record with nil notes")
     func testRecordWithNilNotes() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let record = PurchaseRecordModel(
@@ -536,7 +524,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Handle purchase record with nil subtotal")
     func testRecordWithNilSubtotal() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let record = PurchaseRecordModel(
@@ -555,7 +542,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Handle empty supplier list gracefully")
     func testEmptySupplierList() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         // Don't create any records
@@ -567,7 +553,6 @@ struct PurchaseRecordServiceTests {
 
     @Test("Handle zero spending calculations")
     func testZeroSpendingCalculation() async throws {
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.purchaseRecordService
 
         let calendar = Calendar.current

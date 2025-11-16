@@ -15,11 +15,12 @@ import CoreData
 @MainActor
 struct CoreDataProjectRepositoryTests {
 
-    // MARK: - Test Helpers
+    // MARK: - Shared Dependencies
 
-    func createTestController() -> PersistenceController {
-        return PersistenceController.createTestController()
-    }
+    /// ✅ CRITICAL: Store PersistenceController at struct level to keep it alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let controller = PersistenceController.createTestController()
 
     func createTestPlan(
         id: UUID = UUID(),
@@ -45,7 +46,6 @@ struct CoreDataProjectRepositoryTests {
 
     @Test("Core Data: Relationship-based storage for tags, glass items, and reference URLs")
     func testRelationshipBasedStorage() async throws {
-        let controller = createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let plan = ProjectModel(
@@ -89,7 +89,6 @@ struct CoreDataProjectRepositoryTests {
 
     @Test("Core Data: Update replaces relationships correctly")
     func testUpdateReplacesRelationships() async throws {
-        let controller = createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         // Create plan with initial relationships
@@ -138,7 +137,6 @@ struct CoreDataProjectRepositoryTests {
 
     @Test("Core Data: Add reference URL creates proper relationship")
     func testAddReferenceUrl() async throws {
-        let controller = createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let plan = createTestPlan(referenceUrls: [])
@@ -160,7 +158,6 @@ struct CoreDataProjectRepositoryTests {
 
     @Test("Core Data: Update reference URL modifies existing relationship")
     func testUpdateReferenceUrl() async throws {
-        let controller = createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let originalUrl = ProjectReferenceUrl(
@@ -189,7 +186,6 @@ struct CoreDataProjectRepositoryTests {
 
     @Test("Core Data: Delete reference URL removes relationship")
     func testDeleteReferenceUrl() async throws {
-        let controller = createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let url1 = ProjectReferenceUrl(url: "https://example.com/url1", title: "URL 1")
@@ -206,7 +202,6 @@ struct CoreDataProjectRepositoryTests {
 
     @Test("Core Data: Empty relationships are handled correctly")
     func testEmptyRelationships() async throws {
-        let controller = createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let plan = ProjectModel(
@@ -225,7 +220,6 @@ struct CoreDataProjectRepositoryTests {
 
     @Test("Core Data: Complex plan with all relationship types")
     func testComplexPlanWithAllRelationships() async throws {
-        let controller = createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         let plan = ProjectModel(
@@ -257,7 +251,6 @@ struct CoreDataProjectRepositoryTests {
 
     @Test("Core Data: Cascade delete removes all plan relationships")
     func testCascadeDeleteRemovesPlanRelationships() async throws {
-        let controller = createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
         let context = controller.container.viewContext
 
@@ -306,7 +299,6 @@ struct CoreDataProjectRepositoryTests {
 
     @Test("Core Data: Multiple plans can have same tag strings")
     func testMultiplePlansCanShareTagStrings() async throws {
-        let controller = createTestController()
         let repository = CoreDataProjectRepository(context: controller.container.viewContext)
 
         // Create two plans with overlapping tags

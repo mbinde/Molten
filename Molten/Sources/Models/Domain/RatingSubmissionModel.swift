@@ -15,6 +15,17 @@ public nonisolated struct RatingSubmissionModel: Identifiable, Equatable, Codabl
     public let words: [String]
     public let createdAt: Date
 
+    // MARK: - Equatable
+
+    /// Custom Equatable implementation that compares semantic data (excludes id)
+    /// Two submissions are equal if they have the same data, regardless of ID
+    public static func == (lhs: RatingSubmissionModel, rhs: RatingSubmissionModel) -> Bool {
+        return lhs.itemStableId == rhs.itemStableId &&
+               lhs.starRating == rhs.starRating &&
+               lhs.words == rhs.words &&
+               lhs.createdAt == rhs.createdAt
+    }
+
     /// Initialize with business logic validation
     public nonisolated init(
         id: UUID = UUID(),

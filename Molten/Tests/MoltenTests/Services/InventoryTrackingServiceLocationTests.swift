@@ -14,10 +14,17 @@ import CryptoKit
 @MainActor
 struct InventoryTrackingServiceLocationTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
+
     @Test("addInventory creates inventory with location")
     func testAddInventoryWithLocation() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let glassItemRepo = deps.glassItemRepository
         let service = deps.inventoryTrackingService
 
@@ -50,7 +57,6 @@ struct InventoryTrackingServiceLocationTests {
     @Test("addInventory creates inventory without location")
     func testAddInventoryWithoutLocation() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let glassItemRepo = deps.glassItemRepository
         let service = deps.inventoryTrackingService
 
@@ -80,7 +86,6 @@ struct InventoryTrackingServiceLocationTests {
     @Test("createCompleteItem with initial inventory including locations")
     func testCreateCompleteItemWithLocations() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let service = deps.inventoryTrackingService
 
         let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
@@ -117,7 +122,6 @@ struct InventoryTrackingServiceLocationTests {
     @Test("getCompleteItem includes location information")
     func testGetCompleteItemWithLocations() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let glassItemRepo = deps.glassItemRepository
         let inventoryRepo = deps.inventoryRepository
         let service = deps.inventoryTrackingService
@@ -158,7 +162,6 @@ struct InventoryTrackingServiceLocationTests {
     @Test("getInventorySummary includes location details")
     func testGetInventorySummaryWithLocations() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let glassItemRepo = deps.glassItemRepository
         let inventoryRepo = deps.inventoryRepository
         let service = deps.inventoryTrackingService
@@ -208,7 +211,6 @@ struct InventoryTrackingServiceLocationTests {
     @Test("Multiple locations for same item and type")
     func testMultipleLocationsForSameItemType() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let glassItemRepo = deps.glassItemRepository
         let service = deps.inventoryTrackingService
 
@@ -253,7 +255,6 @@ struct InventoryTrackingServiceLocationTests {
     @Test("validateInventoryConsistency checks for negative quantities")
     func testValidateInventoryConsistency() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let glassItemRepo = deps.glassItemRepository
         let inventoryRepo = deps.inventoryRepository
         let service = deps.inventoryTrackingService
@@ -284,7 +285,6 @@ struct InventoryTrackingServiceLocationTests {
     @Test("Inventory without location is valid")
     func testInventoryWithoutLocationIsValid() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let glassItemRepo = deps.glassItemRepository
         let service = deps.inventoryTrackingService
 

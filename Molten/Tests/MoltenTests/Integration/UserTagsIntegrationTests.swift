@@ -15,6 +15,14 @@ import CryptoKit
 @MainActor
 struct UserTagsIntegrationTests {
 
+    // MARK: - Shared Dependencies
+
+    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// This prevents Core Data zombie objects that cause crashes.
+    /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
+    private let deps = AppDependencies(persistenceController: .createTestController())
+
+
     // MARK: - Model Tests
 
     @Test("CompleteInventoryItemModel combines manufacturer and user tags correctly")
@@ -91,7 +99,6 @@ struct UserTagsIntegrationTests {
     @Test("CatalogService fetches both manufacturer and user tags")
     func testCatalogServiceFetchesBothTagTypes() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
 
         // TODO: Add test data with both manufacturer and user tags
@@ -102,7 +109,6 @@ struct UserTagsIntegrationTests {
     @Test("ShoppingListService includes user tags in shopping lists")
     func testShoppingListServiceIncludesUserTags() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let shoppingListService = deps.shoppingListService
 
         // TODO: Add test data with user tags
@@ -143,7 +149,6 @@ struct UserTagsIntegrationTests {
     @Test("CatalogService batch fetches user tags efficiently")
     func testBatchFetchingUserTags() async throws {
         // Setup
-        let deps = AppDependencies(persistenceController: .createTestController())
         let catalogService = deps.catalogService
 
         // TODO: Test that getAllGlassItems() uses fetchTagsForItems for batch fetching

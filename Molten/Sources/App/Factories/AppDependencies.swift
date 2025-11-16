@@ -62,8 +62,15 @@ class AppDependencies {
 
     // MARK: - Core Dependencies
 
+    /// ✅ CRITICAL: Store the PersistenceController to prevent Core Data zombie crashes
+    /// The controller owns the NSManagedObjectModel and must stay alive for contexts to work.
     let persistenceController: PersistenceController
     let mode: RepositoryMode
+
+    /// Store contexts extracted from persistenceController
+    /// These maintain strong references to contexts which in turn reference the model
+    private let localContext: NSManagedObjectContext
+    private let cloudContext: NSManagedObjectContext
 
     // MARK: - Repositories
 
@@ -117,7 +124,9 @@ class AppDependencies {
         self.persistenceController = persistenceController
 
         // Determine mode based on whether this is in-memory or persistent
-        self.mode = persistenceController.container.persistentStoreDescriptions.first?.url?.path == "/dev/null" ? .mock : .coreData
+        // In-memory stores use /dev/null paths (either "/dev/null" for single store or "/dev/null/local", "/dev/null/cloud" for two-store)
+        let isInMemory = persistenceController.container.persistentStoreDescriptions.first?.url?.path.contains("/dev/null") ?? false
+        self.mode = isInMemory ? .mock : .coreData
 
         // Initialize persistence controller if not already initialized (production only)
         if self.mode == .coreData && !persistenceController.isReady {
@@ -147,36 +156,37 @@ class AppDependencies {
             }
         }
 
-        // Access contexts directly - they will fatalError if initialization failed
-        let localContext = persistenceController.localContext
-        let cloudContext = persistenceController.cloudContext
+        // Extract and store contexts from persistenceController
+        // Both persistenceController AND contexts are retained to ensure model stays alive
+        self.localContext = persistenceController.localContext
+        self.cloudContext = persistenceController.cloudContext
 
         // Create repositories (catalog data from bundled SQLite, user data from cloud store)
         // In test mode, use writable Core Data repository instead of read-only SQLite
         if self.mode == .mock {
-            self.glassItemRepository = CoreDataGlassItemRepository(context: localContext)
+            self.glassItemRepository = CoreDataGlassItemRepository(context: self.localContext)
         } else {
             self.glassItemRepository = SQLiteGlassItemRepository(databaseManager: .shared)
         }
         self.coatingItemRepository = CoreDataCoatingItemRepository(persistentContainer: persistenceController.container)
-        self.toolItemRepository = CoreDataToolItemRepository(context: localContext)
-        self.inventoryRepository = CoreDataInventoryRepository(context: cloudContext)
-        self.locationRepository = CoreDataLocationRepository(context: cloudContext)
-        self.itemTagsRepository = CoreDataItemTagsRepository(context: localContext)
-        self.userTagsRepository = CoreDataUserTagsRepository(context: cloudContext)
-        self.userNotesRepository = CoreDataUserNotesRepository(context: cloudContext)
-        self.shoppingListRepository = CoreDataShoppingListRepository(context: cloudContext)
-        self.itemMinimumRepository = CoreDataItemMinimumRepository(context: cloudContext)
-        self.projectRepository = CoreDataProjectRepository(context: cloudContext)
-        self.logbookRepository = CoreDataLogbookRepository(context: cloudContext)
-        self.purchaseRecordRepository = CoreDataPurchaseRecordRepository(context: cloudContext)
-        self.projectImageRepository = CoreDataProjectImageRepository(context: cloudContext)
-        self.kilnScheduleRepository = CoreDataKilnScheduleRepository(context: cloudContext)
-        self.recipeRepository = CoreDataRecipeRepository(context: cloudContext)
+        self.toolItemRepository = CoreDataToolItemRepository(context: self.localContext)
+        self.inventoryRepository = CoreDataInventoryRepository(context: self.cloudContext)
+        self.locationRepository = CoreDataLocationRepository(context: self.cloudContext)
+        self.itemTagsRepository = CoreDataItemTagsRepository(context: self.localContext)
+        self.userTagsRepository = CoreDataUserTagsRepository(context: self.cloudContext)
+        self.userNotesRepository = CoreDataUserNotesRepository(context: self.cloudContext)
+        self.shoppingListRepository = CoreDataShoppingListRepository(context: self.cloudContext)
+        self.itemMinimumRepository = CoreDataItemMinimumRepository(context: self.cloudContext)
+        self.projectRepository = CoreDataProjectRepository(context: self.cloudContext)
+        self.logbookRepository = CoreDataLogbookRepository(context: self.cloudContext)
+        self.purchaseRecordRepository = CoreDataPurchaseRecordRepository(context: self.cloudContext)
+        self.projectImageRepository = CoreDataProjectImageRepository(context: self.cloudContext)
+        self.kilnScheduleRepository = CoreDataKilnScheduleRepository(context: self.cloudContext)
+        self.recipeRepository = CoreDataRecipeRepository(context: self.cloudContext)
         self.unifiedLocationRepository = CoreDataUnifiedLocationRepository(persistenceController: persistenceController)
-        self.ratingRepository = CoreDataRatingRepository(localContext: localContext, cloudContext: cloudContext)
+        self.ratingRepository = CoreDataRatingRepository(localContext: self.localContext, cloudContext: self.cloudContext)
         #if canImport(UIKit)
-        self.userImageRepository = CoreDataUserImageRepository(context: cloudContext)
+        self.userImageRepository = CoreDataUserImageRepository(context: self.cloudContext)
         #endif
 
         // Create services (using helper to avoid duplication)

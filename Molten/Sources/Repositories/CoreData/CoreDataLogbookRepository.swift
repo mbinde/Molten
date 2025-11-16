@@ -25,7 +25,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             let entity = Logbook(context: self.context)
             self.mapModelToEntity(log, entity: entity)
 
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
             return log
         }
     }
@@ -78,7 +78,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             }
 
             self.mapModelToEntity(log, entity: entity)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 
@@ -105,7 +105,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
 
             // Delete the logbook entity (related entities with cascade delete will be removed automatically)
             self.context.delete(entity)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 

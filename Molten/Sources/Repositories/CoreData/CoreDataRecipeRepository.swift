@@ -94,7 +94,7 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
                     self.updateCoreDataFritRecipe(coreDataRecipe, with: recipe)
 
                     // Save context
-                    try self.context.save()
+                    try CoreDataErrorHandler.save(context: self.context)
 
                     self.log.info("Created frit recipe: \(recipe.title)")
                     continuation.resume(returning: recipe)
@@ -124,7 +124,7 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
                     self.updateCoreDataFritRecipe(coreDataRecipe, with: updated)
 
                     // Save context
-                    try self.context.save()
+                    try CoreDataErrorHandler.save(context: self.context)
 
                     self.log.info("Updated frit recipe: \(updated.title)")
                     continuation.resume(returning: updated)
@@ -150,7 +150,7 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
                     }
 
                     self.context.delete(coreDataRecipe)
-                    try self.context.save()
+                    try CoreDataErrorHandler.save(context: self.context)
 
                     self.log.info("Deleted frit recipe with ID: \(id)")
                     continuation.resume()

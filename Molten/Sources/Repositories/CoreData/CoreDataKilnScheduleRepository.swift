@@ -23,7 +23,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
             let entity = KilnScheduleEntity(context: self.context)
             self.mapModelToEntity(schedule, entity: entity)
 
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
             return schedule
         }
     }
@@ -61,7 +61,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
             }
 
             self.mapModelToEntity(schedule, entity: entity)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 
@@ -75,7 +75,7 @@ class CoreDataKilnScheduleRepository: @unchecked Sendable, KilnScheduleRepositor
             }
 
             self.context.delete(entity)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 

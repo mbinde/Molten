@@ -280,7 +280,7 @@ struct CoreDataHelpers {
                 }
                 
                 // Perform the actual save
-                try context.save()
+                try CoreDataErrorHandler.save(context: context)
                 print("✅ \(description) saved successfully")
             } catch let error as NSError {
                 print("❌ Error saving \(description): \(error)")

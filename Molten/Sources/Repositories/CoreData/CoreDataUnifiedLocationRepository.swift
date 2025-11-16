@@ -240,7 +240,7 @@ class CoreDataUnifiedLocationRepository: @unchecked Sendable, UnifiedLocationRep
                 serviceEntity.location = entity
             }
 
-            try context.save()
+            try CoreDataErrorHandler.save(context: context)
         }
     }
 
@@ -262,7 +262,7 @@ class CoreDataUnifiedLocationRepository: @unchecked Sendable, UnifiedLocationRep
             let locations = try context.fetch(request)
             locations.forEach { context.delete($0) }
 
-            try context.save()
+            try CoreDataErrorHandler.save(context: context)
         }
     }
 
@@ -274,7 +274,7 @@ class CoreDataUnifiedLocationRepository: @unchecked Sendable, UnifiedLocationRep
             let locations = try context.fetch(request)
             locations.forEach { context.delete($0) }
 
-            try context.save()
+            try CoreDataErrorHandler.save(context: context)
         }
     }
 

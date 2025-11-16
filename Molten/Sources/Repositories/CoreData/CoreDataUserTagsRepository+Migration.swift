@@ -62,7 +62,7 @@ extension CoreDataUserTagsRepository {
                         try self.migrateEntity(entity, context: context, log: log)
                     }
 
-                    try context.save()
+                    try CoreDataErrorHandler.save(context: context)
                     log.info("UserTags migration complete: \(unmigrated.count) records migrated")
 
                     continuation.resume()
@@ -86,7 +86,7 @@ extension CoreDataUserTagsRepository {
         }
 
         if needsSave {
-            try context.save()
+            try CoreDataErrorHandler.save(context: context)
         }
     }
 }

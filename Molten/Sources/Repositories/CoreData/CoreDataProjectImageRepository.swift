@@ -24,7 +24,7 @@ class CoreDataProjectImageRepository: @unchecked Sendable, ProjectImageRepositor
         return try await context.perform {
             let entity = ProjectImage(context: self.context)
             self.mapModelToEntity(metadata, entity: entity)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
             return metadata
         }
     }
@@ -98,7 +98,7 @@ class CoreDataProjectImageRepository: @unchecked Sendable, ProjectImageRepositor
             }
 
             self.mapModelToEntity(metadata, entity: entity)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 
@@ -114,7 +114,7 @@ class CoreDataProjectImageRepository: @unchecked Sendable, ProjectImageRepositor
                 }
             }
 
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 
@@ -131,7 +131,7 @@ class CoreDataProjectImageRepository: @unchecked Sendable, ProjectImageRepositor
             }
 
             self.context.delete(entity)
-            try self.context.save()
+            try CoreDataErrorHandler.save(context: self.context)
         }
     }
 

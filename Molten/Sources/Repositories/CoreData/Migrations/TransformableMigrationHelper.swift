@@ -69,7 +69,7 @@ struct TransformableMigrationHelper {
             try? migrateTags(for: plan, in: context)
         }
 
-        try context.save()
+        try CoreDataErrorHandler.save(context: context)
         print("✅ Tags migration complete")
     }
 
@@ -102,7 +102,7 @@ struct TransformableMigrationHelper {
             try? migrateTechniques(for: log, in: context)
         }
 
-        try context.save()
+        try CoreDataErrorHandler.save(context: context)
         print("✅ Techniques migration complete")
     }
 
@@ -138,7 +138,7 @@ struct TransformableMigrationHelper {
             try? migrateReferenceUrls(for: plan, in: context)
         }
 
-        try context.save()
+        try CoreDataErrorHandler.save(context: context)
         print("✅ Reference URLs migration complete")
     }
 
@@ -226,7 +226,7 @@ struct TransformableMigrationHelper {
             try? migrateStepGlassItems(for: step, in: context)
         }
 
-        try context.save()
+        try CoreDataErrorHandler.save(context: context)
         print("✅ Glass items migration complete")
     }
 

@@ -57,7 +57,7 @@ extension CoreDataInventoryRepository {
                         }
 
                         self.updateCoreDataEntity(coreDataItem, with: updatedRecord)
-                        try self.context.save()
+                        try CoreDataErrorHandler.save(context: self.context)
 
                         continuation.resume(returning: updatedRecord)
                     } else {
@@ -74,7 +74,7 @@ extension CoreDataInventoryRepository {
                         let coreDataItem = NSManagedObject(entity: entity, insertInto: self.context)
 
                         self.updateCoreDataEntity(coreDataItem, with: newRecord)
-                        try self.context.save()
+                        try CoreDataErrorHandler.save(context: self.context)
 
                         continuation.resume(returning: newRecord)
                     }
@@ -109,7 +109,7 @@ extension CoreDataInventoryRepository {
                     if newQuantity <= 0 {
                         // Delete the record if quantity reaches zero or below
                         self.context.delete(coreDataItem)
-                        try self.context.save()
+                        try CoreDataErrorHandler.save(context: self.context)
                         continuation.resume(returning: nil)
                     } else {
                         // Update the record with new quantity
@@ -123,7 +123,7 @@ extension CoreDataInventoryRepository {
                         )
 
                         self.updateCoreDataEntity(coreDataItem, with: updatedRecord)
-                        try self.context.save()
+                        try CoreDataErrorHandler.save(context: self.context)
                         continuation.resume(returning: updatedRecord)
                     }
 

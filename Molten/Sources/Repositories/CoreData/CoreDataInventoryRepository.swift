@@ -131,7 +131,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     self.updateCoreDataEntity(coreDataItem, with: newInventory)
 
                     // Save context
-                    try self.context.save()
+                    try CoreDataErrorHandler.save(context: self.context)
 
                     self.log.info("Created inventory record: \(newInventory.item_stable_id) - \(newInventory.type)")
                     continuation.resume(returning: newInventory)
@@ -177,7 +177,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     }
 
                     // Save all changes at once
-                    try self.context.save()
+                    try CoreDataErrorHandler.save(context: self.context)
 
                     self.log.info("Created \(createdInventories.count) inventory records in batch")
                     continuation.resume(returning: createdInventories)
@@ -205,7 +205,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     self.updateCoreDataEntity(coreDataItem, with: inventory)
 
                     // Save context
-                    try self.context.save()
+                    try CoreDataErrorHandler.save(context: self.context)
 
                     self.log.info("Updated inventory record: \(inventory.id)")
                     continuation.resume(returning: inventory)
@@ -233,7 +233,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     self.context.delete(coreDataItem)
 
                     // Save context
-                    try self.context.save()
+                    try CoreDataErrorHandler.save(context: self.context)
 
                     self.log.info("Deleted inventory record: \(id)")
                     continuation.resume()
@@ -260,7 +260,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     }
 
                     if !itemsToDelete.isEmpty {
-                        try self.context.save()
+                        try CoreDataErrorHandler.save(context: self.context)
                     }
 
                     self.log.info("Deleted \(itemsToDelete.count) inventory records for item: \(item_stable_id)")
@@ -290,7 +290,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     }
 
                     if !itemsToDelete.isEmpty {
-                        try self.context.save()
+                        try CoreDataErrorHandler.save(context: self.context)
                     }
 
                     self.log.info("Deleted \(itemsToDelete.count) inventory records for item: \(item_stable_id) type: \(cleanType)")

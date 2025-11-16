@@ -26,17 +26,8 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
             let entity = Project(context: self.context)
             self.mapModelToEntity(project, entity: entity)
 
-            do {
-                try self.context.save()
-            } catch let error as NSError {
-                // Log detailed error before re-throwing
-                print("❌ Core Data save failed: \(error.localizedDescription)")
-                print("   Domain: \(error.domain), Code: \(error.code)")
-                if let userInfo = error.userInfo as? [String: Any] {
-                    print("   UserInfo: \(userInfo)")
-                }
-                throw error
-            }
+            // Use enhanced error handler for better debugging
+            try CoreDataErrorHandler.save(context: self.context)
             return project
         }
     }

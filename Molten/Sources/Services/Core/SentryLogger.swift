@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import UIKit
+import AppKit
 import Sentry
 
 // MARK: - Environment
@@ -244,11 +244,11 @@ public final class SentryLogger: LoggerBackend, @unchecked Sendable {
 
         enriched["environment"] = environment.rawValue
 
-        // Add device metadata
-        let device = UIDevice.current
-        enriched["device_model"] = device.model
-        enriched["os_version"] = device.systemVersion
-        enriched["device_name"] = device.name
+        // Add device metadata (macOS)
+        let processInfo = ProcessInfo.processInfo
+        enriched["device_model"] = getMacModel()
+        enriched["os_version"] = processInfo.operatingSystemVersionString
+        enriched["device_name"] = Host.current().localizedName ?? "Unknown"
 
         // Add memory info
         var info = mach_task_basic_info()
@@ -298,5 +298,15 @@ public final class SentryLogger: LoggerBackend, @unchecked Sendable {
         filtered.removeValue(forKey: "email")
 
         return filtered
+    }
+
+    // MARK: - macOS Helpers
+
+    private func getMacModel() -> String {
+        var size = 0
+        sysctlbyname("hw.model", nil, &size, nil, 0)
+        var model = [CChar](repeating: 0, count: size)
+        sysctlbyname("hw.model", &model, &size, nil, 0)
+        return String(cString: model)
     }
 }

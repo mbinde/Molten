@@ -204,11 +204,11 @@ struct LabelBuilderConfig: Equatable, Codable {
         qrPosition: .left,
         qrSize: nil,  // Use format default
         fontScale: nil,  // Use format default
-        manufacturerImagePosition: .none,
+        manufacturerImagePosition: .right,  // Add manufacturer logo on right
         manufacturerImageSize: nil,  // Use default (0.6)
         textFields: [.manufacturer, .sku, .colorName, .coe],
         textAlignment: .left,
-        fieldFormats: LabelFieldFormat.defaults
+        fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
     )
 
     /// Get format for a specific field (with fallback to default)
@@ -240,11 +240,11 @@ struct LabelBuilderConfig: Equatable, Codable {
                 qrPosition: .left,
                 qrSize: nil,  // Use format default
                 fontScale: nil,  // Use format default
-                manufacturerImagePosition: .none,
-                manufacturerImageSize: nil,
+                manufacturerImagePosition: .right,  // Add manufacturer logo on right
+                manufacturerImageSize: nil,  // Use default (0.6)
                 textFields: [.manufacturer, .sku, .colorName, .coe],
                 textAlignment: .left,
-                fieldFormats: LabelFieldFormat.defaults
+                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
             )
         ),
         LabelBuilderPreset(
@@ -252,13 +252,13 @@ struct LabelBuilderConfig: Equatable, Codable {
             description: "Large QR code, minimal text",
             config: LabelBuilderConfig(
                 qrPosition: .left,
-                qrSize: 0.75,  // Override: Larger QR than format default
+                qrSize: nil,  // Use format default
                 fontScale: nil,  // Use format default
                 manufacturerImagePosition: .none,
                 manufacturerImageSize: nil,
                 textFields: [.manufacturer, .sku],
                 textAlignment: .left,
-                fieldFormats: LabelFieldFormat.defaults
+                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
             )
         ),
         LabelBuilderPreset(
@@ -272,7 +272,7 @@ struct LabelBuilderConfig: Equatable, Codable {
                 manufacturerImageSize: nil,
                 textFields: [.manufacturer, .sku, .colorName],
                 textAlignment: .center,
-                fieldFormats: LabelFieldFormat.defaults
+                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
             )
         ),
         LabelBuilderPreset(
@@ -280,13 +280,13 @@ struct LabelBuilderConfig: Equatable, Codable {
             description: "With location information",
             config: LabelBuilderConfig(
                 qrPosition: .left,
-                qrSize: 0.50,  // Override: Smaller QR to make room for location
-                fontScale: 0.9,  // Override: Slightly smaller text to fit more fields
+                qrSize: nil,  // Use format default
+                fontScale: nil,  // Use format default
                 manufacturerImagePosition: .none,
                 manufacturerImageSize: nil,
-                textFields: [.manufacturer, .sku, .colorName, .coe, .location],
+                textFields: [.manufacturer, .sku, .colorName, .location],  // Removed .coe
                 textAlignment: .left,
-                fieldFormats: LabelFieldFormat.defaults
+                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
             )
         )
     ]
@@ -656,11 +656,23 @@ struct LabelData: Sendable {
 @preconcurrency
 class LabelPrintingService {
 
+    // MARK: - Performance Optimization
+
+    /// Shared CIContext for QR code generation (expensive to create)
+    private let qrContext = CIContext()
+
+    /// Cache for generated QR codes (key = stableId)
+    private var qrCodeCache: [String: UIImage] = [:]
+
     /// Generate QR code image for a glass item with Molten logo overlay
     /// - Parameter stableId: The stable_id of the glass item (e.g., "2wjEBu")
     /// - Returns: UIImage containing the QR code with logo in center
     func generateQRCode(for stableId: String) -> UIImage {
-        let context = CIContext()
+        // Check cache first
+        if let cachedQR = qrCodeCache[stableId] {
+            return cachedQR
+        }
+
         let filter = CIFilter.qrCodeGenerator()
 
         // Create deep link URL with stable_id
@@ -676,14 +688,19 @@ class LabelPrintingService {
         let scaleY = qrSize / outputImage.extent.height
         let transformedImage = outputImage.transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
 
-        guard let cgImage = context.createCGImage(transformedImage, from: transformedImage.extent) else {
+        guard let cgImage = qrContext.createCGImage(transformedImage, from: transformedImage.extent) else {
             return UIImage()
         }
 
         let qrImage = UIImage(cgImage: cgImage)
 
         // Overlay logo in center
-        return overlayLogoOnQRCode(qrImage: qrImage, qrSize: qrSize)
+        let finalImage = overlayLogoOnQRCode(qrImage: qrImage, qrSize: qrSize)
+
+        // Cache for reuse
+        qrCodeCache[stableId] = finalImage
+
+        return finalImage
     }
 
     /// Overlay Molten logo in the center of QR code
@@ -905,8 +922,105 @@ class LabelPrintingService {
             }
         }
 
-        // Draw text fields in the order specified by config
-        var yPosition = rect.minY + padding
+        // Draw manufacturer image(s) if configured
+        if config.manufacturerImagePosition != .none, let manufacturer = labelData.manufacturer {
+            let effectiveImageSize = config.manufacturerImageSize ?? 0.6
+            let imageSize = rect.height * effectiveImageSize
+
+            // Try to load manufacturer logo
+            // Manufacturer codes are uppercase (e.g., "EF", "BE"), but files are lowercase with _print.png suffix
+            let imageName = "\(manufacturer.lowercased())_print.png"
+            print("🏷️ LabelPrintingService: Attempting to load manufacturer image: \(imageName)")
+            if let logoImage = UIImage(named: imageName) {
+                print("✅ LabelPrintingService: Successfully loaded manufacturer image for \(manufacturer)")
+                switch config.manufacturerImagePosition {
+                case .left:
+                    // Draw left image
+                    let leftImageRect = CGRect(
+                        x: rect.minX + padding,
+                        y: rect.minY + (rect.height - imageSize) / 2,
+                        width: imageSize,
+                        height: imageSize
+                    )
+                    logoImage.draw(in: leftImageRect)
+
+                    // Adjust content area to be to the right of image
+                    contentX = leftImageRect.maxX + padding
+                    contentWidth = rect.maxX - contentX - padding
+
+                case .right:
+                    // Draw right image
+                    let rightImageRect = CGRect(
+                        x: rect.maxX - padding - imageSize,
+                        y: rect.minY + (rect.height - imageSize) / 2,
+                        width: imageSize,
+                        height: imageSize
+                    )
+                    logoImage.draw(in: rightImageRect)
+
+                    // Content area is from left edge to image
+                    contentWidth = rightImageRect.minX - contentX - padding
+
+                case .both:
+                    // Draw left image
+                    let leftImageRect = CGRect(
+                        x: rect.minX + padding,
+                        y: rect.minY + (rect.height - imageSize) / 2,
+                        width: imageSize,
+                        height: imageSize
+                    )
+                    logoImage.draw(in: leftImageRect)
+
+                    // Draw right image
+                    let rightImageRect = CGRect(
+                        x: rect.maxX - padding - imageSize,
+                        y: rect.minY + (rect.height - imageSize) / 2,
+                        width: imageSize,
+                        height: imageSize
+                    )
+                    logoImage.draw(in: rightImageRect)
+
+                    // Content area is between the two images
+                    contentX = leftImageRect.maxX + padding
+                    contentWidth = rightImageRect.minX - contentX - padding
+
+                case .none:
+                    break
+                }
+            } else {
+                print("⚠️ LabelPrintingService: Manufacturer image '\(imageName)' not found in Assets")
+                print("   Expected file naming: {manufacturer}_print.png (e.g., be_print.png, cim_print.png)")
+            }
+        } else if config.manufacturerImagePosition != .none {
+            print("ℹ️ LabelPrintingService: Manufacturer image position is \(config.manufacturerImagePosition.rawValue) but no manufacturer data available")
+        }
+
+        // Calculate total text height first for vertical centering
+        var totalTextHeight: CGFloat = 0
+        for field in config.textFields {
+            let fieldFormat = config.format(for: field)
+            let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+
+            // Only count this field if it has data to show
+            let shouldShow: Bool = {
+                switch field {
+                case .manufacturer: return labelData.manufacturer != nil
+                case .sku: return labelData.sku != nil
+                case .colorName: return labelData.colorName != nil
+                case .coe: return labelData.coe != nil
+                case .location: return labelData.location != nil
+                case .owner: return labelData.owner != nil
+                }
+            }()
+
+            if shouldShow {
+                totalTextHeight += font.lineHeight + 1
+            }
+        }
+
+        // Start Y position centered vertically in the available space
+        let availableHeight = rect.height - (padding * 2)
+        var yPosition = rect.minY + padding + max(0, (availableHeight - totalTextHeight) / 2)
 
         // Convert text alignment to NSTextAlignment
         let textAlignment: NSTextAlignment = {

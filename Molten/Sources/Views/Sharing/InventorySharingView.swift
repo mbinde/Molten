@@ -13,16 +13,42 @@ struct InventorySharingView: View {
     @State private var viewModel = InventorySharingViewModel()
     @State private var friendToDelete: FriendShare?
     @State private var showingDeleteConfirmation = false
+    @State private var myShareExpanded = false
+    @State private var expiringSharesExpanded = false
+    @State private var friendsExpanded = false
+    @State private var hasLoadedInitialData = false
+
+    /// Optional share code to pre-fill when adding a friend (e.g., from QR code deep link)
+    let pendingShareCode: String?
+
+    init(pendingShareCode: String? = nil) {
+        self.pendingShareCode = pendingShareCode
+    }
 
     var body: some View {
         NavigationStack {
             List {
                 myShareSection
+                expiringSharesSection
                 friendsSection
             }
             .navigationTitle("Inventory Sharing")
             .task {
                 await viewModel.onAppear()
+                hasLoadedInitialData = true
+
+                // If we have a pending share code from deep link, pre-fill and show add friend sheet
+                if let shareCode = pendingShareCode {
+                    viewModel.friendShareCode = shareCode
+                    viewModel.showingAddFriend = true
+                }
+            }
+            .onChange(of: viewModel.myShareCode) { oldValue, newValue in
+                // Only auto-expand if share code changed from nil to a value AFTER initial load
+                // This ensures we expand when creating a new share, but not when loading an existing one
+                if hasLoadedInitialData && oldValue == nil && newValue != nil {
+                    myShareExpanded = true
+                }
             }
             .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
                 Button("OK") {
@@ -46,6 +72,9 @@ struct InventorySharingView: View {
                 if let friend = viewModel.selectedFriendForCustomization {
                     CustomizeFriendView(friend: friend, viewModel: viewModel)
                 }
+            }
+            .sheet(isPresented: $viewModel.showingCreateExpiringShare) {
+                CreateExpiringShareView(viewModel: viewModel)
             }
             .alert("Delete Friend?", isPresented: $showingDeleteConfirmation) {
                 Button("Cancel", role: .cancel) {
@@ -71,112 +100,230 @@ struct InventorySharingView: View {
     private var myShareSection: some View {
         Section {
             if let shareCode = viewModel.myShareCode {
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                    Text("Your Share Code")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
+                // Header row (always visible)
+                Button(action: { myShareExpanded.toggle() }) {
                     HStack {
-                        Text(shareCode)
-                            .font(.system(.title2, design: .monospaced))
-                            .fontWeight(.bold)
-
-                        Spacer()
-
-                        Button {
-                            viewModel.copyShareCode()
-                        } label: {
-                            Image(systemName: "doc.on.doc")
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                            Text("My Inventory")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            Text("Click to show your share code")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
                         }
-                        .buttonStyle(.borderless)
+                        Spacer()
+                        Image(systemName: myShareExpanded ? "chevron.up" : "chevron.down")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
                     }
-
-                    Text("Share this code with friends so they can view your inventory")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    .contentShape(Rectangle())
                 }
-                .padding(.vertical, DesignSystem.Spacing.xs)
+                .buttonStyle(.plain)
 
-                if let metadata = viewModel.myShareMetadata {
-                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                if myShareExpanded {
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                        // Large share code display
                         HStack {
-                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                                Text("Display Name: \(metadata.displayName)")
-                                    .font(.subheadline)
+                            Text(shareCode.formattedShareCode)
+                                .font(.system(.title, design: .monospaced))
+                                .fontWeight(.bold)
 
-                                if let notes = metadata.shareNotes {
-                                    Text("Notes: \(notes)")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
+                            Button {
+                                viewModel.copyShareCode()
+                            } label: {
+                                Image(systemName: "doc.on.doc")
                             }
+                            .buttonStyle(.borderless)
 
                             Spacer()
 
                             Button {
-                                viewModel.showingEditMetadata = true
+                                shareDeepLink(shareCode: shareCode.unformattedShareCode)
                             } label: {
-                                Image(systemName: "pencil")
+                                Image(systemName: "square.and.arrow.up")
                             }
                             .buttonStyle(.borderless)
                         }
+
+                        // QR Code for easy scanning (deep link to add friend)
+                        let deepLinkURL = "molten://inventory/\(shareCode.unformattedShareCode)"
+                        if let qrImage = generateQRCode(from: deepLinkURL) {
+                            HStack {
+                                Spacer()
+                                Image(uiImage: qrImage)
+                                    .interpolation(.none)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 200, height: 200)
+                                Spacer()
+                            }
+                            .padding(.vertical, DesignSystem.Spacing.sm)
+                        }
                     }
                     .padding(.vertical, DesignSystem.Spacing.xs)
-                }
 
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                    Button {
+                    if let metadata = viewModel.myShareMetadata {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                                    Text("Display Name: \(metadata.displayName)")
+                                        .font(.subheadline)
+
+                                    if let notes = metadata.shareNotes {
+                                        Text("Notes: \(notes)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+
+                                Spacer()
+
+                                Button {
+                                    viewModel.showingEditMetadata = true
+                                } label: {
+                                    Image(systemName: "pencil")
+                                }
+                                .buttonStyle(.borderless)
+                            }
+                        }
+                        .padding(.vertical, DesignSystem.Spacing.xs)
+                    }
+
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        Button {
+                            Task {
+                                await viewModel.refreshMyShare()
+                            }
+                        } label: {
+                            HStack {
+                                Image(systemName: "arrow.clockwise")
+                                Text("Update Inventory on Server Immediately")
+                            }
+                        }
+                        .disabled(viewModel.isLoading)
+
+                        Text("Re-uploads your current inventory to update what friends see. If you don't do this, it will refresh every 24 hours as long as you open the app during that time. All refreshes, whether automatic or manual, also reset the 90-day auto-deletion timer.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.leading, DesignSystem.Spacing.md)
+                    }
+
+                    Button(role: .destructive) {
                         Task {
-                            await viewModel.refreshMyShare()
+                            await viewModel.deleteMyShare()
                         }
                     } label: {
                         HStack {
-                            Image(systemName: "arrow.clockwise")
-                            Text("Update Inventory on Server")
+                            Image(systemName: "trash")
+                            Text("Delete Share")
                         }
                     }
                     .disabled(viewModel.isLoading)
-
-                    Text("Re-uploads your current inventory to update what friends see. Also resets the 90-day auto-deletion timer.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.leading, DesignSystem.Spacing.md)
                 }
-
-                Button(role: .destructive) {
-                    Task {
-                        await viewModel.deleteMyShare()
-                    }
-                } label: {
-                    HStack {
-                        Image(systemName: "trash")
-                        Text("Delete Share")
-                    }
-                }
-                .disabled(viewModel.isLoading)
 
             } else {
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                    Text("Share Your Inventory")
-                        .font(.headline)
+                // No share code - show clickable row to create
+                Button(action: { viewModel.showingCreateShare = true }) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                            Text("My Inventory")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            Text("Click to share your inventory")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "plus.circle")
+                            .foregroundColor(.accentColor)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
 
-                    Text("Create a share code to let friends view your glass inventory")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+    // MARK: - Helper Functions
+
+    private func generateQRCode(from string: String) -> UIImage? {
+        let data = string.data(using: .utf8)
+
+        guard let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
+        filter.setValue(data, forKey: "inputMessage")
+        filter.setValue("H", forKey: "inputCorrectionLevel")
+
+        guard let ciImage = filter.outputImage else { return nil }
+
+        // Scale up the QR code for better quality
+        let transform = CGAffineTransform(scaleX: 10, y: 10)
+        let scaledCIImage = ciImage.transformed(by: transform)
+
+        let context = CIContext()
+        guard let cgImage = context.createCGImage(scaledCIImage, from: scaledCIImage.extent) else { return nil }
+
+        return UIImage(cgImage: cgImage)
+    }
+
+    private func shareDeepLink(shareCode: String) {
+        let deepLinkURL = "molten://inventory/\(shareCode)"
+        let activityViewController = UIActivityViewController(
+            activityItems: [deepLinkURL],
+            applicationActivities: nil
+        )
+
+        // Get the window scene and present the share sheet
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootViewController = windowScene.windows.first?.rootViewController {
+            // Find the topmost view controller
+            var topController = rootViewController
+            while let presentedViewController = topController.presentedViewController {
+                topController = presentedViewController
+            }
+            activityViewController.popoverPresentationController?.sourceView = topController.view
+            topController.present(activityViewController, animated: true)
+        }
+    }
+
+    // MARK: - Expiring Shares Section
+
+    private var expiringSharesSection: some View {
+        Section {
+            if let shareCode = viewModel.myShareCode {
+                // Header row (always visible)
+                Button(action: { expiringSharesExpanded.toggle() }) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                            Text("Temporary Shares")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            Text("\(viewModel.expiringShares.count) active")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: expiringSharesExpanded ? "chevron.up" : "chevron.down")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                if expiringSharesExpanded {
+                    ForEach(viewModel.expiringShares) { share in
+                        ExpiringShareRowView(share: share, viewModel: viewModel)
+                    }
 
                     Button {
-                        viewModel.showingCreateShare = true
+                        viewModel.showingCreateExpiringShare = true
                     } label: {
                         HStack {
-                            Image(systemName: "square.and.arrow.up")
-                            Text("Create Share")
+                            Image(systemName: "clock.arrow.circlepath")
+                            Text("Create Temporary Share")
                         }
                     }
                 }
-                .padding(.vertical, DesignSystem.Spacing.xs)
             }
-        } header: {
-            Text("My Inventory")
         }
     }
 
@@ -311,6 +458,36 @@ struct FriendRowView: View {
         return weeks == 1 ? "1 week" : "\(weeks) weeks"
     }
 
+    private func timeUntilExpiration(_ expiresAt: Date) -> String {
+        let seconds = expiresAt.timeIntervalSince(currentTime)
+
+        // Already expired
+        if seconds <= 0 {
+            return "expired"
+        }
+
+        // Less than a minute
+        if seconds < 60 {
+            return "< 1 min"
+        }
+
+        // Minutes (1-59)
+        if seconds < 3600 {
+            let minutes = Int(seconds / 60)
+            return "\(minutes) min"
+        }
+
+        // Hours (1-23)
+        if seconds < 86400 {
+            let hours = Int(seconds / 3600)
+            return hours == 1 ? "1 hr" : "\(hours) hrs"
+        }
+
+        // Days
+        let days = Int(seconds / 86400)
+        return days == 1 ? "1 day" : "\(days) days"
+    }
+
     var body: some View {
         HStack(spacing: DesignSystem.Spacing.md) {
             // Icon
@@ -337,16 +514,23 @@ struct FriendRowView: View {
                 }
 
                 HStack {
-                    Text(friend.shareCode)
+                    Text(friend.shareCode.formattedShareCode)
                         .font(.caption)
                         .foregroundColor(.secondary)
 
-                    if friend.lastRefreshed != nil {
+                    // All shares have expiration times (90 days for regular, 7 days for temporary)
+                    if let expiresAt = friend.expiresAt {
                         Text("•")
                             .foregroundColor(.secondary)
-                        Text("Updated \(relativeTimeString) ago")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        if expiresAt < currentTime {
+                            Text("Expired")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        } else {
+                            Text("Expires in \(timeUntilExpiration(expiresAt))")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
             }
@@ -357,6 +541,80 @@ struct FriendRowView: View {
         }
         .onAppear {
             currentTime = Date()
+        }
+    }
+}
+
+// MARK: - Expiring Share Row View
+
+struct ExpiringShareRowView: View {
+    let share: ExpiringShare
+    @Bindable var viewModel: InventorySharingViewModel
+
+    @State private var showingDeleteConfirmation = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+            HStack {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                    // Share code - large and bold at top
+                    HStack {
+                        Text(share.shareCode.formattedShareCode)
+                            .font(.system(.title3, design: .monospaced))
+                            .fontWeight(.bold)
+
+                        Button {
+                            viewModel.copyExpiringShareCode(share.shareCode)
+                        } label: {
+                            Image(systemName: "doc.on.doc")
+                        }
+                        .buttonStyle(.borderless)
+                    }
+
+                    // Display name
+                    Text(share.displayName)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+
+                    if let notes = share.shareNotes {
+                        Text(notes)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                    }
+
+                    HStack {
+                        Image(systemName: share.isExpired ? "clock.badge.xmark" : "clock")
+                            .font(.caption)
+                            .foregroundColor(share.isExpired ? .red : .secondary)
+
+                        Text(share.expirationDisplayString)
+                            .font(.caption)
+                            .foregroundColor(share.isExpired ? .red : .secondary)
+                    }
+                }
+
+                Spacer()
+
+                Button(role: .destructive) {
+                    showingDeleteConfirmation = true
+                } label: {
+                    Image(systemName: "trash")
+                        .foregroundColor(.red)
+                }
+                .buttonStyle(.borderless)
+            }
+        }
+        .padding(.vertical, DesignSystem.Spacing.xs)
+        .alert("Delete Temporary Share?", isPresented: $showingDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                Task {
+                    await viewModel.deleteExpiringShare(share)
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete \"\(share.displayName)\"? The share code will stop working immediately.")
         }
     }
 }

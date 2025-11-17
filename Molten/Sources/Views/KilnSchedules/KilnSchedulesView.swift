@@ -7,9 +7,10 @@
 
 import SwiftUI
 
-struct KilnSchedulesView: View {
+struct KilnSchedulesView: View, CachedDataDeletion {
     @State private var viewModel: KilnSchedulesViewModel
     private let kilnScheduleService: KilnScheduleService
+    private let kilnScheduleRepository: KilnScheduleRepository
 
     // UI-only state
     @State private var showingAddSchedule = false
@@ -19,22 +20,23 @@ struct KilnSchedulesView: View {
     @State private var showingSortOptions = false
 
     // Accept ViewModel directly (protocol-based pattern)
-    init(viewModel: KilnSchedulesViewModel, kilnScheduleService: KilnScheduleService) {
+    init(viewModel: KilnSchedulesViewModel, kilnScheduleService: KilnScheduleService, kilnScheduleRepository: KilnScheduleRepository) {
         self._viewModel = State(initialValue: viewModel)
         self.kilnScheduleService = kilnScheduleService
+        self.kilnScheduleRepository = kilnScheduleRepository
     }
 
     // Convenience init for production use
-    init(kilnScheduleService: KilnScheduleService) {
+    init(kilnScheduleService: KilnScheduleService, deps: AppDependencies = AppDependencies()) {
         let viewModel = KilnSchedulesViewModel(kilnScheduleService: kilnScheduleService)
-        self.init(viewModel: viewModel, kilnScheduleService: kilnScheduleService)
+        self.init(viewModel: viewModel, kilnScheduleService: kilnScheduleService, kilnScheduleRepository: deps.kilnScheduleRepository)
     }
 
     /// Convenience init using AppDependencies
     init(deps: AppDependencies = AppDependencies()) {
         let service = deps.kilnScheduleService
         let viewModel = KilnSchedulesViewModel(kilnScheduleService: service)
-        self.init(viewModel: viewModel, kilnScheduleService: service)
+        self.init(viewModel: viewModel, kilnScheduleService: service, kilnScheduleRepository: deps.kilnScheduleRepository)
     }
 
     var body: some View {
@@ -152,25 +154,12 @@ struct KilnSchedulesView: View {
                 )) {
                     KilnScheduleRowView(schedule: schedule)
                 }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button(role: .destructive) {
-                        scheduleToDelete = schedule
-                        showingDeleteConfirmation = true
-                    } label: {
-                        Label("Delete", systemImage: "trash")
+            }
+            .onDelete { indexSet in
+                Task {
+                    for index in indexSet {
+                        await deleteItem(viewModel.filteredSchedules[index])
                     }
-
-                    Button {
-                        Task {
-                            try? await viewModel.duplicateSchedule(
-                                schedule,
-                                newName: "\(schedule.name) (Copy)"
-                            )
-                        }
-                    } label: {
-                        Label("Duplicate", systemImage: "doc.on.doc")
-                    }
-                    .tint(.blue)
                 }
             }
 
@@ -310,6 +299,23 @@ struct KilnSchedulesView: View {
             .controlSize(.large)
         }
         .padding()
+    }
+
+    // MARK: - CachedDataDeletion Implementation
+
+    func performDeletion(for item: KilnSchedule) async throws {
+        // Delete the kiln schedule (Core Data will cascade delete segments)
+        try await kilnScheduleRepository.deleteSchedule(id: item.id)
+    }
+
+    func removeFromCache(_ item: KilnSchedule) async {
+        await MainActor.run {
+            viewModel.schedules.removeAll { $0.id == item.id }
+        }
+    }
+
+    func reloadData() async {
+        await viewModel.loadSchedules()
     }
 }
 

@@ -29,19 +29,15 @@ struct MockRepositoryDebugTest: MockOnlyTestSuite {
 
     @Test("Debug: Test basic mock repository operations step by step")
     func testMockRepositoryBasicOperations() async throws {
-        print("🔍 MOCK REPOSITORY DEBUG: Testing basic operations")
         
         // Create a completely fresh mock repository 
         let mockRepo = MockGlassItemRepository()
-        print("📊 Repository created")
         
         // Clear any existing data explicitly
         mockRepo.clearAllData()
-        print("📊 Data cleared")
         
         // Check initial count
         let initialCount = await mockRepo.getItemCount()
-        print("📊 Initial count: \(initialCount)")
         #expect(initialCount == 0, "Should start with 0 items")
         
         // Create a simple test item

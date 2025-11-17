@@ -13,7 +13,7 @@ import OSLog
 import CoreData
 
 /// Repository-based InventoryView that uses the new GlassItem architecture
-struct InventoryView: View {
+struct InventoryView: View, CachedDataDeletion {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data
     @State private var viewModel: InventoryViewModel
     @Environment(EntitlementService.self) private var entitlementService
@@ -35,6 +35,7 @@ struct InventoryView: View {
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
     @State private var showingLabelDesigner = false
     @State private var showingSharing = false
+    @State private var pendingShareCode: String? = nil
 
     // Performance optimization: Cache computed values to avoid recomputation on every view refresh
     @State private var cachedAllTags: [String] = []
@@ -50,6 +51,7 @@ struct InventoryView: View {
     private let userImageRepository: UserImageRepository
     private let kilnScheduleService: KilnScheduleService
     private let glassItemRepository: GlassItemRepository
+    private let locationRepository: LocationRepository
 
     private let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Flameworker", category: "InventoryView")
 
@@ -63,7 +65,8 @@ struct InventoryView: View {
         shoppingListRepository: ShoppingListRepository,
         userImageRepository: UserImageRepository,
         kilnScheduleService: KilnScheduleService,
-        glassItemRepository: GlassItemRepository
+        glassItemRepository: GlassItemRepository,
+        locationRepository: LocationRepository
     ) {
         self._viewModel = State(initialValue: viewModel)
         self.catalogService = catalogService
@@ -74,6 +77,7 @@ struct InventoryView: View {
         self.userImageRepository = userImageRepository
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
+        self.locationRepository = locationRepository
     }
 
     // Convenience init for production use
@@ -91,7 +95,8 @@ struct InventoryView: View {
             shoppingListRepository: deps.shoppingListRepository,
             userImageRepository: deps.userImageRepository,
             kilnScheduleService: deps.kilnScheduleService,
-            glassItemRepository: deps.glassItemRepository
+            glassItemRepository: deps.glassItemRepository,
+            locationRepository: deps.locationRepository
         )
     }
     
@@ -345,11 +350,13 @@ struct InventoryView: View {
             }
             .fullScreenCover(isPresented: $showingSharing) {
                 NavigationStack {
-                    InventorySharingView()
+                    InventorySharingView(pendingShareCode: pendingShareCode)
                         .toolbar {
                             ToolbarItem(placement: .cancellationAction) {
                                 Button("Done") {
                                     showingSharing = false
+                                    // Clear pending share code after dismissing
+                                    pendingShareCode = nil
                                 }
                             }
                         }
@@ -408,6 +415,13 @@ struct InventoryView: View {
                 // Reset navigation when user taps Inventory tab while already on Inventory
                 navigationPath = NavigationPath()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .navigateToInventorySharingWithCode)) { notification in
+                // Extract share code from notification and show sharing view
+                if let shareCode = notification.userInfo?["shareCode"] as? String {
+                    pendingShareCode = shareCode
+                    showingSharing = true
+                }
+            }
         }
     }
     
@@ -417,12 +431,7 @@ struct InventoryView: View {
         CustomEmptyStateView(
             icon: "archivebox",
             title: "No Inventory Yet",
-            description: "Start tracking your glass inventory by adding your first item",
-            actionButton: .init(
-                title: "Add Item",
-                action: { showingAddItem = true },
-                style: .prominent
-            )
+            description: "Start tracking your glass inventory by adding your first item using the + button in the menu bar"
         )
     }
 
@@ -458,6 +467,13 @@ struct InventoryView: View {
                 }
                 .id("\(item.id)-\(item.rating?.totalRatings ?? 0)-\(item.rating?.averageRating ?? 0)")  // Force re-render when rating changes
                 .accessibilityIdentifier("inventory.item.\(item.glassItem.stable_id)")
+            }
+            .onDelete { indexSet in
+                Task {
+                    for index in indexSet {
+                        await deleteInventoryItem(sortedFilteredItems[index])
+                    }
+                }
             }
         }
         .accessibilityIdentifier("inventory.list")
@@ -517,7 +533,7 @@ struct InventoryView: View {
     }
     
     // MARK: - Helper Methods
-    
+
     private func loadData() async {
         log.info("🔄 InventoryView loadData() called")
 
@@ -532,6 +548,83 @@ struct InventoryView: View {
             updateCaches()  // PERFORMANCE: Update cached filter values
             refreshTrigger += 1  // Force SwiftUI to refresh the list
         }
+    }
+
+    // MARK: - CachedDataDeletion Protocol Implementation
+
+    func performDeletion(for item: CompleteInventoryItemModel) async throws {
+        let stableId = item.glassItem.stable_id
+
+        // Delete all inventory records and their associated storage locations
+        for inventory in item.inventory {
+            // Delete storage locations for this inventory record
+            try await locationRepository.deleteLocations(forInventory: inventory.id)
+
+            // Delete the inventory record itself
+            try await inventoryTrackingService.deleteInventory(id: inventory.id)
+        }
+
+        // Clean up orphaned user data (tags and notes)
+        // Remove all user tags for this item
+        try await userTagsRepository.removeAllTags(fromItem: stableId)
+
+        // Delete user notes for this item (if any exist)
+        try await userNotesRepository.deleteNotes(forItem: stableId)
+
+        log.info("✅ Deleted inventory and associated data for item: \(stableId)")
+    }
+
+    func removeFromCache(_ item: CompleteInventoryItemModel) async {
+        await MainActor.run {
+            log.info("🗑️ removeFromCache START: completeItems.count = \(viewModel.completeItems.count)")
+            log.info("🗑️ removeFromCache: Looking for item \(item.glassItem.stable_id)")
+
+            // DON'T remove the catalog item - just update it to have no inventory
+            // The catalog should always contain all items
+            if let index = viewModel.completeItems.firstIndex(where: { $0.id == item.id }) {
+                let existing = viewModel.completeItems[index]
+                log.info("🗑️ removeFromCache: Found at index \(index), inventory count = \(existing.inventory.count)")
+
+                // Create new item with empty inventory (all properties are immutable)
+                let updatedItem = CompleteInventoryItemModel(
+                    catalogItem: existing.catalogItem,
+                    inventory: [],  // Clear inventory records
+                    tags: existing.tags,
+                    userTags: existing.userTags,
+                    rating: existing.rating
+                )
+                viewModel.completeItems[index] = updatedItem
+                log.info("🗑️ removeFromCache: Updated item, new inventory count = \(updatedItem.inventory.count)")
+            } else {
+                log.warning("🗑️ removeFromCache: Item NOT FOUND in completeItems!")
+            }
+
+            log.info("🗑️ removeFromCache END: completeItems.count = \(viewModel.completeItems.count)")
+            log.info("🗑️ removeFromCache: Incrementing refreshTrigger from \(refreshTrigger) to \(refreshTrigger + 1)")
+            refreshTrigger += 1  // Force SwiftUI to refresh (updates counters, UI)
+        }
+    }
+
+    func reloadData() async {
+        log.info("🔄 reloadData: Starting deferred reload...")
+        // CRITICAL: Force cache reload from Core Data
+        // Without this, loadInventoryItems() returns stale cache data and undoes our in-place update
+        await CatalogDataCache.shared.reload(catalogService: catalogService)
+        await viewModel.loadInventoryItems()
+        log.info("🔄 reloadData: Reload complete - \(viewModel.completeItems.count) items")
+    }
+
+    func updateDerivedCaches() {
+        log.info("📊 updateDerivedCaches: Before updateCaches()")
+        log.info("📊 sortedFilteredItems.count = \(sortedFilteredItems.count)")
+        updateCaches()
+        log.info("📊 updateDerivedCaches: After updateCaches()")
+        log.info("📊 sortedFilteredItems.count = \(sortedFilteredItems.count)")
+    }
+
+    // Convenience wrapper for .onDelete handler
+    private func deleteInventoryItem(_ item: CompleteInventoryItemModel) async {
+        await deleteItem(item)
     }
 }
 

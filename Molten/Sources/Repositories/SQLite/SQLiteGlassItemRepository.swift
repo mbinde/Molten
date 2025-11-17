@@ -25,127 +25,134 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
     // MARK: - Read Operations
 
     func fetchItems(matching predicate: NSPredicate?) async throws -> [GlassItemModel] {
-        let db = try databaseManager.getDatabaseConnection()
-
         // For now, fetch all items (predicate support can be added later)
         let query = "SELECT * FROM glass_items ORDER BY manufacturer, code"
-        return try await executeQuery(db: db, query: query)
+        return try databaseManager.performDatabaseOperation { db in
+            try executeQuery(db: db, query: query)
+        }
     }
 
     func fetchItem(byStableId stableId: String) async throws -> GlassItemModel? {
-        let db = try databaseManager.getDatabaseConnection()
         let query = "SELECT * FROM glass_items WHERE stable_id = ?"
-        let items = try await executeQuery(db: db, query: query, parameters: [stableId])
+        let items = try databaseManager.performDatabaseOperation { db in
+            try executeQuery(db: db, query: query, parameters: [stableId])
+        }
         return items.first
     }
 
     func searchItems(text: String) async throws -> [GlassItemModel] {
-        let db = try databaseManager.getDatabaseConnection()
         let searchPattern = "%\(text)%"
-
         let query = """
             SELECT * FROM glass_items
             WHERE name LIKE ? OR manufacturer LIKE ? OR code LIKE ?
             ORDER BY manufacturer, code
             """
 
-        return try await executeQuery(db: db, query: query, parameters: [searchPattern, searchPattern, searchPattern])
+        return try databaseManager.performDatabaseOperation { db in
+            try executeQuery(db: db, query: query, parameters: [searchPattern, searchPattern, searchPattern])
+        }
     }
 
     func fetchItems(byManufacturer manufacturer: String) async throws -> [GlassItemModel] {
-        let db = try databaseManager.getDatabaseConnection()
         let query = "SELECT * FROM glass_items WHERE manufacturer = ? ORDER BY code"
 
-        return try await executeQuery(db: db, query: query, parameters: [manufacturer])
+        return try databaseManager.performDatabaseOperation { db in
+            try executeQuery(db: db, query: query, parameters: [manufacturer])
+        }
     }
 
     func fetchItems(byCOE coe: Int32) async throws -> [GlassItemModel] {
-        let db = try databaseManager.getDatabaseConnection()
         let query = "SELECT * FROM glass_items WHERE coe = ? ORDER BY manufacturer, code"
 
-        return try await executeQuery(db: db, query: query, parameters: [String(coe)])
+        return try databaseManager.performDatabaseOperation { db in
+            try executeQuery(db: db, query: query, parameters: [String(coe)])
+        }
     }
 
     func fetchItems(byStatus status: String) async throws -> [GlassItemModel] {
-        let db = try databaseManager.getDatabaseConnection()
         let query = "SELECT * FROM glass_items WHERE status = ? ORDER BY manufacturer, code"
 
-        return try await executeQuery(db: db, query: query, parameters: [status])
+        return try databaseManager.performDatabaseOperation { db in
+            try executeQuery(db: db, query: query, parameters: [status])
+        }
     }
 
     func getDistinctManufacturers() async throws -> [String] {
-        let db = try databaseManager.getDatabaseConnection()
         let query = "SELECT DISTINCT manufacturer FROM glass_items ORDER BY manufacturer"
 
-        var manufacturers: [String] = []
-        var statement: OpaquePointer?
+        return try databaseManager.performDatabaseOperation { db in
+            var manufacturers: [String] = []
+            var statement: OpaquePointer?
 
-        guard sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK else {
-            throw SQLiteError.queryFailed(String(cString: sqlite3_errmsg(db)))
-        }
-
-        defer {
-            sqlite3_finalize(statement)
-        }
-
-        while sqlite3_step(statement) == SQLITE_ROW {
-            if let manufacturer = sqlite3_column_text(statement, 0) {
-                manufacturers.append(String(cString: manufacturer))
+            guard sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK else {
+                throw SQLiteError.queryFailed(String(cString: sqlite3_errmsg(db)))
             }
-        }
 
-        return manufacturers
+            defer {
+                sqlite3_finalize(statement)
+            }
+
+            while sqlite3_step(statement) == SQLITE_ROW {
+                if let manufacturer = sqlite3_column_text(statement, 0) {
+                    manufacturers.append(String(cString: manufacturer))
+                }
+            }
+
+            return manufacturers
+        }
     }
 
     func getDistinctCOEValues() async throws -> [Int32] {
-        let db = try databaseManager.getDatabaseConnection()
         let query = "SELECT DISTINCT coe FROM glass_items WHERE coe IS NOT NULL AND coe != '' ORDER BY CAST(coe AS INTEGER)"
 
-        var coeValues: [Int32] = []
-        var statement: OpaquePointer?
+        return try databaseManager.performDatabaseOperation { db in
+            var coeValues: [Int32] = []
+            var statement: OpaquePointer?
 
-        guard sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK else {
-            throw SQLiteError.queryFailed(String(cString: sqlite3_errmsg(db)))
-        }
+            guard sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK else {
+                throw SQLiteError.queryFailed(String(cString: sqlite3_errmsg(db)))
+            }
 
-        defer {
-            sqlite3_finalize(statement)
-        }
+            defer {
+                sqlite3_finalize(statement)
+            }
 
-        while sqlite3_step(statement) == SQLITE_ROW {
-            if let coeText = sqlite3_column_text(statement, 0) {
-                let coeString = String(cString: coeText)
-                if let coeValue = Int32(coeString) {
-                    coeValues.append(coeValue)
+            while sqlite3_step(statement) == SQLITE_ROW {
+                if let coeText = sqlite3_column_text(statement, 0) {
+                    let coeString = String(cString: coeText)
+                    if let coeValue = Int32(coeString) {
+                        coeValues.append(coeValue)
+                    }
                 }
             }
-        }
 
-        return coeValues
+            return coeValues
+        }
     }
 
     func getDistinctStatuses() async throws -> [String] {
-        let db = try databaseManager.getDatabaseConnection()
         let query = "SELECT DISTINCT status FROM glass_items ORDER BY status"
 
-        var statuses: [String] = []
-        var statement: OpaquePointer?
+        return try databaseManager.performDatabaseOperation { db in
+            var statuses: [String] = []
+            var statement: OpaquePointer?
 
-        guard sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK else {
-            throw SQLiteError.queryFailed(String(cString: sqlite3_errmsg(db)))
-        }
-
-        defer {
-            sqlite3_finalize(statement)
-        }
-
-        while sqlite3_step(statement) == SQLITE_ROW {
-            if let status = sqlite3_column_text(statement, 0) {
-                statuses.append(String(cString: status))
+            guard sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK else {
+                throw SQLiteError.queryFailed(String(cString: sqlite3_errmsg(db)))
             }
-        }
 
-        return statuses
+            defer {
+                sqlite3_finalize(statement)
+            }
+
+            while sqlite3_step(statement) == SQLITE_ROW {
+                if let status = sqlite3_column_text(statement, 0) {
+                    statuses.append(String(cString: status))
+                }
+            }
+
+            return statuses
+        }
     }
 
     func stableIdExists(_ stableId: String) async throws -> Bool {
@@ -214,7 +221,7 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
     // MARK: - Helper Methods
 
     /// Execute a SELECT query and return GlassItemModel instances
-    private func executeQuery(db: OpaquePointer, query: String, parameters: [String] = []) async throws -> [GlassItemModel] {
+    private func executeQuery(db: OpaquePointer, query: String, parameters: [String] = []) throws -> [GlassItemModel] {
         var statement: OpaquePointer?
 
         guard sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK else {

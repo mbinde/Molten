@@ -139,9 +139,9 @@ actor ImageSyncService {
 
             // Download the thumbnail
             if let _ = await ImageDownloadService.loadImage(
-                itemCode: item.code ?? "",
                 manufacturer: item.manufacturer,
                 exactFilename: imagePath,
+                exactThumbnailFilename: thumbFilename,
                 useThumbnail: true
             ) {
                 downloadCount += 1
@@ -161,7 +161,6 @@ actor ImageSyncService {
     func loadImageForViewing(itemCode: String, manufacturer: String?, imagePath: String?) async -> PlatformImage? {
         // First try to load from cache (always fast)
         if let cached = await ImageDownloadService.loadImage(
-            itemCode: itemCode,
             manufacturer: manufacturer,
             exactFilename: imagePath,
             useThumbnail: false
@@ -176,7 +175,6 @@ actor ImageSyncService {
 
         // Download full-size image
         return await ImageDownloadService.loadImage(
-            itemCode: itemCode,
             manufacturer: manufacturer,
             exactFilename: imagePath,
             useThumbnail: false
@@ -228,7 +226,6 @@ actor ImageSyncService {
                 let itemCode = parts[1...].joined(separator: "-").replacingOccurrences(of: "_thumb", with: "")
 
                 _ = await ImageDownloadService.loadImage(
-                    itemCode: itemCode,
                     manufacturer: manufacturer,
                     exactFilename: update.filename,
                     useThumbnail: true

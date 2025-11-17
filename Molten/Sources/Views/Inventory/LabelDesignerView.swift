@@ -13,6 +13,8 @@ struct LabelDesignerView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedFormat: AveryFormat = .avery5160
+    @State private var searchText: String = ""
+    @State private var isSearching: Bool = false
 
     // Label builder configuration (replaces template)
     @State private var builderConfig: LabelBuilderConfig = .default
@@ -50,43 +52,28 @@ struct LabelDesignerView: View {
     var body: some View {
         NavigationStack {
             Form {
+                labelCountSection
+
                 Section {
-                    Text("\(totalLabelCount) label\(totalLabelCount == 1 ? "" : "s") to print")
-                        .font(.headline)
-
-                    Text("From \(items.count) item\(items.count == 1 ? "" : "s") selected")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    if totalLabelCount > selectedFormat.labelsPerSheet {
-                        Text("This will create \(numberOfSheets) sheet\(numberOfSheets == 1 ? "" : "s")")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    if isSearching {
+                        FormatSearchView(
+                            searchText: $searchText,
+                            isSearching: $isSearching,
+                            selectedFormat: $selectedFormat,
+                            filteredFormats: filteredFormats
+                        )
+                    } else {
+                        SelectedFormatView(
+                            selectedFormat: selectedFormat,
+                            isSearching: $isSearching
+                        )
                     }
-                }
-
-                Section("Label Format") {
-                    Picker("Format", selection: $selectedFormat) {
-                        // Use organized categories from AveryFormat.allFormats
-                        ForEach(Array(AveryFormat.allFormats.keys.sorted()), id: \.self) { category in
-                            Section(category) {
-                                ForEach(AveryFormat.allFormats[category] ?? [], id: \.name) { format in
-                                    Text(formatDisplayName(format)).tag(format)
-                                }
-                            }
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(selectedFormat.name)
+                } header: {
+                    Text("Label Format")
+                } footer: {
+                    if !isSearching {
+                        Text("Tap to search from \(AveryFormat.flatList.count) available formats")
                             .font(.caption)
-                            .fontWeight(.medium)
-                        Text("\(selectedFormat.labelsPerSheet) labels per sheet (\(selectedFormat.columns)×\(selectedFormat.rows))")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        Text(formatDimensions(selectedFormat))
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
                     }
                 }
 
@@ -628,6 +615,60 @@ struct LabelDesignerView: View {
 
     // MARK: - Computed Properties
 
+    /// Label count summary section
+    private var labelCountSection: some View {
+        Section {
+            Text("\(totalLabelCount) label\(totalLabelCount == 1 ? "" : "s") to print")
+                .font(.headline)
+
+            Text("From \(items.count) item\(items.count == 1 ? "" : "s") selected")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            if totalLabelCount > selectedFormat.labelsPerSheet {
+                Text("This will create \(numberOfSheets) sheet\(numberOfSheets == 1 ? "" : "s")")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+
+    /// Filtered formats based on search text
+    private var filteredFormats: [AveryFormat] {
+        if searchText.isEmpty {
+            // Show popular formats when no search
+            return AveryFormat.allFormats["Popular"] ?? []
+        }
+
+        let searchLower = searchText.lowercased()
+        return AveryFormat.flatList.filter { format in
+            // Search by name (e.g., "5160", "Avery 5160")
+            if format.name.lowercased().contains(searchLower) {
+                return true
+            }
+
+            // Search by dimensions (e.g., "2.625", "1 x 2")
+            let dimensions = formatDimensions(format).lowercased()
+            if dimensions.contains(searchLower) {
+                return true
+            }
+
+            // Search by label count (e.g., "30 labels")
+            if "\(format.labelsPerSheet)".contains(searchLower) {
+                return true
+            }
+
+            // Search by category
+            for (category, formats) in AveryFormat.allFormats {
+                if category.lowercased().contains(searchLower) && formats.contains(where: { $0.name == format.name }) {
+                    return true
+                }
+            }
+
+            return false
+        }
+    }
+
     /// Total number of labels to print (sum of all inventory quantities)
     private var totalLabelCount: Int {
         items.reduce(0) { total, item in
@@ -971,6 +1012,175 @@ private struct SavePresetSheet: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Format Search View
+
+/// Search view for finding label formats
+private struct FormatSearchView: View {
+    @Binding var searchText: String
+    @Binding var isSearching: Bool
+    @Binding var selectedFormat: AveryFormat
+    let filteredFormats: [AveryFormat]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Search field
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                    .font(.body)
+
+                TextField("Search label formats...", text: $searchText)
+                    .textFieldStyle(.plain)
+                    .autocorrectionDisabled()
+
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Button("Cancel") {
+                    withAnimation {
+                        isSearching = false
+                        searchText = ""
+                    }
+                }
+                .font(.body)
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .background(Color(.systemGray6))
+            .cornerRadius(10)
+        }
+
+        // Search results
+        ForEach(filteredFormats, id: \.name) { format in
+            FormatRow(format: format) {
+                withAnimation {
+                    selectedFormat = format
+                    isSearching = false
+                    searchText = ""
+                }
+            }
+        }
+
+        if filteredFormats.isEmpty && !searchText.isEmpty {
+            Text("No formats match \"\(searchText)\"")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.vertical, 8)
+        }
+    }
+}
+
+/// Selected format display button
+private struct SelectedFormatView: View {
+    let selectedFormat: AveryFormat
+    @Binding var isSearching: Bool
+
+    var body: some View {
+        Button {
+            withAnimation {
+                isSearching = true
+            }
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                    .font(.body)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(selectedFormat.name)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+
+                    FormatDetailsText(format: selectedFormat)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 4)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Format row in search results
+private struct FormatRow: View {
+    let format: AveryFormat
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(format.name)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                FormatDetailsText(format: format)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Format details text (labels • dimensions • grid)
+private struct FormatDetailsText: View {
+    let format: AveryFormat
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text("\(format.labelsPerSheet) labels")
+            Text("•")
+            Text(formatDimensions)
+            Text("•")
+            Text("\(format.columns)×\(format.rows)")
+        }
+        .font(.caption)
+        .foregroundColor(.secondary)
+    }
+
+    private var formatDimensions: String {
+        let widthInches = format.labelWidth / 72.0
+        let heightInches = format.labelHeight / 72.0
+
+        let widthStr = formatInches(widthInches)
+        let heightStr = formatInches(heightInches)
+
+        return "\(widthStr)\" × \(heightStr)\""
+    }
+
+    private func formatInches(_ inches: Double) -> String {
+        if abs(inches - 0.5) < 0.01 { return "½" }
+        if abs(inches - 0.75) < 0.01 { return "¾" }
+        if abs(inches - 1.75) < 0.01 { return "1¾" }
+        if abs(inches - 2.625) < 0.01 { return "2⅝" }
+        if abs(inches - 3.33) < 0.01 { return "3⅓" }
+        if abs(inches - 3.375) < 0.01 { return "3⅜" }
+        if abs(inches - 2.33) < 0.01 { return "2⅓" }
+        if abs(inches - 1.33) < 0.01 { return "1⅓" }
+        if abs(inches - 1.25) < 0.01 { return "1¼" }
+        if abs(inches - 2.25) < 0.01 { return "2¼" }
+        if abs(inches - 3.5) < 0.01 { return "3.5" }
+
+        if abs(inches - round(inches)) < 0.01 {
+            return "\(Int(round(inches)))"
+        }
+
+        return String(format: "%.1f", inches)
     }
 }
 

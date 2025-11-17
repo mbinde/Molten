@@ -16,6 +16,7 @@ class ShareMetadataRepository {
     private let userDefaults: UserDefaults
     private let myShareCodeKey = "molten.shareMetadata.myShareCode"
     private let myShareMetadataKey = "molten.shareMetadata.myShareMetadata"
+    private let myShareLastUpdatedKey = "molten.shareMetadata.myShareLastUpdated"
     private let friendSharesKey = "molten.shareMetadata.friendShares"
 
     // MARK: - Initialization
@@ -59,6 +60,18 @@ class ShareMetadataRepository {
 
         let decoder = JSONDecoder()
         return try? decoder.decode(MyShareMetadata.self, from: data)
+    }
+
+    // MARK: - My Share Last Updated
+
+    /// Save timestamp of last share update
+    func setMyShareLastUpdated(_ date: Date) {
+        userDefaults.set(date, forKey: myShareLastUpdatedKey)
+    }
+
+    /// Get timestamp of last share update
+    func getMyShareLastUpdated() -> Date? {
+        return userDefaults.object(forKey: myShareLastUpdatedKey) as? Date
     }
 
     // MARK: - Friend Shares

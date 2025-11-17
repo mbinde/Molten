@@ -227,7 +227,7 @@ struct InventoryDetailView: View {
                             Button {
                                 checkLimitAndShowAddInventory()
                             } label: {
-                                Label("Add Inventory", systemImage: "archivebox.fill")
+                                Label("Add to Inventory", systemImage: "archivebox.fill")
                             }
 
                             Button {
@@ -239,13 +239,13 @@ struct InventoryDetailView: View {
                             Button {
                                 showingImagePicker = true
                             } label: {
-                                Label("Add Image", systemImage: "photo.fill")
+                                Label("Add an Image", systemImage: "photo.fill")
                             }
 
                             Button {
                                 showingUserNotesEditor = true
                             } label: {
-                                Label("Add Note", systemImage: "note.text")
+                                Label("Add a Note", systemImage: "note.text")
                             }
 
                             Button {

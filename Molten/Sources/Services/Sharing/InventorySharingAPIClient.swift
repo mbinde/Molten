@@ -23,7 +23,7 @@ class InventorySharingAPIClient: NSObject {
 
     init(
         session: URLSessionProtocol = URLSession.shared,
-        baseURL: URL = URL(string: "https://api.example.com")!,
+        baseURL: URL = URL(string: "https://www.moltenglass.app")!,
         attestationManager: AttestationManager = AttestationManager(),
         pinnedCertificates: [Data] = []
     ) {
@@ -42,7 +42,7 @@ class InventorySharingAPIClient: NSObject {
     ///   - snapshotData: Serialized snapshot data
     ///   - publicKey: Public key for signature verification
     open func uploadSnapshot(shareCode: String, snapshotData: Data, publicKey: Data) async throws {
-        let url = baseURL.appendingPathComponent("v1/share")
+        let url = baseURL.appendingPathComponent("api/v1/share")
 
         // Create request body
         let requestBody: [String: Any] = [
@@ -72,7 +72,11 @@ class InventorySharingAPIClient: NSObject {
 
         switch httpResponse.statusCode {
         case 201:
-            return // Success
+            return // Success - 201 Created is the ONLY valid response for POST
+            // NOTE: 200 OK is NOT valid here - it likely means we hit the wrong endpoint and got HTML
+        case 200:
+            // This indicates we hit the wrong URL (e.g., Astro homepage returning 200)
+            throw SharingAPIError.invalidResponse
         case 409:
             throw SharingAPIError.conflict
         case 401, 403:
@@ -88,7 +92,7 @@ class InventorySharingAPIClient: NSObject {
     /// - Parameter shareCode: Share code to download
     /// - Returns: Downloaded snapshot with public key
     open func downloadSnapshot(shareCode: String) async throws -> DownloadedSnapshot {
-        let url = baseURL.appendingPathComponent("v1/share").appendingPathComponent(shareCode)
+        let url = baseURL.appendingPathComponent("api/v1/share").appendingPathComponent(shareCode)
 
         // Create request
         var request = URLRequest(url: url)
@@ -122,7 +126,28 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.invalidData
         }
 
-        return DownloadedSnapshot(snapshotData: snapshotData, publicKey: publicKey)
+        // Extract optional metadata (displayName, shareNotes, expiresAt)
+        let displayName = json["displayName"] as? String
+        let shareNotes = json["shareNotes"] as? String
+        let expiresAt: Date?
+        if let expiresAtString = json["expiresAt"] as? String {
+            print("🔍 [DOWNLOAD] Server returned expiresAt: \(expiresAtString)")
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            expiresAt = formatter.date(from: expiresAtString)
+            print("🔍 [DOWNLOAD] Parsed expiresAt: \(expiresAt?.description ?? "nil")")
+        } else {
+            print("⚠️ [DOWNLOAD] Server did NOT return expiresAt field")
+            expiresAt = nil
+        }
+
+        return DownloadedSnapshot(
+            snapshotData: snapshotData,
+            publicKey: publicKey,
+            displayName: displayName,
+            shareNotes: shareNotes,
+            expiresAt: expiresAt
+        )
     }
 
     // MARK: - Delete
@@ -132,7 +157,7 @@ class InventorySharingAPIClient: NSObject {
     ///   - shareCode: Share code to delete
     ///   - ownershipSignature: Signature proving ownership (signed with original private key)
     open func deleteShare(shareCode: String, ownershipSignature: Data) async throws {
-        let url = baseURL.appendingPathComponent("v1/share").appendingPathComponent(shareCode)
+        let url = baseURL.appendingPathComponent("api/v1/share").appendingPathComponent(shareCode)
 
         print("🔐 [API] DELETE URL: \(url)")
         print("🔐 [API] Ownership signature (base64): \(ownershipSignature.base64EncodedString())")
@@ -185,7 +210,7 @@ class InventorySharingAPIClient: NSObject {
     ///   - publicKey: Public key for signature verification
     ///   - ownershipSignature: Signature proving ownership (signed with original private key)
     open func updateSnapshot(shareCode: String, snapshotData: Data, publicKey: Data, ownershipSignature: Data) async throws {
-        let url = baseURL.appendingPathComponent("v1/share").appendingPathComponent(shareCode)
+        let url = baseURL.appendingPathComponent("api/v1/share").appendingPathComponent(shareCode)
 
         // Create request body
         let requestBody: [String: Any] = [
@@ -217,6 +242,188 @@ class InventorySharingAPIClient: NSObject {
 
         switch httpResponse.statusCode {
         case 200:
+            return // Success
+        case 404:
+            throw SharingAPIError.notFound
+        case 401, 403:
+            throw SharingAPIError.unauthorized
+        default:
+            throw SharingAPIError.serverError(httpResponse.statusCode)
+        }
+    }
+
+    // MARK: - Expiring Shares
+
+    /// Create an expiring share alias
+    /// - Parameters:
+    ///   - mainShareCode: The main share code to create an alias for
+    ///   - displayName: Display name for this expiring share
+    ///   - shareNotes: Optional notes for this expiring share
+    ///   - expirationDuration: Duration in seconds until expiration
+    /// - Returns: Tuple of (new share code, expiration date)
+    open func createExpiringShare(
+        mainShareCode: String,
+        displayName: String,
+        shareNotes: String?,
+        expirationDuration: TimeInterval
+    ) async throws -> (shareCode: String, expiresAt: Date) {
+        let url = baseURL.appendingPathComponent("api/v1/share/expiring")
+
+        // Create request body
+        var requestBody: [String: Any] = [
+            "mainShareCode": mainShareCode,
+            "displayName": displayName,
+            "expirationDuration": Int(expirationDuration)
+        ]
+
+        if let notes = shareNotes {
+            requestBody["shareNotes"] = notes
+        }
+
+        let bodyData = try JSONSerialization.data(withJSONObject: requestBody)
+
+        // Create request
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = bodyData
+
+        // Add App Attest assertion
+        try await addAttestation(to: &request)
+
+        // Execute request
+        let (data, response) = try await executeRequest(request)
+
+        // Check status code
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw SharingAPIError.invalidResponse
+        }
+
+        print("🔍 [CREATE EXPIRING] Status: \(httpResponse.statusCode)")
+        print("🔍 [CREATE EXPIRING] Response data: \(String(data: data, encoding: .utf8) ?? "nil")")
+
+        switch httpResponse.statusCode {
+        case 201:
+            break // Success - 201 Created is the ONLY valid response for POST
+        case 200:
+            // This indicates we hit the wrong URL (e.g., Astro homepage returning 200)
+            throw SharingAPIError.invalidResponse
+        case 404:
+            throw SharingAPIError.notFound
+        case 401, 403:
+            throw SharingAPIError.unauthorized
+        default:
+            throw SharingAPIError.serverError(httpResponse.statusCode)
+        }
+
+        // Parse response
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let shareCode = json["shareCode"] as? String,
+              let expiresAtString = json["expiresAt"] as? String else {
+            print("🔍 [CREATE EXPIRING] Failed to parse JSON")
+            throw SharingAPIError.invalidData
+        }
+
+        // Parse ISO 8601 date with fractional seconds
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let expiresAt = formatter.date(from: expiresAtString) else {
+            print("🔍 [CREATE EXPIRING] Failed to parse date: \(expiresAtString)")
+            throw SharingAPIError.invalidData
+        }
+
+        return (shareCode, expiresAt)
+    }
+
+    /// Fetch all expiring shares for a main share code
+    /// - Parameter mainShareCode: The main share code
+    /// - Returns: Array of expiring share records
+    open func fetchExpiringShares(forMainShareCode mainShareCode: String) async throws -> [ExpiringShareServerResponse] {
+        let url = baseURL
+            .appendingPathComponent("api/v1/share")
+            .appendingPathComponent(mainShareCode)
+            .appendingPathComponent("expiring")
+
+        // Create request
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+
+        // Execute request
+        let (data, response) = try await executeRequest(request)
+
+        // Check status code
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw SharingAPIError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 200:
+            break // Success
+        case 404:
+            throw SharingAPIError.notFound
+        case 401, 403:
+            throw SharingAPIError.unauthorized
+        default:
+            throw SharingAPIError.serverError(httpResponse.statusCode)
+        }
+
+        // Parse response
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let expiringSharesArray = json["expiringShares"] as? [[String: Any]] else {
+            throw SharingAPIError.invalidData
+        }
+
+        let formatter = ISO8601DateFormatter()
+        var shares: [ExpiringShareServerResponse] = []
+
+        for shareDict in expiringSharesArray {
+            guard let shareCode = shareDict["shareCode"] as? String,
+                  let displayName = shareDict["displayName"] as? String,
+                  let expiresAtString = shareDict["expiresAt"] as? String,
+                  let createdAtString = shareDict["createdAt"] as? String,
+                  let expiresAt = formatter.date(from: expiresAtString),
+                  let createdAt = formatter.date(from: createdAtString) else {
+                continue // Skip invalid entries
+            }
+
+            let shareNotes = shareDict["shareNotes"] as? String
+
+            shares.append(ExpiringShareServerResponse(
+                shareCode: shareCode,
+                displayName: displayName,
+                shareNotes: shareNotes,
+                expiresAt: expiresAt,
+                createdAt: createdAt
+            ))
+        }
+
+        return shares
+    }
+
+    /// Delete an expiring share
+    /// - Parameter shareCode: The expiring share code to delete
+    open func deleteExpiringShare(shareCode: String) async throws {
+        let url = baseURL
+            .appendingPathComponent("api/v1/share/expiring")
+            .appendingPathComponent(shareCode)
+
+        // Create request
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+
+        // Add App Attest assertion
+        try await addAttestation(to: &request)
+
+        // Execute request
+        let (_, response) = try await executeRequest(request)
+
+        // Check status code
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw SharingAPIError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 204:
             return // Success
         case 404:
             throw SharingAPIError.notFound

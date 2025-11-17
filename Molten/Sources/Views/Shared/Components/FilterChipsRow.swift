@@ -116,6 +116,7 @@ struct FilterChipsRow: View {
                 HStack(spacing: DesignSystem.Spacing.sm) {
                     Toggle("", isOn: $searchTitlesOnly)
                         .labelsHidden()
+                        .tint(DesignSystem.Colors.accentPrimary)
                     Text("Search titles only")
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
@@ -196,7 +197,7 @@ struct FilterChipsRow: View {
             .foregroundColor(selectedManufacturers.isEmpty ? .secondary : .white)
             .padding(.horizontal, DesignSystem.Padding.chip)
             .padding(.vertical, DesignSystem.Padding.chipVertical)
-            .background(selectedManufacturers.isEmpty ? Color(.systemGray6) : Color.accentColor)
+            .background(selectedManufacturers.isEmpty ? Color(.systemGray6) : DesignSystem.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
     }
@@ -238,7 +239,7 @@ struct FilterChipsRow: View {
             .foregroundColor(selectedCOEs.isEmpty ? .secondary : .white)
             .padding(.horizontal, DesignSystem.Padding.chip)
             .padding(.vertical, DesignSystem.Padding.chipVertical)
-            .background(selectedCOEs.isEmpty ? Color(.systemGray6) : Color.accentColor)
+            .background(selectedCOEs.isEmpty ? Color(.systemGray6) : DesignSystem.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
     }
@@ -283,7 +284,7 @@ struct FilterChipsRow: View {
             .foregroundColor(selectedTags.isEmpty ? .secondary : .white)
             .padding(.horizontal, DesignSystem.Padding.chip)
             .padding(.vertical, DesignSystem.Padding.chipVertical)
-            .background(selectedTags.isEmpty ? Color(.systemGray6) : Color.accentColor)
+            .background(selectedTags.isEmpty ? Color(.systemGray6) : DesignSystem.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
     }

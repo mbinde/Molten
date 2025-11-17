@@ -224,8 +224,10 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                 do {
                     // Find existing item
                     guard let coreDataItem = try self.fetchCoreDataItemSync(byId: id) else {
-                        self.log.warning("Attempted to delete non-existent inventory record: \(id)")
-                        continuation.resume(throwing: CoreDataInventoryRepositoryError.itemNotFound(id.uuidString))
+                        // Item doesn't exist - this is actually success (idempotent deletion)
+                        // It may have been deleted by CloudKit sync or on another device
+                        self.log.info("Inventory record already deleted or doesn't exist: \(id)")
+                        continuation.resume(returning: ())
                         return
                     }
 

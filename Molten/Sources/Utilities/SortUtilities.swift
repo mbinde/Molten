@@ -205,16 +205,6 @@ nonisolated struct SortUtilities {
                 return false // Both empty, maintain order
             }
             
-            // Get COE values for comparison
-            let coe1 = getCOEForManufacturer(manufacturer1) ?? Int.max
-            let coe2 = getCOEForManufacturer(manufacturer2) ?? Int.max
-            
-            // If COEs are different, sort by COE
-            if coe1 != coe2 {
-                return coe1 < coe2
-            }
-            
-            // If COEs are the same, sort alphabetically by manufacturer name
             return manufacturer1.localizedCaseInsensitiveCompare(manufacturer2) == .orderedAscending
         }
     }
@@ -268,30 +258,6 @@ nonisolated struct SortUtilities {
             
             // If COEs are the same, sort alphabetically by manufacturer name
             return manufacturer1.localizedCaseInsensitiveCompare(manufacturer2) == .orderedAscending
-        }
-    }
-    
-    // MARK: - COE Mapping
-    
-    /// Get COE (coefficient of expansion) for manufacturer - simplified mapping
-    private static func getCOEForManufacturer(_ manufacturer: String) -> Int? {
-        // COE mapping based on common glass manufacturers
-        // This provides a fallback when GlassManufacturers utility is not available
-        switch manufacturer.lowercased() {
-        case "bullseye":
-            return 90
-        case "effetre", "kugler":
-            return 104
-        case "spectrum": 
-            return 96
-        case "gaffer":
-            return 96
-        case "uroboros":
-            return 90
-        case "oceanside":
-            return 96
-        default:
-            return nil // Unknown manufacturers sort to end
         }
     }
 }

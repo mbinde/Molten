@@ -188,7 +188,8 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Appearance") {
+                // MARK: - General
+                Section("General") {
                     Picker("Appearance", selection: Binding(
                         get: { UserSettings.shared.appearanceMode },
                         set: { UserSettings.shared.appearanceMode = $0 }
@@ -198,41 +199,27 @@ struct SettingsView: View {
                         }
                     }
                     .pickerStyle(.segmented)
-                }
 
-                Section("Interface") {
                     NavigationLink {
                         TabCustomizationView()
                     } label: {
                         Label("Customize Tabs", systemImage: "square.grid.2x2")
                     }
-                }
 
-                // Subscription section
-                Section("Subscription") {
-                    NavigationLink {
-                        SubscriptionStatusView(viewModel: subscriptionViewModel)
-                    } label: {
-                        HStack {
-                            Label("Manage Subscription", systemImage: subscriptionIcon)
-                            Spacer()
-                            Text(subscriptionBadge)
-                                .font(.caption.bold())
-                                .foregroundColor(subscriptionBadgeColor)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(subscriptionBadgeBackground)
-                                .cornerRadius(6)
+                    Picker("Temperature Unit", selection: Binding(
+                        get: { UserSettings.shared.preferredTemperatureUnit },
+                        set: { UserSettings.shared.preferredTemperatureUnit = $0 }
+                    )) {
+                        ForEach(TemperatureUnit.allCases, id: \.self) { unit in
+                            Text(unit.displayName).tag(unit)
                         }
                     }
-                }
-                .task {
-                    // Load subscription status when settings view appears
-                    await subscriptionViewModel.loadSubscriptionStatus()
+                    .pickerStyle(.segmented)
+                    .help("Choose your preferred temperature unit for displaying kiln schedules")
                 }
 
-                // Catalog Updates section
-                Section("Catalog") {
+                // MARK: - Catalog & Display
+                Section("Catalog & Display") {
                     NavigationLink {
                         CatalogInfoView(viewModel: catalogUpdateViewModel)
                     } label: {
@@ -252,28 +239,26 @@ struct SettingsView: View {
                             }
                         }
                     }
-                }
 
-                Section {
                     HStack {
-                        Text("Inventory Owner")
-                        Spacer()
-                        TextField("Optional", text: Binding(
-                            get: { UserSettings.shared.inventoryOwner ?? "" },
-                            set: { UserSettings.shared.inventoryOwner = $0.isEmpty ? nil : $0 }
-                        ))
-                        .textFieldStyle(.roundedBorder)
-                        .frame(maxWidth: 200)
-                        .multilineTextAlignment(.trailing)
+                        Picker("Default Catalog Sort Order", selection: defaultSortOptionBinding) {
+                            ForEach(SortOption.allCases, id: \.self) { option in
+                                Text(option.rawValue).tag(option)
+                            }
+                        }
+                        .pickerStyle(.menu)
                     }
-                    .help("Optional name to display on inventory labels (e.g., studio name or artist name)")
-                } header: {
-                    Text("Labels")
-                } footer: {
-                    Text("The inventory owner will appear as an optional field on printed labels when set.")
-                }
 
-                Section("Display") {
+                    HStack {
+                        Picker("Default Inventory Sort Order", selection: defaultInventorySortOptionBinding) {
+                            Text("Name").tag("Name")
+                            Text("Inventory Count").tag("Inventory Count")
+                            Text("Buy Count").tag("Buy Count")
+                            Text("Sell Count").tag("Sell Count")
+                        }
+                        .pickerStyle(.menu)
+                    }
+
                     Toggle("Expand Manufacturer Descriptions by Default", isOn: Binding(
                         get: { UserSettings.shared.expandManufacturerDescriptionsByDefault },
                         set: { UserSettings.shared.expandManufacturerDescriptionsByDefault = $0 }
@@ -297,71 +282,11 @@ struct SettingsView: View {
                     .pickerStyle(.menu)
                     .help("Choose how project thumbnails are displayed: Fit preserves aspect ratio, Fill crops to square")
 
-                    HStack {
-                        Picker("Default Catalog Sort Order", selection: defaultSortOptionBinding) {
-                            ForEach(SortOption.allCases, id: \.self) { option in
-                                Text(option.rawValue).tag(option)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                    }
-
-                    HStack {
-                        Picker("Default Inventory Sort Order", selection: defaultInventorySortOptionBinding) {
-                            Text("Name").tag("Name")
-                            Text("Inventory Count").tag("Inventory Count")
-                            Text("Buy Count").tag("Buy Count")
-                            Text("Sell Count").tag("Sell Count")
-                        }
-                        .pickerStyle(.menu)
-                    }
- /*
-                    HStack {
-                        Picker("Default Units", selection: defaultUnitsBinding) {
-                            ForEach(DefaultUnits.allCases, id: \.self) { unit in
-                                Label(unit.displayName, systemImage: unit.systemImage).tag(unit)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .help("Default units for recording inventory")
-                    }
- */
+                    Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
+                        .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
                 }
 
-                // Image Quality section
-                Section {
-                    NavigationLink {
-                        ImageQualitySettingsView()
-                    } label: {
-                        Label("Image Quality & Cache", systemImage: "photo.on.rectangle.angled")
-                    }
-                } header: {
-                    Text("Images")
-                }
-
-                // REMOVED: Haptic feedback section - HapticService removed from project
-
-                // Kiln settings section
-                Section("Kiln") {
-                    Picker("Temperature Unit", selection: Binding(
-                        get: { UserSettings.shared.preferredTemperatureUnit },
-                        set: { UserSettings.shared.preferredTemperatureUnit = $0 }
-                    )) {
-                        ForEach(TemperatureUnit.allCases, id: \.self) { unit in
-                            Text(unit.displayName).tag(unit)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .help("Choose your preferred temperature unit for displaying kiln schedules")
-
-                    NavigationLink {
-                        KilnRatesSettingsView()
-                    } label: {
-                        Label("Kiln Max Rates", systemImage: "gauge.with.dots.needle.67percent")
-                    }
-                }
-
-                // Filtering section - navigate to separate views
+                // MARK: - Filtering
                 Section("Filtering") {
                     NavigationLink {
                         COEFilterView()
@@ -374,10 +299,7 @@ struct SettingsView: View {
                     } label: {
                         Label("Manufacturer Filter", systemImage: "building.2")
                     }
-                }
 
-                // Tag Filters section
-                Section {
                     Toggle("Show User Tags in Filters", isOn: Binding(
                         get: { UserSettings.shared.showUserTagsInFilter },
                         set: { UserSettings.shared.showUserTagsInFilter = $0 }
@@ -389,32 +311,52 @@ struct SettingsView: View {
                         set: { UserSettings.shared.showTechnicalTagsInFilter = $0 }
                     ))
                     .help("When enabled, technical property tags (reducing, seeded, reactive, striker, uv, cfl, luster, etc.) will appear in the tag filter menu")
-                } header: {
-                    Text("Tag Filters")
-                } footer: {
-                    Text("Control which tag categories appear in the tag filter menu. Tags will remain visible on catalog items regardless of these settings.")
                 }
 
-                // Author Profile section
-                Section("Author Profile") {
+                // MARK: - Content & Customization
+                Section("Content & Customization") {
                     NavigationLink {
                         AuthorSettingsView()
                     } label: {
                         Label("Author Information", systemImage: "person.circle")
                     }
-                }
 
-                // Terminology section
-                Section("Terminology") {
                     NavigationLink {
                         TerminologySettingsView()
                     } label: {
                         Label("Glass Working Terminology", systemImage: "text.bubble")
                     }
+
+                    NavigationLink {
+                        RatingSettingsView()
+                    } label: {
+                        Label("Manage Ratings", systemImage: "star")
+                    }
+
+                    HStack {
+                        Text("Inventory Owner")
+                        Spacer()
+                        TextField("Optional", text: Binding(
+                            get: { UserSettings.shared.inventoryOwner ?? "" },
+                            set: { UserSettings.shared.inventoryOwner = $0.isEmpty ? nil : $0 }
+                        ))
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 200)
+                        .multilineTextAlignment(.trailing)
+                    }
+                    .help("Optional name to display on inventory labels (e.g., studio name or artist name)")
+                } footer: {
+                    Text("Customize how you interact with your content. The inventory owner will appear on printed labels when set.")
                 }
 
-                // Data Management section
-                Section("Data") {
+                // MARK: - Media & Data
+                Section("Media & Data") {
+                    NavigationLink {
+                        ImageQualitySettingsView()
+                    } label: {
+                        Label("Image Quality & Cache", systemImage: "photo.on.rectangle.angled")
+                    }
+
                     NavigationLink {
                         DataExportView()
                     } label: {
@@ -422,27 +364,52 @@ struct SettingsView: View {
                     }
                 }
 
-                // Ratings section
-                Section("Ratings") {
-                    Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
-                        .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
-
+                // MARK: - Kiln
+                Section("Kiln") {
                     NavigationLink {
-                        RatingSettingsView()
+                        KilnRatesSettingsView()
                     } label: {
-                        Label("Manage Ratings", systemImage: "star")
+                        Label("Kiln Max Rates", systemImage: "gauge.with.dots.needle.67percent")
                     }
                 }
 
-                // Advanced filtering settings - feature gated for release
-                // Note: This legacy section is replaced by the new Manufacturer Filter section above
-                /*
-                if isAdvancedFeaturesEnabled {
-                    // Legacy manufacturer filtering code removed
+                // MARK: - Subscription
+                Section("Subscription") {
+                    NavigationLink {
+                        SubscriptionStatusView(viewModel: subscriptionViewModel)
+                    } label: {
+                        HStack {
+                            Label("Manage Subscription", systemImage: subscriptionIcon)
+                            Spacer()
+                            Text(subscriptionBadge)
+                                .font(.caption.bold())
+                                .foregroundColor(subscriptionBadgeColor)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(subscriptionBadgeBackground)
+                                .cornerRadius(6)
+                        }
+                    }
                 }
-                */
+                .task {
+                    // Load subscription status when settings view appears
+                    await subscriptionViewModel.loadSubscriptionStatus()
+                }
 
-                Section("Debug") {
+                // MARK: - Advanced
+                Section("Advanced") {
+                    NavigationLink {
+                        DebugSettingsView()
+                    } label: {
+                        Label("Debug Settings", systemImage: "ladybug")
+                    }
+
+                    NavigationLink {
+                        SentryTestView()
+                    } label: {
+                        Label("Test Sentry Logging", systemImage: "ant.circle")
+                    }
+
                     // Subscription tier override for testing
                     Toggle(isOn: Binding(
                         get: { DebugConfig.debugOverrideSubscriptionTier },
@@ -477,20 +444,6 @@ struct SettingsView: View {
                         }
                     }
 
-                    NavigationLink {
-                        DebugSettingsView()
-                    } label: {
-                        Label("Debug Settings", systemImage: "ladybug")
-                    }
-
-                    NavigationLink {
-                        SentryTestView()
-                    } label: {
-                        Label("Test Sentry Logging", systemImage: "ant.circle")
-                    }
-                }
-
-                Section("About") {
                     NavigationLink {
                         AboutView()
                     } label: {

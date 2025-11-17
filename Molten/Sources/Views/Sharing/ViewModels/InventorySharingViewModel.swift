@@ -16,11 +16,14 @@ class InventorySharingViewModel {
 
     private let sharingManager: InventorySharingManager
     private let catalogService: CatalogService
+    private let apiClient: InventorySharingAPIClient
+    private let expiringShareRepository: CoreDataExpiringShareRepository
 
     // State
     var myShareCode: String?
     var myShareMetadata: MyShareMetadata?
     var friendShares: [FriendShare] = []
+    var expiringShares: [ExpiringShare] = []
     var isLoading = false
     var errorMessage: String?
 
@@ -46,21 +49,38 @@ class InventorySharingViewModel {
     var showingCustomizeFriend = false
     var selectedFriendForCustomization: FriendShare?
 
+    // Expiring share creation
+    var showingCreateExpiringShare = false
+    var expiringShareDisplayName = ""
+    var expiringShareNotes = ""
+    var expiringShareDays = 7
+    var expiringShareHours = 0
+    var isCreatingExpiringShare = false
+
     // MARK: - Initialization
 
     init(
         sharingManager: InventorySharingManager,
-        catalogService: CatalogService
+        catalogService: CatalogService,
+        apiClient: InventorySharingAPIClient,
+        expiringShareRepository: CoreDataExpiringShareRepository
     ) {
         self.sharingManager = sharingManager
         self.catalogService = catalogService
+        self.apiClient = apiClient
+        self.expiringShareRepository = expiringShareRepository
     }
 
     /// Convenience init using AppDependencies
     convenience init(deps: AppDependencies = AppDependencies()) {
+        let persistence = PersistenceController.shared
+        let cloudContext = persistence.cloudContext
+
         self.init(
             sharingManager: deps.inventorySharingManager,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: cloudContext)
         )
     }
 
@@ -74,6 +94,17 @@ class InventorySharingViewModel {
         myShareCode = sharingManager.getMyShareCode()
         myShareMetadata = sharingManager.getMyShareMetadata()
         friendShares = sharingManager.getFriendShares()
+
+        // Load expiring shares
+        do {
+            expiringShares = try await expiringShareRepository.fetchAllExpiringShares()
+            // Clean up expired shares
+            try await expiringShareRepository.deleteExpiredShares()
+            expiringShares = try await expiringShareRepository.fetchAllExpiringShares()
+        } catch {
+            // Log error but don't fail the whole load
+            print("Failed to load expiring shares: \(error)")
+        }
 
         // Populate form fields with existing metadata
         if let metadata = myShareMetadata {
@@ -183,8 +214,26 @@ class InventorySharingViewModel {
             myShareCode = nil
             myShareMetadata = nil
 
+            // Also delete all expiring shares when main share is deleted
+            await deleteAllExpiringSharesForMainShare()
+
         } catch SharingManagerError.noShareExists {
             errorMessage = "No share exists."
+        } catch SharingAPIError.notFound {
+            // Share doesn't exist on server (never uploaded or already deleted)
+            // Delete locally so user can create a new share
+            do {
+                try sharingManager.deleteLocalShareOnly()
+                myShareCode = nil
+                myShareMetadata = nil
+
+                // Also delete all expiring shares
+                await deleteAllExpiringSharesForMainShare()
+
+                // Don't show error - deletion succeeded from user's perspective
+            } catch {
+                errorMessage = "Failed to delete local share: \(error.localizedDescription)"
+            }
         } catch SharingAPIError.unauthorized {
             // Key pair mismatch - this should be extremely rare with iCloud Keychain sync
             // Only happens if: iCloud Keychain disabled, or manual key deletion during testing
@@ -192,6 +241,10 @@ class InventorySharingViewModel {
                 try sharingManager.deleteLocalShareOnly()
                 myShareCode = nil
                 myShareMetadata = nil
+
+                // Also delete all expiring shares
+                await deleteAllExpiringSharesForMainShare()
+
                 errorMessage = "Local share deleted. Server deletion failed - your encryption keys are not available. This can happen if iCloud Keychain is disabled. Enable iCloud Keychain in Settings to prevent this issue. You can create a new share now."
             } catch {
                 errorMessage = "Failed to delete local share: \(error.localizedDescription)"
@@ -233,7 +286,7 @@ class InventorySharingViewModel {
             showingAddFriend = false
 
         } catch SharingAPIError.notFound {
-            errorMessage = "Share code not found. Check the code and try again."
+            errorMessage = "Share code '\(friendShareCode.uppercased())' not found. Check the code and try again."
         } catch {
             errorMessage = "Failed to add friend: \(error.localizedDescription)"
         }
@@ -314,6 +367,112 @@ class InventorySharingViewModel {
         }
     }
 
+    // MARK: - Expiring Shares
+
+    func createExpiringShare() async {
+        guard let mainShareCode = myShareCode else {
+            errorMessage = "No main share exists. Create one first."
+            return
+        }
+
+        print("🔍 [VIEWMODEL] Main share code: \(mainShareCode)")
+        print("🔍 [VIEWMODEL] Main share code (unformatted): \(mainShareCode.unformattedShareCode)")
+
+        guard !expiringShareDisplayName.trimmingCharacters(in: .whitespaces).isEmpty else {
+            errorMessage = "Please enter a display name for the expiring share"
+            return
+        }
+
+        // Validate duration
+        let duration = ExpiringShareDuration(days: expiringShareDays, hours: expiringShareHours)
+        guard duration.isValid else {
+            errorMessage = "Invalid duration. Minimum 1 hour, maximum 30 days + 23 hours"
+            return
+        }
+
+        isCreatingExpiringShare = true
+        errorMessage = nil
+
+        do {
+            let trimmedDisplayName = expiringShareDisplayName.trimmingCharacters(in: .whitespaces)
+            let trimmedNotes = expiringShareNotes.trimmingCharacters(in: .whitespaces)
+            let notes = trimmedNotes.isEmpty ? nil : trimmedNotes
+
+            // Use unformatted share code (remove dash)
+            let unformattedMainShareCode = mainShareCode.unformattedShareCode
+
+            print("🔍 [VIEWMODEL] Sending mainShareCode: \(unformattedMainShareCode)")
+
+            // Call server to create expiring share
+            let (shareCode, expiresAt) = try await apiClient.createExpiringShare(
+                mainShareCode: unformattedMainShareCode,
+                displayName: trimmedDisplayName,
+                shareNotes: notes,
+                expirationDuration: duration.timeInterval
+            )
+
+            // Save locally
+            let expiringShare = ExpiringShare(
+                shareCode: shareCode,
+                mainShareCode: mainShareCode,
+                displayName: trimmedDisplayName,
+                shareNotes: notes,
+                expiresAt: expiresAt
+            )
+
+            try await expiringShareRepository.saveExpiringShare(expiringShare)
+
+            // Reload list
+            expiringShares = try await expiringShareRepository.fetchAllExpiringShares()
+
+            // Clear form
+            expiringShareDisplayName = ""
+            expiringShareNotes = ""
+            expiringShareDays = 7
+            expiringShareHours = 0
+            showingCreateExpiringShare = false
+
+        } catch {
+            errorMessage = "Failed to create expiring share: \(error.localizedDescription)"
+        }
+
+        isCreatingExpiringShare = false
+    }
+
+    func deleteExpiringShare(_ share: ExpiringShare) async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            // Delete from server
+            try await apiClient.deleteExpiringShare(shareCode: share.shareCode)
+
+            // Delete locally
+            try await expiringShareRepository.deleteExpiringShare(byCode: share.shareCode)
+
+            // Reload list
+            expiringShares = try await expiringShareRepository.fetchAllExpiringShares()
+
+        } catch {
+            errorMessage = "Failed to delete expiring share: \(error.localizedDescription)"
+        }
+
+        isLoading = false
+    }
+
+    func deleteAllExpiringSharesForMainShare() async {
+        guard let mainShareCode = myShareCode else { return }
+
+        do {
+            // Delete all expiring shares for this main share
+            try await expiringShareRepository.deleteExpiringShares(forMainShareCode: mainShareCode)
+            expiringShares = []
+        } catch {
+            // Log error but don't fail - this is cleanup during main share deletion
+            print("Failed to delete expiring shares: \(error)")
+        }
+    }
+
     // MARK: - Helpers
 
     func copyShareCode() {
@@ -321,6 +480,12 @@ class InventorySharingViewModel {
         if let code = myShareCode {
             UIPasteboard.general.string = code
         }
+        #endif
+    }
+
+    func copyExpiringShareCode(_ shareCode: String) {
+        #if canImport(UIKit)
+        UIPasteboard.general.string = shareCode
         #endif
     }
 

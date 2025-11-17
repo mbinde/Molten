@@ -27,6 +27,7 @@ extension Notification.Name {
     static let showSettings = Notification.Name("showSettings")
     static let navigateToShoppingListForStore = Notification.Name("navigateToShoppingListForStore")
     static let filterShoppingListByStore = Notification.Name("filterShoppingListByStore")
+    static let navigateToInventorySharingWithCode = Notification.Name("navigateToInventorySharingWithCode")
 }
 
 /// Main tab view that provides navigation between the app's primary sections
@@ -241,6 +242,14 @@ struct MainTabView: View {
                     )
                 }
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToInventorySharingWithCode)) { notification in
+            // Switch to inventory tab and trigger sharing view with pre-filled code
+            selectedTab = .inventory
+            markTabAsViewed(.inventory)
+
+            // Forward notification to InventoryView to show sharing sheet
+            // The notification is already posted, InventoryView will receive it
         }
         .onChange(of: selectedTab) { oldTab, newTab in
             // Save the selected tab whenever it changes (but only if it actually changed)

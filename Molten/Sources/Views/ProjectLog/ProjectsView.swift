@@ -16,7 +16,7 @@ enum ProjectDestination: Hashable {
     case new(ProjectModel)
 }
 
-struct ProjectsView: View {
+struct ProjectsView: View, CachedDataDeletion {
     @State private var projects: [ProjectModel] = []
     @State private var isLoading = false
     @State private var refreshTrigger = 0
@@ -36,10 +36,14 @@ struct ProjectsView: View {
 
     private let deps: AppDependencies
     private let projectPlanRepository: ProjectRepository
+    private let userImageRepository: UserImageRepository
+    private let projectImageRepository: ProjectImageRepository
 
     init(deps: AppDependencies = AppDependencies()) {
         self.deps = deps
         self.projectPlanRepository = deps.projectRepository
+        self.userImageRepository = deps.userImageRepository
+        self.projectImageRepository = deps.projectImageRepository
     }
 
     // MARK: - Computed Properties
@@ -219,6 +223,13 @@ struct ProjectsView: View {
                     ProjectRow(plan: plan, tags: [])
                 }
             }
+            .onDelete { indexSet in
+                Task {
+                    for index in indexSet {
+                        await deleteItem(filteredProjects[index])
+                    }
+                }
+            }
         }
         .id(refreshTrigger)
     }
@@ -269,6 +280,33 @@ struct ProjectsView: View {
         await MainActor.run {
             navigationPath.append(ProjectDestination.new(blankPlan))
         }
+    }
+
+    // MARK: - CachedDataDeletion Implementation
+
+    func performDeletion(for item: ProjectModel) async throws {
+        // Delete all images associated with this project
+        let images = try await userImageRepository.getImages(
+            ownerType: .projectPlan,
+            ownerId: item.id.uuidString
+        )
+
+        for image in images {
+            try await userImageRepository.deleteImage(image.id)
+        }
+
+        // Delete the project (Core Data will cascade delete ProjectImage, ProjectStep, etc.)
+        try await projectPlanRepository.deleteProject(id: item.id)
+    }
+
+    func removeFromCache(_ item: ProjectModel) async {
+        await MainActor.run {
+            projects.removeAll { $0.id == item.id }
+        }
+    }
+
+    func reloadData() async {
+        await loadProjects()
     }
 }
 

@@ -125,6 +125,7 @@ struct SearchAndFilterHeader: View {
                     HStack(spacing: DesignSystem.Spacing.sm) {
                         Toggle("", isOn: $searchTitlesOnly)
                             .labelsHidden()
+                            .tint(DesignSystem.Colors.accentPrimary)
                         Text("Search titles only")
                             .font(DesignSystem.Typography.caption)
                             .fontWeight(DesignSystem.FontWeight.medium)

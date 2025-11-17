@@ -1,0 +1,18 @@
+You’re a senior iOS engineer.
+Please clean up and restructure staged changes code according to modern best practices.
+
+
+Goals:
+Reduce code duplication and improve reusability.
+Remove unused/obsolete code
+Split large files or classes into smaller, focused components (e.g., separate files, extensions, or utility classes).
+Move logic into proper layers (ViewModel, Repository, Utils, Extensions, etc.)
+Apply proper architectural structure
+Use clear naming conventions and consistent formatting.
+Add comments or brief docstrings only where they help understand logic — avoid noise.
+Ensure maintainability, scalability, and readability.
+Do not change functionality unless necessary for clarity or safety.
+Follow SOLID, DRY, and Clean Architecture principles
+
+
+Focus ONLY on files that have been edited and have staged changes. If code is already clean - do not try to improve it to the edge. Overengineering is also bad.

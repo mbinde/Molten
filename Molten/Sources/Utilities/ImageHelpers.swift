@@ -383,7 +383,7 @@ struct ProductImageView: View {
     private func loadImageAsync() async {
         isLoading = true
 
-        // PRIORITY 1: Try to load user-uploaded image first (if we have a stableId)
+        // Step 0: User-uploaded image (highest priority)
         if let stableId = stableId {
             if let primaryModel = try? await Self.sharedUserImageRepository.getPrimaryImage(ownerType: .glassItem, ownerId: stableId),
                let userImage = try? await Self.sharedUserImageRepository.loadImage(primaryModel) {
@@ -393,42 +393,37 @@ struct ProductImageView: View {
             }
         }
 
-        // PRIORITY 1.5: Try to load thumbnail from local bundle first (saves bandwidth)
-        let useThumbnail = !UserSettings.shared.downloadFullSizeImages
-        if useThumbnail, let imageThumbPath = imageThumbPath, !imageThumbPath.isEmpty {
-            let thumbImage = await Task.detached(priority: .background) {
-                ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: imageThumbPath)
+        // Step 1: Check if we have permission for product images
+        // If not, fall back to manufacturer logo
+        if let manufacturer = manufacturer,
+           !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
+            // No permission - use manufacturer default image only
+            let image = await Task.detached(priority: .background) {
+                ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
             }.value
-
-            if let thumbImage = thumbImage {
-                loadedImage = thumbImage
-                isLoading = false
-                return
-            }
+            loadedImage = image
+            isLoading = false
+            return
         }
 
-        // PRIORITY 2: Try to download from CDN (only if local bundle doesn't have it)
-        // ProductImageView uses thumbnails by default for faster loading in lists (unless user enabled full-size)
-        if let imagePath = imagePath, !imagePath.isEmpty {
-            if let cdnImage = await ImageDownloadService.loadImage(
-                itemCode: itemCode,
-                manufacturer: manufacturer,
-                exactFilename: imagePath,
-                exactThumbnailFilename: imageThumbPath,
-                useThumbnail: useThumbnail
-            ) {
-                loadedImage = cdnImage
-                isLoading = false
-                return
-            }
+        // Steps 2→3→4: ImageDownloadService handles: cache → bundle → CDN download
+        // (Permission already checked above, ImageDownloadService will verify again at lowest level)
+        let useThumbnail = !UserSettings.shared.downloadFullSizeImages
+        if let cdnImage = await ImageDownloadService.loadImage(
+            manufacturer: manufacturer,
+            exactFilename: imagePath,
+            exactThumbnailFilename: imageThumbPath,
+            useThumbnail: useThumbnail
+        ) {
+            loadedImage = cdnImage
+            isLoading = false
+            return
         }
 
-        // PRIORITY 3: Load bundle/manufacturer images (fallback)
-        // This will load manufacturer logos for manufacturers where we don't have product image permission
+        // Final fallback: Try manufacturer logo (in case catalog didn't have image_path)
         let image = await Task.detached(priority: .background) {
-            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: imagePath)
+            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
         }.value
-
         loadedImage = image
         isLoading = false
     }
@@ -551,7 +546,7 @@ struct ProductImageDetail: View {
     private func loadImageAsync() async {
         isLoading = true
 
-        // PRIORITY 1: Try to load user-uploaded image first (if we have a stableId)
+        // Step 0: User-uploaded image (highest priority)
         if let stableId = stableId {
             if let primaryModel = try? await Self.sharedUserImageRepository.getPrimaryImage(ownerType: .glassItem, ownerId: stableId),
                let userImage = try? await Self.sharedUserImageRepository.loadImage(primaryModel) {
@@ -561,29 +556,36 @@ struct ProductImageDetail: View {
             }
         }
 
-        // PRIORITY 1.5: Try to download from CDN (only if we have an exact image_path from catalog)
-        // ProductImageDetail respects user preference for image quality
-        if let imagePath = imagePath, !imagePath.isEmpty {
-            let useThumbnail = !UserSettings.shared.downloadFullSizeImages
-            if let cdnImage = await ImageDownloadService.loadImage(
-                itemCode: itemCode,
-                manufacturer: manufacturer,
-                exactFilename: imagePath,
-                exactThumbnailFilename: imageThumbPath,
-                useThumbnail: useThumbnail
-            ) {
-                loadedImage = cdnImage
-                isLoading = false
-                return
-            }
+        // Step 1: Check if we have permission for product images
+        // If not, fall back to manufacturer logo
+        if let manufacturer = manufacturer,
+           !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
+            // No permission - use manufacturer default image only
+            let image = await Task.detached(priority: .utility) {
+                ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
+            }.value
+            loadedImage = image
+            isLoading = false
+            return
         }
 
-        // PRIORITY 2: Load bundle/manufacturer images (fallback)
-        // This will load manufacturer logos for manufacturers where we don't have product image permission
-        let image = await Task.detached(priority: .utility) {
-            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: imagePath)
-        }.value
+        // Steps 2→3→4: ImageDownloadService handles: cache → bundle → CDN download
+        let useThumbnail = !UserSettings.shared.downloadFullSizeImages
+        if let cdnImage = await ImageDownloadService.loadImage(
+            manufacturer: manufacturer,
+            exactFilename: imagePath,
+            exactThumbnailFilename: imageThumbPath,
+            useThumbnail: useThumbnail
+        ) {
+            loadedImage = cdnImage
+            isLoading = false
+            return
+        }
 
+        // Final fallback: Try manufacturer logo
+        let image = await Task.detached(priority: .utility) {
+            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
+        }.value
         loadedImage = image
         isLoading = false
     }

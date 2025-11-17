@@ -67,12 +67,14 @@ struct LabelDesignerView: View {
 
                 Section("Label Format") {
                     Picker("Format", selection: $selectedFormat) {
-                        Text("Avery 5160 (30 labels, 1\" × 2⅝\")").tag(AveryFormat.avery5160)
-                        Text("Avery 18167 (80 labels, ½\" × 1¾\")").tag(AveryFormat.avery18167)
-                        Text("Mr-Label MR184 (30 labels, 1\" × 2⅝\")").tag(AveryFormat.mrLabel184)
-                        // Temporarily hidden for testing - uncomment to enable
-                        // Text("Avery 5163 (10 labels, 2\" × 4\")").tag(AveryFormat.avery5163)
-                        // Text("Avery 5167 (80 labels, ½\" × 1¾\")").tag(AveryFormat.avery5167)
+                        // Use organized categories from AveryFormat.allFormats
+                        ForEach(Array(AveryFormat.allFormats.keys.sorted()), id: \.self) { category in
+                            Section(category) {
+                                ForEach(AveryFormat.allFormats[category] ?? [], id: \.name) { format in
+                                    Text(formatDisplayName(format)).tag(format)
+                                }
+                            }
+                        }
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
@@ -80,6 +82,9 @@ struct LabelDesignerView: View {
                             .font(.caption)
                             .fontWeight(.medium)
                         Text("\(selectedFormat.labelsPerSheet) labels per sheet (\(selectedFormat.columns)×\(selectedFormat.rows))")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text(formatDimensions(selectedFormat))
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
@@ -737,6 +742,50 @@ struct LabelDesignerView: View {
         }
     }
 
+    // MARK: - Format Display Helpers
+
+    /// Format display name for picker (shows count and dimensions)
+    private func formatDisplayName(_ format: AveryFormat) -> String {
+        let dimensions = formatDimensions(format)
+        return "\(format.name) (\(format.labelsPerSheet) labels, \(dimensions))"
+    }
+
+    /// Format dimensions as human-readable string
+    private func formatDimensions(_ format: AveryFormat) -> String {
+        let widthInches = format.labelWidth / 72.0
+        let heightInches = format.labelHeight / 72.0
+
+        // Format to remove unnecessary decimals
+        let widthStr = formatInches(widthInches)
+        let heightStr = formatInches(heightInches)
+
+        return "\(widthStr)\" × \(heightStr)\""
+    }
+
+    /// Format inches value, using fractions for common values
+    private func formatInches(_ inches: Double) -> String {
+        // Common fractional values
+        if abs(inches - 0.5) < 0.01 { return "½" }
+        if abs(inches - 0.75) < 0.01 { return "¾" }
+        if abs(inches - 1.75) < 0.01 { return "1¾" }
+        if abs(inches - 2.625) < 0.01 { return "2⅝" }
+        if abs(inches - 3.33) < 0.01 { return "3⅓" }
+        if abs(inches - 3.375) < 0.01 { return "3⅜" }
+        if abs(inches - 2.33) < 0.01 { return "2⅓" }
+        if abs(inches - 1.33) < 0.01 { return "1⅓" }
+        if abs(inches - 1.25) < 0.01 { return "1¼" }
+        if abs(inches - 2.25) < 0.01 { return "2¼" }
+        if abs(inches - 3.5) < 0.01 { return "3.5" }
+
+        // For whole numbers, just show the integer
+        if abs(inches - round(inches)) < 0.01 {
+            return "\(Int(round(inches)))"
+        }
+
+        // Otherwise, show with one decimal
+        return String(format: "%.1f", inches)
+    }
+
     // MARK: - Settings Persistence
 
     private var settingsKey: String {
@@ -747,17 +796,9 @@ struct LabelDesignerView: View {
     private func loadLastUsedFormat() {
         let defaults = UserDefaults.standard
         if let formatName = defaults.string(forKey: "labelPrinting.lastUsedFormat") {
-            // Try to match the saved format name to an AveryFormat case
-            if formatName == AveryFormat.avery5160.name {
-                selectedFormat = .avery5160
-            } else if formatName == AveryFormat.avery18167.name {
-                selectedFormat = .avery18167
-            } else if formatName == AveryFormat.mrLabel184.name {
-                selectedFormat = .mrLabel184
-            } else if formatName == AveryFormat.avery5163.name {
-                selectedFormat = .avery5163
-            } else if formatName == AveryFormat.avery5167.name {
-                selectedFormat = .avery5167
+            // Search through all available formats to find matching name
+            if let matchedFormat = AveryFormat.flatList.first(where: { $0.name == formatName }) {
+                selectedFormat = matchedFormat
             }
             // If no match, keep default .avery5160
         }

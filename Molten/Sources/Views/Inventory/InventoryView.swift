@@ -35,6 +35,7 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
     @State private var showingLabelDesigner = false
     @State private var showingSharing = false
+    @State private var pendingShareCode: String? = nil
 
     // Performance optimization: Cache computed values to avoid recomputation on every view refresh
     @State private var cachedAllTags: [String] = []
@@ -349,11 +350,13 @@ struct InventoryView: View, CachedDataDeletion {
             }
             .fullScreenCover(isPresented: $showingSharing) {
                 NavigationStack {
-                    InventorySharingView()
+                    InventorySharingView(pendingShareCode: pendingShareCode)
                         .toolbar {
                             ToolbarItem(placement: .cancellationAction) {
                                 Button("Done") {
                                     showingSharing = false
+                                    // Clear pending share code after dismissing
+                                    pendingShareCode = nil
                                 }
                             }
                         }
@@ -412,6 +415,13 @@ struct InventoryView: View, CachedDataDeletion {
                 // Reset navigation when user taps Inventory tab while already on Inventory
                 navigationPath = NavigationPath()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .navigateToInventorySharingWithCode)) { notification in
+                // Extract share code from notification and show sharing view
+                if let shareCode = notification.userInfo?["shareCode"] as? String {
+                    pendingShareCode = shareCode
+                    showingSharing = true
+                }
+            }
         }
     }
     
@@ -421,12 +431,7 @@ struct InventoryView: View, CachedDataDeletion {
         CustomEmptyStateView(
             icon: "archivebox",
             title: "No Inventory Yet",
-            description: "Start tracking your glass inventory by adding your first item",
-            actionButton: .init(
-                title: "Add Item",
-                action: { showingAddItem = true },
-                style: .prominent
-            )
+            description: "Start tracking your glass inventory by adding your first item using the + button in the menu bar"
         )
     }
 
@@ -571,10 +576,15 @@ struct InventoryView: View, CachedDataDeletion {
 
     func removeFromCache(_ item: CompleteInventoryItemModel) async {
         await MainActor.run {
+            log.info("🗑️ removeFromCache START: completeItems.count = \(viewModel.completeItems.count)")
+            log.info("🗑️ removeFromCache: Looking for item \(item.glassItem.stable_id)")
+
             // DON'T remove the catalog item - just update it to have no inventory
             // The catalog should always contain all items
             if let index = viewModel.completeItems.firstIndex(where: { $0.id == item.id }) {
                 let existing = viewModel.completeItems[index]
+                log.info("🗑️ removeFromCache: Found at index \(index), inventory count = \(existing.inventory.count)")
+
                 // Create new item with empty inventory (all properties are immutable)
                 let updatedItem = CompleteInventoryItemModel(
                     catalogItem: existing.catalogItem,
@@ -584,8 +594,13 @@ struct InventoryView: View, CachedDataDeletion {
                     rating: existing.rating
                 )
                 viewModel.completeItems[index] = updatedItem
-                log.info("🗑️ removeFromCache: Cleared inventory for item \(item.glassItem.stable_id)")
+                log.info("🗑️ removeFromCache: Updated item, new inventory count = \(updatedItem.inventory.count)")
+            } else {
+                log.warning("🗑️ removeFromCache: Item NOT FOUND in completeItems!")
             }
+
+            log.info("🗑️ removeFromCache END: completeItems.count = \(viewModel.completeItems.count)")
+            log.info("🗑️ removeFromCache: Incrementing refreshTrigger from \(refreshTrigger) to \(refreshTrigger + 1)")
             refreshTrigger += 1  // Force SwiftUI to refresh (updates counters, UI)
         }
     }
@@ -600,7 +615,11 @@ struct InventoryView: View, CachedDataDeletion {
     }
 
     func updateDerivedCaches() {
+        log.info("📊 updateDerivedCaches: Before updateCaches()")
+        log.info("📊 sortedFilteredItems.count = \(sortedFilteredItems.count)")
         updateCaches()
+        log.info("📊 updateDerivedCaches: After updateCaches()")
+        log.info("📊 sortedFilteredItems.count = \(sortedFilteredItems.count)")
     }
 
     // Convenience wrapper for .onDelete handler

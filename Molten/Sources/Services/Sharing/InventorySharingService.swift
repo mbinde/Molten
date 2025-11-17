@@ -94,9 +94,20 @@ open class InventorySharingService {
         let downloaded = try await apiClient.downloadSnapshot(shareCode: shareCode)
 
         // Deserialize and verify signature
-        let result = try snapshot.deserialize(
+        var result = try snapshot.deserialize(
             data: downloaded.snapshotData,
             publicKey: downloaded.publicKey
+        )
+
+        // Add metadata from download response
+        result = SnapshotResult(
+            items: result.items,
+            timestamp: result.timestamp,
+            version: result.version,
+            isValid: result.isValid,
+            ownerName: downloaded.displayName ?? result.ownerName,
+            ownerShareNotes: downloaded.shareNotes ?? result.ownerShareNotes,
+            expiresAt: downloaded.expiresAt
         )
 
         return result

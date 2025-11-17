@@ -16,10 +16,10 @@ struct CreateShareView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Display Name", text: $viewModel.displayName)
+                    TextField("Name (shared with others)", text: $viewModel.displayName)
                         .textContentType(.name)
 
-                    TextField("Notes (Optional)", text: $viewModel.shareNotes, axis: .vertical)
+                    TextField("Notes (Optional; shared with others)", text: $viewModel.shareNotes, axis: .vertical)
                         .lineLimit(3...6)
                 } header: {
                     Text("Share Information")
@@ -34,6 +34,9 @@ struct CreateShareView: View {
                             .fontWeight(.medium)
 
                         Text("Your share will be automatically deleted from the server 90 days after your last inventory update. Update your inventory at least once every 90 days to keep your share active.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("You can revoke your share at any time on the Inventory Sharing screen, and it will disappear from other devices the next time they try to open it.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

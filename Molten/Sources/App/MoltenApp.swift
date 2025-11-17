@@ -258,6 +258,9 @@ extension MoltenApp {
             .task {
                 // Perform background catalog update check
                 await performBackgroundCatalogUpdate()
+
+                // Refresh stale friend shares (> 24 hours old)
+                await refreshStaleFriendShares()
             }
     }
 
@@ -507,6 +510,23 @@ extension MoltenApp {
         print("✅ Background catalog update check completed")
     }
 
+    /// Refresh my share if stale (not updated in > 24 hours)
+    @MainActor
+    private func refreshStaleFriendShares() async {
+        // Skip if running tests
+        guard !isRunningTests && !isRunningUITests else {
+            return
+        }
+
+        // Small delay to let app finish loading
+        try? await Task.sleep(for: .seconds(3))
+
+        print("🔄 Starting background share refresh check...")
+        let sharingManager = dependencies.inventorySharingManager
+        await sharingManager.refreshMyShareIfStale()
+        print("✅ Background share refresh check completed")
+    }
+
     /// Configure environment for UI testing
     @MainActor
     private func configureUITestEnvironment() {
@@ -565,25 +585,55 @@ extension MoltenApp {
         }
     }
 
-    /// Handle deep links from QR codes (molten://g/{naturalKey})
+    /// Handle deep links from QR codes
+    /// - molten://g/{naturalKey} - Glass item detail
+    /// - molten://share/{shareCode} - Add friend share
     @MainActor
     private func handleDeepLink(_ url: URL) {
-        // Parse URL: molten://g/bullseye-clear-001
-        guard url.host == "g" else {
-            return
+        guard let host = url.host else { return }
+
+        switch host {
+        case "g":
+            // Glass item detail: molten://g/bullseye-clear-001
+            let path = url.path
+            let naturalKey = path.hasPrefix("/") ? String(path.dropFirst()) : path
+
+            guard !naturalKey.isEmpty else {
+                return
+            }
+
+            deepLinkGlassItemStableId = naturalKey
+            // Note: showingDeepLinkedItem is now managed by .onChange(of: deepLinkGlassItemStableId)
+            // This ensures proper handling when scanning multiple QR codes in succession
+
+        case "inventory":
+            // Friend share: molten://inventory/ABC123
+            let path = url.path
+            let shareCode = path.hasPrefix("/") ? String(path.dropFirst()) : path
+
+            guard !shareCode.isEmpty else {
+                return
+            }
+
+            // Navigate to inventory sharing view and trigger add friend flow
+            handleShareDeepLink(shareCode: shareCode)
+
+        default:
+            print("⚠️ Unknown deep link host: \(host)")
         }
+    }
 
-        // Extract natural key from path
-        let path = url.path
-        let naturalKey = path.hasPrefix("/") ? String(path.dropFirst()) : path
+    /// Handle share deep link by navigating to inventory sharing and opening add friend sheet
+    @MainActor
+    private func handleShareDeepLink(shareCode: String) {
+        print("🔗 Deep link to add friend share: \(shareCode)")
 
-        guard !naturalKey.isEmpty else {
-            return
-        }
-
-        deepLinkGlassItemStableId = naturalKey
-        // Note: showingDeepLinkedItem is now managed by .onChange(of: deepLinkGlassItemStableId)
-        // This ensures proper handling when scanning multiple QR codes in succession
+        // Post notification to navigate to inventory tab and show sharing view with pre-filled code
+        NotificationCenter.default.post(
+            name: .navigateToInventorySharingWithCode,
+            object: nil,
+            userInfo: ["shareCode": shareCode]
+        )
     }
 
     /// Detect file type by examining JSON content

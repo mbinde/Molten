@@ -15,6 +15,7 @@ public struct SnapshotResult {
     public let isValid: Bool
     public let ownerName: String?  // Share owner's display name
     public let ownerShareNotes: String?  // Share owner's public notes
+    public let expiresAt: Date?  // Expiration date (only set for expiring shares)
 
     public init(
         items: [InventoryItemSnapshot],
@@ -22,7 +23,8 @@ public struct SnapshotResult {
         version: String,
         isValid: Bool,
         ownerName: String? = nil,
-        ownerShareNotes: String? = nil
+        ownerShareNotes: String? = nil,
+        expiresAt: Date? = nil
     ) {
         self.items = items
         self.timestamp = timestamp
@@ -30,5 +32,6 @@ public struct SnapshotResult {
         self.isValid = isValid
         self.ownerName = ownerName
         self.ownerShareNotes = ownerShareNotes
+        self.expiresAt = expiresAt
     }
 }

@@ -11,6 +11,7 @@ import SwiftUI
 struct LabelDesignerView: View {
     let items: [CompleteInventoryItemModel]
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.editMode) private var editMode
 
     @State private var selectedFormat: AveryFormat = .avery5160
 
@@ -22,8 +23,7 @@ struct LabelDesignerView: View {
     @State private var showingShareSheet = false
     @State private var errorMessage: String?
 
-    // Print adjustments (persisted per format/template in UserDefaults)
-    @State private var fontScale: Double = 1.0
+    // Print adjustments
     @State private var offsetX: Double = 0.0
     @State private var offsetY: Double = 0.0
 
@@ -33,6 +33,7 @@ struct LabelDesignerView: View {
 
     // Advanced options collapsed state
     @State private var showAdvancedOptions: Bool = false
+    @State private var showAdvancedLayoutOptions: Bool = false
 
     // Preset management
     @State private var showingPresetSheet = false
@@ -47,9 +48,22 @@ struct LabelDesignerView: View {
     // Preview item selection
     @State private var selectedPreviewIndex: Int = 0
 
+    // Owner editing popup
+    @State private var showingOwnerEditor = false
+    @State private var ownerEditText = ""
+
+    // Track currently loaded preset (if any)
+    @State private var currentPreset: LabelBuilderPreset?
+    @State private var previousPreset: LabelBuilderPreset?  // Fallback when deleting current preset
+
+    // Delete confirmation
+    @State private var showingDeleteConfirmation = false
+    @State private var presetToDelete: LabelBuilderPreset?
+
     var body: some View {
         NavigationStack {
             Form {
+                Group {
                 Section {
                     Text("\(totalLabelCount) label\(totalLabelCount == 1 ? "" : "s") to print")
                         .font(.headline)
@@ -59,7 +73,7 @@ struct LabelDesignerView: View {
                         .foregroundColor(.secondary)
 
                     if totalLabelCount > selectedFormat.labelsPerSheet {
-                        Text("This will create \(numberOfSheets) sheet\(numberOfSheets == 1 ? "" : "s")")
+                        Text("This will require \(numberOfSheets) sheet\(numberOfSheets == 1 ? " of labels" : "s of labels")")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -75,12 +89,14 @@ struct LabelDesignerView: View {
                         // Text("Avery 5167 (80 labels, ½\" × 1¾\")").tag(AveryFormat.avery5167)
                     }
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
                         Text(selectedFormat.name)
                             .font(.caption)
                             .fontWeight(.medium)
+                        Text("•")
+                            .foregroundColor(.secondary)
                         Text("\(selectedFormat.labelsPerSheet) labels per sheet (\(selectedFormat.columns)×\(selectedFormat.rows))")
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
@@ -100,12 +116,67 @@ struct LabelDesignerView: View {
                         }
                     }
 
-                    Button {
-                        showingSavePreset = true
-                    } label: {
+                    // Show current preset status
+                    if let preset = currentPreset {
                         HStack {
-                            Image(systemName: "square.and.arrow.down")
-                            Text("Save Current as Preset")
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                                .font(.caption)
+                            Text(preset.name)
+                                .font(.subheadline)
+                            if preset.config != builderConfig {
+                                Text("(modified)")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                            }
+                            Spacer()
+                        }
+                        .padding(.vertical, 4)
+                    }
+
+                    // Show different options based on whether we have a current user preset loaded
+                    if let preset = currentPreset, !LabelBuilderConfig.presets.contains(where: { $0.id == preset.id }) {
+                        // User preset is loaded - show Save (if modified), Save As New, Delete
+                        let isModified = preset.config != builderConfig
+
+                        if isModified {
+                            Button {
+                                saveCurrentPreset()
+                            } label: {
+                                HStack {
+                                    Image(systemName: "square.and.arrow.down")
+                                    Text("Overwrite Preset")
+                                }
+                            }
+                        }
+
+                        Button {
+                            showingSavePreset = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "square.and.arrow.down.on.square")
+                                Text("Save as New Preset")
+                            }
+                        }
+
+                        Button(role: .destructive) {
+                            presetToDelete = preset
+                            showingDeleteConfirmation = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "trash")
+                                Text("Delete Preset")
+                            }
+                        }
+                    } else {
+                        // No user preset loaded - show Save As New only
+                        Button {
+                            showingSavePreset = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "square.and.arrow.down")
+                                Text("Save Current as a New Preset")
+                            }
                         }
                     }
                 } header: {
@@ -120,116 +191,140 @@ struct LabelDesignerView: View {
                     Section {
                         // Item selector (if multiple items)
                         if items.count > 1 {
-                            Picker("Preview Item", selection: $selectedPreviewIndex) {
+                            Picker("Preview with:", selection: $selectedPreviewIndex) {
                                 ForEach(0..<items.count, id: \.self) { index in
                                     let item = items[index]
-                                    Text("\(item.glassItem.manufacturer)  \(item.glassItem.sku) - \(item.glassItem.name)")
+                                    Text("\(item.glassItem.name)")
                                         .lineLimit(1)
                                         .tag(index)
                                 }
                             }
                             .pickerStyle(.menu)
-                        }
-
-                        LabelPreviewView(
-                            format: selectedFormat,
-                            config: builderConfig,
-                            sampleData: previewData,
-                            fontScale: fontScale,
-                            offsetX: offsetX,
-                            offsetY: offsetY
-                        )
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
-                    } header: {
-                        Text("Preview")
-                    } footer: {
-                        if items.count > 1 {
-                            Text("Select which item to preview above. Red highlighting shows text that will be truncated in the PDF.")
+                            Text("Select which item to preview above. Red highlighting will show text that will be truncated on the label.")
                                 .font(.caption)
                         } else {
-                            Text("Red highlighting shows text that will be truncated in the PDF.")
+                            Text("Red highlighting will show text that will be truncated on the label.")
+                                .font(.caption)
+                        }
+
+                        labelPreview
+                    } header: {
+                        if items.count > 1 {
+                            Text("Select which item to preview above. Red highlighting will show text that will be truncated on the label.")
+                                .font(.caption)
+                        } else {
+                            Text("Red highlighting will show text that will be truncated on the label.")
                                 .font(.caption)
                         }
                     }
                 }
+                } // End Group 1
 
+                Group {
                 // Label Builder Section
                 Section {
                     VStack(alignment: .leading, spacing: 12) {
-                        // Font Size (at the top)
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Font Size")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
+                        // Font Size (compact inline)
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 12) {
+                                Text("Font Size")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .frame(width: 80, alignment: .leading)
 
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack {
-                                    Text("\(Int(fontScale * 100))%")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .monospacedDigit()
-                                    Spacer()
-                                }
+                                Slider(value: fontScaleBinding, in: 0.2...2.0, step: 0.1)
+                                    .tint(isUsingCustomFontScale ? .orange : .blue)
+                                    .id("fontScale-\(builderConfig.fontScale?.description ?? "default")")
 
-                                Slider(value: $fontScale, in: 0.2...2.0, step: 0.1) {
-                                    Text("Font Size")
-                                }
-                                .tint(.blue)
+                                Text("\(Int(effectiveFontScale * 100))%")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .monospacedDigit()
+                                    .frame(width: 45, alignment: .trailing)
+                            }
 
-                                HStack {
-                                    Text("Smaller")
+                            if isUsingCustomFontScale {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "info.circle.fill")
                                         .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    Text("Larger")
+                                        .foregroundColor(.orange)
+                                    Text("Custom (\(selectedFormat.name) default: \(Int(selectedFormat.defaultFontScale * 100))%)")
                                         .font(.caption2)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(.orange)
+                                    Spacer()
+                                    Button {
+                                        builderConfig.fontScale = nil
+                                    } label: {
+                                        Text("Reset to Default")
+                                            .font(.caption2)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .tint(.orange)
                                 }
                             }
                         }
 
                         Divider()
 
-                        // QR Code Position
+                        // QR Code Position (compact inline)
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("QR Code Position")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
+                            HStack(spacing: 12) {
+                                Text("QR Code Position")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
 
-                            Picker("QR Position", selection: $builderConfig.qrPosition) {
-                                ForEach(QRCodePosition.allCases, id: \.self) { position in
-                                    Text(position.rawValue).tag(position)
+                                Spacer()
+
+                                Picker("QR Position", selection: $builderConfig.qrPosition) {
+                                    ForEach(QRCodePosition.allCases, id: \.self) { position in
+                                        Text(position.rawValue).tag(position)
+                                    }
                                 }
+                                .pickerStyle(.menu)
+                                .labelsHidden()
                             }
-                            .pickerStyle(.segmented)
 
                             if builderConfig.qrPosition != .none {
-                                // QR Size slider
+                                // QR Code Size (compact inline, matching others)
                                 VStack(alignment: .leading, spacing: 4) {
-                                    HStack {
+                                    HStack(spacing: 12) {
                                         Text("QR Code Size")
-                                            .font(.caption)
-                                        Spacer()
-                                        Text("\(Int(builderConfig.qrSize * 100))%")
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                            .frame(width: 140, alignment: .leading)
+
+                                        Slider(value: qrSizeBinding, in: 0.5...0.8, step: 0.05)
+                                            .tint(isUsingCustomQRSize ? .orange : .blue)
+                                            .id("qrSize-\(builderConfig.qrSize?.description ?? "default")")
+
+                                        Text("\(Int(effectiveQRSize * 100))%")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                             .monospacedDigit()
+                                            .frame(width: 45, alignment: .trailing)
                                     }
 
-                                    Slider(value: $builderConfig.qrSize, in: 0.5...0.8, step: 0.05)
-                                        .tint(.blue)
-
-                                    HStack {
-                                        Text("Smaller")
-                                            .font(.caption2)
-                                            .foregroundColor(.secondary)
-                                        Spacer()
-                                        Text("Larger")
-                                            .font(.caption2)
-                                            .foregroundColor(.secondary)
+                                    if isUsingCustomQRSize {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "info.circle.fill")
+                                                .font(.caption2)
+                                                .foregroundColor(.orange)
+                                            Text("Custom (\(selectedFormat.name) default: \(Int(selectedFormat.defaultQRSize * 100))%)")
+                                                .font(.caption2)
+                                                .foregroundColor(.orange)
+                                            Spacer()
+                                            Button {
+                                                builderConfig.qrSize = nil
+                                            } label: {
+                                                Text("Reset to Default")
+                                                    .font(.caption2)
+                                            }
+                                            .buttonStyle(.bordered)
+                                            .tint(.orange)
+                                        }
                                     }
                                 }
+                                .padding(.top, 4)
                             }
                         }
 
@@ -250,17 +345,8 @@ struct LabelDesignerView: View {
                             // Included fields (reorderable)
                             if !builderConfig.textFields.isEmpty {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Active Fields (in order):")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .padding(.bottom, 4)
-
-                                    ForEach(builderConfig.textFields, id: \.self) { field in
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "line.3.horizontal")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-
+                                    List {
+                                        ForEach(builderConfig.textFields, id: \.self) { field in
                                             Button {
                                                 toggleField(field)
                                             } label: {
@@ -272,26 +358,19 @@ struct LabelDesignerView: View {
                                                         .font(.subheadline)
 
                                                     Spacer()
-
-                                                    if let index = builderConfig.textFields.firstIndex(of: field) {
-                                                        Text("#\(index + 1)")
-                                                            .font(.caption2)
-                                                            .foregroundColor(.secondary)
-                                                            .monospacedDigit()
-                                                    }
                                                 }
-                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                .contentShape(Rectangle())
                                             }
                                             .buttonStyle(.plain)
+                                            .listRowBackground(Color(.systemGray6))
                                         }
-                                        .padding(.vertical, 6)
-                                        .padding(.horizontal, 8)
-                                        .background(Color(.systemGray6))
-                                        .cornerRadius(6)
+                                        .onMove { from, to in
+                                            builderConfig.textFields.move(fromOffsets: from, toOffset: to)
+                                        }
                                     }
-                                    .onMove { from, to in
-                                        builderConfig.textFields.move(fromOffsets: from, toOffset: to)
-                                    }
+                                    .listStyle(.plain)
+                                    .frame(height: CGFloat(builderConfig.textFields.count * 52))
+                                    .environment(\.editMode, .constant(.active))
                                 }
 
                                 Divider()
@@ -299,10 +378,15 @@ struct LabelDesignerView: View {
                             }
 
                             // Available fields (not included)
-                            let unusedFields = LabelTextField.allCases.filter { !builderConfig.textFields.contains($0) }
+                            // Filter out owner field if owner isn't set in settings
+                            let ownerIsSet = UserSettings.shared.inventoryOwner != nil && !UserSettings.shared.inventoryOwner!.isEmpty
+                            let unusedFields = LabelTextField.allCases.filter { field in
+                                !builderConfig.textFields.contains(field) && (field != .owner || ownerIsSet)
+                            }
+
                             if !unusedFields.isEmpty {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Available Fields:")
+                                    Text("Available Fields (unused):")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                         .padding(.bottom, 4)
@@ -330,6 +414,30 @@ struct LabelDesignerView: View {
                                 }
                             }
 
+                            // Show helpful message if owner field is not available because owner isn't set
+                            if !ownerIsSet {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "info.circle")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                        Text("To include an Owner field on labels,")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                        + Text(" ")
+                                        + Text("tap here to set your inventory owner")
+                                            .font(.caption2)
+                                            .foregroundColor(.blue)
+                                            .underline()
+                                    }
+                                    .padding(.top, 8)
+                                    .onTapGesture {
+                                        ownerEditText = UserSettings.shared.inventoryOwner ?? ""
+                                        showingOwnerEditor = true
+                                    }
+                                }
+                            }
+
                             if !builderConfig.textFields.isEmpty {
                                 Text("Long-press and drag to reorder active fields")
                                     .font(.caption2)
@@ -343,7 +451,7 @@ struct LabelDesignerView: View {
                     Text("Label Layout")
                 } footer: {
                     // Layout validation warnings
-                    let validation = builderConfig.validateLayout(for: selectedFormat, fontScale: fontScale)
+                    let validation = builderConfig.validateLayout(for: selectedFormat, fontScale: effectiveFontScale)
                     if !validation.warnings.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
                             ForEach(validation.warnings, id: \.self) { warning in
@@ -361,7 +469,139 @@ struct LabelDesignerView: View {
                     }
                 }
 
-                // Advanced Options Section (collapsed by default)
+                // Preview Copy #2 (before Field Formatting)
+                if sampleLabelData != nil {
+                    Section {
+                        labelPreview
+                    }
+                }
+
+                // Advanced Layout Options Section (manufacturer image + field formatting)
+                Section {
+                    DisclosureGroup(
+                        isExpanded: $showAdvancedLayoutOptions,
+                        content: {
+                            VStack(alignment: .leading, spacing: 16) {
+                                // Manufacturer Image Section
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Manufacturer Logo")
+                                        .font(.headline)
+
+                                    // Position picker
+                                    HStack(spacing: 12) {
+                                        Text("Position")
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+
+                                        Spacer()
+
+                                        Picker("Image Position", selection: $builderConfig.manufacturerImagePosition) {
+                                            ForEach(ManufacturerImagePosition.allCases, id: \.self) { position in
+                                                Text(position.rawValue).tag(position)
+                                            }
+                                        }
+                                        .pickerStyle(.menu)
+                                        .labelsHidden()
+                                    }
+
+                                    // Overlap warning
+                                    if builderConfig.manufacturerImageOverlapsQR() {
+                                        HStack(spacing: 4) {
+                                            Rectangle()
+                                                .fill(Color.red)
+                                                .frame(height: 2)
+                                                .frame(maxWidth: .infinity)
+                                        }
+                                        Text("Image overlaps with QR code and won't be visible")
+                                            .font(.caption2)
+                                            .foregroundColor(.red)
+                                    }
+
+                                    // Size slider (if manufacturer image is enabled)
+                                    if builderConfig.manufacturerImagePosition != .none {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            HStack(spacing: 12) {
+                                                Text("Image Size")
+                                                    .font(.subheadline)
+                                                    .fontWeight(.medium)
+                                                    .frame(width: 80, alignment: .leading)
+
+                                                Slider(value: manufacturerImageSizeBinding, in: 0.3...0.9, step: 0.05)
+                                                    .tint(isUsingCustomManufacturerImageSize ? .orange : .blue)
+                                                    .id("manufacturerImageSize-\(builderConfig.manufacturerImageSize?.description ?? "default")")
+
+                                                Text("\(Int(effectiveManufacturerImageSize * 100))%")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                                    .monospacedDigit()
+                                                    .frame(width: 45, alignment: .trailing)
+                                            }
+
+                                            if isUsingCustomManufacturerImageSize {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "info.circle.fill")
+                                                        .font(.caption2)
+                                                        .foregroundColor(.orange)
+                                                    Text("Custom (default: 60%)")
+                                                        .font(.caption2)
+                                                        .foregroundColor(.orange)
+                                                    Spacer()
+                                                    Button {
+                                                        builderConfig.manufacturerImageSize = nil
+                                                    } label: {
+                                                        Text("Reset to Default")
+                                                            .font(.caption2)
+                                                    }
+                                                    .buttonStyle(.bordered)
+                                                    .tint(.orange)
+                                                }
+                                            }
+                                        }
+                                        .padding(.top, 4)
+                                    }
+                                }
+
+                                Divider()
+
+                                // Field Formatting Section
+                                Text("Field Formatting")
+                                    .font(.headline)
+
+                                Text("Customize formatting for each field on your labels")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+
+                                ForEach(LabelTextField.allCases, id: \.self) { field in
+                                    FieldFormatEditor(
+                                        field: field,
+                                        format: Binding(
+                                            get: { builderConfig.format(for: field) },
+                                            set: { builderConfig.fieldFormats[field] = $0 }
+                                        )
+                                    )
+                                }
+                            }
+                            .padding(.vertical, 8)
+                        },
+                        label: {
+                            Label("Advanced Layout Options", systemImage: "textformat")
+                        }
+                    )
+                } footer: {
+                    Text("Customize manufacturer logo position and size, and adjust font size, bold, and italic formatting for individual fields. These settings are saved with presets.")
+                        .font(.caption)
+                }
+                } // End Group 2
+
+                // Preview Copy #3 (before Advanced Sheet Options)
+                if sampleLabelData != nil {
+                    Section {
+                        labelPreview
+                    }
+                }
+
+                Group {
+                // Advanced Sheet Options Section (collapsed by default)
                 Section {
                     DisclosureGroup(
                         isExpanded: $showAdvancedOptions,
@@ -520,7 +760,7 @@ struct LabelDesignerView: View {
                             }
                         },
                         label: {
-                            Label("Advanced Options", systemImage: "gearshape")
+                            Label("Advanced Sheet Op,tions", systemImage: "gearshape")
                         }
                     )
                 }
@@ -532,6 +772,7 @@ struct LabelDesignerView: View {
                             .font(.caption)
                     }
                 }
+                } // End Group 3
             }
             .navigationTitle("Print Labels")
             .navigationBarTitleDisplayMode(.inline)
@@ -560,11 +801,14 @@ struct LabelDesignerView: View {
                 PresetSelectionSheet(
                     presets: presetsManager.allPresets,
                     onSelect: { preset in
+                        previousPreset = currentPreset  // Save current as previous before switching
                         builderConfig = preset.config
+                        currentPreset = preset  // Track loaded preset
                         showingPresetSheet = false
                     },
                     onDelete: { preset in
-                        presetsManager.deletePreset(preset)
+                        presetToDelete = preset
+                        showingDeleteConfirmation = true
                     }
                 )
             }
@@ -579,6 +823,7 @@ struct LabelDesignerView: View {
                             config: builderConfig
                         )
                         presetsManager.savePreset(preset)
+                        currentPreset = preset  // Track the newly created preset
                         newPresetName = ""
                         newPresetDescription = ""
                         showingSavePreset = false
@@ -590,24 +835,62 @@ struct LabelDesignerView: View {
                     }
                 )
             }
+            .alert("Set Inventory Owner", isPresented: $showingOwnerEditor) {
+                TextField("Owner name", text: $ownerEditText)
+                    .textInputAutocapitalization(.words)
+                Button("Cancel", role: .cancel) {
+                    ownerEditText = ""
+                }
+                Button("Save") {
+                    let trimmed = ownerEditText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    UserSettings.shared.inventoryOwner = trimmed.isEmpty ? nil : trimmed
+                    ownerEditText = ""
+                }
+            } message: {
+                Text("Enter the name to display on the Owner field for your inventory labels.")
+            }
+            .alert("Delete Preset?", isPresented: $showingDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {
+                    presetToDelete = nil
+                }
+                Button("OK", role: .destructive) {
+                    if let preset = presetToDelete {
+                        let isDeletingCurrent = currentPreset?.id == preset.id
+                        presetsManager.deletePreset(preset)
+
+                        // If we deleted the current preset, fall back to previous or default
+                        if isDeletingCurrent {
+                            if let previous = previousPreset, presetsManager.allPresets.contains(where: { $0.id == previous.id }) {
+                                // Previous preset still exists, load it
+                                builderConfig = previous.config
+                                currentPreset = previous
+                            } else {
+                                // No valid fallback, use default config
+                                builderConfig = .default
+                                currentPreset = nil
+                                previousPreset = nil
+                            }
+                        }
+                        presetToDelete = nil
+                    }
+                }
+            } message: {
+                Text("This operation cannot be undone.")
+            }
             .onAppear {
-                print("🏷️ LabelDesignerView: .onAppear called")
                 if labelService == nil {
-                    print("🏷️ LabelDesignerView: Creating LabelPrintingService...")
                     labelService = LabelPrintingService()
-                    print("✅ LabelDesignerView: LabelPrintingService created")
-                } else {
-                    print("✅ LabelDesignerView: LabelPrintingService already exists (cached)")
                 }
                 loadLastUsedFormat()
                 loadSettings()
+                // If no preset matched from saved settings, check if current config matches a preset
+                if currentPreset == nil {
+                    updateCurrentPresetFromConfig()
+                }
             }
             .onChange(of: selectedFormat) { _, newFormat in
                 saveLastUsedFormat(newFormat)
                 loadSettings()
-            }
-            .onChange(of: fontScale) { _, _ in
-                saveSettings()
             }
             .onChange(of: offsetX) { _, _ in
                 saveSettings()
@@ -617,17 +900,127 @@ struct LabelDesignerView: View {
             }
             .onChange(of: builderConfig) { _, _ in
                 saveSettings()
+                // Keep currentPreset so we can show "Preset Name (modified)"
+                // The UI already handles showing (modified) when preset.config != builderConfig
             }
         }
     }
 
     // MARK: - Computed Properties
 
+    /// Effective font scale (preset override or format default)
+    private var effectiveFontScale: CGFloat {
+        return builderConfig.fontScale ?? selectedFormat.defaultFontScale
+    }
+
+    /// Effective QR size (preset override or format default)
+    private var effectiveQRSize: CGFloat {
+        return builderConfig.qrSize ?? selectedFormat.defaultQRSize
+    }
+
+    /// Effective manufacturer image size (preset override or default 0.6)
+    private var effectiveManufacturerImageSize: CGFloat {
+        return builderConfig.manufacturerImageSize ?? 0.6
+    }
+
+    /// Whether font scale is using a custom value (not format default)
+    private var isUsingCustomFontScale: Bool {
+        return builderConfig.fontScale != nil
+    }
+
+    /// Whether QR size is using a custom value (not format default)
+    private var isUsingCustomQRSize: Bool {
+        return builderConfig.qrSize != nil
+    }
+
+    /// Whether manufacturer image size is using a custom value (not default)
+    private var isUsingCustomManufacturerImageSize: Bool {
+        return builderConfig.manufacturerImageSize != nil
+    }
+
+    /// Reusable preview view
+    @ViewBuilder
+    private var labelPreview: some View {
+        if let previewData = sampleLabelData {
+            LabelPreviewView(
+                format: selectedFormat,
+                config: builderConfig,
+                sampleData: previewData,
+                fontScale: effectiveFontScale,
+                offsetX: offsetX,
+                offsetY: offsetY
+            )
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+        }
+    }
+
+    /// Binding for font scale slider (syncs with builderConfig.fontScale)
+    private var fontScaleBinding: Binding<Double> {
+        Binding(
+            get: { Double(self.effectiveFontScale) },
+            set: { newValue in
+                // Set to nil if it matches the format default, otherwise set custom value
+                let cgValue = CGFloat(newValue)
+                if abs(cgValue - self.selectedFormat.defaultFontScale) < 0.01 {
+                    self.builderConfig.fontScale = nil
+                } else {
+                    self.builderConfig.fontScale = cgValue
+                }
+            }
+        )
+    }
+
+    /// Binding for QR size slider (syncs with builderConfig.qrSize)
+    private var qrSizeBinding: Binding<Double> {
+        Binding(
+            get: { Double(self.effectiveQRSize) },
+            set: { newValue in
+                // Set to nil if it matches the format default, otherwise set custom value
+                let cgValue = CGFloat(newValue)
+                if abs(cgValue - self.selectedFormat.defaultQRSize) < 0.05 {
+                    self.builderConfig.qrSize = nil
+                } else {
+                    self.builderConfig.qrSize = cgValue
+                }
+            }
+        )
+    }
+
+    /// Binding for manufacturer image size slider (syncs with builderConfig.manufacturerImageSize)
+    private var manufacturerImageSizeBinding: Binding<Double> {
+        Binding(
+            get: { Double(self.effectiveManufacturerImageSize) },
+            set: { newValue in
+                // Set to nil if it matches the default (0.6), otherwise set custom value
+                let cgValue = CGFloat(newValue)
+                if abs(cgValue - 0.6) < 0.05 {
+                    self.builderConfig.manufacturerImageSize = nil
+                } else {
+                    self.builderConfig.manufacturerImageSize = cgValue
+                }
+            }
+        )
+    }
+
     /// Total number of labels to print (sum of all inventory quantities)
     private var totalLabelCount: Int {
         items.reduce(0) { total, item in
             let quantity = item.inventory.first?.quantity ?? 1.0
-            return total + Int(quantity)
+
+            // Safe conversion: check if quantity is within Int range
+            guard !quantity.isNaN && !quantity.isInfinite &&
+                  quantity >= Double(Int.min) && quantity <= Double(Int.max) else {
+                return Int.max
+            }
+
+            let quantityInt = Int(quantity)
+
+            // Prevent overflow when adding to total
+            if total > Int.max - quantityInt {
+                return Int.max
+            }
+            return total + quantityInt
         }
     }
 
@@ -702,7 +1095,7 @@ struct LabelDesignerView: View {
             labels: labelData,
             format: selectedFormat,
             config: builderConfig,
-            fontScale: fontScale,
+            fontScale: effectiveFontScale,
             offsetX: offsetX,
             offsetY: offsetY,
             startRow: startRow,
@@ -735,6 +1128,21 @@ struct LabelDesignerView: View {
                 builderConfig.textFields.append(field)
             }
         }
+    }
+
+    // MARK: - Preset Management
+
+    /// Save changes to the currently loaded preset
+    private func saveCurrentPreset() {
+        guard let preset = currentPreset else { return }
+
+        // Update the preset with current config
+        var updatedPreset = preset
+        updatedPreset.config = builderConfig
+        updatedPreset.modifiedAt = Date()
+
+        presetsManager.savePreset(updatedPreset)
+        currentPreset = updatedPreset
     }
 
     // MARK: - Settings Persistence
@@ -771,8 +1179,6 @@ struct LabelDesignerView: View {
 
     private func loadSettings() {
         let defaults = UserDefaults.standard
-        fontScale = defaults.double(forKey: "\(settingsKey).fontScale")
-        if fontScale == 0 { fontScale = 1.0 }  // Default if never set
         offsetX = defaults.double(forKey: "\(settingsKey).offsetX")
         offsetY = defaults.double(forKey: "\(settingsKey).offsetY")
 
@@ -780,12 +1186,28 @@ struct LabelDesignerView: View {
         if let configData = defaults.data(forKey: "\(settingsKey).builderConfig"),
            let savedConfig = try? JSONDecoder().decode(LabelBuilderConfig.self, from: configData) {
             builderConfig = savedConfig
+
+            // Try to match the loaded config to a preset
+            updateCurrentPresetFromConfig()
+        }
+    }
+
+    /// Update currentPreset to match the loaded config (if it matches a known preset)
+    private func updateCurrentPresetFromConfig() {
+        // Check all presets (built-in + user) to see if any match the current config
+        if let matchingPreset = presetsManager.allPresets.first(where: { $0.config == builderConfig }) {
+            currentPreset = matchingPreset
+        } else {
+            // No exact match - fall back to "Information Dense" as default
+            if let infoDensePreset = presetsManager.allPresets.first(where: { $0.name == "Information Dense" }) {
+                currentPreset = infoDensePreset
+                builderConfig = infoDensePreset.config  // Sync config to match preset
+            }
         }
     }
 
     private func saveSettings() {
         let defaults = UserDefaults.standard
-        defaults.set(fontScale, forKey: "\(settingsKey).fontScale")
         defaults.set(offsetX, forKey: "\(settingsKey).offsetX")
         defaults.set(offsetY, forKey: "\(settingsKey).offsetY")
 
@@ -808,31 +1230,26 @@ private struct PresetSelectionSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                // Built-in presets
-                let builtInPresets = presets.filter { preset in
-                    LabelBuilderConfig.presets.contains(where: { $0.id == preset.id })
-                }
-                if !builtInPresets.isEmpty {
-                    Section("Built-in Presets") {
-                        ForEach(builtInPresets) { preset in
-                            PresetRow(preset: preset, onSelect: onSelect)
-                        }
-                    }
-                }
-
-                // User presets
+                // User presets FIRST
                 let userPresets = presets.filter { preset in
                     !LabelBuilderConfig.presets.contains(where: { $0.id == preset.id })
                 }
                 if !userPresets.isEmpty {
                     Section("My Presets") {
                         ForEach(userPresets) { preset in
-                            PresetRow(preset: preset, onSelect: onSelect)
+                            PresetRow(preset: preset, onSelect: onSelect, showDelete: true, onDelete: onDelete)
                         }
-                        .onDelete { indexSet in
-                            indexSet.forEach { index in
-                                onDelete(userPresets[index])
-                            }
+                    }
+                }
+
+                // Built-in presets SECOND
+                let builtInPresets = presets.filter { preset in
+                    LabelBuilderConfig.presets.contains(where: { $0.id == preset.id })
+                }
+                if !builtInPresets.isEmpty {
+                    Section("Built-in Presets") {
+                        ForEach(builtInPresets) { preset in
+                            PresetRow(preset: preset, onSelect: onSelect, showDelete: false, onDelete: nil)
                         }
                     }
                 }
@@ -861,29 +1278,47 @@ private struct PresetSelectionSheet: View {
 private struct PresetRow: View {
     let preset: LabelBuilderPreset
     let onSelect: (LabelBuilderPreset) -> Void
+    let showDelete: Bool
+    let onDelete: ((LabelBuilderPreset) -> Void)?
 
     var body: some View {
         Button {
             onSelect(preset)
         } label: {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(preset.name)
-                    .font(.headline)
-                    .foregroundColor(.primary)
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(preset.name)
+                        .font(.headline)
+                        .foregroundColor(.primary)
 
-                Text(preset.description)
-                    .font(.caption)
+                    Text(preset.description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    HStack(spacing: 12) {
+                        Label(preset.config.qrPosition.rawValue, systemImage: "qrcode")
+                        Label("\(preset.config.textFields.count) fields", systemImage: "list.bullet")
+                    }
+                    .font(.caption2)
                     .foregroundColor(.secondary)
-
-                HStack(spacing: 12) {
-                    Label(preset.config.qrPosition.rawValue, systemImage: "qrcode")
-                    Label("\(preset.config.textFields.count) fields", systemImage: "list.bullet")
                 }
-                .font(.caption2)
-                .foregroundColor(.secondary)
+                .padding(.vertical, 4)
+
+                Spacer()
+
+                if showDelete, let onDelete = onDelete {
+                    Button {
+                        onDelete(preset)
+                    } label: {
+                        Image(systemName: "trash")
+                            .foregroundColor(.red)
+                    }
+                    .buttonStyle(.borderless)
+                }
             }
-            .padding(.vertical, 4)
+            .contentShape(Rectangle())  // Make entire row tappable
         }
+        .buttonStyle(.plain)
     }
 }
 
@@ -929,6 +1364,69 @@ private struct SavePresetSheet: View {
                     .disabled(presetName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
+        }
+    }
+}
+
+// MARK: - Field Format Editor
+
+/// Editor for customizing individual field formatting
+private struct FieldFormatEditor: View {
+    let field: LabelTextField
+    @Binding var format: LabelFieldFormat
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(field.rawValue)
+                .font(.subheadline)
+                .fontWeight(.medium)
+
+            // Font Size Slider
+            HStack(spacing: 12) {
+                Text("Size")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(width: 40, alignment: .leading)
+
+                Slider(value: $format.fontSize, in: 5...14, step: 0.5)
+                    .tint(.blue)
+
+                Text("\(Int(format.fontSize))pt")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .monospacedDigit()
+                    .frame(width: 35, alignment: .trailing)
+            }
+
+            // Bold & Italic Toggles
+            HStack(spacing: 12) {
+                Text("Style")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(width: 40, alignment: .leading)
+
+                Toggle("Bold", isOn: $format.bold)
+                    .toggleStyle(.button)
+                    .font(.caption)
+
+                Toggle("Italic", isOn: $format.italic)
+                    .toggleStyle(.button)
+                    .font(.caption)
+
+                Spacer()
+
+                // Reset to default
+                Button {
+                    format = LabelFieldFormat.defaultFormat(for: field)
+                } label: {
+                    Text("Reset")
+                        .font(.caption2)
+                }
+                .buttonStyle(.bordered)
+                .tint(.secondary)
+            }
+
+            Divider()
         }
     }
 }

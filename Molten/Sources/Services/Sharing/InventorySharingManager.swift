@@ -26,6 +26,7 @@ class InventorySharingManager {
     private let metadataRepository: ShareMetadataRepository  // For "my share code" only
     private let shareRecordRepository: CoreDataShareRecordRepository  // For friend shares (Cloud)
     private let sharedInventoryRepository: CoreDataSharedInventoryRepository  // For friend inventory cache (Local)
+    private let catalogService: CatalogService  // For fetching inventory items
 
     // MARK: - Initialization
 
@@ -34,12 +35,14 @@ class InventorySharingManager {
         coordinator: InventorySharingCoordinator,
         metadataRepository: ShareMetadataRepository,
         shareRecordRepository: CoreDataShareRecordRepository,
-        sharedInventoryRepository: CoreDataSharedInventoryRepository
+        sharedInventoryRepository: CoreDataSharedInventoryRepository,
+        catalogService: CatalogService
     ) {
         self.coordinator = coordinator
         self.metadataRepository = metadataRepository
         self.shareRecordRepository = shareRecordRepository
         self.sharedInventoryRepository = sharedInventoryRepository
+        self.catalogService = catalogService
     }
 
     /// Convenience init using AppDependencies (default for production/tests)
@@ -62,7 +65,8 @@ class InventorySharingManager {
             coordinator: coordinator,
             metadataRepository: metadataRepository,
             shareRecordRepository: shareRecordRepository,
-            sharedInventoryRepository: sharedInventoryRepository
+            sharedInventoryRepository: sharedInventoryRepository,
+            catalogService: deps.catalogService
         )
     }
 
@@ -86,6 +90,9 @@ class InventorySharingManager {
         // Save share code and metadata locally
         try metadataRepository.saveMyShareCode(shareCode)
         try metadataRepository.saveMyShareMetadata(metadata)
+
+        // Set initial timestamp
+        metadataRepository.setMyShareLastUpdated(Date())
 
         return shareCode
     }
@@ -111,6 +118,9 @@ class InventorySharingManager {
         if let newMetadata = metadata {
             try metadataRepository.saveMyShareMetadata(newMetadata)
         }
+
+        // Update last updated timestamp
+        metadataRepository.setMyShareLastUpdated(Date())
     }
 
     /// Get my share metadata
@@ -172,12 +182,13 @@ class InventorySharingManager {
         let randomColors = generateRandomIconColors()
 
         // Save share record to Core Data (Cloud - syncs across devices)
-        // Includes owner's metadata from server (owner_name, owner_share_notes)
+        // Includes owner's metadata from server (owner_name, owner_share_notes, expires_at)
         try shareRecordRepository.saveShareRecord(
             shareCode: shareCode,
             ownerName: ownerName,
             ownerNickname: nickname,
             ownerShareNotes: result.ownerShareNotes,
+            expiresAt: result.expiresAt,
             iconSymbol: randomColors.symbol,
             iconBackgroundHex: randomColors.backgroundHex,
             iconForegroundHex: randomColors.foregroundHex
@@ -229,8 +240,15 @@ class InventorySharingManager {
             print("🔐 [REFRESH] Downloading friend inventory for share code: \(shareCode)")
             let result = try await coordinator.downloadFriendInventory(shareCode: shareCode)
 
-            // Update last fetched timestamp
-            try shareRecordRepository.updateLastFetched(shareCode: shareCode)
+            // Update share record with latest metadata (displayName, shareNotes, expiresAt, last_fetched)
+            // This preserves user's custom nickname and icon settings
+            let ownerName = result.ownerName ?? "Unknown"
+            try shareRecordRepository.saveShareRecord(
+                shareCode: shareCode,
+                ownerName: ownerName,
+                ownerShareNotes: result.ownerShareNotes,
+                expiresAt: result.expiresAt
+            )
 
             // Update inventory snapshot in Core Data (Local)
             try sharedInventoryRepository.saveSnapshot(shareCode: shareCode, items: result.items)
@@ -293,6 +311,54 @@ class InventorySharingManager {
     /// - Returns: Array of active ShareRecord entities
     func getActiveShareRecords() throws -> [ShareRecord] {
         return try shareRecordRepository.getActiveShareRecords()
+    }
+
+    /// Refresh my share if it hasn't been updated in > 24 hours
+    /// Uploads current inventory to server, resets 90-day deletion timer
+    /// Runs in background, silently skips errors
+    func refreshMyShareIfStale() async {
+        // Check if we have a share
+        guard let shareCode = metadataRepository.getMyShareCode(),
+              let metadata = metadataRepository.getMyShareMetadata() else {
+            return // No share to refresh
+        }
+
+        // Check last update time
+        let now = Date()
+        let staleThreshold: TimeInterval = 24 * 60 * 60 // 24 hours
+
+        let isStale: Bool
+        if let lastUpdated = metadataRepository.getMyShareLastUpdated() {
+            let timeSinceUpdate = now.timeIntervalSince(lastUpdated)
+            isStale = timeSinceUpdate > staleThreshold
+
+            if !isStale {
+                print("🔄 [AUTO-REFRESH] My share is up to date (last updated \(Int(timeSinceUpdate / 3600)) hours ago)")
+                return
+            }
+
+            print("🔄 [AUTO-REFRESH] My share is stale (last updated \(Int(timeSinceUpdate / 3600)) hours ago), refreshing...")
+        } else {
+            // No timestamp - treat as stale and refresh
+            print("🔄 [AUTO-REFRESH] My share has no last updated timestamp, refreshing...")
+            isStale = true
+        }
+
+        do {
+            // Get current inventory
+            let items = try await catalogService.getAllGlassItems(includeWithoutInventory: false)
+
+            // Upload to server
+            try await coordinator.updateMyShare(shareCode: shareCode, items: items, metadata: metadata)
+
+            // Update last updated timestamp
+            metadataRepository.setMyShareLastUpdated(Date())
+
+            print("✅ [AUTO-REFRESH] Successfully refreshed my share")
+        } catch {
+            // Silently skip errors - user can manually refresh if needed
+            print("⚠️ [AUTO-REFRESH] Failed to refresh my share: \(error)")
+        }
     }
 
     /// Get a specific share record (Core Data entity)

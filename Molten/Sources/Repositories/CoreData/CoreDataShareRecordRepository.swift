@@ -37,6 +37,7 @@ class CoreDataShareRecordRepository {
         ownerName: String,
         ownerNickname: String? = nil,
         ownerShareNotes: String? = nil,
+        expiresAt: Date? = nil,
         iconSymbol: String? = nil,
         iconBackgroundHex: String? = nil,
         iconForegroundHex: String? = nil
@@ -56,6 +57,7 @@ class CoreDataShareRecordRepository {
         record.setValue(ownerName, forKey: "owner_name")
         record.setValue(ownerNickname, forKey: "owner_nickname")
         record.setValue(ownerShareNotes, forKey: "user_share_notes")
+        record.setValue(expiresAt, forKey: "expires_at")
         record.setValue(Date(), forKey: "last_fetched")
         record.setValue("active", forKey: "status")
 

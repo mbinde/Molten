@@ -24,6 +24,10 @@ struct AveryFormat: Equatable, Hashable {
     let horizontalGap: CGFloat
     let verticalGap: CGFloat
 
+    // Default formatting for this label size
+    let defaultFontScale: CGFloat
+    let defaultQRSize: CGFloat  // as percentage of label height (0.5 to 0.8)
+
     /// Avery 5160 (Address Labels)
     /// 30 labels per sheet (3 columns × 10 rows)
     /// 1" × 2⅝" per label
@@ -38,7 +42,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 13.5,  // 0.1875" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 9,  // Spacing: 2.75" × 72 - 189pt = 9pt
-        verticalGap: 0  // Labels are vertically contiguous
+        verticalGap: 0,  // Labels are vertically contiguous
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5163 (Shipping Labels)
@@ -55,7 +61,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 18,
         topMargin: 36,
         horizontalGap: 18,
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.2,  // Larger label = can afford bigger text
+        defaultQRSize: 0.6
     )
 
     /// Avery 5167 (Return Address)
@@ -72,7 +80,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 20.25,  // 0.28125" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 22.5,  // Spacing: 2.0625" × 72 - 126pt = 22.5pt
-        verticalGap: 0  // Labels are vertically contiguous
+        verticalGap: 0,  // Labels are vertically contiguous
+        defaultFontScale: 0.75,  // Tiny label = need smaller text
+        defaultQRSize: 0.7
     )
 
     /// Avery 18167 (Return Address - Same dimensions as 5167)
@@ -89,7 +99,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 20.25,  // 0.28125" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 22.5,  // Spacing: 2.0625" × 72 - 126pt = 22.5pt
-        verticalGap: 0  // Labels are vertically contiguous
+        verticalGap: 0,  // Labels are vertically contiguous
+        defaultFontScale: 0.75,  // Tiny label = need smaller text
+        defaultQRSize: 0.7
     )
 
     /// Mr-Label MR184 (Cable Labels)
@@ -107,16 +119,26 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 13.5,  // 0.1875" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 9,  // Spacing between columns
-        verticalGap: 0  // Labels are vertically contiguous
+        verticalGap: 0,  // Labels are vertically contiguous
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 }
 
 /// QR code position on label
 enum QRCodePosition: String, CaseIterable, Codable {
     case none = "None"
-    case left = "Left"
-    case right = "Right"
-    case both = "Both"
+    case left = "Left side"
+    case right = "Right side"
+    case both = "Both sides"
+}
+
+/// Manufacturer image position on label
+enum ManufacturerImagePosition: String, CaseIterable, Codable {
+    case none = "None"
+    case left = "Left side"
+    case right = "Right side"
+    case both = "Both sides"
 }
 
 /// Text alignment on label
@@ -144,20 +166,70 @@ enum LabelTextField: String, CaseIterable, Codable {
     }
 }
 
+/// Formatting configuration for individual label fields
+struct LabelFieldFormat: Equatable, Codable {
+    var fontSize: CGFloat
+    var bold: Bool
+    var italic: Bool
+
+    /// Default formats for each field type
+    static let defaults: [LabelTextField: LabelFieldFormat] = [
+        .manufacturer: LabelFieldFormat(fontSize: 9, bold: true, italic: false),
+        .sku: LabelFieldFormat(fontSize: 9, bold: true, italic: false),
+        .colorName: LabelFieldFormat(fontSize: 8, bold: false, italic: false),
+        .coe: LabelFieldFormat(fontSize: 7, bold: false, italic: false),
+        .location: LabelFieldFormat(fontSize: 7, bold: false, italic: false),
+        .owner: LabelFieldFormat(fontSize: 7, bold: false, italic: false)
+    ]
+
+    /// Get default format for a field
+    static func defaultFormat(for field: LabelTextField) -> LabelFieldFormat {
+        return defaults[field] ?? LabelFieldFormat(fontSize: 8, bold: false, italic: false)
+    }
+}
+
 /// Label builder configuration - user-customizable label layout
 struct LabelBuilderConfig: Equatable, Codable {
     var qrPosition: QRCodePosition
-    var qrSize: CGFloat  // as percentage of label height (0.5 to 0.8, min 2cm/57pt per QR spec)
+    var qrSize: CGFloat?  // as percentage of label height (0.5 to 0.8) - nil = use format default
+    var fontScale: CGFloat?  // text size multiplier - nil = use format default
+    var manufacturerImagePosition: ManufacturerImagePosition
+    var manufacturerImageSize: CGFloat?  // as percentage of label height - nil = use default (0.6)
     var textFields: [LabelTextField]
     var textAlignment: LabelTextAlignment  // text alignment (left, center, right)
+    var fieldFormats: [LabelTextField: LabelFieldFormat]  // per-field formatting
 
     /// Default configuration (information dense)
     static let `default` = LabelBuilderConfig(
         qrPosition: .left,
-        qrSize: 0.65,
+        qrSize: nil,  // Use format default
+        fontScale: nil,  // Use format default
+        manufacturerImagePosition: .right,  // Add manufacturer logo on right
+        manufacturerImageSize: nil,  // Use default (0.6)
         textFields: [.manufacturer, .sku, .colorName, .coe],
-        textAlignment: .left
+        textAlignment: .left,
+        fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
     )
+
+    /// Get format for a specific field (with fallback to default)
+    func format(for field: LabelTextField) -> LabelFieldFormat {
+        return fieldFormats[field] ?? LabelFieldFormat.defaultFormat(for: field)
+    }
+
+    /// Check if manufacturer image overlaps with QR code
+    func manufacturerImageOverlapsQR() -> Bool {
+        guard manufacturerImagePosition != .none else { return false }
+
+        // Check for overlaps
+        switch (qrPosition, manufacturerImagePosition) {
+        case (.left, .left), (.right, .right):
+            return true  // Same side = overlap
+        case (.both, _), (_, .both):
+            return true  // Either QR or image on both sides = always overlaps
+        default:
+            return false
+        }
+    }
 
     /// Preset configurations for common use cases
     static let presets: [LabelBuilderPreset] = [
@@ -166,9 +238,13 @@ struct LabelBuilderConfig: Equatable, Codable {
             description: "Maximum info with QR code on left",
             config: LabelBuilderConfig(
                 qrPosition: .left,
-                qrSize: 0.65,
+                qrSize: nil,  // Use format default
+                fontScale: nil,  // Use format default
+                manufacturerImagePosition: .right,  // Add manufacturer logo on right
+                manufacturerImageSize: nil,  // Use default (0.6)
                 textFields: [.manufacturer, .sku, .colorName, .coe],
-                textAlignment: .left
+                textAlignment: .left,
+                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
             )
         ),
         LabelBuilderPreset(
@@ -176,9 +252,13 @@ struct LabelBuilderConfig: Equatable, Codable {
             description: "Large QR code, minimal text",
             config: LabelBuilderConfig(
                 qrPosition: .left,
-                qrSize: 0.75,
+                qrSize: nil,  // Use format default
+                fontScale: nil,  // Use format default
+                manufacturerImagePosition: .none,
+                manufacturerImageSize: nil,
                 textFields: [.manufacturer, .sku],
-                textAlignment: .left
+                textAlignment: .left,
+                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
             )
         ),
         LabelBuilderPreset(
@@ -186,9 +266,13 @@ struct LabelBuilderConfig: Equatable, Codable {
             description: "QR codes on both ends",
             config: LabelBuilderConfig(
                 qrPosition: .both,
-                qrSize: 0.65,
+                qrSize: nil,  // Use format default
+                fontScale: nil,  // Use format default
+                manufacturerImagePosition: .none,
+                manufacturerImageSize: nil,
                 textFields: [.manufacturer, .sku, .colorName],
-                textAlignment: .center
+                textAlignment: .center,
+                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
             )
         ),
         LabelBuilderPreset(
@@ -196,15 +280,19 @@ struct LabelBuilderConfig: Equatable, Codable {
             description: "With location information",
             config: LabelBuilderConfig(
                 qrPosition: .left,
-                qrSize: 0.50,
-                textFields: [.manufacturer, .sku, .colorName, .coe, .location],
-                textAlignment: .left
+                qrSize: nil,  // Use format default
+                fontScale: nil,  // Use format default
+                manufacturerImagePosition: .none,
+                manufacturerImageSize: nil,
+                textFields: [.manufacturer, .sku, .colorName, .location],  // Removed .coe
+                textAlignment: .left,
+                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
             )
         )
     ]
 
     /// Convert to legacy LabelTemplate for backwards compatibility
-    func toLegacyTemplate() -> LabelTemplate {
+    func toLegacyTemplate(format: AveryFormat) -> LabelTemplate {
         return LabelTemplate(
             name: "Custom",
             includeQRCode: qrPosition != .none,
@@ -216,7 +304,7 @@ struct LabelBuilderConfig: Equatable, Codable {
             includeQuantity: false,  // Not used in builder config
             includeLocation: textFields.contains(.location),
             includeOwner: textFields.contains(.owner),
-            qrCodeSize: qrSize
+            qrCodeSize: qrSize ?? format.defaultQRSize
         )
     }
 
@@ -236,7 +324,8 @@ struct LabelBuilderConfig: Equatable, Codable {
 
         // Account for QR code(s) - QR codes are sized as percentage of label height, so they always fit
         if qrPosition != .none {
-            let qrSize = format.labelHeight * qrSize
+            let effectiveQRSize = qrSize ?? format.defaultQRSize
+            let qrSize = format.labelHeight * effectiveQRSize
 
             switch qrPosition {
             case .left, .right:
@@ -320,6 +409,7 @@ struct LabelBuilderPreset: Identifiable, Codable {
 }
 
 /// Manager for storing and retrieving label builder presets
+/// Uses Core Data for CloudKit sync, replacing UserDefaults
 @MainActor
 class LabelPresetsManager: ObservableObject {
     @Published private(set) var userPresets: [LabelBuilderPreset] = []
@@ -328,26 +418,54 @@ class LabelPresetsManager: ObservableObject {
 
     static let shared = LabelPresetsManager()
 
-    private init() {
-        loadPresets()
+    private init(repository: LabelPresetRepository? = nil) {
+        // Use provided repository or get from PersistenceController (available at init time)
+        self.repository = repository ?? CoreDataLabelPresetRepository(context: PersistenceController.shared.cloudContext)
+
+        // Load presets asynchronously
+        Task {
+            await loadPresets()
+            // Auto-migrate from UserDefaults if needed
+            await migrateFromUserDefaults()
+        }
+    }
+
+    /// Initialize with custom repository (for testing)
+    convenience init(repository: LabelPresetRepository) {
+        self.init(repository: repository)
     }
 
     /// Save a new preset or update existing one
     func savePreset(_ preset: LabelBuilderPreset) {
-        if let index = userPresets.firstIndex(where: { $0.id == preset.id }) {
-            var updatedPreset = preset
-            updatedPreset.modifiedAt = Date()
-            userPresets[index] = updatedPreset
-        } else {
-            userPresets.append(preset)
+        Task {
+            do {
+                var presetToSave = preset
+                if let existingIndex = userPresets.firstIndex(where: { $0.id == preset.id }) {
+                    // Update existing
+                    presetToSave.modifiedAt = Date()
+                    _ = try await repository.updatePreset(presetToSave)
+                    userPresets[existingIndex] = presetToSave
+                } else {
+                    // Create new
+                    _ = try await repository.createPreset(presetToSave)
+                    userPresets.append(presetToSave)
+                }
+            } catch {
+                print("❌ Failed to save preset: \(error)")
+            }
         }
-        persistPresets()
     }
 
     /// Delete a preset
     func deletePreset(_ preset: LabelBuilderPreset) {
-        userPresets.removeAll { $0.id == preset.id }
-        persistPresets()
+        Task {
+            do {
+                try await repository.deletePreset(id: preset.id)
+                userPresets.removeAll { $0.id == preset.id }
+            } catch {
+                print("❌ Failed to delete preset: \(error)")
+            }
+        }
     }
 
     /// Export preset to share with others
@@ -375,19 +493,46 @@ class LabelPresetsManager: ObservableObject {
         LabelBuilderConfig.presets + userPresets
     }
 
+    // MARK: - Private Properties
+
+    private let repository: LabelPresetRepository
+
     // MARK: - Private Methods
 
-    private func loadPresets() {
-        guard let data = UserDefaults.standard.data(forKey: userDefaultsKey),
-              let presets = try? JSONDecoder().decode([LabelBuilderPreset].self, from: data) else {
-            return
+    private func loadPresets() async {
+        do {
+            let presets = try await repository.fetchAllPresets()
+            await MainActor.run {
+                self.userPresets = presets
+            }
+        } catch {
+            print("❌ Failed to load presets: \(error)")
         }
-        userPresets = presets
     }
 
-    private func persistPresets() {
-        guard let data = try? JSONEncoder().encode(userPresets) else { return }
-        UserDefaults.standard.set(data, forKey: userDefaultsKey)
+    /// Migrate old UserDefaults presets to Core Data (one-time migration)
+    func migrateFromUserDefaults() async {
+        guard let data = UserDefaults.standard.data(forKey: userDefaultsKey),
+              let oldPresets = try? JSONDecoder().decode([LabelBuilderPreset].self, from: data) else {
+            return
+        }
+
+        print("🔄 Migrating \(oldPresets.count) presets from UserDefaults to Core Data...")
+
+        for preset in oldPresets {
+            do {
+                _ = try await repository.createPreset(preset)
+            } catch {
+                print("❌ Failed to migrate preset '\(preset.name)': \(error)")
+            }
+        }
+
+        // Clear old UserDefaults storage
+        UserDefaults.standard.removeObject(forKey: userDefaultsKey)
+        print("✅ Migration complete, cleared UserDefaults storage")
+
+        // Reload presets
+        await loadPresets()
     }
 }
 
@@ -429,8 +574,12 @@ struct LabelTemplate: Equatable, Hashable {
         return LabelBuilderConfig(
             qrPosition: qrPosition,
             qrSize: qrCodeSize,
+            fontScale: nil,  // Use format default for legacy templates
+            manufacturerImagePosition: .none,  // Legacy templates don't have manufacturer images
+            manufacturerImageSize: nil,
             textFields: fields,
-            textAlignment: .left  // Default to left alignment for legacy templates
+            textAlignment: .left,  // Default to left alignment for legacy templates
+            fieldFormats: LabelFieldFormat.defaults  // Use default field formats for legacy templates
         )
     }
 
@@ -507,11 +656,23 @@ struct LabelData: Sendable {
 @preconcurrency
 class LabelPrintingService {
 
+    // MARK: - Performance Optimization
+
+    /// Shared CIContext for QR code generation (expensive to create)
+    private let qrContext = CIContext()
+
+    /// Cache for generated QR codes (key = stableId)
+    private var qrCodeCache: [String: UIImage] = [:]
+
     /// Generate QR code image for a glass item with Molten logo overlay
     /// - Parameter stableId: The stable_id of the glass item (e.g., "2wjEBu")
     /// - Returns: UIImage containing the QR code with logo in center
     func generateQRCode(for stableId: String) -> UIImage {
-        let context = CIContext()
+        // Check cache first
+        if let cachedQR = qrCodeCache[stableId] {
+            return cachedQR
+        }
+
         let filter = CIFilter.qrCodeGenerator()
 
         // Create deep link URL with stable_id
@@ -527,14 +688,19 @@ class LabelPrintingService {
         let scaleY = qrSize / outputImage.extent.height
         let transformedImage = outputImage.transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
 
-        guard let cgImage = context.createCGImage(transformedImage, from: transformedImage.extent) else {
+        guard let cgImage = qrContext.createCGImage(transformedImage, from: transformedImage.extent) else {
             return UIImage()
         }
 
         let qrImage = UIImage(cgImage: cgImage)
 
         // Overlay logo in center
-        return overlayLogoOnQRCode(qrImage: qrImage, qrSize: qrSize)
+        let finalImage = overlayLogoOnQRCode(qrImage: qrImage, qrSize: qrSize)
+
+        // Cache for reuse
+        qrCodeCache[stableId] = finalImage
+
+        return finalImage
     }
 
     /// Overlay Molten logo in the center of QR code
@@ -654,6 +820,7 @@ class LabelPrintingService {
                         drawLabel(
                             labelData: labelData,
                             rect: labelRect,
+                            format: format,
                             config: config,
                             fontScale: CGFloat(fontScale),
                             context: context.cgContext
@@ -683,6 +850,7 @@ class LabelPrintingService {
     private func drawLabel(
         labelData: LabelData,
         rect: CGRect,
+        format: AveryFormat,
         config: LabelBuilderConfig,
         fontScale: CGFloat = 1.0,
         context: CGContext
@@ -694,7 +862,8 @@ class LabelPrintingService {
         var contentWidth = rect.width - (padding * 2)
 
         if config.qrPosition != .none {
-            let qrSize = rect.height * config.qrSize
+            let effectiveQRSize = config.qrSize ?? format.defaultQRSize
+            let qrSize = rect.height * effectiveQRSize
             let qrImage = generateQRCode(for: labelData.stableId)
 
             switch config.qrPosition {
@@ -753,8 +922,105 @@ class LabelPrintingService {
             }
         }
 
-        // Draw text fields in the order specified by config
-        var yPosition = rect.minY + padding
+        // Draw manufacturer image(s) if configured
+        if config.manufacturerImagePosition != .none, let manufacturer = labelData.manufacturer {
+            let effectiveImageSize = config.manufacturerImageSize ?? 0.6
+            let imageSize = rect.height * effectiveImageSize
+
+            // Try to load manufacturer logo
+            // Manufacturer codes are uppercase (e.g., "EF", "BE"), but files are lowercase with _print.png suffix
+            let imageName = "\(manufacturer.lowercased())_print.png"
+            print("🏷️ LabelPrintingService: Attempting to load manufacturer image: \(imageName)")
+            if let logoImage = UIImage(named: imageName) {
+                print("✅ LabelPrintingService: Successfully loaded manufacturer image for \(manufacturer)")
+                switch config.manufacturerImagePosition {
+                case .left:
+                    // Draw left image
+                    let leftImageRect = CGRect(
+                        x: rect.minX + padding,
+                        y: rect.minY + (rect.height - imageSize) / 2,
+                        width: imageSize,
+                        height: imageSize
+                    )
+                    logoImage.draw(in: leftImageRect)
+
+                    // Adjust content area to be to the right of image
+                    contentX = leftImageRect.maxX + padding
+                    contentWidth = rect.maxX - contentX - padding
+
+                case .right:
+                    // Draw right image
+                    let rightImageRect = CGRect(
+                        x: rect.maxX - padding - imageSize,
+                        y: rect.minY + (rect.height - imageSize) / 2,
+                        width: imageSize,
+                        height: imageSize
+                    )
+                    logoImage.draw(in: rightImageRect)
+
+                    // Content area is from left edge to image
+                    contentWidth = rightImageRect.minX - contentX - padding
+
+                case .both:
+                    // Draw left image
+                    let leftImageRect = CGRect(
+                        x: rect.minX + padding,
+                        y: rect.minY + (rect.height - imageSize) / 2,
+                        width: imageSize,
+                        height: imageSize
+                    )
+                    logoImage.draw(in: leftImageRect)
+
+                    // Draw right image
+                    let rightImageRect = CGRect(
+                        x: rect.maxX - padding - imageSize,
+                        y: rect.minY + (rect.height - imageSize) / 2,
+                        width: imageSize,
+                        height: imageSize
+                    )
+                    logoImage.draw(in: rightImageRect)
+
+                    // Content area is between the two images
+                    contentX = leftImageRect.maxX + padding
+                    contentWidth = rightImageRect.minX - contentX - padding
+
+                case .none:
+                    break
+                }
+            } else {
+                print("⚠️ LabelPrintingService: Manufacturer image '\(imageName)' not found in Assets")
+                print("   Expected file naming: {manufacturer}_print.png (e.g., be_print.png, cim_print.png)")
+            }
+        } else if config.manufacturerImagePosition != .none {
+            print("ℹ️ LabelPrintingService: Manufacturer image position is \(config.manufacturerImagePosition.rawValue) but no manufacturer data available")
+        }
+
+        // Calculate total text height first for vertical centering
+        var totalTextHeight: CGFloat = 0
+        for field in config.textFields {
+            let fieldFormat = config.format(for: field)
+            let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+
+            // Only count this field if it has data to show
+            let shouldShow: Bool = {
+                switch field {
+                case .manufacturer: return labelData.manufacturer != nil
+                case .sku: return labelData.sku != nil
+                case .colorName: return labelData.colorName != nil
+                case .coe: return labelData.coe != nil
+                case .location: return labelData.location != nil
+                case .owner: return labelData.owner != nil
+                }
+            }()
+
+            if shouldShow {
+                totalTextHeight += font.lineHeight + 1
+            }
+        }
+
+        // Start Y position centered vertically in the available space
+        let availableHeight = rect.height - (padding * 2)
+        var yPosition = rect.minY + padding + max(0, (availableHeight - totalTextHeight) / 2)
 
         // Convert text alignment to NSTextAlignment
         let textAlignment: NSTextAlignment = {
@@ -769,88 +1035,110 @@ class LabelPrintingService {
             switch field {
             case .manufacturer:
                 if let manufacturer = labelData.manufacturer {
-                    // Check if SKU already starts with manufacturer (case-insensitive)
+                    // Convert manufacturer abbreviation to full name first
+                    let fullName = GlassManufacturers.fullName(for: manufacturer) ?? manufacturer
+
+                    // Check if SKU already starts with full manufacturer name (case-insensitive)
+                    // Only hide manufacturer if SKU literally starts with the full name (not just abbreviation)
                     let skuStartsWithManufacturer: Bool = {
                         guard let sku = labelData.sku,
                               config.textFields.contains(.sku) else {
                             return false
                         }
-                        return sku.lowercased().hasPrefix(manufacturer.lowercased())
+                        return sku.lowercased().hasPrefix(fullName.lowercased())
                     }()
 
                     // Only show manufacturer if SKU doesn't already start with it
                     if !skuStartsWithManufacturer {
+                        let fieldFormat = config.format(for: .manufacturer)
+                        let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
                         yPosition = drawText(
-                            manufacturer.uppercased(),
+                            fullName,
                             at: CGPoint(x: contentX, y: yPosition),
                             width: contentWidth,
-                            font: .boldSystemFont(ofSize: 9 * fontScale),
+                            font: font,
                             alignment: textAlignment,
-                            context: context
+                            context: context,
+                            italic: fieldFormat.italic
                         )
                     }
                 }
 
             case .sku:
                 if let sku = labelData.sku {
+                    let fieldFormat = config.format(for: .sku)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
                     yPosition = drawText(
                         sku,
                         at: CGPoint(x: contentX, y: yPosition),
                         width: contentWidth,
-                        font: .boldSystemFont(ofSize: 9 * fontScale),
+                        font: font,
                         alignment: textAlignment,
-                        context: context
+                        context: context,
+                        italic: fieldFormat.italic
                     )
                 }
 
             case .colorName:
                 if let colorName = labelData.colorName {
+                    let fieldFormat = config.format(for: .colorName)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
                     yPosition = drawText(
                         colorName,
                         at: CGPoint(x: contentX, y: yPosition),
                         width: contentWidth,
-                        font: .systemFont(ofSize: 8 * fontScale),
+                        font: font,
                         alignment: textAlignment,
-                        context: context
+                        context: context,
+                        italic: fieldFormat.italic
                     )
                 }
 
             case .coe:
                 if let coe = labelData.coe {
+                    let fieldFormat = config.format(for: .coe)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
                     yPosition = drawText(
                         "COE \(coe)",
                         at: CGPoint(x: contentX, y: yPosition),
                         width: contentWidth,
-                        font: .systemFont(ofSize: 7 * fontScale),
+                        font: font,
                         color: .darkGray,
                         alignment: textAlignment,
-                        context: context
+                        context: context,
+                        italic: fieldFormat.italic
                     )
                 }
 
             case .location:
                 if let location = labelData.location {
+                    let fieldFormat = config.format(for: .location)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
                     yPosition = drawText(
                         "📍 \(location)",
                         at: CGPoint(x: contentX, y: yPosition),
                         width: contentWidth,
-                        font: .systemFont(ofSize: 7 * fontScale),
+                        font: font,
                         color: .darkGray,
                         alignment: textAlignment,
-                        context: context
+                        context: context,
+                        italic: fieldFormat.italic
                     )
                 }
 
             case .owner:
                 if let owner = labelData.owner {
+                    let fieldFormat = config.format(for: .owner)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
                     yPosition = drawText(
                         owner,
                         at: CGPoint(x: contentX, y: yPosition),
                         width: contentWidth,
-                        font: .systemFont(ofSize: 7 * fontScale),
+                        font: font,
                         color: .darkGray,
                         alignment: textAlignment,
-                        context: context
+                        context: context,
+                        italic: fieldFormat.italic
                     )
                 }
             }
@@ -864,14 +1152,24 @@ class LabelPrintingService {
         font: UIFont,
         color: UIColor = .black,
         alignment: NSTextAlignment = .left,
-        context: CGContext
+        context: CGContext,
+        italic: Bool = false
     ) -> CGFloat {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = alignment
         paragraphStyle.lineBreakMode = .byTruncatingTail
 
+        // Apply italic if requested by creating italic font descriptor
+        let finalFont: UIFont
+        if italic {
+            let descriptor = font.fontDescriptor.withSymbolicTraits(.traitItalic) ?? font.fontDescriptor
+            finalFont = UIFont(descriptor: descriptor, size: font.pointSize)
+        } else {
+            finalFont = font
+        }
+
         let attributes: [NSAttributedString.Key: Any] = [
-            .font: font,
+            .font: finalFont,
             .foregroundColor: color,
             .paragraphStyle: paragraphStyle
         ]

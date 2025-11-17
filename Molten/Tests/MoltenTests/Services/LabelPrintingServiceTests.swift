@@ -819,4 +819,276 @@ struct LabelPrintingServiceTests {
 
         #expect(pdfURL != nil)
     }
+
+    // MARK: - New Label Format Tests
+
+    @Test("Avery 5161 dimensions")
+    func testAvery5161Dimensions() async throws {
+        let format = AveryFormat.avery5161
+
+        #expect(format.name == "Avery 5161")
+        #expect(format.labelsPerSheet == 20)
+        #expect(format.columns == 2)
+        #expect(format.rows == 10)
+        #expect(format.labelWidth == 288)
+        #expect(format.labelHeight == 72)
+    }
+
+    @Test("Avery 5162 dimensions")
+    func testAvery5162Dimensions() async throws {
+        let format = AveryFormat.avery5162
+
+        #expect(format.name == "Avery 5162")
+        #expect(format.labelsPerSheet == 14)
+        #expect(format.columns == 2)
+        #expect(format.rows == 7)
+        #expect(format.labelWidth == 288)
+        #expect(format.labelHeight == 96)
+    }
+
+    @Test("Avery 5164 dimensions")
+    func testAvery5164Dimensions() async throws {
+        let format = AveryFormat.avery5164
+
+        #expect(format.name == "Avery 5164")
+        #expect(format.labelsPerSheet == 6)
+        #expect(format.columns == 2)
+        #expect(format.rows == 3)
+        #expect(format.labelWidth == 288)
+        #expect(format.labelHeight == 240)
+    }
+
+    @Test("Avery 8160 dimensions")
+    func testAvery8160Dimensions() async throws {
+        let format = AveryFormat.avery8160
+
+        #expect(format.name == "Avery 8160")
+        #expect(format.labelsPerSheet == 30)
+        #expect(format.columns == 3)
+        #expect(format.rows == 10)
+        #expect(format.labelWidth == 189)
+        #expect(format.labelHeight == 72)
+    }
+
+    @Test("Avery 8163 dimensions")
+    func testAvery8163Dimensions() async throws {
+        let format = AveryFormat.avery8163
+
+        #expect(format.name == "Avery 8163")
+        #expect(format.labelsPerSheet == 10)
+        #expect(format.columns == 2)
+        #expect(format.rows == 5)
+        #expect(format.labelWidth == 288)
+        #expect(format.labelHeight == 144)
+    }
+
+    @Test("Avery 5168 dimensions (extra large)")
+    func testAvery5168Dimensions() async throws {
+        let format = AveryFormat.avery5168
+
+        #expect(format.name == "Avery 5168")
+        #expect(format.labelsPerSheet == 4)
+        #expect(format.columns == 2)
+        #expect(format.rows == 2)
+        #expect(format.labelWidth == 360)
+        #expect(format.labelHeight == 252)
+    }
+
+    @Test("Avery 5395 name badge dimensions")
+    func testAvery5395Dimensions() async throws {
+        let format = AveryFormat.avery5395
+
+        #expect(format.name == "Avery 5395")
+        #expect(format.labelsPerSheet == 8)
+        #expect(format.columns == 2)
+        #expect(format.rows == 4)
+        #expect(format.labelWidth == 243)
+        #expect(format.labelHeight == 168)
+    }
+
+    @Test("Avery 6870 durable ID dimensions")
+    func testAvery6870Dimensions() async throws {
+        let format = AveryFormat.avery6870
+
+        #expect(format.name == "Avery 6870")
+        #expect(format.labelsPerSheet == 30)
+        #expect(format.columns == 3)
+        #expect(format.rows == 10)
+        #expect(format.labelWidth == 162)
+        #expect(format.labelHeight == 54)
+    }
+
+    @Test("Avery 5165 full sheet dimensions")
+    func testAvery5165Dimensions() async throws {
+        let format = AveryFormat.avery5165
+
+        #expect(format.name == "Avery 5165")
+        #expect(format.labelsPerSheet == 1)
+        #expect(format.columns == 1)
+        #expect(format.rows == 1)
+        #expect(format.labelWidth == 612)
+        #expect(format.labelHeight == 792)
+        #expect(format.leftMargin == 0)
+        #expect(format.topMargin == 0)
+    }
+
+    @Test("AveryFormat allFormats contains all categories")
+    func testAllFormatsCategories() async throws {
+        let allFormats = AveryFormat.allFormats
+
+        #expect(allFormats.keys.contains("Popular"))
+        #expect(allFormats.keys.contains("Address Labels"))
+        #expect(allFormats.keys.contains("Shipping Labels"))
+        #expect(allFormats.keys.contains("Return Address"))
+        #expect(allFormats.keys.contains("Inkjet Labels"))
+        #expect(allFormats.keys.contains("Specialty"))
+    }
+
+    @Test("AveryFormat flatList contains all unique formats")
+    func testFlatListUnique() async throws {
+        let flatList = AveryFormat.flatList
+
+        // Should have many formats
+        #expect(flatList.count > 20)
+
+        // Should be sorted alphabetically
+        for i in 0..<(flatList.count - 1) {
+            #expect(flatList[i].name <= flatList[i + 1].name)
+        }
+
+        // Should have no duplicates
+        let uniqueNames = Set(flatList.map { $0.name })
+        #expect(uniqueNames.count == flatList.count)
+    }
+
+    @Test("Generate PDF with Avery 5161 format")
+    func testGeneratePDFAvery5161() async throws {
+        let service = LabelPrintingService()
+
+        let labels = [
+            LabelData(
+                stableId: "test1",
+                manufacturer: "Test",
+                sku: "001",
+                colorName: "Color",
+                coe: "90",
+                location: nil,
+                owner: nil
+            )
+        ]
+
+        let pdfURL = await service.generateLabelSheet(
+            labels: labels,
+            format: .avery5161,
+            config: .default
+        )
+
+        #expect(pdfURL != nil)
+    }
+
+    @Test("Generate PDF with Avery 5164 format")
+    func testGeneratePDFAvery5164() async throws {
+        let service = LabelPrintingService()
+
+        let labels = [
+            LabelData(
+                stableId: "test1",
+                manufacturer: "Test",
+                sku: "001",
+                colorName: "Color",
+                coe: "90",
+                location: "Studio A",
+                owner: "Owner Name"
+            )
+        ]
+
+        let config = LabelBuilderConfig(
+            qrPosition: .left,
+            qrSize: 0.5,
+            textFields: [.manufacturer, .sku, .colorName, .coe, .location, .owner],
+            textAlignment: .left
+        )
+
+        let pdfURL = await service.generateLabelSheet(
+            labels: labels,
+            format: .avery5164,
+            config: config
+        )
+
+        #expect(pdfURL != nil)
+    }
+
+    @Test("Generate PDF with Avery 8167 return address format")
+    func testGeneratePDFAvery8167() async throws {
+        let service = LabelPrintingService()
+
+        let labels = [
+            LabelData(
+                stableId: "test1",
+                manufacturer: "BE",
+                sku: "001",
+                colorName: nil,
+                coe: "90",
+                location: nil,
+                owner: nil
+            )
+        ]
+
+        let config = LabelBuilderConfig(
+            qrPosition: .left,
+            qrSize: 0.7,
+            textFields: [.manufacturer, .sku],
+            textAlignment: .left
+        )
+
+        let pdfURL = await service.generateLabelSheet(
+            labels: labels,
+            format: .avery8167,
+            config: config
+        )
+
+        #expect(pdfURL != nil)
+    }
+
+    @Test("Validate layout for all new formats")
+    func testValidateLayoutNewFormats() async throws {
+        let config = LabelBuilderConfig.default
+        let formats: [AveryFormat] = [
+            .avery5161, .avery5162, .avery5164, .avery5168,
+            .avery5260, .avery5261, .avery5262, .avery5263, .avery5264,
+            .avery8160, .avery8161, .avery8162, .avery8163, .avery8164,
+            .avery5395, .avery6870, .avery5165, .avery8165
+        ]
+
+        for format in formats {
+            let validation = config.validateLayout(for: format)
+            #expect(validation.availableWidth > 0, "Failed for \(format.name)")
+            #expect(validation.availableHeight > 0, "Failed for \(format.name)")
+        }
+    }
+
+    @Test("Labels per sheet calculation is correct for all formats")
+    func testLabelsPerSheetCalculation() async throws {
+        let formats: [(AveryFormat, Int)] = [
+            (.avery5160, 30),
+            (.avery5161, 20),
+            (.avery5162, 14),
+            (.avery5163, 10),
+            (.avery5164, 6),
+            (.avery5167, 80),
+            (.avery5168, 4),
+            (.avery8160, 30),
+            (.avery8163, 10),
+            (.avery8167, 80),
+            (.avery5165, 1),
+            (.avery8165, 1),
+            (.avery5395, 8),
+            (.avery6870, 30)
+        ]
+
+        for (format, expectedCount) in formats {
+            #expect(format.labelsPerSheet == expectedCount, "Failed for \(format.name)")
+            #expect(format.labelsPerSheet == format.rows * format.columns, "Row×Column mismatch for \(format.name)")
+        }
+    }
 }

@@ -12,6 +12,14 @@ import CoreImage.CIFilterBuiltins
 import Combine
 
 /// Avery label format specifications
+///
+/// Data sources for template specifications:
+/// - Primary: CSV database from https://gist.github.com/armadsen/5084458
+/// - Secondary: XML templates from https://github.com/yardstick/PDF-Labels
+/// - Verification: Official Avery product specifications
+///
+/// All dimensions in points (1 point = 1/72 inch)
+/// Standard sheet size: 8.5" × 11" (US Letter) = 612 × 792 points
 struct AveryFormat: Equatable, Hashable {
     let name: String
     let labelsPerSheet: Int
@@ -109,6 +117,531 @@ struct AveryFormat: Equatable, Hashable {
         horizontalGap: 9,  // Spacing between columns
         verticalGap: 0  // Labels are vertically contiguous
     )
+
+    // MARK: - Additional Address Labels
+
+    /// Avery 5161 (Address Labels)
+    /// 20 labels per sheet (2 columns × 10 rows)
+    /// 1" × 4" per label
+    /// Larger width than 5160, good for longer text
+    static let avery5161 = AveryFormat(
+        name: "Avery 5161",
+        labelsPerSheet: 20,
+        columns: 2,
+        rows: 10,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 72,  // 1" × 72
+        leftMargin: 11.25,  // 0.156" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 13.5,  // 0.188" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 5162 (Address Labels)
+    /// 14 labels per sheet (2 columns × 7 rows)
+    /// 1.33" × 4" per label
+    /// Taller labels for more text per label
+    static let avery5162 = AveryFormat(
+        name: "Avery 5162",
+        labelsPerSheet: 14,
+        columns: 2,
+        rows: 7,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 96,  // 1.33" × 72
+        leftMargin: 11.25,  // 0.156" × 72
+        topMargin: 60,  // 0.833" × 72
+        horizontalGap: 13.5,  // 0.188" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 5164 (Shipping Labels)
+    /// 6 labels per sheet (2 columns × 3 rows)
+    /// 3.33" × 4" per label
+    /// Large labels for detailed shipping information
+    static let avery5164 = AveryFormat(
+        name: "Avery 5164",
+        labelsPerSheet: 6,
+        columns: 2,
+        rows: 3,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 240,  // 3.33" × 72
+        leftMargin: 11.25,  // 0.156" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 13.5,  // 0.188" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 5159 (Address Labels)
+    /// 14 labels per sheet (2 columns × 7 rows)
+    /// 1.25" × 4" per label
+    /// Similar to 5162 but slightly smaller height
+    static let avery5159 = AveryFormat(
+        name: "Avery 5159",
+        labelsPerSheet: 14,
+        columns: 2,
+        rows: 7,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 90,  // 1.25" × 72
+        leftMargin: 11.25,  // 0.156" × 72
+        topMargin: 18,  // 0.25" × 72
+        horizontalGap: 13.5,  // 0.188" × 72
+        verticalGap: 0
+    )
+
+    // MARK: - Small Labels (High Density)
+
+    /// Avery 5260 (Address Labels - Same as 5160)
+    /// 30 labels per sheet (3 columns × 10 rows)
+    /// 1" × 2⅝" per label
+    /// EasyPeel version of 5160
+    static let avery5260 = AveryFormat(
+        name: "Avery 5260",
+        labelsPerSheet: 30,
+        columns: 3,
+        rows: 10,
+        labelWidth: 189,  // 2.625" × 72
+        labelHeight: 72,  // 1" × 72
+        leftMargin: 13.5,  // 0.188" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 9,  // 0.125" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 5261 (Address Labels - Same as 5161)
+    /// 20 labels per sheet (2 columns × 10 rows)
+    /// 1" × 4" per label
+    /// EasyPeel version of 5161
+    static let avery5261 = AveryFormat(
+        name: "Avery 5261",
+        labelsPerSheet: 20,
+        columns: 2,
+        rows: 10,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 72,  // 1" × 72
+        leftMargin: 11.25,  // 0.156" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 13.5,  // 0.188" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 5262 (Address Labels - Same as 5162)
+    /// 14 labels per sheet (2 columns × 7 rows)
+    /// 1.33" × 4" per label
+    /// EasyPeel version of 5162
+    static let avery5262 = AveryFormat(
+        name: "Avery 5262",
+        labelsPerSheet: 14,
+        columns: 2,
+        rows: 7,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 96,  // 1.33" × 72
+        leftMargin: 11.25,  // 0.156" × 72
+        topMargin: 60,  // 0.835" × 72
+        horizontalGap: 13.5,  // 0.188" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 5263 (Shipping Labels - Same as 5163)
+    /// 10 labels per sheet (2 columns × 5 rows)
+    /// 2" × 4" per label
+    /// EasyPeel version of 5163
+    static let avery5263 = AveryFormat(
+        name: "Avery 5263",
+        labelsPerSheet: 10,
+        columns: 2,
+        rows: 5,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 144,  // 2" × 72
+        leftMargin: 12.25,  // 0.17" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 11.5,  // 0.16" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 5264 (Shipping Labels - Same as 5164)
+    /// 6 labels per sheet (2 columns × 3 rows)
+    /// 3.33" × 4" per label
+    /// EasyPeel version of 5164
+    static let avery5264 = AveryFormat(
+        name: "Avery 5264",
+        labelsPerSheet: 6,
+        columns: 2,
+        rows: 3,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 240,  // 3.33" × 72
+        leftMargin: 11.25,  // 0.156" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 13.5,  // 0.188" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 5267 (Return Address - Same as 5167)
+    /// 80 labels per sheet (4 columns × 20 rows)
+    /// ½" × 1¾" per label
+    /// EasyPeel version of 5167
+    static let avery5267 = AveryFormat(
+        name: "Avery 5267",
+        labelsPerSheet: 80,
+        columns: 4,
+        rows: 20,
+        labelWidth: 126,  // 1.75" × 72
+        labelHeight: 36,  // 0.5" × 72
+        leftMargin: 21.6,  // 0.3" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 21.6,  // 0.3" × 72
+        verticalGap: 0
+    )
+
+    // MARK: - Inkjet Labels (8xxx Series)
+
+    /// Avery 8160 (Address Labels - Inkjet)
+    /// 30 labels per sheet (3 columns × 10 rows)
+    /// 1" × 2⅝" per label
+    /// Inkjet version of 5160
+    static let avery8160 = AveryFormat(
+        name: "Avery 8160",
+        labelsPerSheet: 30,
+        columns: 3,
+        rows: 10,
+        labelWidth: 189,  // 2.625" × 72
+        labelHeight: 72,  // 1" × 72
+        leftMargin: 13.5,  // 0.188" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 9,  // 0.125" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 8161 (Address Labels - Inkjet)
+    /// 20 labels per sheet (2 columns × 10 rows)
+    /// 1" × 4" per label
+    /// Inkjet version of 5161
+    static let avery8161 = AveryFormat(
+        name: "Avery 8161",
+        labelsPerSheet: 20,
+        columns: 2,
+        rows: 10,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 72,  // 1" × 72
+        leftMargin: 11.25,  // 0.156" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 13.5,  // 0.188" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 8162 (Address Labels - Inkjet)
+    /// 14 labels per sheet (2 columns × 7 rows)
+    /// 1.33" × 4" per label
+    /// Inkjet version of 5162
+    static let avery8162 = AveryFormat(
+        name: "Avery 8162",
+        labelsPerSheet: 14,
+        columns: 2,
+        rows: 7,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 96,  // 1.33" × 72
+        leftMargin: 11.25,  // 0.156" × 72
+        topMargin: 60,  // 0.833" × 72
+        horizontalGap: 13.5,  // 0.188" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 8163 (Shipping Labels - Inkjet)
+    /// 10 labels per sheet (2 columns × 5 rows)
+    /// 2" × 4" per label
+    /// Inkjet version of 5163
+    static let avery8163 = AveryFormat(
+        name: "Avery 8163",
+        labelsPerSheet: 10,
+        columns: 2,
+        rows: 5,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 144,  // 2" × 72
+        leftMargin: 12.25,  // 0.17" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 11.5,  // 0.16" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 8164 (Shipping Labels - Inkjet)
+    /// 6 labels per sheet (2 columns × 3 rows)
+    /// 3.33" × 4" per label
+    /// Inkjet version of 5164
+    static let avery8164 = AveryFormat(
+        name: "Avery 8164",
+        labelsPerSheet: 6,
+        columns: 2,
+        rows: 3,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 240,  // 3.33" × 72
+        leftMargin: 11.25,  // 0.156" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 13.5,  // 0.188" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 8167 (Return Address - Inkjet)
+    /// 80 labels per sheet (4 columns × 20 rows)
+    /// ½" × 1¾" per label
+    /// Inkjet version of 5167
+    static let avery8167 = AveryFormat(
+        name: "Avery 8167",
+        labelsPerSheet: 80,
+        columns: 4,
+        rows: 20,
+        labelWidth: 126,  // 1.75" × 72
+        labelHeight: 36,  // 0.5" × 72
+        leftMargin: 21.6,  // 0.3" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 21.6,  // 0.3" × 72
+        verticalGap: 0
+    )
+
+    // MARK: - Specialty Labels
+
+    /// Avery 5168 (Shipping Labels)
+    /// 4 labels per sheet (2 columns × 2 rows)
+    /// 3.5" × 5" per label
+    /// Extra large labels for packages
+    static let avery5168 = AveryFormat(
+        name: "Avery 5168",
+        labelsPerSheet: 4,
+        columns: 2,
+        rows: 2,
+        labelWidth: 360,  // 5" × 72
+        labelHeight: 252,  // 3.5" × 72
+        leftMargin: 36,  // 0.5" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 36,  // 0.5" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 5960 (Address Labels)
+    /// 30 labels per sheet (3 columns × 10 rows)
+    /// 1" × 2⅝" per label
+    /// Template-free edge labels (same as 5160)
+    static let avery5960 = AveryFormat(
+        name: "Avery 5960",
+        labelsPerSheet: 30,
+        columns: 3,
+        rows: 10,
+        labelWidth: 189,  // 2.625" × 72
+        labelHeight: 72,  // 1" × 72
+        leftMargin: 13.5,  // 0.188" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 9,  // 0.125" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 5961 (Address Labels)
+    /// 20 labels per sheet (2 columns × 10 rows)
+    /// 1" × 4" per label
+    /// Template-free edge labels (same as 5161)
+    static let avery5961 = AveryFormat(
+        name: "Avery 5961",
+        labelsPerSheet: 20,
+        columns: 2,
+        rows: 10,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 72,  // 1" × 72
+        leftMargin: 11.25,  // 0.156" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 13.5,  // 0.188" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 5962 (Address Labels)
+    /// 14 labels per sheet (2 columns × 7 rows)
+    /// 1.33" × 4" per label
+    /// Template-free edge labels (same as 5162)
+    static let avery5962 = AveryFormat(
+        name: "Avery 5962",
+        labelsPerSheet: 14,
+        columns: 2,
+        rows: 7,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 96,  // 1.33" × 72
+        leftMargin: 11.25,  // 0.156" × 72
+        topMargin: 60,  // 0.833" × 72
+        horizontalGap: 13.5,  // 0.188" × 72
+        verticalGap: 0
+    )
+
+    /// Avery 5963 (Shipping Labels)
+    /// 10 labels per sheet (2 columns × 5 rows)
+    /// 2" × 4" per label
+    /// Template-free edge labels (same as 5163)
+    static let avery5963 = AveryFormat(
+        name: "Avery 5963",
+        labelsPerSheet: 10,
+        columns: 2,
+        rows: 5,
+        labelWidth: 288,  // 4" × 72
+        labelHeight: 144,  // 2" × 72
+        leftMargin: 12.25,  // 0.17" × 72
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 11.5,  // 0.16" × 72
+        verticalGap: 0
+    )
+
+    // MARK: - Name Badge Labels
+
+    /// Avery 5395 (Name Badge Labels)
+    /// 8 labels per sheet (2 columns × 4 rows)
+    /// 2⅓" × 3⅜" per label
+    /// Perfect for name tags and badges
+    static let avery5395 = AveryFormat(
+        name: "Avery 5395",
+        labelsPerSheet: 8,
+        columns: 2,
+        rows: 4,
+        labelWidth: 243,  // 3.375" × 72
+        labelHeight: 168,  // 2.33" × 72
+        leftMargin: 27,  // 0.375" × 72
+        topMargin: 45,  // 0.625" × 72
+        horizontalGap: 18,  // 0.25" × 72
+        verticalGap: 18  // 0.25" × 72
+    )
+
+    /// Avery 6870 (Durable ID Labels)
+    /// 30 labels per sheet (3 columns × 10 rows)
+    /// ¾" × 2¼" per label
+    /// Smaller than 5160, good for asset tags
+    static let avery6870 = AveryFormat(
+        name: "Avery 6870",
+        labelsPerSheet: 30,
+        columns: 3,
+        rows: 10,
+        labelWidth: 162,  // 2.25" × 72
+        labelHeight: 54,  // 0.75" × 72
+        leftMargin: 27,  // 0.375" × 72
+        topMargin: 45,  // 0.625" × 72
+        horizontalGap: 36,  // 0.5" × 72
+        verticalGap: 18  // 0.25" × 72
+    )
+
+    /// Avery 8371 (Business Cards)
+    /// 10 per sheet (2 columns × 5 rows)
+    /// 2" × 3.5" per label
+    /// Standard business card size
+    static let avery8371 = AveryFormat(
+        name: "Avery 8371",
+        labelsPerSheet: 10,
+        columns: 2,
+        rows: 5,
+        labelWidth: 252,  // 3.5" × 72
+        labelHeight: 144,  // 2" × 72
+        leftMargin: 27,  // Calculated from sheet width
+        topMargin: 36,  // 0.5" × 72
+        horizontalGap: 0,
+        verticalGap: 0
+    )
+
+    /// Avery 5165 (Full Sheet Labels)
+    /// 1 label per sheet
+    /// 8.5" × 11" full page
+    /// For posters, signs, or full-page designs
+    static let avery5165 = AveryFormat(
+        name: "Avery 5165",
+        labelsPerSheet: 1,
+        columns: 1,
+        rows: 1,
+        labelWidth: 612,  // 8.5" × 72
+        labelHeight: 792,  // 11" × 72
+        leftMargin: 0,
+        topMargin: 0,
+        horizontalGap: 0,
+        verticalGap: 0
+    )
+
+    /// Avery 8165 (Full Sheet Labels - Inkjet)
+    /// 1 label per sheet
+    /// 8.5" × 11" full page
+    /// Inkjet version for posters, signs, or full-page designs
+    static let avery8165 = AveryFormat(
+        name: "Avery 8165",
+        labelsPerSheet: 1,
+        columns: 1,
+        rows: 1,
+        labelWidth: 612,  // 8.5" × 72
+        labelHeight: 792,  // 11" × 72
+        leftMargin: 0,
+        topMargin: 0,
+        horizontalGap: 0,
+        verticalGap: 0
+    )
+
+    // MARK: - All Available Formats
+
+    /// All available Avery formats, organized by category
+    static let allFormats: [String: [AveryFormat]] = [
+        "Popular": [
+            .avery5160,
+            .avery5163,
+            .avery5167,
+            .avery8160,
+            .avery8163,
+            .avery8167
+        ],
+        "Address Labels": [
+            .avery5160,
+            .avery5161,
+            .avery5162,
+            .avery5159,
+            .avery5260,
+            .avery5261,
+            .avery5262,
+            .avery5960,
+            .avery5961,
+            .avery5962
+        ],
+        "Shipping Labels": [
+            .avery5163,
+            .avery5164,
+            .avery5168,
+            .avery5263,
+            .avery5264,
+            .avery5963
+        ],
+        "Return Address": [
+            .avery5167,
+            .avery18167,
+            .avery5267,
+            .avery8167
+        ],
+        "Inkjet Labels": [
+            .avery8160,
+            .avery8161,
+            .avery8162,
+            .avery8163,
+            .avery8164,
+            .avery8167
+        ],
+        "Specialty": [
+            .avery5395,
+            .avery6870,
+            .avery8371,
+            .avery5165,
+            .avery8165,
+            .mrLabel184
+        ]
+    ]
+
+    /// Get a flat list of all formats
+    static var flatList: [AveryFormat] {
+        var seen = Set<String>()
+        var result: [AveryFormat] = []
+
+        for category in allFormats.values {
+            for format in category {
+                if !seen.contains(format.name) {
+                    seen.insert(format.name)
+                    result.append(format)
+                }
+            }
+        }
+
+        return result.sorted { $0.name < $1.name }
+    }
 }
 
 /// QR code position on label

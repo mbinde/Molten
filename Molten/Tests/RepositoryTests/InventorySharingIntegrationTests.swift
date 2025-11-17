@@ -67,7 +67,8 @@ struct InventorySharingIntegrationTests {
             coordinator: coordinator,
             metadataRepository: metadataRepo,
             shareRecordRepository: shareRecordRepo,
-            sharedInventoryRepository: sharedInventoryRepo
+            sharedInventoryRepository: sharedInventoryRepo,
+            catalogService: deps.catalogService
         )
 
         // Create test inventory
@@ -147,7 +148,8 @@ struct InventorySharingIntegrationTests {
             coordinator: userBCoordinator,
             metadataRepository: metadataRepo,
             shareRecordRepository: shareRecordRepo,
-            sharedInventoryRepository: sharedInventoryRepo
+            sharedInventoryRepository: sharedInventoryRepo,
+            catalogService: deps.catalogService
         )
 
         // Download friend's share
@@ -229,7 +231,8 @@ struct InventorySharingIntegrationTests {
             coordinator: coordinator,
             metadataRepository: metadataRepo,
             shareRecordRepository: shareRecordRepo,
-            sharedInventoryRepository: sharedInventoryRepo
+            sharedInventoryRepository: sharedInventoryRepo,
+            catalogService: deps.catalogService
         )
 
         let result = try await manager.addFriendShare(
@@ -259,7 +262,8 @@ struct InventorySharingIntegrationTests {
             coordinator: coordinator,
             metadataRepository: metadataRepo,
             shareRecordRepository: shareRecordRepo,
-            sharedInventoryRepository: sharedInventoryRepo
+            sharedInventoryRepository: sharedInventoryRepo,
+            catalogService: deps.catalogService
         )
 
         // Create initial share
@@ -314,7 +318,8 @@ struct InventorySharingIntegrationTests {
             coordinator: coordinator,
             metadataRepository: metadataRepo,
             shareRecordRepository: shareRecordRepo,
-            sharedInventoryRepository: sharedInventoryRepo
+            sharedInventoryRepository: sharedInventoryRepo,
+            catalogService: deps.catalogService
         )
 
         let item = createTestItem()

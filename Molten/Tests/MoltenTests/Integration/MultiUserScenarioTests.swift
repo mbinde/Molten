@@ -58,7 +58,8 @@ struct MultiUserScenarioTests {
             inventoryTrackingService: inventoryTrackingService,
             itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
-            userTagsRepository: userTagsRepo
+            userTagsRepository: userTagsRepo,
+            ratingService: AppDependencies.shared.ratingService
         )
         
         return (catalogService, inventoryTrackingService, shoppingListService)

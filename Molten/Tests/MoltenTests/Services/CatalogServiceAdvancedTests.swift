@@ -57,7 +57,8 @@ struct CatalogServiceAdvancedTests {
             inventoryTrackingService: inventoryTrackingService,
             itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
-            userTagsRepository: userTagsRepo
+            userTagsRepository: userTagsRepo,
+            ratingService: AppDependencies.shared.ratingService
         )
     }
     

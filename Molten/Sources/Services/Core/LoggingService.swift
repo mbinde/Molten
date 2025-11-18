@@ -93,9 +93,7 @@ public struct LogEntry {
         self.level = level
         self.message = message
         self.timestamp = timestamp
-        // TEMPORARILY DISABLED: Store context to isolate malloc error
-        // self.context = context
-        self.context = nil
+        self.context = context
         self.error = error
         self.file = file
         self.function = function
@@ -114,8 +112,8 @@ public protocol LoggerBackend: Sendable {
 // MARK: - Logging Service
 
 /// Main logging service that coordinates multiple backends
-@MainActor
-public final class LoggingService {
+/// Note: Not @MainActor because all operations are thread-safe (backends are Sendable)
+public final class LoggingService: Sendable {
 
     // MARK: - Properties
 
@@ -155,8 +153,8 @@ public final class LoggingService {
         // Filter by minimum level
         guard level >= minimumLocalLevel else { return }
 
-        // TEMPORARILY DISABLED: Log to OSLog (local)
-        // osLogger.log(level: level.osLogType, "\(level.description): \(message)")
+        // Log to OSLog (local)
+        osLogger.log(level: level.osLogType, "\(level.description): \(message)")
 
         // Log to all backends
         for backend in backends {
@@ -283,8 +281,7 @@ public final class MockLogger: LoggerBackend {
     private var _logs: [LogEntry] = []
 
     public var logs: [LogEntry] {
-        // Return a copy of the logs array to avoid any potential sharing issues
-        return Array(_logs)
+        _logs
     }
 
     public init() {}

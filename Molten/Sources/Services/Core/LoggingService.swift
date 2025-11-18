@@ -349,6 +349,6 @@ public final class MockLogger: LoggerBackend {
     }
 
     public func clear() {
-        _logs.removeAllObjects()
+        _logs.removeAll()
     }
 }

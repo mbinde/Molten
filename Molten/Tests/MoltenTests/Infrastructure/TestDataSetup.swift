@@ -282,7 +282,7 @@ struct TestDataSetup {
             inventoryRepository: inventoryRepo,
             glassItemRepository: glassItemRepo,
             itemTagsRepository: itemTagsRepo,
-            userTagsRepository: userTagsRepo
+            userTagsRepository: userTagsRepo,
         )
         
         let coatingItemRepo = MockCoatingItemRepository()
@@ -295,7 +295,8 @@ struct TestDataSetup {
             inventoryTrackingService: inventoryTrackingService,
             itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
-            userTagsRepository: userTagsRepo
+            userTagsRepository: userTagsRepo,
+            ratingService: AppDependencies.shared.ratingService
         )
     }
 

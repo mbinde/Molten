@@ -320,7 +320,8 @@ class TestDataBuilder {
             inventoryTrackingService: inventoryService,
             itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
-            userTagsRepository: userTagsRepo
+            userTagsRepository: userTagsRepo,
+            ratingService: AppDependencies.shared.ratingService
         )
 
         _catalogService = service

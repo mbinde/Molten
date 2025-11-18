@@ -93,7 +93,17 @@ public struct LogEntry {
         self.level = level
         self.message = message
         self.timestamp = timestamp
-        self.context = context
+        // Create a copy of the context dictionary to avoid double-free issues
+        // when the same context is stored in multiple LogEntry instances
+        if let ctx = context {
+            var copy: [String: Any] = [:]
+            for (key, value) in ctx {
+                copy[key] = value
+            }
+            self.context = copy
+        } else {
+            self.context = nil
+        }
         self.error = error
         self.file = file
         self.function = function

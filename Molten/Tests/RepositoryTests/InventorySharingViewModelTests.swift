@@ -108,7 +108,9 @@ struct InventorySharingViewModelTests {
 
         let viewModel = InventorySharingViewModel(
             sharingManager: mockManager,
-            catalogService: mockCatalogService
+            catalogService: mockCatalogService,
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
 
         viewModel.displayName = "Alice"
@@ -134,7 +136,9 @@ struct InventorySharingViewModelTests {
 
         let viewModel = InventorySharingViewModel(
             sharingManager: mockManager,
-            catalogService: mockCatalogService
+            catalogService: mockCatalogService,
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
 
         viewModel.displayName = "  Alice  "
@@ -158,7 +162,9 @@ struct InventorySharingViewModelTests {
 
         let viewModel = InventorySharingViewModel(
             sharingManager: mockManager,
-            catalogService: mockCatalogService
+            catalogService: mockCatalogService,
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
 
         viewModel.displayName = "Alice"
@@ -181,7 +187,9 @@ struct InventorySharingViewModelTests {
 
         let viewModel = InventorySharingViewModel(
             sharingManager: mockManager,
-            catalogService: mockCatalogService
+            catalogService: mockCatalogService,
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
 
         viewModel.displayName = "   "  // Only whitespace
@@ -210,7 +218,9 @@ struct InventorySharingViewModelTests {
 
         let viewModel = InventorySharingViewModel(
             sharingManager: mockManager,
-            catalogService: mockCatalogService
+            catalogService: mockCatalogService,
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
         await viewModel.loadShareData()
 
@@ -240,7 +250,9 @@ struct InventorySharingViewModelTests {
 
         let viewModel = InventorySharingViewModel(
             sharingManager: mockManager,
-            catalogService: mockCatalogService
+            catalogService: mockCatalogService,
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
         await viewModel.loadShareData()
 
@@ -265,7 +277,9 @@ struct InventorySharingViewModelTests {
 
         let viewModel = InventorySharingViewModel(
             sharingManager: mockManager,
-            catalogService: mockCatalogService
+            catalogService: mockCatalogService,
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
 
         viewModel.friendShareCode = "ABC123"
@@ -294,7 +308,9 @@ struct InventorySharingViewModelTests {
 
         let viewModel = InventorySharingViewModel(
             sharingManager: mockManager,
-            catalogService: mockCatalogService
+            catalogService: mockCatalogService,
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
 
         viewModel.friendShareCode = "ABC123"
@@ -318,7 +334,9 @@ struct InventorySharingViewModelTests {
 
         let viewModel = InventorySharingViewModel(
             sharingManager: mockManager,
-            catalogService: mockCatalogService
+            catalogService: mockCatalogService,
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
 
         viewModel.friendShareCode = ""  // Empty
@@ -341,7 +359,9 @@ struct InventorySharingViewModelTests {
 
         let viewModel = InventorySharingViewModel(
             sharingManager: mockManager,
-            catalogService: mockCatalogService
+            catalogService: mockCatalogService,
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
 
         viewModel.friendShareCode = "INVALID"
@@ -368,7 +388,9 @@ struct InventorySharingViewModelTests {
 
         let viewModel = InventorySharingViewModel(
             sharingManager: mockManager,
-            catalogService: mockCatalogService
+            catalogService: mockCatalogService,
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
         await viewModel.loadShareData()
 
@@ -396,7 +418,9 @@ struct InventorySharingViewModelTests {
 
         let viewModel = InventorySharingViewModel(
             sharingManager: mockManager,
-            catalogService: mockCatalogService
+            catalogService: mockCatalogService,
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
         await viewModel.loadShareData()
 
@@ -413,7 +437,9 @@ struct InventorySharingViewModelTests {
 
         let viewModel = InventorySharingViewModel(
             sharingManager: createMockSharingManager(),
-            catalogService: createMockCatalogService()
+            catalogService: createMockCatalogService(),
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
 
         viewModel.errorMessage = "Test error"

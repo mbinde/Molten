@@ -383,7 +383,9 @@ struct LabelPrintingServiceTests {
             leftMargin: 20,
             topMargin: 20,
             horizontalGap: 10,
-            verticalGap: 10
+            verticalGap: 10,
+            defaultFontScale: 1.0,
+            defaultQRSize: 0.65
         )
 
         let config = LabelBuilderConfig(

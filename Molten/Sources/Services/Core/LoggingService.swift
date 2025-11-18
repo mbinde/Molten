@@ -291,7 +291,8 @@ public final class MockLogger: LoggerBackend {
     private var _logs: [LogEntry] = []
 
     public var logs: [LogEntry] {
-        _logs
+        // Return a copy of the logs array to avoid any potential sharing issues
+        return Array(_logs)
     }
 
     public init() {}

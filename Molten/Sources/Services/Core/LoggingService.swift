@@ -69,7 +69,8 @@ public enum LogLevel: Int, Comparable, Sendable {
 // MARK: - Log Entry
 
 /// A captured log entry with all metadata
-public struct LogEntry: Sendable {
+/// Note: Not Sendable because `context: [String: Any]?` contains non-Sendable `Any` type
+public struct LogEntry {
     let level: LogLevel
     let message: String
     let timestamp: Date
@@ -275,11 +276,12 @@ public final class LoggingService {
 // MARK: - Mock Logger (for testing)
 
 /// Mock logger backend that captures log entries for testing
-public final class MockLogger: LoggerBackend, @unchecked Sendable {
-    private let _logs = NSMutableArray()
+/// Not marked as Sendable because it stores non-Sendable LogEntry instances
+public final class MockLogger: LoggerBackend {
+    private var _logs: [LogEntry] = []
 
     public var logs: [LogEntry] {
-        _logs.compactMap { $0 as? LogEntry }
+        _logs
     }
 
     public init() {}
@@ -302,7 +304,7 @@ public final class MockLogger: LoggerBackend, @unchecked Sendable {
             function: function,
             line: line
         )
-        _logs.add(entry)
+        _logs.append(entry)
     }
 
     public func logError(

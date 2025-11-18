@@ -103,7 +103,7 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
             inventoryRepository: mockInventoryRepo,
             glassItemRepository: mockGlassItemRepo,
             itemTagsRepository: mockItemTagsRepo,
-            userTagsRepository: mockUserTagsRepo
+            userTagsRepository: mockUserTagsRepo,
         )
 
         let catalogService = CatalogService(
@@ -113,7 +113,8 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
             inventoryTrackingService: inventoryService,
             itemMinimumRepository: mockItemMinimumRepo,
             itemTagsRepository: mockItemTagsRepo,
-            userTagsRepository: mockUserTagsRepo
+            userTagsRepository: mockUserTagsRepo,
+            ratingService: AppDependencies.shared.ratingService
         )
         
         // Test: Add item directly to mock repository

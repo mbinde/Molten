@@ -113,7 +113,7 @@ struct CoreDataLeakDiagnostic {
             inventoryRepository: mockInventoryRepo,
             glassItemRepository: mockGlassItemRepo,
             itemTagsRepository: mockItemTagsRepo,
-            userTagsRepository: mockUserTagsRepo
+            userTagsRepository: mockUserTagsRepo,
         )
 
         let catalogService = CatalogService(
@@ -123,7 +123,8 @@ struct CoreDataLeakDiagnostic {
             inventoryTrackingService: inventoryTrackingService,
             itemMinimumRepository: mockItemMinimumRepo,
             itemTagsRepository: mockItemTagsRepo,
-            userTagsRepository: mockUserTagsRepo
+            userTagsRepository: mockUserTagsRepo,
+            ratingService: AppDependencies.shared.ratingService
         )
         
         // TEST 1: Add item directly to mock repository

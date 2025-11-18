@@ -452,7 +452,8 @@ struct InventorySharingViewModelTests {
             coordinator: mockCoordinator,
             metadataRepository: testMetadataRepo,
             shareRecordRepository: shareRecordRepo,
-            sharedInventoryRepository: sharedInventoryRepo
+            sharedInventoryRepository: sharedInventoryRepo,
+            catalogService: deps.catalogService
         )
     }
 
@@ -484,7 +485,8 @@ struct InventorySharingViewModelTests {
             coordinator: mockCoordinator,
             metadataRepository: testMetadataRepo,
             shareRecordRepository: shareRecordRepo,
-            sharedInventoryRepository: sharedInventoryRepo
+            sharedInventoryRepository: sharedInventoryRepo,
+            catalogService: deps.catalogService
         )
     }
 

@@ -145,7 +145,7 @@ struct LabelTextFieldOwnerTests {
             fieldFormats: LabelFieldFormat.defaults
         )
 
-        let template = config.toLegacyTemplate()
+        let template = config.toLegacyTemplate(format: .avery5160)
 
         #expect(template.includeOwner == true)
     }
@@ -161,7 +161,7 @@ struct LabelTextFieldOwnerTests {
             fieldFormats: LabelFieldFormat.defaults
         )
 
-        let template = config.toLegacyTemplate()
+        let template = config.toLegacyTemplate(format: .avery5160)
 
         #expect(template.includeOwner == false)
     }

@@ -19,7 +19,9 @@ struct LabelPrintingOwnerTests {
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.textFields.contains(.owner))
@@ -31,7 +33,9 @@ struct LabelPrintingOwnerTests {
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.coe, LabelTextField.location, LabelTextField.owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let validation = config.validateLayout(for: AveryFormat.avery5160)
@@ -47,14 +51,18 @@ struct LabelPrintingOwnerTests {
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let configWithOwner = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let validationWithout = configWithoutOwner.validateLayout(for: AveryFormat.avery5160)
@@ -71,7 +79,9 @@ struct LabelPrintingOwnerTests {
             qrPosition: .both,
             qrSize: 0.75,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.coe, LabelTextField.location, LabelTextField.owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         // Test with small label format (Avery 5167 - 0.5" × 1.75")
@@ -87,7 +97,9 @@ struct LabelPrintingOwnerTests {
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         // Test with large label format (Avery 5163 - 2" × 4")
@@ -103,7 +115,9 @@ struct LabelPrintingOwnerTests {
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         // Test with different font scales
@@ -148,7 +162,9 @@ struct LabelPrintingOwnerTests {
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.coe, LabelTextField.location, LabelTextField.owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         // All fields should be present
@@ -167,7 +183,9 @@ struct LabelPrintingOwnerTests {
             qrPosition: .left,
             qrSize: 0.75,
             textFields: [LabelTextField.owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.textFields.count == 1)
@@ -180,14 +198,18 @@ struct LabelPrintingOwnerTests {
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [LabelTextField.owner, LabelTextField.manufacturer, LabelTextField.sku],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let configLast = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(configFirst.textFields.first == .owner)
@@ -203,7 +225,9 @@ struct LabelPrintingOwnerTests {
             qrPosition: .none,
             qrSize: 0.65,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let validation = config.validateLayout(for: AveryFormat.avery5160)
@@ -219,14 +243,18 @@ struct LabelPrintingOwnerTests {
             qrPosition: .both,
             qrSize: 0.65,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let configSingle = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let validationDual = configDual.validateLayout(for: AveryFormat.avery5160)

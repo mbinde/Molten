@@ -39,7 +39,9 @@ struct LabelTextFieldOwnerTests {
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [.manufacturer, .sku, .colorName, .owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.textFields.contains(LabelTextField.owner))
@@ -51,7 +53,9 @@ struct LabelTextFieldOwnerTests {
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [.manufacturer, .sku, .colorName, .coe],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(!config.textFields.contains(LabelTextField.owner))
@@ -63,7 +67,9 @@ struct LabelTextFieldOwnerTests {
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [.owner, .manufacturer, .sku],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
         #expect(configFirst.textFields.first == LabelTextField.owner)
 
@@ -71,7 +77,9 @@ struct LabelTextFieldOwnerTests {
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [.manufacturer, .owner, .sku],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
         #expect(configMiddle.textFields[1] == LabelTextField.owner)
 
@@ -79,7 +87,9 @@ struct LabelTextFieldOwnerTests {
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [.manufacturer, .sku, .owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
         #expect(configLast.textFields.last == LabelTextField.owner)
     }
@@ -130,7 +140,9 @@ struct LabelTextFieldOwnerTests {
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [.manufacturer, .sku, .owner],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let template = config.toLegacyTemplate()
@@ -144,7 +156,9 @@ struct LabelTextFieldOwnerTests {
             qrPosition: .left,
             qrSize: 0.65,
             textFields: [.manufacturer, .sku, .colorName],
-            textAlignment: .left
+            textAlignment: .left,
+            manufacturerImagePosition: .none,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let template = config.toLegacyTemplate()
@@ -175,7 +189,9 @@ struct LabelTextFieldOwnerTests {
                 qrPosition: qrPosition,
                 qrSize: 0.65,
                 textFields: [.owner],
-                textAlignment: .left
+                textAlignment: .left,
+                manufacturerImagePosition: .none,
+                fieldFormats: LabelFieldFormat.defaults
             )
 
             #expect(config.textFields.contains(LabelTextField.owner))

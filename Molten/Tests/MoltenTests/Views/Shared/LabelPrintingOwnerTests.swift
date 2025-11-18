@@ -18,9 +18,9 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.owner],
             textAlignment: .left,
-            manufacturerImagePosition: .none,
             fieldFormats: LabelFieldFormat.defaults
         )
 
@@ -32,9 +32,9 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.coe, LabelTextField.location, LabelTextField.owner],
             textAlignment: .left,
-            manufacturerImagePosition: .none,
             fieldFormats: LabelFieldFormat.defaults
         )
 
@@ -50,18 +50,18 @@ struct LabelPrintingOwnerTests {
         let configWithoutOwner = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName],
             textAlignment: .left,
-            manufacturerImagePosition: .none,
             fieldFormats: LabelFieldFormat.defaults
         )
 
         let configWithOwner = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.owner],
             textAlignment: .left,
-            manufacturerImagePosition: .none,
             fieldFormats: LabelFieldFormat.defaults
         )
 
@@ -78,9 +78,9 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .both,
             qrSize: 0.75,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.coe, LabelTextField.location, LabelTextField.owner],
             textAlignment: .left,
-            manufacturerImagePosition: .none,
             fieldFormats: LabelFieldFormat.defaults
         )
 
@@ -96,9 +96,9 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
             textAlignment: .left,
-            manufacturerImagePosition: .none,
             fieldFormats: LabelFieldFormat.defaults
         )
 
@@ -114,9 +114,9 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
             textAlignment: .left,
-            manufacturerImagePosition: .none,
             fieldFormats: LabelFieldFormat.defaults
         )
 
@@ -161,9 +161,9 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.coe, LabelTextField.location, LabelTextField.owner],
             textAlignment: .left,
-            manufacturerImagePosition: .none,
             fieldFormats: LabelFieldFormat.defaults
         )
 
@@ -182,9 +182,9 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.75,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.owner],
             textAlignment: .left,
-            manufacturerImagePosition: .none,
             fieldFormats: LabelFieldFormat.defaults
         )
 
@@ -197,18 +197,18 @@ struct LabelPrintingOwnerTests {
         let configFirst = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.owner, LabelTextField.manufacturer, LabelTextField.sku],
             textAlignment: .left,
-            manufacturerImagePosition: .none,
             fieldFormats: LabelFieldFormat.defaults
         )
 
         let configLast = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
             textAlignment: .left,
-            manufacturerImagePosition: .none,
             fieldFormats: LabelFieldFormat.defaults
         )
 
@@ -224,9 +224,9 @@ struct LabelPrintingOwnerTests {
         let config = LabelBuilderConfig(
             qrPosition: .none,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName, LabelTextField.owner],
             textAlignment: .left,
-            manufacturerImagePosition: .none,
             fieldFormats: LabelFieldFormat.defaults
         )
 
@@ -242,18 +242,18 @@ struct LabelPrintingOwnerTests {
         let configDual = LabelBuilderConfig(
             qrPosition: .both,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
             textAlignment: .left,
-            manufacturerImagePosition: .none,
             fieldFormats: LabelFieldFormat.defaults
         )
 
         let configSingle = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.owner],
             textAlignment: .left,
-            manufacturerImagePosition: .none,
             fieldFormats: LabelFieldFormat.defaults
         )
 

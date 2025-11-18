@@ -56,7 +56,9 @@ struct InventorySharingViewModelTests {
         // Create ViewModel
         let viewModel = InventorySharingViewModel(
             sharingManager: mockManager,
-            catalogService: createMockCatalogService()
+            catalogService: createMockCatalogService(),
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
 
         // Test
@@ -81,7 +83,9 @@ struct InventorySharingViewModelTests {
 
         let viewModel = InventorySharingViewModel(
             sharingManager: mockManager,
-            catalogService: createMockCatalogService()
+            catalogService: createMockCatalogService(),
+            apiClient: InventorySharingAPIClient(),
+            expiringShareRepository: CoreDataExpiringShareRepository(context: deps.persistenceController.container.viewContext)
         )
 
         // Test

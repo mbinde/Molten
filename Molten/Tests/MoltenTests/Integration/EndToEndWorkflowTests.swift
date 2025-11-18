@@ -68,7 +68,8 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             inventoryTrackingService: inventoryTrackingService,
             itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
-            userTagsRepository: userTagsRepo
+            userTagsRepository: userTagsRepo,
+            ratingService: AppDependencies.shared.ratingService
         )
         
         let inventoryViewModel = await InventoryViewModel(

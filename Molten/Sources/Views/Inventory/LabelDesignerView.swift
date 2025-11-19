@@ -52,9 +52,65 @@ struct LabelDesignerView: View {
     var body: some View {
         NavigationStack {
             Form {
-                labelCountSection
+                formContent
+            }
+            .navigationTitle("Label Designer")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                toolbarContent
+            }
+            .sheet(isPresented: $showingPresetSheet) {
+                presetSheet
+            }
+            .sheet(isPresented: $showingSavePreset) {
+                savePresetSheet
+            }
+            .task {
+                print("🏷️ LabelDesignerView: .task called")
+                if labelService == nil {
+                    print("🏷️ LabelDesignerView: Creating LabelPrintingService...")
+                    labelService = LabelPrintingService()
+                    print("✅ LabelDesignerView: LabelPrintingService created")
+                } else {
+                    print("✅ LabelDesignerView: LabelPrintingService already exists (cached)")
+                }
+                loadLastUsedFormat()
+                await loadSettings()
+            }
+            .onChange(of: items) { _, _ in
+                // Reset error when items change
+                errorMessage = nil
+            }
+            .onChange(of: selectedFormat) { _, newFormat in
+                saveLastUsedFormat(newFormat)
+                saveSettings()
+            }
+            .onChange(of: fontScale) { _, _ in
+                saveSettings()
+            }
+            .onChange(of: startRow) { _, _ in
+                saveSettings()
+            }
+            .onChange(of: startColumn) { _, _ in
+                saveSettings()
+            }
+            .onChange(of: offsetX) { _, _ in
+                saveSettings()
+            }
+            .onChange(of: offsetY) { _, _ in
+                saveSettings()
+            }
+            .onChange(of: builderConfig) { _, _ in
+                saveSettings()
+            }
+        }
+    }
 
-                Section {
+    @ViewBuilder
+    private var formContent: some View {
+        labelCountSection
+
+        Section {
                     if isSearching {
                         FormatSearchView(
                             searchText: $searchText,
@@ -524,93 +580,62 @@ struct LabelDesignerView: View {
                             .font(.caption)
                     }
                 }
-            }
-            .navigationTitle("Print Labels")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
+    }
 
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Generate PDF") {
-                        Task {
-                            await generatePDF()
-                        }
-                    }
-                    .disabled(isGenerating || items.isEmpty)
-                }
-            }
-            .sheet(isPresented: $showingShareSheet) {
-                if let url = generatedPDFURL {
-                    ShareSheet(items: [url])
-                }
-            }
-            .sheet(isPresented: $showingPresetSheet) {
-                PresetSelectionSheet(
-                    presets: presetsManager.allPresets,
-                    onSelect: { preset in
-                        builderConfig = preset.config
-                        showingPresetSheet = false
-                    },
-                    onDelete: { preset in
-                        presetsManager.deletePreset(preset)
-                    }
-                )
-            }
-            .sheet(isPresented: $showingSavePreset) {
-                SavePresetSheet(
-                    presetName: $newPresetName,
-                    presetDescription: $newPresetDescription,
-                    onSave: {
-                        let preset = LabelBuilderPreset(
-                            name: newPresetName.isEmpty ? "Custom Preset" : newPresetName,
-                            description: newPresetDescription.isEmpty ? "User-created preset" : newPresetDescription,
-                            config: builderConfig
-                        )
-                        presetsManager.savePreset(preset)
-                        newPresetName = ""
-                        newPresetDescription = ""
-                        showingSavePreset = false
-                    },
-                    onCancel: {
-                        newPresetName = ""
-                        newPresetDescription = ""
-                        showingSavePreset = false
-                    }
-                )
-            }
-            .onAppear {
-                print("🏷️ LabelDesignerView: .onAppear called")
-                if labelService == nil {
-                    print("🏷️ LabelDesignerView: Creating LabelPrintingService...")
-                    labelService = LabelPrintingService()
-                    print("✅ LabelDesignerView: LabelPrintingService created")
-                } else {
-                    print("✅ LabelDesignerView: LabelPrintingService already exists (cached)")
-                }
-                loadLastUsedFormat()
-                loadSettings()
-            }
-            .onChange(of: selectedFormat) { _, newFormat in
-                saveLastUsedFormat(newFormat)
-                loadSettings()
-            }
-            .onChange(of: fontScale) { _, _ in
-                saveSettings()
-            }
-            .onChange(of: offsetX) { _, _ in
-                saveSettings()
-            }
-            .onChange(of: offsetY) { _, _ in
-                saveSettings()
-            }
-            .onChange(of: builderConfig) { _, _ in
-                saveSettings()
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button("Cancel") {
+                dismiss()
             }
         }
+
+        ToolbarItem(placement: .primaryAction) {
+            Button("Generate PDF") {
+                Task {
+                    await generatePDF()
+                }
+            }
+            .disabled(isGenerating || items.isEmpty)
+        }
+    }
+
+    @ViewBuilder
+    private var presetSheet: some View {
+        PresetSelectionSheet(
+            presets: presetsManager.allPresets,
+            onSelect: { preset in
+                builderConfig = preset.config
+                showingPresetSheet = false
+            },
+            onDelete: { preset in
+                presetsManager.deletePreset(preset)
+            }
+        )
+    }
+
+    @ViewBuilder
+    private var savePresetSheet: some View {
+        SavePresetSheet(
+            presetName: $newPresetName,
+            presetDescription: $newPresetDescription,
+            onSave: {
+                let preset = LabelBuilderPreset(
+                    name: newPresetName.isEmpty ? "Custom Preset" : newPresetName,
+                    description: newPresetDescription.isEmpty ? "User-created preset" : newPresetDescription,
+                    config: builderConfig
+                )
+                presetsManager.savePreset(preset)
+                newPresetName = ""
+                newPresetDescription = ""
+                showingSavePreset = false
+            },
+            onCancel: {
+                newPresetName = ""
+                newPresetDescription = ""
+                showingSavePreset = false
+            }
+        )
     }
 
     // MARK: - Computed Properties

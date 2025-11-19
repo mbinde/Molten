@@ -400,27 +400,76 @@ struct LabelDesignerView: View {
     /// Label builder section
     @ViewBuilder
     private var labelBuilderSection: some View {
-        if let previewData = sampleLabelData {
-            Section {
-                VStack(alignment: .leading, spacing: 12) {
-                    // Font Size (at the top)
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Font Size")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
+        Section {
+            VStack(alignment: .leading, spacing: 12) {
+                // Font Size (at the top)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Font Size")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
 
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("\(Int(fontScale * 100))%")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .monospacedDigit()
+                            Spacer()
+                        }
+
+                        Slider(value: $fontScale, in: 0.2...2.0, step: 0.1) {
+                            Text("Font Size")
+                        }
+                        .tint(.blue)
+
+                        HStack {
+                            Text("Smaller")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text("Larger")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                Divider()
+
+                // QR Code Position
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("QR Code Position")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    Picker("QR Position", selection: $builderConfig.qrPosition) {
+                        ForEach(QRCodePosition.allCases, id: \.self) { position in
+                            Text(position.rawValue).tag(position)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    if builderConfig.qrPosition != .none {
+                        // QR Size slider
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
-                                Text("\(Int(fontScale * 100))%")
+                                Text("QR Code Size")
+                                    .font(.caption)
+                                Spacer()
+                                Text("\(Int((builderConfig.qrSize ?? 0.65) * 100))%")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                     .monospacedDigit()
-                                Spacer()
                             }
 
-                            Slider(value: $fontScale, in: 0.2...2.0, step: 0.1) {
-                                Text("Font Size")
-                            }
+                            Slider(
+                                value: Binding(
+                                    get: { builderConfig.qrSize ?? 0.65 },
+                                    set: { builderConfig.qrSize = $0 }
+                                ),
+                                in: 0.5...0.8,
+                                step: 0.05
+                            )
                             .tint(.blue)
 
                             HStack {
@@ -434,129 +483,133 @@ struct LabelDesignerView: View {
                             }
                         }
                     }
+                }
 
-                    Divider()
+                Divider()
 
-                    // QR Code Position
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("QR Code Position")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-
-                        Picker("QR Position", selection: $builderConfig.qrPosition) {
-                            ForEach(QRCodePosition.allCases, id: \.self) { position in
-                                Text(position.rawValue).tag(position)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-
-                        if builderConfig.qrPosition != .none {
-                            // QR Size slider
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack {
-                                    Text("QR Code Size")
-                                        .font(.caption)
-                                    Spacer()
-                                    Text("\(Int((builderConfig.qrSize ?? 0.65) * 100))%")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .monospacedDigit()
-                                }
-
-                                Slider(
-                                    value: Binding(
-                                        get: { builderConfig.qrSize ?? 0.65 },
-                                        set: { builderConfig.qrSize = $0 }
-                                    ),
-                                    in: 0.5...0.8,
-                                    step: 0.05
-                                )
-                                .tint(.blue)
-
-                                HStack {
-                                    Text("Smaller")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    Text("Larger")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            .padding(.top, 4)
-                        }
-                    }
-
-                    Divider()
-
-                    // Manufacturer Image Position
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Manufacturer Image")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-
-                        Picker("Image Position", selection: $builderConfig.manufacturerImagePosition) {
-                            ForEach(ManufacturerImagePosition.allCases, id: \.self) { position in
-                                Text(position.displayName).tag(position)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                    }
-
-                    Divider()
-
-                    // Label Fields
-                    VStack(alignment: .leading, spacing: 8) {
+                // Text Fields (Reorderable List)
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
                         Text("Label Fields")
                             .font(.subheadline)
                             .fontWeight(.medium)
+                        Spacer()
+                        Text("Tap to toggle • Drag to reorder")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
 
-                        ForEach(LabelTextField.allCases, id: \.self) { field in
-                            Toggle(isOn: Binding(
-                                get: { builderConfig.textFields.contains(field) },
-                                set: { isOn in
-                                    if isOn {
-                                        if !builderConfig.textFields.contains(field) {
-                                            builderConfig.textFields.append(field)
+                    // Included fields (reorderable)
+                    if !builderConfig.textFields.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Active Fields (in order):")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .padding(.bottom, 4)
+
+                            ForEach(builderConfig.textFields, id: \.self) { field in
+                                HStack(spacing: 8) {
+                                    Image(systemName: "line.3.horizontal")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+
+                                    Button {
+                                        toggleField(field)
+                                    } label: {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .foregroundColor(.green)
+
+                                            Text(field.rawValue)
+                                                .font(.subheadline)
+
+                                            Spacer()
+
+                                            if let index = builderConfig.textFields.firstIndex(of: field) {
+                                                Text("#\(index + 1)")
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondary)
+                                                    .monospacedDigit()
+                                            }
                                         }
-                                    } else {
-                                        builderConfig.textFields.removeAll { $0 == field }
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                     }
+                                    .buttonStyle(.plain)
                                 }
-                            )) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(field.displayName)
-                                        .font(.body)
-                                    if let description = field.description {
-                                        Text(description)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
+                                .padding(.vertical, 6)
+                                .padding(.horizontal, 8)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(6)
                             }
-                            .tint(.blue)
+                            .onMove { from, to in
+                                builderConfig.textFields.move(fromOffsets: from, toOffset: to)
+                            }
+                        }
+
+                        Divider()
+                            .padding(.vertical, 8)
+                    }
+
+                    // Available fields (not included)
+                    let unusedFields = LabelTextField.allCases.filter { !builderConfig.textFields.contains($0) }
+                    if !unusedFields.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Available Fields:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .padding(.bottom, 4)
+
+                            ForEach(unusedFields, id: \.self) { field in
+                                Button {
+                                    toggleField(field)
+                                } label: {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "circle")
+                                            .foregroundColor(.secondary)
+
+                                        Text(field.rawValue)
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+
+                                        Spacer()
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.vertical, 6)
+                                .padding(.horizontal, 8)
+                            }
                         }
                     }
 
-                    // Validation warnings
-                    if let previewData = sampleLabelData {
-                        let validation = labelService?.validateLayout(
-                            for: selectedFormat,
-                            fontScale: fontScale
-                        )
-
-                        if let warnings = validation?.warnings, !warnings.isEmpty {
-                            VStack(alignment: .leading, spacing: 4) {
-                                ForEach(warnings, id: \.self) { warning in
-                                    Text(warning)
-                                        .font(.caption)
-                                        .foregroundColor(.orange)
-                                }
-                            }
-                        }
-                        .padding(.top, 8)
+                    if !builderConfig.textFields.isEmpty {
+                        Text("Long-press and drag to reorder active fields")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .italic()
+                            .padding(.top, 8)
                     }
                 }
+            }
+        } header: {
+            Text("Label Layout")
+        } footer: {
+            // Layout validation warnings
+            let validation = builderConfig.validateLayout(for: selectedFormat, fontScale: fontScale)
+            if !validation.warnings.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(validation.warnings, id: \.self) { warning in
+                        HStack(alignment: .top, spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                            Text(warning)
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                        }
+                    }
+                }
+                .padding(.top, 8)
             }
         }
     }

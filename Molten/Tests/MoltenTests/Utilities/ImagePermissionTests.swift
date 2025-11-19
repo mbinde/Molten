@@ -93,7 +93,7 @@ struct ImagePermissionTests {
     @Test("Default image name matches expected values")
     func testDefaultImageNameValues() async throws {
         #expect(GlassManufacturers.defaultImageName(for: "CiM") == "cim")
-        #expect(GlassManufacturers.defaultImageName(for: "EF") == "effetre")
+        #expect(GlassManufacturers.defaultImageName(for: "EF") == "ef")
         #expect(GlassManufacturers.defaultImageName(for: "DH") == "dh")
         #expect(GlassManufacturers.defaultImageName(for: "BB") == "bb")
         #expect(GlassManufacturers.defaultImageName(for: "GA") == "ga")

@@ -178,7 +178,12 @@ class CoreDataLabelPresetRepository: @unchecked Sendable, LabelPresetRepository 
 
         // Manufacturer image position (with fallback to .none for old presets)
         let manufacturerImagePositionString = entity.value(forKey: "manufacturer_image_position") as? String
-        let manufacturerImagePosition = manufacturerImagePositionString.flatMap { ManufacturerImagePosition(rawValue: $0) } ?? .none
+        let manufacturerImagePosition: ManufacturerImagePosition
+        if let posString = manufacturerImagePositionString, let position = ManufacturerImagePosition(rawValue: posString) {
+            manufacturerImagePosition = position
+        } else {
+            manufacturerImagePosition = .none
+        }
 
         // Decode text fields order
         guard let textFieldsData = textFieldsOrderJSON.data(using: .utf8),

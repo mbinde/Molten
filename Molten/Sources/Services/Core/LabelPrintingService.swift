@@ -1493,6 +1493,25 @@ struct LabelBuilderConfig: Equatable, Codable {
             }
         }
 
+        // Account for manufacturer image(s) - sized as percentage of label height
+        if manufacturerImagePosition != .none {
+            let effectiveImageSize = manufacturerImageSize ?? 0.6
+            let imageSize = format.labelHeight * effectiveImageSize
+
+            switch manufacturerImagePosition {
+            case .left, .right:
+                availableWidth -= (imageSize + padding)
+            case .both:
+                availableWidth -= (2 * imageSize + 2 * padding)
+                // Warn if dual images leave very little text space
+                if format.labelWidth < 120 {
+                    warnings.append("Manufacturer images on both sides leave minimal space for text")
+                }
+            case .none:
+                break
+            }
+        }
+
         // Estimate text height
         let estimatedTextHeight = textFields.reduce(0) { $0 + ($1.estimatedHeight * fontScale) }
         let textFits = estimatedTextHeight <= availableHeight

@@ -42,6 +42,10 @@ struct LabelDesignerView: View {
     @State private var newPresetName = ""
     @State private var newPresetDescription = ""
     @StateObject private var presetsManager = LabelPresetsManager.shared
+    @State private var currentPresetName: String?
+    @State private var isPresetModified: Bool = false
+    @State private var presetToDelete: LabelBuilderPreset?
+    @State private var showingDeleteConfirmation = false
 
     // CRITICAL: Cache service instance in @State to prevent recreation on every body evaluation
     @State private var labelService: LabelPrintingService?
@@ -101,6 +105,10 @@ struct LabelDesignerView: View {
                 saveSettings()
             }
             .onChange(of: builderConfig) { _, _ in
+                // Mark preset as modified if we have a current preset loaded
+                if currentPresetName != nil {
+                    isPresetModified = true
+                }
                 saveSettings()
             }
         }
@@ -148,6 +156,42 @@ struct LabelDesignerView: View {
                         }
                     }
 
+                    // Current preset name display
+                    if let presetName = currentPresetName {
+                        HStack {
+                            Text("Current:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(presetName)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            if isPresetModified {
+                                Text("(modified)")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                                    .italic()
+                            }
+                            Spacer()
+
+                            // Delete button (only for user presets, not built-in)
+                            if !LabelBuilderConfig.presets.contains(where: { $0.name == presetName }) {
+                                Button(role: .destructive) {
+                                    // Find the preset to delete
+                                    if let preset = presetsManager.allPresets.first(where: { $0.name == presetName }) {
+                                        presetToDelete = preset
+                                        showingDeleteConfirmation = true
+                                    }
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .foregroundColor(.red)
+                                        .font(.caption)
+                                }
+                                .buttonStyle(.borderless)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+
                     Button {
                         showingSavePreset = true
                     } label: {
@@ -165,6 +209,82 @@ struct LabelDesignerView: View {
 
                 labelPreviewSection
                 labelBuilderSection
+
+                // Second preview before Advanced Options
+                labelPreviewSection
+
+                // Advanced Layout Options Section
+                Section {
+                    VStack(alignment: .leading, spacing: 16) {
+                        // Manufacturer Image Position
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Manufacturer Image")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+
+                            Picker("Image Position", selection: $builderConfig.manufacturerImagePosition) {
+                                ForEach(ManufacturerImagePosition.allCases, id: \.self) { position in
+                                    Text(position.rawValue).tag(position)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+
+                            // Overlap warning
+                            if builderConfig.manufacturerImageOverlapsQR() {
+                                HStack(alignment: .top, spacing: 6) {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .font(.caption)
+                                        .foregroundColor(.red)
+                                    Text("Manufacturer image will be covered by QR code")
+                                        .font(.caption)
+                                        .foregroundColor(.red)
+                                }
+                                .padding(.top, 4)
+                            }
+
+                            // Manufacturer Image Size slider
+                            if builderConfig.manufacturerImagePosition != .none {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text("Image Size")
+                                            .font(.caption)
+                                        Spacer()
+                                        Text("\(Int((builderConfig.manufacturerImageSize ?? 0.6) * 100))%")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .monospacedDigit()
+                                    }
+
+                                    Slider(
+                                        value: Binding(
+                                            get: { builderConfig.manufacturerImageSize ?? 0.6 },
+                                            set: { builderConfig.manufacturerImageSize = $0 }
+                                        ),
+                                        in: 0.4...0.8,
+                                        step: 0.05
+                                    )
+                                    .tint(.blue)
+
+                                    HStack {
+                                        Text("Smaller")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                        Spacer()
+                                        Text("Larger")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .padding(.top, 8)
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Advanced Layout Options")
+                } footer: {
+                    Text("Configure manufacturer logos and other advanced layout settings")
+                        .font(.caption)
+                }
 
                 // Advanced Options Section (collapsed by default)
                 Section {
@@ -325,7 +445,7 @@ struct LabelDesignerView: View {
                             }
                         },
                         label: {
-                            Label("Advanced Options", systemImage: "gearshape")
+                            Label("Advanced Sheet Options", systemImage: "gearshape")
                         }
                     )
                 }
@@ -362,13 +482,42 @@ struct LabelDesignerView: View {
         PresetSelectionSheet(
             presets: presetsManager.allPresets,
             onSelect: { preset in
+                // Auto-save current preset if modified before switching
+                if isPresetModified, let currentName = currentPresetName {
+                    let autoSavedPreset = LabelBuilderPreset(
+                        name: currentName,
+                        description: "Auto-saved preset",
+                        config: builderConfig
+                    )
+                    presetsManager.savePreset(autoSavedPreset)
+                }
+
+                // Load new preset
                 builderConfig = preset.config
+                currentPresetName = preset.name
+                isPresetModified = false
                 showingPresetSheet = false
             },
             onDelete: { preset in
-                presetsManager.deletePreset(preset)
+                presetToDelete = preset
+                showingDeleteConfirmation = true
             }
         )
+        .alert("Delete Preset?", isPresented: $showingDeleteConfirmation, presenting: presetToDelete) { preset in
+            Button("Cancel", role: .cancel) {
+                presetToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                presetsManager.deletePreset(preset)
+                if currentPresetName == preset.name {
+                    currentPresetName = nil
+                    isPresetModified = false
+                }
+                presetToDelete = nil
+            }
+        } message: { preset in
+            Text("Are you sure you want to delete '\(preset.name)'? This action cannot be undone.")
+        }
     }
 
     @ViewBuilder
@@ -377,12 +526,15 @@ struct LabelDesignerView: View {
             presetName: $newPresetName,
             presetDescription: $newPresetDescription,
             onSave: {
+                let presetName = newPresetName.isEmpty ? "Custom Preset" : newPresetName
                 let preset = LabelBuilderPreset(
-                    name: newPresetName.isEmpty ? "Custom Preset" : newPresetName,
+                    name: presetName,
                     description: newPresetDescription.isEmpty ? "User-created preset" : newPresetDescription,
                     config: builderConfig
                 )
                 presetsManager.savePreset(preset)
+                currentPresetName = presetName
+                isPresetModified = false
                 newPresetName = ""
                 newPresetDescription = ""
                 showingSavePreset = false
@@ -448,6 +600,19 @@ struct LabelDesignerView: View {
                         }
                     }
                     .pickerStyle(.segmented)
+
+                    // Overlap warning
+                    if builderConfig.manufacturerImageOverlapsQR() {
+                        HStack(alignment: .top, spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                            Text("QR code will cover manufacturer image")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
+                        .padding(.top, 4)
+                    }
 
                     if builderConfig.qrPosition != .none {
                         // QR Size slider
@@ -899,10 +1064,21 @@ struct LabelDesignerView: View {
         offsetX = defaults.double(forKey: "\(settingsKey).offsetX")
         offsetY = defaults.double(forKey: "\(settingsKey).offsetY")
 
+        // Load current preset name
+        currentPresetName = defaults.string(forKey: "\(settingsKey).currentPresetName")
+
         // Load builder config
         if let configData = defaults.data(forKey: "\(settingsKey).builderConfig"),
            let savedConfig = try? JSONDecoder().decode(LabelBuilderConfig.self, from: configData) {
             builderConfig = savedConfig
+            isPresetModified = false
+        } else {
+            // No saved config - default to "Information Dense" preset
+            if let informationDensePreset = LabelBuilderConfig.presets.first(where: { $0.name == "Information Dense" }) {
+                builderConfig = informationDensePreset.config
+                currentPresetName = informationDensePreset.name
+                isPresetModified = false
+            }
         }
     }
 
@@ -911,6 +1087,13 @@ struct LabelDesignerView: View {
         defaults.set(fontScale, forKey: "\(settingsKey).fontScale")
         defaults.set(offsetX, forKey: "\(settingsKey).offsetX")
         defaults.set(offsetY, forKey: "\(settingsKey).offsetY")
+
+        // Save current preset name
+        if let presetName = currentPresetName {
+            defaults.set(presetName, forKey: "\(settingsKey).currentPresetName")
+        } else {
+            defaults.removeObject(forKey: "\(settingsKey).currentPresetName")
+        }
 
         // Save builder config
         if let configData = try? JSONEncoder().encode(builderConfig) {

@@ -239,11 +239,11 @@ struct AggregatedRatingModelTests {
 
     @Test("Has enough ratings with insufficient ratings returns false")
     func hasEnoughRatings_withInsufficientRatings_returnsFalse() {
-        // Given
+        // Given - threshold is >= 1, so 0 is insufficient
         let model = AggregatedRatingModel(
             itemStableId: "bullseye-001-0",
-            averageRating: 4.5,
-            totalRatings: 4,
+            averageRating: 0.0,
+            totalRatings: 0,
             topWords: []
         )
 

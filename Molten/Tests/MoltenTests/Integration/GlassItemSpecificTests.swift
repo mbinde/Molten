@@ -87,7 +87,8 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
             inventoryTrackingService: inventoryService,
             itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
-            userTagsRepository: userTagsRepository
+            userTagsRepository: userTagsRepository,
+            ratingService: AppDependencies.shared.ratingService
         )
         
         // Verify setup worked

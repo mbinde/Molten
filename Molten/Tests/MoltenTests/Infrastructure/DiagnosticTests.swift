@@ -107,7 +107,7 @@ struct DiagnosticTests: MockOnlyTestSuite {
             inventoryRepository: repos.inventory,
             glassItemRepository: repos.glassItem,
             itemTagsRepository: repos.itemTags,
-            userTagsRepository: userTagsRepo
+            userTagsRepository: userTagsRepo,
         )
 
         let catalogService = CatalogService(
@@ -117,7 +117,8 @@ struct DiagnosticTests: MockOnlyTestSuite {
             inventoryTrackingService: inventoryTrackingService,
             itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
-            userTagsRepository: userTagsRepo
+            userTagsRepository: userTagsRepo,
+            ratingService: AppDependencies.shared.ratingService
         )
         
         // Test that services use the injected repositories

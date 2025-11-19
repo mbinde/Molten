@@ -314,7 +314,7 @@ struct SettingsView: View {
                 }
 
                 // MARK: - Content & Customization
-                Section("Content & Customization") {
+                Section {
                     NavigationLink {
                         AuthorSettingsView()
                     } label: {
@@ -345,6 +345,8 @@ struct SettingsView: View {
                         .multilineTextAlignment(.trailing)
                     }
                     .help("Optional name to display on inventory labels (e.g., studio name or artist name)")
+                } header: {
+                    Text("Content & Customization")
                 } footer: {
                     Text("Customize how you interact with your content. The inventory owner will appear on printed labels when set.")
                 }

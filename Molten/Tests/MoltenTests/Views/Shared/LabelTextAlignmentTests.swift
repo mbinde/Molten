@@ -35,8 +35,10 @@ struct LabelTextAlignmentTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.textAlignment == .left)
@@ -47,8 +49,10 @@ struct LabelTextAlignmentTests {
         let config = LabelBuilderConfig(
             qrPosition: .both,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku],
-            textAlignment: .center
+            textAlignment: .center,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.textAlignment == .center)
@@ -59,8 +63,10 @@ struct LabelTextAlignmentTests {
         let config = LabelBuilderConfig(
             qrPosition: .right,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku],
-            textAlignment: .right
+            textAlignment: .right,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.textAlignment == .right)
@@ -112,8 +118,10 @@ struct LabelTextAlignmentTests {
                 let config = LabelBuilderConfig(
                     qrPosition: qrPosition,
                     qrSize: 0.65,
+                    manufacturerImagePosition: .none,
                     textFields: [LabelTextField.manufacturer, LabelTextField.sku],
-                    textAlignment: alignment
+                    textAlignment: alignment,
+                    fieldFormats: LabelFieldFormat.defaults
                 )
 
                 #expect(config.qrPosition == qrPosition)
@@ -148,22 +156,28 @@ struct LabelTextAlignmentTests {
         let config1 = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let config2 = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let config3 = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku],
-            textAlignment: .center
+            textAlignment: .center,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config1 == config2)
@@ -175,8 +189,10 @@ struct LabelTextAlignmentTests {
         let config = LabelBuilderConfig(
             qrPosition: .both,
             qrSize: 0.70,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName],
-            textAlignment: .center
+            textAlignment: .center,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let encoder = JSONEncoder()
@@ -197,8 +213,10 @@ struct LabelTextAlignmentTests {
         let config1 = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku],
-            textAlignment: .center
+            textAlignment: .center,
+            fieldFormats: LabelFieldFormat.defaults
         )
         #expect(config1.qrPosition == .left)
         #expect(config1.textAlignment == .center)
@@ -207,8 +225,10 @@ struct LabelTextAlignmentTests {
         let config2 = LabelBuilderConfig(
             qrPosition: .none,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
         #expect(config2.qrPosition == .none)
         #expect(config2.textAlignment == .left)
@@ -217,8 +237,10 @@ struct LabelTextAlignmentTests {
         let config3 = LabelBuilderConfig(
             qrPosition: .both,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [LabelTextField.manufacturer, LabelTextField.sku],
-            textAlignment: .right
+            textAlignment: .right,
+            fieldFormats: LabelFieldFormat.defaults
         )
         #expect(config3.qrPosition == .both)
         #expect(config3.textAlignment == .right)

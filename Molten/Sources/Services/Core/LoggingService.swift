@@ -2,12 +2,11 @@
 //  LoggingService.swift
 //  Molten
 //
-//  Unified logging system with configurable backends (OSLog, Sentry)
+//  Unified logging system with configurable backends (Sentry)
 //  Supports structured logging, pattern detection, and remote error tracking
 //
 
 import Foundation
-import OSLog
 
 // MARK: - Log Level
 
@@ -30,17 +29,6 @@ public enum LogLevel: Int, Comparable, Sendable {
             return false
         case .error, .critical:
             return true
-        }
-    }
-
-    /// Convert to OSLog type
-    var osLogType: OSLogType {
-        switch self {
-        case .debug: return .debug
-        case .info: return .info
-        case .warning: return .default
-        case .error: return .error
-        case .critical: return .fault
         }
     }
 
@@ -69,7 +57,8 @@ public enum LogLevel: Int, Comparable, Sendable {
 // MARK: - Log Entry
 
 /// A captured log entry with all metadata
-public struct LogEntry: Sendable {
+/// Note: Not Sendable because `context: [String: Any]?` contains non-Sendable `Any` type
+public struct LogEntry {
     let level: LogLevel
     let message: String
     let timestamp: Date
@@ -111,15 +100,14 @@ public protocol LoggerBackend: Sendable {
 // MARK: - Logging Service
 
 /// Main logging service that coordinates multiple backends
-@MainActor
-public final class LoggingService {
+/// Note: Not @MainActor because all operations are thread-safe (backends are Sendable)
+public final class LoggingService: Sendable {
 
     // MARK: - Properties
 
     private let backends: [LoggerBackend]
     private let minimumLocalLevel: LogLevel
     private let minimumRemoteLevel: LogLevel
-    private let osLogger: Logger
 
     // MARK: - Initialization
 
@@ -131,10 +119,6 @@ public final class LoggingService {
         self.backends = backends
         self.minimumLocalLevel = minimumLocalLevel
         self.minimumRemoteLevel = minimumRemoteLevel
-        self.osLogger = Logger(
-            subsystem: Bundle.main.bundleIdentifier ?? "com.flameworker.molten",
-            category: "Application"
-        )
     }
 
     // MARK: - Public API
@@ -151,9 +135,6 @@ public final class LoggingService {
     ) {
         // Filter by minimum level
         guard level >= minimumLocalLevel else { return }
-
-        // Log to OSLog (local)
-        osLogger.log(level: level.osLogType, "\(level.description): \(message)")
 
         // Log to all backends
         for backend in backends {
@@ -275,11 +256,12 @@ public final class LoggingService {
 // MARK: - Mock Logger (for testing)
 
 /// Mock logger backend that captures log entries for testing
-public final class MockLogger: LoggerBackend, @unchecked Sendable {
-    private let _logs = NSMutableArray()
+/// Not marked as Sendable because it stores non-Sendable LogEntry instances
+public final class MockLogger: LoggerBackend {
+    private var _logs: [LogEntry] = []
 
     public var logs: [LogEntry] {
-        _logs.compactMap { $0 as? LogEntry }
+        _logs
     }
 
     public init() {}
@@ -302,7 +284,7 @@ public final class MockLogger: LoggerBackend, @unchecked Sendable {
             function: function,
             line: line
         )
-        _logs.add(entry)
+        _logs.append(entry)
     }
 
     public func logError(
@@ -347,6 +329,6 @@ public final class MockLogger: LoggerBackend, @unchecked Sendable {
     }
 
     public func clear() {
-        _logs.removeAllObjects()
+        _logs.removeAll()
     }
 }

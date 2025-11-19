@@ -282,11 +282,15 @@ struct TestDataSetup {
             inventoryRepository: inventoryRepo,
             glassItemRepository: glassItemRepo,
             itemTagsRepository: itemTagsRepo,
-            userTagsRepository: userTagsRepo
+            userTagsRepository: userTagsRepo,
         )
         
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
+
+        let ratingService = await MainActor.run {
+            AppDependencies.shared.ratingService
+        }
 
         return CatalogService(
             glassItemRepository: glassItemRepo,
@@ -295,7 +299,8 @@ struct TestDataSetup {
             inventoryTrackingService: inventoryTrackingService,
             itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
-            userTagsRepository: userTagsRepo
+            userTagsRepository: userTagsRepo,
+            ratingService: ratingService
         )
     }
 

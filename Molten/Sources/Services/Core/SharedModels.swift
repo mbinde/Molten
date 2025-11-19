@@ -30,13 +30,15 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
     let image_url: String?
     let image_path: String?
     let image_thumb_path: String?
+    let dominant_colors: [String]?  // Optional array of hex color strings (e.g., ["#2E5E41", "#1D4030", "#0C2219"])
 
     nonisolated var id: String { stable_id }
 
     /// Initialize with computed URI
     nonisolated init(stable_id: String, name: String, sku: String?, manufacturer: String,
          mfr_notes: String? = nil, coe: Int32, url: String? = nil, mfr_status: String,
-         image_url: String? = nil, image_path: String? = nil, image_thumb_path: String? = nil) {
+         image_url: String? = nil, image_path: String? = nil, image_thumb_path: String? = nil,
+         dominant_colors: [String]? = nil) {
         self.stable_id = stable_id
         self.name = name
         self.sku = sku
@@ -49,6 +51,7 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
         self.image_url = image_url
         self.image_path = image_path
         self.image_thumb_path = image_thumb_path
+        self.dominant_colors = dominant_colors
     }
 
     // Equatable conformance - based on business key (manufacturer + SKU when available, else stable_id)

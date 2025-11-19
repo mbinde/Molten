@@ -304,6 +304,7 @@ struct ProductImageView: View {
     let stableId: String?
     let imagePath: String?
     let imageThumbPath: String?
+    let dominantColors: [String]?
     let size: CGFloat
 
     @State private var loadedImage: UIImage?
@@ -313,12 +314,13 @@ struct ProductImageView: View {
     // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
     private static let sharedUserImageRepository = AppDependencies.shared.userImageRepository
 
-    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, size: CGFloat = 60) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, dominantColors: [String]? = nil, size: CGFloat = 60) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.stableId = stableId
         self.imagePath = imagePath
         self.imageThumbPath = imageThumbPath
+        self.dominantColors = dominantColors
         self.size = size
     }
 
@@ -331,6 +333,13 @@ struct ProductImageView: View {
                     .frame(width: size, height: size)
                     .clipped()
                     .cornerRadius(8)
+            } else if !isLoading,
+                      let colors = dominantColors,
+                      !colors.isEmpty,
+                      let manufacturer = manufacturer,
+                      !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
+                // Show color swatch for manufacturers without image permission
+                ColorSwatchView(colors: colors, size: size, cornerRadius: 8)
             } else {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color(.systemGray5))
@@ -715,20 +724,22 @@ struct ProductImageThumbnail: View {
     let stableId: String?
     let imagePath: String?
     let imageThumbPath: String?
+    let dominantColors: [String]?
     let size: CGFloat
 
-    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, size: CGFloat = 40) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, dominantColors: [String]? = nil, size: CGFloat = 40) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.stableId = stableId
         self.imagePath = imagePath
         self.imageThumbPath = imageThumbPath
+        self.dominantColors = dominantColors
         self.size = size
     }
 
     var body: some View {
         #if canImport(UIKit)
-        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, stableId: stableId, imagePath: imagePath, imageThumbPath: imageThumbPath, size: size)
+        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, stableId: stableId, imagePath: imagePath, imageThumbPath: imageThumbPath, dominantColors: dominantColors, size: size)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(Color(.systemGray4), lineWidth: 0.5)

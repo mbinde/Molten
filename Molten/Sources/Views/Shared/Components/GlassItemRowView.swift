@@ -25,6 +25,7 @@ struct GlassItemRowView: View {
         let stableId: String
         let imagePath: String?
         let imageThumbPath: String?
+        let dominantColors: [String]?
         let tags: [String]
         let rating: AggregatedRatingModel?  // Optional rating data
 
@@ -35,6 +36,7 @@ struct GlassItemRowView: View {
             self.stableId = completeItem.glassItem.stable_id
             self.imagePath = completeItem.glassItem.image_path
             self.imageThumbPath = completeItem.glassItem.image_thumb_path
+            self.dominantColors = completeItem.glassItem.dominant_colors
             self.tags = completeItem.allTags
             self.rating = completeItem.rating
         }
@@ -46,6 +48,7 @@ struct GlassItemRowView: View {
             self.stableId = detailedShoppingItem.glassItem.stable_id
             self.imagePath = detailedShoppingItem.glassItem.image_path
             self.imageThumbPath = detailedShoppingItem.glassItem.image_thumb_path
+            self.dominantColors = detailedShoppingItem.glassItem.dominant_colors
             self.tags = detailedShoppingItem.allTags
             self.rating = nil  // Shopping list items don't include ratings
         }
@@ -58,17 +61,19 @@ struct GlassItemRowView: View {
             self.stableId = enrichedItem.snapshot.stableId
             self.imagePath = enrichedItem.catalogData?.imagePath
             self.imageThumbPath = enrichedItem.catalogData?.imageThumbPath
+            self.dominantColors = enrichedItem.catalogData?.dominantColors
             self.tags = enrichedItem.catalogData?.tags ?? []
             self.rating = nil  // Friend inventory items don't include ratings
         }
 
-        init(name: String, manufacturer: String, sku: String?, stableId: String, imagePath: String? = nil, imageThumbPath: String? = nil, tags: [String], rating: AggregatedRatingModel? = nil) {
+        init(name: String, manufacturer: String, sku: String?, stableId: String, imagePath: String? = nil, imageThumbPath: String? = nil, dominantColors: [String]? = nil, tags: [String], rating: AggregatedRatingModel? = nil) {
             self.name = name
             self.manufacturer = manufacturer
             self.sku = sku
             self.stableId = stableId
             self.imagePath = imagePath
             self.imageThumbPath = imageThumbPath
+            self.dominantColors = dominantColors
             self.tags = tags
             self.rating = rating
         }
@@ -100,6 +105,7 @@ struct GlassItemRowView: View {
                 stableId: item.stableId,
                 imagePath: item.imagePath,
                 imageThumbPath: item.imageThumbPath,
+                dominantColors: item.dominantColors,
                 size: 60
             )
 

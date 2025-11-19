@@ -334,10 +334,22 @@ struct ProductImageView: View {
                     .clipped()
                     .cornerRadius(8)
             } else if !isLoading,
-                      let colors = dominantColors,
-                      !colors.isEmpty {
-                // Show color gradient when we have color codes but no image
-                ColorSwatchView(colors: colors, size: size, cornerRadius: 8)
+                      let manufacturer = manufacturer,
+                      !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
+                // No permission to show product images - show gradient if we have colors, else show manufacturer logo
+                if let colors = dominantColors, !colors.isEmpty {
+                    ColorSwatchView(colors: colors, size: size, cornerRadius: 8)
+                } else {
+                    // Manufacturer logo was already loaded in loadImageAsync (or gray box if not available)
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(.systemGray5))
+                        .frame(width: size, height: size)
+                        .overlay {
+                            Image(systemName: "photo")
+                                .foregroundColor(Color(.systemGray3))
+                                .font(.system(size: size * 0.4))
+                        }
+                }
             } else {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color(.systemGray5))

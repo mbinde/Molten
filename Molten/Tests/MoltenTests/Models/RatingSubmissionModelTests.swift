@@ -5,6 +5,7 @@
 //  Converted to Swift Testing on 11/18/25.
 //
 
+import Foundation
 import Testing
 @testable import Molten
 

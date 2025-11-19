@@ -259,7 +259,8 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
         // 0=stable_id, 1=status, 2=added_date, 3=last_seen, 4=discontinued_date,
         // 5=manufacturer, 6=code, 7=name, 8=start_date, 9=end_date,
         // 10=manufacturer_description, 11=tags, 12=synonyms, 13=coe, 14=type,
-        // 15=manufacturer_url, 16=image_path, 17=image_url, 18=stock_type
+        // 15=manufacturer_url, 16=image_path, 17=image_thumb_path, 18=image_url,
+        // 19=stock_type, 20=dominant_colors
 
         func getText(_ column: Int32) -> String? {
             guard let cString = sqlite3_column_text(statement, column) else {
@@ -297,6 +298,20 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
         let image_thumb_path = getText(17)
         let image_url = getText(18)
 
+        // Parse dominant_colors from JSON array format: ["#2E5E41", "#1D4030", "#0C2219"]
+        let dominant_colors: [String]?
+        if let colorsJSON = getText(20), !colorsJSON.isEmpty {
+            // Parse JSON array of hex color strings
+            if let data = colorsJSON.data(using: .utf8),
+               let colors = try? JSONDecoder().decode([String].self, from: data) {
+                dominant_colors = colors
+            } else {
+                dominant_colors = nil
+            }
+        } else {
+            dominant_colors = nil
+        }
+
         return GlassItemModel(
             stable_id: stable_id,
             name: name,
@@ -308,7 +323,8 @@ final class SQLiteGlassItemRepository: GlassItemRepository {
             mfr_status: mfr_status,
             image_url: image_url,
             image_path: image_path,
-            image_thumb_path: image_thumb_path
+            image_thumb_path: image_thumb_path,
+            dominant_colors: dominant_colors
         )
     }
 }

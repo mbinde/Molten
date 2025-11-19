@@ -112,9 +112,9 @@ struct ProjectsView: View, CachedDataDeletion {
                         .scaleEffect(1.5)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if projects.isEmpty && searchText.isEmpty {
-                    emptyStateView
+                    ProjectsEmptyStates.standard(onCreatePlan: createNewPlan)
                 } else if filteredProjects.isEmpty {
-                    noResultsView
+                    ProjectsEmptyStates.searchResults
                 } else {
                     projectsListView
                 }
@@ -153,64 +153,6 @@ struct ProjectsView: View, CachedDataDeletion {
             }
             #endif
         }
-    }
-
-    // MARK: - Empty State
-
-    private var emptyStateView: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            VStack(spacing: 20) {
-                Image(systemName: "pencil.and.list.clipboard")
-                    .font(.system(size: 70))
-                    .foregroundColor(.accentColor)
-
-                Text("No Project Plans Yet")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-
-                Text("Save notes, photos, recipes, and tutorials to bring your glass art ideas to life")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-
-                Button("Create Your First Plan") {
-                    Task {
-                        await createNewPlan()
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .padding(.top, 8)
-            }
-
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var noResultsView: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            VStack(spacing: 16) {
-                Image(systemName: "magnifyingglass")
-                    .font(.largeTitle)
-                    .foregroundColor(.secondary)
-
-                Text("No Results Found")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-
-                Text("Try adjusting your search")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - List View

@@ -686,7 +686,7 @@ struct InventoryTrackingServiceTests {
 
         _ = try await service.createCompleteItem(glassItem)
 
-        await #expect(throws: InventoryServiceError.self) {
+        await #expect(throws: InventoryTrackingServiceError.self) {
             try await service.addInventory(
                 quantity: 0.0,
                 type: "rod",

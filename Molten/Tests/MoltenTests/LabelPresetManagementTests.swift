@@ -73,10 +73,7 @@ struct LabelPresetManagementTests {
             config: config
         )
 
-        manager.savePreset(preset)
-
-        // Wait for async save
-        try await Task.sleep(for: .milliseconds(500))
+        try await manager.savePreset(preset)
 
         #expect(manager.allPresets.contains(where: { $0.name == "Saved Preset" }))
     }
@@ -105,8 +102,7 @@ struct LabelPresetManagementTests {
             config: config
         )
 
-        manager.savePreset(preset)
-        try await Task.sleep(for: .milliseconds(100))
+        try await manager.savePreset(preset)
 
         // Find and verify the saved preset
         let loaded = manager.allPresets.first(where: { $0.name == "Load Test" })
@@ -171,7 +167,7 @@ struct LabelPresetManagementTests {
 
     @Test("Overwrite existing preset with new config")
     func testOverwritePreset() async throws {
-        let manager = LabelPresetsManager(repository: testRepository)
+        let manager = await createManager()
 
         // Create initial preset
         let initialConfig = LabelBuilderConfig(
@@ -191,8 +187,7 @@ struct LabelPresetManagementTests {
             config: initialConfig
         )
 
-        manager.savePreset(preset)
-        try await Task.sleep(for: .milliseconds(100))
+        try await manager.savePreset(preset)
 
         // Find the saved preset
         guard let saved = manager.allPresets.first(where: { $0.name == "Overwrite Test" }) else {
@@ -221,8 +216,7 @@ struct LabelPresetManagementTests {
             modifiedAt: Date()
         )
 
-        manager.savePreset(updated)
-        try await Task.sleep(for: .milliseconds(100))
+        try await manager.savePreset(updated)
 
         // Verify the preset was updated
         let result = manager.allPresets.first(where: { $0.id == saved.id })
@@ -237,7 +231,7 @@ struct LabelPresetManagementTests {
 
     @Test("Edit preset name without changing config")
     func testEditPresetName() async throws {
-        let manager = LabelPresetsManager(repository: testRepository)
+        let manager = await createManager()
 
         let config = LabelBuilderConfig.default
         let preset = LabelBuilderPreset(
@@ -246,8 +240,7 @@ struct LabelPresetManagementTests {
             config: config
         )
 
-        manager.savePreset(preset)
-        try await Task.sleep(for: .milliseconds(100))
+        try await manager.savePreset(preset)
 
         // Find the saved preset
         guard let saved = manager.allPresets.first(where: { $0.name == "Original Name" }) else {
@@ -264,8 +257,7 @@ struct LabelPresetManagementTests {
             modifiedAt: Date()
         )
 
-        manager.savePreset(renamed)
-        try await Task.sleep(for: .milliseconds(100))
+        try await manager.savePreset(renamed)
 
         // Verify name changed but config stayed the same
         let result = manager.allPresets.first(where: { $0.id == saved.id })
@@ -275,7 +267,7 @@ struct LabelPresetManagementTests {
 
     @Test("Edit preset description")
     func testEditPresetDescription() async throws {
-        let manager = LabelPresetsManager(repository: testRepository)
+        let manager = await createManager()
 
         let config = LabelBuilderConfig.default
         let preset = LabelBuilderPreset(
@@ -284,8 +276,7 @@ struct LabelPresetManagementTests {
             config: config
         )
 
-        manager.savePreset(preset)
-        try await Task.sleep(for: .milliseconds(100))
+        try await manager.savePreset(preset)
 
         // Find the saved preset
         guard let saved = manager.allPresets.first(where: { $0.name == "Test Preset" }) else {
@@ -302,8 +293,7 @@ struct LabelPresetManagementTests {
             modifiedAt: Date()
         )
 
-        manager.savePreset(updated)
-        try await Task.sleep(for: .milliseconds(100))
+        try await manager.savePreset(updated)
 
         // Verify description changed
         let result = manager.allPresets.first(where: { $0.id == saved.id })
@@ -395,7 +385,7 @@ struct LabelPresetManagementTests {
 
     @Test("Save and load preset with field formats")
     func testSaveLoadPresetWithFieldFormats() async throws {
-        let manager = LabelPresetsManager(repository: testRepository)
+        let manager = await createManager()
 
         var config = LabelBuilderConfig.default
 
@@ -410,8 +400,7 @@ struct LabelPresetManagementTests {
             config: config
         )
 
-        manager.savePreset(preset)
-        try await Task.sleep(for: .milliseconds(100))
+        try await manager.savePreset(preset)
 
         // Load and verify
         let loaded = manager.allPresets.first(where: { $0.name == "Format Test" })
@@ -437,7 +426,7 @@ struct LabelPresetManagementTests {
 
     @Test("Delete preset")
     func testDeletePreset() async throws {
-        let manager = LabelPresetsManager(repository: testRepository)
+        let manager = await createManager()
 
         let preset = LabelBuilderPreset(
             name: "To Delete",
@@ -445,16 +434,14 @@ struct LabelPresetManagementTests {
             config: .default
         )
 
-        manager.savePreset(preset)
-        try await Task.sleep(for: .milliseconds(100))
+        try await manager.savePreset(preset)
 
         // Verify it was saved
         #expect(manager.allPresets.contains(where: { $0.name == "To Delete" }))
 
         // Delete it
         if let toDelete = manager.allPresets.first(where: { $0.name == "To Delete" }) {
-            manager.deletePreset(toDelete)
-            try await Task.sleep(for: .milliseconds(100))
+            try await manager.deletePreset(toDelete)
         }
 
         // Verify it's gone
@@ -474,7 +461,7 @@ struct LabelPresetManagementTests {
 
     @Test("User presets shown first in list")
     func testUserPresetsFirst() async throws {
-        let manager = LabelPresetsManager(repository: testRepository)
+        let manager = await createManager()
 
         // Add a user preset
         let userPreset = LabelBuilderPreset(
@@ -483,8 +470,7 @@ struct LabelPresetManagementTests {
             config: .default
         )
 
-        manager.savePreset(userPreset)
-        try await Task.sleep(for: .milliseconds(100))
+        try await manager.savePreset(userPreset)
 
         // Get all presets (user + built-in)
         let allPresets = manager.allPresets

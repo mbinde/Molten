@@ -1603,35 +1603,29 @@ class LabelPresetsManager: ObservableObject {
     }
 
     /// Save a new preset or update existing one
-    func savePreset(_ preset: LabelBuilderPreset) {
-        Task {
-            do {
-                var presetToSave = preset
-                if let existingIndex = userPresets.firstIndex(where: { $0.id == preset.id }) {
-                    // Update existing
-                    presetToSave.modifiedAt = Date()
-                    _ = try await repository.updatePreset(presetToSave)
-                    userPresets[existingIndex] = presetToSave
-                } else {
-                    // Create new
-                    _ = try await repository.createPreset(presetToSave)
-                    userPresets.append(presetToSave)
-                }
-            } catch {
-                print("❌ Failed to save preset: \(error)")
+    func savePreset(_ preset: LabelBuilderPreset) async throws {
+        var presetToSave = preset
+        if let existingIndex = userPresets.firstIndex(where: { $0.id == preset.id }) {
+            // Update existing
+            presetToSave.modifiedAt = Date()
+            _ = try await repository.updatePreset(presetToSave)
+            await MainActor.run {
+                self.userPresets[existingIndex] = presetToSave
+            }
+        } else {
+            // Create new
+            _ = try await repository.createPreset(presetToSave)
+            await MainActor.run {
+                self.userPresets.append(presetToSave)
             }
         }
     }
 
     /// Delete a preset
-    func deletePreset(_ preset: LabelBuilderPreset) {
-        Task {
-            do {
-                try await repository.deletePreset(id: preset.id)
-                userPresets.removeAll { $0.id == preset.id }
-            } catch {
-                print("❌ Failed to delete preset: \(error)")
-            }
+    func deletePreset(_ preset: LabelBuilderPreset) async throws {
+        try await repository.deletePreset(id: preset.id)
+        await MainActor.run {
+            self.userPresets.removeAll { $0.id == preset.id }
         }
     }
 
@@ -1641,7 +1635,7 @@ class LabelPresetsManager: ObservableObject {
     }
 
     /// Import preset from others
-    func importPreset(from data: Data) throws {
+    func importPreset(from data: Data) async throws {
         guard let preset = LabelBuilderPreset.importJSON(data) else {
             throw LabelPresetsError.invalidData
         }
@@ -1652,12 +1646,12 @@ class LabelPresetsManager: ObservableObject {
             description: preset.description,
             config: preset.config
         )
-        savePreset(importedPreset)
+        try await savePreset(importedPreset)
     }
 
-    /// Get all presets (built-in + user)
+    /// Get all presets (user first, then built-in)
     var allPresets: [LabelBuilderPreset] {
-        LabelBuilderConfig.presets + userPresets
+        userPresets + LabelBuilderConfig.presets
     }
 
     // MARK: - Private Properties

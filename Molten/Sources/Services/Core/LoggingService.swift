@@ -101,7 +101,8 @@ public protocol LoggerBackend: Sendable {
 
 /// Main logging service that coordinates multiple backends
 /// Note: Not @MainActor because all operations are thread-safe (backends are Sendable)
-public final class LoggingService: Sendable {
+/// Note: Not Sendable to avoid TaskLocal storage corruption in Swift 6
+public final class LoggingService {
 
     // MARK: - Properties
 

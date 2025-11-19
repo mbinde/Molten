@@ -287,6 +287,24 @@ struct ShoppingListView: View {
         !viewModel.shoppingLists.isEmpty && (!viewModel.searchText.isEmpty || !viewModel.selectedTags.isEmpty || !viewModel.selectedCOEs.isEmpty || !viewModel.selectedManufacturers.isEmpty || viewModel.selectedStore != nil)
     }
 
+    // Active filters for empty state display
+    private var activeFiltersForEmptyState: [String] {
+        var activeFilters: [String] = []
+        if !viewModel.selectedTags.isEmpty {
+            activeFilters.append("\(viewModel.selectedTags.count) tag\(viewModel.selectedTags.count == 1 ? "" : "s")")
+        }
+        if !viewModel.selectedCOEs.isEmpty {
+            activeFilters.append("COE \(viewModel.selectedCOEs.map { String($0) }.joined(separator: ", "))")
+        }
+        if !viewModel.selectedManufacturers.isEmpty {
+            activeFilters.append("\(viewModel.selectedManufacturers.count) manufacturer\(viewModel.selectedManufacturers.count == 1 ? "" : "s")")
+        }
+        if let store = viewModel.selectedStore {
+            activeFilters.append("store '\(store)'")
+        }
+        return activeFilters
+    }
+
     // Helper for sort menu content
     private var sortMenuView: AnyView {
         AnyView(
@@ -343,15 +361,19 @@ struct ShoppingListView: View {
 
                 // Store filter (if multiple stores available)
                 if allAvailableStores.count > 1 {
-                    storeFilterButton
-                        .padding(.horizontal, DesignSystem.Padding.standard)
-                        .padding(.vertical, DesignSystem.Spacing.xs)
-                        .background(DesignSystem.Colors.background)
+                    StoreFilterButton(
+                        selectedStore: viewModel.selectedStore,
+                        onTap: { showingStoreSelection = true },
+                        onClear: { viewModel.selectedStore = nil }
+                    )
+                    .padding(.horizontal, DesignSystem.Padding.standard)
+                    .padding(.vertical, DesignSystem.Spacing.xs)
+                    .background(DesignSystem.Colors.background)
                 }
 
                 // Shopping mode instructions
                 if shoppingModeState.isShoppingModeEnabled {
-                    shoppingModeInstructions
+                    ShoppingModeInstructionsBanner(isExpanded: $shoppingModeInstructionsExpanded)
                 }
 
                 // Main content
@@ -359,9 +381,16 @@ struct ShoppingListView: View {
                     LoadingStateView()
                 } else if filteredShoppingLists.isEmpty {
                     if shouldShowSearchEmptyState {
-                        searchEmptyStateView
+                        ShoppingListEmptyStates.searchResults(
+                            searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
+                            activeFilters: activeFiltersForEmptyState,
+                            onClearFilters: {
+                                viewModel.searchText = ""
+                                viewModel.clearFilters()
+                            }
+                        )
                     } else {
-                        standardizedEmptyStateView
+                        ShoppingListEmptyStates.standard(onAddItem: { showingAddItem = true })
                     }
                 } else {
                     shoppingListContent
@@ -516,76 +545,6 @@ struct ShoppingListView: View {
         }
     }
 
-    private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "cart")
-                .font(.system(size: 80, weight: .regular))
-                .foregroundColor(.secondary)
-
-            Text("No items on your shopping list yet")
-                .font(.title2)
-                .fontWeight(.bold)
-
-            Text("Set minimum quantities in the catalog to automatically generate shopping lists")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-
-            Button(action: {
-                showingAddItem = true
-            }) {
-                Text("Add to Shopping List")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.accentColor)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-            }
-            .padding(.top, 8)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
-    }
-
-    private var standardizedEmptyStateView: some View {
-        CustomEmptyStateView(
-            icon: "cart",
-            title: "No items on your shopping list yet",
-            description: "Set minimum quantities in the catalog to automatically generate shopping lists",
-            actionButton: .init(
-                title: "Add to Shopping List",
-                action: { showingAddItem = true },
-                style: .prominent
-            )
-        )
-    }
-
-    private var searchEmptyStateView: some View {
-        var activeFilters: [String] = []
-        if !viewModel.selectedTags.isEmpty {
-            activeFilters.append("\(viewModel.selectedTags.count) tag\(viewModel.selectedTags.count == 1 ? "" : "s")")
-        }
-        if !viewModel.selectedCOEs.isEmpty {
-            activeFilters.append("COE \(viewModel.selectedCOEs.map { String($0) }.joined(separator: ", "))")
-        }
-        if !viewModel.selectedManufacturers.isEmpty {
-            activeFilters.append("\(viewModel.selectedManufacturers.count) manufacturer\(viewModel.selectedManufacturers.count == 1 ? "" : "s")")
-        }
-        if let store = viewModel.selectedStore {
-            activeFilters.append("store '\(store)'")
-        }
-
-        return CustomEmptyStateView.searchResults(
-            searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
-            filters: activeFilters,
-            onClearFilters: {
-                viewModel.searchText = ""
-                viewModel.clearFilters()
-            }
-        )
-    }
 
     private var shoppingListContent: some View {
         List {
@@ -809,79 +768,6 @@ struct ShoppingListView: View {
         }
     }
 
-    private var shoppingModeInstructions: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-            Button(action: {
-                withAnimation {
-                    shoppingModeInstructionsExpanded.toggle()
-                }
-            }) {
-                HStack {
-                    Image(systemName: "cart.fill")
-                        .foregroundColor(.green)
-                    Text("Shopping Mode")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                    Spacer()
-                    Image(systemName: shoppingModeInstructionsExpanded ? "chevron.up" : "chevron.down")
-                        .secondaryCaptionStyle()
-                }
-            }
-            .buttonStyle(.plain)
-
-            if shoppingModeInstructionsExpanded {
-                Text("Tap on items to confirm that you've added them to your basket. When you're done, click \"Checkout\" and they'll be removed from your list and added to your inventory.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-        }
-        .padding(DesignSystem.Padding.standard)
-        .background(Color.green.opacity(0.1))
-        .cornerRadius(DesignSystem.CornerRadius.medium)
-        .padding(.horizontal, DesignSystem.Padding.standard)
-        .padding(.vertical, DesignSystem.Spacing.xs)
-    }
-
-    private var storeFilterButton: some View {
-        Button {
-            showingStoreSelection = true
-        } label: {
-            HStack(spacing: DesignSystem.Spacing.sm) {
-                Image(systemName: "building.2")
-                    .font(DesignSystem.Typography.captionSmall)
-
-                if let selectedStore = viewModel.selectedStore {
-                    Text(selectedStore)
-                        .font(DesignSystem.Typography.caption)
-                        .fontWeight(DesignSystem.FontWeight.medium)
-                        .lineLimit(1)
-
-                    Image(systemName: "xmark.circle.fill")
-                        .font(DesignSystem.Typography.caption)
-                        .onTapGesture {
-                            withAnimation {
-                                viewModel.selectedStore = nil
-                            }
-                        }
-                } else {
-                    Text("All Stores")
-                        .font(DesignSystem.Typography.caption)
-                        .fontWeight(DesignSystem.FontWeight.medium)
-
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 10))
-                }
-            }
-            .foregroundColor(viewModel.selectedStore == nil ? DesignSystem.Colors.textSecondary : .white)
-            .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)
-            .padding(.vertical, DesignSystem.Padding.buttonVertical)
-            .background(viewModel.selectedStore == nil ? DesignSystem.Colors.backgroundInput : DesignSystem.Colors.accentPrimary)
-            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
-        }
-    }
 
     private func loadShoppingList() async {
         print("🛒 ShoppingListView: Loading shopping list...")

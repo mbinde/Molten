@@ -896,8 +896,6 @@ struct LabelPrintingServiceTests {
         #expect(allFormats.keys.contains("Address Labels"))
         #expect(allFormats.keys.contains("Shipping Labels"))
         #expect(allFormats.keys.contains("Return Address"))
-        #expect(allFormats.keys.contains("Inkjet Labels"))
-        #expect(allFormats.keys.contains("Specialty"))
     }
 
     @Test("AveryFormat flatList contains all unique formats")

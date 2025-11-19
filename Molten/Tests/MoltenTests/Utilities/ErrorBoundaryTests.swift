@@ -64,7 +64,8 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
             inventoryTrackingService: inventoryService,
             itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
-            userTagsRepository: userTagsRepo
+            userTagsRepository: userTagsRepo,
+            ratingService: AppDependencies.shared.ratingService
         )
         
         let inventoryViewModel = await MainActor.run {

@@ -155,8 +155,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .sku],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.qrPosition == .left)
@@ -167,8 +169,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .right,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .sku],
-            textAlignment: .right
+            textAlignment: .right,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.qrPosition == .right)
@@ -179,8 +183,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .both,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .sku],
-            textAlignment: .center
+            textAlignment: .center,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.qrPosition == .both)
@@ -191,8 +197,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .none,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .sku, .colorName, .coe],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.qrPosition == .none)
@@ -203,8 +211,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.textAlignment == .left)
@@ -215,8 +225,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .both,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer],
-            textAlignment: .center
+            textAlignment: .center,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.textAlignment == .center)
@@ -227,8 +239,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .right,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer],
-            textAlignment: .right
+            textAlignment: .right,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.textAlignment == .right)
@@ -239,8 +253,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .coe, .location],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.textFields.count == 3)
@@ -255,8 +271,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [.colorName, .manufacturer, .sku],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         #expect(config.textFields[0] == .colorName)
@@ -269,11 +287,13 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.7,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .sku, .colorName, .coe],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
-        let legacyTemplate = config.toLegacyTemplate()
+        let legacyTemplate = config.toLegacyTemplate(format: .avery5160)
 
         #expect(legacyTemplate.includeQRCode == true)
         #expect(legacyTemplate.dualQRCodes == false)
@@ -336,8 +356,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.8,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .sku, .colorName, .coe, .location, .owner],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
         let format = AveryFormat.avery5167  // Small label
 
@@ -361,14 +383,18 @@ struct LabelPrintingServiceTests {
             leftMargin: 20,
             topMargin: 20,
             horizontalGap: 10,
-            verticalGap: 10
+            verticalGap: 10,
+            defaultFontScale: 1.0,
+            defaultQRSize: 0.65
         )
 
         let config = LabelBuilderConfig(
             qrPosition: .both,
             qrSize: 0.75,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .sku],
-            textAlignment: .center
+            textAlignment: .center,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let validation = config.validateLayout(for: verySmallFormat)
@@ -382,8 +408,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .sku, .colorName, .coe, .location, .owner],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
         let format = AveryFormat.avery5167  // Small label (height < 72)
 
@@ -709,8 +737,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.5,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .sku, .colorName, .coe, .location, .owner],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let pdfURL = await service.generateLabelSheet(
@@ -742,8 +772,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .sku],  // Both fields enabled
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let pdfURL = await service.generateLabelSheet(
@@ -775,8 +807,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .none,  // No QR code
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .sku, .colorName, .coe],
-            textAlignment: .center
+            textAlignment: .center,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let pdfURL = await service.generateLabelSheet(
@@ -807,8 +841,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .both,  // QR on both sides
             qrSize: 0.65,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .sku],
-            textAlignment: .center
+            textAlignment: .center,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let pdfURL = await service.generateLabelSheet(

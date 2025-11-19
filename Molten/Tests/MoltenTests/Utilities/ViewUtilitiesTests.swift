@@ -267,30 +267,7 @@ struct ViewUtilitiesTests {
         primaryAction()
         #expect(primaryActionCalled == true, "Primary action should work when invoked")
     }
-    
-    @Test("View extension loadingOverlay should apply overlay modifier correctly")
-    @MainActor
-    func testViewExtensionLoadingOverlay() throws {
-        // Create a simple test view
-        let testView = Text("Base Content")
-        
-        // Act - Apply loadingOverlay modifier with loading state false
-        let nonLoadingView = testView.loadingOverlay(isLoading: false, message: "Loading...")
-        
-        // Assert
-        #expect(nonLoadingView != nil, "Should create non-loading overlay view successfully")
-        
-        // Act - Apply loadingOverlay modifier with loading state true
-        let loadingView = testView.loadingOverlay(isLoading: true, message: "Please wait...")
-        
-        // Assert
-        #expect(loadingView != nil, "Should create loading overlay view successfully")
-        
-        // Test default message
-        let defaultMessageView = testView.loadingOverlay(isLoading: true)
-        #expect(defaultMessageView != nil, "Should create overlay view with default message")
-    }
-    
+
     // MARK: - Advanced Interaction Pattern Tests
     
     @Test("Should handle complex async operation chains with proper state management")

@@ -58,7 +58,8 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
             inventoryTrackingService: inventoryTrackingService,
             itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
-            userTagsRepository: userTagsRepo
+            userTagsRepository: userTagsRepo,
+            ratingService: AppDependencies.shared.ratingService
         )
         
         return (catalogService, inventoryTrackingService, repos)

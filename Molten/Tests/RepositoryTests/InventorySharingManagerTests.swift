@@ -382,7 +382,8 @@ struct InventorySharingManagerTests {
             coordinator: coordinator,
             metadataRepository: metadataRepo,
             shareRecordRepository: shareRecordRepo,
-            sharedInventoryRepository: sharedInventoryRepo
+            sharedInventoryRepository: sharedInventoryRepo,
+            catalogService: deps.catalogService
         )
     }
 

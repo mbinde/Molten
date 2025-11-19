@@ -85,7 +85,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
             inventoryRepository: otherMockRepos.inventory,
             glassItemRepository: mockRepo, // Use the SAME instance
             itemTagsRepository: otherMockRepos.itemTags,
-            userTagsRepository: userTagsRepo
+            userTagsRepository: userTagsRepo,
         )
 
         let catalogService = CatalogService(
@@ -95,7 +95,8 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
             inventoryTrackingService: inventoryService,
             itemMinimumRepository: otherMockRepos.itemMinimum,
             itemTagsRepository: otherMockRepos.itemTags,
-            userTagsRepository: userTagsRepo
+            userTagsRepository: userTagsRepo,
+            ratingService: AppDependencies.shared.ratingService
         )
         
         // Test if catalog service sees our marker item

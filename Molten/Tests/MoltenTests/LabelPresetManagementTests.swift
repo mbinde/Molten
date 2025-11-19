@@ -20,7 +20,20 @@ import Foundation
 @MainActor
 struct LabelPresetManagementTests {
 
-    private let deps = AppDependencies.shared
+    // Create a test persistence controller and repository for each test
+    private let testController = PersistenceController.createTestController()
+
+    private var testRepository: LabelPresetRepository {
+        CoreDataLabelPresetRepository(context: testController.cloudContext)
+    }
+
+    // Helper to create and initialize a manager
+    private func createManager() async -> LabelPresetsManager {
+        let manager = LabelPresetsManager(repository: testRepository)
+        // Wait for initial load to complete
+        try? await Task.sleep(for: .milliseconds(300))
+        return manager
+    }
 
     // MARK: - Creating and Saving Presets
 
@@ -51,7 +64,7 @@ struct LabelPresetManagementTests {
 
     @Test("Save preset to manager")
     func testSavePreset() async throws {
-        let manager = LabelPresetsManager.shared
+        let manager = await createManager()
 
         let config = LabelBuilderConfig.default
         let preset = LabelBuilderPreset(
@@ -63,7 +76,7 @@ struct LabelPresetManagementTests {
         manager.savePreset(preset)
 
         // Wait for async save
-        try await Task.sleep(for: .milliseconds(100))
+        try await Task.sleep(for: .milliseconds(500))
 
         #expect(manager.allPresets.contains(where: { $0.name == "Saved Preset" }))
     }
@@ -72,7 +85,7 @@ struct LabelPresetManagementTests {
 
     @Test("Load preset and apply config")
     func testLoadPreset() async throws {
-        let manager = LabelPresetsManager.shared
+        let manager = await createManager()
 
         // Create and save a preset with specific config
         let config = LabelBuilderConfig(
@@ -158,7 +171,7 @@ struct LabelPresetManagementTests {
 
     @Test("Overwrite existing preset with new config")
     func testOverwritePreset() async throws {
-        let manager = LabelPresetsManager.shared
+        let manager = LabelPresetsManager(repository: testRepository)
 
         // Create initial preset
         let initialConfig = LabelBuilderConfig(
@@ -224,7 +237,7 @@ struct LabelPresetManagementTests {
 
     @Test("Edit preset name without changing config")
     func testEditPresetName() async throws {
-        let manager = LabelPresetsManager.shared
+        let manager = LabelPresetsManager(repository: testRepository)
 
         let config = LabelBuilderConfig.default
         let preset = LabelBuilderPreset(
@@ -262,7 +275,7 @@ struct LabelPresetManagementTests {
 
     @Test("Edit preset description")
     func testEditPresetDescription() async throws {
-        let manager = LabelPresetsManager.shared
+        let manager = LabelPresetsManager(repository: testRepository)
 
         let config = LabelBuilderConfig.default
         let preset = LabelBuilderPreset(
@@ -382,7 +395,7 @@ struct LabelPresetManagementTests {
 
     @Test("Save and load preset with field formats")
     func testSaveLoadPresetWithFieldFormats() async throws {
-        let manager = LabelPresetsManager.shared
+        let manager = LabelPresetsManager(repository: testRepository)
 
         var config = LabelBuilderConfig.default
 
@@ -424,7 +437,7 @@ struct LabelPresetManagementTests {
 
     @Test("Delete preset")
     func testDeletePreset() async throws {
-        let manager = LabelPresetsManager.shared
+        let manager = LabelPresetsManager(repository: testRepository)
 
         let preset = LabelBuilderPreset(
             name: "To Delete",
@@ -461,7 +474,7 @@ struct LabelPresetManagementTests {
 
     @Test("User presets shown first in list")
     func testUserPresetsFirst() async throws {
-        let manager = LabelPresetsManager.shared
+        let manager = LabelPresetsManager(repository: testRepository)
 
         // Add a user preset
         let userPreset = LabelBuilderPreset(

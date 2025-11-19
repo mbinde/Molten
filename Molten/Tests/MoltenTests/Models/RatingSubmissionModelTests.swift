@@ -141,9 +141,9 @@ struct RatingSubmissionModelTests {
         #expect(model.validationErrors.contains("Star rating must be between 1 and 5"))
     }
 
-    @Test("IsValid WithFewerThanFiveWords ReturnsFalse")
-    func testIsValid_WithFewerThanFiveWords_ReturnsFalse() {
-        // Given
+    @Test("IsValid WithFewerThanFiveWords ReturnsTrue")
+    func testIsValid_WithFewerThanFiveWords_ReturnsTrue() {
+        // Given - words are optional (0-5 allowed)
         let model = RatingSubmissionModel(
             itemStableId: "bullseye-001-0",
             starRating: 5,
@@ -151,8 +151,8 @@ struct RatingSubmissionModelTests {
         )
 
         // When/Then
-        #expect(!model.isValid)
-        #expect(model.validationErrors.contains("Exactly 5 words are required"))
+        #expect(model.isValid)
+        #expect(model.validationErrors.isEmpty)
     }
 
     @Test("IsValid WithMoreThanFiveWords ReturnsFalse")
@@ -166,21 +166,21 @@ struct RatingSubmissionModelTests {
 
         // When/Then
         #expect(!model.isValid)
-        #expect(model.validationErrors.contains("Exactly 5 words are required"))
+        #expect(model.validationErrors.contains("Maximum 5 words allowed"))
     }
 
-    @Test("IsValid WithEmptyWord ReturnsFalse")
-    func testIsValid_WithEmptyWord_ReturnsFalse() {
-        // Given
+    @Test("IsValid WithEmptyWord ReturnsTrue")
+    func testIsValid_WithEmptyWord_ReturnsTrue() {
+        // Given - empty words are filtered out, only non-empty words are validated
         let model = RatingSubmissionModel(
             itemStableId: "bullseye-001-0",
             starRating: 5,
             words: ["beautiful", "", "smooth", "reliable", "stunning"]
         )
 
-        // When/Then
-        #expect(!model.isValid)
-        #expect(model.validationErrors.contains("All words must be non-empty"))
+        // When/Then - 4 non-empty words is valid (0-5 allowed)
+        #expect(model.isValid)
+        #expect(model.validationErrors.isEmpty)
     }
 
     @Test("IsValid WithWordTooLong ReturnsFalse")

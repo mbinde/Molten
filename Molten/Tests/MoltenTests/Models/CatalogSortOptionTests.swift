@@ -57,10 +57,11 @@ struct CatalogSortOptionTests {
     func testAllCases() {
         let allCases = SortOption.allCases
 
-        #expect(allCases.count == 3)
+        #expect(allCases.count == 4)
         #expect(allCases.contains(.name))
         #expect(allCases.contains(.code))
         #expect(allCases.contains(.manufacturer))
+        #expect(allCases.contains(.rating))
     }
 
     @Test("allCases order is consistent")

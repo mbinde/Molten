@@ -2,12 +2,11 @@
 //  LoggingService.swift
 //  Molten
 //
-//  Unified logging system with configurable backends (OSLog, Sentry)
+//  Unified logging system with configurable backends (Sentry)
 //  Supports structured logging, pattern detection, and remote error tracking
 //
 
 import Foundation
-import OSLog
 
 // MARK: - Log Level
 
@@ -30,17 +29,6 @@ public enum LogLevel: Int, Comparable, Sendable {
             return false
         case .error, .critical:
             return true
-        }
-    }
-
-    /// Convert to OSLog type
-    var osLogType: OSLogType {
-        switch self {
-        case .debug: return .debug
-        case .info: return .info
-        case .warning: return .default
-        case .error: return .error
-        case .critical: return .fault
         }
     }
 
@@ -120,7 +108,6 @@ public final class LoggingService: Sendable {
     private let backends: [LoggerBackend]
     private let minimumLocalLevel: LogLevel
     private let minimumRemoteLevel: LogLevel
-    private let osLogger: Logger
 
     // MARK: - Initialization
 
@@ -132,10 +119,6 @@ public final class LoggingService: Sendable {
         self.backends = backends
         self.minimumLocalLevel = minimumLocalLevel
         self.minimumRemoteLevel = minimumRemoteLevel
-        self.osLogger = Logger(
-            subsystem: Bundle.main.bundleIdentifier ?? "com.flameworker.molten",
-            category: "Application"
-        )
     }
 
     // MARK: - Public API
@@ -152,9 +135,6 @@ public final class LoggingService: Sendable {
     ) {
         // Filter by minimum level
         guard level >= minimumLocalLevel else { return }
-
-        // Log to OSLog (local)
-        osLogger.log(level: level.osLogType, "\(level.description): \(message)")
 
         // Log to all backends
         for backend in backends {

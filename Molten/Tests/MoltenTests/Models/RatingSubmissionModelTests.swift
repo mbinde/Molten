@@ -2,16 +2,19 @@
 //  RatingSubmissionModelTests.swift
 //  MoltenTests
 //
-//  Created by TDD for rating system on 11/13/25.
+//  Converted to Swift Testing on 11/18/25.
 //
 
-import XCTest
+import Foundation
+import Testing
 @testable import Molten
 
-final class RatingSubmissionModelTests: XCTestCase {
+@Suite("RatingSubmissionModel Tests")
+struct RatingSubmissionModelTests {
 
     // MARK: - Initialization Tests
 
+    @Test("Initialization WithValidData CreatesModel")
     func testInitialization_WithValidData_CreatesModel() {
         // Given
         let itemStableId = "bullseye-001-0"
@@ -26,12 +29,13 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // Then
-        XCTAssertEqual(model.itemStableId, itemStableId)
-        XCTAssertEqual(model.starRating, starRating)
-        XCTAssertEqual(model.words, words)
-        XCTAssertNotNil(model.createdAt)
+        #expect(model.itemStableId == itemStableId)
+        #expect(model.starRating == starRating)
+        #expect(model.words == words)
+        #expect(model.createdAt != nil)
     }
 
+    @Test("Initialization TrimsWhitespaceFromItemStableId")
     func testInitialization_TrimsWhitespaceFromItemStableId() {
         // Given
         let itemStableId = "  bullseye-001-0  "
@@ -44,9 +48,10 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // Then
-        XCTAssertEqual(model.itemStableId, "bullseye-001-0")
+        #expect(model.itemStableId == "bullseye-001-0")
     }
 
+    @Test("Initialization TrimsWhitespaceFromWords")
     func testInitialization_TrimsWhitespaceFromWords() {
         // Given
         let words = ["  beautiful  ", "vibrant", "  smooth", "reliable  ", "stunning"]
@@ -59,9 +64,10 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // Then
-        XCTAssertEqual(model.words, ["beautiful", "vibrant", "smooth", "reliable", "stunning"])
+        #expect(model.words == ["beautiful", "vibrant", "smooth", "reliable", "stunning"])
     }
 
+    @Test("Initialization LowercasesWords")
     func testInitialization_LowercasesWords() {
         // Given
         let words = ["Beautiful", "VIBRANT", "SmOoTh", "reliable", "STUNNING"]
@@ -74,11 +80,12 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // Then
-        XCTAssertEqual(model.words, ["beautiful", "vibrant", "smooth", "reliable", "stunning"])
+        #expect(model.words == ["beautiful", "vibrant", "smooth", "reliable", "stunning"])
     }
 
     // MARK: - Validation Tests
 
+    @Test("IsValid WithValidData ReturnsTrue")
     func testIsValid_WithValidData_ReturnsTrue() {
         // Given
         let model = RatingSubmissionModel(
@@ -88,10 +95,11 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // When/Then
-        XCTAssertTrue(model.isValid)
-        XCTAssertTrue(model.validationErrors.isEmpty)
+        #expect(model.isValid)
+        #expect(model.validationErrors.isEmpty)
     }
 
+    @Test("IsValid WithEmptyItemStableId ReturnsFalse")
     func testIsValid_WithEmptyItemStableId_ReturnsFalse() {
         // Given
         let model = RatingSubmissionModel(
@@ -101,10 +109,11 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // When/Then
-        XCTAssertFalse(model.isValid)
-        XCTAssertTrue(model.validationErrors.contains("Item stable ID is required"))
+        #expect(!model.isValid)
+        #expect(model.validationErrors.contains("Item stable ID is required"))
     }
 
+    @Test("IsValid WithStarRatingTooLow ReturnsFalse")
     func testIsValid_WithStarRatingTooLow_ReturnsFalse() {
         // Given
         let model = RatingSubmissionModel(
@@ -114,10 +123,11 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // When/Then
-        XCTAssertFalse(model.isValid)
-        XCTAssertTrue(model.validationErrors.contains("Star rating must be between 1 and 5"))
+        #expect(!model.isValid)
+        #expect(model.validationErrors.contains("Star rating must be between 1 and 5"))
     }
 
+    @Test("IsValid WithStarRatingTooHigh ReturnsFalse")
     func testIsValid_WithStarRatingTooHigh_ReturnsFalse() {
         // Given
         let model = RatingSubmissionModel(
@@ -127,12 +137,13 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // When/Then
-        XCTAssertFalse(model.isValid)
-        XCTAssertTrue(model.validationErrors.contains("Star rating must be between 1 and 5"))
+        #expect(!model.isValid)
+        #expect(model.validationErrors.contains("Star rating must be between 1 and 5"))
     }
 
-    func testIsValid_WithFewerThanFiveWords_ReturnsFalse() {
-        // Given
+    @Test("IsValid WithFewerThanFiveWords ReturnsTrue")
+    func testIsValid_WithFewerThanFiveWords_ReturnsTrue() {
+        // Given - words are optional (0-5 allowed)
         let model = RatingSubmissionModel(
             itemStableId: "bullseye-001-0",
             starRating: 5,
@@ -140,10 +151,11 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // When/Then
-        XCTAssertFalse(model.isValid)
-        XCTAssertTrue(model.validationErrors.contains("Exactly 5 words are required"))
+        #expect(model.isValid)
+        #expect(model.validationErrors.isEmpty)
     }
 
+    @Test("IsValid WithMoreThanFiveWords ReturnsFalse")
     func testIsValid_WithMoreThanFiveWords_ReturnsFalse() {
         // Given
         let model = RatingSubmissionModel(
@@ -153,23 +165,25 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // When/Then
-        XCTAssertFalse(model.isValid)
-        XCTAssertTrue(model.validationErrors.contains("Exactly 5 words are required"))
+        #expect(!model.isValid)
+        #expect(model.validationErrors.contains("Maximum 5 words allowed"))
     }
 
-    func testIsValid_WithEmptyWord_ReturnsFalse() {
-        // Given
+    @Test("IsValid WithEmptyWord ReturnsTrue")
+    func testIsValid_WithEmptyWord_ReturnsTrue() {
+        // Given - empty words are filtered out, only non-empty words are validated
         let model = RatingSubmissionModel(
             itemStableId: "bullseye-001-0",
             starRating: 5,
             words: ["beautiful", "", "smooth", "reliable", "stunning"]
         )
 
-        // When/Then
-        XCTAssertFalse(model.isValid)
-        XCTAssertTrue(model.validationErrors.contains("All words must be non-empty"))
+        // When/Then - 4 non-empty words is valid (0-5 allowed)
+        #expect(model.isValid)
+        #expect(model.validationErrors.isEmpty)
     }
 
+    @Test("IsValid WithWordTooLong ReturnsFalse")
     func testIsValid_WithWordTooLong_ReturnsFalse() {
         // Given
         let longWord = String(repeating: "a", count: 31)
@@ -180,10 +194,11 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // When/Then
-        XCTAssertFalse(model.isValid)
-        XCTAssertTrue(model.validationErrors.contains("Words must be 30 characters or less"))
+        #expect(!model.isValid)
+        #expect(model.validationErrors.contains("Words must be 30 characters or less"))
     }
 
+    @Test("IsValid WithDuplicateWords ReturnsFalse")
     func testIsValid_WithDuplicateWords_ReturnsFalse() {
         // Given
         let model = RatingSubmissionModel(
@@ -193,12 +208,13 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // When/Then
-        XCTAssertFalse(model.isValid)
-        XCTAssertTrue(model.validationErrors.contains("Words must be unique"))
+        #expect(!model.isValid)
+        #expect(model.validationErrors.contains("Words must be unique"))
     }
 
     // MARK: - Profanity Filter Tests
 
+    @Test("ContainsProfanity WithCleanWords ReturnsFalse")
     func testContainsProfanity_WithCleanWords_ReturnsFalse() {
         // Given
         let model = RatingSubmissionModel(
@@ -208,9 +224,10 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // When/Then
-        XCTAssertFalse(model.containsProfanity)
+        #expect(!model.containsProfanity)
     }
 
+    @Test("ContainsProfanity WithProfaneWord ReturnsTrue")
     func testContainsProfanity_WithProfaneWord_ReturnsTrue() {
         // Given - using a mild example for testing
         let model = RatingSubmissionModel(
@@ -220,11 +237,12 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // When/Then
-        XCTAssertTrue(model.containsProfanity)
+        #expect(model.containsProfanity)
     }
 
     // MARK: - Equatable Tests
 
+    @Test("Equatable SameData ReturnsTrue")
     func testEquatable_SameData_ReturnsTrue() {
         // Given
         let date = Date()
@@ -242,9 +260,10 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // When/Then
-        XCTAssertEqual(model1, model2)
+        #expect(model1 == model2)
     }
 
+    @Test("Equatable DifferentStarRating ReturnsFalse")
     func testEquatable_DifferentStarRating_ReturnsFalse() {
         // Given
         let model1 = RatingSubmissionModel(
@@ -259,11 +278,12 @@ final class RatingSubmissionModelTests: XCTestCase {
         )
 
         // When/Then
-        XCTAssertNotEqual(model1, model2)
+        #expect(model1 != model2)
     }
 
     // MARK: - Codable Tests
 
+    @Test("Codable EncodeDecode PreservesData")
     func testCodable_EncodeDecode_PreservesData() throws {
         // Given
         let original = RatingSubmissionModel(
@@ -277,8 +297,8 @@ final class RatingSubmissionModelTests: XCTestCase {
         let decoded = try JSONDecoder().decode(RatingSubmissionModel.self, from: encoded)
 
         // Then
-        XCTAssertEqual(decoded.itemStableId, original.itemStableId)
-        XCTAssertEqual(decoded.starRating, original.starRating)
-        XCTAssertEqual(decoded.words, original.words)
+        #expect(decoded.itemStableId == original.itemStableId)
+        #expect(decoded.starRating == original.starRating)
+        #expect(decoded.words == original.words)
     }
 }

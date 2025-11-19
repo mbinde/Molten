@@ -584,7 +584,7 @@ struct InventorySharingAPIClientTests {
         // Verify path includes /v1/
         let request = try #require(mockSession.lastRequest)
         let url = try #require(request.url)
-        #expect(url.path == "/v1/share")
+        #expect(url.path == "/api/v1/share")
     }
 
     @Test("Download endpoint uses /v1/share/{shareCode} path")
@@ -615,7 +615,7 @@ struct InventorySharingAPIClientTests {
         // Verify path includes /v1/
         let request = try #require(mockSession.lastRequest)
         let url = try #require(request.url)
-        #expect(url.path == "/v1/share/\(shareCode)")
+        #expect(url.path == "/api/v1/share/\(shareCode)")
     }
 
     @Test("Delete endpoint uses /v1/share/{shareCode} path")
@@ -642,7 +642,7 @@ struct InventorySharingAPIClientTests {
         // Verify path includes /v1/
         let request = try #require(mockSession.lastRequest)
         let url = try #require(request.url)
-        #expect(url.path == "/v1/share/\(shareCode)")
+        #expect(url.path == "/api/v1/share/\(shareCode)")
         #expect(request.httpMethod == "DELETE")
     }
 
@@ -677,7 +677,7 @@ struct InventorySharingAPIClientTests {
         // Verify path includes /v1/
         let request = try #require(mockSession.lastRequest)
         let url = try #require(request.url)
-        #expect(url.path == "/v1/share/\(shareCode)")
+        #expect(url.path == "/api/v1/share/\(shareCode)")
         #expect(request.httpMethod == "PUT")
     }
 }

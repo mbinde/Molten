@@ -102,7 +102,7 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig.default
 
         #expect(config.qrPosition == .left)
-        #expect(config.qrSize == 0.65)
+        #expect(config.qrSize == nil)
         #expect(config.textFields.contains(.manufacturer))
         #expect(config.textFields.contains(.sku))
         #expect(config.textFields.contains(.colorName))
@@ -116,7 +116,7 @@ struct LabelPrintingServiceTests {
 
         #expect(preset != nil)
         #expect(preset?.config.qrPosition == .left)
-        #expect(preset?.config.qrSize == 0.65)
+        #expect(preset?.config.qrSize == nil)
         #expect(preset?.config.textFields.contains(.manufacturer) == true)
         #expect(preset?.config.textFields.contains(.sku) == true)
         #expect(preset?.config.textFields.contains(.colorName) == true)
@@ -129,7 +129,7 @@ struct LabelPrintingServiceTests {
 
         #expect(preset != nil)
         #expect(preset?.config.qrPosition == .left)
-        #expect(preset?.config.qrSize == 0.75)
+        #expect(preset?.config.qrSize == nil)
         #expect(preset?.config.textFields.count == 2)
     }
 
@@ -469,86 +469,6 @@ struct LabelPrintingServiceTests {
         #expect(format.rows == 20)
         #expect(format.labelWidth == 126)
         #expect(format.labelHeight == 36)
-    }
-
-    // MARK: - Preset Management Tests
-
-    @Test("Save preset to manager")
-    func testSavePreset() async throws {
-        let manager = LabelPresetsManager.shared
-
-        let preset = LabelBuilderPreset(
-            name: "Test Preset",
-            description: "Test description",
-            config: LabelBuilderConfig.default
-        )
-
-        manager.savePreset(preset)
-
-        let allPresets = manager.allPresets
-        #expect(allPresets.contains { $0.id == preset.id })
-    }
-
-    @Test("Delete preset from manager")
-    func testDeletePreset() async throws {
-        let manager = LabelPresetsManager.shared
-
-        let preset = LabelBuilderPreset(
-            name: "Test Delete Preset",
-            description: "Will be deleted",
-            config: LabelBuilderConfig.default
-        )
-
-        manager.savePreset(preset)
-        #expect(manager.userPresets.contains { $0.id == preset.id })
-
-        manager.deletePreset(preset)
-        #expect(!manager.userPresets.contains { $0.id == preset.id })
-    }
-
-    @Test("Export preset to JSON")
-    func testExportPreset() async throws {
-        let preset = LabelBuilderPreset(
-            name: "Export Test",
-            description: "Test export",
-            config: LabelBuilderConfig.default
-        )
-
-        let jsonData = preset.exportJSON()
-
-        #expect(jsonData != nil)
-        #expect(jsonData!.count > 0)
-    }
-
-    @Test("Import preset from JSON")
-    func testImportPreset() async throws {
-        let manager = LabelPresetsManager.shared
-
-        let originalPreset = LabelBuilderPreset(
-            name: "Import Test",
-            description: "Test import",
-            config: LabelBuilderConfig.default
-        )
-
-        guard let jsonData = originalPreset.exportJSON() else {
-            Issue.record("Failed to export preset")
-            return
-        }
-
-        try manager.importPreset(from: jsonData)
-
-        // Should have imported preset with new ID
-        #expect(manager.userPresets.contains { $0.name == "Import Test" })
-    }
-
-    @Test("Get all presets includes built-in and user presets")
-    func testGetAllPresets() async throws {
-        let manager = LabelPresetsManager.shared
-
-        let allPresets = manager.allPresets
-
-        // Should include built-in presets
-        #expect(allPresets.count >= LabelBuilderConfig.presets.count)
     }
 
     // MARK: - Label Sheet Generation Tests

@@ -670,7 +670,7 @@ struct InventoryTrackingServiceTests {
         #expect(completeItem.tags.count <= 2)
     }
 
-    @Test("Add zero quantity inventory")
+    @Test("Add zero quantity inventory throws error")
     func testAddZeroQuantityInventory() async throws {
         let service = deps.inventoryTrackingService
 
@@ -686,13 +686,13 @@ struct InventoryTrackingServiceTests {
 
         _ = try await service.createCompleteItem(glassItem)
 
-        let inventoryRecord = try await service.addInventory(
-            quantity: 0.0,
-            type: "rod",
-            toItem: stableId
-        )
-
-        #expect(inventoryRecord.quantity == 0.0)
+        await #expect(throws: InventoryTrackingServiceError.self) {
+            try await service.addInventory(
+                quantity: 0.0,
+                type: "rod",
+                toItem: stableId
+            )
+        }
     }
 
     @Test("Search with empty text returns results")

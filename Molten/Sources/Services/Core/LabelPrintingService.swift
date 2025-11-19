@@ -148,7 +148,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.25,  // 0.156" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5162 (Address Labels)
@@ -165,7 +167,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.25,  // 0.156" × 72
         topMargin: 60,  // 0.833" × 72
         horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5164 (Shipping Labels)
@@ -182,7 +186,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.25,  // 0.156" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5159 (Address Labels)
@@ -199,7 +205,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.25,  // 0.156" × 72
         topMargin: 18,  // 0.25" × 72
         horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     // MARK: - Small Labels (High Density)
@@ -218,7 +226,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 13.5,  // 0.188" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 9,  // 0.125" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5261 (Address Labels - Same as 5161)
@@ -235,7 +245,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.25,  // 0.156" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5262 (Address Labels - Same as 5162)
@@ -252,7 +264,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.25,  // 0.156" × 72
         topMargin: 60,  // 0.835" × 72
         horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5263 (Shipping Labels - Same as 5163)
@@ -269,7 +283,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 12.25,  // 0.17" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 11.5,  // 0.16" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5264 (Shipping Labels - Same as 5164)
@@ -286,7 +302,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.25,  // 0.156" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5267 (Return Address - Same as 5167)
@@ -303,7 +321,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 21.6,  // 0.3" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 21.6,  // 0.3" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     // MARK: - Inkjet Labels (8xxx Series)
@@ -322,7 +342,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 13.5,  // 0.188" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 9,  // 0.125" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 8161 (Address Labels - Inkjet)
@@ -339,7 +361,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.25,  // 0.156" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 8162 (Address Labels - Inkjet)
@@ -356,7 +380,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.25,  // 0.156" × 72
         topMargin: 60,  // 0.833" × 72
         horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 8163 (Shipping Labels - Inkjet)
@@ -373,7 +399,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 12.25,  // 0.17" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 11.5,  // 0.16" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 8164 (Shipping Labels - Inkjet)
@@ -390,7 +418,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.25,  // 0.156" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 8167 (Return Address - Inkjet)
@@ -407,7 +437,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 21.6,  // 0.3" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 21.6,  // 0.3" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     // MARK: - Specialty Labels
@@ -426,7 +458,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 36,  // 0.5" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 36,  // 0.5" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5960 (Address Labels)
@@ -443,7 +477,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 13.5,  // 0.188" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 9,  // 0.125" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5961 (Address Labels)
@@ -460,7 +496,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.25,  // 0.156" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5962 (Address Labels)
@@ -477,7 +515,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.25,  // 0.156" × 72
         topMargin: 60,  // 0.833" × 72
         horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5963 (Shipping Labels)
@@ -494,7 +534,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 12.25,  // 0.17" × 72
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 11.5,  // 0.16" × 72
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     // MARK: - Name Badge Labels
@@ -513,7 +555,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 27,  // 0.375" × 72
         topMargin: 45,  // 0.625" × 72
         horizontalGap: 18,  // 0.25" × 72
-        verticalGap: 18  // 0.25" × 72
+        verticalGap: 18,  // 0.25" × 72
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 6870 (Durable ID Labels)
@@ -530,7 +574,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 27,  // 0.375" × 72
         topMargin: 45,  // 0.625" × 72
         horizontalGap: 36,  // 0.5" × 72
-        verticalGap: 18  // 0.25" × 72
+        verticalGap: 18,  // 0.25" × 72
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 8371 (Business Cards)
@@ -547,7 +593,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 27,  // Calculated from sheet width
         topMargin: 36,  // 0.5" × 72
         horizontalGap: 0,
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5165 (Full Sheet Labels)
@@ -564,7 +612,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 0,
         topMargin: 0,
         horizontalGap: 0,
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 8165 (Full Sheet Labels - Inkjet)
@@ -581,7 +631,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 0,
         topMargin: 0,
         horizontalGap: 0,
-        verticalGap: 0
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     // MARK: - Laser Labels (55xx Series)
@@ -599,7 +651,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 13.54,
         topMargin: 36.00,
         horizontalGap: 9.00,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5512 (Laser Address Labels)
@@ -615,7 +669,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.23,
         topMargin: 59.98,
         horizontalGap: 13.54,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5513 (Laser Shipping Labels)
@@ -631,7 +687,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 12.24,
         topMargin: 36.00,
         horizontalGap: 11.52,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5514 (Laser Shipping Labels)
@@ -647,7 +705,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.23,
         topMargin: 36.00,
         horizontalGap: 13.54,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5516 (Laser Half Sheet Labels)
@@ -663,7 +723,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 2.88,
         topMargin: 2.88,
         horizontalGap: 0.00,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5520 (Laser Address Labels)
@@ -679,7 +741,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 13.54,
         topMargin: 36.00,
         horizontalGap: 9.00,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5522 (Laser Address Labels)
@@ -695,7 +759,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.23,
         topMargin: 59.98,
         horizontalGap: 13.54,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5523 (Laser Shipping Labels)
@@ -711,7 +777,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 12.24,
         topMargin: 36.00,
         horizontalGap: 11.52,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5524 (Laser Shipping Labels)
@@ -727,7 +795,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.23,
         topMargin: 36.00,
         horizontalGap: 13.54,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5526 (Laser Shipping Labels)
@@ -743,7 +813,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 18.00,
         topMargin: 36.00,
         horizontalGap: 18.00,
-        verticalGap: 36.00
+        verticalGap: 36.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5560 (Laser Mailing Labels)
@@ -759,7 +831,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 13.54,
         topMargin: 36.00,
         horizontalGap: 9.00,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     // MARK: - Round/Circle Labels
@@ -777,7 +851,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 41.04,
         topMargin: 54.00,
         horizontalGap: 18.00,
-        verticalGap: 18.00
+        verticalGap: 18.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5294 (Round Labels)
@@ -793,7 +869,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 36.00,
         topMargin: 18.00,
         horizontalGap: 18.00,
-        verticalGap: 18.00
+        verticalGap: 18.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5923 (Round Labels)
@@ -809,7 +887,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 41.04,
         topMargin: 54.00,
         horizontalGap: 18.00,
-        verticalGap: 18.00
+        verticalGap: 18.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5930 (Round Labels)
@@ -825,7 +905,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 54.00,
         topMargin: 27.00,
         horizontalGap: 27.00,
-        verticalGap: 9.00
+        verticalGap: 9.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     // MARK: - File Folder Labels
@@ -843,7 +925,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.23,
         topMargin: 18.00,
         horizontalGap: 0.00,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 5777 (File Folder Labels)
@@ -859,7 +943,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.23,
         topMargin: 18.00,
         horizontalGap: 0.00,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     // MARK: - Durable/Ultra Duty Labels
@@ -877,7 +963,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 27.00,
         topMargin: 45.00,
         horizontalGap: 36.00,
-        verticalGap: 18.00
+        verticalGap: 18.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 6873 (Ultra Duty Labels)
@@ -893,7 +981,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 27.00,
         topMargin: 54.00,
         horizontalGap: 27.00,
-        verticalGap: 27.00
+        verticalGap: 27.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 6874 (Ultra Duty Labels)
@@ -909,7 +999,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 27.00,
         topMargin: 45.00,
         horizontalGap: 18.00,
-        verticalGap: 18.00
+        verticalGap: 18.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     // MARK: - Additional Inkjet Labels (82xx, 84xx, 86xx, 87xx)
@@ -927,7 +1019,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 13.54,
         topMargin: 36.00,
         horizontalGap: 9.00,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 8253 (Inkjet Shipping Labels)
@@ -943,7 +1037,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 12.24,
         topMargin: 36.00,
         horizontalGap: 11.52,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 8460 (Inkjet Address Labels)
@@ -959,7 +1055,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.23,
         topMargin: 36.00,
         horizontalGap: 13.54,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 8461 (Inkjet Address Labels)
@@ -975,7 +1073,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.23,
         topMargin: 36.00,
         horizontalGap: 13.54,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 8462 (Inkjet Address Labels)
@@ -991,7 +1091,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.23,
         topMargin: 59.98,
         horizontalGap: 13.54,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 8660 (Inkjet Address Labels)
@@ -1007,7 +1109,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 13.54,
         topMargin: 36.00,
         horizontalGap: 9.00,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 8760 (Inkjet Address Labels)
@@ -1023,7 +1127,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 11.23,
         topMargin: 36.00,
         horizontalGap: 13.54,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     // MARK: - Multipurpose Labels
@@ -1041,7 +1147,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 54.00,
         topMargin: 40.50,
         horizontalGap: 54.00,
-        verticalGap: 0.00
+        verticalGap: 0.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     /// Avery 6464 (Multipurpose Labels)
@@ -1057,7 +1165,9 @@ struct AveryFormat: Equatable, Hashable {
         leftMargin: 27.00,
         topMargin: 54.00,
         horizontalGap: 27.00,
-        verticalGap: 27.00
+        verticalGap: 27.00,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.65
     )
 
     // MARK: - All Available Formats

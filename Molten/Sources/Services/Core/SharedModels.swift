@@ -338,6 +338,7 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
     let image_url: String?
     let image_path: String?
     let image_thumb_path: String?
+    let dominant_colors: [String]?
     let itemType: CatalogItemType
     let coe: Int32?  // Only for glass items
 
@@ -356,6 +357,7 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.image_url = glassItem.image_url
         self.image_path = glassItem.image_path
         self.image_thumb_path = glassItem.image_thumb_path
+        self.dominant_colors = glassItem.dominant_colors
         self.itemType = .glass
         self.coe = glassItem.coe
     }
@@ -373,6 +375,7 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.image_url = coatingItem.image_url
         self.image_path = coatingItem.image_path
         self.image_thumb_path = nil  // Coatings don't have thumbnails yet
+        self.dominant_colors = nil  // Coatings don't have dominant colors
         self.itemType = .coating
         self.coe = nil  // Coatings don't have COE
     }
@@ -390,6 +393,7 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.image_url = toolItem.image_url
         self.image_path = toolItem.image_path
         self.image_thumb_path = nil  // Tools don't have thumbnails yet
+        self.dominant_colors = nil  // Tools don't have dominant colors
         self.itemType = .tool
         self.coe = nil  // Tools don't have COE
     }

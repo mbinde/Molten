@@ -216,6 +216,7 @@ class FriendInventoryViewModel {
                         name: catalogItem.glassItem.name,
                         imagePath: catalogItem.glassItem.image_path,
                         imageThumbPath: catalogItem.glassItem.image_thumb_path,
+                        dominantColors: catalogItem.glassItem.dominant_colors,
                         tags: catalogItem.allTags,
                         coe: catalogItem.glassItem.coe
                     )
@@ -373,6 +374,7 @@ class FriendInventoryViewModel {
                         name: myItem.catalogItem.name,
                         imagePath: myItem.catalogItem.image_path,
                         imageThumbPath: myItem.catalogItem.image_thumb_path,
+                        dominantColors: myItem.catalogItem.dominant_colors,
                         tags: myItem.allTags,
                         coe: myItem.catalogItem.coe ?? 0
                     )
@@ -623,6 +625,7 @@ struct CatalogData {
     let name: String
     let imagePath: String?
     let imageThumbPath: String?
+    let dominantColors: [String]?
     let tags: [String]
     let coe: Int32
 }

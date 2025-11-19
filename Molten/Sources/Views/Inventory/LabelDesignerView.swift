@@ -35,6 +35,7 @@ struct LabelDesignerView: View {
 
     // Advanced options collapsed state
     @State private var showAdvancedOptions: Bool = false
+    @State private var showAdvancedLayoutOptions: Bool = false
 
     // Preset management
     @State private var showingPresetSheet = false
@@ -46,6 +47,12 @@ struct LabelDesignerView: View {
     @State private var isPresetModified: Bool = false
     @State private var presetToDelete: LabelBuilderPreset?
     @State private var showingDeleteConfirmation = false
+    @State private var showingUnsavedChangesAlert = false
+    @State private var isLoadingPreset: Bool = false  // Flag to suppress onChange during loading
+    @State private var loadingTask: Task<Void, Never>?  // Track the loading task so we can cancel it
+    @State private var showingEditPreset = false
+    @State private var editingPresetName = ""
+    @State private var editingPresetDescription = ""
 
     // CRITICAL: Cache service instance in @State to prevent recreation on every body evaluation
     @State private var labelService: LabelPrintingService?
@@ -69,6 +76,31 @@ struct LabelDesignerView: View {
             .sheet(isPresented: $showingSavePreset) {
                 savePresetSheet
             }
+            .sheet(isPresented: $showingEditPreset) {
+                editPresetSheet
+            }
+            .alert("Unsaved Changes", isPresented: $showingUnsavedChangesAlert) {
+                Button("Discard Changes", role: .destructive) {
+                    dismiss()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                if let presetName = currentPresetName {
+                    Text("You have unsaved changes to '\(presetName)'. Discard them?")
+                } else {
+                    Text("You have unsaved changes. Discard them?")
+                }
+            }
+            .alert("Delete Preset?", isPresented: $showingDeleteConfirmation, presenting: presetToDelete) { preset in
+                Button("Cancel", role: .cancel) {
+                    presetToDelete = nil
+                }
+                Button("Delete", role: .destructive) {
+                    deletePreset(preset)
+                }
+            } message: { preset in
+                Text("Are you sure you want to delete '\(preset.name)'? This action cannot be undone.")
+            }
             .task {
                 print("🏷️ LabelDesignerView: .task called")
                 if labelService == nil {
@@ -90,6 +122,10 @@ struct LabelDesignerView: View {
                 saveSettings()
             }
             .onChange(of: fontScale) { _, _ in
+                // Mark as modified if not currently loading
+                if !isLoadingPreset && currentPresetName != nil {
+                    isPresetModified = true
+                }
                 saveSettings()
             }
             .onChange(of: startRow) { _, _ in
@@ -99,14 +135,30 @@ struct LabelDesignerView: View {
                 saveSettings()
             }
             .onChange(of: offsetX) { _, _ in
+                // Mark as modified if not currently loading
+                if !isLoadingPreset && currentPresetName != nil {
+                    isPresetModified = true
+                }
                 saveSettings()
             }
             .onChange(of: offsetY) { _, _ in
+                // Mark as modified if not currently loading
+                if !isLoadingPreset && currentPresetName != nil {
+                    isPresetModified = true
+                }
                 saveSettings()
             }
             .onChange(of: builderConfig) { _, _ in
-                // Mark preset as modified if we have a current preset loaded
-                if currentPresetName != nil {
+                // Cancel any pending loading task (user made a change)
+                loadingTask?.cancel()
+                loadingTask = nil
+
+                // If we were loading, stop that now
+                if isLoadingPreset {
+                    isLoadingPreset = false
+                    // Don't mark as modified - this is the loading completing
+                } else if currentPresetName != nil {
+                    // User made a change after loading completed
                     isPresetModified = true
                 }
                 saveSettings()
@@ -159,9 +211,6 @@ struct LabelDesignerView: View {
                     // Current preset name display
                     if let presetName = currentPresetName {
                         HStack {
-                            Text("Current:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
                             Text(presetName)
                                 .font(.subheadline)
                                 .fontWeight(.medium)
@@ -173,13 +222,29 @@ struct LabelDesignerView: View {
                             }
                             Spacer()
 
+                            // Edit button (only for user presets, not built-in)
+                            if !LabelBuilderConfig.presets.contains(where: { $0.name == presetName }) {
+                                Button {
+                                    // Find the preset to edit
+                                    if let preset = presetsManager.allPresets.first(where: { $0.name == presetName }) {
+                                        editingPresetName = preset.name
+                                        editingPresetDescription = preset.description
+                                        showingEditPreset = true
+                                    }
+                                } label: {
+                                    Image(systemName: "pencil")
+                                        .foregroundColor(.blue)
+                                        .font(.caption)
+                                }
+                                .buttonStyle(.borderless)
+                            }
+
                             // Delete button (only for user presets, not built-in)
                             if !LabelBuilderConfig.presets.contains(where: { $0.name == presetName }) {
                                 Button(role: .destructive) {
                                     // Find the preset to delete
                                     if let preset = presetsManager.allPresets.first(where: { $0.name == presetName }) {
-                                        presetToDelete = preset
-                                        showingDeleteConfirmation = true
+                                        requestDeletePreset(preset)
                                     }
                                 } label: {
                                     Image(systemName: "trash")
@@ -192,12 +257,27 @@ struct LabelDesignerView: View {
                         .padding(.vertical, 4)
                     }
 
+                    // Overwrite button (only when preset is modified and not a built-in preset)
+                    if isPresetModified,
+                       let presetName = currentPresetName,
+                       !LabelBuilderConfig.presets.contains(where: { $0.name == presetName }) {
+                        Button {
+                            overwriteCurrentPreset()
+                        } label: {
+                            HStack {
+                                Image(systemName: "arrow.clockwise")
+                                Text("Overwrite Current Preset")
+                            }
+                        }
+                        .foregroundColor(.orange)
+                    }
+
                     Button {
                         showingSavePreset = true
                     } label: {
                         HStack {
                             Image(systemName: "square.and.arrow.down")
-                            Text("Save Current as Preset")
+                            Text("Save Current as a New Preset")
                         }
                     }
                 } header: {
@@ -210,11 +290,27 @@ struct LabelDesignerView: View {
                 labelPreviewSection
                 labelBuilderSection
 
-                // Second preview before Advanced Options
-                labelPreviewSection
+                // Second preview before Advanced Options (just the image)
+                if let previewData = sampleLabelData {
+                    Section {
+                        LabelPreviewView(
+                            format: selectedFormat,
+                            config: builderConfig,
+                            sampleData: previewData,
+                            fontScale: fontScale,
+                            offsetX: offsetX,
+                            offsetY: offsetY
+                        )
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                    }
+                }
 
-                // Advanced Layout Options Section
+                // Advanced Layout Options Section (collapsible)
                 Section {
+                    DisclosureGroup(
+                        isExpanded: $showAdvancedLayoutOptions,
+                        content: {
                     VStack(alignment: .leading, spacing: 16) {
                         // Manufacturer Image Position
                         VStack(alignment: .leading, spacing: 6) {
@@ -278,12 +374,127 @@ struct LabelDesignerView: View {
                                 .padding(.top, 8)
                             }
                         }
+
+                        // Per-field formatting controls
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Field Formatting")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .padding(.top, 8)
+
+                            ForEach(builderConfig.textFields, id: \.self) { field in
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(field.rawValue.capitalized)
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+
+                                    // Get current format or default
+                                    let currentFormat = builderConfig.format(for: field)
+
+                                    // Style picker (plain/bold/italic)
+                                    HStack(spacing: 12) {
+                                        Text("Style:")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+
+                                        Button {
+                                            var format = builderConfig.format(for: field)
+                                            format.bold = false
+                                            format.italic = false
+                                            builderConfig.fieldFormats[field] = format
+                                        } label: {
+                                            Text("Plain")
+                                                .font(.caption)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .background(!currentFormat.bold && !currentFormat.italic ? Color.blue : Color.clear)
+                                                .foregroundColor(!currentFormat.bold && !currentFormat.italic ? .white : .primary)
+                                                .cornerRadius(4)
+                                        }
+                                        .buttonStyle(.plain)
+
+                                        Button {
+                                            var format = builderConfig.format(for: field)
+                                            format.bold = true
+                                            format.italic = false
+                                            builderConfig.fieldFormats[field] = format
+                                        } label: {
+                                            Text("Bold")
+                                                .font(.caption)
+                                                .fontWeight(.bold)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .background(currentFormat.bold && !currentFormat.italic ? Color.blue : Color.clear)
+                                                .foregroundColor(currentFormat.bold && !currentFormat.italic ? .white : .primary)
+                                                .cornerRadius(4)
+                                        }
+                                        .buttonStyle(.plain)
+
+                                        Button {
+                                            var format = builderConfig.format(for: field)
+                                            format.bold = false
+                                            format.italic = true
+                                            builderConfig.fieldFormats[field] = format
+                                        } label: {
+                                            Text("Italic")
+                                                .font(.caption)
+                                                .italic()
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .background(!currentFormat.bold && currentFormat.italic ? Color.blue : Color.clear)
+                                                .foregroundColor(!currentFormat.bold && currentFormat.italic ? .white : .primary)
+                                                .cornerRadius(4)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+
+                                    // Font size slider
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        HStack {
+                                            Text("Font Size")
+                                                .font(.caption)
+                                            Spacer()
+                                            Text("\(Int(currentFormat.fontSize))pt")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                                .monospacedDigit()
+                                        }
+
+                                        Slider(
+                                            value: Binding(
+                                                get: { builderConfig.format(for: field).fontSize },
+                                                set: { newValue in
+                                                    var format = builderConfig.format(for: field)
+                                                    format.fontSize = newValue
+                                                    builderConfig.fieldFormats[field] = format
+                                                }
+                                            ),
+                                            in: 5...14,
+                                            step: 0.5
+                                        )
+                                        .tint(.blue)
+
+                                        HStack {
+                                            Text("5pt")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                            Spacer()
+                                            Text("14pt")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+
+                                    Divider()
+                                }
+                            }
+                        }
                     }
-                } header: {
-                    Text("Advanced Layout Options")
-                } footer: {
-                    Text("Configure manufacturer logos and other advanced layout settings")
-                        .font(.caption)
+                        },
+                        label: {
+                            Label("Advanced Layout Options", systemImage: "slider.horizontal.3")
+                        }
+                    )
                 }
 
                 // Advanced Options Section (collapsed by default)
@@ -463,7 +674,11 @@ struct LabelDesignerView: View {
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button("Cancel") {
-                dismiss()
+                if isPresetModified {
+                    showingUnsavedChangesAlert = true
+                } else {
+                    dismiss()
+                }
             }
         }
 
@@ -482,42 +697,25 @@ struct LabelDesignerView: View {
         PresetSelectionSheet(
             presets: presetsManager.allPresets,
             onSelect: { preset in
-                // Auto-save current preset if modified before switching
-                if isPresetModified, let currentName = currentPresetName {
-                    let autoSavedPreset = LabelBuilderPreset(
-                        name: currentName,
-                        description: "Auto-saved preset",
-                        config: builderConfig
-                    )
-                    presetsManager.savePreset(autoSavedPreset)
-                }
-
-                // Load new preset
+                // Load new preset (suppress onChange marking as modified)
+                isLoadingPreset = true
                 builderConfig = preset.config
                 currentPresetName = preset.name
-                isPresetModified = false
                 showingPresetSheet = false
+
+                // Reset flags after a short delay to ensure onChange has processed
+                // Store the task so we can cancel it if user makes changes
+                loadingTask = Task {
+                    try? await Task.sleep(for: .milliseconds(10))
+                    isLoadingPreset = false
+                    isPresetModified = false
+                    loadingTask = nil
+                }
             },
             onDelete: { preset in
-                presetToDelete = preset
-                showingDeleteConfirmation = true
+                requestDeletePreset(preset)
             }
         )
-        .alert("Delete Preset?", isPresented: $showingDeleteConfirmation, presenting: presetToDelete) { preset in
-            Button("Cancel", role: .cancel) {
-                presetToDelete = nil
-            }
-            Button("Delete", role: .destructive) {
-                presetsManager.deletePreset(preset)
-                if currentPresetName == preset.name {
-                    currentPresetName = nil
-                    isPresetModified = false
-                }
-                presetToDelete = nil
-            }
-        } message: { preset in
-            Text("Are you sure you want to delete '\(preset.name)'? This action cannot be undone.")
-        }
     }
 
     @ViewBuilder
@@ -543,6 +741,43 @@ struct LabelDesignerView: View {
                 newPresetName = ""
                 newPresetDescription = ""
                 showingSavePreset = false
+            }
+        )
+    }
+
+    private var editPresetSheet: some View {
+        SavePresetSheet(
+            presetName: $editingPresetName,
+            presetDescription: $editingPresetDescription,
+            isEditing: true,
+            onSave: {
+                // Find the existing preset
+                guard let presetName = currentPresetName,
+                      let existingPreset = presetsManager.allPresets.first(where: { $0.name == presetName }) else {
+                    showingEditPreset = false
+                    return
+                }
+
+                // Create updated preset with new name/description but same config
+                let updatedPreset = LabelBuilderPreset(
+                    id: existingPreset.id,
+                    name: editingPresetName.isEmpty ? existingPreset.name : editingPresetName,
+                    description: editingPresetDescription,
+                    config: existingPreset.config,
+                    createdAt: existingPreset.createdAt,
+                    modifiedAt: Date()
+                )
+
+                presetsManager.savePreset(updatedPreset)
+                currentPresetName = updatedPreset.name
+                editingPresetName = ""
+                editingPresetDescription = ""
+                showingEditPreset = false
+            },
+            onCancel: {
+                editingPresetName = ""
+                editingPresetDescription = ""
+                showingEditPreset = false
             }
         )
     }
@@ -989,6 +1224,53 @@ struct LabelDesignerView: View {
         }
     }
 
+    // MARK: - Preset Management
+
+    /// Request deletion of a preset (shows confirmation alert)
+    private func requestDeletePreset(_ preset: LabelBuilderPreset) {
+        presetToDelete = preset
+        showingDeleteConfirmation = true
+    }
+
+    /// Actually delete the preset (called after confirmation)
+    private func deletePreset(_ preset: LabelBuilderPreset) {
+        presetsManager.deletePreset(preset)
+
+        // If we deleted the currently loaded preset, clear it
+        if currentPresetName == preset.name {
+            currentPresetName = nil
+            isPresetModified = false
+        }
+
+        presetToDelete = nil
+    }
+
+    /// Overwrite the current preset with current settings
+    private func overwriteCurrentPreset() {
+        guard let presetName = currentPresetName else { return }
+
+        // Find the existing preset
+        guard let existingPreset = presetsManager.allPresets.first(where: { $0.name == presetName }) else {
+            return
+        }
+
+        // Create updated preset with same ID and name but new config
+        let updatedPreset = LabelBuilderPreset(
+            id: existingPreset.id,
+            name: existingPreset.name,
+            description: existingPreset.description,
+            config: builderConfig,
+            createdAt: existingPreset.createdAt,
+            modifiedAt: Date()
+        )
+
+        // Update the preset
+        presetsManager.savePreset(updatedPreset)
+
+        // Clear the modified flag
+        isPresetModified = false
+    }
+
     // MARK: - Format Display Helpers
 
     /// Format display name for picker (shows count and dimensions)
@@ -1057,7 +1339,10 @@ struct LabelDesignerView: View {
         defaults.set(format.name, forKey: "labelPrinting.lastUsedFormat")
     }
 
-    private func loadSettings() {
+    private func loadSettings() async {
+        // Suppress onChange marking as modified during load
+        isLoadingPreset = true
+
         let defaults = UserDefaults.standard
         fontScale = defaults.double(forKey: "\(settingsKey).fontScale")
         if fontScale == 0 { fontScale = 1.0 }  // Default if never set
@@ -1071,15 +1356,20 @@ struct LabelDesignerView: View {
         if let configData = defaults.data(forKey: "\(settingsKey).builderConfig"),
            let savedConfig = try? JSONDecoder().decode(LabelBuilderConfig.self, from: configData) {
             builderConfig = savedConfig
-            isPresetModified = false
         } else {
             // No saved config - default to "Information Dense" preset
             if let informationDensePreset = LabelBuilderConfig.presets.first(where: { $0.name == "Information Dense" }) {
                 builderConfig = informationDensePreset.config
                 currentPresetName = informationDensePreset.name
-                isPresetModified = false
             }
         }
+
+        // Wait for next runloop to ensure all onChange handlers have finished
+        try? await Task.sleep(for: .milliseconds(10))
+
+        // After all loading is complete, reset flags
+        isLoadingPreset = false
+        isPresetModified = false
     }
 
     private func saveSettings() {
@@ -1114,19 +1404,7 @@ private struct PresetSelectionSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                // Built-in presets
-                let builtInPresets = presets.filter { preset in
-                    LabelBuilderConfig.presets.contains(where: { $0.id == preset.id })
-                }
-                if !builtInPresets.isEmpty {
-                    Section("Built-in Presets") {
-                        ForEach(builtInPresets) { preset in
-                            PresetRow(preset: preset, onSelect: onSelect)
-                        }
-                    }
-                }
-
-                // User presets
+                // User presets (shown first)
                 let userPresets = presets.filter { preset in
                     !LabelBuilderConfig.presets.contains(where: { $0.id == preset.id })
                 }
@@ -1139,6 +1417,18 @@ private struct PresetSelectionSheet: View {
                             indexSet.forEach { index in
                                 onDelete(userPresets[index])
                             }
+                        }
+                    }
+                }
+
+                // Built-in presets (shown second)
+                let builtInPresets = presets.filter { preset in
+                    LabelBuilderConfig.presets.contains(where: { $0.id == preset.id })
+                }
+                if !builtInPresets.isEmpty {
+                    Section("Built-in Presets") {
+                        ForEach(builtInPresets) { preset in
+                            PresetRow(preset: preset, onSelect: onSelect)
                         }
                     }
                 }
@@ -1199,6 +1489,7 @@ private struct PresetRow: View {
 private struct SavePresetSheet: View {
     @Binding var presetName: String
     @Binding var presetDescription: String
+    var isEditing: Bool = false
     let onSave: () -> Void
     let onCancel: () -> Void
 
@@ -1214,12 +1505,14 @@ private struct SavePresetSheet: View {
                 }
 
                 Section {
-                    Text("This will save your current label configuration (QR position, size, and fields) as a preset for quick access later.")
+                    Text(isEditing
+                         ? "Update the name and description for this preset."
+                         : "This will save your current label configuration (QR position, size, and fields) as a preset for quick access later.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
-            .navigationTitle("Save Preset")
+            .navigationTitle(isEditing ? "Edit Preset" : "Save Preset")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

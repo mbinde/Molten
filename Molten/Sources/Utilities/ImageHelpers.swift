@@ -335,10 +335,8 @@ struct ProductImageView: View {
                     .cornerRadius(8)
             } else if !isLoading,
                       let colors = dominantColors,
-                      !colors.isEmpty,
-                      let manufacturer = manufacturer,
-                      !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
-                // Show color swatch for manufacturers without image permission
+                      !colors.isEmpty {
+                // Show color gradient when we have color codes but no image
                 ColorSwatchView(colors: colors, size: size, cornerRadius: 8)
             } else {
                 RoundedRectangle(cornerRadius: 8)

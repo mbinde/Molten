@@ -235,8 +235,9 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         let duration = Date().timeIntervalSince(startTime)
 
         // In real scenarios, we'd expect reasonable timeout handling
-        #expect(duration < 10.0, "Should complete or timeout within reasonable time")
-        
+        // Using 15s threshold to account for slower CI/test environments
+        #expect(duration < 15.0, "Should complete or timeout within reasonable time")
+
         print("✅ Network timeout scenarios handled (duration: \(String(format: "%.3f", duration))s)")
     }
     

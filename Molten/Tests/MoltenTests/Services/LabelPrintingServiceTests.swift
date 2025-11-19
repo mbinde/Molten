@@ -102,7 +102,7 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig.default
 
         #expect(config.qrPosition == .left)
-        #expect(config.qrSize == 0.65)
+        #expect(config.qrSize == nil)
         #expect(config.textFields.contains(.manufacturer))
         #expect(config.textFields.contains(.sku))
         #expect(config.textFields.contains(.colorName))
@@ -116,7 +116,7 @@ struct LabelPrintingServiceTests {
 
         #expect(preset != nil)
         #expect(preset?.config.qrPosition == .left)
-        #expect(preset?.config.qrSize == 0.65)
+        #expect(preset?.config.qrSize == nil)
         #expect(preset?.config.textFields.contains(.manufacturer) == true)
         #expect(preset?.config.textFields.contains(.sku) == true)
         #expect(preset?.config.textFields.contains(.colorName) == true)
@@ -129,7 +129,7 @@ struct LabelPrintingServiceTests {
 
         #expect(preset != nil)
         #expect(preset?.config.qrPosition == .left)
-        #expect(preset?.config.qrSize == 0.75)
+        #expect(preset?.config.qrSize == nil)
         #expect(preset?.config.textFields.count == 2)
     }
 

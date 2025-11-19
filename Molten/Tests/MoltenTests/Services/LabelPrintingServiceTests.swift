@@ -961,8 +961,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.5,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .sku, .colorName, .coe, .location, .owner],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let pdfURL = await service.generateLabelSheet(
@@ -993,8 +995,10 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.7,
+            manufacturerImagePosition: .none,
             textFields: [.manufacturer, .sku],
-            textAlignment: .left
+            textAlignment: .left,
+            fieldFormats: LabelFieldFormat.defaults
         )
 
         let pdfURL = await service.generateLabelSheet(

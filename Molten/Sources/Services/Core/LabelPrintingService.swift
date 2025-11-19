@@ -1589,7 +1589,8 @@ class LabelPresetsManager: ObservableObject {
 
     static let shared = LabelPresetsManager()
 
-    private init(repository: LabelPresetRepository? = nil) {
+    /// Initialize with optional repository (for testing, provide a repository)
+    init(repository: LabelPresetRepository? = nil) {
         // Use provided repository or get from PersistenceController (available at init time)
         self.repository = repository ?? CoreDataLabelPresetRepository(context: PersistenceController.shared.cloudContext)
 
@@ -1599,11 +1600,6 @@ class LabelPresetsManager: ObservableObject {
             // Auto-migrate from UserDefaults if needed
             await migrateFromUserDefaults()
         }
-    }
-
-    /// Initialize with custom repository (for testing)
-    convenience init(repository: LabelPresetRepository) {
-        self.init(repository: repository)
     }
 
     /// Save a new preset or update existing one

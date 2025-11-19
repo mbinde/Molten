@@ -358,46 +358,6 @@ class PersistenceController {
         }
     }
 
-    /// Purge GlassItem persistent history transactions to prevent replay
-    /// Call this after bulk GlassItem loading (like JSON import) completes
-    /// This only deletes persistent HISTORY, not the actual entities
-    func purgeGlassItemHistory() async {
-        let context = container.newBackgroundContext()
-        await context.perform {
-            do {
-                // Fetch all persistent history transactions
-                let fetchRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: Date.distantPast)
-
-                if let historyResult = try context.execute(fetchRequest) as? NSPersistentHistoryResult,
-                   let transactions = historyResult.result as? [NSPersistentHistoryTransaction] {
-
-                    // Filter to only transactions that involve GlassItem or ItemTags
-                    var transactionsToDelete: [NSPersistentHistoryTransaction] = []
-
-                    for transaction in transactions {
-                        if let changes = transaction.changes {
-                            let hasGlassItemChanges = changes.contains { change in
-                                change.changedObjectID.entity.name == "GlassItem" ||
-                                change.changedObjectID.entity.name == "ItemTags"
-                            }
-                            if hasGlassItemChanges {
-                                transactionsToDelete.append(transaction)
-                            }
-                        }
-                    }
-
-                    // Delete only the GlassItem/ItemTags transactions
-                    for transaction in transactionsToDelete {
-                        let deleteRequest = NSPersistentHistoryChangeRequest.deleteHistory(before: transaction.timestamp.addingTimeInterval(0.001))
-                        try context.execute(deleteRequest)
-                    }
-                }
-            } catch {
-                // Silent failure - history purging is not critical
-            }
-        }
-    }
-
     /// Asynchronously initialize the persistent stores
     /// Call this from your app startup code to load stores without blocking the main thread
     /// IMPORTANT: This must be called before using the container!

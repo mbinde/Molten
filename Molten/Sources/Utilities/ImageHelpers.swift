@@ -339,8 +339,16 @@ struct ProductImageView: View {
                 // No permission to show product images - show gradient if we have colors, else show manufacturer logo
                 if let colors = dominantColors, !colors.isEmpty {
                     ColorSwatchView(colors: colors, size: size, cornerRadius: 8)
+                } else if let mfgImage = ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil) {
+                    // Show manufacturer logo
+                    Image(uiImage: mfgImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: size, height: size)
+                        .clipped()
+                        .cornerRadius(8)
                 } else {
-                    // Manufacturer logo was already loaded in loadImageAsync (or gray box if not available)
+                    // No manufacturer logo available
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color(.systemGray5))
                         .frame(width: size, height: size)
@@ -413,14 +421,10 @@ struct ProductImageView: View {
         }
 
         // Step 1: Check if we have permission for product images
-        // If not, fall back to manufacturer logo
+        // If not, don't load anything - let the view logic decide between gradient or manufacturer logo
         if let manufacturer = manufacturer,
            !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
-            // No permission - use manufacturer default image only
-            let image = await Task.detached(priority: .background) {
-                ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
-            }.value
-            loadedImage = image
+            // No permission - leave loadedImage as nil so view can show gradient/logo
             isLoading = false
             return
         }

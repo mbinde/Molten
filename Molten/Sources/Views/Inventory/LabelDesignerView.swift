@@ -730,12 +730,16 @@ struct LabelDesignerView: View {
                     description: newPresetDescription.isEmpty ? "User-created preset" : newPresetDescription,
                     config: builderConfig
                 )
-                presetsManager.savePreset(preset)
-                currentPresetName = presetName
-                isPresetModified = false
-                newPresetName = ""
-                newPresetDescription = ""
-                showingSavePreset = false
+                Task {
+                    try? await presetsManager.savePreset(preset)
+                    await MainActor.run {
+                        currentPresetName = presetName
+                        isPresetModified = false
+                        newPresetName = ""
+                        newPresetDescription = ""
+                        showingSavePreset = false
+                    }
+                }
             },
             onCancel: {
                 newPresetName = ""
@@ -768,11 +772,15 @@ struct LabelDesignerView: View {
                     modifiedAt: Date()
                 )
 
-                presetsManager.savePreset(updatedPreset)
-                currentPresetName = updatedPreset.name
-                editingPresetName = ""
-                editingPresetDescription = ""
-                showingEditPreset = false
+                Task {
+                    try? await presetsManager.savePreset(updatedPreset)
+                    await MainActor.run {
+                        currentPresetName = updatedPreset.name
+                        editingPresetName = ""
+                        editingPresetDescription = ""
+                        showingEditPreset = false
+                    }
+                }
             },
             onCancel: {
                 editingPresetName = ""
@@ -1234,15 +1242,19 @@ struct LabelDesignerView: View {
 
     /// Actually delete the preset (called after confirmation)
     private func deletePreset(_ preset: LabelBuilderPreset) {
-        presetsManager.deletePreset(preset)
+        Task {
+            try? await presetsManager.deletePreset(preset)
 
-        // If we deleted the currently loaded preset, clear it
-        if currentPresetName == preset.name {
-            currentPresetName = nil
-            isPresetModified = false
+            await MainActor.run {
+                // If we deleted the currently loaded preset, clear it
+                if currentPresetName == preset.name {
+                    currentPresetName = nil
+                    isPresetModified = false
+                }
+
+                presetToDelete = nil
+            }
         }
-
-        presetToDelete = nil
     }
 
     /// Overwrite the current preset with current settings
@@ -1265,10 +1277,14 @@ struct LabelDesignerView: View {
         )
 
         // Update the preset
-        presetsManager.savePreset(updatedPreset)
+        Task {
+            try? await presetsManager.savePreset(updatedPreset)
 
-        // Clear the modified flag
-        isPresetModified = false
+            await MainActor.run {
+                // Clear the modified flag
+                isPresetModified = false
+            }
+        }
     }
 
     // MARK: - Format Display Helpers

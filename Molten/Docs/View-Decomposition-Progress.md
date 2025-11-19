@@ -24,36 +24,46 @@
 
 ### 1. SettingsView.swift (1,513 LOC → ~200 LOC) - NEXT
 
-**Current Issues:**
-- Single massive file with all settings sections
-- Mix of UI and state management
-- Hard to test individual sections
+**Current Status:** MUCH BETTER THAN EXPECTED!
+- File is 1,513 LOC, but main view is only **341 LOC** (lines 119-459)
+- Already has 8 extracted sub-views:
+  - ✅ DataManagementView (lines 461-615)
+  - ✅ COEFilterView (lines 617-653)
+  - ✅ ManufacturerFilterView (lines 655-797)
+  - ✅ SubscriptionManagementView (lines 984-1125)
+  - ✅ KilnRatesSettingsView (lines 1189-1293)
+  - ✅ TerminologySettingsView (lines 1323-1410)
+  - ✅ ImageQualitySettingsView (lines 1413-1514)
+  - Plus various UI components
+
+**Remaining Work:**
+- Main `SettingsView` struct (341 LOC) can be further decomposed
+- Extract ViewModel for state management
+- Break body into section components
 
 **Decomposition Strategy:**
 ```
-SettingsView.swift (~150 LOC)
+SettingsView.swift (~100 LOC) - orchestrator only
   ├── ViewModels/
-  │   └── SettingsViewModel.swift (~100 LOC)
+  │   └── SettingsViewModel.swift (~80 LOC)
   └── Components/
-      ├── AccountSettingsSection.swift (~80 LOC)
-      ├── AppearanceSettingsSection.swift (~60 LOC)
-      ├── DataManagementSection.swift (~80 LOC)
-      ├── SubscriptionSection.swift (~70 LOC)
-      ├── AboutSection.swift (~50 LOC)
-      └── DebugSettingsSection.swift (~60 LOC)
+      ├── GeneralSettingsSection.swift (~60 LOC) - Appearance, Tabs, Temperature
+      ├── CatalogDisplaySection.swift (~80 LOC) - Catalog updates, sorts, toggles
+      ├── FilteringSection.swift (~50 LOC) - COE, Manufacturer, Tag filters
+      ├── ContentCustomizationSection.swift (~70 LOC) - Author, Terminology, Ratings, Owner
+      └── AdvancedSettingsSection.swift (~80 LOC) - Debug, Sentry, Subscription override
 ```
 
 **Steps:**
 1. ✅ Analyze current structure
 2. ⚪ Create SettingsViewModel
-3. ⚪ Extract AccountSettingsSection
-4. ⚪ Extract AppearanceSettingsSection
-5. ⚪ Extract DataManagementSection
-6. ⚪ Extract SubscriptionSection
-7. ⚪ Extract AboutSection
-8. ⚪ Extract DebugSettingsSection
-9. ⚪ Simplify main SettingsView to orchestrator
-10. ⚪ Test & commit
+3. ⚪ Extract GeneralSettingsSection
+4. ⚪ Extract CatalogDisplaySection
+5. ⚪ Extract FilteringSection
+6. ⚪ Extract ContentCustomizationSection
+7. ⚪ Extract AdvancedSettingsSection
+8. ⚪ Simplify main SettingsView to orchestrator
+9. ⚪ Test & commit
 
 ---
 

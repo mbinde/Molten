@@ -178,7 +178,12 @@ class CoreDataLabelPresetRepository: @unchecked Sendable, LabelPresetRepository 
 
         // Manufacturer image position (with fallback to .none for old presets)
         let manufacturerImagePositionString = entity.value(forKey: "manufacturer_image_position") as? String
-        let manufacturerImagePosition = manufacturerImagePositionString.flatMap { ManufacturerImagePosition(rawValue: $0) } ?? .none
+        let manufacturerImagePosition: ManufacturerImagePosition
+        if let posString = manufacturerImagePositionString, let position = ManufacturerImagePosition(rawValue: posString) {
+            manufacturerImagePosition = position
+        } else {
+            manufacturerImagePosition = .none
+        }
 
         // Decode text fields order
         guard let textFieldsData = textFieldsOrderJSON.data(using: .utf8),
@@ -194,12 +199,17 @@ class CoreDataLabelPresetRepository: @unchecked Sendable, LabelPresetRepository 
             return nil
         }
 
+        // Convert optionals without closures to avoid isolation issues
+        let qrSizeCGFloat: CGFloat? = qrSize != nil ? CGFloat(qrSize!) : nil
+        let fontScaleCGFloat: CGFloat? = fontScale != nil ? CGFloat(fontScale!) : nil
+        let manufacturerImageSizeCGFloat: CGFloat? = manufacturerImageSize != nil ? CGFloat(manufacturerImageSize!) : nil
+
         let config = LabelBuilderConfig(
             qrPosition: qrPosition,
-            qrSize: qrSize.map { CGFloat($0) },  // Convert Double? to CGFloat?
-            fontScale: fontScale.map { CGFloat($0) },  // Convert Double? to CGFloat?
+            qrSize: qrSizeCGFloat,
+            fontScale: fontScaleCGFloat,
             manufacturerImagePosition: manufacturerImagePosition,
-            manufacturerImageSize: manufacturerImageSize.map { CGFloat($0) },  // Convert Double? to CGFloat?
+            manufacturerImageSize: manufacturerImageSizeCGFloat,
             textFields: textFields,
             textAlignment: textAlignment,
             fieldFormats: fieldFormats
@@ -217,16 +227,21 @@ class CoreDataLabelPresetRepository: @unchecked Sendable, LabelPresetRepository 
 
     /// Update Core Data entity from model
     private func updateEntity(_ entity: NSManagedObject, with preset: LabelBuilderPreset) throws {
+        // Convert optionals without closures to avoid isolation issues
+        let qrSizeDouble: Double? = preset.config.qrSize != nil ? Double(preset.config.qrSize!) : nil
+        let fontScaleDouble: Double? = preset.config.fontScale != nil ? Double(preset.config.fontScale!) : nil
+        let manufacturerImageSizeDouble: Double? = preset.config.manufacturerImageSize != nil ? Double(preset.config.manufacturerImageSize!) : nil
+
         entity.setValue(preset.id, forKey: "id")
         entity.setValue(preset.name, forKey: "name")
         entity.setValue(preset.description.isEmpty ? nil : preset.description, forKey: "desc")
         entity.setValue(preset.createdAt, forKey: "created_at")
         entity.setValue(preset.modifiedAt, forKey: "modified_at")
         entity.setValue(preset.config.qrPosition.rawValue, forKey: "qr_position")
-        entity.setValue(preset.config.qrSize.map { Double($0) }, forKey: "qr_size")  // Convert CGFloat? to Double?
-        entity.setValue(preset.config.fontScale.map { Double($0) }, forKey: "font_scale")  // Convert CGFloat? to Double?
+        entity.setValue(qrSizeDouble, forKey: "qr_size")
+        entity.setValue(fontScaleDouble, forKey: "font_scale")
         entity.setValue(preset.config.manufacturerImagePosition.rawValue, forKey: "manufacturer_image_position")
-        entity.setValue(preset.config.manufacturerImageSize.map { Double($0) }, forKey: "manufacturer_image_size")  // Convert CGFloat? to Double?
+        entity.setValue(manufacturerImageSizeDouble, forKey: "manufacturer_image_size")
         entity.setValue(preset.config.textAlignment.rawValue, forKey: "text_alignment")
 
         // Encode text fields order to JSON

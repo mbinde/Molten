@@ -111,13 +111,16 @@ struct TestConfiguration {
 enum TestError: Error {
     case coreDataLeakage(String)
     case mockConfigurationFailure(String)
-    
+    case presetNotFound
+
     var localizedDescription: String {
         switch self {
         case .coreDataLeakage(let message):
             return "Core Data leakage detected: \(message)"
         case .mockConfigurationFailure(let message):
             return "Mock configuration failed: \(message)"
+        case .presetNotFound:
+            return "Preset not found in test"
         }
     }
 }

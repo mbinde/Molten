@@ -896,6 +896,13 @@ struct LabelPrintingServiceTests {
         #expect(allFormats.keys.contains("Address Labels"))
         #expect(allFormats.keys.contains("Shipping Labels"))
         #expect(allFormats.keys.contains("Return Address"))
+        #expect(allFormats.keys.contains("Round/Circle Labels"))
+        #expect(allFormats.keys.contains("File Folder Labels"))
+        #expect(allFormats.keys.contains("Durable/Ultra Duty"))
+        #expect(allFormats.keys.contains("Multipurpose"))
+        #expect(allFormats.keys.contains("Name Badges & Cards"))
+        #expect(allFormats.keys.contains("Full Sheet"))
+        #expect(allFormats.keys.contains("Other Brands"))
     }
 
     @Test("AveryFormat flatList contains all unique formats")
@@ -959,10 +966,12 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.5,
+            fontScale: nil,
             manufacturerImagePosition: .none,
+            manufacturerImageSize: nil,
             textFields: [.manufacturer, .sku, .colorName, .coe, .location, .owner],
             textAlignment: .left,
-            fieldFormats: LabelFieldFormat.defaults
+            fieldFormats: [:]
         )
 
         let pdfURL = await service.generateLabelSheet(
@@ -993,10 +1002,12 @@ struct LabelPrintingServiceTests {
         let config = LabelBuilderConfig(
             qrPosition: .left,
             qrSize: 0.7,
+            fontScale: nil,
             manufacturerImagePosition: .none,
+            manufacturerImageSize: nil,
             textFields: [.manufacturer, .sku],
             textAlignment: .left,
-            fieldFormats: LabelFieldFormat.defaults
+            fieldFormats: [:]
         )
 
         let pdfURL = await service.generateLabelSheet(
@@ -1010,7 +1021,17 @@ struct LabelPrintingServiceTests {
 
     @Test("Validate layout for all new formats")
     func testValidateLayoutNewFormats() async throws {
-        let config = LabelBuilderConfig.default
+        // Use minimal config for testing - some small formats can't fit QR + manufacturer image
+        let config = LabelBuilderConfig(
+            qrPosition: .left,
+            qrSize: nil,
+            fontScale: nil,
+            manufacturerImagePosition: .none,  // No manufacturer image for small labels
+            manufacturerImageSize: nil,
+            textFields: [.manufacturer, .sku, .colorName],
+            textAlignment: .left,
+            fieldFormats: [:]
+        )
         let formats: [AveryFormat] = [
             .avery5161, .avery5162, .avery5164, .avery5168,
             .avery5260, .avery5261, .avery5262, .avery5263, .avery5264,

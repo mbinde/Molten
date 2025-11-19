@@ -237,20 +237,6 @@ struct AggregatedRatingModelTests {
         #expect(model.hasEnoughRatings)
     }
 
-    @Test("Has enough ratings with sufficient ratings returns true")
-    func hasEnoughRatings_withSufficientRatings_returnsTrue() {
-        // Given - threshold is >= 1, so 4 is sufficient
-        let model = AggregatedRatingModel(
-            itemStableId: "bullseye-001-0",
-            averageRating: 4.5,
-            totalRatings: 4,
-            topWords: []
-        )
-
-        // When/Then
-        #expect(model.hasEnoughRatings)
-    }
-
     @Test("Top words sorted by rank")
     func topWords_sortedByRank() {
         // Given

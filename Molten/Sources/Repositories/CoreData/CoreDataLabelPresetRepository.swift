@@ -199,12 +199,17 @@ class CoreDataLabelPresetRepository: @unchecked Sendable, LabelPresetRepository 
             return nil
         }
 
+        // Convert optionals without closures to avoid isolation issues
+        let qrSizeCGFloat: CGFloat? = qrSize != nil ? CGFloat(qrSize!) : nil
+        let fontScaleCGFloat: CGFloat? = fontScale != nil ? CGFloat(fontScale!) : nil
+        let manufacturerImageSizeCGFloat: CGFloat? = manufacturerImageSize != nil ? CGFloat(manufacturerImageSize!) : nil
+
         let config = LabelBuilderConfig(
             qrPosition: qrPosition,
-            qrSize: qrSize.map { CGFloat($0) },  // Convert Double? to CGFloat?
-            fontScale: fontScale.map { CGFloat($0) },  // Convert Double? to CGFloat?
+            qrSize: qrSizeCGFloat,
+            fontScale: fontScaleCGFloat,
             manufacturerImagePosition: manufacturerImagePosition,
-            manufacturerImageSize: manufacturerImageSize.map { CGFloat($0) },  // Convert Double? to CGFloat?
+            manufacturerImageSize: manufacturerImageSizeCGFloat,
             textFields: textFields,
             textAlignment: textAlignment,
             fieldFormats: fieldFormats

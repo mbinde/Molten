@@ -1,0 +1,71 @@
+//
+//  FormatSearchView.swift
+//  Molten
+//
+//  Extracted from LabelDesignerView.swift
+//
+
+import SwiftUI
+
+/// Search view for finding label formats
+struct FormatSearchView: View {
+    @Binding var searchText: String
+    @Binding var isSearching: Bool
+    @Binding var selectedFormat: AveryFormat
+    let filteredFormats: [AveryFormat]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Search field
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                    .font(.body)
+
+                TextField("Search label formats...", text: $searchText)
+                    .textFieldStyle(.plain)
+                    .autocorrectionDisabled()
+
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Button("Cancel") {
+                    withAnimation {
+                        isSearching = false
+                        searchText = ""
+                    }
+                }
+                .font(.body)
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .background(Color(.systemGray6))
+            .cornerRadius(10)
+        }
+
+        // Search results
+        ForEach(filteredFormats, id: \.name) { format in
+            FormatRow(format: format) {
+                withAnimation {
+                    selectedFormat = format
+                    isSearching = false
+                    searchText = ""
+                }
+            }
+        }
+
+        if filteredFormats.isEmpty && !searchText.isEmpty {
+            Text("No formats match \"\(searchText)\"")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.vertical, 8)
+        }
+    }
+}

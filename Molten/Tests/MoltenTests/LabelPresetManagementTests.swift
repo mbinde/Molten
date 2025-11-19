@@ -17,9 +17,10 @@ import Foundation
 /// - Editing preset metadata (name/description)
 /// - Per-field formatting
 @Suite("Label Preset Management")
+@MainActor
 struct LabelPresetManagementTests {
 
-    private let deps = AppDependencies(forTesting: true)
+    private let deps = AppDependencies.shared
 
     // MARK: - Creating and Saving Presets
 
@@ -31,7 +32,7 @@ struct LabelPresetManagementTests {
             fontScale: 1.0,
             manufacturerImagePosition: .right,
             manufacturerImageSize: 0.5,
-            textFields: [.manufacturer, .sku, .colorName],
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName],
             textAlignment: .left,
             fieldFormats: [:]
         )
@@ -50,7 +51,7 @@ struct LabelPresetManagementTests {
 
     @Test("Save preset to manager")
     func testSavePreset() async throws {
-        let manager = LabelPresetsManager(repository: deps.labelPresetRepository)
+        let manager = LabelPresetsManager.shared
 
         let config = LabelBuilderConfig.default
         let preset = LabelBuilderPreset(
@@ -71,7 +72,7 @@ struct LabelPresetManagementTests {
 
     @Test("Load preset and apply config")
     func testLoadPreset() async throws {
-        let manager = LabelPresetsManager(repository: deps.labelPresetRepository)
+        let manager = LabelPresetsManager.shared
 
         // Create and save a preset with specific config
         let config = LabelBuilderConfig(
@@ -80,7 +81,7 @@ struct LabelPresetManagementTests {
             fontScale: 1.2,
             manufacturerImagePosition: .left,
             manufacturerImageSize: 0.6,
-            textFields: [.manufacturer, .colorName, .coe, .location],
+            textFields: [LabelTextField.manufacturer, LabelTextField.colorName, LabelTextField.coe, LabelTextField.location],
             textAlignment: .center,
             fieldFormats: [:]
         )
@@ -114,7 +115,7 @@ struct LabelPresetManagementTests {
             fontScale: 1.0,
             manufacturerImagePosition: .right,
             manufacturerImageSize: 0.5,
-            textFields: [.manufacturer, .sku],
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku],
             textAlignment: .left,
             fieldFormats: [:]
         )
@@ -125,7 +126,7 @@ struct LabelPresetManagementTests {
             fontScale: 1.0,
             manufacturerImagePosition: .right,
             manufacturerImageSize: 0.5,
-            textFields: [.manufacturer, .sku],
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku],
             textAlignment: .left,
             fieldFormats: [:]
         )
@@ -157,7 +158,7 @@ struct LabelPresetManagementTests {
 
     @Test("Overwrite existing preset with new config")
     func testOverwritePreset() async throws {
-        let manager = LabelPresetsManager(repository: deps.labelPresetRepository)
+        let manager = LabelPresetsManager.shared
 
         // Create initial preset
         let initialConfig = LabelBuilderConfig(
@@ -166,7 +167,7 @@ struct LabelPresetManagementTests {
             fontScale: 1.0,
             manufacturerImagePosition: .right,
             manufacturerImageSize: 0.5,
-            textFields: [.manufacturer, .sku],
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku],
             textAlignment: .left,
             fieldFormats: [:]
         )
@@ -192,7 +193,7 @@ struct LabelPresetManagementTests {
             fontScale: 1.2,      // Changed
             manufacturerImagePosition: .left,  // Changed
             manufacturerImageSize: 0.6,
-            textFields: [.manufacturer, .sku, .colorName],  // Changed
+            textFields: [LabelTextField.manufacturer, LabelTextField.sku, LabelTextField.colorName],  // Changed
             textAlignment: .center,  // Changed
             fieldFormats: [:]
         )
@@ -223,7 +224,7 @@ struct LabelPresetManagementTests {
 
     @Test("Edit preset name without changing config")
     func testEditPresetName() async throws {
-        let manager = LabelPresetsManager(repository: deps.labelPresetRepository)
+        let manager = LabelPresetsManager.shared
 
         let config = LabelBuilderConfig.default
         let preset = LabelBuilderPreset(
@@ -261,7 +262,7 @@ struct LabelPresetManagementTests {
 
     @Test("Edit preset description")
     func testEditPresetDescription() async throws {
-        let manager = LabelPresetsManager(repository: deps.labelPresetRepository)
+        let manager = LabelPresetsManager.shared
 
         let config = LabelBuilderConfig.default
         let preset = LabelBuilderPreset(
@@ -304,9 +305,9 @@ struct LabelPresetManagementTests {
 
         // Set custom format for manufacturer field
         let manufacturerFormat = LabelFieldFormat(fontSize: 12, bold: true, italic: false)
-        config.fieldFormats[.manufacturer] = manufacturerFormat
+        config.fieldFormats[LabelTextField.manufacturer] = manufacturerFormat
 
-        let retrievedFormat = config.format(for: .manufacturer)
+        let retrievedFormat = config.format(for: LabelTextField.manufacturer)
         #expect(retrievedFormat.fontSize == 12)
         #expect(retrievedFormat.bold == true)
         #expect(retrievedFormat.italic == false)
@@ -317,7 +318,7 @@ struct LabelPresetManagementTests {
         let config = LabelBuilderConfig.default
 
         // No custom format set, should return default
-        let format = config.format(for: .manufacturer)
+        let format = config.format(for: LabelTextField.manufacturer)
         let defaultFormat = LabelFieldFormat.defaultFormat(for: .manufacturer)
 
         #expect(format.fontSize == defaultFormat.fontSize)
@@ -329,12 +330,12 @@ struct LabelPresetManagementTests {
     func testSetBoldStyle() async throws {
         var config = LabelBuilderConfig.default
 
-        var format = config.format(for: .sku)
+        var format = config.format(for: LabelTextField.sku)
         format.bold = true
         format.italic = false
-        config.fieldFormats[.sku] = format
+        config.fieldFormats[LabelTextField.sku] = format
 
-        let result = config.format(for: .sku)
+        let result = config.format(for: LabelTextField.sku)
         #expect(result.bold == true)
         #expect(result.italic == false)
     }
@@ -343,12 +344,12 @@ struct LabelPresetManagementTests {
     func testSetItalicStyle() async throws {
         var config = LabelBuilderConfig.default
 
-        var format = config.format(for: .colorName)
+        var format = config.format(for: LabelTextField.colorName)
         format.bold = false
         format.italic = true
-        config.fieldFormats[.colorName] = format
+        config.fieldFormats[LabelTextField.colorName] = format
 
-        let result = config.format(for: .colorName)
+        let result = config.format(for: LabelTextField.colorName)
         #expect(result.bold == false)
         #expect(result.italic == true)
     }
@@ -357,12 +358,12 @@ struct LabelPresetManagementTests {
     func testSetPlainStyle() async throws {
         var config = LabelBuilderConfig.default
 
-        var format = config.format(for: .coe)
+        var format = config.format(for: LabelTextField.coe)
         format.bold = false
         format.italic = false
-        config.fieldFormats[.coe] = format
+        config.fieldFormats[LabelTextField.coe] = format
 
-        let result = config.format(for: .coe)
+        let result = config.format(for: LabelTextField.coe)
         #expect(result.bold == false)
         #expect(result.italic == false)
     }
@@ -371,24 +372,24 @@ struct LabelPresetManagementTests {
     func testSetFontSize() async throws {
         var config = LabelBuilderConfig.default
 
-        var format = config.format(for: .location)
+        var format = config.format(for: LabelTextField.location)
         format.fontSize = 10.5
-        config.fieldFormats[.location] = format
+        config.fieldFormats[LabelTextField.location] = format
 
-        let result = config.format(for: .location)
+        let result = config.format(for: LabelTextField.location)
         #expect(result.fontSize == 10.5)
     }
 
     @Test("Save and load preset with field formats")
     func testSaveLoadPresetWithFieldFormats() async throws {
-        let manager = LabelPresetsManager(repository: deps.labelPresetRepository)
+        let manager = LabelPresetsManager.shared
 
         var config = LabelBuilderConfig.default
 
         // Set custom formats for multiple fields
-        config.fieldFormats[.manufacturer] = LabelFieldFormat(fontSize: 11, bold: true, italic: false)
-        config.fieldFormats[.sku] = LabelFieldFormat(fontSize: 9, bold: false, italic: true)
-        config.fieldFormats[.colorName] = LabelFieldFormat(fontSize: 10, bold: false, italic: false)
+        config.fieldFormats[LabelTextField.manufacturer] = LabelFieldFormat(fontSize: 11, bold: true, italic: false)
+        config.fieldFormats[LabelTextField.sku] = LabelFieldFormat(fontSize: 9, bold: false, italic: true)
+        config.fieldFormats[LabelTextField.colorName] = LabelFieldFormat(fontSize: 10, bold: false, italic: false)
 
         let preset = LabelBuilderPreset(
             name: "Format Test",
@@ -403,17 +404,17 @@ struct LabelPresetManagementTests {
         let loaded = manager.allPresets.first(where: { $0.name == "Format Test" })
         #expect(loaded != nil)
 
-        let manufacturerFormat = loaded?.config.format(for: .manufacturer)
+        let manufacturerFormat = loaded?.config.format(for: LabelTextField.manufacturer)
         #expect(manufacturerFormat?.fontSize == 11)
         #expect(manufacturerFormat?.bold == true)
         #expect(manufacturerFormat?.italic == false)
 
-        let skuFormat = loaded?.config.format(for: .sku)
+        let skuFormat = loaded?.config.format(for: LabelTextField.sku)
         #expect(skuFormat?.fontSize == 9)
         #expect(skuFormat?.bold == false)
         #expect(skuFormat?.italic == true)
 
-        let colorFormat = loaded?.config.format(for: .colorName)
+        let colorFormat = loaded?.config.format(for: LabelTextField.colorName)
         #expect(colorFormat?.fontSize == 10)
         #expect(colorFormat?.bold == false)
         #expect(colorFormat?.italic == false)
@@ -423,7 +424,7 @@ struct LabelPresetManagementTests {
 
     @Test("Delete preset")
     func testDeletePreset() async throws {
-        let manager = LabelPresetsManager(repository: deps.labelPresetRepository)
+        let manager = LabelPresetsManager.shared
 
         let preset = LabelBuilderPreset(
             name: "To Delete",
@@ -460,7 +461,7 @@ struct LabelPresetManagementTests {
 
     @Test("User presets shown first in list")
     func testUserPresetsFirst() async throws {
-        let manager = LabelPresetsManager(repository: deps.labelPresetRepository)
+        let manager = LabelPresetsManager.shared
 
         // Add a user preset
         let userPreset = LabelBuilderPreset(
@@ -484,10 +485,4 @@ struct LabelPresetManagementTests {
             #expect(userIdx < builtInIdx)
         }
     }
-}
-
-// MARK: - Test Errors
-
-enum TestError: Error {
-    case presetNotFound
 }

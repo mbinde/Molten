@@ -754,20 +754,8 @@ struct CatalogView: View {
 extension CatalogView {
     
     private func manufacturerDisplayName(_ manufacturer: String) -> String {
-        // Simplified manufacturer display for repository pattern
-        // Avoid GlassManufacturers utility which might have Core Data dependencies
-        return manufacturer
-        
-        /* Original implementation with potential Core Data dependencies:
-        let fullName = GlassManufacturers.fullName(for: manufacturer) ?? manufacturer
-        
-        if let coeValues = GlassManufacturers.coeValues(for: manufacturer) {
-            let coeString = coeValues.map(String.init).joined(separator: ", ")
-            return "\(fullName) (\(coeString))"
-        } else {
-            return fullName
-        }
-        */
+        // Use GlassManufacturers utility to get full name (no Core Data dependencies)
+        return GlassManufacturers.fullName(for: manufacturer) ?? manufacturer
     }
     
     private func hideKeyboard() {

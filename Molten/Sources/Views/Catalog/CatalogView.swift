@@ -26,6 +26,9 @@ struct CatalogView: View {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data ✓
     @State private var viewModel: CatalogViewModel
 
+    // Performance timing (DEBUG builds only)
+    @State private var performanceTimer = PerformanceTimer()
+
     // Use manual UserDefaults handling instead of @AppStorage to prevent test crashes
     @State private var defaultSortOptionRawValue = SortOption.name.rawValue
     @State private var enabledManufacturersData: Data = Data()
@@ -537,7 +540,7 @@ struct CatalogView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .navigationTitle("Catalog")
+            .performanceTitle("Catalog", timer: performanceTimer)
             .searchable(
                 text: $viewModel.searchText,
                 placement: .navigationBarDrawer(displayMode: .always),
@@ -603,7 +606,8 @@ struct CatalogView: View {
                 clearSearch: clearSearch,
                 resetNavigation: resetNavigation,
                 catalogUpdateMessage: $catalogUpdateMessage,
-                showCatalogUpdateToast: $showCatalogUpdateToast
+                showCatalogUpdateToast: $showCatalogUpdateToast,
+                performanceTimer: performanceTimer
             ))
             .toast(
                 message: catalogUpdateMessage,

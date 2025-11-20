@@ -18,6 +18,9 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var viewModel: InventoryViewModel
     @Environment(EntitlementService.self) private var entitlementService
 
+    // Performance timing (DEBUG builds only)
+    @State private var performanceTimer = PerformanceTimer()
+
     // UI-only state (not in ViewModel)
     @State private var showingAddItem = false
     @State private var showingUpgradePrompt = false
@@ -301,7 +304,7 @@ struct InventoryView: View, CachedDataDeletion {
                     }
                 }
             }
-            .navigationTitle("Inventory")
+            .performanceTitle("Inventory", timer: performanceTimer)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -364,6 +367,7 @@ struct InventoryView: View, CachedDataDeletion {
             }
             .task {
                 await loadData()
+                performanceTimer.complete()
             }
             .refreshable {
                 // Invalidate cache to force fresh data load on pull-to-refresh

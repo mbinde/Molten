@@ -194,7 +194,7 @@ struct ImportInventoryView: View {
             Section("Breakdown by Manufacturer") {
                 ForEach(preview.manufacturerBreakdown, id: \.manufacturer) { item in
                     HStack {
-                        Text(item.manufacturer)
+                        Text(GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer)
                         Spacer()
                         Text("\(item.count)")
                             .foregroundColor(.secondary)

@@ -80,10 +80,10 @@ struct InventoryItemRowView: View {
             Spacer()
             
             VStack(alignment: .trailing, spacing: 2) {
-                Text(completeItem.glassItem.manufacturer.capitalized)
+                Text(GlassManufacturers.fullName(for: completeItem.glassItem.manufacturer) ?? completeItem.glassItem.manufacturer)
                     .font(.caption2)
                     .foregroundColor(.secondary)
-                
+
                 Text("COE \(completeItem.glassItem.coe)")
                     .font(.caption2)
                     .foregroundColor(.secondary)

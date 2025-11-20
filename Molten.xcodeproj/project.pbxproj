@@ -176,6 +176,7 @@
 				Tests/MoltenTests/Models/LogbookModelTests.swift,
 				Tests/MoltenTests/Models/LowStockDetailModelTests.swift,
 				Tests/MoltenTests/Models/LowStockReportModelTests.swift,
+				Tests/MoltenTests/Models/ManufacturerFilterModelTests.swift,
 				Tests/MoltenTests/Models/ManufacturerStatisticsModelSortingTests.swift,
 				Tests/MoltenTests/Models/ProjectGlassItemTests.swift,
 				Tests/MoltenTests/Models/ProjectModelTests.swift,
@@ -216,6 +217,7 @@
 				Tests/MoltenTests/Services/KilnScheduleServiceTests.swift,
 				Tests/MoltenTests/Services/LabelPrintingServiceTests.swift,
 				Tests/MoltenTests/Services/LocationServiceTests.swift,
+				Tests/MoltenTests/Services/ManufacturerFilterServiceTests.swift,
 				Tests/MoltenTests/Services/MockCatalogUpdateHelpers.swift,
 				Tests/MoltenTests/Services/ProjectExportServiceTests.swift,
 				Tests/MoltenTests/Services/ProjectImportServiceTests.swift,
@@ -376,6 +378,7 @@
 				Tests/MoltenTests/Models/LogbookModelTests.swift,
 				Tests/MoltenTests/Models/LowStockDetailModelTests.swift,
 				Tests/MoltenTests/Models/LowStockReportModelTests.swift,
+				Tests/MoltenTests/Models/ManufacturerFilterModelTests.swift,
 				Tests/MoltenTests/Models/ManufacturerStatisticsModelSortingTests.swift,
 				Tests/MoltenTests/Models/ProjectGlassItemTests.swift,
 				Tests/MoltenTests/Models/ProjectModelTests.swift,
@@ -398,6 +401,7 @@
 				Tests/MoltenTests/Repositories/ProjectRepositoryErrorsTests.swift,
 				Tests/MoltenTests/Repositories/ShoppingListRepositoryTests.swift,
 				Tests/MoltenTests/Repositories/UserImageRepositoryTests.swift,
+				Tests/MoltenTests/Repositories/UserPreferencesRepositoryTests.swift,
 				Tests/MoltenTests/Services/BackgroundUpdateServiceTests.swift,
 				Tests/MoltenTests/Services/CatalogAPIClientTests.swift,
 				Tests/MoltenTests/Services/CatalogDatabaseManagerTests.swift,
@@ -416,6 +420,7 @@
 				Tests/MoltenTests/Services/KilnScheduleServiceTests.swift,
 				Tests/MoltenTests/Services/LabelPrintingServiceTests.swift,
 				Tests/MoltenTests/Services/LocationServiceTests.swift,
+				Tests/MoltenTests/Services/ManufacturerFilterServiceTests.swift,
 				Tests/MoltenTests/Services/MockCatalogUpdateHelpers.swift,
 				Tests/MoltenTests/Services/ProjectExportServiceTests.swift,
 				Tests/MoltenTests/Services/ProjectImportServiceTests.swift,
@@ -594,6 +599,7 @@
 		F5FACB172EA0B4A10084A6D0 /* Exceptions for "Molten" folder in "RepositoryTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Tests/MoltenTests/Repositories/UserPreferencesRepositoryTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataHelpersTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataInventoryLocationTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataInventoryRepositoryTests.swift,

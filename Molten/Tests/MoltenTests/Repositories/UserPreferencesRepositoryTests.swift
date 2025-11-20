@@ -10,6 +10,7 @@ import Foundation
 @testable import Molten
 
 @Suite("UserPreferencesRepository Tests")
+@MainActor
 struct UserPreferencesRepositoryTests {
 
     @Test("Save and retrieve manufacturer filter")

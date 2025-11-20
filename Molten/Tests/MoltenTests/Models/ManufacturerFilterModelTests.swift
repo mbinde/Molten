@@ -10,6 +10,7 @@ import Foundation
 @testable import Molten
 
 @Suite("ManufacturerFilterModel Tests")
+@MainActor
 struct ManufacturerFilterModelTests {
 
     @Test("Initialize with default selection (all manufacturers)")

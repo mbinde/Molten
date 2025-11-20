@@ -10,6 +10,7 @@ import Foundation
 @testable import Molten
 
 @Suite("ManufacturerFilterService Tests")
+@MainActor
 struct ManufacturerFilterServiceTests {
 
     @Test("Initialize with repository and load existing preferences")
@@ -25,11 +26,12 @@ struct ManufacturerFilterServiceTests {
         // Wait for initialization
         try await Task.sleep(for: .milliseconds(50))
 
-        #expect(service.selectedManufacturers == Set(["EF", "DH", "BE", "CiM"]))  // New manufacturers enabled by default
+        // Service loads saved preferences as-is (doesn't auto-enable new manufacturers until updateAvailableManufacturers is called)
+        #expect(service.selectedManufacturers == Set(["EF", "DH"]))
         #expect(service.isManufacturerEnabled("EF") == true)
         #expect(service.isManufacturerEnabled("DH") == true)
-        #expect(service.isManufacturerEnabled("BE") == true)  // New, enabled by default
-        #expect(service.isManufacturerEnabled("CiM") == true)  // New, enabled by default
+        #expect(service.isManufacturerEnabled("BE") == false)
+        #expect(service.isManufacturerEnabled("CiM") == false)
     }
 
     @Test("Initialize with no existing preferences (defaults to all)")
@@ -172,7 +174,7 @@ struct ManufacturerFilterServiceTests {
 
         try await Task.sleep(for: .milliseconds(50))
 
-        #expect(service.enabledCount == 4)  // EF, DH (saved) + BE, CiM (new, default enabled)
+        #expect(service.enabledCount == 2)  // EF, DH (as saved)
     }
 }
 

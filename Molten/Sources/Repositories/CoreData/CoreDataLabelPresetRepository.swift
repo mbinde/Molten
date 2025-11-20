@@ -43,83 +43,59 @@ class CoreDataLabelPresetRepository: @unchecked Sendable, LabelPresetRepository 
     }
 
     func fetchPresets(matching predicate: NSPredicate?) async throws -> [LabelBuilderPreset] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[LabelBuilderPreset], Error>) in
-            nonisolated(unsafe) let predicateCopy = predicate
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "LabelPresetEntity")
-                    fetchRequest.predicate = predicateCopy
-                    fetchRequest.sortDescriptors = [
-                        NSSortDescriptor(key: "name", ascending: true)
-                    ]
+        nonisolated(unsafe) let predicateCopy = predicate
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "LabelPresetEntity")
+            fetchRequest.predicate = predicateCopy
+            fetchRequest.sortDescriptors = [
+                NSSortDescriptor(key: "name", ascending: true)
+            ]
 
-                    let entities = try self.backgroundContext.fetch(fetchRequest)
-                    let presets = entities.compactMap { self.convertToModel($0) }
+            let entities = try context.fetch(fetchRequest)
+            let presets = entities.compactMap { self.convertToModel($0) }
 
-                    continuation.resume(returning: presets)
-
-                } catch {
-                    self.log.error("Failed to fetch label presets: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+            return presets
         }
     }
 
     // MARK: - Write Operations
 
     func createPreset(_ preset: LabelBuilderPreset) async throws -> LabelBuilderPreset {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<LabelBuilderPreset, Error>) in
-            backgroundContext.perform {
-                do {
-                    guard let entity = NSEntityDescription.entity(forEntityName: "LabelPresetEntity", in: self.backgroundContext) else {
-                        throw CoreDataLabelPresetError.entityNotFound
-                    }
-                    let coreDataEntity = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-
-                    // Set properties
-                    try self.updateEntity(coreDataEntity, with: preset)
-
-                    // Save context
-                    try self.backgroundContext.save()
-
-                    self.log.info("Created label preset: \(preset.name)")
-                    continuation.resume(returning: preset)
-
-                } catch {
-                    self.log.error("Failed to create label preset: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            guard let entity = NSEntityDescription.entity(forEntityName: "LabelPresetEntity", in: context) else {
+                throw CoreDataLabelPresetError.entityNotFound
             }
+            let coreDataEntity = NSManagedObject(entity: entity, insertInto: context)
+
+            // Set properties
+            try self.updateEntity(coreDataEntity, with: preset)
+
+            // Save context
+            try context.save()
+
+            self.log.info("Created label preset: \(preset.name)")
+            return preset
         }
     }
 
     func updatePreset(_ preset: LabelBuilderPreset) async throws -> LabelBuilderPreset {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<LabelBuilderPreset, Error>) in
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "LabelPresetEntity")
-                    fetchRequest.predicate = NSPredicate(format: "id == %@", preset.id as CVarArg)
-                    fetchRequest.fetchLimit = 1
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "LabelPresetEntity")
+            fetchRequest.predicate = NSPredicate(format: "id == %@", preset.id as CVarArg)
+            fetchRequest.fetchLimit = 1
 
-                    guard let entity = try self.backgroundContext.fetch(fetchRequest).first else {
-                        throw CoreDataLabelPresetError.presetNotFound(preset.id)
-                    }
-
-                    // Update properties
-                    try self.updateEntity(entity, with: preset)
-
-                    // Save context
-                    try self.backgroundContext.save()
-
-                    self.log.info("Updated label preset: \(preset.name)")
-                    continuation.resume(returning: preset)
-
-                } catch {
-                    self.log.error("Failed to update label preset: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            guard let entity = try context.fetch(fetchRequest).first else {
+                throw CoreDataLabelPresetError.presetNotFound(preset.id)
             }
+
+            // Update properties
+            try self.updateEntity(entity, with: preset)
+
+            // Save context
+            try context.save()
+
+            self.log.info("Updated label preset: \(preset.name)")
+            return preset
         }
     }
 
@@ -128,35 +104,26 @@ class CoreDataLabelPresetRepository: @unchecked Sendable, LabelPresetRepository 
     }
 
     func deletePresets(ids: [UUID]) async throws {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "LabelPresetEntity")
-                    fetchRequest.predicate = NSPredicate(format: "id IN %@", ids)
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "LabelPresetEntity")
+            fetchRequest.predicate = NSPredicate(format: "id IN %@", ids)
 
-                    let entities = try self.backgroundContext.fetch(fetchRequest)
+            let entities = try context.fetch(fetchRequest)
 
-                    for entity in entities {
-                        self.backgroundContext.delete(entity)
-                    }
-
-                    try self.backgroundContext.save()
-
-                    self.log.info("Deleted \(entities.count) label preset(s)")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete label presets: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            for entity in entities {
+                context.delete(entity)
             }
+
+            try context.save()
+
+            self.log.info("Deleted \(entities.count) label preset(s)")
         }
     }
 
     // MARK: - Conversion Helpers
 
     /// Convert Core Data entity to model
-    private func convertToModel(_ entity: NSManagedObject) -> LabelBuilderPreset? {
+    private nonisolated func convertToModel(_ entity: NSManagedObject) -> LabelBuilderPreset? {
         guard let id = entity.value(forKey: "id") as? UUID,
               let name = entity.value(forKey: "name") as? String,
               let createdAt = entity.value(forKey: "created_at") as? Date,
@@ -215,18 +182,22 @@ class CoreDataLabelPresetRepository: @unchecked Sendable, LabelPresetRepository 
             fieldFormats: fieldFormats
         )
 
-        return LabelBuilderPreset(
-            id: id,
-            name: name,
-            description: description ?? "",
-            config: config,
-            createdAt: createdAt,
-            modifiedAt: modifiedAt
-        )
+        // LabelBuilderPreset is not Sendable but is safe to construct off MainActor
+        // Using assumeIsolated to bypass false positive
+        return MainActor.assumeIsolated {
+            LabelBuilderPreset(
+                id: id,
+                name: name,
+                description: description ?? "",
+                config: config,
+                createdAt: createdAt,
+                modifiedAt: modifiedAt
+            )
+        }
     }
 
     /// Update Core Data entity from model
-    private func updateEntity(_ entity: NSManagedObject, with preset: LabelBuilderPreset) throws {
+    private nonisolated func updateEntity(_ entity: NSManagedObject, with preset: LabelBuilderPreset) throws {
         // Convert optionals without closures to avoid isolation issues
         let qrSizeDouble: Double? = preset.config.qrSize != nil ? Double(preset.config.qrSize!) : nil
         let fontScaleDouble: Double? = preset.config.fontScale != nil ? Double(preset.config.fontScale!) : nil

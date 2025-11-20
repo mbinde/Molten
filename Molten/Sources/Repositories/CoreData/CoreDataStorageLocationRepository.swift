@@ -40,27 +40,20 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
     // MARK: - Basic CRUD Operations
     
     func fetchLocations(matching predicate: NSPredicate?) async throws -> [StorageLocationModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[StorageLocationModel], Error>) in
-            nonisolated(unsafe) let predicateCopy = predicate
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
-                    fetchRequest.predicate = predicateCopy
-                    fetchRequest.sortDescriptors = [
-                        NSSortDescriptor(key: "location", ascending: true),
-                        NSSortDescriptor(key: "quantity", ascending: false)
-                    ]
-                    
-                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
-                    let locationItems = coreDataItems.compactMap { self.convertToStorageLocationModel($0) }
-                    
-                    continuation.resume(returning: locationItems)
-                    
-                } catch {
-                    self.log.error("Failed to fetch location records: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+        nonisolated(unsafe) let predicateCopy = predicate
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
+            fetchRequest.predicate = predicateCopy
+            fetchRequest.sortDescriptors = [
+                NSSortDescriptor(key: "location", ascending: true),
+                NSSortDescriptor(key: "quantity", ascending: false)
+            ]
+
+            let coreDataItems = try context.fetch(fetchRequest)
+            let locationItems = coreDataItems.compactMap { self.convertToStorageLocationModel($0) }
+
+            self.log.info("Fetched \(locationItems.count) location records")
+            return locationItems
         }
     }
     
@@ -76,29 +69,21 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
     }
     
     func createLocation(_ location: StorageLocationModel) async throws -> StorageLocationModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<StorageLocationModel, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Create new Core Data entity
-                    guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: self.backgroundContext) else {
-                        throw CoreDataLocationRepositoryError.entityNotFound("StorageLocation")
-                    }
-                    let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-                    
-                    // Set properties
-                    self.updateCoreDataEntity(coreDataItem, with: location)
-                    
-                    // Save context
-                    try self.backgroundContext.save()
-                    
-                    self.log.info("Created location record: \(location.location) for inventory: \(location.inventory_id)")
-                    continuation.resume(returning: location)
-                    
-                } catch {
-                    self.log.error("Failed to create location record: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            // Create new Core Data entity
+            guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: context) else {
+                throw CoreDataLocationRepositoryError.entityNotFound("StorageLocation")
             }
+            let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
+
+            // Set properties
+            self.updateCoreDataEntity(coreDataItem, with: location)
+
+            // Save context
+            try context.save()
+
+            self.log.info("Created location record: \(location.location) for inventory: \(location.inventory_id)")
+            return location
         }
     }
     

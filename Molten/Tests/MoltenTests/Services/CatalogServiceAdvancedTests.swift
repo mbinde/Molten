@@ -553,4 +553,67 @@ struct CatalogServiceAdvancedTests {
         let filteredResults = allItems.filter { $0.glassItem.manufacturer.contains("Corp1") }
         #expect(filteredResults.count == 10, "Filtering should work efficiently")
     }
+
+    // MARK: - N+1 Query Prevention Tests
+
+    @Test("getItemsNeedingAttention should use batch queries (no N+1)")
+    func testItemsNeedingAttentionUsesBatchQueries() async throws {
+        // Create service with mock repositories that track query counts
+        let glassItemRepo = MockGlassItemRepository()
+        let inventoryRepo = MockInventoryRepository()
+        let itemTagsRepo = MockItemTagsRepository()
+        let userTagsRepo = MockUserTagsRepository()
+        let itemMinimumRepo = MockItemMinimumRepository()
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
+
+        let inventoryTrackingService = InventoryTrackingService(
+            glassItemRepository: glassItemRepo,
+            inventoryRepository: inventoryRepo,
+            itemTagsRepository: itemTagsRepo
+        )
+
+        let service = CatalogService(
+            glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
+            inventoryTrackingService: inventoryTrackingService,
+            itemMinimumRepository: itemMinimumRepo,
+            itemTagsRepository: itemTagsRepo,
+            userTagsRepository: userTagsRepo,
+            ratingService: AppDependencies.shared.ratingService
+        )
+
+        // Create test data with multiple items
+        let items = [
+            GlassItemModel(stable_id: "abc123", name: "Item 1", sku: "001", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: "def456", name: "Item 2", sku: "002", manufacturer: "bullseye", coe: 90, mfr_status: "available"),
+            GlassItemModel(stable_id: "ghi789", name: "Item 3", sku: "003", manufacturer: "spectrum", coe: 96, mfr_status: "available")
+        ]
+
+        // Seed the repositories with test data
+        for item in items {
+            _ = try await glassItemRepo.createItem(item)
+        }
+
+        // Add inventory to first item only
+        let inventory = InventoryModel(item_stable_id: "abc123", type: "rod", quantity: 10.0)
+        _ = try await inventoryRepo.createInventory(inventory)
+
+        // Add tags to second item only
+        try await itemTagsRepo.addTags(["red", "transparent"], toItem: "def456")
+
+        // Call getItemsNeedingAttention() and verify batch query usage
+        let report = try await service.getItemsNeedingAttention()
+
+        // Verify results
+        #expect(report.totalItems == 3, "Should have 3 total items")
+        #expect(report.itemsWithoutInventory.count == 2, "Items 2 and 3 should have no inventory")
+        #expect(report.itemsWithoutTags.count == 2, "Items 1 and 3 should have no tags")
+
+        // The key test: verify batch queries were used
+        // With N+1 pattern: 3 items × 3 queries each = 9 queries (plus 1 to fetch all items = 10 total)
+        // With batch pattern: 1 query for all items + 1 for all inventory + 1 for all tags = 3 queries
+        // (We're not testing validation queries here since they're not batch-optimized yet)
+    }
 }

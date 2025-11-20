@@ -582,6 +582,7 @@ struct CatalogView: View {
                 showingCOESelection: $showingCOESelection,
                 showingManufacturerSelection: $showingManufacturerSelection,
                 allAvailableTags: allAvailableTags,
+                allUserTags: allUserTags,
                 selectedTags: $viewModel.selectedTags,
                 tagCounts: tagCounts,
                 allAvailableCOEs: allAvailableCOEs,

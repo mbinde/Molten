@@ -35,54 +35,46 @@ extension CoreDataInventoryRepository {
     func addQuantity(_ quantity: Double, toItem item_stable_id: String, type: String) async throws -> InventoryModel {
         let cleanType = InventoryModel.cleanType(type)
 
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<InventoryModel, Error>) in
-            context.perform {
-                do {
-                    // Look for existing inventory record
-                    let existingRecords = try self.fetchInventorySync(forItem: item_stable_id, type: cleanType)
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            // Look for existing inventory record
+            let existingRecords = try self.fetchInventorySync(forItem: item_stable_id, type: cleanType)
 
-                    if let existingRecord = existingRecords.first {
-                        // Update existing record
-                        let updatedRecord = InventoryModel(
-                            id: existingRecord.id,
-                            item_stable_id: existingRecord.item_stable_id,
-                            type: existingRecord.type,  // Use non-optional accessor
-                            quantity: existingRecord.quantity + quantity,
-                            date_added: existingRecord.date_added,
-                            date_modified: Date() // Set to current time on update
-                        )
+            if let existingRecord = existingRecords.first {
+                // Update existing record
+                let updatedRecord = InventoryModel(
+                    id: existingRecord.id,
+                    item_stable_id: existingRecord.item_stable_id,
+                    type: existingRecord.type,  // Use non-optional accessor
+                    quantity: existingRecord.quantity + quantity,
+                    date_added: existingRecord.date_added,
+                    date_modified: Date() // Set to current time on update
+                )
 
-                        guard let coreDataItem = try self.fetchCoreDataItemSync(byId: existingRecord.id) else {
-                            throw CoreDataInventoryRepositoryError.itemNotFound(existingRecord.id.uuidString)
-                        }
-
-                        self.updateCoreDataEntity(coreDataItem, with: updatedRecord)
-                        try CoreDataErrorHandler.save(context: self.context)
-
-                        continuation.resume(returning: updatedRecord)
-                    } else {
-                        // Create new record
-                        let newRecord = InventoryModel(
-                            item_stable_id: item_stable_id,
-                            type: cleanType,
-                            quantity: quantity
-                        )
-
-                        guard let entity = NSEntityDescription.entity(forEntityName: "Inventory", in: self.context) else {
-                            throw CoreDataInventoryRepositoryError.entityNotFound("Inventory")
-                        }
-                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.context)
-
-                        self.updateCoreDataEntity(coreDataItem, with: newRecord)
-                        try CoreDataErrorHandler.save(context: self.context)
-
-                        continuation.resume(returning: newRecord)
-                    }
-
-                } catch {
-                    self.log.error("Failed to add quantity: \(error)")
-                    continuation.resume(throwing: error)
+                guard let coreDataItem = try self.fetchCoreDataItemSync(byId: existingRecord.id) else {
+                    throw CoreDataInventoryRepositoryError.itemNotFound(existingRecord.id.uuidString)
                 }
+
+                self.updateCoreDataEntity(coreDataItem, with: updatedRecord)
+                try CoreDataErrorHandler.save(context: context)
+
+                return updatedRecord
+            } else {
+                // Create new record
+                let newRecord = InventoryModel(
+                    item_stable_id: item_stable_id,
+                    type: cleanType,
+                    quantity: quantity
+                )
+
+                guard let entity = NSEntityDescription.entity(forEntityName: "Inventory", in: context) else {
+                    throw CoreDataInventoryRepositoryError.entityNotFound("Inventory")
+                }
+                let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
+
+                self.updateCoreDataEntity(coreDataItem, with: newRecord)
+                try CoreDataErrorHandler.save(context: context)
+
+                return newRecord
             }
         }
     }
@@ -90,47 +82,39 @@ extension CoreDataInventoryRepository {
     func subtractQuantity(_ quantity: Double, fromItem item_stable_id: String, type: String) async throws -> InventoryModel? {
         let cleanType = InventoryModel.cleanType(type)
 
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<InventoryModel?, Error>) in
-            context.perform {
-                do {
-                    // Look for existing inventory record
-                    let existingRecords = try self.fetchInventorySync(forItem: item_stable_id, type: cleanType)
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            // Look for existing inventory record
+            let existingRecords = try self.fetchInventorySync(forItem: item_stable_id, type: cleanType)
 
-                    guard let existingRecord = existingRecords.first else {
-                        throw CoreDataInventoryRepositoryError.itemNotFound("No inventory found for \(item_stable_id) - \(cleanType)")
-                    }
+            guard let existingRecord = existingRecords.first else {
+                throw CoreDataInventoryRepositoryError.itemNotFound("No inventory found for \(item_stable_id) - \(cleanType)")
+            }
 
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(byId: existingRecord.id) else {
-                        throw CoreDataInventoryRepositoryError.itemNotFound(existingRecord.id.uuidString)
-                    }
+            guard let coreDataItem = try self.fetchCoreDataItemSync(byId: existingRecord.id) else {
+                throw CoreDataInventoryRepositoryError.itemNotFound(existingRecord.id.uuidString)
+            }
 
-                    let newQuantity = existingRecord.quantity - quantity
+            let newQuantity = existingRecord.quantity - quantity
 
-                    if newQuantity <= 0 {
-                        // Delete the record if quantity reaches zero or below
-                        self.context.delete(coreDataItem)
-                        try CoreDataErrorHandler.save(context: self.context)
-                        continuation.resume(returning: nil)
-                    } else {
-                        // Update the record with new quantity
-                        let updatedRecord = InventoryModel(
-                            id: existingRecord.id,
-                            item_stable_id: existingRecord.item_stable_id,
-                            type: existingRecord.type,  // Use non-optional accessor
-                            quantity: newQuantity,
-                            date_added: existingRecord.date_added,
-                            date_modified: Date() // Set to current time on update
-                        )
+            if newQuantity <= 0 {
+                // Delete the record if quantity reaches zero or below
+                context.delete(coreDataItem)
+                try CoreDataErrorHandler.save(context: context)
+                return nil
+            } else {
+                // Update the record with new quantity
+                let updatedRecord = InventoryModel(
+                    id: existingRecord.id,
+                    item_stable_id: existingRecord.item_stable_id,
+                    type: existingRecord.type,  // Use non-optional accessor
+                    quantity: newQuantity,
+                    date_added: existingRecord.date_added,
+                    date_modified: Date() // Set to current time on update
+                )
 
-                        self.updateCoreDataEntity(coreDataItem, with: updatedRecord)
-                        try CoreDataErrorHandler.save(context: self.context)
-                        continuation.resume(returning: updatedRecord)
-                    }
-
-                } catch {
-                    self.log.error("Failed to subtract quantity: \(error)")
-                    continuation.resume(throwing: error)
-                }
+                self.updateCoreDataEntity(coreDataItem, with: updatedRecord)
+                try CoreDataErrorHandler.save(context: context)
+                return updatedRecord
             }
         }
     }
@@ -149,20 +133,20 @@ extension CoreDataInventoryRepository {
             if let existingRecord = existingRecords.first {
                 // Update existing record
                 let updatedRecord = InventoryModel(
-                    id: existingRecord.id,
-                    item_stable_id: existingRecord.item_stable_id,
-                    type: existingRecord.type,  // Use non-optional accessor
-                    quantity: quantity,
-                    date_added: existingRecord.date_added,
-                    date_modified: Date() // Set to current time on update
+            id: existingRecord.id,
+            item_stable_id: existingRecord.item_stable_id,
+            type: existingRecord.type,  // Use non-optional accessor
+            quantity: quantity,
+            date_added: existingRecord.date_added,
+            date_modified: Date() // Set to current time on update
                 )
                 return try await updateInventory(updatedRecord)
             } else {
                 // Create new record
                 let newRecord = InventoryModel(
-                    item_stable_id: item_stable_id,
-                    type: cleanType,
-                    quantity: quantity
+            item_stable_id: item_stable_id,
+            type: cleanType,
+            quantity: quantity
                 )
                 return try await createInventory(newRecord)
             }

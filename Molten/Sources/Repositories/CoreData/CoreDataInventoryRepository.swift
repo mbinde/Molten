@@ -41,54 +41,38 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     // MARK: - Basic CRUD Operations
 
     func fetchInventory(matching predicate: NSPredicate?) async throws -> [InventoryModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[InventoryModel], Error>) in
-            nonisolated(unsafe) let predicateCopy = predicate
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
-                    fetchRequest.predicate = predicateCopy
-                    fetchRequest.sortDescriptors = [
-                        NSSortDescriptor(key: "item_stable_id", ascending: true),
-                        NSSortDescriptor(key: "type", ascending: true)
-                    ]
+        nonisolated(unsafe) let predicateCopy = predicate
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
+            fetchRequest.predicate = predicateCopy
+            fetchRequest.sortDescriptors = [
+                NSSortDescriptor(key: "item_stable_id", ascending: true),
+                NSSortDescriptor(key: "type", ascending: true)
+            ]
 
-                    let coreDataItems = try self.context.fetch(fetchRequest)
-                    let inventoryItems = coreDataItems.compactMap { self.convertToInventoryModel($0) }
+            let coreDataItems = try context.fetch(fetchRequest)
+            let inventoryItems = coreDataItems.compactMap { self.convertToInventoryModel($0) }
 
-                    continuation.resume(returning: inventoryItems)
-
-                } catch {
-                    self.log.error("Failed to fetch inventory records: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+            return inventoryItems
         }
     }
 
     func fetchInventory(byId id: UUID) async throws -> InventoryModel? {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<InventoryModel?, Error>) in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
-                    fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
-                    fetchRequest.fetchLimit = 1
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
+            fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+            fetchRequest.fetchLimit = 1
 
-                    let results = try self.context.fetch(fetchRequest)
-                    let inventoryItem = results.first.flatMap { self.convertToInventoryModel($0) }
+            let results = try context.fetch(fetchRequest)
+            let inventoryItem = results.first.flatMap { self.convertToInventoryModel($0) }
 
-                    if inventoryItem != nil {
-                        self.log.debug("Found inventory record with ID: \(id)")
-                    } else {
-                        self.log.debug("Inventory record not found with ID: \(id)")
-                    }
-
-                    continuation.resume(returning: inventoryItem)
-
-                } catch {
-                    self.log.error("Failed to fetch inventory record by ID: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            if inventoryItem != nil {
+                self.log.debug("Found inventory record with ID: \(id)")
+            } else {
+                self.log.debug("Inventory record not found with ID: \(id)")
             }
+
+            return inventoryItem
         }
     }
 
@@ -104,205 +88,152 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
     }
 
     func createInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<InventoryModel, Error>) in
-            context.perform {
-                do {
-                    // Create new Core Data entity
-                    guard let entity = NSEntityDescription.entity(forEntityName: "Inventory", in: self.context) else {
-                        throw CoreDataInventoryRepositoryError.entityNotFound("Inventory")
-                    }
-                    let coreDataItem = NSManagedObject(entity: entity, insertInto: self.context)
-
-                    // Create a new inventory model with a fresh ID for Core Data
-                    let newInventory = InventoryModel(
-                        id: UUID(), // Always generate new ID for Core Data persistence
-                        item_stable_id: inventory.item_stable_id,
-                        type: inventory.type,  // Use non-optional accessor
-                        subtype: inventory.subtype,
-                        subsubtype: inventory.subsubtype,
-                        dimensions: inventory.dimensions,
-                        quantity: inventory.quantity,
-                        location: inventory.location,
-                        date_added: inventory.date_added,
-                        date_modified: inventory.date_modified
-                    )
-
-                    // Set properties
-                    self.updateCoreDataEntity(coreDataItem, with: newInventory)
-
-                    // Save context
-                    try CoreDataErrorHandler.save(context: self.context)
-
-                    self.log.info("Created inventory record: \(newInventory.item_stable_id) - \(newInventory.type)")
-                    continuation.resume(returning: newInventory)
-
-                } catch {
-                    self.log.error("Failed to create inventory record: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            // Create new Core Data entity
+            guard let entity = NSEntityDescription.entity(forEntityName: "Inventory", in: context) else {
+                throw CoreDataInventoryRepositoryError.entityNotFound("Inventory")
             }
+            let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
+
+            // Create a new inventory model with a fresh ID for Core Data
+            let newInventory = InventoryModel(
+                id: UUID(), // Always generate new ID for Core Data persistence
+                item_stable_id: inventory.item_stable_id,
+                type: inventory.type,  // Use non-optional accessor
+                subtype: inventory.subtype,
+                subsubtype: inventory.subsubtype,
+                dimensions: inventory.dimensions,
+                quantity: inventory.quantity,
+                location: inventory.location,
+                date_added: inventory.date_added,
+                date_modified: inventory.date_modified
+            )
+
+            // Set properties
+            self.updateCoreDataEntity(coreDataItem, with: newInventory)
+
+            // Save context
+            try CoreDataErrorHandler.save(context: context)
+
+            self.log.info("Created inventory record: \(newInventory.item_stable_id) - \(newInventory.type)")
+            return newInventory
         }
     }
 
     func createInventories(_ inventories: [InventoryModel]) async throws -> [InventoryModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[InventoryModel], Error>) in
-            context.perform {
-                do {
-                    var createdInventories: [InventoryModel] = []
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            var createdInventories: [InventoryModel] = []
 
-                    for inventory in inventories {
-                        // Create new Core Data entity
-                        guard let entity = NSEntityDescription.entity(forEntityName: "Inventory", in: self.context) else {
-                            throw CoreDataInventoryRepositoryError.entityNotFound("Inventory")
-                        }
-                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.context)
-
-                        // Create a new inventory model with a fresh ID for Core Data
-                        let newInventory = InventoryModel(
-                            id: UUID(), // Always generate new ID for Core Data persistence
-                            item_stable_id: inventory.item_stable_id,
-                            type: inventory.type,  // Use non-optional accessor
-                            subtype: inventory.subtype,
-                            subsubtype: inventory.subsubtype,
-                            dimensions: inventory.dimensions,
-                            quantity: inventory.quantity,
-                            location: inventory.location,
-                            date_added: inventory.date_added,
-                            date_modified: inventory.date_modified
-                        )
-
-                        // Set properties
-                        self.updateCoreDataEntity(coreDataItem, with: newInventory)
-                        createdInventories.append(newInventory)
-                    }
-
-                    // Save all changes at once
-                    try CoreDataErrorHandler.save(context: self.context)
-
-                    self.log.info("Created \(createdInventories.count) inventory records in batch")
-                    continuation.resume(returning: createdInventories)
-
-                } catch {
-                    self.log.error("Failed to create inventory records in batch: \(error)")
-                    continuation.resume(throwing: error)
+            for inventory in inventories {
+                // Create new Core Data entity
+                guard let entity = NSEntityDescription.entity(forEntityName: "Inventory", in: context) else {
+                    throw CoreDataInventoryRepositoryError.entityNotFound("Inventory")
                 }
+                let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
+
+                // Create a new inventory model with a fresh ID for Core Data
+                let newInventory = InventoryModel(
+                    id: UUID(), // Always generate new ID for Core Data persistence
+                    item_stable_id: inventory.item_stable_id,
+                    type: inventory.type,  // Use non-optional accessor
+                    subtype: inventory.subtype,
+                    subsubtype: inventory.subsubtype,
+                    dimensions: inventory.dimensions,
+                    quantity: inventory.quantity,
+                    location: inventory.location,
+                    date_added: inventory.date_added,
+                    date_modified: inventory.date_modified
+                )
+
+                // Set properties
+                self.updateCoreDataEntity(coreDataItem, with: newInventory)
+                createdInventories.append(newInventory)
             }
+
+            // Save all changes at once
+            try CoreDataErrorHandler.save(context: context)
+
+            self.log.info("Created \(createdInventories.count) inventory records in batch")
+            return createdInventories
         }
     }
 
     func updateInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<InventoryModel, Error>) in
-            context.perform {
-                do {
-                    // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(byId: inventory.id) else {
-                        self.log.warning("Attempted to update non-existent inventory record: \(inventory.id)")
-                        continuation.resume(throwing: CoreDataInventoryRepositoryError.itemNotFound(inventory.id.uuidString))
-                        return
-                    }
-
-                    // Update properties
-                    self.updateCoreDataEntity(coreDataItem, with: inventory)
-
-                    // Save context
-                    try CoreDataErrorHandler.save(context: self.context)
-
-                    self.log.info("Updated inventory record: \(inventory.id)")
-                    continuation.resume(returning: inventory)
-
-                } catch {
-                    self.log.error("Failed to update inventory record: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            // Find existing item
+            guard let coreDataItem = try self.fetchCoreDataItemSync(byId: inventory.id) else {
+                self.log.warning("Attempted to update non-existent inventory record: \(inventory.id)")
+                throw CoreDataInventoryRepositoryError.itemNotFound(inventory.id.uuidString)
             }
+
+            // Update properties
+            self.updateCoreDataEntity(coreDataItem, with: inventory)
+
+            // Save context
+            try CoreDataErrorHandler.save(context: context)
+
+            self.log.info("Updated inventory record: \(inventory.id)")
+            return inventory
         }
     }
 
     func deleteInventory(id: UUID) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            context.perform {
-                do {
-                    // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(byId: id) else {
-                        // Item doesn't exist - this is actually success (idempotent deletion)
-                        // It may have been deleted by CloudKit sync or on another device
-                        self.log.info("Inventory record already deleted or doesn't exist: \(id)")
-                        continuation.resume(returning: ())
-                        return
-                    }
-
-                    // Delete item (this should also cascade delete any related locations)
-                    self.context.delete(coreDataItem)
-
-                    // Save context
-                    try CoreDataErrorHandler.save(context: self.context)
-
-                    self.log.info("Deleted inventory record: \(id)")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete inventory record: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        try await CoreDataHelper.performAsyncVoid(on: context) { context in
+            // Find existing item
+            guard let coreDataItem = try self.fetchCoreDataItemSync(byId: id) else {
+                // Item doesn't exist - this is actually success (idempotent deletion)
+                // It may have been deleted by CloudKit sync or on another device
+                self.log.info("Inventory record already deleted or doesn't exist: \(id)")
+                return
             }
-        }
+
+            // Delete item (this should also cascade delete any related locations)
+            context.delete(coreDataItem)
+
+            // Save context
+            try CoreDataErrorHandler.save(context: context)
+
+            self.log.info("Deleted inventory record: \(id)")
+                    }
     }
 
     func deleteInventory(forItem item_stable_id: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
-                    fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", item_stable_id)
+        try await CoreDataHelper.performAsyncVoid(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
+            fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", item_stable_id)
 
-                    let itemsToDelete = try self.context.fetch(fetchRequest)
+            let itemsToDelete = try context.fetch(fetchRequest)
 
-                    for item in itemsToDelete {
-                        self.context.delete(item)
-                    }
-
-                    if !itemsToDelete.isEmpty {
-                        try CoreDataErrorHandler.save(context: self.context)
-                    }
-
-                    self.log.info("Deleted \(itemsToDelete.count) inventory records for item: \(item_stable_id)")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete inventory records for item: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            for item in itemsToDelete {
+                context.delete(item)
             }
-        }
+
+            if !itemsToDelete.isEmpty {
+                try CoreDataErrorHandler.save(context: context)
+            }
+
+            self.log.info("Deleted \(itemsToDelete.count) inventory records for item: \(item_stable_id)")
+                    }
     }
 
     func deleteInventory(forItem item_stable_id: String, type: String) async throws {
         let cleanType = InventoryModel.cleanType(type)
 
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
-                    fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@ AND type == %@", item_stable_id, cleanType)
+        try await CoreDataHelper.performAsyncVoid(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Inventory")
+            fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@ AND type == %@", item_stable_id, cleanType)
 
-                    let itemsToDelete = try self.context.fetch(fetchRequest)
+            let itemsToDelete = try context.fetch(fetchRequest)
 
-                    for item in itemsToDelete {
-                        self.context.delete(item)
-                    }
-
-                    if !itemsToDelete.isEmpty {
-                        try CoreDataErrorHandler.save(context: self.context)
-                    }
-
-                    self.log.info("Deleted \(itemsToDelete.count) inventory records for item: \(item_stable_id) type: \(cleanType)")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete inventory records for item and type: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            for item in itemsToDelete {
+                context.delete(item)
             }
-        }
+
+            if !itemsToDelete.isEmpty {
+                try CoreDataErrorHandler.save(context: context)
+            }
+
+            self.log.info("Deleted \(itemsToDelete.count) inventory records for item: \(item_stable_id) type: \(cleanType)")
+                    }
     }
 }

@@ -196,7 +196,6 @@ class PersistenceController {
             let cloudKitOptions = NSPersistentCloudKitContainerOptions(
                 containerIdentifier: "iCloud.com.motleywoods.molten"
             )
-            // Enable verbose logging to diagnose sync issues
             cloudKitOptions.databaseScope = .private
             cloudDescription.cloudKitContainerOptions = cloudKitOptions
             Logger(subsystem: "com.motleywoods.molten", category: "persistence").info("☁️ Cloud store: \(cloudDescription.url?.path ?? "unknown")")

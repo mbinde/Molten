@@ -22,149 +22,105 @@ class CoreDataExpiringShareRepository: @unchecked Sendable {
 
     /// Fetch all expiring shares for the user
     func fetchAllExpiringShares() async throws -> [ExpiringShare] {
-        return try await withCheckedThrowingContinuation { continuation in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ExpiringShareRecord")
-                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "expires_at", ascending: true)]
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ExpiringShareRecord")
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "expires_at", ascending: true)]
 
-                    let records = try self.context.fetch(fetchRequest)
-                    let shares = records.compactMap { self.convertToExpiringShare($0) }
+            let records = try context.fetch(fetchRequest)
+            let shares = records.compactMap { Self.convertToExpiringShare($0) }
 
-                    continuation.resume(returning: shares)
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
+            return shares
         }
     }
 
     /// Fetch a specific expiring share by share code
     func fetchExpiringShare(byCode shareCode: String) async throws -> ExpiringShare? {
-        return try await withCheckedThrowingContinuation { continuation in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ExpiringShareRecord")
-                    fetchRequest.predicate = NSPredicate(format: "share_code == %@", shareCode)
-                    fetchRequest.fetchLimit = 1
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ExpiringShareRecord")
+            fetchRequest.predicate = NSPredicate(format: "share_code == %@", shareCode)
+            fetchRequest.fetchLimit = 1
 
-                    let records = try self.context.fetch(fetchRequest)
-                    let share = records.first.flatMap { self.convertToExpiringShare($0) }
+            let records = try context.fetch(fetchRequest)
+            let share = records.first.flatMap { Self.convertToExpiringShare($0) }
 
-                    continuation.resume(returning: share)
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
+            return share
         }
     }
 
     /// Save a new expiring share
     func saveExpiringShare(_ share: ExpiringShare) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            context.perform {
-                do {
-                    guard let entity = NSEntityDescription.entity(forEntityName: "ExpiringShareRecord", in: self.context) else {
-                        continuation.resume(throwing: NSError(domain: "CoreData", code: -1, userInfo: [NSLocalizedDescriptionKey: "Entity ExpiringShareRecord not found"]))
-                        return
-                    }
-
-                    let record = NSManagedObject(entity: entity, insertInto: self.context)
-                    record.setValue(share.id, forKey: "id")
-                    record.setValue(share.shareCode, forKey: "share_code")
-                    record.setValue(share.mainShareCode, forKey: "main_share_code")
-                    record.setValue(share.displayName, forKey: "display_name")
-                    record.setValue(share.shareNotes, forKey: "share_notes")
-                    record.setValue(share.expiresAt, forKey: "expires_at")
-                    record.setValue(share.createdAt, forKey: "created_at")
-
-                    try self.context.save()
-                    continuation.resume()
-                } catch {
-                    continuation.resume(throwing: error)
-                }
+        try await CoreDataHelper.performAsyncVoid(on: context) { context in
+            guard let entity = NSEntityDescription.entity(forEntityName: "ExpiringShareRecord", in: context) else {
+                throw NSError(domain: "CoreData", code: -1, userInfo: [NSLocalizedDescriptionKey: "Entity ExpiringShareRecord not found"])
             }
+
+            let record = NSManagedObject(entity: entity, insertInto: context)
+            record.setValue(share.id, forKey: "id")
+            record.setValue(share.shareCode, forKey: "share_code")
+            record.setValue(share.mainShareCode, forKey: "main_share_code")
+            record.setValue(share.displayName, forKey: "display_name")
+            record.setValue(share.shareNotes, forKey: "share_notes")
+            record.setValue(share.expiresAt, forKey: "expires_at")
+            record.setValue(share.createdAt, forKey: "created_at")
+
+            try context.save()
         }
     }
 
     /// Delete an expiring share by share code
     func deleteExpiringShare(byCode shareCode: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ExpiringShareRecord")
-                    fetchRequest.predicate = NSPredicate(format: "share_code == %@", shareCode)
+        try await CoreDataHelper.performAsyncVoid(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ExpiringShareRecord")
+            fetchRequest.predicate = NSPredicate(format: "share_code == %@", shareCode)
 
-                    let records = try self.context.fetch(fetchRequest)
-                    for record in records {
-                        self.context.delete(record)
-                    }
+            let records = try context.fetch(fetchRequest)
+            for record in records {
+                context.delete(record)
+            }
 
-                    if !records.isEmpty {
-                        try self.context.save()
-                    }
-
-                    continuation.resume()
-                } catch {
-                    continuation.resume(throwing: error)
-                }
+            if !records.isEmpty {
+                try context.save()
             }
         }
     }
 
     /// Delete all expiring shares associated with a main share code
     func deleteExpiringShares(forMainShareCode mainShareCode: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ExpiringShareRecord")
-                    fetchRequest.predicate = NSPredicate(format: "main_share_code == %@", mainShareCode)
+        try await CoreDataHelper.performAsyncVoid(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ExpiringShareRecord")
+            fetchRequest.predicate = NSPredicate(format: "main_share_code == %@", mainShareCode)
 
-                    let records = try self.context.fetch(fetchRequest)
-                    for record in records {
-                        self.context.delete(record)
-                    }
+            let records = try context.fetch(fetchRequest)
+            for record in records {
+                context.delete(record)
+            }
 
-                    if !records.isEmpty {
-                        try self.context.save()
-                    }
-
-                    continuation.resume()
-                } catch {
-                    continuation.resume(throwing: error)
-                }
+            if !records.isEmpty {
+                try context.save()
             }
         }
     }
 
     /// Delete all expired shares
     func deleteExpiredShares() async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ExpiringShareRecord")
-                    fetchRequest.predicate = NSPredicate(format: "expires_at < %@", Date() as NSDate)
+        try await CoreDataHelper.performAsyncVoid(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ExpiringShareRecord")
+            fetchRequest.predicate = NSPredicate(format: "expires_at < %@", Date() as NSDate)
 
-                    let records = try self.context.fetch(fetchRequest)
-                    for record in records {
-                        self.context.delete(record)
-                    }
+            let records = try context.fetch(fetchRequest)
+            for record in records {
+                context.delete(record)
+            }
 
-                    if !records.isEmpty {
-                        try self.context.save()
-                    }
-
-                    continuation.resume()
-                } catch {
-                    continuation.resume(throwing: error)
-                }
+            if !records.isEmpty {
+                try context.save()
             }
         }
     }
 
     // MARK: - Conversion Helpers
 
-    private func convertToExpiringShare(_ record: NSManagedObject) -> ExpiringShare? {
+    private nonisolated static func convertToExpiringShare(_ record: NSManagedObject) -> ExpiringShare? {
         guard let id = record.value(forKey: "id") as? UUID,
               let shareCode = record.value(forKey: "share_code") as? String,
               let mainShareCode = record.value(forKey: "main_share_code") as? String,
@@ -176,14 +132,18 @@ class CoreDataExpiringShareRepository: @unchecked Sendable {
 
         let shareNotes = record.value(forKey: "share_notes") as? String
 
-        return ExpiringShare(
-            id: id,
-            shareCode: shareCode,
-            mainShareCode: mainShareCode,
-            displayName: displayName,
-            shareNotes: shareNotes,
-            expiresAt: expiresAt,
-            createdAt: createdAt
-        )
+        // ExpiringShare is Sendable, but compiler incorrectly infers MainActor isolation
+        // Using assumeIsolated to bypass false positive
+        return MainActor.assumeIsolated {
+            ExpiringShare(
+                id: id,
+                shareCode: shareCode,
+                mainShareCode: mainShareCode,
+                displayName: displayName,
+                shareNotes: shareNotes,
+                expiresAt: expiresAt,
+                createdAt: createdAt
+            )
+        }
     }
 }

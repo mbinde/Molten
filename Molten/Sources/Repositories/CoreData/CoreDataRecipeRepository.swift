@@ -31,223 +31,157 @@ class CoreDataRecipeRepository: @unchecked Sendable, RecipeRepository {
     // MARK: - Frit Recipe Operations
 
     func fetchAllRecipes() async throws -> [RecipeModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[RecipeModel], Error>) in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
-                    fetchRequest.sortDescriptors = [
-                        NSSortDescriptor(key: "date_created", ascending: false)
-                    ]
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
+            fetchRequest.sortDescriptors = [
+                NSSortDescriptor(key: "date_created", ascending: false)
+            ]
 
-                    let coreDataRecipes = try self.context.fetch(fetchRequest)
-                    let recipes = coreDataRecipes.compactMap { self.convertToRecipeModel($0) }
+            let coreDataRecipes = try context.fetch(fetchRequest)
+            let recipes = coreDataRecipes.compactMap { self.convertToRecipeModel($0) }
 
-                    self.log.debug("Fetched \(recipes.count) frit recipes")
-                    continuation.resume(returning: recipes)
-
-                } catch {
-                    self.log.error("Failed to fetch frit recipes: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+            self.log.debug("Fetched \(recipes.count) frit recipes")
+            return recipes
         }
     }
 
     func fetchRecipe(byId id: UUID) async throws -> RecipeModel? {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<RecipeModel?, Error>) in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
-                    fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
-                    fetchRequest.fetchLimit = 1
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
+            fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+            fetchRequest.fetchLimit = 1
 
-                    let results = try self.context.fetch(fetchRequest)
-                    let recipe = results.first.flatMap { self.convertToRecipeModel($0) }
+            let results = try context.fetch(fetchRequest)
+            let recipe = results.first.flatMap { self.convertToRecipeModel($0) }
 
-                    if recipe != nil {
-                        self.log.debug("Found frit recipe with ID: \(id)")
-                    } else {
-                        self.log.debug("Frit recipe not found with ID: \(id)")
-                    }
-
-                    continuation.resume(returning: recipe)
-
-                } catch {
-                    self.log.error("Failed to fetch frit recipe by ID: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            if recipe != nil {
+                self.log.debug("Found frit recipe with ID: \(id)")
+            } else {
+                self.log.debug("Frit recipe not found with ID: \(id)")
             }
+
+            return recipe
         }
     }
 
     func createRecipe(_ recipe: RecipeModel) async throws -> RecipeModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<RecipeModel, Error>) in
-            context.perform {
-                do {
-                    // Create new Core Data entity
-                    guard let entity = NSEntityDescription.entity(forEntityName: "Recipe", in: self.context) else {
-                        throw RecipeRepositoryError.persistenceError("FritRecipe entity not found")
-                    }
-                    let coreDataRecipe = NSManagedObject(entity: entity, insertInto: self.context)
-
-                    // Set properties
-                    self.updateCoreDataFritRecipe(coreDataRecipe, with: recipe)
-
-                    // Save context
-                    try CoreDataErrorHandler.save(context: self.context)
-
-                    self.log.info("Created frit recipe: \(recipe.title)")
-                    continuation.resume(returning: recipe)
-
-                } catch {
-                    self.log.error("Failed to create frit recipe: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            // Create new Core Data entity
+            guard let entity = NSEntityDescription.entity(forEntityName: "Recipe", in: context) else {
+                throw RecipeRepositoryError.persistenceError("FritRecipe entity not found")
             }
+            let coreDataRecipe = NSManagedObject(entity: entity, insertInto: context)
+
+            // Set properties
+            self.updateCoreDataFritRecipe(coreDataRecipe, with: recipe)
+
+            // Save context
+            try CoreDataErrorHandler.save(context: context)
+
+            self.log.info("Created frit recipe: \(recipe.title)")
+            return recipe
         }
     }
 
     func updateRecipe(_ recipe: RecipeModel) async throws -> RecipeModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<RecipeModel, Error>) in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
-                    fetchRequest.predicate = NSPredicate(format: "id == %@", recipe.id as CVarArg)
-                    fetchRequest.fetchLimit = 1
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
+            fetchRequest.predicate = NSPredicate(format: "id == %@", recipe.id as CVarArg)
+            fetchRequest.fetchLimit = 1
 
-                    guard let coreDataRecipe = try self.context.fetch(fetchRequest).first else {
-                        throw RecipeRepositoryError.recipeNotFound
-                    }
-
-                    // Update with new modification date
-                    let updated = recipe.withUpdatedModificationDate()
-                    self.updateCoreDataFritRecipe(coreDataRecipe, with: updated)
-
-                    // Save context
-                    try CoreDataErrorHandler.save(context: self.context)
-
-                    self.log.info("Updated frit recipe: \(updated.title)")
-                    continuation.resume(returning: updated)
-
-                } catch {
-                    self.log.error("Failed to update frit recipe: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            guard let coreDataRecipe = try context.fetch(fetchRequest).first else {
+                throw RecipeRepositoryError.recipeNotFound
             }
+
+            // Update with new modification date
+            let updated = recipe.withUpdatedModificationDate()
+            self.updateCoreDataFritRecipe(coreDataRecipe, with: updated)
+
+            // Save context
+            try CoreDataErrorHandler.save(context: context)
+
+            self.log.info("Updated frit recipe: \(updated.title)")
+            return updated
         }
     }
 
     func deleteRecipe(id: UUID) async throws {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
-                    fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
-                    fetchRequest.fetchLimit = 1
+        try await CoreDataHelper.performAsyncVoid(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
+            fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+            fetchRequest.fetchLimit = 1
 
-                    guard let coreDataRecipe = try self.context.fetch(fetchRequest).first else {
-                        throw RecipeRepositoryError.recipeNotFound
-                    }
-
-                    self.context.delete(coreDataRecipe)
-                    try CoreDataErrorHandler.save(context: self.context)
-
-                    self.log.info("Deleted frit recipe with ID: \(id)")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete frit recipe: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            guard let coreDataRecipe = try context.fetch(fetchRequest).first else {
+                throw RecipeRepositoryError.recipeNotFound
             }
+
+            context.delete(coreDataRecipe)
+            try CoreDataErrorHandler.save(context: context)
+
+            self.log.info("Deleted frit recipe with ID: \(id)")
         }
     }
 
     // MARK: - Search Operations
 
     func searchRecipes(byTitle query: String) async throws -> [RecipeModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[RecipeModel], Error>) in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
-                    fetchRequest.predicate = NSPredicate(format: "title CONTAINS[cd] %@", query)
-                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
+            fetchRequest.predicate = NSPredicate(format: "title CONTAINS[cd] %@", query)
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
 
-                    let coreDataRecipes = try self.context.fetch(fetchRequest)
-                    let recipes = coreDataRecipes.compactMap { self.convertToRecipeModel($0) }
+            let coreDataRecipes = try context.fetch(fetchRequest)
+            let recipes = coreDataRecipes.compactMap { self.convertToRecipeModel($0) }
 
-                    self.log.debug("Search '\(query)' found \(recipes.count) recipes")
-                    continuation.resume(returning: recipes)
-
-                } catch {
-                    self.log.error("Failed to search frit recipes: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+            self.log.debug("Search '\(query)' found \(recipes.count) recipes")
+            return recipes
         }
     }
 
     func fetchRecipes(containingIngredient stableId: String) async throws -> [RecipeModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[RecipeModel], Error>) in
-            context.perform {
-                do {
-                    // Fetch all ingredients with this stable_id
-                    let ingredientFetch = NSFetchRequest<NSManagedObject>(entityName: "RecipeIngredient")
-                    ingredientFetch.predicate = NSPredicate(format: "stable_id == %@", stableId)
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            // Fetch all ingredients with this stable_id
+            let ingredientFetch = NSFetchRequest<NSManagedObject>(entityName: "RecipeIngredient")
+            ingredientFetch.predicate = NSPredicate(format: "stable_id == %@", stableId)
 
-                    let ingredients = try self.context.fetch(ingredientFetch)
+            let ingredients = try context.fetch(ingredientFetch)
 
-                    // Get unique recipe IDs from ingredients
-                    let recipeIds = ingredients.compactMap { ingredient -> UUID? in
-                        guard let recipe = ingredient.value(forKey: "recipe") as? NSManagedObject,
-                              let id = recipe.value(forKey: "id") as? UUID else {
-                            return nil
-                        }
-                        return id
-                    }
-
-                    // Fetch recipes with those IDs
-                    if recipeIds.isEmpty {
-                        continuation.resume(returning: [])
-                        return
-                    }
-
-                    let recipeFetch = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
-                    recipeFetch.predicate = NSPredicate(format: "id IN %@", recipeIds)
-
-                    let coreDataRecipes = try self.context.fetch(recipeFetch)
-                    let recipes = coreDataRecipes.compactMap { self.convertToRecipeModel($0) }
-
-                    self.log.debug("Found \(recipes.count) recipes containing ingredient \(stableId)")
-                    continuation.resume(returning: recipes)
-
-                } catch {
-                    self.log.error("Failed to fetch recipes by ingredient: \(error)")
-                    continuation.resume(throwing: error)
+            // Get unique recipe IDs from ingredients
+            let recipeIds = ingredients.compactMap { ingredient -> UUID? in
+                guard let recipe = ingredient.value(forKey: "recipe") as? NSManagedObject,
+                      let id = recipe.value(forKey: "id") as? UUID else {
+                    return nil
                 }
+                return id
             }
+
+            // Fetch recipes with those IDs
+            if recipeIds.isEmpty {
+                return []
+            }
+
+            let recipeFetch = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
+            recipeFetch.predicate = NSPredicate(format: "id IN %@", recipeIds)
+
+            let coreDataRecipes = try context.fetch(recipeFetch)
+            let recipes = coreDataRecipes.compactMap { self.convertToRecipeModel($0) }
+
+            self.log.debug("Found \(recipes.count) recipes containing ingredient \(stableId)")
+            return recipes
         }
     }
 
     func fetchRecipes(byMeasurementType measurementType: MeasurementType) async throws -> [RecipeModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[RecipeModel], Error>) in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
-                    fetchRequest.predicate = NSPredicate(format: "measurement_type == %@", measurementType.rawValue)
-                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Recipe")
+            fetchRequest.predicate = NSPredicate(format: "measurement_type == %@", measurementType.rawValue)
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
 
-                    let coreDataRecipes = try self.context.fetch(fetchRequest)
-                    let recipes = coreDataRecipes.compactMap { self.convertToRecipeModel($0) }
+            let coreDataRecipes = try context.fetch(fetchRequest)
+            let recipes = coreDataRecipes.compactMap { self.convertToRecipeModel($0) }
 
-                    self.log.debug("Found \(recipes.count) recipes with measurement type \(measurementType.rawValue)")
-                    continuation.resume(returning: recipes)
-
-                } catch {
-                    self.log.error("Failed to fetch recipes by measurement type: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+            self.log.debug("Found \(recipes.count) recipes with measurement type \(measurementType.rawValue)")
+            return recipes
         }
     }
 

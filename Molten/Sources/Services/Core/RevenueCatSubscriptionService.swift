@@ -16,19 +16,13 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
     public func hasProAccess() async -> Bool {
         do {
             let customerInfo = try await Purchases.shared.customerInfo()
-            print("🔍 [RevenueCat] Checking Pro access for entitlement: '\(proEntitlementIdentifier)'")
-            print("🔍 [RevenueCat] Available entitlements: \(customerInfo.entitlements.all.keys.sorted())")
-            print("🔍 [RevenueCat] Active entitlements: \(customerInfo.entitlements.all.filter { $0.value.isActive }.keys.sorted())")
-
             if let proEntitlement = customerInfo.entitlements[proEntitlementIdentifier] {
-                print("🔍 [RevenueCat] Pro entitlement found - isActive: \(proEntitlement.isActive)")
                 return proEntitlement.isActive
             } else {
-                print("⚠️ [RevenueCat] Pro entitlement '\(proEntitlementIdentifier)' not found in customer entitlements")
                 return false
             }
         } catch {
-            print("❌ [RevenueCat] Error checking Pro access: \(error)")
+            // Error checking Pro access - fail closed
             return false
         }
     }
@@ -56,7 +50,7 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
                 willRenew: false
             )
         } catch {
-            print("Error getting subscription status: \(error)")
+            // Error getting subscription status - fail closed
             return SubscriptionInfo(
                 isActive: false,
                 productIdentifier: nil,
@@ -86,16 +80,12 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
 
     public func presentPaywall() async throws {
         #if canImport(UIKit)
-        print("🔵 [RevenueCat] presentPaywall() called")
-
         // RevenueCat Paywalls (modern approach with default offering)
         guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene else {
-            print("❌ [RevenueCat] Could not find windowScene")
             throw SubscriptionServiceError.configurationError
         }
 
         guard let rootViewController = await windowScene.windows.first?.rootViewController else {
-            print("❌ [RevenueCat] Could not find rootViewController")
             throw SubscriptionServiceError.configurationError
         }
 
@@ -105,15 +95,12 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
             topViewController = presented
         }
 
-        print("✅ [RevenueCat] Found topmost view controller: \(type(of: topViewController))")
         let paywallViewController = PaywallViewController()
 
         // Handle purchase completion
         paywallViewController.delegate = PaywallViewControllerDelegateHandler.shared
 
-        print("🎬 [RevenueCat] Presenting paywall from topmost view controller...")
         await topViewController.present(paywallViewController, animated: true)
-        print("✅ [RevenueCat] Paywall presented")
         #else
         throw SubscriptionServiceError.configurationError
         #endif
@@ -162,7 +149,7 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
             let customerInfo = try await Purchases.shared.customerInfo()
             return customerInfo.entitlements[identifier]?.isActive == true
         } catch {
-            print("Error checking entitlement '\(identifier)': \(error)")
+            // Error checking entitlement - fail closed
             return false
         }
     }
@@ -177,10 +164,6 @@ private class PaywallViewControllerDelegateHandler: NSObject, PaywallViewControl
 
     func paywallViewController(_ controller: PaywallViewController,
                               didFinishPurchasingWith customerInfo: RevenueCat.CustomerInfo) {
-        print("✅ [RevenueCat] Purchase completed successfully!")
-        print("✅ [RevenueCat] Customer has entitlements: \(customerInfo.entitlements.all.keys.sorted())")
-        print("✅ [RevenueCat] Active entitlements: \(customerInfo.entitlements.all.filter { $0.value.isActive }.keys.sorted())")
-
         controller.dismiss(animated: true)
 
         // Post notification to reload subscription status
@@ -189,7 +172,7 @@ private class PaywallViewControllerDelegateHandler: NSObject, PaywallViewControl
 
     func paywallViewController(_ controller: PaywallViewController,
                               didFailPurchasingWith error: Error) {
-        print("❌ [RevenueCat] Purchase failed: \(error)")
+        // Purchase failed - error silently handled
     }
 }
 #endif

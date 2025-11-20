@@ -384,10 +384,8 @@ actor ProjectPDFService {
 #else
 // macOS stub - PDF generation is iOS-only
 actor ProjectPDFService {
-    private let userImageRepository: UserImageRepository
-
-    init(userImageRepository: UserImageRepository) {
-        self.userImageRepository = userImageRepository
+    init() {
+        // No-op init for macOS
     }
 
     func exportPlanAsPDF(_ plan: ProjectModel) async throws -> URL {

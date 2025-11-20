@@ -5,6 +5,8 @@
 **Status:** Planning
 **Last Updated:** 2025-11-08
 
+> **⚠️ NOTE:** This document was written when catalog used JSON + Core Data. The catalog has since been migrated to **SQLite**. References to JSON/Core Data in this document are historical and need updating when implementing OTA updates for the SQLite-based catalog.
+
 ---
 
 ## Table of Contents

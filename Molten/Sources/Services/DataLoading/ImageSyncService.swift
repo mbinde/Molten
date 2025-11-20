@@ -104,7 +104,7 @@ actor ImageSyncService {
 
     /// Called when downloading a new catalog
     /// Downloads thumbnails for new/changed items, respecting network conditions
-    func syncThumbnailsAfterCatalogUpdate(catalogItems: [CatalogItemData]) async throws {
+    func syncThumbnailsAfterCatalogUpdate(catalogItems: [GlassItemModel]) async throws {
         guard shouldDownloadImages() else {
             return
         }

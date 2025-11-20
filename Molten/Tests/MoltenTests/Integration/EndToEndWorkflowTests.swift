@@ -231,15 +231,25 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         await CatalogDataCache.shared.reload(catalogService: catalogService)
         await inventoryViewModel.loadInventoryItems()
 
-        await MainActor.run {
-            #expect(inventoryViewModel.filteredItems.count >= 2, "Should show filtered inventory items")
+        // Verify the data is in the services before checking the view
+        let allCatalogItems = try await catalogService.getAllGlassItems()
+        print("DEBUG: Total catalog items: \(allCatalogItems.count)")
+        print("DEBUG: Filtered items in ViewModel: \(inventoryViewModel.filteredItems.count)")
 
-            let bullseyeRed = inventoryViewModel.filteredItems.first { $0.glassItem.manufacturer == "bullseye" && $0.glassItem.sku == "0124" }
-            #expect(bullseyeRed != nil, "Should find Bullseye Red in inventory")
-            let inventoryQty = bullseyeRed?.inventoryByType["inventory"] ?? 0.0
-            let buyQty = bullseyeRed?.inventoryByType["buy"] ?? 0.0
-            #expect(inventoryQty == 10.0, "Should show 10 units in inventory")
-            #expect(buyQty == 10.0, "Should show 10 units purchased")
+        if allCatalogItems.count >= 2 {
+            await MainActor.run {
+                #expect(inventoryViewModel.filteredItems.count >= 2, "Should show filtered inventory items")
+
+                let bullseyeRed = inventoryViewModel.filteredItems.first { $0.glassItem.manufacturer == "bullseye" && $0.glassItem.sku == "0124" }
+                #expect(bullseyeRed != nil, "Should find Bullseye Red in inventory")
+                let inventoryQty = bullseyeRed?.inventoryByType["inventory"] ?? 0.0
+                let buyQty = bullseyeRed?.inventoryByType["buy"] ?? 0.0
+                #expect(inventoryQty == 10.0, "Should show 10 units in inventory")
+                #expect(buyQty == 10.0, "Should show 10 units purchased")
+            }
+        } else {
+            print("⚠️  WARNING: No inventory items found - ViewModel may not be loading correctly")
+            #expect(false, "No inventory items found in service - test data setup issue")
         }
         
         print("✅ Complete catalog management workflow successful!")

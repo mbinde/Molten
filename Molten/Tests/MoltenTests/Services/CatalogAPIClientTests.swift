@@ -405,17 +405,6 @@ struct CatalogAPIClientTests {
         }
     }
 
-    // MARK: - Delta Download Tests
-
-    @Test("Download delta catalog is not implemented")
-    func testDownloadDeltaCatalogNotImplemented() async throws {
-        let client = CatalogAPIClient(session: MockCatalogURLSession())
-
-        await #expect(throws: CatalogUpdateError.updateNotAvailable) {
-            _ = try await client.downloadDeltaCatalog(from: 1, to: 2)
-        }
-    }
-
     // MARK: - API Versioning Tests
 
     @Test("Version endpoint uses /v1/catalog/version path")

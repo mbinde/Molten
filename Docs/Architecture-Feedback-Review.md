@@ -51,45 +51,31 @@ This document tracks architectural feedback received and our analysis/decisions 
 ---
 
 #### 1.2: Two-Store Architecture
-**Assessment:** PARTIALLY VALID - May be treating symptom not cause
+**Assessment:** ✅ RESOLVED - Catalog migrated to SQLite
 
-**Key question:** Why is read-only catalog data in Core Data at all?
+**Original issue:** Catalog data was in Core Data LocalStore to prevent CloudKit duplication
 
-**Investigation findings:**
-- ✅ Catalog data loaded from bundled JSON file (`glassitems.json`)
-- Source: `GlassItemDataLoadingService.swift` lines 46-104
-- Checksum-based change detection (UserDefaults)
-- Version-based wipe/reload support (lines 106-146)
-- Loaded once at app startup, then persisted in Core Data localContext
-- **Currently uses Core Data for**: Querying, filtering, relationships to inventory/tags
+**Resolution (Completed):**
+- ✅ Catalog data migrated from Core Data to **bundled SQLite database**
+- ✅ Catalog is now **read-only** via `SQLiteGlassItemRepository`
+- ✅ Two-store Core Data architecture **eliminated for catalog**
+- ✅ Core Data now only stores user data (CloudKit-synced)
+- ✅ JSON parsing code (`CatalogDataModels.swift`, `CatalogDataProcessor.swift`) **removed as dead code**
 
-**Why two stores exist:**
-- LocalContext (no CloudKit): GlassItem, ItemTags, CoatingItem, ToolItem (catalog data)
-- CloudContext (CloudKit sync): Inventory, PurchaseRecord, Projects, UserTags (user data)
-- Prevents CloudKit from syncing identical catalog data across all user devices
+**Current architecture:**
+- **Catalog**: Bundled SQLite database (read-only, ~2,659 items)
+  - Accessed via `SQLiteGlassItemRepository`
+  - Updates delivered via OTA mechanism (new SQLite file download)
+  - No Core Data overhead for catalog queries
+- **User Data**: Single Core Data CloudStore
+  - Inventory, PurchaseRecord, Projects, UserTags (CloudKit sync)
+  - No catalog entities in Core Data anymore
 
-**The deeper question:**
-- Does read-only catalog data need Core Data at all?
-- Pro: Powerful queries, relationships, lazy loading
-- Con: Complexity, migration overhead, two-store workarounds
-- Alternative: In-memory dictionary/array loaded from JSON (simpler, faster)
-- Consideration: ~2,659 catalog items - fits easily in memory
-
-**Decision:** ⏳ INVESTIGATE COMPLETE - See detailed analysis
-
-**Investigation complete:** See [`Catalog-Data-Investigation.md`](./Catalog-Data-Investigation.md)
-
-**Key findings:**
-- **ZERO Core Data relationships** from GlassItem (already string-based!)
-- Simple predicates easily replaced with Swift native filtering
-- Most queries: `fetchItems(matching: nil)` then filter (perfect for in-memory!)
-- Memory: ~1.3 MB for 2,659 items (negligible)
-- 40-60 hours for full migration
-- **Recommendation:** YES - move catalog to in-memory store
-- **Priority:** High (eliminates two-store complexity)
-- **Dependencies:** Should do AFTER Issue 1.1 (DI) for cleaner migration
-
-**Action items:** See investigation document for 6-phase migration plan
+**Benefits achieved:**
+- Simplified architecture (no two-store complexity)
+- Faster catalog queries (native SQLite, no Core Data overhead)
+- Smaller CloudKit sync surface (user data only)
+- Clear separation: catalog = read-only SQLite, user data = writable Core Data
 
 ---
 

@@ -95,12 +95,16 @@ enum CatalogDownloadStrategy {
 
 // MARK: - Delta Update (v2.0)
 
+// NOTE: Delta updates not implemented yet - commented out due to CatalogItemData removal
+// Uncomment and update to use GlassItemModel (with Codable conformance) when implementing v2.0
+
+/*
 /// Incremental catalog update (not implemented in v1.5)
 struct CatalogDelta: Codable {
     let fromVersion: Int
     let toVersion: Int
     let generated: Date
-    let added: [CatalogItemData]
+    let added: [GlassItemModel]
     let updated: [CatalogItemUpdate]
     let removed: [String]  // stable_ids
 
@@ -123,6 +127,7 @@ struct CatalogItemUpdate: Codable {
         case changes
     }
 }
+*/
 
 // Helper for dynamic JSON decoding
 struct AnyCodable: Codable {

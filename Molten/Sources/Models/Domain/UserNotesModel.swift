@@ -9,12 +9,12 @@ import Foundation
 
 /// Business model for user notes with validation and business logic
 struct UserNotesModel: Identifiable, Equatable, Codable, Sendable {
-    let id: String
-    let item_stable_id: String
-    let notes: String
+    nonisolated let id: UUID
+    nonisolated let item_stable_id: String
+    nonisolated let notes: String
 
     /// Initialize with business logic validation
-    nonisolated init(id: String = UUID().uuidString, item_stable_id: String, notes: String) {
+    nonisolated init(id: UUID = UUID(), item_stable_id: String, notes: String) {
         self.id = id
         self.item_stable_id = item_stable_id.trimmingCharacters(in: .whitespacesAndNewlines)
         self.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -85,7 +85,13 @@ extension UserNotesModel {
             return nil
         }
 
-        let id = dictionary["id"] as? String ?? UUID().uuidString
+        // Try to get UUID from dictionary, or generate new one
+        let id: UUID
+        if let uuidString = dictionary["id"] as? String, let uuid = UUID(uuidString: uuidString) {
+            id = uuid
+        } else {
+            id = UUID()
+        }
 
         return UserNotesModel(
             id: id,
@@ -97,7 +103,7 @@ extension UserNotesModel {
     /// Convert to dictionary (useful for storage or API calls)
     func toDictionary() -> [String: Any] {
         return [
-            "id": id,
+            "id": id.uuidString,
             "item_stable_id": item_stable_id,
             "notes": notes
         ]

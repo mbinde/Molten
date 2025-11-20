@@ -187,7 +187,7 @@ struct UserNotesEditor: View {
                 }
 
                 let notes = UserNotesModel(
-                    id: existingNotes?.id ?? UUID().uuidString,
+                    id: existingNotes?.id ?? UUID(),
                     item_stable_id: item.glassItem.stable_id,
                     notes: trimmedNotes
                 )

@@ -17,7 +17,7 @@ import Foundation
 /// - DO NOT add a "natural_key" field - it was deleted and should NEVER come back
 /// - DO NOT create any "bullseye-001-001" format keys - those are legacy garbage
 /// - If you see natural_key in old tests, DELETE IT from the tests
-struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
+struct GlassItemModel: CatalogItem {
     let stable_id: String  // PRIMARY KEY: MANDATORY 6-char hash (e.g., "abc123")
     let name: String
     let sku: String?  // Optional - some manufacturers don't use SKUs
@@ -84,7 +84,7 @@ struct GlassItemModel: Identifiable, Equatable, Hashable, Sendable {
 /// - DO NOT add a "natural_key" field - it was deleted and should NEVER come back
 /// - DO NOT create any "manufacturer-001-001" format keys - those are legacy garbage
 /// - If you see natural_key in old tests, DELETE IT from the tests
-struct CoatingItemModel: Identifiable, Equatable, Hashable, Sendable {
+struct CoatingItemModel: CatalogItem {
     let stable_id: String  // PRIMARY KEY: MANDATORY 6-char hash (e.g., "abc123")
     let name: String
     let sku: String?  // Optional - some manufacturers don't use SKUs
@@ -144,7 +144,7 @@ struct CoatingItemModel: Identifiable, Equatable, Hashable, Sendable {
 /// - DO NOT add a "natural_key" field - it was deleted and should NEVER come back
 /// - DO NOT create any "manufacturer-001-001" format keys - those are legacy garbage
 /// - If you see natural_key in old tests, DELETE IT from the tests
-struct ToolItemModel: Identifiable, Equatable, Hashable, Sendable {
+struct ToolItemModel: CatalogItem {
     let stable_id: String  // PRIMARY KEY: MANDATORY 6-char hash (e.g., "abc123")
     let name: String
     let sku: String?  // Optional - some manufacturers don't use SKUs

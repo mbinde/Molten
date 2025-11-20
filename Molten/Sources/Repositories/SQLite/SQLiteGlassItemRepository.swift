@@ -13,7 +13,7 @@ final class SQLiteGlassItemRepository: BaseSQLiteCatalogItemRepository<GlassItem
 
     // MARK: - Initialization
 
-    init(databaseManager: CatalogDatabaseManagerProtocol = CatalogDatabaseManager.shared) {
+    nonisolated init(databaseManager: CatalogDatabaseManagerProtocol = CatalogDatabaseManager.shared) {
         super.init(
             databaseManager: databaseManager,
             tableName: "glass_items",

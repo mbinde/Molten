@@ -21,52 +21,36 @@ extension CoreDataInventoryRepository {
     }
 
     func getDistinctLocations() async throws -> [String] {
-        return try await withCheckedThrowingContinuation { continuation in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
-                    fetchRequest.propertiesToFetch = ["location"]
-                    fetchRequest.returnsDistinctResults = true
-                    fetchRequest.resultType = .dictionaryResultType
-                    fetchRequest.predicate = NSPredicate(format: "location != nil")
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
+            fetchRequest.propertiesToFetch = ["location"]
+            fetchRequest.returnsDistinctResults = true
+            fetchRequest.resultType = .dictionaryResultType
+            fetchRequest.predicate = NSPredicate(format: "location != nil")
 
-                    let results = try self.context.fetch(fetchRequest)
-                    let locations = results.compactMap { $0["location"] as? String }.sorted()
+            let results = try context.fetch(fetchRequest)
+            let locations = results.compactMap { $0["location"] as? String }.sorted()
 
-                    self.log.debug("Found \(locations.count) distinct locations")
-                    continuation.resume(returning: locations)
-
-                } catch {
-                    self.log.error("Failed to fetch distinct locations: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+            self.log.debug("Found \(locations.count) distinct locations")
+            return locations
         }
     }
 
     func getLocationNames(withPrefix prefix: String) async throws -> [String] {
         let cleanPrefix = StorageLocationModel.cleanLocationName(prefix)
 
-        return try await withCheckedThrowingContinuation { continuation in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
-                    fetchRequest.propertiesToFetch = ["location"]
-                    fetchRequest.returnsDistinctResults = true
-                    fetchRequest.resultType = .dictionaryResultType
-                    fetchRequest.predicate = NSPredicate(format: "location BEGINSWITH[c] %@", cleanPrefix)
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
+            fetchRequest.propertiesToFetch = ["location"]
+            fetchRequest.returnsDistinctResults = true
+            fetchRequest.resultType = .dictionaryResultType
+            fetchRequest.predicate = NSPredicate(format: "location BEGINSWITH[c] %@", cleanPrefix)
 
-                    let results = try self.context.fetch(fetchRequest)
-                    let locations = results.compactMap { $0["location"] as? String }.sorted()
+            let results = try context.fetch(fetchRequest)
+            let locations = results.compactMap { $0["location"] as? String }.sorted()
 
-                    self.log.debug("Found \(locations.count) locations with prefix: \(cleanPrefix)")
-                    continuation.resume(returning: locations)
-
-                } catch {
-                    self.log.error("Failed to fetch location names with prefix: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+            self.log.debug("Found \(locations.count) locations with prefix: \(cleanPrefix)")
+            return locations
         }
     }
 

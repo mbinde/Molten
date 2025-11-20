@@ -15,48 +15,32 @@ import OSLog
 extension CoreDataInventoryRepository {
 
     func getDistinctTypes() async throws -> [String] {
-        return try await withCheckedThrowingContinuation { continuation in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
-                    fetchRequest.propertiesToFetch = ["type"]
-                    fetchRequest.returnsDistinctResults = true
-                    fetchRequest.resultType = .dictionaryResultType
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
+            fetchRequest.propertiesToFetch = ["type"]
+            fetchRequest.returnsDistinctResults = true
+            fetchRequest.resultType = .dictionaryResultType
 
-                    let results = try self.context.fetch(fetchRequest)
-                    let types = results.compactMap { $0["type"] as? String }.sorted()
+            let results = try context.fetch(fetchRequest)
+            let types = results.compactMap { $0["type"] as? String }.sorted()
 
-                    self.log.debug("Found \(types.count) distinct inventory types")
-                    continuation.resume(returning: types)
-
-                } catch {
-                    self.log.error("Failed to fetch distinct types: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+            self.log.debug("Found \(types.count) distinct inventory types")
+            return types
         }
     }
 
     func getItemsWithInventory() async throws -> [String] {
-        return try await withCheckedThrowingContinuation { continuation in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
-                    fetchRequest.propertiesToFetch = ["item_stable_id"]
-                    fetchRequest.returnsDistinctResults = true
-                    fetchRequest.resultType = .dictionaryResultType
+        return try await CoreDataHelper.performAsync(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Inventory")
+            fetchRequest.propertiesToFetch = ["item_stable_id"]
+            fetchRequest.returnsDistinctResults = true
+            fetchRequest.resultType = .dictionaryResultType
 
-                    let results = try self.context.fetch(fetchRequest)
-                    let naturalKeys = results.compactMap { $0["item_stable_id"] as? String }.sorted()
+            let results = try context.fetch(fetchRequest)
+            let naturalKeys = results.compactMap { $0["item_stable_id"] as? String }.sorted()
 
-                    self.log.debug("Found \(naturalKeys.count) items with inventory")
-                    continuation.resume(returning: naturalKeys)
-
-                } catch {
-                    self.log.error("Failed to fetch items with inventory: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+            self.log.debug("Found \(naturalKeys.count) items with inventory")
+            return naturalKeys
         }
     }
 

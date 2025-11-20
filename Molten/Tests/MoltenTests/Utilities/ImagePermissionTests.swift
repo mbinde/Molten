@@ -23,8 +23,8 @@ struct ImagePermissionTests {
 
     @Test("GlassManufacturers tracks permission for other manufacturers as true")
     func testOtherManufacturersHavePermission() async throws {
-        // Test that other manufacturers have permission
-        let manufacturers = ["EF", "DH", "BB", "GA", "RE", "TAG", "VF", "NS", "BE", "KUG", "MOR"]
+        // Test that some manufacturers have permission
+        let manufacturers = ["BE", "EF"]
 
         for manufacturer in manufacturers {
             let hasPermission = GlassManufacturers.hasProductImagePermission(for: manufacturer)

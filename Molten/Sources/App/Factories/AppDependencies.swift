@@ -166,14 +166,15 @@ class AppDependencies {
         // In test mode, use writable Core Data repository instead of read-only SQLite
         if self.mode == .mock {
             self.glassItemRepository = CoreDataGlassItemRepository(context: self.localContext)
+            self.itemTagsRepository = CoreDataItemTagsRepository(context: self.localContext)
         } else {
             self.glassItemRepository = SQLiteGlassItemRepository(databaseManager: .shared)
+            self.itemTagsRepository = SQLiteItemTagsRepository(databaseManager: .shared)
         }
         self.coatingItemRepository = CoreDataCoatingItemRepository(persistentContainer: persistenceController.container)
         self.toolItemRepository = CoreDataToolItemRepository(context: self.localContext)
         self.inventoryRepository = CoreDataInventoryRepository(context: self.cloudContext)
         self.locationRepository = CoreDataLocationRepository(context: self.cloudContext)
-        self.itemTagsRepository = CoreDataItemTagsRepository(context: self.localContext)
         self.userTagsRepository = CoreDataUserTagsRepository(context: self.cloudContext)
         self.userNotesRepository = CoreDataUserNotesRepository(context: self.cloudContext)
         self.shoppingListRepository = CoreDataShoppingListRepository(context: self.cloudContext)

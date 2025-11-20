@@ -12,6 +12,7 @@ struct CatalogSheetModifiers: ViewModifier {
     @Binding var showingCOESelection: Bool
     @Binding var showingManufacturerSelection: Bool
     let allAvailableTags: [String]
+    let allUserTags: Set<String>
     @Binding var selectedTags: Set<String>
     let tagCounts: [String: Int]
     let allAvailableCOEs: [Int32]
@@ -27,6 +28,7 @@ struct CatalogSheetModifiers: ViewModifier {
                 FilterSelectionSheet.tags(
                     availableTags: allAvailableTags,
                     selectedTags: $selectedTags,
+                    userTags: allUserTags,
                     itemCounts: tagCounts
                 )
             }

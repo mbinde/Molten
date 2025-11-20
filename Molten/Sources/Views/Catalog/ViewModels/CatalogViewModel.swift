@@ -79,7 +79,8 @@ struct TagFilter: Filterable {
     func applyFilter(to items: [CompleteInventoryItemModel], viewModel: CatalogViewModel) -> [CompleteInventoryItemModel] {
         guard !viewModel.selectedTags.isEmpty else { return items }
         return items.filter { item in
-            !viewModel.selectedTags.isDisjoint(with: Set(item.allTags))
+            // AND logic: item must have ALL selected tags
+            viewModel.selectedTags.isSubset(of: Set(item.allTags))
         }
     }
 }

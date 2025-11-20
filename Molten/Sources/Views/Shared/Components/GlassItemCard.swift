@@ -50,6 +50,8 @@ struct GlassItemCard: View {
                     manufacturer: item.manufacturer,
                     stableId: item.stable_id,
                     imagePath: item.image_path,
+                    imageThumbPath: item.image_thumb_path,
+                    dominantColors: item.dominant_colors,
                     maxSize: variant.imageSize,
                     allowImageUpload: variant == .large,
                     allowFullScreen: variant == .large,

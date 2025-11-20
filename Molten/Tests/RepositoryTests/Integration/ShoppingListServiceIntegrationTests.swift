@@ -46,21 +46,14 @@ struct ShoppingListServiceIntegrationTests {
     func testGenerateShoppingListBelowMinimum() async throws {
         let (shoppingService, catalogService, inventoryService, _) = await createTestEnvironment()
 
-        // Create glass item
-        let glassItem = GlassItemModel(
-            stable_id: "shop-test-001",
-            name: "Clear Rod",
-            sku: "001",
-            manufacturer: "Bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-
-        try await catalogService.createGlassItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = glassItem.stable_id
 
         // Set minimum threshold
         try await shoppingService.setMinimum(
-            forItem: "shop-test-001",
+            forItem: stableId,
             type: "rod",
             quantity: 10.0,
             store: "TestStore"
@@ -70,14 +63,14 @@ struct ShoppingListServiceIntegrationTests {
         try await inventoryService.addInventory(
             quantity: 3.0,
             type: "rod",
-            toItem: "shop-test-001"
+            toItem: stableId
         )
 
         // Generate shopping list
         let shoppingList = try await shoppingService.generateShoppingList(forStore: "TestStore")
 
         #expect(shoppingList.items.count == 1)
-        #expect(shoppingList.items.first?.glassItem.name == "Clear Rod")
+        #expect(shoppingList.items.first?.glassItem.stable_id == stableId)
         #expect(shoppingList.items.first?.shoppingListItem.neededQuantity == 7.0) // 10 - 3
     }
 
@@ -85,21 +78,14 @@ struct ShoppingListServiceIntegrationTests {
     func testExcludeItemsAboveMinimum() async throws {
         let (shoppingService, catalogService, inventoryService, _) = await createTestEnvironment()
 
-        // Create glass item
-        let glassItem = GlassItemModel(
-            stable_id: "shop-test-002",
-            name: "Blue Rod",
-            sku: "002",
-            manufacturer: "Bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-
-        try await catalogService.createGlassItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.filter({ $0.sku != nil })[1] // Use second item
+        let stableId = glassItem.stable_id
 
         // Set minimum threshold
         try await shoppingService.setMinimum(
-            forItem: "shop-test-002",
+            forItem: stableId,
             type: "rod",
             quantity: 10.0,
             store: "TestStore"
@@ -109,7 +95,7 @@ struct ShoppingListServiceIntegrationTests {
         try await inventoryService.addInventory(
             quantity: 10.0,
             type: "rod",
-            toItem: "shop-test-002"
+            toItem: stableId
         )
 
         // Generate shopping list
@@ -122,20 +108,16 @@ struct ShoppingListServiceIntegrationTests {
     func testStoreFiltering() async throws {
         let (shoppingService, catalogService, inventoryService, _) = await createTestEnvironment()
 
-        // Create items for different stores
-        for (id, store) in [("item-a", "Store A"), ("item-b", "Store B")] {
-            let glassItem = GlassItemModel(
-                stable_id: id,
-                name: "Item \(id)",
-                sku: id,
-                manufacturer: "Bullseye",
-                coe: 90,
-                mfr_status: "available"
-            )
-            try await catalogService.createGlassItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let realItems = Array(catalogItems.filter({ $0.sku != nil }).prefix(2))
+        let itemA = realItems[0]
+        let itemB = realItems[1]
 
+        // Create items for different stores
+        for (item, store) in [(itemA, "Store A"), (itemB, "Store B")] {
             try await shoppingService.setMinimum(
-                forItem: id,
+                forItem: item.stable_id,
                 type: "rod",
                 quantity: 10.0,
                 store: store
@@ -144,7 +126,7 @@ struct ShoppingListServiceIntegrationTests {
             try await inventoryService.addInventory(
                 quantity: 2.0,
                 type: "rod",
-                toItem: id
+                toItem: item.stable_id
             )
         }
 
@@ -152,12 +134,12 @@ struct ShoppingListServiceIntegrationTests {
         let storeAList = try await shoppingService.generateShoppingList(forStore: "Store A")
 
         #expect(storeAList.items.count == 1)
-        #expect(storeAList.items.first?.glassItem.stable_id == "item-a")
+        #expect(storeAList.items.first?.glassItem.stable_id == itemA.stable_id)
 
         // Generate list for Store B only
         let storeBList = try await shoppingService.generateShoppingList(forStore: "Store B")
 
         #expect(storeBList.items.count == 1)
-        #expect(storeBList.items.first?.glassItem.stable_id == "item-b")
+        #expect(storeBList.items.first?.glassItem.stable_id == itemB.stable_id)
     }
 }

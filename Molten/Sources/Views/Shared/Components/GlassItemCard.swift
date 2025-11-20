@@ -73,7 +73,7 @@ struct GlassItemCard: View {
                 VStack(alignment: .leading, spacing: variant.contentSpacing) {
                     if variant == .compact {
                         // Compact header: manufacturer badge
-                        Text(item.manufacturer.uppercased())
+                        Text(GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer)
                             .font(DesignSystem.Typography.caption)
                             .fontWeight(DesignSystem.FontWeight.semibold)
                             .foregroundColor(DesignSystem.Colors.textSecondary)

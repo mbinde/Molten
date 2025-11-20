@@ -222,7 +222,6 @@ This document tracks files that were identified as 0% coverage but are not appro
 - `KilnScheduleExportService.swift` - File export service (requires file I/O mocking)
 - `RecipeService.swift` - Service layer (requires repository mocks, belongs in integration tests)
 - `CoreDataMigrationService.swift` - Migration service (requires Core Data context)
-- `GlassItemDataLoadingService.swift` - Data loading service (requires repository mocks, belongs in integration tests)
 - `ProjectPDFService.swift` - PDF generation service (requires file I/O mocking)
 - `UnifiedLocationService.swift` - Service layer (requires repository mocks, belongs in integration tests) - Batch 8
 - `ToolItemDataLoadingService.swift` - Data loading service (requires repository mocks) - Batch 8

@@ -149,20 +149,23 @@ cached    ↙    ↓    ↘
 
 ```swift
 // In your catalog download service
-class CatalogDataLoadingService {
+class CatalogUpdateService {
     private let imageSyncService = ImageSyncService()
 
-    func loadCatalog() async throws {
-        // 1. Download catalog data (CatalogItemData from JSON)
-        let items: [CatalogItemData] = try await downloadCatalogJSON()
+    func updateCatalog() async throws {
+        // 1. Download new catalog SQLite database
+        let newCatalogDB = try await downloadCatalogDatabase()
 
-        // 2. Sync thumbnails for new/changed items
+        // 2. Extract items that changed (for image sync)
+        let changedItems: [GlassItemModel] = try await extractChangedItems(from: newCatalogDB)
+
+        // 3. Sync thumbnails for new/changed items
         try await imageSyncService.syncThumbnailsAfterCatalogUpdate(
-            catalogItems: items
+            catalogItems: changedItems
         )
 
-        // 3. Save to database
-        try await saveCatalogToDatabase(items)
+        // 4. Atomically swap to new catalog database
+        try await swapCatalogDatabase(newCatalogDB)
     }
 }
 ```

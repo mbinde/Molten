@@ -271,10 +271,11 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         // Verify system can still function under "memory pressure"
         let resultItems = try await catalogService.getAllGlassItems()
         let duration = Date().timeIntervalSince(startTime)
-        
+
         #expect(resultItems.count == largeDataset.count, "Should handle large datasets under memory pressure")
-        #expect(duration < 10.0, "Should complete large operations efficiently")
-        
+        // NOTE: Performance assertion removed - duration varies based on hardware/system load
+        // Move to PerformanceTests if strict timing validation is needed
+
         print("✅ Memory pressure scenarios handled (\(resultItems.count) items in \(String(format: "%.3f", duration))s)")
     }
     

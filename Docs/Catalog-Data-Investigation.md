@@ -1,7 +1,10 @@
 # Investigation: Removing Catalog Data from Core Data
 
 **Date:** 2025-11-10
+**Status:** ✅ COMPLETED - Catalog migrated to SQLite
 **Question:** Should we move catalog data (GlassItem, CoatingItem, ToolItem) from Core Data to an in-memory store?
+
+> **✅ MIGRATION COMPLETED:** This investigation led to migrating catalog data to SQLite (not in-memory, but out of Core Data). The catalog now uses `SQLiteGlassItemRepository` with a bundled read-only database. This document is retained for historical context.
 
 ---
 

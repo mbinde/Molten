@@ -193,10 +193,14 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
         }
     }
 
+    // NOTE: Delta catalog update not implemented yet - commented out due to CatalogDelta removal
+    // Uncomment when implementing v2.0 delta updates
+    /*
     /// Download delta catalog update (v2.0 feature - not implemented in v1.5)
     func downloadDeltaCatalog(from: Int, to: Int) async throws -> CatalogDelta {
         throw CatalogUpdateError.updateNotAvailable  // Not implemented yet
     }
+    */
 
     // MARK: - Private Helpers
 

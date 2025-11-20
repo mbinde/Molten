@@ -139,3 +139,15 @@ extension CatalogItemRepository where ItemType == GlassItemModel {
         fatalError("removeRecommendedSchedule(scheduleId:fromGlassItem:) must be implemented by concrete GlassItemRepository")
     }
 }
+
+// MARK: - Type Aliases for Backwards Compatibility
+
+/// Type alias for glass item repositories (backwards compatibility with existing code)
+typealias GlassItemRepository = any CatalogItemRepository<GlassItemModel>
+
+/// Type alias for coating item repositories (backwards compatibility with existing code)
+typealias CoatingItemRepository = any CatalogItemRepository<CoatingItemModel>
+
+/// Type alias for tool item repositories (backwards compatibility with existing code)
+typealias ToolItemRepository = any CatalogItemRepository<ToolItemModel>
+

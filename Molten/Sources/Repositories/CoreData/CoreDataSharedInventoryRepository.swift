@@ -22,11 +22,11 @@ class CoreDataSharedInventoryRepository {
     // MARK: - Properties
 
     private let context: NSManagedObjectContext
-    private let catalogRepository: GlassItemRepository
+    private let catalogRepository: SQLiteGlassItemRepository
 
     // MARK: - Initialization
 
-    init(context: NSManagedObjectContext, catalogRepository: GlassItemRepository) {
+    init(context: NSManagedObjectContext, catalogRepository: SQLiteGlassItemRepository) {
         self.context = context
         self.catalogRepository = catalogRepository
     }

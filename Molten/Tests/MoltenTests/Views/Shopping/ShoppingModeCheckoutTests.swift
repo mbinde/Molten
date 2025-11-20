@@ -28,16 +28,11 @@ struct ShoppingModeCheckoutTests {
     @Test("Can add basket items to inventory")
     func testAddBasketItemsToInventory() async throws {
         let inventoryService = deps.inventoryTrackingService
+        let catalogService = deps.catalogService
 
-        // Create a test glass item
-        let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "checkout-001"),
-            name: "Test Checkout Item",
-            sku: "checkout-001",
-            manufacturer: "test",
-            coe: 33,
-            mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
 
         // Create the item with zero initial inventory
         _ = try await inventoryService.createCompleteItem(glassItem, initialInventory: [])
@@ -68,13 +63,11 @@ struct ShoppingModeCheckoutTests {
     @Test("Can add multiple basket items to inventory in batch")
     func testAddMultipleItemsToInventory() async throws {
         let inventoryService = deps.inventoryTrackingService
+        let catalogService = deps.catalogService
 
-        // Create multiple test items
-        let items: [GlassItemModel] = [
-            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "multi-001"), name: "Multi Test 1", sku: "multi-001", manufacturer: "test", coe: 33, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "multi-002"), name: "Multi Test 2", sku: "multi-002", manufacturer: "test", coe: 33, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "multi-003"), name: "Multi Test 3", sku: "multi-003", manufacturer: "test", coe: 33, mfr_status: "available")
-        ]
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let items = Array(catalogItems.filter({ $0.sku != nil }).prefix(3))
 
         // Create all items
         for item in items {
@@ -106,17 +99,13 @@ struct ShoppingModeCheckoutTests {
     @Test("Can remove item from shopping list")
     func testRemoveItemFromShoppingList() async throws {
         let shoppingListService = deps.shoppingListService
-
-        // Create a test glass item
         let inventoryService = deps.inventoryTrackingService
-        let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "remove-001"),
-            name: "Remove Test Item",
-            sku: "remove-001",
-            manufacturer: "test",
-            coe: 33,
-            mfr_status: "available"
-        )
+        let catalogService = deps.catalogService
+
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+
         _ = try await inventoryService.createCompleteItem(glassItem, initialInventory: [])
 
         // Add item to shopping list
@@ -143,13 +132,11 @@ struct ShoppingModeCheckoutTests {
     func testRemoveMultipleItemsFromShoppingList() async throws {
         let shoppingListService = deps.shoppingListService
         let inventoryService = deps.inventoryTrackingService
+        let catalogService = deps.catalogService
 
-        // Create test items
-        let items: [GlassItemModel] = [
-            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "removem-001"), name: "Remove Multi 1", sku: "removem-001", manufacturer: "test", coe: 33, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "removem-002"), name: "Remove Multi 2", sku: "removem-002", manufacturer: "test", coe: 33, mfr_status: "available"),
-            GlassItemModel(stable_id: generateStableId(manufacturer: "test", sku: "removem-003"), name: "Remove Multi 3", sku: "removem-003", manufacturer: "test", coe: 33, mfr_status: "available")
-        ]
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let items = Array(catalogItems.filter({ $0.sku != nil }).prefix(3))
 
         // Create items and add to shopping list
         for item in items {
@@ -186,16 +173,12 @@ struct ShoppingModeCheckoutTests {
     func testCompleteCheckoutFlow() async throws {
         let inventoryService = deps.inventoryTrackingService
         let shoppingListService = deps.shoppingListService
+        let catalogService = deps.catalogService
 
-        // Create test item
-        let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "flow-001"),
-            name: "Flow Test Item",
-            sku: "flow-001",
-            manufacturer: "test",
-            coe: 33,
-            mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+
         _ = try await inventoryService.createCompleteItem(glassItem, initialInventory: [])
 
         // Add to shopping list
@@ -241,16 +224,12 @@ struct ShoppingModeCheckoutTests {
     func testCheckoutWithPartialQuantity() async throws {
         let inventoryService = deps.inventoryTrackingService
         let shoppingListService = deps.shoppingListService
+        let catalogService = deps.catalogService
 
-        // Create test item
-        let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "partial-001"),
-            name: "Partial Test Item",
-            sku: "partial-001",
-            manufacturer: "test",
-            coe: 33,
-            mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+
         _ = try await inventoryService.createCompleteItem(glassItem, initialInventory: [])
 
         // Add to shopping list (need 10 units)
@@ -288,16 +267,12 @@ struct ShoppingModeCheckoutTests {
     func testCheckoutWithExtraQuantity() async throws {
         let inventoryService = deps.inventoryTrackingService
         let shoppingListService = deps.shoppingListService
+        let catalogService = deps.catalogService
 
-        // Create test item
-        let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "extra-001"),
-            name: "Extra Test Item",
-            sku: "extra-001",
-            manufacturer: "test",
-            coe: 33,
-            mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+
         _ = try await inventoryService.createCompleteItem(glassItem, initialInventory: [])
 
         // Add to shopping list (need 5 units)

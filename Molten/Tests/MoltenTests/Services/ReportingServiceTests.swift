@@ -24,7 +24,7 @@ struct ReportingServiceTests {
 
     // MARK: - Setup Helpers
 
-    /// Create test glass items with inventory using real catalog data
+    /// Add inventory to real catalog items for testing
     private func setupTestData(
         catalogService: CatalogService,
         inventoryService: InventoryTrackingService
@@ -34,7 +34,7 @@ struct ReportingServiceTests {
         let catalogItems = try await catalogService.getGlassItemsLightweight()
         let testItems = Array(catalogItems.prefix(3).filter { $0.sku != nil })
 
-        // Add inventory for items
+        // Add inventory for catalog items (catalog is read-only, we only add inventory)
         _ = try await inventoryService.addInventory(
             quantity: 10.0,
             type: "rod",

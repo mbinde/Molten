@@ -147,7 +147,7 @@ struct CatalogItemSearchField: View {
                                 .foregroundColor(.secondary)
                         }
 
-                        Text("Manufacturer: \(selectedItem.glassItem.manufacturer)")
+                        Text("Manufacturer: \(GlassManufacturers.fullName(for: selectedItem.glassItem.manufacturer) ?? selectedItem.glassItem.manufacturer)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -283,7 +283,7 @@ struct CatalogItemSearchResultRow: View {
                                 .foregroundColor(.secondary)
                         }
 
-                        Text(item.glassItem.manufacturer)
+                        Text(GlassManufacturers.fullName(for: item.glassItem.manufacturer) ?? item.glassItem.manufacturer)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

@@ -10,8 +10,20 @@ import SwiftUI
 struct ManufacturerToggleRow: View {
     let manufacturer: String
     let isEnabled: Bool
+    let service: ManufacturerFilterService
     let onToggle: (Bool) -> Void
-    @State private var internalIsEnabled: Bool = false
+
+    init(
+        manufacturer: String,
+        isEnabled: Bool,
+        service: ManufacturerFilterService = AppDependencies.shared.manufacturerFilterService,
+        onToggle: @escaping (Bool) -> Void
+    ) {
+        self.manufacturer = manufacturer
+        self.isEnabled = isEnabled
+        self.service = service
+        self.onToggle = onToggle
+    }
 
     private var displayText: String {
         let fullName = GlassManufacturers.fullName(for: manufacturer) ?? manufacturer
@@ -25,16 +37,10 @@ struct ManufacturerToggleRow: View {
             Spacer()
 
             Toggle("", isOn: Binding(
-                get: { internalIsEnabled },
+                get: { isEnabled },
                 set: { onToggle($0) }
             ))
             .labelsHidden()
-        }
-        .onAppear {
-            internalIsEnabled = ManufacturerFilterService.shared.isManufacturerEnabled(manufacturer)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .manufacturerSelectionChanged)) { _ in
-            internalIsEnabled = ManufacturerFilterService.shared.isManufacturerEnabled(manufacturer)
         }
     }
 }

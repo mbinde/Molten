@@ -7,111 +7,6 @@
 
 import SwiftUI
 
-// MARK: - Manufacturer Filter Preference Management
-
-/// Manages user preferences for manufacturer filtering
-class ManufacturerFilterPreference {
-
-    /// Storage key for UserDefaults
-    nonisolated static let storageKey = "selectedManufacturerFilter"
-
-    /// UserDefaults instance (can be overridden for testing)
-    nonisolated(unsafe) private static var userDefaults: UserDefaults = .standard
-
-    /// Selected manufacturers (multi-selection)
-    nonisolated static var selectedManufacturers: Set<String> {
-        if let data = userDefaults.data(forKey: storageKey),
-           let manufacturers = try? JSONDecoder().decode(Set<String>.self, from: data) {
-            return manufacturers
-        }
-
-        // Default: all manufacturers selected
-        return Set(GlassManufacturers.allCodes)
-    }
-
-    /// Add a manufacturer to the multi-selection
-    nonisolated static func addManufacturer(_ manufacturer: String) {
-        var current = selectedManufacturers
-        current.insert(manufacturer)
-        saveSelectedManufacturers(current)
-        NotificationCenter.default.post(name: .manufacturerSelectionChanged, object: nil)
-    }
-
-    /// Remove a manufacturer from the multi-selection
-    nonisolated static func removeManufacturer(_ manufacturer: String) {
-        var current = selectedManufacturers
-        current.remove(manufacturer)
-        saveSelectedManufacturers(current)
-        NotificationCenter.default.post(name: .manufacturerSelectionChanged, object: nil)
-    }
-
-    /// Set the complete multi-selection
-    nonisolated static func setSelectedManufacturers(_ manufacturers: Set<String>) {
-        saveSelectedManufacturers(manufacturers)
-        NotificationCenter.default.post(name: .manufacturerSelectionChanged, object: nil)
-    }
-
-    /// Save selected manufacturers to UserDefaults
-    nonisolated private static func saveSelectedManufacturers(_ manufacturers: Set<String>) {
-        if let data = try? JSONEncoder().encode(manufacturers) {
-            userDefaults.set(data, forKey: storageKey)
-        }
-    }
-
-    /// Reset to default (all manufacturers selected)
-    nonisolated static func resetToDefault() {
-        userDefaults.removeObject(forKey: storageKey)
-    }
-
-    /// Set UserDefaults instance (for testing)
-    nonisolated static func setUserDefaults(_ defaults: UserDefaults) {
-        userDefaults = defaults
-    }
-}
-
-// MARK: - Manufacturer Filter Helpers
-
-/// Helpers for integrating manufacturer filter into SettingsView
-struct ManufacturerFilterHelpers {
-
-    /// Check if manufacturer filter section should be shown
-    static func shouldShowManufacturerFilterSection() -> Bool {
-        return true  // Always show manufacturer filter
-    }
-
-    /// Title for manufacturer filter section
-    static let manufacturerFilterSectionTitle = "Manufacturer Filter"
-
-    /// Footer text for manufacturer filter section
-    static let manufacturerFilterSectionFooter = "Select which manufacturers to show in the catalog. This filter works alongside the COE filter to refine your search results."
-}
-
-// MARK: - Manufacturer Filter Service
-
-/// Service for integrating manufacturer filtering throughout the app
-class ManufacturerFilterService {
-
-    static let shared = ManufacturerFilterService()
-
-    nonisolated private init() {}
-
-    /// Check if a specific manufacturer is enabled
-    nonisolated func isManufacturerEnabled(_ manufacturer: String) -> Bool {
-        return ManufacturerFilterPreference.selectedManufacturers.contains(manufacturer)
-    }
-
-    /// Get all currently enabled manufacturers
-    nonisolated var enabledManufacturers: Set<String> {
-        return ManufacturerFilterPreference.selectedManufacturers
-    }
-
-    /// Check if a catalog item should be shown based on manufacturer filter
-    nonisolated func shouldShowItem(manufacturer: String?) -> Bool {
-        guard let manufacturer = manufacturer else { return true }
-        return isManufacturerEnabled(manufacturer)
-    }
-}
-
 // MARK: - Release Configuration
 // Set to false for simplified release builds
 private let isAdvancedFeaturesEnabled = false
@@ -472,13 +367,6 @@ extension SortOption {
             return "Rating"
         }
     }
-}
-
-// MARK: - Notification Extension
-
-extension Notification.Name {
-    nonisolated static let coeSelectionChanged = Notification.Name("coeSelectionChanged")
-    nonisolated static let manufacturerSelectionChanged = Notification.Name("manufacturerSelectionChanged")
 }
 
 // MARK: - Preview

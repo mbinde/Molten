@@ -10,33 +10,44 @@ import SwiftUI
 struct ManufacturerQuickActionsView: View {
     let allManufacturers: [String]
     @Binding var localEnabledManufacturers: Set<String>
-    @State private var selectedCount: Int = 0
+    let service: ManufacturerFilterService
+
+    init(
+        allManufacturers: [String],
+        localEnabledManufacturers: Binding<Set<String>>,
+        service: ManufacturerFilterService = AppDependencies.shared.manufacturerFilterService
+    ) {
+        self.allManufacturers = allManufacturers
+        self._localEnabledManufacturers = localEnabledManufacturers
+        self.service = service
+    }
 
     var body: some View {
         HStack {
             Button("Select All") {
-                let allManufacturerSet = Set(allManufacturers)
-                ManufacturerFilterPreference.setSelectedManufacturers(allManufacturerSet)
-                localEnabledManufacturers = allManufacturerSet
+                Task {
+                    await service.selectAll()
+                    await MainActor.run {
+                        localEnabledManufacturers = Set(allManufacturers)
+                    }
+                }
             }
             .buttonStyle(.bordered)
-            .disabled(selectedCount == allManufacturers.count)
+            .disabled(localEnabledManufacturers.count == allManufacturers.count)
 
             Spacer()
 
             Button("Select None") {
-                ManufacturerFilterPreference.setSelectedManufacturers(Set())
-                localEnabledManufacturers.removeAll()
+                Task {
+                    await service.selectNone()
+                    await MainActor.run {
+                        localEnabledManufacturers.removeAll()
+                    }
+                }
             }
             .buttonStyle(.bordered)
-            .disabled(selectedCount == 0)
+            .disabled(localEnabledManufacturers.isEmpty)
         }
         .padding(.top, 8)
-        .onAppear {
-            selectedCount = ManufacturerFilterService.shared.enabledManufacturers.count
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .manufacturerSelectionChanged)) { _ in
-            selectedCount = ManufacturerFilterService.shared.enabledManufacturers.count
-        }
     }
 }

@@ -439,20 +439,9 @@ class CoreDataGlassItemRepository: @unchecked Sendable, GlassItemRepository {
             image_url = nil
         }
         let image_path = entity.value(forKey: "image_path") as? String
-        let image_thumb_path = entity.value(forKey: "image_thumb_path") as? String
-
-        // Parse dominant_colors from JSON string if available
-        let dominant_colors: [String]?
-        if let colorsJSON = entity.value(forKey: "dominant_colors") as? String, !colorsJSON.isEmpty {
-            if let data = colorsJSON.data(using: .utf8),
-               let colors = try? JSONDecoder().decode([String].self, from: data) {
-                dominant_colors = colors
-            } else {
-                dominant_colors = nil
-            }
-        } else {
-            dominant_colors = nil
-        }
+        // image_thumb_path and dominant_colors are not in Core Data entity (SQLite only)
+        let image_thumb_path: String? = nil
+        let dominant_colors: [String]? = nil
 
         return GlassItemModel(
             stable_id: stableId,

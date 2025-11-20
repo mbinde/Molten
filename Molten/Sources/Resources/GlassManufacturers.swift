@@ -72,6 +72,8 @@ struct GlassManufacturers {
 
     /// Tracks whether we have permission to use product-specific images from each manufacturer
     /// If false, we must always use the default manufacturer image instead
+    ///
+    /// DO NOT CHANGE ANYTHING IN THIS SECTION UNLESS YOU KNOW WE HAVE PERMISSIONS
     nonisolated static let productImagePermissions: [String: Bool] = [
         "AB": false,           // Asian (Chinese) Boro - NO permission (no idea who to ask)
         "BB": false,           // Boro Batch - NO permission (no response via instagram)

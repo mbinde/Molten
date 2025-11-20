@@ -169,7 +169,6 @@ extension MoltenApp {
                 Color.clear
                     .onAppear {
                         // Dependencies already initialized in body
-                        print("🎬 MoltenApp: Creating cached MainTabView...")
                         mainTabView = createMainTabView()
                     }
             } else {
@@ -197,15 +196,12 @@ extension MoltenApp {
             }
             .sheet(isPresented: $showingDeepLinkedItem, onDismiss: {
                 // Always clear on dismiss
-                print("🔄 Sheet dismissed - clearing deepLinkGlassItemStableId")
                 deepLinkGlassItemStableId = nil
 
                 // If we have a pending ID, restore it after a short delay
                 if let pending = pendingDeepLinkStableId {
-                    print("🔄 Pending ID exists: '\(pending)' - will restore after dismiss completes")
                     Task { @MainActor in
                         try? await Task.sleep(for: .milliseconds(100))
-                        print("🔄 Restoring deepLinkGlassItemStableId = '\(pending)' from pending")
                         deepLinkGlassItemStableId = pending
                         pendingDeepLinkStableId = nil
                         // Present the sheet
@@ -221,16 +217,12 @@ extension MoltenApp {
                 }
             }
             .onChange(of: deepLinkGlassItemStableId) { oldValue, newValue in
-                print("🔄 deepLinkGlassItemStableId: '\(oldValue ?? "nil")' → '\(newValue ?? "nil")'")
-                print("🔄 showingDeepLinkedItem is currently: \(showingDeepLinkedItem)")
-
                 // CRITICAL: If a new QR code is scanned while the sheet is already open,
                 // we need to dismiss and re-present to show the new item.
                 // This handles the iOS-appropriate pattern for updating sheet content.
                 if let newValue = newValue {
                     if let oldValue = oldValue, oldValue != newValue, showingDeepLinkedItem {
                         // Case 1: Scanning a different item while sheet is already open
-                        print("🔄 New QR scanned while sheet open - refreshing sheet...")
                         // Store the new ID as pending
                         // The .onDismiss handler will detect this and handle the restore + re-present
                         pendingDeepLinkStableId = newValue
@@ -239,13 +231,10 @@ extension MoltenApp {
                         // Note: .onDismiss will handle restoring the ID and re-presenting
                     } else if !showingDeepLinkedItem {
                         // Case 2: First scan or sheet was closed - just present
-                        print("🔄 First scan or sheet closed - presenting sheet...")
                         pendingDeepLinkStableId = nil  // Not a refresh
                         showingDeepLinkedItem = true
-                    } else {
-                        // Case 3: Same item scanned again (do nothing)
-                        print("🔄 Same item scanned again - sheet already open")
                     }
+                    // Case 3: Same item scanned again - do nothing
                 }
             }
             .onOpenURL { url in
@@ -290,7 +279,6 @@ extension MoltenApp {
                         Color.clear
                             .onAppear {
                                 // Dependencies already initialized in body
-                                print("🎬 MoltenApp: Creating cached MainTabView...")
                                 mainTabView = createMainTabView()
                             }
                     } else {
@@ -308,9 +296,6 @@ extension MoltenApp {
                         } else {
                             Text("No URL available")
                                 .foregroundColor(.red)
-                                .onAppear {
-                                    print("❌ MoltenApp: Sheet presented but importPlanURL is nil!")
-                                }
                         }
                     }
                     .sheet(isPresented: $showingImportInventory) {
@@ -319,21 +304,6 @@ extension MoltenApp {
                         } else {
                             Text("No URL available")
                                 .foregroundColor(.red)
-                                .onAppear {
-                                    print("❌ MoltenApp: Sheet presented but importInventoryURL is nil!")
-                                }
-                        }
-                    }
-                    .onChange(of: showingImportPlan) { oldValue, newValue in
-                        print("🔄 MoltenApp: showingImportPlan changed from \(oldValue) to \(newValue)")
-                        if newValue {
-                            print("📂 MoltenApp: About to show import sheet with URL: \(importPlanURL?.path ?? "nil")")
-                        }
-                    }
-                    .onChange(of: showingImportInventory) { oldValue, newValue in
-                        print("🔄 MoltenApp: showingImportInventory changed from \(oldValue) to \(newValue)")
-                        if newValue {
-                            print("📂 MoltenApp: About to show inventory import sheet with URL: \(importInventoryURL?.path ?? "nil")")
                         }
                     }
                     .onOpenURL { url in
@@ -372,8 +342,6 @@ extension MoltenApp {
         // Create sync monitor if needed (only in production with CloudKit, NOT during UI tests)
         if !isRunningUITests, syncMonitor == nil, let container = dependencies.persistenceController.container as? NSPersistentCloudKitContainer {
             syncMonitor = CloudKitSyncMonitor(container: container)
-        } else if isRunningUITests {
-            print("🧪 Skipping CloudKit sync monitor for UI tests")
         }
 
         let tabView = MainTabView(
@@ -407,7 +375,6 @@ extension MoltenApp {
 
         // Transition to first-run loading view IMMEDIATELY
         // Core Data will be initialized while the loading screen is visible!
-        print("🎯 Transitioning to first-run loading view")
         withAnimation(.easeInOut(duration: 0.3)) {
             isLaunching = false
             showFirstRunDataLoading = true
@@ -497,17 +464,14 @@ extension MoltenApp {
     private func performBackgroundCatalogUpdate() async {
         // Skip if running tests
         guard !isRunningTests && !isRunningUITests else {
-            print("🧪 Skipping catalog update check for tests")
             return
         }
 
         // Small delay to avoid competing with initial data load
         try? await Task.sleep(for: .seconds(2))
 
-        print("📦 Starting background catalog update check...")
         let backgroundUpdateService = dependencies.backgroundUpdateService
         await backgroundUpdateService.checkForUpdatesIfNeeded()
-        print("✅ Background catalog update check completed")
     }
 
     /// Refresh my share if stale (not updated in > 24 hours)
@@ -521,10 +485,8 @@ extension MoltenApp {
         // Small delay to let app finish loading
         try? await Task.sleep(for: .seconds(3))
 
-        print("🔄 Starting background share refresh check...")
         let sharingManager = dependencies.inventorySharingManager
         await sharingManager.refreshMyShareIfStale()
-        print("✅ Background share refresh check completed")
     }
 
     /// Configure environment for UI testing
@@ -546,12 +508,6 @@ extension MoltenApp {
 
         // Note: Database reset and test data population deferred to Phase 4
         // when we properly set up Core Data for UI tests
-        if isRunningUITests && (shouldResetDatabase || shouldUseTestData) {
-            print("⚠️ Database reset/test data not yet supported with mock dependencies")
-            print("⚠️ This will be implemented in Phase 4 of DI migration")
-        }
-
-        print("✅ Test Environment UI configuration complete")
     }
 
     /// Handle URLs opened from outside the app (e.g., .molten files, deep links)
@@ -578,11 +534,10 @@ extension MoltenApp {
                 showingImportPlan = true
 
             case .unknown:
-                print("❌ MoltenApp: Could not detect file type")
+                break  // Silently ignore unknown file types
             }
-        } else {
-            print("❌ MoltenApp: Not a supported file (extension: \(url.pathExtension))")
         }
+        // Silently ignore unsupported file types
     }
 
     /// Handle deep links from QR codes
@@ -619,15 +574,13 @@ extension MoltenApp {
             handleShareDeepLink(shareCode: shareCode)
 
         default:
-            print("⚠️ Unknown deep link host: \(host)")
+            break  // Unknown deep link host, silently ignore
         }
     }
 
     /// Handle share deep link by navigating to inventory sharing and opening add friend sheet
     @MainActor
     private func handleShareDeepLink(shareCode: String) {
-        print("🔗 Deep link to add friend share: \(shareCode)")
-
         // Post notification to navigate to inventory tab and show sharing view with pre-filled code
         NotificationCenter.default.post(
             name: .navigateToInventorySharingWithCode,
@@ -811,28 +764,23 @@ extension MoltenApp {
             // Enable network tracking
             options.enableNetworkTracking = true
 
-            // change this to make Sentry debug more or less noisy
+            // Sentry debug logging disabled - too verbose for debug console
             #if DEBUG
-            options.debug = false  // Enable debug output in development
+            options.debug = false
             #endif
         }
-
-        print("✅ Sentry configured successfully (environment: \(SentryEnvironment.current.rawValue))")
     }
 
     /// Configure RevenueCat SDK with API key and settings
     private func configureRevenueCat() {
-        #if DEBUG
-        Purchases.logLevel = .debug
-        #endif
+        // RevenueCat logging disabled - too verbose for debug console
+        // To re-enable: Purchases.logLevel = .debug
 
         Purchases.configure(
             with: Configuration.Builder(withAPIKey: "test_oIPjDwQxUqwuGvJpuCZEuaWmQTL")
                 .with(entitlementVerificationMode: .informational) // Recommended for production
                 .build()
         )
-
-        print("✅ RevenueCat configured successfully")
     }
 }
 

@@ -16,7 +16,7 @@ struct GlassItemCard: View {
     let userTags: [String]
     let onManageTags: (() -> Void)?
 
-    @State private var isTagsExpanded = false
+    @AppStorage("glassItemCardTagsExpanded") private var isTagsExpanded = false
 
     enum Variant {
         /// Large variant with full details, used in detail views

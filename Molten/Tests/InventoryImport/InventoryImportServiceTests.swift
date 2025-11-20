@@ -26,7 +26,7 @@ struct InventoryImportServiceTests {
         InventoryImportService(
             catalogService: deps.catalogService,
             inventoryTrackingService: deps.inventoryTrackingService,
-            locationRepository: deps.locationRepository
+            storageLocationRepository: deps.storageLocationRepository
         )
     }
 

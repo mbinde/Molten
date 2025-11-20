@@ -39,11 +39,11 @@ struct LocationAutoCompleteFieldTests {
         }
         var wrapper = TestWrapper()
 
-        // Act: Create LocationAutoCompleteField with location repository
+        // Act: Create LocationAutoCompleteField with storage location repository
         // Use constant binding since we're just testing the API accepts the parameter
         let locationField = LocationAutoCompleteField(
             location: .constant(wrapper.location),
-            storageLocationRepository: locationRepository
+            storageLocationRepository: storageLocationRepository
         )
 
         // Assert: Should be created successfully with repository injection
@@ -53,7 +53,7 @@ struct LocationAutoCompleteFieldTests {
     @Test("LocationAutoCompleteField should work with AppDependencies pattern")
     func testLocationAutoCompleteFieldWorksWithAppDependencies() {
         // Arrange: Configure factory for testing
-        let storageLocationRepository = deps.locationRepository
+        let storageLocationRepository = deps.storageLocationRepository
 
         // Use constant binding since we're just testing the API works with AppDependencies
         let testLocation = "Workshop"
@@ -80,7 +80,7 @@ struct LocationAutoCompleteFieldTests {
         // Act: Create field with repository-based approach
         let locationField = LocationAutoCompleteField(
             location: .constant(location),
-            storageLocationRepository: locationRepository
+            storageLocationRepository: storageLocationRepository
         )
 
         // Assert: Should use repository layer for data access

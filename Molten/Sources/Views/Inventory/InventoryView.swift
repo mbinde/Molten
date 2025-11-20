@@ -77,7 +77,7 @@ struct InventoryView: View, CachedDataDeletion {
         self.userImageRepository = userImageRepository
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
-        self.storageLocationRepository = locationRepository
+        self.storageLocationRepository = storageLocationRepository
     }
 
     // Convenience init for production use

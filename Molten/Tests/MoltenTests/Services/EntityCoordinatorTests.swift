@@ -25,21 +25,12 @@ struct EntityCoordinatorTests {
     // MARK: - Setup Helpers
 
     /// Get a test glass item from real catalog data
-    private func createTestGlassItem(
-        stableId: String = "test123",
+    private func getRealCatalogItem(
         using catalogService: CatalogService
-    ) async throws -> CompleteInventoryItemModel {
+    ) async throws -> GlassItemModel {
         // Use real catalog data (catalog is read-only)
         let catalogItems = try await catalogService.getGlassItemsLightweight()
-        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
-
-        // Return as CompleteInventoryItemModel
-        return CompleteInventoryItemModel(
-            catalogItem: UnifiedCatalogItem(glassItem: glassItem),
-            inventory: [],
-            tags: [],
-            userTags: []
-        )
+        return try catalogItems.first(where: { $0.sku != nil })!
     }
 
     /// Create test inventory for a glass item
@@ -67,16 +58,16 @@ struct EntityCoordinatorTests {
             inventoryTrackingService: inventoryService
         )
 
-        // Create glass item
-        let glassItem = try await createTestGlassItem(stableId: "coord001", using: catalogService)
+        // Get real catalog item (catalog is read-only)
+        let glassItem = try await getRealCatalogItem(using: catalogService)
 
         // Add inventory
-        try await createTestInventory(stableId: glassItem.glassItem.stable_id, quantity: 15.0, using: inventoryService)
+        try await createTestInventory(stableId: glassItem.stable_id, quantity: 15.0, using: inventoryService)
 
         // Get inventory coordination
-        let coordination = try await coordinator.getInventoryForGlassItem(stableId: glassItem.glassItem.stable_id)
+        let coordination = try await coordinator.getInventoryForGlassItem(stableId: glassItem.stable_id)
 
-        #expect(coordination.glassItem.stable_id == glassItem.glassItem.stable_id)
+        #expect(coordination.glassItem.stable_id == glassItem.stable_id)
         #expect(coordination.hasInventory == true)
         #expect(coordination.totalQuantity > 0)
     }
@@ -108,13 +99,13 @@ struct EntityCoordinatorTests {
             inventoryTrackingService: inventoryService
         )
 
-        // Create glass item but don't add inventory
-        let glassItem = try await createTestGlassItem(stableId: "coord002", using: catalogService)
+        // Get real catalog item (catalog is read-only) but don't add inventory
+        let glassItem = try await getRealCatalogItem(using: catalogService)
 
         // Get inventory coordination
-        let coordination = try await coordinator.getInventoryForGlassItem(stableId: glassItem.glassItem.stable_id)
+        let coordination = try await coordinator.getInventoryForGlassItem(stableId: glassItem.stable_id)
 
-        #expect(coordination.glassItem.stable_id == glassItem.glassItem.stable_id)
+        #expect(coordination.glassItem.stable_id == glassItem.stable_id)
         #expect(coordination.hasInventory == false)
         #expect(coordination.totalQuantity == 0.0)
     }
@@ -128,25 +119,25 @@ struct EntityCoordinatorTests {
             inventoryTrackingService: inventoryService
         )
 
-        // Create glass item
-        let glassItem = try await createTestGlassItem(stableId: "coord003", using: catalogService)
+        // Get real catalog item (catalog is read-only)
+        let glassItem = try await getRealCatalogItem(using: catalogService)
 
         // Add inventory in multiple locations
         _ = try await inventoryService.addInventory(
             quantity: 10.0,
             type: "rod",
-            toItem: glassItem.glassItem.stable_id,
+            toItem: glassItem.stable_id,
             atLocation: "Studio A"
         )
         _ = try await inventoryService.addInventory(
             quantity: 5.0,
             type: "rod",
-            toItem: glassItem.glassItem.stable_id,
+            toItem: glassItem.stable_id,
             atLocation: "Studio B"
         )
 
         // Get inventory coordination
-        let coordination = try await coordinator.getInventoryForGlassItem(stableId: glassItem.glassItem.stable_id)
+        let coordination = try await coordinator.getInventoryForGlassItem(stableId: glassItem.stable_id)
 
         #expect(coordination.hasInventory == true)
         #expect(coordination.totalQuantity >= 15.0)
@@ -162,16 +153,16 @@ struct EntityCoordinatorTests {
             inventoryTrackingService: inventoryService
         )
 
-        // Create glass item with inventory
-        let glassItem = try await createTestGlassItem(stableId: "coord004", using: catalogService)
-        try await createTestInventory(stableId: glassItem.glassItem.stable_id, quantity: 20.0, using: inventoryService)
+        // Get real catalog item and add inventory
+        let glassItem = try await getRealCatalogItem(using: catalogService)
+        try await createTestInventory(stableId: glassItem.stable_id, quantity: 20.0, using: inventoryService)
 
         // Get coordination
-        let coordination = try await coordinator.getInventoryForGlassItem(stableId: glassItem.glassItem.stable_id)
+        let coordination = try await coordinator.getInventoryForGlassItem(stableId: glassItem.stable_id)
 
         // Test convenience accessors
-        #expect(coordination.glassItem.stable_id == glassItem.glassItem.stable_id)
-        #expect(coordination.glassItem.name == "Test Glass Item")
+        #expect(coordination.glassItem.stable_id == glassItem.stable_id)
+        #expect(coordination.glassItem.name == glassItem.name)
         #expect(coordination.tags is [String])
         #expect(coordination.locations is [String])
     }
@@ -189,17 +180,15 @@ struct EntityCoordinatorTests {
             purchaseRecordService: purchaseService
         )
 
-        // Create glass item
-        let glassItem = try await createTestGlassItem(stableId: "coord005", using: catalogService)
-
-        // Add inventory
-        try await createTestInventory(stableId: glassItem.glassItem.stable_id, quantity: 25.0, using: inventoryService)
+        // Get real catalog item and add inventory
+        let glassItem = try await getRealCatalogItem(using: catalogService)
+        try await createTestInventory(stableId: glassItem.stable_id, quantity: 25.0, using: inventoryService)
 
         // Create purchase record with reference to item
         let recordId = UUID()
         let purchaseItem = PurchaseRecordItemModel(
             id: UUID(),
-            item_stable_id: glassItem.glassItem.stable_id,
+            item_stable_id: glassItem.stable_id,
             type: "rod",
             subtype: nil,
             subsubtype: nil,
@@ -212,15 +201,15 @@ struct EntityCoordinatorTests {
             supplier: "Test Supplier",
             datePurchased: Date(),
             subtotal: Decimal(250.00),
-            notes: "Contains \(glassItem.glassItem.stable_id)",
+            notes: "Contains \(glassItem.stable_id)",
             items: [purchaseItem]
         )
         _ = try await purchaseService.createRecord(purchaseRecord)
 
         // Correlate
-        let correlation = try await coordinator.correlatePurchasesWithInventory(stableId: glassItem.glassItem.stable_id)
+        let correlation = try await coordinator.correlatePurchasesWithInventory(stableId: glassItem.stable_id)
 
-        #expect(correlation.stableId == glassItem.glassItem.stable_id)
+        #expect(correlation.stableId == glassItem.stable_id)
         #expect(correlation.totalQuantityInInventory >= 25.0)
         #expect(correlation.totalSpent > 0)
     }
@@ -236,11 +225,9 @@ struct EntityCoordinatorTests {
             purchaseRecordService: purchaseService
         )
 
-        // Create glass item
-        let glassItem = try await createTestGlassItem(stableId: "coord006", using: catalogService)
-
-        // Add 10 units of inventory
-        try await createTestInventory(stableId: glassItem.glassItem.stable_id, quantity: 10.0, using: inventoryService)
+        // Get real catalog item and add inventory
+        let glassItem = try await getRealCatalogItem(using: catalogService)
+        try await createTestInventory(stableId: glassItem.stable_id, quantity: 10.0, using: inventoryService)
 
         // Create purchase for $100 (should be $10 per unit)
         let purchaseRecord = PurchaseRecordModel(
@@ -248,13 +235,13 @@ struct EntityCoordinatorTests {
             supplier: "Test Supplier",
             datePurchased: Date(),
             subtotal: Decimal(100.00),
-            notes: "\(glassItem.glassItem.stable_id) purchase",
+            notes: "\(glassItem.stable_id) purchase",
             items: []
         )
         _ = try await purchaseService.createRecord(purchaseRecord)
 
         // Correlate
-        let correlation = try await coordinator.correlatePurchasesWithInventory(stableId: glassItem.glassItem.stable_id)
+        let correlation = try await coordinator.correlatePurchasesWithInventory(stableId: glassItem.stable_id)
 
         #expect(correlation.averagePricePerUnit > 0)
     }
@@ -270,14 +257,14 @@ struct EntityCoordinatorTests {
             purchaseRecordService: purchaseService
         )
 
-        // Create glass item with inventory but no purchases
-        let glassItem = try await createTestGlassItem(stableId: "coord007", using: catalogService)
-        try await createTestInventory(stableId: glassItem.glassItem.stable_id, quantity: 15.0, using: inventoryService)
+        // Get real catalog item, add inventory but no purchases
+        let glassItem = try await getRealCatalogItem(using: catalogService)
+        try await createTestInventory(stableId: glassItem.stable_id, quantity: 15.0, using: inventoryService)
 
         // Correlate
-        let correlation = try await coordinator.correlatePurchasesWithInventory(stableId: glassItem.glassItem.stable_id)
+        let correlation = try await coordinator.correlatePurchasesWithInventory(stableId: glassItem.stable_id)
 
-        #expect(correlation.stableId == glassItem.glassItem.stable_id)
+        #expect(correlation.stableId == glassItem.stable_id)
         #expect(correlation.totalSpent == 0.0)
         #expect(correlation.averagePricePerUnit == 0.0)
         #expect(correlation.purchaseRecords.isEmpty)
@@ -294,13 +281,13 @@ struct EntityCoordinatorTests {
             purchaseRecordService: purchaseService
         )
 
-        // Create glass item with no inventory
-        let glassItem = try await createTestGlassItem(stableId: "coord008", using: catalogService)
+        // Get real catalog item with no inventory
+        let glassItem = try await getRealCatalogItem(using: catalogService)
 
         // Correlate
-        let correlation = try await coordinator.correlatePurchasesWithInventory(stableId: glassItem.glassItem.stable_id)
+        let correlation = try await coordinator.correlatePurchasesWithInventory(stableId: glassItem.stable_id)
 
-        #expect(correlation.stableId == glassItem.glassItem.stable_id)
+        #expect(correlation.stableId == glassItem.stable_id)
         #expect(correlation.totalQuantityInInventory == 0.0)
         #expect(correlation.inventoryRecords.isEmpty)
     }
@@ -316,16 +303,16 @@ struct EntityCoordinatorTests {
             purchaseRecordService: purchaseService
         )
 
-        // Create glass item
-        let glassItem = try await createTestGlassItem(stableId: "coord009", using: catalogService)
-        try await createTestInventory(stableId: glassItem.glassItem.stable_id, quantity: 10.0, using: inventoryService)
+        // Get real catalog item and add inventory
+        let glassItem = try await getRealCatalogItem(using: catalogService)
+        try await createTestInventory(stableId: glassItem.stable_id, quantity: 10.0, using: inventoryService)
 
         // Correlate
-        let correlation = try await coordinator.correlatePurchasesWithInventory(stableId: glassItem.glassItem.stable_id)
+        let correlation = try await coordinator.correlatePurchasesWithInventory(stableId: glassItem.stable_id)
 
         // Test convenience accessor
-        #expect(correlation.glassItem.stable_id == glassItem.glassItem.stable_id)
-        #expect(correlation.glassItem.name == "Test Glass Item")
+        #expect(correlation.glassItem.stable_id == glassItem.stable_id)
+        #expect(correlation.glassItem.name == glassItem.name)
     }
 
     // MARK: - Search with Inventory Context Tests
@@ -339,15 +326,15 @@ struct EntityCoordinatorTests {
             inventoryTrackingService: inventoryService
         )
 
-        // Create glass item
-        let glassItem = try await createTestGlassItem(stableId: "coord010", using: catalogService)
-        try await createTestInventory(stableId: glassItem.glassItem.stable_id, quantity: 20.0, using: inventoryService)
+        // Get real catalog item and add inventory
+        let glassItem = try await getRealCatalogItem(using: catalogService)
+        try await createTestInventory(stableId: glassItem.stable_id, quantity: 20.0, using: inventoryService)
 
-        // Search for it
-        let results = try await coordinator.searchGlassItemsWithInventoryContext(searchText: "Test Glass")
+        // Search for it using its actual name
+        let results = try await coordinator.searchGlassItemsWithInventoryContext(searchText: glassItem.name)
 
         #expect(results.count > 0)
-        #expect(results.contains { $0.glassItem.stable_id == glassItem.glassItem.stable_id })
+        #expect(results.contains { $0.glassItem.stable_id == glassItem.stable_id })
     }
 
     @Test("Search with multiple matches")
@@ -359,15 +346,17 @@ struct EntityCoordinatorTests {
             inventoryTrackingService: inventoryService
         )
 
-        // Create multiple glass items with similar names
-        let item1 = try await createTestGlassItem(stableId: "search001", using: catalogService)
-        let item2 = try await createTestGlassItem(stableId: "search002", using: catalogService)
+        // Get real catalog items
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let realItems = Array(catalogItems.filter({ $0.sku != nil }).prefix(2))
+        let item1 = realItems[0]
+        let item2 = realItems[1]
 
-        try await createTestInventory(stableId: item1.glassItem.stable_id, quantity: 10.0, using: inventoryService)
-        try await createTestInventory(stableId: item2.glassItem.stable_id, quantity: 5.0, using: inventoryService)
+        try await createTestInventory(stableId: item1.stable_id, quantity: 10.0, using: inventoryService)
+        try await createTestInventory(stableId: item2.stable_id, quantity: 5.0, using: inventoryService)
 
-        // Search
-        let results = try await coordinator.searchGlassItemsWithInventoryContext(searchText: "Test")
+        // Search using a common term from catalog
+        let results = try await coordinator.searchGlassItemsWithInventoryContext(searchText: "")
 
         #expect(results.count >= 2)
     }
@@ -396,13 +385,13 @@ struct EntityCoordinatorTests {
             inventoryTrackingService: inventoryService
         )
 
-        // Create item without inventory
-        let glassItem = try await createTestGlassItem(stableId: "coord011", using: catalogService)
+        // Get real catalog item without inventory
+        let glassItem = try await getRealCatalogItem(using: catalogService)
 
-        // Search for it
-        let results = try await coordinator.searchGlassItemsWithInventoryContext(searchText: "Test Glass")
+        // Search for it using its actual name
+        let results = try await coordinator.searchGlassItemsWithInventoryContext(searchText: glassItem.name)
 
-        let foundItem = results.first { $0.glassItem.stable_id == glassItem.glassItem.stable_id }
+        let foundItem = results.first { $0.glassItem.stable_id == glassItem.stable_id }
         #expect(foundItem != nil)
         #expect(foundItem?.hasInventory == false)
         #expect(foundItem?.totalQuantity == 0.0)
@@ -452,11 +441,11 @@ struct EntityCoordinatorTests {
             purchaseRecordService: nil
         )
 
-        // Create a glass item first
-        let glassItem = try await createTestGlassItem(stableId: "coord012", using: catalogService)
+        // Get real catalog item
+        let glassItem = try await getRealCatalogItem(using: catalogService)
 
         do {
-            _ = try await coordinator.correlatePurchasesWithInventory(stableId: glassItem.glassItem.stable_id)
+            _ = try await coordinator.correlatePurchasesWithInventory(stableId: glassItem.stable_id)
             Issue.record("Expected error to be thrown")
         } catch let error as CoordinationError {
             #expect(error == .missingServices)

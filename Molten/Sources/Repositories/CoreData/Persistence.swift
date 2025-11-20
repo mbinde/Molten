@@ -97,54 +97,9 @@ class PersistenceController {
     /// Lazy preview data creation - called only when needed, not during static initialization
     @MainActor
     static func createPreviewDataIfNeeded() {
-        let viewContext = preview.container.viewContext
-        
-        // Check if preview data already exists with explicit entity resolution
-        guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: viewContext) else {
-            Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Could not find CatalogItem entity in managed object model")
-            return
-        }
-        
-        let fetchRequest = NSFetchRequest<CatalogItem>()
-        fetchRequest.entity = entity
-        fetchRequest.includesPropertyValues = false // More efficient for count
-        fetchRequest.includesSubentities = false
-        
-        do {
-            let existingCount = try viewContext.count(for: fetchRequest)
-            if existingCount > 0 {
-                return // Preview data already exists
-            }
-        } catch {
-            Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Error checking for existing preview data: \(error)")
-            return
-        }
-        
-        // Only create preview data if stores are loaded
-        guard !preview.container.persistentStoreCoordinator.persistentStores.isEmpty else {
-            Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Cannot create preview data - no persistent stores loaded")
-            return
-        }
-        
-        // Create preview data synchronously on main actor using safe entity creation
-        for i in 0..<10 {
-            guard let newItem = createCatalogItem(in: viewContext) else {
-                Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Failed to create preview CatalogItem at index \(i)")
-                continue
-            }
-            
-            newItem.code = "PREVIEW-\(i + 1)"
-            newItem.name = "Preview Item \(i + 1)"
-            newItem.manufacturer = i % 2 == 0 ? "Preview Manufacturer A" : "Preview Manufacturer B"
-        }
-        
-        do {
-            try viewContext.save()
-        } catch {
-            // Log the error but don't crash the app in production
-            let nsError = error as NSError
-            Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Preview data creation error: \(String(describing: nsError)) userInfo=\(String(describing: nsError.userInfo))")
-        }
+        // Preview data creation removed - CatalogItem is legacy code
+        // CatalogView now uses GlassItem hierarchy
+        // If preview data is needed in the future, use GlassItem instead
     }
 
     let container: NSPersistentContainer
@@ -675,20 +630,9 @@ class PersistenceController {
     /// Validates that all expected entities are properly registered in the managed object model
     /// Call this during app startup to catch entity resolution issues early
     func validateEntityRegistration() -> Bool {
-        let expectedEntities = ["CatalogItem"] // Add other entity names as needed
-        var allEntitiesFound = true
-        
-        for entityName in expectedEntities {
-            guard let entity = NSEntityDescription.entity(forEntityName: entityName, in: container.viewContext) else {
-                log.error("❌ Entity '\(entityName)' not found in managed object model")
-                allEntitiesFound = false
-                continue
-            }
-            
-            log.info("✅ Entity '\(entityName)' found in managed object model with \(entity.properties.count) properties")
-        }
-        
-        return allEntitiesFound
+        // Entity validation removed - was only checking for legacy CatalogItem
+        // If entity validation is needed in the future, add GlassItem or other current entities
+        return true
     }
     
     /// Forces Core Data to rebuild its internal entity caches

@@ -11,14 +11,7 @@ import Foundation
 
 // MARK: - Core Data Entity Base Classes
 
-@preconcurrency @objc(CatalogItem)
-public class CatalogItem: NSManagedObject {}
-
-@preconcurrency @objc(CatalogItemParent)
-public class CatalogItemParent: NSManagedObject {}
-
-@preconcurrency @objc(CatalogItemUser)
-public class CatalogItemUser: CatalogItem {}
+// CatalogItem entities removed - legacy code replaced by Item hierarchy (GlassItem, CoatingItem, ToolItem)
 
 @preconcurrency @objc(CoatingItem)
 public class CoatingItem: Item {}

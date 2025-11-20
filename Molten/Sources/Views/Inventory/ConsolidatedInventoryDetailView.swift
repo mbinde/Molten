@@ -68,7 +68,7 @@ struct ConsolidatedInventoryDetailView: View {
                             HStack {
                                 Text("Manufacturer:")
                                     .foregroundColor(.secondary)
-                                Text(glassItem.manufacturer.uppercased())
+                                Text(GlassManufacturers.fullName(for: glassItem.manufacturer) ?? glassItem.manufacturer)
                                     .fontWeight(.medium)
                             }
                             

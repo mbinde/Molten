@@ -92,6 +92,7 @@ class AppDependencies {
     let recipeRepository: RecipeRepository
     let unifiedLocationRepository: UnifiedLocationRepository
     let ratingRepository: RatingRepository
+    let userPreferencesRepository: UserPreferencesRepository
     #if os(iOS)
     let userImageRepository: UserImageRepository
     #endif
@@ -230,6 +231,19 @@ class AppDependencies {
         _subscriptionService
     }
 
+    private var _manufacturerFilterService: ManufacturerFilterService?
+    var manufacturerFilterService: ManufacturerFilterService {
+        if let service = _manufacturerFilterService {
+            return service
+        }
+        let service = ManufacturerFilterService(
+            repository: userPreferencesRepository,
+            availableManufacturers: GlassManufacturers.allCodes
+        )
+        _manufacturerFilterService = service
+        return service
+    }
+
     // Background services (created lazily)
     private var _catalogUpdateService: CatalogUpdateService?
     private var _backgroundUpdateService: BackgroundUpdateService?
@@ -317,6 +331,7 @@ class AppDependencies {
         self.recipeRepository = CoreDataRecipeRepository(context: self.cloudContext)
         self.unifiedLocationRepository = CoreDataUnifiedLocationRepository(persistenceController: persistenceController)
         self.ratingRepository = CoreDataRatingRepository(localContext: self.localContext, cloudContext: self.cloudContext)
+        self.userPreferencesRepository = UserDefaultsPreferencesRepository()
         #if os(iOS)
         self.userImageRepository = CoreDataUserImageRepository(context: self.cloudContext)
         #endif

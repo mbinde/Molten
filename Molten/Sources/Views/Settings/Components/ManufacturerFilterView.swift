@@ -13,9 +13,14 @@ struct ManufacturerFilterView: View {
     @State private var isLoading = true
 
     private let catalogService: CatalogService
+    private let manufacturerFilterService: ManufacturerFilterService
 
-    init(catalogService: CatalogService = AppDependencies().catalogService) {
+    init(
+        catalogService: CatalogService = AppDependencies.shared.catalogService,
+        manufacturerFilterService: ManufacturerFilterService = AppDependencies.shared.manufacturerFilterService
+    ) {
         self.catalogService = catalogService
+        self.manufacturerFilterService = manufacturerFilterService
     }
 
     // All unique manufacturers from both catalog items and GlassManufacturers, sorted by COE first, then alphabetically
@@ -66,29 +71,16 @@ struct ManufacturerFilterView: View {
         }
     }
 
-    // Load enabled manufacturers from ManufacturerFilterPreference
+    // Load enabled manufacturers from service
     private func loadEnabledManufacturers() {
-        let currentManufacturers = Set(allManufacturers)
-        let selectedFromPreference = ManufacturerFilterPreference.selectedManufacturers
+        localEnabledManufacturers = manufacturerFilterService.selectedManufacturers
 
-        // Start with saved preferences, but only keep manufacturers that still exist
-        var enabled = selectedFromPreference.intersection(currentManufacturers)
-
-        // Add any NEW manufacturers that weren't in the saved preferences
-        // This ensures new manufacturers are enabled by default
-        let newManufacturers = currentManufacturers.subtracting(selectedFromPreference)
-        enabled.formUnion(newManufacturers)
-
-        // If no valid manufacturers at all, default to all
-        if enabled.isEmpty {
-            enabled = currentManufacturers
-        }
-
-        localEnabledManufacturers = enabled
-
-        // Save the updated set if it changed (to persist new manufacturers as enabled)
-        if enabled != selectedFromPreference {
-            ManufacturerFilterPreference.setSelectedManufacturers(enabled)
+        // Update service with current manufacturer list (handles new/removed manufacturers)
+        Task {
+            await manufacturerFilterService.updateAvailableManufacturers(allManufacturers)
+            await MainActor.run {
+                localEnabledManufacturers = manufacturerFilterService.selectedManufacturers
+            }
         }
     }
 
@@ -114,20 +106,28 @@ struct ManufacturerFilterView: View {
                     // Quick actions for all manufacturers
                     ManufacturerQuickActionsView(
                         allManufacturers: allManufacturers,
-                        localEnabledManufacturers: $localEnabledManufacturers
+                        localEnabledManufacturers: $localEnabledManufacturers,
+                        service: manufacturerFilterService
                     )
 
                     ForEach(allManufacturers, id: \.self) { manufacturer in
                         ManufacturerToggleRow(
                             manufacturer: manufacturer,
-                            isEnabled: localEnabledManufacturers.contains(manufacturer)
+                            isEnabled: localEnabledManufacturers.contains(manufacturer),
+                            service: manufacturerFilterService
                         ) { isEnabled in
-                            if isEnabled {
-                                ManufacturerFilterPreference.addManufacturer(manufacturer)
-                                localEnabledManufacturers.insert(manufacturer)
-                            } else {
-                                ManufacturerFilterPreference.removeManufacturer(manufacturer)
-                                localEnabledManufacturers.remove(manufacturer)
+                            Task {
+                                if isEnabled {
+                                    await manufacturerFilterService.enableManufacturer(manufacturer)
+                                    await MainActor.run {
+                                        localEnabledManufacturers.insert(manufacturer)
+                                    }
+                                } else {
+                                    await manufacturerFilterService.disableManufacturer(manufacturer)
+                                    await MainActor.run {
+                                        localEnabledManufacturers.remove(manufacturer)
+                                    }
+                                }
                             }
                         }
                     }
@@ -135,7 +135,7 @@ struct ManufacturerFilterView: View {
                 }
             } footer: {
                 if !isLoading {
-                    Text("\(ManufacturerFilterHelpers.manufacturerFilterSectionFooter) \(localEnabledManufacturers.count) of \(allManufacturers.count) manufacturers selected.")
+                    Text("Select which manufacturers to show in the catalog. This filter works alongside the COE filter to refine your search results. \(localEnabledManufacturers.count) of \(allManufacturers.count) manufacturers selected.")
                 }
             }
         }

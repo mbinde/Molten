@@ -56,16 +56,13 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
         let catalogItems = try await catalogService.getGlassItemsLightweight()
         let testGlassItem = try catalogItems.first(where: { $0.sku != nil })!
 
-        let testInventory = [
-            InventoryModel(item_stable_id: testGlassItem.stable_id, type: "rod", quantity: 10.0)
-        ]
-
-        _ = try await inventoryTrackingService.createCompleteItem(
-            testGlassItem,
-            initialInventory: testInventory,
-            tags: ["test"]
+        // Add inventory to the real catalog item
+        _ = try await inventoryTrackingService.addInventory(
+            quantity: 10.0,
+            type: "rod",
+            toItem: testGlassItem.stable_id
         )
-        
+
         let dataLoader = DataLoadingService(catalogService: catalogService)
         
         // Act: Load catalog items
@@ -89,18 +86,15 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
 
         let quantities = [15.0, 25.0]
 
+        // Add inventory to the real catalog items
         for (index, glassItem) in testItems.enumerated() {
-            let inventory = [
-                InventoryModel(item_stable_id: glassItem.stable_id, type: "rod", quantity: quantities[index])
-            ]
-
-            _ = try await inventoryTrackingService.createCompleteItem(
-                glassItem,
-                initialInventory: inventory,
-                tags: []
+            _ = try await inventoryTrackingService.addInventory(
+                quantity: quantities[index],
+                type: "rod",
+                toItem: glassItem.stable_id
             )
         }
-        
+
         let dataLoader = DataLoadingService(catalogService: catalogService)
         
         // Act: Get system overview
@@ -123,18 +117,15 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
         let catalogItems = try await catalogService.getGlassItemsLightweight()
         let searchableItems = Array(catalogItems.prefix(3).filter { $0.sku != nil })
 
+        // Add inventory to the real catalog items
         for glassItem in searchableItems {
-            let inventory = [
-                InventoryModel(item_stable_id: glassItem.stable_id, type: "rod", quantity: 5.0)
-            ]
-
-            _ = try await inventoryTrackingService.createCompleteItem(
-                glassItem,
-                initialInventory: inventory,
-                tags: []
+            _ = try await inventoryTrackingService.addInventory(
+                quantity: 5.0,
+                type: "rod",
+                toItem: glassItem.stable_id
             )
         }
-        
+
         let dataLoader = DataLoadingService(catalogService: catalogService)
 
         // Act: Search using the first item's name
@@ -155,15 +146,12 @@ struct DataLoadingServiceRepositoryTests: MockOnlyTestSuite {
         let catalogItems = try await catalogService.getGlassItemsLightweight()
         let manufacturerItems = Array(catalogItems.prefix(3).filter { $0.sku != nil })
 
+        // Add inventory to the real catalog items
         for glassItem in manufacturerItems {
-            let inventory = [
-                InventoryModel(item_stable_id: glassItem.stable_id, type: "rod", quantity: 8.0)
-            ]
-
-            _ = try await inventoryTrackingService.createCompleteItem(
-                glassItem,
-                initialInventory: inventory,
-                tags: []
+            _ = try await inventoryTrackingService.addInventory(
+                quantity: 8.0,
+                type: "rod",
+                toItem: glassItem.stable_id
             )
         }
 

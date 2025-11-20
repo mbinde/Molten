@@ -14,6 +14,19 @@ import CoreData
 @MainActor
 struct CoreDataSharedInventoryRepositoryTests {
 
+    // MARK: - Test Helpers
+
+    /// Fetch real catalog items to use in tests (catalog is read-only)
+    /// Only returns items that have non-nil SKUs since InventoryItemSnapshot requires them
+    private func getCatalogTestItems(glassRepo: GlassItemRepository, count: Int = 1) async throws -> [GlassItemModel] {
+        let allItems = try await glassRepo.fetchItems(matching: nil)
+        let itemsWithSKU = allItems.filter { $0.sku != nil }
+        guard itemsWithSKU.count >= count else {
+            throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Not enough catalog items with SKU (need \(count), found \(itemsWithSKU.count))"])
+        }
+        return Array(itemsWithSKU.prefix(count))
+    }
+
     // MARK: - Save Tests
 
     @Test("Should save inventory snapshot")
@@ -22,22 +35,15 @@ struct CoreDataSharedInventoryRepositoryTests {
         let controller = PersistenceController.createTestController()
         let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
 
-        // Create catalog item first (required for getSnapshot to work)
-        let glassItem = GlassItemModel(
-            stable_id: "test-123",
-            name: "Clear Rod",
-            sku: "001",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-        _ = try await glassRepo.createItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getCatalogTestItems(glassRepo: glassRepo, count: 1)
+        let testItem = catalogItems[0]
 
         let items = [
             InventoryItemSnapshot(
-                stableId: "test-123",
-                manufacturer: "bullseye",
-                sku: "001",
+                stableId: testItem.stable_id,
+                manufacturer: testItem.manufacturer,
+                sku: testItem.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 5.0,
                 unit: "rod",
                 location: "Shelf A"
@@ -50,7 +56,7 @@ struct CoreDataSharedInventoryRepositoryTests {
         // Verify
         let snapshot = try await sharedRepo.getSnapshot(shareCode: "ABC123")
         #expect(snapshot.count == 1)
-        #expect(snapshot[0].stableId == "test-123")
+        #expect(snapshot[0].stableId == testItem.stable_id)
         #expect(snapshot[0].quantity == 5.0)
         #expect(snapshot[0].unit == "rod")
         #expect(snapshot[0].location == "Shelf A")
@@ -62,22 +68,15 @@ struct CoreDataSharedInventoryRepositoryTests {
         let controller = PersistenceController.createTestController()
         let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
 
-        // Create catalog item first (required for getSnapshot to work)
-        let glassItem = GlassItemModel(
-            stable_id: "test-123",
-            name: "Clear Rod",
-            sku: "001",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-        _ = try await glassRepo.createItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getCatalogTestItems(glassRepo: glassRepo, count: 1)
+        let testItem = catalogItems[0]
 
         let items = [
             InventoryItemSnapshot(
-                stableId: "test-123",
-                manufacturer: "bullseye",
-                sku: "001",
+                stableId: testItem.stable_id,
+                manufacturer: testItem.manufacturer,
+                sku: testItem.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 5.0,
                 unit: "rod",
                 location: nil,
@@ -102,32 +101,16 @@ struct CoreDataSharedInventoryRepositoryTests {
         let controller = PersistenceController.createTestController()
         let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
 
-        // Create catalog items first (required for getSnapshot to work)
-        let glassItem1 = GlassItemModel(
-            stable_id: "test-123",
-            name: "Clear Rod",
-            sku: "001",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-        _ = try await glassRepo.createItem(glassItem1)
-
-        let glassItem2 = GlassItemModel(
-            stable_id: "test-456",
-            name: "Clear Tube",
-            sku: "002",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-        _ = try await glassRepo.createItem(glassItem2)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getCatalogTestItems(glassRepo: glassRepo, count: 2)
+        let testItem1 = catalogItems[0]
+        let testItem2 = catalogItems[1]
 
         let items1 = [
             InventoryItemSnapshot(
-                stableId: "test-123",
-                manufacturer: "bullseye",
-                sku: "001",
+                stableId: testItem1.stable_id,
+                manufacturer: testItem1.manufacturer,
+                sku: testItem1.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 5.0,
                 unit: "rod",
                 location: nil
@@ -136,9 +119,9 @@ struct CoreDataSharedInventoryRepositoryTests {
 
         let items2 = [
             InventoryItemSnapshot(
-                stableId: "test-456",
-                manufacturer: "bullseye",
-                sku: "002",
+                stableId: testItem2.stable_id,
+                manufacturer: testItem2.manufacturer,
+                sku: testItem2.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 10.0,
                 unit: "tube",
                 location: "Shelf B"
@@ -152,7 +135,7 @@ struct CoreDataSharedInventoryRepositoryTests {
         // Verify - should only have items2
         let snapshot = try await sharedRepo.getSnapshot(shareCode: "ABC123")
         #expect(snapshot.count == 1)
-        #expect(snapshot[0].stableId == "test-456")
+        #expect(snapshot[0].stableId == testItem2.stable_id)
         #expect(snapshot[0].quantity == 10.0)
     }
 
@@ -162,32 +145,16 @@ struct CoreDataSharedInventoryRepositoryTests {
         let controller = PersistenceController.createTestController()
         let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
 
-        // Create catalog items first (required for getSnapshot to work)
-        let glassItem1 = GlassItemModel(
-            stable_id: "test-123",
-            name: "Clear Rod",
-            sku: "001",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-        _ = try await glassRepo.createItem(glassItem1)
-
-        let glassItem2 = GlassItemModel(
-            stable_id: "test-456",
-            name: "Clear Tube",
-            sku: "002",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-        _ = try await glassRepo.createItem(glassItem2)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getCatalogTestItems(glassRepo: glassRepo, count: 2)
+        let testItem1 = catalogItems[0]
+        let testItem2 = catalogItems[1]
 
         let items1 = [
             InventoryItemSnapshot(
-                stableId: "test-123",
-                manufacturer: "bullseye",
-                sku: "001",
+                stableId: testItem1.stable_id,
+                manufacturer: testItem1.manufacturer,
+                sku: testItem1.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 5.0,
                 unit: "rod",
                 location: nil
@@ -196,9 +163,9 @@ struct CoreDataSharedInventoryRepositoryTests {
 
         let items2 = [
             InventoryItemSnapshot(
-                stableId: "test-456",
-                manufacturer: "bullseye",
-                sku: "002",
+                stableId: testItem2.stable_id,
+                manufacturer: testItem2.manufacturer,
+                sku: testItem2.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 10.0,
                 unit: "tube",
                 location: nil
@@ -215,8 +182,8 @@ struct CoreDataSharedInventoryRepositoryTests {
 
         #expect(snapshot1.count == 1)
         #expect(snapshot2.count == 1)
-        #expect(snapshot1[0].stableId == "test-123")
-        #expect(snapshot2[0].stableId == "test-456")
+        #expect(snapshot1[0].stableId == testItem1.stable_id)
+        #expect(snapshot2[0].stableId == testItem2.stable_id)
     }
 
     // MARK: - Fetch Tests
@@ -240,23 +207,16 @@ struct CoreDataSharedInventoryRepositoryTests {
         let controller = PersistenceController.createTestController()
         let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
 
-        // Create glass item in catalog
-        let glassItem = GlassItemModel(
-            stable_id: "test-123",
-            name: "Clear Rod",
-            sku: "001",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-        _ = try await glassRepo.createItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getCatalogTestItems(glassRepo: glassRepo, count: 1)
+        let testItem = catalogItems[0]
 
         // Save snapshot (only stable_id stored)
         let items = [
             InventoryItemSnapshot(
-                stableId: "test-123",
-                manufacturer: "bullseye",  // This gets looked up from catalog
-                sku: "001",                // This gets looked up from catalog
+                stableId: testItem.stable_id,
+                manufacturer: testItem.manufacturer,  // This gets looked up from catalog
+                sku: testItem.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs                    // This gets looked up from catalog
                 quantity: 5.0,
                 unit: "rod",
                 location: nil
@@ -269,8 +229,8 @@ struct CoreDataSharedInventoryRepositoryTests {
 
         // Verify
         #expect(snapshot.count == 1)
-        #expect(snapshot[0].manufacturer == "bullseye")
-        #expect(snapshot[0].sku == "001")
+        #expect(snapshot[0].manufacturer == testItem.manufacturer)
+        #expect(snapshot[0].sku == testItem.sku)
     }
 
     @Test("Should skip items not in catalog")
@@ -279,23 +239,16 @@ struct CoreDataSharedInventoryRepositoryTests {
         let controller = PersistenceController.createTestController()
         let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
 
-        // Only create one glass item
-        let glassItem = GlassItemModel(
-            stable_id: "test-123",
-            name: "Clear Rod",
-            sku: "001",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-        _ = try await glassRepo.createItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getCatalogTestItems(glassRepo: glassRepo, count: 1)
+        let testItem = catalogItems[0]
 
         // Save snapshot with two items (one not in catalog)
         let items = [
             InventoryItemSnapshot(
-                stableId: "test-123",
-                manufacturer: "bullseye",
-                sku: "001",
+                stableId: testItem.stable_id,
+                manufacturer: testItem.manufacturer,
+                sku: testItem.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 5.0,
                 unit: "rod",
                 location: nil
@@ -316,7 +269,7 @@ struct CoreDataSharedInventoryRepositoryTests {
 
         // Verify - should only return item that exists in catalog
         #expect(snapshot.count == 1)
-        #expect(snapshot[0].stableId == "test-123")
+        #expect(snapshot[0].stableId == testItem.stable_id)
     }
 
     // MARK: - Delete Tests
@@ -325,13 +278,17 @@ struct CoreDataSharedInventoryRepositoryTests {
     func testDeleteSnapshot() async throws {
         // Setup
         let controller = PersistenceController.createTestController()
-        let (sharedRepo, _) = try await createTestRepositories(controller: controller)
+        let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
+
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getCatalogTestItems(glassRepo: glassRepo, count: 1)
+        let testItem = catalogItems[0]
 
         let items = [
             InventoryItemSnapshot(
-                stableId: "test-123",
-                manufacturer: "bullseye",
-                sku: "001",
+                stableId: testItem.stable_id,
+                manufacturer: testItem.manufacturer,
+                sku: testItem.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 5.0,
                 unit: "rod",
                 location: nil
@@ -351,13 +308,17 @@ struct CoreDataSharedInventoryRepositoryTests {
     func testDeleteSnapshotWithTags() async throws {
         // Setup
         let controller = PersistenceController.createTestController()
-        let (sharedRepo, _) = try await createTestRepositories(controller: controller)
+        let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
+
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getCatalogTestItems(glassRepo: glassRepo, count: 1)
+        let testItem = catalogItems[0]
 
         let items = [
             InventoryItemSnapshot(
-                stableId: "test-123",
-                manufacturer: "bullseye",
-                sku: "001",
+                stableId: testItem.stable_id,
+                manufacturer: testItem.manufacturer,
+                sku: testItem.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 5.0,
                 unit: "rod",
                 location: nil,
@@ -380,32 +341,16 @@ struct CoreDataSharedInventoryRepositoryTests {
         let controller = PersistenceController.createTestController()
         let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
 
-        // Create catalog items first (required for getSnapshot to work)
-        let glassItem1 = GlassItemModel(
-            stable_id: "test-123",
-            name: "Clear Rod",
-            sku: "001",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-        _ = try await glassRepo.createItem(glassItem1)
-
-        let glassItem2 = GlassItemModel(
-            stable_id: "test-456",
-            name: "Clear Tube",
-            sku: "002",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-        _ = try await glassRepo.createItem(glassItem2)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getCatalogTestItems(glassRepo: glassRepo, count: 2)
+        let testItem1 = catalogItems[0]
+        let testItem2 = catalogItems[1]
 
         let items1 = [
             InventoryItemSnapshot(
-                stableId: "test-123",
-                manufacturer: "bullseye",
-                sku: "001",
+                stableId: testItem1.stable_id,
+                manufacturer: testItem1.manufacturer,
+                sku: testItem1.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 5.0,
                 unit: "rod",
                 location: nil
@@ -414,9 +359,9 @@ struct CoreDataSharedInventoryRepositoryTests {
 
         let items2 = [
             InventoryItemSnapshot(
-                stableId: "test-456",
-                manufacturer: "bullseye",
-                sku: "002",
+                stableId: testItem2.stable_id,
+                manufacturer: testItem2.manufacturer,
+                sku: testItem2.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 10.0,
                 unit: "tube",
                 location: nil
@@ -445,41 +390,26 @@ struct CoreDataSharedInventoryRepositoryTests {
         let controller = PersistenceController.createTestController()
         let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
 
-        // Create glass items
-        let item1 = GlassItemModel(
-            stable_id: "test-123",
-            name: "Clear Rod",
-            sku: "001",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-        let item2 = GlassItemModel(
-            stable_id: "test-456",
-            name: "Blue Rod",
-            sku: "002",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-        _ = try await glassRepo.createItem(item1)
-        _ = try await glassRepo.createItem(item2)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getCatalogTestItems(glassRepo: glassRepo, count: 2)
+        let testItem1 = catalogItems[0]
+        let testItem2 = catalogItems[1]
 
         // Save snapshots with tags
         let items = [
             InventoryItemSnapshot(
-                stableId: "test-123",
-                manufacturer: "bullseye",
-                sku: "001",
+                stableId: testItem1.stable_id,
+                manufacturer: testItem1.manufacturer,
+                sku: testItem1.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 5.0,
                 unit: "rod",
                 location: nil,
                 tags: ["transparent", "coe90"]
             ),
             InventoryItemSnapshot(
-                stableId: "test-456",
-                manufacturer: "bullseye",
-                sku: "002",
+                stableId: testItem2.stable_id,
+                manufacturer: testItem2.manufacturer,
+                sku: testItem2.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 10.0,
                 unit: "rod",
                 location: nil,
@@ -494,7 +424,7 @@ struct CoreDataSharedInventoryRepositoryTests {
 
         // Verify
         #expect(transparentItems.count == 1)
-        #expect(transparentItems[0].stableId == "test-123")
+        #expect(transparentItems[0].stableId == testItem1.stable_id)
 
         #expect(coe90Items.count == 2)
     }
@@ -505,32 +435,17 @@ struct CoreDataSharedInventoryRepositoryTests {
         let controller = PersistenceController.createTestController()
         let (sharedRepo, glassRepo) = try await createTestRepositories(controller: controller)
 
-        // Create glass items
-        let item1 = GlassItemModel(
-            stable_id: "test-123",
-            name: "Clear Rod",
-            sku: "001",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-        let item2 = GlassItemModel(
-            stable_id: "test-456",
-            name: "Blue Rod",
-            sku: "002",
-            manufacturer: "bullseye",
-            coe: 90,
-            mfr_status: "available"
-        )
-        _ = try await glassRepo.createItem(item1)
-        _ = try await glassRepo.createItem(item2)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getCatalogTestItems(glassRepo: glassRepo, count: 2)
+        let testItem1 = catalogItems[0]
+        let testItem2 = catalogItems[1]
 
         // Save to different share codes
         let items1 = [
             InventoryItemSnapshot(
-                stableId: "test-123",
-                manufacturer: "bullseye",
-                sku: "001",
+                stableId: testItem1.stable_id,
+                manufacturer: testItem1.manufacturer,
+                sku: testItem1.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 5.0,
                 unit: "rod",
                 location: nil,
@@ -540,9 +455,9 @@ struct CoreDataSharedInventoryRepositoryTests {
 
         let items2 = [
             InventoryItemSnapshot(
-                stableId: "test-456",
-                manufacturer: "bullseye",
-                sku: "002",
+                stableId: testItem2.stable_id,
+                manufacturer: testItem2.manufacturer,
+                sku: testItem2.sku!,  // Force-unwrap safe: getCatalogTestItems filters for non-nil SKUs
                 quantity: 10.0,
                 unit: "rod",
                 location: nil,

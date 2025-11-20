@@ -43,35 +43,26 @@ extension CoreDataUserTagsRepository {
     static func migrateAllRecordsIfNeeded(context: NSManagedObjectContext) async throws {
         let log = Logger(subsystem: "com.motleywoods.molten", category: "usertags-migration")
 
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            context.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
-                    fetchRequest.predicate = NSPredicate(format: "owner_type == nil")
+        try await CoreDataHelper.performAsyncVoid(on: context) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
+            fetchRequest.predicate = NSPredicate(format: "owner_type == nil")
 
-                    let unmigrated = try context.fetch(fetchRequest)
+            let unmigrated = try context.fetch(fetchRequest)
 
-                    guard !unmigrated.isEmpty else {
-                        continuation.resume()
-                        return
-                    }
-
-                    log.info("Migrating \(unmigrated.count) UserTags records...")
-
-                    for entity in unmigrated {
-                        try self.migrateEntity(entity, context: context, log: log)
-                    }
-
-                    try CoreDataErrorHandler.save(context: context)
-                    log.info("UserTags migration complete: \(unmigrated.count) records migrated")
-
-                    continuation.resume()
-                } catch {
-                    log.error("UserTags migration failed: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            guard !unmigrated.isEmpty else {
+                                        return
             }
-        }
+
+            log.info("Migrating \(unmigrated.count) UserTags records...")
+
+            for entity in unmigrated {
+                try self.migrateEntity(entity, context: context, log: log)
+            }
+
+            try CoreDataErrorHandler.save(context: context)
+            log.info("UserTags migration complete: \(unmigrated.count) records migrated")
+
+                    }
     }
 
     /// Migrate entities on-demand when accessed (lazy migration fallback)

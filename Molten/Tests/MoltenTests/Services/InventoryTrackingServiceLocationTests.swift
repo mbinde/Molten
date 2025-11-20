@@ -70,10 +70,11 @@ struct InventoryTrackingServiceLocationTests {
         #expect(inventory.quantity == 10)
     }
 
-    @Test("createCompleteItem with initial inventory including locations")
-    func testCreateCompleteItemWithLocations() async throws {
+    @Test("Add inventory with multiple locations to catalog item")
+    func testAddInventoryWithMultipleLocations() async throws {
         // Setup
         let catalogService = deps.catalogService
+        let inventoryRepo = deps.inventoryRepository
         let service = deps.inventoryTrackingService
 
         // Use real catalog data (catalog is read-only)
@@ -81,25 +82,23 @@ struct InventoryTrackingServiceLocationTests {
         let glassItem = try catalogItems.first(where: { $0.sku != nil })!
         let stableId = glassItem.stable_id
 
-        let initialInventory = [
-            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 5, location: "Shelf A"),
+        // Test - add inventory to multiple locations
+        _ = try await inventoryRepo.createInventory(
+            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 5, location: "Shelf A")
+        )
+        _ = try await inventoryRepo.createInventory(
             InventoryModel(item_stable_id: stableId, type: "sheet", quantity: 2, location: "Shelf B")
-        ]
-
-        // Test
-        let completeItem = try await service.createCompleteItem(
-            glassItem,
-            initialInventory: initialInventory,
-            tags: []
         )
 
+        let completeItem = try await service.getCompleteItem(stableId: stableId)
+
         // Verify
-        #expect(completeItem.inventory.count == 2)
-        #expect(completeItem.inventory.contains { $0.location == "Shelf A" && $0.type == "rod" })
-        #expect(completeItem.inventory.contains { $0.location == "Shelf B" && $0.type == "sheet" })
-        #expect(completeItem.locations.count == 2)
-        #expect(completeItem.locations.contains("Shelf A"))
-        #expect(completeItem.locations.contains("Shelf B"))
+        #expect(completeItem?.inventory.count == 2)
+        #expect(completeItem?.inventory.contains { $0.location == "Shelf A" && $0.type == "rod" } == true)
+        #expect(completeItem?.inventory.contains { $0.location == "Shelf B" && $0.type == "sheet" } == true)
+        #expect(completeItem?.locations.count == 2)
+        #expect(completeItem?.locations.contains("Shelf A") == true)
+        #expect(completeItem?.locations.contains("Shelf B") == true)
     }
 
     @Test("getCompleteItem includes location information")

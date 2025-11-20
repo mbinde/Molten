@@ -563,9 +563,14 @@ struct CoreDataSharedInventoryRepositoryTests {
     // MARK: - Helper Methods
 
     private func createTestRepositories(controller: PersistenceController) async throws -> (CoreDataSharedInventoryRepository, GlassItemRepository) {
-        // Create a writable Core Data glass item repository for tests
-        // (AppDependencies uses read-only SQLiteGlassItemRepository)
-        let glassRepo = CoreDataGlassItemRepository(context: controller.container.viewContext)
+        // Create test SQLite repository (now used for both production and tests)
+        guard let bundlePath = Bundle.main.path(forResource: "catalog", ofType: "sqlite") else {
+            throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Catalog database not found"])
+        }
+        let testDbManager = TestCatalogDatabaseManager(databasePath: bundlePath)
+        try testDbManager.initialize()
+
+        let glassRepo = SQLiteGlassItemRepository(databaseManager: testDbManager)
         let sharedRepo = CoreDataSharedInventoryRepository(
             context: controller.container.viewContext,
             catalogRepository: glassRepo

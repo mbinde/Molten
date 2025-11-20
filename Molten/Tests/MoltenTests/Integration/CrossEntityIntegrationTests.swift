@@ -43,41 +43,33 @@ struct CrossEntityIntegrationTests {
         // Create services with new instances to avoid data pollution
         let catalogService = deps.catalogService
         let inventoryTrackingService = deps.inventoryTrackingService
-        
+
         // Create coordination service that works across entities
         let coordinator = EntityCoordinator(
             catalogService: catalogService,
             inventoryTrackingService: inventoryTrackingService
         )
-        
-        // Create a complete glass item with inventory using the service
-        let stableId = generateStableId(manufacturer: "Bullseye", sku: "RGR-001")
-        let testGlassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Red Glass Rod",
-            sku: "RGR-001",
-            manufacturer: "Bullseye",
-            mfr_notes: "Transparent red glass rod",
-            coe: 90,
-            url: "https://bullseyeglass.com",
-            mfr_status: "available"
-        )
+
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let testGlassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = testGlassItem.stable_id
 
         let testInventory = [
             InventoryModel(item_stable_id: stableId, type: "rod", quantity: 5.0)
         ]
-        
+
         let testTags = ["red", "bullseye", "transparent"]
-        
+
         let testLocations = [
             StorageLocationModel(
                 id: UUID(),
-                inventory_id: testInventory[0].id, 
-                location: "Workshop Bin A", 
+                inventory_id: testInventory[0].id,
+                location: "Workshop Bin A",
                 quantity: 5.0
             )
         ]
-        
+
         _ = try await inventoryTrackingService.createCompleteItem(
             testGlassItem,
             initialInventory: testInventory,
@@ -91,7 +83,7 @@ struct CrossEntityIntegrationTests {
         let coordination = try await coordinator.getInventoryForGlassItem(stableId: stableId)
         
         // Assert: Coordination should combine all data correctly
-        #expect(coordination.glassItem.name == "Red Glass Rod", "Should have correct glass item name")
+        #expect(coordination.glassItem.stable_id == stableId, "Should have correct stable ID")
         #expect(coordination.totalQuantity == 5.0, "Should have correct total quantity")
         #expect(coordination.hasInventory == true, "Should indicate inventory exists")
         #expect(coordination.tags.contains("red"), "Should include tags")
@@ -101,32 +93,26 @@ struct CrossEntityIntegrationTests {
     @Test("Should handle purchase and inventory correlation using new architecture")
     func testPurchaseInventoryCorrelation() async throws {
         // Arrange: Configure and create services
+        let catalogService = deps.catalogService
         let inventoryTrackingService = deps.inventoryTrackingService
         let mockPurchaseRepo = MockPurchaseRecordRepository()
         let purchaseService = PurchaseRecordService(repository: mockPurchaseRepo)
-        
+
         let coordinator = EntityCoordinator(
+            catalogService: catalogService,
             inventoryTrackingService: inventoryTrackingService,
             purchaseRecordService: purchaseService
         )
-        
-        // Create glass item with inventory
-        let stableId = generateStableId(manufacturer: "Bullseye", sku: "RGR-001")
-        let testGlassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Red Glass Rod",
-            sku: "RGR-001",
-            manufacturer: "Bullseye",
-            mfr_notes: "Transparent red glass rod",
-            coe: 90,
-            url: "https://bullseyeglass.com",
-            mfr_status: "available"
-        )
+
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let testGlassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = testGlassItem.stable_id
 
         let testInventory = [
             InventoryModel(item_stable_id: stableId, type: "rod", quantity: 10.0)
         ]
-        
+
         _ = try await inventoryTrackingService.createCompleteItem(
             testGlassItem,
             initialInventory: testInventory,

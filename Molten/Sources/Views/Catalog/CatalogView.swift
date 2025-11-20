@@ -662,91 +662,22 @@ struct CatalogView: View {
     // MARK: - Views
 
     private var catalogLoadingState: some View {
-        VStack {
-            Spacer()
-
-            VStack(spacing: 20) {
-                ProgressView()
-                    .scaleEffect(1.5)
-                    .padding(.bottom, 8)
-
-                Text("Loading Catalog")
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                Text("Please wait while we load your glass catalog...")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            }
-
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        CatalogLoadingState()
     }
 
     private var catalogEmptyState: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                Image(systemName: "text.justify")
-                    .font(.largeTitle)
-                    .foregroundColor(.secondary)
-
-                Text("No Catalog Items")
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                Text("Something is very wrong, we should always be able to load some catalog data. Please contact the developer.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            }
-            .padding()
-            .padding(.top, 60)
-        }
+        CatalogEmptyState()
     }
     
     private var searchEmptyStateView: some View {
-        List {
-            VStack(spacing: 16) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 40))
-                    .foregroundColor(.secondary)
-                
-                Text("No Results")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                
-                Text(emptyStateMessage)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-        }
-        .listStyle(.plain)
-    }
-    
-    // MIGRATION: Get empty state message from ViewModel
-    private var emptyStateMessage: String {
-        return viewModel.emptyStateMessage
+        CatalogSearchEmptyState(
+            message: viewModel.emptyStateMessage,
+            onClearSearch: clearSearch
+        )
     }
     
     private var catalogListView: some View {
-        List {
-            ForEach(sortedFilteredItems, id: \.id) { item in
-                NavigationLink(value: CatalogNavigationDestination.catalogItemDetail(itemModel: item)) {
-                    GlassItemRowView.catalog(item: item)
-                }
-                .accessibilityIdentifier("catalog.item.\(item.glassItem.stable_id)")
-            }
-        }
-        .accessibilityIdentifier("catalog.list")
+        CatalogListView(items: sortedFilteredItems)
     }
 }
 

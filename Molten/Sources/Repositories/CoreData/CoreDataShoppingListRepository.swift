@@ -34,73 +34,44 @@ class CoreDataShoppingListRepository: @unchecked Sendable, ShoppingListRepositor
     // MARK: - Basic CRUD Operations
 
     func fetchAllItems() async throws -> [ItemShoppingModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[ItemShoppingModel], Error>) in
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "dateAdded", ascending: false)]
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "dateAdded", ascending: false)]
 
-                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
-                    let items = coreDataItems.compactMap { self.convertToModel($0) }
+            let coreDataItems = try context.fetch(fetchRequest)
+            let items = coreDataItems.compactMap { self.convertToModel($0) }
 
-                    continuation.resume(returning: items)
-
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
+            return items
         }
     }
 
     func fetchItems(matching predicate: NSPredicate?) async throws -> [ItemShoppingModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[ItemShoppingModel], Error>) in
-            nonisolated(unsafe) let predicateCopy = predicate
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    fetchRequest.predicate = predicateCopy
-                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "dateAdded", ascending: false)]
+        nonisolated(unsafe) let predicateCopy = predicate
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
+            fetchRequest.predicate = predicateCopy
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "dateAdded", ascending: false)]
 
-                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
-                    let items = coreDataItems.compactMap { self.convertToModel($0) }
+            let coreDataItems = try context.fetch(fetchRequest)
+            let items = coreDataItems.compactMap { self.convertToModel($0) }
 
-                    continuation.resume(returning: items)
-
-                } catch {
-                    self.log.error("Failed to fetch shopping list items with predicate: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+            return items
         }
     }
 
     func fetchItem(byId id: UUID) async throws -> ItemShoppingModel? {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ItemShoppingModel?, Error>) in
-            backgroundContext.perform {
-                do {
-                    let result = try self.fetchCoreDataItemSync(byId: id)
-                    let model = result.flatMap { self.convertToModel($0) }
-                    continuation.resume(returning: model)
-                } catch {
-                    self.log.error("Failed to fetch shopping list item by ID: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let result = try self.fetchCoreDataItemSync(byId: id)
+            let model = result.flatMap { self.convertToModel($0) }
+            return model
         }
     }
 
     func fetchItem(forItem item_stable_id: String) async throws -> ItemShoppingModel? {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ItemShoppingModel?, Error>) in
-            backgroundContext.perform {
-                do {
-                    let result = try self.fetchCoreDataItemSync(forItem: item_stable_id)
-                    let model = result.flatMap { self.convertToModel($0) }
-                    continuation.resume(returning: model)
-                } catch {
-                    self.log.error("Failed to fetch shopping list item for item: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let result = try self.fetchCoreDataItemSync(forItem: item_stable_id)
+            let model = result.flatMap { self.convertToModel($0) }
+            return model
         }
     }
 
@@ -112,503 +83,367 @@ class CoreDataShoppingListRepository: @unchecked Sendable, ShoppingListRepositor
     }
 
     func createItem(_ item: ItemShoppingModel) async throws -> ItemShoppingModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ItemShoppingModel, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Validate item
-                    guard item.isValid else {
-                        throw CoreDataShoppingListRepositoryError.invalidData(item.validationErrors.joined(separator: ", "))
-                    }
-
-                    // Check if item already exists - shopping list items are unique per (item_stable_id, store) tuple
-                    // Same item can exist in different stores
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    if let store = item.store {
-                        fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@ AND store == %@",
-                                                             item.item_stable_id,
-                                                             store)
-                    } else {
-                        fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@ AND store == NULL",
-                                                             item.item_stable_id)
-                    }
-                    fetchRequest.fetchLimit = 1
-                    if try self.backgroundContext.fetch(fetchRequest).first != nil {
-                        throw CoreDataShoppingListRepositoryError.itemAlreadyExists(item.item_stable_id)
-                    }
-
-                    // Create new Core Data entity
-                    guard let entity = NSEntityDescription.entity(forEntityName: "ItemShopping", in: self.backgroundContext) else {
-                        throw CoreDataShoppingListRepositoryError.entityNotFound("ItemShopping")
-                    }
-                    let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-
-                    // Set properties
-                    self.updateCoreDataEntity(coreDataItem, with: item)
-
-                    // Save context
-                    try self.backgroundContext.save()
-
-                    self.log.info("Created shopping list item for: \(item.item_stable_id)")
-                    continuation.resume(returning: item)
-
-                } catch {
-                    self.log.error("Failed to create shopping list item: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            // Validate item
+            guard item.isValid else {
+            throw CoreDataShoppingListRepositoryError.invalidData(item.validationErrors.joined(separator: ", "))
             }
+
+            // Check if item already exists - shopping list items are unique per (item_stable_id, store) tuple
+            // Same item can exist in different stores
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
+            if let store = item.store {
+            fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@ AND store == %@",
+            item.item_stable_id,
+            store)
+            } else {
+            fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@ AND store == NULL",
+            item.item_stable_id)
+            }
+            fetchRequest.fetchLimit = 1
+            if try context.fetch(fetchRequest).first != nil {
+            throw CoreDataShoppingListRepositoryError.itemAlreadyExists(item.item_stable_id)
+            }
+
+            // Create new Core Data entity
+            guard let entity = NSEntityDescription.entity(forEntityName: "ItemShopping", in: context) else {
+            throw CoreDataShoppingListRepositoryError.entityNotFound("ItemShopping")
+            }
+            let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
+
+            // Set properties
+            self.updateCoreDataEntity(coreDataItem, with: item)
+
+            // Save context
+            try context.save()
+
+            self.log.info("Created shopping list item for: \(item.item_stable_id)")
+            return item
         }
     }
 
     func updateItem(_ item: ItemShoppingModel) async throws -> ItemShoppingModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ItemShoppingModel, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Validate item
-                    guard item.isValid else {
-                        throw CoreDataShoppingListRepositoryError.invalidData(item.validationErrors.joined(separator: ", "))
-                    }
-
-                    // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(byId: item.id) else {
-                        self.log.warning("Attempted to update non-existent shopping list item: \(item.id)")
-                        throw CoreDataShoppingListRepositoryError.itemNotFound(item.id.uuidString)
-                    }
-
-                    // Update properties
-                    self.updateCoreDataEntity(coreDataItem, with: item)
-
-                    // Save context
-                    try self.backgroundContext.save()
-
-                    self.log.info("Updated shopping list item: \(item.item_stable_id)")
-                    continuation.resume(returning: item)
-
-                } catch {
-                    self.log.error("Failed to update shopping list item: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            // Validate item
+            guard item.isValid else {
+            throw CoreDataShoppingListRepositoryError.invalidData(item.validationErrors.joined(separator: ", "))
             }
+
+            // Find existing item
+            guard let coreDataItem = try self.fetchCoreDataItemSync(byId: item.id) else {
+            self.log.warning("Attempted to update non-existent shopping list item: \(item.id)")
+            throw CoreDataShoppingListRepositoryError.itemNotFound(item.id.uuidString)
+            }
+
+            // Update properties
+            self.updateCoreDataEntity(coreDataItem, with: item)
+
+            // Save context
+            try context.save()
+
+            self.log.info("Updated shopping list item: \(item.item_stable_id)")
+            return item
         }
     }
 
     func deleteItem(id: UUID) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(byId: id) else {
-                        self.log.warning("Attempted to delete non-existent shopping list item: \(id)")
-                        // Not throwing error - idempotent delete
-                        continuation.resume()
-                        return
-                    }
-
-                    // Delete item
-                    self.backgroundContext.delete(coreDataItem)
-
-                    // Save context
-                    try self.backgroundContext.save()
-
-                    self.log.info("Deleted shopping list item by ID: \(id)")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete shopping list item: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            // Find existing item
+            guard let coreDataItem = try self.fetchCoreDataItemSync(byId: id) else {
+            self.log.warning("Attempted to delete non-existent shopping list item: \(id)")
+            // Not throwing error - idempotent delete
+            return
             }
+
+            // Delete item
+            context.delete(coreDataItem)
+
+            // Save context
+            try context.save()
+
+            self.log.info("Deleted shopping list item by ID: \(id)")
         }
     }
 
     func deleteItem(forItem item_stable_id: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) else {
-                        self.log.warning("Attempted to delete non-existent shopping list item: \(item_stable_id)")
-                        // Not throwing error - idempotent delete
-                        continuation.resume()
-                        return
-                    }
-
-                    // Delete item
-                    self.backgroundContext.delete(coreDataItem)
-
-                    // Save context
-                    try self.backgroundContext.save()
-
-                    self.log.info("Deleted shopping list item for: \(item_stable_id)")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete shopping list item: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            // Find existing item
+            guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) else {
+            self.log.warning("Attempted to delete non-existent shopping list item: \(item_stable_id)")
+            // Not throwing error - idempotent delete
+            return
             }
+
+            // Delete item
+            context.delete(coreDataItem)
+
+            // Save context
+            try context.save()
+
+            self.log.info("Deleted shopping list item for: \(item_stable_id)")
+
         }
     }
 
     func deleteAllItems() async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    let allItems = try self.backgroundContext.fetch(fetchRequest)
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
+            let allItems = try context.fetch(fetchRequest)
 
-                    for item in allItems {
-                        self.backgroundContext.delete(item)
-                    }
-
-                    if !allItems.isEmpty {
-                        try self.backgroundContext.save()
-                    }
-
-                    self.log.info("Deleted all \(allItems.count) shopping list items")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete all shopping list items: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            for item in allItems {
+            context.delete(item)
             }
+
+            if !allItems.isEmpty {
+            try context.save()
+            }
+
+            self.log.info("Deleted all \(allItems.count) shopping list items")
+
         }
     }
 
     // MARK: - Quantity Operations
 
     func updateQuantity(_ quantity: Double, forItem item_stable_id: String) async throws -> ItemShoppingModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ItemShoppingModel, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) else {
-                        throw CoreDataShoppingListRepositoryError.itemNotFound(item_stable_id)
-                    }
-
-                    // Update quantity
-                    coreDataItem.setValue(max(0, quantity), forKey: "quantity")
-
-                    // Save context
-                    try self.backgroundContext.save()
-
-                    guard let updatedModel = self.convertToModel(coreDataItem) else {
-                        throw CoreDataShoppingListRepositoryError.conversionFailed
-                    }
-
-                    self.log.info("Updated quantity for shopping list item: \(item_stable_id)")
-                    continuation.resume(returning: updatedModel)
-
-                } catch {
-                    self.log.error("Failed to update quantity: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            // Find existing item
+            guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) else {
+            throw CoreDataShoppingListRepositoryError.itemNotFound(item_stable_id)
             }
+
+            // Update quantity
+            coreDataItem.setValue(max(0, quantity), forKey: "quantity")
+
+            // Save context
+            try context.save()
+
+            guard let updatedModel = self.convertToModel(coreDataItem) else {
+            throw CoreDataShoppingListRepositoryError.conversionFailed
+            }
+
+            self.log.info("Updated quantity for shopping list item: \(item_stable_id)")
+            return updatedModel
+
         }
     }
 
     func addQuantity(_ quantity: Double, toItem item_stable_id: String, store: String?) async throws -> ItemShoppingModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ItemShoppingModel, Error>) in
-            backgroundContext.perform {
-                do {
-                    if let existingItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) {
-                        // Add to existing quantity
-                        let currentQuantity = existingItem.value(forKey: "quantity") as? Double ?? 0
-                        existingItem.setValue(currentQuantity + quantity, forKey: "quantity")
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            if let existingItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) {
+            // Add to existing quantity
+            let currentQuantity = existingItem.value(forKey: "quantity") as? Double ?? 0
+            existingItem.setValue(currentQuantity + quantity, forKey: "quantity")
 
-                        try self.backgroundContext.save()
+            try context.save()
 
-                        guard let updatedModel = self.convertToModel(existingItem) else {
-                            throw CoreDataShoppingListRepositoryError.conversionFailed
-                        }
-
-                        self.log.info("Added quantity to existing shopping list item: \(item_stable_id)")
-                        continuation.resume(returning: updatedModel)
-
-                    } else {
-                        // Create new item
-                        let newItem = ItemShoppingModel(
-                            item_stable_id: item_stable_id,
-                            quantity: quantity,
-                            store: store
-                        )
-
-                        guard let entity = NSEntityDescription.entity(forEntityName: "ItemShopping", in: self.backgroundContext) else {
-                            throw CoreDataShoppingListRepositoryError.entityNotFound("ItemShopping")
-                        }
-                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-
-                        self.updateCoreDataEntity(coreDataItem, with: newItem)
-                        try self.backgroundContext.save()
-
-                        self.log.info("Created new shopping list item: \(item_stable_id)")
-                        continuation.resume(returning: newItem)
-                    }
-
-                } catch {
-                    self.log.error("Failed to add quantity: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            guard let updatedModel = self.convertToModel(existingItem) else {
+            throw CoreDataShoppingListRepositoryError.conversionFailed
             }
+
+            self.log.info("Added quantity to existing shopping list item: \(item_stable_id)")
+            return updatedModel
+
+            } else {
+            // Create new item
+            let newItem = ItemShoppingModel(
+            item_stable_id: item_stable_id,
+            quantity: quantity,
+            store: store
+            )
+
+            guard let entity = NSEntityDescription.entity(forEntityName: "ItemShopping", in: context) else {
+            throw CoreDataShoppingListRepositoryError.entityNotFound("ItemShopping")
+            }
+            let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
+
+            self.updateCoreDataEntity(coreDataItem, with: newItem)
+            try context.save()
+
+            self.log.info("Created new shopping list item: \(item_stable_id)")
+            return newItem
+            }
+
         }
     }
 
     // MARK: - Store Operations
 
     func updateStore(_ store: String?, forItem item_stable_id: String) async throws -> ItemShoppingModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ItemShoppingModel, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) else {
-                        throw CoreDataShoppingListRepositoryError.itemNotFound(item_stable_id)
-                    }
-
-                    // Update store
-                    coreDataItem.setValue(store, forKey: "store")
-
-                    // Save context
-                    try self.backgroundContext.save()
-
-                    guard let updatedModel = self.convertToModel(coreDataItem) else {
-                        throw CoreDataShoppingListRepositoryError.conversionFailed
-                    }
-
-                    self.log.info("Updated store for shopping list item: \(item_stable_id)")
-                    continuation.resume(returning: updatedModel)
-
-                } catch {
-                    self.log.error("Failed to update store: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            // Find existing item
+            guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) else {
+            throw CoreDataShoppingListRepositoryError.itemNotFound(item_stable_id)
             }
+
+            // Update store
+            coreDataItem.setValue(store, forKey: "store")
+
+            // Save context
+            try context.save()
+
+            guard let updatedModel = self.convertToModel(coreDataItem) else {
+            throw CoreDataShoppingListRepositoryError.conversionFailed
+            }
+
+            self.log.info("Updated store for shopping list item: \(item_stable_id)")
+            return updatedModel
+
         }
     }
 
     func getDistinctStores() async throws -> [String] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String], Error>) in
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    let items = try self.backgroundContext.fetch(fetchRequest)
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
+            let items = try context.fetch(fetchRequest)
 
-                    let stores = Set(items.compactMap { $0.value(forKey: "store") as? String })
-                    let sortedStores = stores.sorted()
+            let stores = Set(items.compactMap { $0.value(forKey: "store") as? String })
+            let sortedStores = stores.sorted()
 
-                    continuation.resume(returning: sortedStores)
+            return sortedStores
 
-                } catch {
-                    self.log.error("Failed to get distinct stores: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
         }
     }
 
     func getItemCountByStore() async throws -> [String: Int] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String: Int], Error>) in
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    let items = try self.backgroundContext.fetch(fetchRequest)
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
+            let items = try context.fetch(fetchRequest)
 
-                    var countByStore: [String: Int] = [:]
-                    for item in items {
-                        if let store = item.value(forKey: "store") as? String {
-                            countByStore[store, default: 0] += 1
-                        }
-                    }
-
-                    continuation.resume(returning: countByStore)
-
-                } catch {
-                    self.log.error("Failed to get item count by store: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            var countByStore: [String: Int] = [:]
+            for item in items {
+            if let store = item.value(forKey: "store") as? String {
+            countByStore[store, default: 0] += 1
             }
+            }
+
+            return countByStore
+
         }
     }
 
     // MARK: - Discovery Operations
 
     func isItemInList(_ item_stable_id: String) async throws -> Bool {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Bool, Error>) in
-            backgroundContext.perform {
-                do {
-                    let exists = try self.fetchCoreDataItemSync(forItem: item_stable_id) != nil
-                    continuation.resume(returning: exists)
-                } catch {
-                    self.log.error("Failed to check if item is in list: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let exists = try self.fetchCoreDataItemSync(forItem: item_stable_id) != nil
+            return exists
         }
     }
 
     func getItemCount() async throws -> Int {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Int, Error>) in
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    let count = try self.backgroundContext.count(for: fetchRequest)
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
+            let count = try context.count(for: fetchRequest)
 
-                    continuation.resume(returning: count)
+            return count
 
-                } catch {
-                    self.log.error("Failed to get item count: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
         }
     }
 
     func getItemCount(forStore store: String) async throws -> Int {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Int, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Trim store name to match ItemShoppingModel.init behavior
-                    let trimmedStore = store.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    fetchRequest.predicate = NSPredicate(format: "store ==[cd] %@", trimmedStore)
-                    let count = try self.backgroundContext.count(for: fetchRequest)
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            // Trim store name to match ItemShoppingModel.init behavior
+            let trimmedStore = store.trimmingCharacters(in: .whitespacesAndNewlines)
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
+            fetchRequest.predicate = NSPredicate(format: "store ==[cd] %@", trimmedStore)
+            let count = try context.count(for: fetchRequest)
 
-                    continuation.resume(returning: count)
+            return count
 
-                } catch {
-                    self.log.error("Failed to get item count for store: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
         }
     }
 
     func getItemsSortedByDate(ascending: Bool) async throws -> [ItemShoppingModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[ItemShoppingModel], Error>) in
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "dateAdded", ascending: ascending)]
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "dateAdded", ascending: ascending)]
 
-                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
-                    let items = coreDataItems.compactMap { self.convertToModel($0) }
+            let coreDataItems = try context.fetch(fetchRequest)
+            let items = coreDataItems.compactMap { self.convertToModel($0) }
 
-                    continuation.resume(returning: items)
+            return items
 
-                } catch {
-                    self.log.error("Failed to get items sorted by date: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
         }
     }
 
     func getItemsSortedByQuantity(ascending: Bool) async throws -> [ItemShoppingModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[ItemShoppingModel], Error>) in
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "quantity", ascending: ascending)]
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "quantity", ascending: ascending)]
 
-                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
-                    let items = coreDataItems.compactMap { self.convertToModel($0) }
+            let coreDataItems = try context.fetch(fetchRequest)
+            let items = coreDataItems.compactMap { self.convertToModel($0) }
 
-                    continuation.resume(returning: items)
+            return items
 
-                } catch {
-                    self.log.error("Failed to get items sorted by quantity: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
         }
     }
 
     // MARK: - Batch Operations
 
     func addItems(_ items: [ItemShoppingModel]) async throws -> [ItemShoppingModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[ItemShoppingModel], Error>) in
-            backgroundContext.perform {
-                do {
-                    guard let entity = NSEntityDescription.entity(forEntityName: "ItemShopping", in: self.backgroundContext) else {
-                        throw CoreDataShoppingListRepositoryError.entityNotFound("ItemShopping")
-                    }
-
-                    var createdItems: [ItemShoppingModel] = []
-
-                    for item in items {
-                        // Validate item
-                        guard item.isValid else {
-                            throw CoreDataShoppingListRepositoryError.invalidData(item.validationErrors.joined(separator: ", "))
-                        }
-
-                        // Create Core Data entity
-                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-                        self.updateCoreDataEntity(coreDataItem, with: item)
-                        createdItems.append(item)
-                    }
-
-                    // Save context
-                    try self.backgroundContext.save()
-
-                    self.log.info("Created \(createdItems.count) shopping list items in batch")
-                    continuation.resume(returning: createdItems)
-
-                } catch {
-                    self.log.error("Failed to add items in batch: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            guard let entity = NSEntityDescription.entity(forEntityName: "ItemShopping", in: context) else {
+            throw CoreDataShoppingListRepositoryError.entityNotFound("ItemShopping")
             }
+
+            var createdItems: [ItemShoppingModel] = []
+
+            for item in items {
+            // Validate item
+            guard item.isValid else {
+            throw CoreDataShoppingListRepositoryError.invalidData(item.validationErrors.joined(separator: ", "))
+            }
+
+            // Create Core Data entity
+            let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
+            self.updateCoreDataEntity(coreDataItem, with: item)
+            createdItems.append(item)
+            }
+
+            // Save context
+            try context.save()
+
+            self.log.info("Created \(createdItems.count) shopping list items in batch")
+            return createdItems
+
         }
     }
 
     func deleteItems(ids: [UUID]) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    for id in ids {
-                        if let coreDataItem = try self.fetchCoreDataItemSync(byId: id) {
-                            self.backgroundContext.delete(coreDataItem)
-                        }
-                    }
-
-                    try self.backgroundContext.save()
-
-                    self.log.info("Deleted \(ids.count) shopping list items in batch")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete items in batch: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            for id in ids {
+            if let coreDataItem = try self.fetchCoreDataItemSync(byId: id) {
+            context.delete(coreDataItem)
             }
+            }
+
+            try context.save()
+
+            self.log.info("Deleted \(ids.count) shopping list items in batch")
+
         }
     }
 
     func deleteItems(forStore store: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Trim store name to match ItemShoppingModel.init behavior
-                    let trimmedStore = store.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
-                    fetchRequest.predicate = NSPredicate(format: "store ==[cd] %@", trimmedStore)
-                    let items = try self.backgroundContext.fetch(fetchRequest)
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            // Trim store name to match ItemShoppingModel.init behavior
+            let trimmedStore = store.trimmingCharacters(in: .whitespacesAndNewlines)
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemShopping")
+            fetchRequest.predicate = NSPredicate(format: "store ==[cd] %@", trimmedStore)
+            let items = try context.fetch(fetchRequest)
 
-                    for item in items {
-                        self.backgroundContext.delete(item)
-                    }
-
-                    if !items.isEmpty {
-                        try self.backgroundContext.save()
-                    }
-
-                    self.log.info("Deleted \(items.count) shopping list items for store: \(trimmedStore)")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete items for store: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            for item in items {
+            context.delete(item)
             }
+
+            if !items.isEmpty {
+            try context.save()
+            }
+
+            self.log.info("Deleted \(items.count) shopping list items for store: \(trimmedStore)")
+
         }
     }
 

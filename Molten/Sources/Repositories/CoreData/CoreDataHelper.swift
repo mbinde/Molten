@@ -27,7 +27,7 @@ enum CoreDataHelper {
     /// ```
     static func performAsync<T>(
         on context: NSManagedObjectContext,
-        _ operation: @escaping (NSManagedObjectContext) throws -> T
+        _ operation: @escaping @Sendable (NSManagedObjectContext) throws -> T
     ) async throws -> T {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<T, Error>) in
             context.perform {
@@ -55,7 +55,7 @@ enum CoreDataHelper {
     /// ```
     static func performAsyncVoid(
         on context: NSManagedObjectContext,
-        _ operation: @escaping (NSManagedObjectContext) throws -> Void
+        _ operation: @escaping @Sendable (NSManagedObjectContext) throws -> Void
     ) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             context.perform {

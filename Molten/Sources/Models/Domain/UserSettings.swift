@@ -452,9 +452,18 @@ class UserSettings {
         var displayName: String {
             switch self {
             case .fit:
-                return "Fit (Preserve Aspect Ratio)"
+                return "Fit"
             case .fill:
-                return "Fill (Crop to Square)"
+                return "Fill"
+            }
+        }
+
+        var description: String {
+            switch self {
+            case .fit:
+                return "Preserve aspect ratio when showing thumbnails"
+            case .fill:
+                return "Crop to a square when showing thumbnails"
             }
         }
 

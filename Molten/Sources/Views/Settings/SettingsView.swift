@@ -23,6 +23,7 @@ struct SettingsView: View {
     private let subscriptionService: SubscriptionServiceProtocol
     @State private var subscriptionViewModel: SubscriptionViewModel
     @State private var catalogUpdateViewModel: CatalogUpdateViewModel
+    @State private var thumbnailDisplayMode: UserSettings.ThumbnailDisplayMode = UserSettings.shared.thumbnailDisplayMode
 
     init(
         catalogService: CatalogService = AppDependencies().catalogService,
@@ -60,6 +61,16 @@ struct SettingsView: View {
         Binding(
             get: { DefaultUnits(rawValue: defaultUnitsRawValue) ?? .pounds },
             set: { defaultUnitsRawValue = $0.rawValue }
+        )
+    }
+
+    private var thumbnailDisplayModeBinding: Binding<UserSettings.ThumbnailDisplayMode> {
+        Binding(
+            get: { thumbnailDisplayMode },
+            set: {
+                thumbnailDisplayMode = $0
+                UserSettings.shared.thumbnailDisplayMode = $0
+            }
         )
     }
 
@@ -166,16 +177,18 @@ struct SettingsView: View {
                     ))
                     .help("When enabled, your personal notes in item detail views will be fully expanded by default")
 
-                    Picker("Project Thumbnail Style", selection: Binding(
-                        get: { UserSettings.shared.thumbnailDisplayMode },
-                        set: { UserSettings.shared.thumbnailDisplayMode = $0 }
-                    )) {
-                        ForEach(UserSettings.ThumbnailDisplayMode.allCases, id: \.self) { mode in
-                            Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Picker("Project Thumbnail Style", selection: thumbnailDisplayModeBinding) {
+                            ForEach(UserSettings.ThumbnailDisplayMode.allCases, id: \.self) { mode in
+                                Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
+                            }
                         }
+                        .pickerStyle(.menu)
+
+                        Text(thumbnailDisplayMode.description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
-                    .pickerStyle(.menu)
-                    .help("Choose how project thumbnails are displayed: Fit preserves aspect ratio, Fill crops to square")
 
                     Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
                         .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")

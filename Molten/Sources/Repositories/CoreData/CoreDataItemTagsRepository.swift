@@ -50,6 +50,7 @@ class CoreDataItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
                     fetchRequest.sortDescriptors = [NSSortDescriptor(key: "tag", ascending: true)]
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
+                    print("🏷️ DEBUG CoreDataItemTagsRepository: Fetched \(coreDataItems.count) tags from CoreData for item \(item_stable_id)")
 
                     // Extract values immediately while on context's queue
                     var tags: [String] = []
@@ -59,9 +60,12 @@ class CoreDataItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
                         }
                     }
 
+                    print("🏷️ DEBUG CoreDataItemTagsRepository: Extracted \(tags.count) tag strings: \(tags.prefix(5).joined(separator: ", "))")
+
                     continuation.resume(returning: tags)
 
                 } catch {
+                    print("🏷️ DEBUG CoreDataItemTagsRepository: ERROR fetching tags: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -85,6 +89,7 @@ class CoreDataItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
                     ]
 
                     let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
+                    print("🏷️ DEBUG CoreDataItemTagsRepository.fetchTagsForItems: Requested \(item_stable_ids.count) items, fetched \(coreDataItems.count) CoreData tag objects")
 
                     // Group tags by item natural key
                     var tagsByItem: [String: [String]] = [:]
@@ -98,6 +103,11 @@ class CoreDataItemTagsRepository: @unchecked Sendable, ItemTagsRepository {
                             tagsByItem[itemKey] = []
                         }
                         tagsByItem[itemKey]?.append(tag)
+                    }
+
+                    print("🏷️ DEBUG CoreDataItemTagsRepository.fetchTagsForItems: Grouped into \(tagsByItem.count) items with tags")
+                    if let firstItem = tagsByItem.first {
+                        print("🏷️ DEBUG CoreDataItemTagsRepository.fetchTagsForItems: Sample - item \(firstItem.key) has \(firstItem.value.count) tags: \(firstItem.value.prefix(5).joined(separator: ", "))")
                     }
 
                     continuation.resume(returning: tagsByItem)

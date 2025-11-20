@@ -70,8 +70,12 @@ struct ImageHelpers {
         // If not, show manufacturer logo only if we don't have color codes for gradient
         if let manufacturer = manufacturer,
            !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
-            // No permission - only load manufacturer logo if no color codes available
-            if dominantColors == nil || dominantColors?.isEmpty == true {
+            // Special case: PDX Tubing's product photos are too poor quality for color extraction
+            // Always show manufacturer logo instead of gradient
+            let isPDX = manufacturer.caseInsensitiveCompare("PDX") == .orderedSame
+
+            // No permission - only load manufacturer logo if no color codes available (or PDX)
+            if isPDX || dominantColors == nil || dominantColors?.isEmpty == true {
                 return await Task.detached(priority: .background) {
                     ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
                 }.value

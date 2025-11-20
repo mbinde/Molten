@@ -9,7 +9,7 @@ import Foundation
 import SQLite3
 
 /// SQLite-based read-only repository for catalog glass items
-final class SQLiteGlassItemRepository: BaseSQLiteCatalogItemRepository<GlassItemModel> {
+final class SQLiteGlassItemRepository: BaseSQLiteCatalogItemRepository<GlassItemModel>, GlassItemRepositoryProtocol {
 
     // MARK: - Initialization
 

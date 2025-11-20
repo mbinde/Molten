@@ -10,8 +10,8 @@ import Foundation
 
 /// Mock implementation of GlassItemRepository for testing
 /// Stores items in memory using a dictionary
-final class MockGlassItemRepository: CatalogItemRepository {
-    typealias ItemType = GlassItemModel
+final class MockGlassItemRepository: GlassItemRepositoryProtocol {
+    typealias Item = GlassItemModel
 
     // MARK: - Storage
 

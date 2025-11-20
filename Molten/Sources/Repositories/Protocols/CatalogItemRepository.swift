@@ -102,48 +102,39 @@ extension CatalogItemRepository where ItemType == GlassItemModel {
         fatalError("fetchItems(byCOE:) must be implemented by concrete GlassItemRepository")
     }
 
+}
+
+// MARK: - Glass-Item-Specific Operations
+
+/// Protocol for glass-item-specific repository operations
+/// These operations only apply to glass items (COE, kiln schedules)
+protocol GlassItemRepositoryProtocol: CatalogItemRepository<GlassItemModel> {
     /// Get all distinct COE values in the system
     /// - Returns: Sorted array of COE values
-    /// - Note: Only available for GlassItemRepository (glass items have COE, coatings/tools don't)
-    func getDistinctCOEValues() async throws -> [Int32] {
-        // Default implementation throws - concrete repositories must override
-        fatalError("getDistinctCOEValues() must be implemented by concrete GlassItemRepository")
-    }
+    func getDistinctCOEValues() async throws -> [Int32]
 
     /// Get recommended kiln schedules for a glass item
     /// - Parameter stableId: The stable ID of the glass item
     /// - Returns: Array of kiln schedule IDs recommended for this glass item
-    /// - Note: Only available for GlassItemRepository (only glass items have kiln schedules)
-    func getRecommendedSchedules(forGlassItem stableId: String) async throws -> [UUID] {
-        // Default implementation throws - concrete repositories must override
-        fatalError("getRecommendedSchedules(forGlassItem:) must be implemented by concrete GlassItemRepository")
-    }
+    func getRecommendedSchedules(forGlassItem stableId: String) async throws -> [UUID]
 
     /// Add a kiln schedule to a glass item's recommended schedules
     /// - Parameters:
     ///   - scheduleId: The kiln schedule ID to add
     ///   - stableId: The stable ID of the glass item
-    /// - Note: Only available for GlassItemRepository (only glass items have kiln schedules)
-    func addRecommendedSchedule(scheduleId: UUID, toGlassItem stableId: String) async throws {
-        // Default implementation throws - concrete repositories must override
-        fatalError("addRecommendedSchedule(scheduleId:toGlassItem:) must be implemented by concrete GlassItemRepository")
-    }
+    func addRecommendedSchedule(scheduleId: UUID, toGlassItem stableId: String) async throws
 
     /// Remove a kiln schedule from a glass item's recommended schedules
     /// - Parameters:
     ///   - scheduleId: The kiln schedule ID to remove
     ///   - stableId: The stable ID of the glass item
-    /// - Note: Only available for GlassItemRepository (only glass items have kiln schedules)
-    func removeRecommendedSchedule(scheduleId: UUID, fromGlassItem stableId: String) async throws {
-        // Default implementation throws - concrete repositories must override
-        fatalError("removeRecommendedSchedule(scheduleId:fromGlassItem:) must be implemented by concrete GlassItemRepository")
-    }
+    func removeRecommendedSchedule(scheduleId: UUID, fromGlassItem stableId: String) async throws
 }
 
 // MARK: - Type Aliases for Backwards Compatibility
 
 /// Type alias for glass item repositories (backwards compatibility with existing code)
-typealias GlassItemRepository = any CatalogItemRepository<GlassItemModel>
+typealias GlassItemRepository = any GlassItemRepositoryProtocol
 
 /// Type alias for coating item repositories (backwards compatibility with existing code)
 typealias CoatingItemRepository = any CatalogItemRepository<CoatingItemModel>

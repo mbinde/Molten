@@ -16,9 +16,10 @@ struct SQLiteGlassItemRepositoryTests {
 
     // MARK: - Test Helpers
 
-    class TestCatalogDatabaseManager {
+    class TestCatalogDatabaseManager: CatalogDatabaseManagerProtocol {
         private var db: OpaquePointer?
         private let dbURL: URL
+        private let connectionLock = NSLock()
 
         init() throws {
             let tempDir = FileManager.default.temporaryDirectory
@@ -126,6 +127,17 @@ struct SQLiteGlassItemRepositoryTests {
             return connection
         }
 
+        // MARK: - CatalogDatabaseManagerProtocol conformance
+
+        nonisolated func performDatabaseOperation<T>(_ operation: (OpaquePointer) throws -> T) throws -> T {
+            connectionLock.lock()
+            defer { connectionLock.unlock() }
+            guard let connection = db else {
+                throw NSError(domain: "TestError", code: -5, userInfo: [NSLocalizedDescriptionKey: "Database not initialized"])
+            }
+            return try operation(connection)
+        }
+
         deinit {
             if let db = db {
                 sqlite3_close(db)
@@ -138,11 +150,8 @@ struct SQLiteGlassItemRepositoryTests {
     func createTestRepository() throws -> (SQLiteGlassItemRepository, TestCatalogDatabaseManager) {
         let manager = try TestCatalogDatabaseManager()
 
-        // Create a custom repository that uses our test manager
-        // Note: We'd need to modify SQLiteGlassItemRepository to accept injected manager
-        // For now, we'll test what we can
-
-        let repository = SQLiteGlassItemRepository(databaseManager: .shared)
+        // Create a repository that uses our test manager
+        let repository = SQLiteGlassItemRepository(databaseManager: manager)
         return (repository, manager)
     }
 

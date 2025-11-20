@@ -207,23 +207,9 @@ struct ShoppingListItemCreationTests {
     // MARK: - Test Helpers
 
     private func createTestGlassItem(catalogService: CatalogService) async throws -> GlassItemModel {
-        // Create a GlassItemModel first
-        let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "TEST-001"),
-            name: "Test Glass Item",
-            sku: "TEST-001",
-            manufacturer: "test",
-            coe: 96,
-            mfr_status: "available"
-        )
-
-        // Then create it using the catalog service
-        let completeItem = try await catalogService.createGlassItem(
-            glassItem,
-            initialInventory: [],
-            tags: ["test"]
-        )
-
-        return completeItem.glassItem
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        return glassItem
     }
 }

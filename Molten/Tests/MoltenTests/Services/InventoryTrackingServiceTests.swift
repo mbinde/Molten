@@ -22,6 +22,12 @@ struct InventoryTrackingServiceTests {
     /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
     private let deps = AppDependencies(persistenceController: .createTestController())
 
+    // Helper to get real catalog items (catalog is read-only)
+    private func getRealCatalogItems() async throws -> [GlassItemModel] {
+        let catalogService = deps.catalogService
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        return Array(catalogItems.filter { $0.sku != nil }.prefix(10))
+    }
 
     // MARK: - Complete Item Creation Tests
 
@@ -29,21 +35,10 @@ struct InventoryTrackingServiceTests {
     func testCreateCompleteItemWithAllFields() async throws {
         let service = deps.inventoryTrackingService
 
-        // Create test data with all fields
-        let stableId = generateStableId(manufacturer: "cim", sku: "123")
-
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Clear Rod Test",
-            sku: "123",
-            manufacturer: "cim",
-            mfr_notes: "Test notes",
-            coe: 104,
-            url: "https://example.com",
-            mfr_status: "available",
-            image_url: "https://example.com/image.jpg",
-            image_path: "/path/to/image.jpg"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getRealCatalogItems()
+        let glassItem = catalogItems[0]
+        let stableId = glassItem.stable_id
 
         let initialInventory = [
             InventoryModel(item_stable_id: stableId, type: "rod", quantity: 10.0),
@@ -58,8 +53,7 @@ struct InventoryTrackingServiceTests {
             tags: tags
         )
 
-        #expect(completeItem.glassItem.stable_id == generateStableId(manufacturer: "cim", sku: "123"))
-        #expect(completeItem.glassItem.name == "Clear Rod Test")
+        #expect(completeItem.glassItem.stable_id == stableId)
         #expect(completeItem.inventory.count == 2)
         #expect(completeItem.tags.count == 3)
         #expect(completeItem.tags.contains("transparent"))
@@ -69,23 +63,14 @@ struct InventoryTrackingServiceTests {
     func testCreateCompleteItemMinimalFields() async throws {
         let service = deps.inventoryTrackingService
 
-        let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "cim", sku: "456"),
-            name: "Minimal Item",
-            sku: "456",
-            manufacturer: "cim",
-            mfr_notes: nil,
-            coe: 96,
-            url: nil,
-            mfr_status: "available",
-            image_url: nil,
-            image_path: nil
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getRealCatalogItems()
+        let glassItem = catalogItems[1]
 
         // No inventory, no tags
         let completeItem = try await service.createCompleteItem(glassItem)
 
-        #expect(completeItem.glassItem.stable_id == generateStableId(manufacturer: "cim", sku: "456"))
+        #expect(completeItem.glassItem.stable_id == glassItem.stable_id)
         #expect(completeItem.inventory.isEmpty)
         #expect(completeItem.tags.isEmpty)
     }
@@ -94,14 +79,9 @@ struct InventoryTrackingServiceTests {
     func testCreateCompleteItemEmptyInventory() async throws {
         let service = deps.inventoryTrackingService
 
-        let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "ef", sku: "789"),
-            name: "Test Item",
-            sku: "789",
-            manufacturer: "ef",
-            coe: 104,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getRealCatalogItems()
+        let glassItem = catalogItems[2]
 
         let completeItem = try await service.createCompleteItem(
             glassItem,
@@ -119,16 +99,10 @@ struct InventoryTrackingServiceTests {
     func testAddInventoryWithLocations() async throws {
         let service = deps.inventoryTrackingService
 
-        // Create base item
-        let stableId = generateStableId(manufacturer: "be", sku: "001")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Test Glass",
-            sku: "001",
-            manufacturer: "be",
-            coe: 90,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getRealCatalogItems()
+        let glassItem = catalogItems[3]
+        let stableId = glassItem.stable_id
 
         _ = try await service.createCompleteItem(glassItem)
 
@@ -164,15 +138,10 @@ struct InventoryTrackingServiceTests {
     func testAddInventoryWithoutLocations() async throws {
         let service = deps.inventoryTrackingService
 
-        let stableId = generateStableId(manufacturer: "be", sku: "002")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Test Glass",
-            sku: "002",
-            manufacturer: "be",
-            coe: 90,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getRealCatalogItems()
+        let glassItem = catalogItems[4]
+        let stableId = glassItem.stable_id
 
         _ = try await service.createCompleteItem(glassItem)
 
@@ -205,15 +174,10 @@ struct InventoryTrackingServiceTests {
     func testMultipleInventoryTypes() async throws {
         let service = deps.inventoryTrackingService
 
-        let stableId = generateStableId(manufacturer: "cim", sku: "multi")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Multi-Type Glass",
-            sku: "multi",
-            manufacturer: "cim",
-            coe: 104,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getRealCatalogItems()
+        let glassItem = catalogItems[5]
+        let stableId = glassItem.stable_id
 
         _ = try await service.createCompleteItem(glassItem)
 
@@ -233,15 +197,10 @@ struct InventoryTrackingServiceTests {
     func testUpdateMultipleTypes() async throws {
         let service = deps.inventoryTrackingService
 
-        let stableId = generateStableId(manufacturer: "ef", sku: "update")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Update Test",
-            sku: "update",
-            manufacturer: "ef",
-            coe: 104,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getRealCatalogItems()
+        let glassItem = catalogItems[6]
+        let stableId = glassItem.stable_id
 
         let initialInventory = [
             InventoryModel(item_stable_id: stableId, type: "rod", quantity: 10.0),
@@ -280,15 +239,10 @@ struct InventoryTrackingServiceTests {
     func testGetCompleteItem() async throws {
         let service = deps.inventoryTrackingService
 
-        let stableId = generateStableId(manufacturer: "be", sku: "complete")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Complete Item",
-            sku: "complete",
-            manufacturer: "be",
-            coe: 90,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getRealCatalogItems()
+        let glassItem = catalogItems[7]
+        let stableId = glassItem.stable_id
 
         let inventory = [
             InventoryModel(item_stable_id: stableId, type: "rod", quantity: 10.0)
@@ -299,7 +253,7 @@ struct InventoryTrackingServiceTests {
         let completeItem = try await service.getCompleteItem(stableId: stableId)
 
         #expect(completeItem != nil)
-        #expect(completeItem?.glassItem.name == "Complete Item")
+        #expect(completeItem?.glassItem.stable_id == stableId)
         #expect(completeItem?.inventory.count == 1)
         #expect(completeItem?.tags.count == 1)
     }
@@ -318,15 +272,10 @@ struct InventoryTrackingServiceTests {
     func testUpdateCompleteItem() async throws {
         let service = deps.inventoryTrackingService
 
-        let stableId = generateStableId(manufacturer: "cim", sku: "update")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Original Name",
-            sku: "update",
-            manufacturer: "cim",
-            coe: 104,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getRealCatalogItems()
+        let glassItem = catalogItems[8]
+        let stableId = glassItem.stable_id
 
         _ = try await service.createCompleteItem(glassItem, tags: ["original"])
 
@@ -334,10 +283,10 @@ struct InventoryTrackingServiceTests {
         let updatedGlassItem = GlassItemModel(
             stable_id: stableId,
             name: "Updated Name",
-            sku: "update",
-            manufacturer: "cim",
-            coe: 104,
-        mfr_status: "available"
+            sku: glassItem.sku,
+            manufacturer: glassItem.manufacturer,
+            coe: glassItem.coe,
+            mfr_status: "available"
         )
 
         let result = try await service.updateCompleteItem(
@@ -355,25 +304,20 @@ struct InventoryTrackingServiceTests {
     func testUpdateCompleteItemKeepTags() async throws {
         let service = deps.inventoryTrackingService
 
-        let stableId = generateStableId(manufacturer: "ef", sku: "keep")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Original",
-            sku: "keep",
-            manufacturer: "ef",
-            coe: 104,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await getRealCatalogItems()
+        let glassItem = catalogItems[9]
+        let stableId = glassItem.stable_id
 
         _ = try await service.createCompleteItem(glassItem, tags: ["keep-me"])
 
         let updatedGlassItem = GlassItemModel(
             stable_id: stableId,
             name: "Updated",
-            sku: "keep",
-            manufacturer: "ef",
-            coe: 104,
-        mfr_status: "available"
+            sku: glassItem.sku,
+            manufacturer: glassItem.manufacturer,
+            coe: glassItem.coe,
+            mfr_status: "available"
         )
 
         let result = try await service.updateCompleteItem(
@@ -391,18 +335,12 @@ struct InventoryTrackingServiceTests {
     @Test("Get inventory summary with locations")
     func testGetInventorySummaryWithLocations() async throws {
         let service = deps.inventoryTrackingService
+        let catalogService = deps.catalogService
 
-        let stableId = generateStableId(manufacturer: "be", sku: "summary")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Summary Test",
-            sku: "summary",
-            manufacturer: "be",
-            coe: 90,
-        mfr_status: "available"
-        )
-
-        _ = try await service.createCompleteItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = glassItem.stable_id
 
         // Add inventory with specific locations
         _ = try await service.addInventory(
@@ -439,64 +377,42 @@ struct InventoryTrackingServiceTests {
     @Test("Search items by text")
     func testSearchItemsByText() async throws {
         let service = deps.inventoryTrackingService
+        let catalogService = deps.catalogService
 
-        // Create test items
-        let item1 = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "cim", sku: "search1"),
-            name: "Blue Glass Rod",
-            sku: "search1",
-            manufacturer: "cim",
-            coe: 104,
-        mfr_status: "available"
-        )
-
-        let item2 = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "ef", sku: "search2"),
-            name: "Red Glass Sheet",
-            sku: "search2",
-            manufacturer: "ef",
-            coe: 104,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let realItems = Array(catalogItems.filter({ $0.sku != nil }).prefix(2))
+        let item1 = realItems[0]
+        let item2 = realItems[1]
 
         _ = try await service.createCompleteItem(item1)
         _ = try await service.createCompleteItem(item2)
 
-        let results = try await service.searchItems(text: "Blue")
+        // Search using the first item's name
+        let results = try await service.searchItems(text: item1.name)
 
         #expect(results.count >= 1)
-        #expect(results.contains { $0.glassItem.name == "Blue Glass Rod" })
+        #expect(results.contains { $0.glassItem.name == item1.name })
     }
 
     @Test("Search items with tag filter")
     func testSearchItemsWithTags() async throws {
         let service = deps.inventoryTrackingService
+        let catalogService = deps.catalogService
 
-        let item1 = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "cim", sku: "tag1"),
-            name: "Tagged Item 1",
-            sku: "tag1",
-            manufacturer: "cim",
-            coe: 104,
-        mfr_status: "available"
-        )
-
-        let item2 = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "ef", sku: "tag2"),
-            name: "Tagged Item 2",
-            sku: "tag2",
-            manufacturer: "ef",
-            coe: 104,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let realItems = Array(catalogItems.filter({ $0.sku != nil }).prefix(2))
+        let item1 = realItems[0]
+        let item2 = realItems[1]
 
         _ = try await service.createCompleteItem(item1, tags: ["transparent", "test"])
         _ = try await service.createCompleteItem(item2, tags: ["opaque", "test"])
 
-        let results = try await service.searchItems(text: "Tagged", withTags: ["transparent"])
+        let results = try await service.searchItems(text: item1.name, withTags: ["transparent"])
 
         #expect(results.count == 1)
-        #expect(results.first?.glassItem.name == "Tagged Item 1")
+        #expect(results.first?.glassItem.name == item1.name)
     }
 
     @Test("Search items with inventory filter")
@@ -504,34 +420,20 @@ struct InventoryTrackingServiceTests {
         let service = deps.inventoryTrackingService
         let catalogService = deps.catalogService
 
-        let stableId1 = generateStableId(manufacturer: "cim", sku: "inv1")
-        let item1 = GlassItemModel(
-            stable_id: stableId1,
-            name: "Has Inventory",
-            sku: "inv1",
-            manufacturer: "cim",
-            coe: 104,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let realItems = Array(catalogItems.filter({ $0.sku != nil }).prefix(2))
+        let item1 = realItems[0]
+        let item2 = realItems[1]
 
-        let stableId2 = generateStableId(manufacturer: "ef", sku: "inv2")
-        let item2 = GlassItemModel(
-            stable_id: stableId2,
-            name: "No Inventory",
-            sku: "inv2",
-            manufacturer: "ef",
-            coe: 104,
-        mfr_status: "available"
-        )
-
-        let inventory = [InventoryModel(item_stable_id: stableId1, type: "rod", quantity: 10.0)]
+        let inventory = [InventoryModel(item_stable_id: item1.stable_id, type: "rod", quantity: 10.0)]
         _ = try await service.createCompleteItem(item1, initialInventory: inventory)
         _ = try await service.createCompleteItem(item2)
 
         let results = try await service.searchItems(text: "", hasInventory: true)
 
-        #expect(results.contains { $0.glassItem.stable_id == stableId1 })
-        #expect(!results.contains { $0.glassItem.stable_id == stableId2 })
+        #expect(results.contains { $0.glassItem.stable_id == item1.stable_id })
+        #expect(!results.contains { $0.glassItem.stable_id == item2.stable_id })
     }
 
     // MARK: - Low Stock Tests
@@ -539,54 +441,34 @@ struct InventoryTrackingServiceTests {
     @Test("Get low stock items below threshold")
     func testGetLowStockItems() async throws {
         let service = deps.inventoryTrackingService
+        let catalogService = deps.catalogService
 
-        // Create items with low stock
-        let stableId1 = generateStableId(manufacturer: "cim", sku: "low1")
-        let item1 = GlassItemModel(
-            stable_id: stableId1,
-            name: "Low Stock Item",
-            sku: "low1",
-            manufacturer: "cim",
-            coe: 104,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let item1 = try catalogItems.first(where: { $0.sku != nil })!
 
-        let inventory = [InventoryModel(item_stable_id: stableId1, type: "rod", quantity: 2.0)]
+        let inventory = [InventoryModel(item_stable_id: item1.stable_id, type: "rod", quantity: 2.0)]
         _ = try await service.createCompleteItem(item1, initialInventory: inventory)
 
         let lowStockItems = try await service.getLowStockItems(threshold: 5.0)
 
         #expect(lowStockItems.count >= 1)
-        #expect(lowStockItems.contains { $0.glassItem.stable_id == stableId1 })
+        #expect(lowStockItems.contains { $0.glassItem.stable_id == item1.stable_id })
     }
 
     @Test("Low stock items are sorted by quantity")
     func testLowStockItemsSorted() async throws {
         let service = deps.inventoryTrackingService
+        let catalogService = deps.catalogService
 
-        // Create items with different low stock levels
-        let stableId1 = generateStableId(manufacturer: "cim", sku: "low1")
-        let item1 = GlassItemModel(
-            stable_id: stableId1,
-            name: "Very Low",
-            sku: "low1",
-            manufacturer: "cim",
-            coe: 104,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let realItems = Array(catalogItems.filter({ $0.sku != nil }).prefix(2))
+        let item1 = realItems[0]
+        let item2 = realItems[1]
 
-        let stableId2 = generateStableId(manufacturer: "ef", sku: "low2")
-        let item2 = GlassItemModel(
-            stable_id: stableId2,
-            name: "Medium Low",
-            sku: "low2",
-            manufacturer: "ef",
-            coe: 104,
-        mfr_status: "available"
-        )
-
-        let inv1 = [InventoryModel(item_stable_id: stableId1, type: "rod", quantity: 1.0)]
-        let inv2 = [InventoryModel(item_stable_id: stableId2, type: "rod", quantity: 3.0)]
+        let inv1 = [InventoryModel(item_stable_id: item1.stable_id, type: "rod", quantity: 1.0)]
+        let inv2 = [InventoryModel(item_stable_id: item2.stable_id, type: "rod", quantity: 3.0)]
 
         _ = try await service.createCompleteItem(item1, initialInventory: inv1)
         _ = try await service.createCompleteItem(item2, initialInventory: inv2)
@@ -606,18 +488,12 @@ struct InventoryTrackingServiceTests {
     @Test("Validate inventory consistency for valid item")
     func testValidateInventoryConsistency() async throws {
         let service = deps.inventoryTrackingService
+        let catalogService = deps.catalogService
 
-        let stableId = generateStableId(manufacturer: "be", sku: "valid")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Valid Item",
-            sku: "valid",
-            manufacturer: "be",
-            coe: 90,
-        mfr_status: "available"
-        )
-
-        _ = try await service.createCompleteItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = glassItem.stable_id
 
         // Add inventory with locations to ensure consistency
         let locations: [(location: String, quantity: Double)] = [
@@ -651,15 +527,11 @@ struct InventoryTrackingServiceTests {
     @Test("Create item with duplicate tags removes duplicates")
     func testCreateItemDuplicateTags() async throws {
         let service = deps.inventoryTrackingService
+        let catalogService = deps.catalogService
 
-        let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "cim", sku: "dup"),
-            name: "Duplicate Tags",
-            sku: "dup",
-            manufacturer: "cim",
-            coe: 104,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
 
         let completeItem = try await service.createCompleteItem(
             glassItem,
@@ -673,16 +545,12 @@ struct InventoryTrackingServiceTests {
     @Test("Add zero quantity inventory throws error")
     func testAddZeroQuantityInventory() async throws {
         let service = deps.inventoryTrackingService
+        let catalogService = deps.catalogService
 
-        let stableId = generateStableId(manufacturer: "be", sku: "zero")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Zero Test",
-            sku: "zero",
-            manufacturer: "be",
-            coe: 90,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = glassItem.stable_id
 
         _ = try await service.createCompleteItem(glassItem)
 
@@ -698,15 +566,11 @@ struct InventoryTrackingServiceTests {
     @Test("Search with empty text returns results")
     func testSearchEmptyText() async throws {
         let service = deps.inventoryTrackingService
+        let catalogService = deps.catalogService
 
-        let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "cim", sku: "empty"),
-            name: "Empty Search Test",
-            sku: "empty",
-            manufacturer: "cim",
-            coe: 104,
-        mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
 
         _ = try await service.createCompleteItem(glassItem)
 

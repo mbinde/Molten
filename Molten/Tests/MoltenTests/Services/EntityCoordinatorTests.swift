@@ -24,22 +24,22 @@ struct EntityCoordinatorTests {
 
     // MARK: - Setup Helpers
 
-    /// Create test glass item and add to catalog
+    /// Get a test glass item from real catalog data
     private func createTestGlassItem(
         stableId: String = "test123",
         using catalogService: CatalogService
     ) async throws -> CompleteInventoryItemModel {
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Test Glass Item",
-            sku: "001",
-            manufacturer: "Bullseye",
-            coe: 90,
-            mfr_status: "active"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
 
-        let created = try await catalogService.createGlassItem(glassItem)
-        return created
+        // Return as CompleteInventoryItemModel
+        return CompleteInventoryItemModel(
+            catalogItem: UnifiedCatalogItem(glassItem: glassItem),
+            inventory: [],
+            tags: [],
+            userTags: []
+        )
     }
 
     /// Create test inventory for a glass item

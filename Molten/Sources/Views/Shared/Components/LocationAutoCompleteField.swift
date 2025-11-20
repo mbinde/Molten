@@ -11,15 +11,15 @@ import SwiftUI
 /// Auto-complete input field for inventory item locations using repository pattern
 struct LocationAutoCompleteField: View {
     @Binding var location: String
-    let locationRepository: LocationRepository
-    
+    let storageLocationRepository: StorageLocationRepository
+
     @State private var showingSuggestions = false
     @State private var locationSuggestions: [String] = []
     @FocusState private var isTextFieldFocused: Bool
-    
-    init(location: Binding<String>, locationRepository: LocationRepository) {
+
+    init(location: Binding<String>, storageLocationRepository: StorageLocationRepository) {
         self._location = location
-        self.locationRepository = locationRepository
+        self.storageLocationRepository = storageLocationRepository
     }
     
     var body: some View {
@@ -108,7 +108,7 @@ struct LocationAutoCompleteField: View {
     private func getUniqueLocations() async -> [String] {
         do {
             // Get all distinct location names from the location repository
-            let locationNames = try await locationRepository.getDistinctLocationNames()
+            let locationNames = try await storageLocationRepository.getDistinctLocationNames()
             return locationNames
             
         } catch {
@@ -122,11 +122,11 @@ struct LocationAutoCompleteField: View {
             let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
             
             guard !trimmedSearchText.isEmpty else {
-                return try await locationRepository.getDistinctLocationNames()
+                return try await storageLocationRepository.getDistinctLocationNames()
             }
             
             // Use repository method to get location names with prefix
-            let suggestions = try await locationRepository.getLocationNames(withPrefix: trimmedSearchText)
+            let suggestions = try await storageLocationRepository.getLocationNames(withPrefix: trimmedSearchText)
             return suggestions
             
         } catch {
@@ -143,7 +143,7 @@ struct LocationAutoCompleteField: View {
     VStack {
         LocationAutoCompleteField(
             location: $location,
-            locationRepository: deps.locationRepository
+            storageLocationRepository: deps.storageLocationRepository
         )
         Spacer()
     }

@@ -468,7 +468,7 @@ struct ShoppingListViewTests {
             // Create shared repositories
             let glassItemRepository = MockGlassItemRepository()
             let inventoryRepository = MockInventoryRepository()
-            let locationRepository = MockLocationRepository()
+            let storageLocationRepository = MockStorageLocationRepository()
             let itemTagsRepository = MockItemTagsRepository()
 
             // Create service with shared repositories

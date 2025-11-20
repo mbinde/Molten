@@ -30,7 +30,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
     
     private func createInventoryServiceTestEnvironment() async throws -> (
         inventoryService: InventoryTrackingService,
-        repos: (glassItem: MockGlassItemRepository, inventory: MockInventoryRepository, location: MockLocationRepository, itemTags: MockItemTagsRepository, itemMinimum: MockItemMinimumRepository)
+        repos: (glassItem: MockGlassItemRepository, inventory: MockInventoryRepository, location: MockStorageLocationRepository, itemTags: MockItemTagsRepository, itemMinimum: MockItemMinimumRepository)
     ) {
         // Use TestConfiguration for consistent setup
         let repos = TestConfiguration.setupMockOnlyTestEnvironment()
@@ -44,7 +44,7 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         return (inventoryService, repos)
     }
     
-    private func addTestGlassItems(_ repos: (glassItem: MockGlassItemRepository, inventory: MockInventoryRepository, location: MockLocationRepository, itemTags: MockItemTagsRepository, itemMinimum: MockItemMinimumRepository)) async throws {
+    private func addTestGlassItems(_ repos: (glassItem: MockGlassItemRepository, inventory: MockInventoryRepository, location: MockStorageLocationRepository, itemTags: MockItemTagsRepository, itemMinimum: MockItemMinimumRepository)) async throws {
         // Add comprehensive test data for search testing
         let testItems = [
             GlassItemModel(

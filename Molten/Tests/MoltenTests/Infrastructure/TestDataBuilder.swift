@@ -31,7 +31,7 @@ class TestDataBuilder {
 
     private var glassItemRepo: MockGlassItemRepository
     private var inventoryRepo: MockInventoryRepository
-    private var locationRepo: MockLocationRepository
+    private var locationRepo: MockStorageLocationRepository
     private var itemTagsRepo: MockItemTagsRepository
     private var userTagsRepo: MockUserTagsRepository
     private var itemMinimumRepo: MockItemMinimumRepository
@@ -55,7 +55,7 @@ class TestDataBuilder {
         // Create fresh mock repositories
         self.glassItemRepo = MockGlassItemRepository()
         self.inventoryRepo = MockInventoryRepository()
-        self.locationRepo = MockLocationRepository()
+        self.locationRepo = MockStorageLocationRepository()
         self.itemTagsRepo = MockItemTagsRepository()
         self.userTagsRepo = MockUserTagsRepository()
         self.itemMinimumRepo = MockItemMinimumRepository()
@@ -368,7 +368,7 @@ class TestDataBuilder {
     var repositories: (
         glassItem: MockGlassItemRepository,
         inventory: MockInventoryRepository,
-        location: MockLocationRepository,
+        location: MockStorageLocationRepository,
         itemTags: MockItemTagsRepository,
         userTags: MockUserTagsRepository,
         itemMinimum: MockItemMinimumRepository,

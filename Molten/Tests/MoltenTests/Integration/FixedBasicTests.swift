@@ -35,7 +35,7 @@ struct FixedBasicTests {
         
         let glassItemRepo = MockGlassItemRepository()
         let inventoryRepo = MockInventoryRepository()
-        let locationRepo = MockLocationRepository()
+        let locationRepo = MockStorageLocationRepository()
         let itemTagsRepo = MockItemTagsRepository()
         let userTagsRepo = MockUserTagsRepository()
         let itemMinimumRepo = MockItemMinimumRepository()

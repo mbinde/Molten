@@ -78,7 +78,7 @@ class AppDependencies {
     let coatingItemRepository: CoatingItemRepository
     let toolItemRepository: ToolItemRepository
     let inventoryRepository: InventoryRepository
-    let locationRepository: LocationRepository
+    let storageLocationRepository: StorageLocationRepository
     let itemTagsRepository: ItemTagsRepository
     let userTagsRepository: UserTagsRepository
     let userNotesRepository: UserNotesRepository
@@ -318,7 +318,7 @@ class AppDependencies {
             self.toolItemRepository = SQLiteToolItemRepository(databaseManager: CatalogDatabaseManager.shared)
         }
         self.inventoryRepository = CoreDataInventoryRepository(context: self.cloudContext)
-        self.locationRepository = CoreDataLocationRepository(context: self.cloudContext)
+        self.storageLocationRepository = CoreDataStorageLocationRepository(context: self.cloudContext)
         self.userTagsRepository = CoreDataUserTagsRepository(context: self.cloudContext)
         self.userNotesRepository = CoreDataUserNotesRepository(context: self.cloudContext)
         self.shoppingListRepository = CoreDataShoppingListRepository(context: self.cloudContext)

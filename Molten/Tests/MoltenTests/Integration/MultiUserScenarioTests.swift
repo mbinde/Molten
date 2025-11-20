@@ -28,7 +28,7 @@ struct MultiUserScenarioTests {
         // Use the new GlassItem architecture with repository pattern
         let glassItemRepo = MockGlassItemRepository()
         let inventoryRepo = MockInventoryRepository()
-        let locationRepo = MockLocationRepository()
+        let locationRepo = MockStorageLocationRepository()
         let itemTagsRepo = MockItemTagsRepository()
         let userTagsRepo = MockUserTagsRepository()
         let itemMinimumRepo = MockItemMinimumRepository()

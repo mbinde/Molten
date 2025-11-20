@@ -31,7 +31,7 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
     
     /// Create a test environment with standard glass items using the working TestConfiguration pattern
     private func createTestEnvironmentWithStandardItems() async throws -> (
-        repos: (glassItem: MockGlassItemRepository, inventory: MockInventoryRepository, location: MockLocationRepository, itemTags: MockItemTagsRepository, itemMinimum: MockItemMinimumRepository),
+        repos: (glassItem: MockGlassItemRepository, inventory: MockInventoryRepository, location: MockStorageLocationRepository, itemTags: MockItemTagsRepository, itemMinimum: MockItemMinimumRepository),
         catalogService: CatalogService,
         inventoryService: InventoryTrackingService
     ) {

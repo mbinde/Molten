@@ -25,7 +25,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
     private func createCoreServices() async throws -> (
         catalogService: CatalogService,
         inventoryTrackingService: InventoryTrackingService,
-        repos: (glassItem: MockGlassItemRepository, inventory: MockInventoryRepository, location: MockLocationRepository, itemTags: MockItemTagsRepository, itemMinimum: MockItemMinimumRepository)
+        repos: (glassItem: MockGlassItemRepository, inventory: MockInventoryRepository, location: MockStorageLocationRepository, itemTags: MockItemTagsRepository, itemMinimum: MockItemMinimumRepository)
     ) {
         // Use the working TestConfiguration pattern instead of AppDependencies
         let repos = TestConfiguration.setupMockOnlyTestEnvironment()

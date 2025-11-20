@@ -70,7 +70,7 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
         // Create minimal mock dependencies
         let mockGlassItemRepo = MockGlassItemRepository()
         let mockInventoryRepo = MockInventoryRepository()
-        let mockLocationRepo = MockLocationRepository()
+        let mockLocationRepo = MockStorageLocationRepository()
         let mockItemTagsRepo = MockItemTagsRepository()
         let mockUserTagsRepo = MockUserTagsRepository()
         let mockItemMinimumRepo = MockItemMinimumRepository()

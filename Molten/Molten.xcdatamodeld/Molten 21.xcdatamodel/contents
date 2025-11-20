@@ -18,18 +18,6 @@
         <attribute name="tags" optional="YES" attributeType="String"/>
         <attribute name="units" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
-    <entity name="CatalogItemParent" representedClassName="CatalogItemParent" syncable="YES" codeGenerationType="category">
-        <attribute name="base_code" optional="YES" attributeType="String"/>
-        <attribute name="base_name" optional="YES" attributeType="String"/>
-        <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="manufacturer" optional="YES" attributeType="String"/>
-        <attribute name="manufacturer_description" optional="YES" attributeType="String"/>
-        <attribute name="tags" optional="YES" attributeType="String"/>
-    </entity>
-    <entity name="CatalogItemUser" representedClassName="CatalogItemUser" parentEntity="CatalogItem" syncable="YES" codeGenerationType="category">
-        <attribute name="notes" optional="YES" attributeType="String"/>
-    </entity>
     <entity name="CoatingItem" representedClassName="CoatingItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
     <entity name="ExpiringShareRecord" representedClassName="ExpiringShareRecord" syncable="YES" codeGenerationType="class">
         <attribute name="created_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -447,8 +435,6 @@
     </configuration>
     <configuration name="Local">
         <memberEntity name="CatalogItem"/>
-        <memberEntity name="CatalogItemParent"/>
-        <memberEntity name="CatalogItemUser"/>
         <memberEntity name="CoatingItem"/>
         <memberEntity name="GlassItem"/>
         <memberEntity name="Item"/>

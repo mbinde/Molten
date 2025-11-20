@@ -11,7 +11,17 @@ import Foundation
 
 // MARK: - Core Data Entity Base Classes
 
-// CatalogItem entities removed - legacy code replaced by Item hierarchy (GlassItem, CoatingItem, ToolItem)
+// CatalogItem entities - LEGACY, kept only to satisfy Core Data auto-generation
+// These entities exist in the model but are never used in code
+// DO NOT USE - use Item hierarchy (GlassItem, CoatingItem, ToolItem) instead
+@preconcurrency @objc(CatalogItem)
+public class CatalogItem: NSManagedObject {}
+
+@preconcurrency @objc(CatalogItemParent)
+public class CatalogItemParent: NSManagedObject {}
+
+@preconcurrency @objc(CatalogItemUser)
+public class CatalogItemUser: CatalogItem {}
 
 @preconcurrency @objc(CoatingItem)
 public class CoatingItem: Item {}

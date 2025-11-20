@@ -108,13 +108,6 @@ struct CoreDataDiagnosticView: View {
 
         results += "\n4. CREATION TEST:\n"
         results += "⚠️ CatalogItem creation test removed - use GlassItem\n"
-
-        if false {
-                results += "❌ Creation test failed - returned nil\n"
-            }
-        } catch {
-            results += "❌ Creation test crashed: \(error.localizedDescription)\n"
-        }
         
         results += "\n5. MODEL ENTITIES:\n"
         let model = controller.container.managedObjectModel

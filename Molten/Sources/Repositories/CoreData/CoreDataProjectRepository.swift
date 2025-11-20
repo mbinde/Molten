@@ -11,6 +11,7 @@ import Foundation
 /// Core Data implementation of ProjectRepository
 class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
     private let context: NSManagedObjectContext
+    #if canImport(UIKit)
     private let imageRepository: UserImageRepository?
 
     nonisolated init(context: NSManagedObjectContext, imageRepository: UserImageRepository? = nil) {
@@ -18,6 +19,12 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
         self.context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
         self.imageRepository = imageRepository
     }
+    #else
+    nonisolated init(context: NSManagedObjectContext) {
+        self.context = context
+        self.context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+    }
+    #endif
 
     // MARK: - CRUD Operations
 
@@ -657,6 +664,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
         // Search OCR text separately (can't do in Core Data predicate)
         var matchingIds = Set(textModels.map { $0.id })
 
+        #if canImport(UIKit)
         if let imageRepository = self.imageRepository {
             // Get all projects to check OCR text
             let allProjects = try await self.getAllProjects(includeArchived: includeArchived)
@@ -681,6 +689,7 @@ class CoreDataProjectRepository: @unchecked Sendable, ProjectRepository {
             // Return all matching projects
             return allProjects.filter { matchingIds.contains($0.id) }
         }
+        #endif
 
         return textModels
     }

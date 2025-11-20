@@ -11,12 +11,18 @@ import Foundation
 /// Core Data implementation of LogbookRepository
 class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
     private let context: NSManagedObjectContext
+    #if canImport(UIKit)
     private let imageRepository: UserImageRepository?
 
     nonisolated init(context: NSManagedObjectContext, imageRepository: UserImageRepository? = nil) {
         self.context = context
         self.imageRepository = imageRepository
     }
+    #else
+    nonisolated init(context: NSManagedObjectContext) {
+        self.context = context
+    }
+    #endif
 
     // MARK: - CRUD Operations
 
@@ -384,6 +390,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
         var matchingIds = Set(textModels.map { $0.id })
 
         // Add OCR text search if imageRepository is available
+        #if canImport(UIKit)
         if let imageRepository = self.imageRepository {
             let allLogs = try await self.getAllLogs()
             for log in allLogs {
@@ -405,6 +412,7 @@ class CoreDataLogbookRepository: @unchecked Sendable, LogbookRepository {
             // Return all matching logs
             return allLogs.filter { matchingIds.contains($0.id) }
         }
+        #endif
 
         // No image repository, just return text matches
         return textModels

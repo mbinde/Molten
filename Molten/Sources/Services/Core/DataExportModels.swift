@@ -238,7 +238,7 @@ struct ExportUserImage: Codable, Sendable {
 }
 
 struct ExportUserNote: Codable, Sendable {
-    let id: String
+    let id: String  // UUID exported as String for JSON compatibility
     let itemStableId: String?
     let noteText: String?
     let dateCreated: Date?

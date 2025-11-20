@@ -18,13 +18,14 @@ struct UserNotesRepositoryTests {
 
     @Test("Should create UserNotesModel with required properties")
     func testUserNotesModelCreation() async throws {
+        let testId = UUID()
         let notes = UserNotesModel(
-            id: "test-id-123",
+            id: testId,
             item_stable_id: "cim-550-0",
             notes: "This is a test note"
         )
 
-        #expect(notes.id == "test-id-123")
+        #expect(notes.id == testId)
         #expect(notes.item_stable_id == "cim-550-0")
         #expect(notes.notes == "This is a test note")
     }

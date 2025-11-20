@@ -25,10 +25,11 @@ struct ReportingServiceTests {
     // MARK: - Setup Helpers
 
     /// Add inventory to real catalog items for testing
+    /// Returns the manufacturer abbreviation of the first item (for assertions)
     private func setupTestData(
         catalogService: CatalogService,
         inventoryService: InventoryTrackingService
-    ) async throws {
+    ) async throws -> String {
 
         // Use real catalog data (catalog is read-only)
         let catalogItems = try await catalogService.getGlassItemsLightweight()
@@ -53,6 +54,8 @@ struct ReportingServiceTests {
             toItem: testItems[2].stable_id,
             atLocation: "Studio A"
         )
+
+        return testItems[0].manufacturer
     }
 
     // MARK: - Comprehensive Report Tests
@@ -61,7 +64,7 @@ struct ReportingServiceTests {
     func testGenerateComprehensiveReportWithData() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -98,7 +101,7 @@ struct ReportingServiceTests {
     func testComprehensiveReportWithDateRange() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -121,7 +124,7 @@ struct ReportingServiceTests {
     func testComprehensiveReportTotals() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -140,7 +143,7 @@ struct ReportingServiceTests {
     func testGenerateInventoryReport() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -158,7 +161,7 @@ struct ReportingServiceTests {
     func testInventoryReportByType() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -175,7 +178,7 @@ struct ReportingServiceTests {
     func testInventoryReportLowStock() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -191,7 +194,7 @@ struct ReportingServiceTests {
     func testInventoryReportTotalQuantity() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -208,7 +211,7 @@ struct ReportingServiceTests {
     func testGenerateManufacturerReport() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -224,7 +227,7 @@ struct ReportingServiceTests {
     func testManufacturerReportStatistics() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        let manufacturerAbbr = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -232,17 +235,20 @@ struct ReportingServiceTests {
 
         let report = try await reportingService.generateManufacturerReport()
 
-        let bullseyeStats = report.manufacturerStatistics.first { $0.name == "Bullseye" }
-        #expect(bullseyeStats != nil)
-        #expect((bullseyeStats?.itemCount ?? 0) > 0)
-        #expect((bullseyeStats?.totalQuantity ?? 0) > 0)
+        // Find stats for the actual manufacturer from our test data
+        let manufacturerStats = report.manufacturerStatistics.first { stat in
+            stat.abbreviation == manufacturerAbbr
+        }
+        #expect(manufacturerStats != nil, "Should have stats for manufacturer \(manufacturerAbbr)")
+        #expect((manufacturerStats?.itemCount ?? 0) > 0, "Should have item count")
+        #expect((manufacturerStats?.totalQuantity ?? 0) > 0, "Should have total quantity")
     }
 
     @Test("Manufacturer report calculates unique COEs")
     func testManufacturerReportUniqueCOEs() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        let manufacturerAbbr = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -250,15 +256,19 @@ struct ReportingServiceTests {
 
         let report = try await reportingService.generateManufacturerReport()
 
-        let bullseyeStats = report.manufacturerStatistics.first { $0.name == "Bullseye" }
-        #expect(bullseyeStats?.uniqueCoes.contains(90) == true)
+        // Find stats for the actual manufacturer from our test data
+        let manufacturerStats = report.manufacturerStatistics.first { stat in
+            stat.abbreviation == manufacturerAbbr
+        }
+        #expect(manufacturerStats != nil, "Should have stats for manufacturer \(manufacturerAbbr)")
+        #expect((manufacturerStats?.uniqueCoes.count ?? 0) > 0, "Should have at least one unique COE")
     }
 
     @Test("Manufacturer statistics sorted by item count")
     func testManufacturerStatisticsSorting() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -280,7 +290,7 @@ struct ReportingServiceTests {
     func testGenerateTagReport() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -325,7 +335,7 @@ struct ReportingServiceTests {
     func testTagStatisticsSorting() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -347,7 +357,7 @@ struct ReportingServiceTests {
     func testGenerateShoppingListReportWithService() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let shoppingListService = deps.shoppingListService
         let reportingService = ReportingService(
             catalogService: catalogService,
@@ -368,7 +378,7 @@ struct ReportingServiceTests {
     func testGenerateShoppingListReportMissingService() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService,
@@ -387,7 +397,7 @@ struct ReportingServiceTests {
     func testInventoryByTypeStatistics() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -405,7 +415,7 @@ struct ReportingServiceTests {
     func testCOEDistributionStatistics() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -424,7 +434,7 @@ struct ReportingServiceTests {
     func testTagAnalysisCalculations() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -462,7 +472,7 @@ struct ReportingServiceTests {
     func testReportsWithItemsWithoutTags() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -478,7 +488,7 @@ struct ReportingServiceTests {
     func testComprehensiveReportLowStockCount() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService
@@ -512,7 +522,7 @@ struct ReportingServiceTests {
     func testMultipleReportGeneration() async throws {
         let catalogService = deps.catalogService
         let inventoryService = deps.inventoryTrackingService
-        try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
+        _ = try await setupTestData(catalogService: catalogService, inventoryService: inventoryService)
         let reportingService = ReportingService(
             catalogService: catalogService,
             inventoryTrackingService: inventoryService

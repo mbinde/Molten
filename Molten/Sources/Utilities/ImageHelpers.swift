@@ -23,6 +23,11 @@ extension Notification.Name {
 struct ImageHelpers {
     nonisolated static let productImagePathPrefix = ""
 
+    // MARK: - Shared Image Repository
+
+    /// Shared user image repository (NOT created per view to avoid Core Data threading issues)
+    private static let sharedUserImageRepository = AppDependencies.shared.userImageRepository
+
     // MARK: - Image Cache
 
     /// Cache to store loaded images and prevent repeated file system access
@@ -39,6 +44,59 @@ struct ImageHelpers {
         cache.countLimit = 500 // Cache up to 500 "not found" results
         return cache
     }()
+
+    // MARK: - Centralized Image Loading Logic
+
+    /// Single source of truth for product image loading decision tree
+    /// Returns nil if should show gradient (no permission + have colors)
+    @MainActor
+    static func loadProductImageForDisplay(
+        itemCode: String,
+        manufacturer: String?,
+        stableId: String?,
+        imagePath: String?,
+        imageThumbPath: String?,
+        dominantColors: [String]?
+    ) async -> UIImage? {
+        // Step 0: User-uploaded image (highest priority)
+        if let stableId = stableId {
+            if let primaryModel = try? await sharedUserImageRepository.getPrimaryImage(ownerType: .glassItem, ownerId: stableId),
+               let userImage = try? await sharedUserImageRepository.loadImage(primaryModel) {
+                return userImage
+            }
+        }
+
+        // Step 1: Check if we have permission for product images
+        // If not, show manufacturer logo only if we don't have color codes for gradient
+        if let manufacturer = manufacturer,
+           !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
+            // No permission - only load manufacturer logo if no color codes available
+            if dominantColors == nil || dominantColors?.isEmpty == true {
+                return await Task.detached(priority: .background) {
+                    ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
+                }.value
+            } else {
+                // Return nil to signal that gradient should be shown
+                return nil
+            }
+        }
+
+        // Steps 2→3→4: ImageDownloadService handles: cache → bundle → CDN download
+        let useThumbnail = !UserSettings.shared.downloadFullSizeImages
+        if let cdnImage = await ImageDownloadService.loadImage(
+            manufacturer: manufacturer,
+            exactFilename: imagePath,
+            exactThumbnailFilename: imageThumbPath,
+            useThumbnail: useThumbnail
+        ) {
+            return cdnImage
+        }
+
+        // Final fallback: Try manufacturer logo
+        return await Task.detached(priority: .background) {
+            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
+        }.value
+    }
 
     /// Loads an image from a file path, stripping color profile information to avoid ICC warnings
     /// Uses UIImage's built-in JPEG/PNG decoder which is more forgiving of corrupt color profiles
@@ -410,60 +468,29 @@ struct ProductImageView: View {
     private func loadImageAsync() async {
         isLoading = true
 
-        // Step 0: User-uploaded image (highest priority)
-        if let stableId = stableId {
-            if let primaryModel = try? await Self.sharedUserImageRepository.getPrimaryImage(ownerType: .glassItem, ownerId: stableId),
-               let userImage = try? await Self.sharedUserImageRepository.loadImage(primaryModel) {
-                loadedImage = userImage
-                isLoading = false
-                return
-            }
-        }
-
-        // Step 1: Check if we have permission for product images
-        // If not, show manufacturer logo only if we don't have color codes for gradient
-        if let manufacturer = manufacturer,
-           !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
-            // No permission - only load manufacturer logo if no color codes available
-            if dominantColors == nil || dominantColors?.isEmpty == true {
-                let image = await Task.detached(priority: .background) {
-                    ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
-                }.value
-                loadedImage = image
-            }
-            isLoading = false
-            return
-        }
-
-        // Steps 2→3→4: ImageDownloadService handles: cache → bundle → CDN download
-        // (Permission already checked above, ImageDownloadService will verify again at lowest level)
-        let useThumbnail = !UserSettings.shared.downloadFullSizeImages
-        if let cdnImage = await ImageDownloadService.loadImage(
+        // Use centralized image loading logic (single source of truth)
+        loadedImage = await ImageHelpers.loadProductImageForDisplay(
+            itemCode: itemCode,
             manufacturer: manufacturer,
-            exactFilename: imagePath,
-            exactThumbnailFilename: imageThumbPath,
-            useThumbnail: useThumbnail
-        ) {
-            loadedImage = cdnImage
-            isLoading = false
-            return
-        }
+            stableId: stableId,
+            imagePath: imagePath,
+            imageThumbPath: imageThumbPath,
+            dominantColors: dominantColors
+        )
 
-        // Final fallback: Try manufacturer logo (in case catalog didn't have image_path)
-        let image = await Task.detached(priority: .background) {
-            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
-        }.value
-        loadedImage = image
         isLoading = false
     }
 }
 
+/// Product image detail view with upload and fullscreen capabilities
+/// Uses centralized image loading logic from ImageHelpers
 struct ProductImageDetail: View {
     let itemCode: String
     let manufacturer: String?
     let stableId: String?
     let imagePath: String?
     let imageThumbPath: String?
+    let dominantColors: [String]?
     let maxSize: CGFloat
     let allowImageUpload: Bool
     let allowFullScreen: Bool
@@ -477,12 +504,13 @@ struct ProductImageDetail: View {
     // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
     private static let sharedUserImageRepository = AppDependencies.shared.userImageRepository
 
-    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, allowFullScreen: Bool = true, onImageUploaded: (() -> Void)? = nil) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, dominantColors: [String]? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, allowFullScreen: Bool = true, onImageUploaded: (() -> Void)? = nil) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.stableId = stableId
         self.imagePath = imagePath
         self.imageThumbPath = imageThumbPath
+        self.dominantColors = dominantColors
         self.maxSize = maxSize
         self.allowImageUpload = allowImageUpload
         self.allowFullScreen = allowFullScreen
@@ -508,6 +536,15 @@ struct ProductImageDetail: View {
                     } else {
                         imageView
                     }
+                } else if !isLoading,
+                          let manufacturer = manufacturer,
+                          !GlassManufacturers.hasProductImagePermission(for: manufacturer),
+                          let colors = dominantColors,
+                          !colors.isEmpty {
+                    // Show gradient when no permission and have colors
+                    ColorSwatchView(colors: colors, size: maxSize, cornerRadius: 12)
+                        .frame(maxWidth: maxSize, maxHeight: maxSize)
+                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                 } else {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color(.systemGray6))
@@ -575,47 +612,16 @@ struct ProductImageDetail: View {
     private func loadImageAsync() async {
         isLoading = true
 
-        // Step 0: User-uploaded image (highest priority)
-        if let stableId = stableId {
-            if let primaryModel = try? await Self.sharedUserImageRepository.getPrimaryImage(ownerType: .glassItem, ownerId: stableId),
-               let userImage = try? await Self.sharedUserImageRepository.loadImage(primaryModel) {
-                loadedImage = userImage
-                isLoading = false
-                return
-            }
-        }
-
-        // Step 1: Check if we have permission for product images
-        // If not, fall back to manufacturer logo
-        if let manufacturer = manufacturer,
-           !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
-            // No permission - use manufacturer default image only
-            let image = await Task.detached(priority: .utility) {
-                ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
-            }.value
-            loadedImage = image
-            isLoading = false
-            return
-        }
-
-        // Steps 2→3→4: ImageDownloadService handles: cache → bundle → CDN download
-        let useThumbnail = !UserSettings.shared.downloadFullSizeImages
-        if let cdnImage = await ImageDownloadService.loadImage(
+        // Use centralized image loading logic (single source of truth)
+        loadedImage = await ImageHelpers.loadProductImageForDisplay(
+            itemCode: itemCode,
             manufacturer: manufacturer,
-            exactFilename: imagePath,
-            exactThumbnailFilename: imageThumbPath,
-            useThumbnail: useThumbnail
-        ) {
-            loadedImage = cdnImage
-            isLoading = false
-            return
-        }
+            stableId: stableId,
+            imagePath: imagePath,
+            imageThumbPath: imageThumbPath,
+            dominantColors: dominantColors
+        )
 
-        // Final fallback: Try manufacturer logo
-        let image = await Task.detached(priority: .utility) {
-            ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
-        }.value
-        loadedImage = image
         isLoading = false
     }
 

@@ -95,6 +95,7 @@ actor InventoryTrackingService {
 
         // 3. Get all tags for this item
         let tags = try await itemTagsRepository.fetchTags(forItem: stableId)
+        print("🏷️ DEBUG: Loaded \(tags.count) tags for item \(stableId): \(tags.prefix(5).joined(separator: ", "))")
 
         return CompleteInventoryItemModel(
             glassItem: glassItem,

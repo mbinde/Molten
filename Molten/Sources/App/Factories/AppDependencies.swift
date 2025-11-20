@@ -163,17 +163,25 @@ class AppDependencies {
         self.cloudContext = persistenceController.cloudContext
 
         // Create repositories (catalog data from bundled SQLite, user data from cloud store)
-        // In test mode, use writable Core Data repository instead of read-only SQLite
+        // Both production and tests use SQLite for catalog data (read-only)
         if self.mode == .mock {
-            self.glassItemRepository = CoreDataGlassItemRepository(context: self.localContext)
-            self.itemTagsRepository = CoreDataItemTagsRepository(context: self.localContext)
-            self.coatingItemRepository = CoreDataCoatingItemRepository(persistentContainer: persistenceController.container)
-            self.toolItemRepository = CoreDataToolItemRepository(context: self.localContext)
+            // Tests: Use bundled SQLite database directly (no Documents copy)
+            guard let bundlePath = Bundle.main.path(forResource: "catalog", ofType: "sqlite") else {
+                fatalError("Test mode requires bundled catalog.sqlite")
+            }
+            let testDbManager = TestCatalogDatabaseManager(databasePath: bundlePath)
+            try! testDbManager.initialize()
+
+            self.glassItemRepository = SQLiteGlassItemRepository(databaseManager: testDbManager)
+            self.itemTagsRepository = SQLiteItemTagsRepository(databaseManager: testDbManager)
+            self.coatingItemRepository = SQLiteCoatingItemRepository(databaseManager: testDbManager)
+            self.toolItemRepository = SQLiteToolItemRepository(databaseManager: testDbManager)
         } else {
-            self.glassItemRepository = SQLiteGlassItemRepository(databaseManager: .shared)
-            self.itemTagsRepository = SQLiteItemTagsRepository(databaseManager: .shared)
-            self.coatingItemRepository = SQLiteCoatingItemRepository(databaseManager: .shared)
-            self.toolItemRepository = SQLiteToolItemRepository(databaseManager: .shared)
+            // Production: Use CatalogDatabaseManager (copies to Documents, handles OTA updates)
+            self.glassItemRepository = SQLiteGlassItemRepository(databaseManager: CatalogDatabaseManager.shared)
+            self.itemTagsRepository = SQLiteItemTagsRepository(databaseManager: CatalogDatabaseManager.shared)
+            self.coatingItemRepository = SQLiteCoatingItemRepository(databaseManager: CatalogDatabaseManager.shared)
+            self.toolItemRepository = SQLiteToolItemRepository(databaseManager: CatalogDatabaseManager.shared)
         }
         self.inventoryRepository = CoreDataInventoryRepository(context: self.cloudContext)
         self.locationRepository = CoreDataLocationRepository(context: self.cloudContext)

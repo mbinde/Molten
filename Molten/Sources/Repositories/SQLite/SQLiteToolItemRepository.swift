@@ -13,9 +13,9 @@ import SQLite3
 /// This repository reads from the bundled catalog.sqlite database shipped with the app.
 /// Write operations are not supported - the catalog is read-only.
 struct SQLiteToolItemRepository: ToolItemRepository {
-    private let databaseManager: CatalogDatabaseManager
+    private let databaseManager: CatalogDatabaseManagerProtocol
 
-    init(databaseManager: CatalogDatabaseManager = .shared) {
+    init(databaseManager: CatalogDatabaseManagerProtocol = CatalogDatabaseManager.shared) {
         self.databaseManager = databaseManager
     }
 

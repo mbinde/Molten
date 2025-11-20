@@ -547,6 +547,7 @@
 				Tests/RepositoryTests/Mock/MockUserTagsRepository.swift,
 				Tests/RepositoryTests/ShareMetadataRepositoryTests.swift,
 				Tests/RepositoryTests/SQLite/SQLiteGlassItemRepositoryTests.swift,
+				Tests/RepositoryTests/SQLite/SQLiteItemTagsRepositoryTests.swift,
 				Tools/Documentation/check_core_data_violations.sh,
 				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
 				Tools/Documentation/CORE_DATA_PREVENTION_GUIDE.md,
@@ -641,6 +642,7 @@
 				Tests/RepositoryTests/Mock/MockUserTagsRepository.swift,
 				Tests/RepositoryTests/ShareMetadataRepositoryTests.swift,
 				Tests/RepositoryTests/SQLite/SQLiteGlassItemRepositoryTests.swift,
+				Tests/RepositoryTests/SQLite/SQLiteItemTagsRepositoryTests.swift,
 			);
 			target = F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */;
 		};

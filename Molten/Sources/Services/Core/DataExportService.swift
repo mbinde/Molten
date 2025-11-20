@@ -415,7 +415,7 @@ class DataExportService {
 
         let exportNotes = notes.map { note in
             ExportUserNote(
-                id: note.id,
+                id: note.id.uuidString,
                 itemStableId: note.item_stable_id,
                 noteText: note.notes,
                 dateCreated: nil,

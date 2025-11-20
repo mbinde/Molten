@@ -171,7 +171,8 @@ class CoreDataMigrationService {
             return false
         } else {
             for item in uninitializedItems {
-                print("  - \(item.name ?? item.id ?? "unknown"): units = \(item.units)")
+                let itemId = (item.id as? String) ?? (item.id as? UUID)?.uuidString ?? "unknown"
+                print("  - \(item.name ?? itemId): units = \(item.units)")
             }
             return true
         }
@@ -205,11 +206,13 @@ class CoreDataMigrationService {
             if catalogItem.units == 0 {
                 catalogItem.units = CatalogUnits.rods.rawValue
                 migratedCount += 1
-                print("📝 Migrated catalog item '\(catalogItem.name ?? catalogItem.id ?? "unknown")': set default units to rods")
+                let itemId = (catalogItem.id as? String) ?? (catalogItem.id as? UUID)?.uuidString ?? "unknown"
+                print("📝 Migrated catalog item '\(catalogItem.name ?? itemId)': set default units to rods")
             } else {
                 preservedCount += 1
                 let units = CatalogUnits(from: catalogItem.units)
-                print("✅ Preserved existing units for catalog item '\(catalogItem.name ?? catalogItem.id ?? "unknown")': \(units.displayName)")
+                let itemId = (catalogItem.id as? String) ?? (catalogItem.id as? UUID)?.uuidString ?? "unknown"
+                print("✅ Preserved existing units for catalog item '\(catalogItem.name ?? itemId)': \(units.displayName)")
             }
             
             processedCatalogItems += 1
@@ -313,10 +316,18 @@ class CoreDataMigrationService {
         var processedItems = 0
         
         for item in catalogItems {
-            guard let id = item.id else { continue }
-            
+            // Handle both String and UUID id types (migration compatibility)
+            let idString: String
+            if let stringId = item.id as? String {
+                idString = stringId
+            } else if let uuidId = item.id as? UUID {
+                idString = uuidId.uuidString
+            } else {
+                continue
+            }
+
             let backup = CatalogItemBackup(
-                id: id,
+                id: idString,
                 code: item.code,
                 name: item.name,
                 units: item.units

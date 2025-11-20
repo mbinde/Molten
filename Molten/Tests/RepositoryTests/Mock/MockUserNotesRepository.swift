@@ -10,8 +10,7 @@ import Foundation
 
 /// Mock implementation of UserNotesRepository for testing
 /// Stores notes in memory using a dictionary
-@MainActor
-final class MockUserNotesRepository: UserNotesRepository {
+final class MockUserNotesRepository: @unchecked Sendable, UserNotesRepository {
 
     // MARK: - Storage
 
@@ -20,7 +19,7 @@ final class MockUserNotesRepository: UserNotesRepository {
     // MARK: - CRUD Operations
 
     func createNotes(_ notes: UserNotesModel) async throws -> UserNotesModel {
-        let key = await notes.item_stable_id
+        let key = notes.item_stable_id
         // Check if notes already exist for this item
         guard self.notes[key] == nil else {
             throw NSError(domain: "MockUserNotesRepository", code: 409, userInfo: [
@@ -36,7 +35,7 @@ final class MockUserNotesRepository: UserNotesRepository {
     }
 
     func updateNotes(_ notes: UserNotesModel) async throws -> UserNotesModel {
-        let key = await notes.item_stable_id
+        let key = notes.item_stable_id
         guard self.notes[key] != nil else {
             throw NSError(domain: "MockUserNotesRepository", code: 404, userInfo: [
                 NSLocalizedDescriptionKey: "Notes not found for item: \(key)"
@@ -50,26 +49,13 @@ final class MockUserNotesRepository: UserNotesRepository {
         notes.removeValue(forKey: itemStableId)
     }
 
-    func deleteNotes(byId id: String) async throws {
+    func deleteNotes(byId id: UUID) async throws {
         // Find and delete by id
         let notesArray = Array(notes.values)
-        var found: UserNotesModel? = nil
-        for note in notesArray {
-            let noteId = await note.id
-            if noteId == id {
-                found = note
-                break
-            }
+        if let foundNote = notesArray.first(where: { $0.id == id }) {
+            notes.removeValue(forKey: foundNote.item_stable_id)
         }
-
-        if let foundNote = found {
-            let foundItemId = await foundNote.item_stable_id
-            notes.removeValue(forKey: foundItemId)
-        } else {
-            throw NSError(domain: "MockUserNotesRepository", code: 404, userInfo: [
-                NSLocalizedDescriptionKey: "Notes not found with id: \(id)"
-            ])
-        }
+        // Idempotent delete - no error if not found
     }
 
     // MARK: - Query Operations
@@ -102,7 +88,7 @@ final class MockUserNotesRepository: UserNotesRepository {
 
     func setNotes(_ notes: UserNotesModel) async throws -> UserNotesModel {
         // Upsert: create or update
-        let key = await notes.item_stable_id
+        let key = notes.item_stable_id
         self.notes[key] = notes
         return notes
     }

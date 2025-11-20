@@ -16,8 +16,8 @@ struct SQLiteGlassItemRepositoryTests {
 
     // MARK: - Test Helpers
 
-    class TestCatalogDatabaseManager: CatalogDatabaseManagerProtocol {
-        private var db: OpaquePointer?
+    final class TestCatalogDatabaseManager: CatalogDatabaseManagerProtocol, @unchecked Sendable {
+        private nonisolated(unsafe) var db: OpaquePointer?
         private let dbURL: URL
         private let connectionLock = NSLock()
 

@@ -17,7 +17,9 @@ struct ShoppingListView: View {
     private let userNotesRepository: UserNotesRepository
     private let userTagsRepository: UserTagsRepository
     private let shoppingListRepository: ShoppingListRepository
+    #if canImport(UIKit)
     private let userImageRepository: UserImageRepository
+    #endif
     private let kilnScheduleService: KilnScheduleService
     private let glassItemRepository: GlassItemRepository
 
@@ -50,6 +52,7 @@ struct ShoppingListView: View {
     @State private var cachedAllManufacturers: [String] = []
 
     // Accept ViewModel directly (protocol-based pattern)
+    #if canImport(UIKit)
     init(viewModel: ShoppingListViewModel,
          shoppingListService: ShoppingListService,
          catalogService: CatalogService,
@@ -73,10 +76,34 @@ struct ShoppingListView: View {
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
     }
+    #else
+    init(viewModel: ShoppingListViewModel,
+         shoppingListService: ShoppingListService,
+         catalogService: CatalogService,
+         inventoryTrackingService: InventoryTrackingService,
+         purchaseService: PurchaseRecordService,
+         userNotesRepository: UserNotesRepository,
+         userTagsRepository: UserTagsRepository,
+         shoppingListRepository: ShoppingListRepository,
+         kilnScheduleService: KilnScheduleService,
+         glassItemRepository: GlassItemRepository) {
+        self._viewModel = State(initialValue: viewModel)
+        self.shoppingListService = shoppingListService
+        self.catalogService = catalogService
+        self.inventoryTrackingService = inventoryTrackingService
+        self.purchaseService = purchaseService
+        self.userNotesRepository = userNotesRepository
+        self.userTagsRepository = userTagsRepository
+        self.shoppingListRepository = shoppingListRepository
+        self.kilnScheduleService = kilnScheduleService
+        self.glassItemRepository = glassItemRepository
+    }
+    #endif
 
     // Convenience init for production use
     init(deps: AppDependencies = AppDependencies()) {
         let viewModel = ShoppingListViewModel(shoppingListService: deps.shoppingListService)
+        #if canImport(UIKit)
         self.init(
             viewModel: viewModel,
             shoppingListService: deps.shoppingListService,
@@ -90,6 +117,20 @@ struct ShoppingListView: View {
             kilnScheduleService: deps.kilnScheduleService,
             glassItemRepository: deps.glassItemRepository
         )
+        #else
+        self.init(
+            viewModel: viewModel,
+            shoppingListService: deps.shoppingListService,
+            catalogService: deps.catalogService,
+            inventoryTrackingService: deps.inventoryTrackingService,
+            purchaseService: deps.purchaseRecordService,
+            userNotesRepository: deps.userNotesRepository,
+            userTagsRepository: deps.userTagsRepository,
+            shoppingListRepository: deps.shoppingListRepository,
+            kilnScheduleService: deps.kilnScheduleService,
+            glassItemRepository: deps.glassItemRepository
+        )
+        #endif
     }
 
     // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes

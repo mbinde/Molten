@@ -23,6 +23,7 @@ struct LogbookView: View, CachedDataDeletion {
 
     @State private var viewModel: LogbookViewModel
     private let logbookRepository: LogbookRepository  // Keep for child views
+    #if canImport(UIKit)
     private let userImageRepository: UserImageRepository
 
     // Accept ViewModel directly (protocol-based pattern)
@@ -31,11 +32,22 @@ struct LogbookView: View, CachedDataDeletion {
         self.logbookRepository = logbookRepository
         self.userImageRepository = userImageRepository
     }
+    #else
+    // Accept ViewModel directly (protocol-based pattern)
+    init(viewModel: LogbookViewModel, logbookRepository: LogbookRepository) {
+        self._viewModel = State(initialValue: viewModel)
+        self.logbookRepository = logbookRepository
+    }
+    #endif
 
     // Convenience init for production use (DI pattern)
     init(logbookRepository: LogbookRepository, deps: AppDependencies = AppDependencies()) {
         let viewModel = LogbookViewModel(logbookRepository: logbookRepository)
+        #if canImport(UIKit)
         self.init(viewModel: viewModel, logbookRepository: logbookRepository, userImageRepository: deps.userImageRepository)
+        #else
+        self.init(viewModel: viewModel, logbookRepository: logbookRepository)
+        #endif
     }
 
     var body: some View {

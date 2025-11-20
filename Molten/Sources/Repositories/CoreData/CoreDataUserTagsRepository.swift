@@ -51,296 +51,229 @@ class CoreDataUserTagsRepository: @unchecked Sendable, UserTagsRepository {
     // MARK: - Generic Tag Operations (New API - Supports All Owner Types)
 
     func fetchTags(ownerType: TagOwnerType, ownerId: String) async throws -> [String] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String], Error>) in
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
-                    fetchRequest.predicate = NSPredicate(
-                        format: "owner_type == %@ AND owner_id == %@",
-                        ownerType.rawValue, ownerId
-                    )
-                    fetchRequest.sortDescriptors = [NSSortDescriptor(key: "tag", ascending: true)]
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
+            fetchRequest.predicate = NSPredicate(
+                format: "owner_type == %@ AND owner_id == %@",
+                ownerType.rawValue, ownerId
+            )
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "tag", ascending: true)]
 
-                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
+            let coreDataItems = try context.fetch(fetchRequest)
 
-                    // Lazy migration fallback (shouldn't be needed if background migration worked)
-                    try self.migrateEntitiesIfNeeded(coreDataItems, context: self.backgroundContext, log: self.log)
+            // Lazy migration fallback (shouldn't be needed if background migration worked)
+            try self.migrateEntitiesIfNeeded(coreDataItems, context: context, log: self.log)
 
-                    let tags = coreDataItems.compactMap { $0.value(forKey: "tag") as? String }
-                    continuation.resume(returning: tags)
-
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
+            let tags = coreDataItems.compactMap { $0.value(forKey: "tag") as? String }
+            return tags
         }
     }
 
     func fetchTagsForOwners(ownerType: TagOwnerType, ownerIds: [String]) async throws -> [String: [String]] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String: [String]], Error>) in
-            backgroundContext.perform {
-                do {
-                    guard !ownerIds.isEmpty else {
-                        continuation.resume(returning: [:])
-                        return
-                    }
-
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
-                    fetchRequest.predicate = NSPredicate(
-                        format: "owner_type == %@ AND owner_id IN %@",
-                        ownerType.rawValue, ownerIds
-                    )
-                    fetchRequest.sortDescriptors = [
-                        NSSortDescriptor(key: "owner_id", ascending: true),
-                        NSSortDescriptor(key: "tag", ascending: true)
-                    ]
-
-                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
-
-                    // Lazy migration fallback
-                    try self.migrateEntitiesIfNeeded(coreDataItems, context: self.backgroundContext, log: self.log)
-
-                    // Group tags by owner ID
-                    var tagsByOwner: [String: [String]] = [:]
-                    for item in coreDataItems {
-                        guard let ownerId = item.value(forKey: "owner_id") as? String,
-                              let tag = item.value(forKey: "tag") as? String else {
-                            continue
-                        }
-
-                        if tagsByOwner[ownerId] == nil {
-                            tagsByOwner[ownerId] = []
-                        }
-                        tagsByOwner[ownerId]?.append(tag)
-                    }
-
-                    continuation.resume(returning: tagsByOwner)
-
-                } catch {
-                    self.log.error("Failed to batch fetch user tags for owners: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            guard !ownerIds.isEmpty else {
+                return [:]
             }
+
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
+            fetchRequest.predicate = NSPredicate(
+                format: "owner_type == %@ AND owner_id IN %@",
+                ownerType.rawValue, ownerIds
+            )
+            fetchRequest.sortDescriptors = [
+                NSSortDescriptor(key: "owner_id", ascending: true),
+                NSSortDescriptor(key: "tag", ascending: true)
+            ]
+
+            let coreDataItems = try context.fetch(fetchRequest)
+
+            // Lazy migration fallback
+            try self.migrateEntitiesIfNeeded(coreDataItems, context: context, log: self.log)
+
+            // Group tags by owner ID
+            var tagsByOwner: [String: [String]] = [:]
+            for item in coreDataItems {
+                guard let ownerId = item.value(forKey: "owner_id") as? String,
+                      let tag = item.value(forKey: "tag") as? String else {
+                    continue
+                }
+
+                if tagsByOwner[ownerId] == nil {
+                    tagsByOwner[ownerId] = []
+                }
+                tagsByOwner[ownerId]?.append(tag)
+            }
+
+            return tagsByOwner
         }
     }
 
     func addTag(_ tag: String, ownerType: TagOwnerType, ownerId: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Clean and validate tag
-                    let cleanTag = CoreDataUserTagsRepository.cleanTag(tag)
-                    guard CoreDataUserTagsRepository.isValidTag(cleanTag) else {
-                        throw CoreDataUserTagsRepositoryError.invalidTag(tag)
-                    }
-
-                    // Check if tag already exists for this owner
-                    if try self.tagExistsSync(cleanTag, ownerType: ownerType, ownerId: ownerId) {
-                        // Already exists, no-op (idempotent)
-                        self.log.debug("User tag '\(cleanTag)' already exists for \(ownerType.rawValue):\(ownerId)")
-                        continuation.resume()
-                        return
-                    }
-
-                    // Create new tag entry
-                    guard let entity = NSEntityDescription.entity(forEntityName: "UserTags", in: self.backgroundContext) else {
-                        throw CoreDataUserTagsRepositoryError.entityNotFound("UserTags")
-                    }
-                    let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-
-                    coreDataItem.setValue(ownerType.rawValue, forKey: "owner_type")
-                    coreDataItem.setValue(ownerId, forKey: "owner_id")
-                    coreDataItem.setValue(cleanTag, forKey: "tag")
-
-                    try self.backgroundContext.save()
-
-                    continuation.resume()
-
-                } catch {
-                    continuation.resume(throwing: error)
-                }
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            // Clean and validate tag
+            let cleanTag = CoreDataUserTagsRepository.cleanTag(tag)
+            guard CoreDataUserTagsRepository.isValidTag(cleanTag) else {
+                throw CoreDataUserTagsRepositoryError.invalidTag(tag)
             }
+
+            // Check if tag already exists for this owner
+            if try self.tagExistsSync(cleanTag, ownerType: ownerType, ownerId: ownerId) {
+                // Already exists, no-op (idempotent)
+                self.log.debug("User tag '\(cleanTag)' already exists for \(ownerType.rawValue):\(ownerId)")
+                return
+            }
+
+            // Create new tag entry
+            guard let entity = NSEntityDescription.entity(forEntityName: "UserTags", in: context) else {
+                throw CoreDataUserTagsRepositoryError.entityNotFound("UserTags")
+            }
+            let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
+
+            coreDataItem.setValue(ownerType.rawValue, forKey: "owner_type")
+            coreDataItem.setValue(ownerId, forKey: "owner_id")
+            coreDataItem.setValue(cleanTag, forKey: "tag")
+
+            try context.save()
         }
     }
 
     func addTags(_ tags: [String], ownerType: TagOwnerType, ownerId: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Clean and validate tags
-                    let cleanTags = tags.compactMap { tag in
-                        let cleaned = CoreDataUserTagsRepository.cleanTag(tag)
-                        return CoreDataUserTagsRepository.isValidTag(cleaned) ? cleaned : nil
-                    }
-
-                    guard !cleanTags.isEmpty else {
-                        self.log.debug("No valid user tags to add")
-                        continuation.resume()
-                        return
-                    }
-
-                    // Get existing tags for this owner
-                    let existingTags = try self.fetchTagsSync(ownerType: ownerType, ownerId: ownerId)
-                    let existingTagsSet = Set(existingTags)
-
-                    // Filter out tags that already exist
-                    let newTags = cleanTags.filter { !existingTagsSet.contains($0) }
-
-                    guard !newTags.isEmpty else {
-                        self.log.debug("All user tags already exist for \(ownerType.rawValue):\(ownerId)")
-                        continuation.resume()
-                        return
-                    }
-
-                    // Create new tag entries
-                    guard let entity = NSEntityDescription.entity(forEntityName: "UserTags", in: self.backgroundContext) else {
-                        throw CoreDataUserTagsRepositoryError.entityNotFound("UserTags")
-                    }
-
-                    for tag in newTags {
-                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-                        coreDataItem.setValue(ownerType.rawValue, forKey: "owner_type")
-                        coreDataItem.setValue(ownerId, forKey: "owner_id")
-                        coreDataItem.setValue(tag, forKey: "tag")
-                    }
-
-                    try self.backgroundContext.save()
-
-                    self.log.info("Added \(newTags.count) user tags to \(ownerType.rawValue):\(ownerId)")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to add user tags: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            // Clean and validate tags
+            let cleanTags = tags.compactMap { tag in
+                let cleaned = CoreDataUserTagsRepository.cleanTag(tag)
+                return CoreDataUserTagsRepository.isValidTag(cleaned) ? cleaned : nil
             }
+
+            guard !cleanTags.isEmpty else {
+                self.log.debug("No valid user tags to add")
+                return
+            }
+
+            // Get existing tags for this owner
+            let existingTags = try self.fetchTagsSync(ownerType: ownerType, ownerId: ownerId)
+            let existingTagsSet = Set(existingTags)
+
+            // Filter out tags that already exist
+            let newTags = cleanTags.filter { !existingTagsSet.contains($0) }
+
+            guard !newTags.isEmpty else {
+                self.log.debug("All user tags already exist for \(ownerType.rawValue):\(ownerId)")
+                return
+            }
+
+            // Create new tag entries
+            guard let entity = NSEntityDescription.entity(forEntityName: "UserTags", in: context) else {
+                throw CoreDataUserTagsRepositoryError.entityNotFound("UserTags")
+            }
+
+            for tag in newTags {
+                let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
+                coreDataItem.setValue(ownerType.rawValue, forKey: "owner_type")
+                coreDataItem.setValue(ownerId, forKey: "owner_id")
+                coreDataItem.setValue(tag, forKey: "tag")
+            }
+
+            try context.save()
+
+            self.log.info("Added \(newTags.count) user tags to \(ownerType.rawValue):\(ownerId)")
         }
     }
 
     func removeTag(_ tag: String, ownerType: TagOwnerType, ownerId: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    let cleanTag = CoreDataUserTagsRepository.cleanTag(tag)
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            let cleanTag = CoreDataUserTagsRepository.cleanTag(tag)
 
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
-                    fetchRequest.predicate = NSPredicate(
-                        format: "owner_type == %@ AND owner_id == %@ AND tag == %@",
-                        ownerType.rawValue, ownerId, cleanTag
-                    )
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
+            fetchRequest.predicate = NSPredicate(
+                format: "owner_type == %@ AND owner_id == %@ AND tag == %@",
+                ownerType.rawValue, ownerId, cleanTag
+            )
 
-                    let results = try self.backgroundContext.fetch(fetchRequest)
+            let results = try context.fetch(fetchRequest)
 
-                    for item in results {
-                        self.backgroundContext.delete(item)
-                    }
+            for item in results {
+                context.delete(item)
+            }
 
-                    if !results.isEmpty {
-                        try self.backgroundContext.save()
-                        self.log.info("Removed user tag '\(cleanTag)' from \(ownerType.rawValue):\(ownerId)")
-                    } else {
-                        self.log.debug("User tag '\(cleanTag)' not found for \(ownerType.rawValue):\(ownerId)")
-                    }
-
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to remove user tag: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            if !results.isEmpty {
+                try context.save()
+                self.log.info("Removed user tag '\(cleanTag)' from \(ownerType.rawValue):\(ownerId)")
+            } else {
+                self.log.debug("User tag '\(cleanTag)' not found for \(ownerType.rawValue):\(ownerId)")
             }
         }
     }
 
     func removeAllTags(ownerType: TagOwnerType, ownerId: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
-                    fetchRequest.predicate = NSPredicate(
-                        format: "owner_type == %@ AND owner_id == %@",
-                        ownerType.rawValue, ownerId
-                    )
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
+            fetchRequest.predicate = NSPredicate(
+                format: "owner_type == %@ AND owner_id == %@",
+                ownerType.rawValue, ownerId
+            )
 
-                    let results = try self.backgroundContext.fetch(fetchRequest)
+            let results = try context.fetch(fetchRequest)
 
-                    for item in results {
-                        self.backgroundContext.delete(item)
-                    }
+            for item in results {
+                context.delete(item)
+            }
 
-                    if !results.isEmpty {
-                        try self.backgroundContext.save()
-                        self.log.info("Removed all \(results.count) user tags from \(ownerType.rawValue):\(ownerId)")
-                    }
-
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to remove all user tags: \(error)")
-                    continuation.resume(throwing: error)
-                }
+            if !results.isEmpty {
+                try context.save()
+                self.log.info("Removed all \(results.count) user tags from \(ownerType.rawValue):\(ownerId)")
             }
         }
     }
 
     func setTags(_ tags: [String], ownerType: TagOwnerType, ownerId: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Clean and validate tags
-                    let cleanTags = tags.compactMap { tag in
-                        let cleaned = CoreDataUserTagsRepository.cleanTag(tag)
-                        return CoreDataUserTagsRepository.isValidTag(cleaned) ? cleaned : nil
-                    }
-                    let cleanTagsSet = Set(cleanTags)
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            // Clean and validate tags
+            let cleanTags = tags.compactMap { tag in
+                let cleaned = CoreDataUserTagsRepository.cleanTag(tag)
+                return CoreDataUserTagsRepository.isValidTag(cleaned) ? cleaned : nil
+            }
+            let cleanTagsSet = Set(cleanTags)
 
-                    // Get existing tags
-                    let existingTags = try self.fetchTagsSync(ownerType: ownerType, ownerId: ownerId)
-                    let existingTagsSet = Set(existingTags)
+            // Get existing tags
+            let existingTags = try self.fetchTagsSync(ownerType: ownerType, ownerId: ownerId)
+            let existingTagsSet = Set(existingTags)
 
-                    // Calculate differences
-                    let tagsToAdd = cleanTagsSet.subtracting(existingTagsSet)
-                    let tagsToRemove = existingTagsSet.subtracting(cleanTagsSet)
+            // Calculate differences
+            let tagsToAdd = cleanTagsSet.subtracting(existingTagsSet)
+            let tagsToRemove = existingTagsSet.subtracting(cleanTagsSet)
 
-                    // Remove tags that shouldn't be there
-                    if !tagsToRemove.isEmpty {
-                        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
-                        fetchRequest.predicate = NSPredicate(
-                            format: "owner_type == %@ AND owner_id == %@ AND tag IN %@",
-                            ownerType.rawValue, ownerId, Array(tagsToRemove)
-                        )
+            // Remove tags that shouldn't be there
+            if !tagsToRemove.isEmpty {
+                let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
+                fetchRequest.predicate = NSPredicate(
+                    format: "owner_type == %@ AND owner_id == %@ AND tag IN %@",
+                    ownerType.rawValue, ownerId, Array(tagsToRemove)
+                )
 
-                        let itemsToDelete = try self.backgroundContext.fetch(fetchRequest)
-                        for item in itemsToDelete {
-                            self.backgroundContext.delete(item)
-                        }
-                    }
-
-                    // Add new tags
-                    if !tagsToAdd.isEmpty {
-                        guard let entity = NSEntityDescription.entity(forEntityName: "UserTags", in: self.backgroundContext) else {
-                            throw CoreDataUserTagsRepositoryError.entityNotFound("UserTags")
-                        }
-
-                        for tag in tagsToAdd {
-                            let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-                            coreDataItem.setValue(ownerType.rawValue, forKey: "owner_type")
-                            coreDataItem.setValue(ownerId, forKey: "owner_id")
-                            coreDataItem.setValue(tag, forKey: "tag")
-                        }
-                    }
-
-                    if !tagsToAdd.isEmpty || !tagsToRemove.isEmpty {
-                        try self.backgroundContext.save()
-                        self.log.info("Set user tags for \(ownerType.rawValue):\(ownerId): added \(tagsToAdd.count), removed \(tagsToRemove.count)")
-                    }
-
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to set user tags: \(error)")
-                    continuation.resume(throwing: error)
+                let itemsToDelete = try context.fetch(fetchRequest)
+                for item in itemsToDelete {
+                    context.delete(item)
                 }
+            }
+
+            // Add new tags
+            if !tagsToAdd.isEmpty {
+                guard let entity = NSEntityDescription.entity(forEntityName: "UserTags", in: context) else {
+                    throw CoreDataUserTagsRepositoryError.entityNotFound("UserTags")
+                }
+
+                for tag in tagsToAdd {
+                    let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
+                    coreDataItem.setValue(ownerType.rawValue, forKey: "owner_type")
+                    coreDataItem.setValue(ownerId, forKey: "owner_id")
+                    coreDataItem.setValue(tag, forKey: "tag")
+                }
+            }
+
+            if !tagsToAdd.isEmpty || !tagsToRemove.isEmpty {
+                try context.save()
+                self.log.info("Set user tags for \(ownerType.rawValue):\(ownerId): added \(tagsToAdd.count), removed \(tagsToRemove.count)")
             }
         }
     }

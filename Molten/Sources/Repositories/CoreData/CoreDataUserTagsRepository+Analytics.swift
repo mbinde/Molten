@@ -56,7 +56,7 @@ extension CoreDataUserTagsRepository {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Bool, Error>) in
             backgroundContext.perform {
                 do {
-                    let cleanTag = UserTagModel.cleanTag(tag)
+                    let cleanTag = CoreDataUserTagsRepository.cleanTag(tag)
 
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
 

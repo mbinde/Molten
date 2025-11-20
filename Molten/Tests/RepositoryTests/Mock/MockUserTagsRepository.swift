@@ -46,7 +46,7 @@ final class MockUserTagsRepository: UserTagsRepository {
     }
 
     func addTag(_ tag: String, ownerType: TagOwnerType, ownerId: String) async throws {
-        let cleanedTag = UserTagModel.cleanTag(tag)
+        let cleanedTag = CoreDataUserTagsRepository.cleanTag(tag)
         let model = await UserTagModel(ownerType: ownerType, ownerId: ownerId, tag: cleanedTag)
         let modelId = await model.id
         tags[modelId] = model
@@ -59,7 +59,7 @@ final class MockUserTagsRepository: UserTagsRepository {
     }
 
     func removeTag(_ tag: String, ownerType: TagOwnerType, ownerId: String) async throws {
-        let cleanedTag = UserTagModel.cleanTag(tag)
+        let cleanedTag = CoreDataUserTagsRepository.cleanTag(tag)
         var newTags: [UUID: UserTagModel] = [:]
         for (key, value) in tags {
             let valueOwnerType = await value.ownerType
@@ -138,7 +138,7 @@ final class MockUserTagsRepository: UserTagsRepository {
     // MARK: - Owner Discovery Operations
 
     func fetchOwners(withTag tag: String, ownerType: TagOwnerType) async throws -> [String] {
-        let cleanedTag = UserTagModel.cleanTag(tag)
+        let cleanedTag = CoreDataUserTagsRepository.cleanTag(tag)
         var owners: [String] = []
         for tagModel in tags.values {
             let tagModelOwnerType = await tagModel.ownerType
@@ -152,7 +152,7 @@ final class MockUserTagsRepository: UserTagsRepository {
     }
 
     func fetchOwners(withAllTags tags: [String], ownerType: TagOwnerType) async throws -> [String] {
-        let cleanedTags = Set(tags.map { UserTagModel.cleanTag($0) })
+        let cleanedTags = Set(tags.map { CoreDataUserTagsRepository.cleanTag($0) })
 
         // Collect all owner IDs for the given owner type
         var ownerIds: Set<String> = []
@@ -180,7 +180,7 @@ final class MockUserTagsRepository: UserTagsRepository {
     }
 
     func fetchOwners(withAnyTags tags: [String], ownerType: TagOwnerType) async throws -> [String] {
-        let cleanedTags = Set(tags.map { UserTagModel.cleanTag($0) })
+        let cleanedTags = Set(tags.map { CoreDataUserTagsRepository.cleanTag($0) })
         var owners: [String] = []
         for tag in self.tags.values {
             let tagOwnerType = await tag.ownerType
@@ -216,7 +216,7 @@ final class MockUserTagsRepository: UserTagsRepository {
     }
 
     func tagExists(_ tag: String, ownerType: TagOwnerType?) async throws -> Bool {
-        let cleanedTag = UserTagModel.cleanTag(tag)
+        let cleanedTag = CoreDataUserTagsRepository.cleanTag(tag)
         for tagModel in tags.values {
             let modelTag = await tagModel.tag
             let modelOwnerType = await tagModel.ownerType
@@ -225,6 +225,33 @@ final class MockUserTagsRepository: UserTagsRepository {
             }
         }
         return false
+    }
+
+    // MARK: - Base TagsRepository Protocol Methods (Glass Items Only)
+
+    /// Get tag usage counts for glass items only (delegates to owner-based method)
+    func getTagUsageCounts() async throws -> [String: Int] {
+        return try await getTagUsageCounts(ownerType: .glassItem)
+    }
+
+    /// Get tags with counts for glass items only (delegates to owner-based method)
+    func getTagsWithCounts(minCount: Int) async throws -> [(tag: String, count: Int)] {
+        return try await getTagsWithCounts(minCount: minCount, ownerType: .glassItem)
+    }
+
+    /// Check if a tag exists for glass items only (delegates to owner-based method)
+    func tagExists(_ tag: String) async throws -> Bool {
+        return try await tagExists(tag, ownerType: .glassItem)
+    }
+
+    /// Get tags with prefix for glass items only (delegates to owner-based method)
+    func getTags(withPrefix prefix: String) async throws -> [String] {
+        return try await getTags(withPrefix: prefix, ownerType: .glassItem)
+    }
+
+    /// Get most used tags for glass items only (delegates to owner-based method)
+    func getMostUsedTags(limit: Int) async throws -> [String] {
+        return try await getMostUsedTags(limit: limit, ownerType: .glassItem)
     }
 
     // MARK: - Legacy Support (for backward compatibility with glass items)

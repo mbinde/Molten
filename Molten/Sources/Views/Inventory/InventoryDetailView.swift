@@ -674,13 +674,13 @@ struct InventoryDetailView: View {
     private var emptyDetailsMessage: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let manufacturerURL = currentItem.glassItem.url, let url = URL(string: manufacturerURL) {
-                Text("No more details available here. Please check ") +
+                Text("Please check ") +
                 Text("the manufacturer's site")
                     .foregroundColor(.blue) +
                 Text(Image(systemName: "arrow.up.forward.square"))
                     .font(.caption)
                     .foregroundColor(.blue) +
-                Text(" to see if they have more information or add notes of your own.")
+                Text(" to see if they have more information available or add notes of your own.")
             } else {
                 Text("No more details available here. Add notes of your own using the note button.")
             }
@@ -1052,6 +1052,7 @@ struct InventoryDetailView: View {
 
             ExpandableText(content: content, lineLimit: 4, isExpanded: $isManufacturerNotesExpanded)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(Color.gray.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 8))

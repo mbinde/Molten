@@ -14,11 +14,13 @@ struct ColorSwatchView: View {
     let colors: [String]  // Array of hex color strings (e.g., ["#2E5E41", "#1D4030", "#0C2219"])
     let size: CGFloat
     let cornerRadius: CGFloat
+    let showGradientFrame: Bool  // Whether to show the radial gradient frame indicator
 
-    init(colors: [String], size: CGFloat = 60, cornerRadius: CGFloat = 8) {
+    init(colors: [String], size: CGFloat = 60, cornerRadius: CGFloat = 8, showGradientFrame: Bool = true) {
         self.colors = colors
         self.size = size
         self.cornerRadius = cornerRadius
+        self.showGradientFrame = showGradientFrame
     }
 
     var body: some View {
@@ -27,8 +29,15 @@ struct ColorSwatchView: View {
                 .fill(gradient)
                 .frame(width: size, height: size)
                 .overlay(
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(Color(.systemGray4), lineWidth: 0.5)
+                    Group {
+                        if showGradientFrame {
+                            RoundedRectangle(cornerRadius: cornerRadius)
+                                .strokeBorder(gradientFrameBorder, lineWidth: 3)
+                        } else {
+                            RoundedRectangle(cornerRadius: cornerRadius)
+                                .strokeBorder(Color(.systemGray4), lineWidth: 0.5)
+                        }
+                    }
                 )
         } else {
             // Fallback if color parsing fails
@@ -41,6 +50,30 @@ struct ColorSwatchView: View {
                         .font(.system(size: size * 0.4))
                 }
         }
+    }
+
+    /// Angular gradient border that indicates this is a color approximation/generated gradient
+    /// Light grey at edges (top/bottom/left/right), dark grey at corners - subtle and visible against any color
+    private var gradientFrameBorder: some ShapeStyle {
+        let darkGrey = Color(white: 0.3)  // Custom dark grey between systemGray6 and black
+        let lightGrey = Color(white:0.9)
+
+        return AngularGradient(
+            gradient: Gradient(colors: [
+                lightGrey,                // Top center (custom light grey)
+                darkGrey,                 // Top-right corner (custom dark grey)
+                lightGrey,      // Right center
+                darkGrey,                 // Bottom-right corner
+                lightGrey,      // Bottom center
+                darkGrey,                 // Bottom-left corner
+                lightGrey,      // Left center
+                darkGrey,                 // Top-left corner
+                lightGrey       // Back to top center
+            ]),
+            center: .center,
+            startAngle: .degrees(-90),  // Start at top
+            endAngle: .degrees(270)     // Full rotation
+        )
     }
 
     /// Creates a linear gradient from the hex color strings
@@ -123,6 +156,46 @@ struct ColorSwatchView: View {
         ColorSwatchView(colors: [])
         ColorSwatchView(colors: ["invalid", "colors"])
         ColorSwatchView(colors: ["#ZZZ"])
+    }
+    .padding()
+}
+
+#Preview("Gradient Frame Comparison") {
+    VStack(spacing: 30) {
+        VStack(spacing: 10) {
+            Text("With Gradient Frame (Default)")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            HStack(spacing: 20) {
+                // Very dark colors
+                ColorSwatchView(colors: ["#0C2219"], size: 80, showGradientFrame: true)
+                // Mid-tone colors
+                ColorSwatchView(colors: ["#2E5E41", "#1D4030", "#0C2219"], size: 80, showGradientFrame: true)
+                // Light colors
+                ColorSwatchView(colors: ["#E8D5C4"], size: 80, showGradientFrame: true)
+            }
+        }
+
+        VStack(spacing: 10) {
+            Text("Without Gradient Frame")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            HStack(spacing: 20) {
+                // Very dark colors
+                ColorSwatchView(colors: ["#0C2219"], size: 80, showGradientFrame: false)
+                // Mid-tone colors
+                ColorSwatchView(colors: ["#2E5E41", "#1D4030", "#0C2219"], size: 80, showGradientFrame: false)
+                // Light colors
+                ColorSwatchView(colors: ["#E8D5C4"], size: 80, showGradientFrame: false)
+            }
+        }
+
+        VStack(spacing: 10) {
+            Text("Large Size with Frame")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            ColorSwatchView(colors: ["#FF7F24", "#FF5733", "#D35400"], size: 120, showGradientFrame: true)
+        }
     }
     .padding()
 }

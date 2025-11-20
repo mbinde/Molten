@@ -43,13 +43,13 @@ struct ManufacturerFilterButton: View {
             .padding(.vertical, DesignSystem.Spacing.xs)
             .background(
                 selectedManufacturers.isEmpty
-                    ? DesignSystem.Colors.secondaryBackground
-                    : DesignSystem.Colors.accentColor.opacity(0.15)
+                    ? DesignSystem.Colors.backgroundSecondary
+                    : DesignSystem.Colors.accentPrimary.opacity(0.15)
             )
             .foregroundColor(
                 selectedManufacturers.isEmpty
                     ? DesignSystem.Colors.textSecondary
-                    : DesignSystem.Colors.accentColor
+                    : DesignSystem.Colors.accentPrimary
             )
             .cornerRadius(DesignSystem.CornerRadius.medium)
         }
@@ -93,13 +93,13 @@ struct COEFilterButton: View {
             .padding(.vertical, DesignSystem.Spacing.xs)
             .background(
                 selectedCOEs.isEmpty
-                    ? DesignSystem.Colors.secondaryBackground
-                    : DesignSystem.Colors.accentColor.opacity(0.15)
+                    ? DesignSystem.Colors.backgroundSecondary
+                    : DesignSystem.Colors.accentPrimary.opacity(0.15)
             )
             .foregroundColor(
                 selectedCOEs.isEmpty
                     ? DesignSystem.Colors.textSecondary
-                    : DesignSystem.Colors.accentColor
+                    : DesignSystem.Colors.accentPrimary
             )
             .cornerRadius(DesignSystem.CornerRadius.medium)
         }
@@ -144,13 +144,13 @@ struct TagFilterButton: View {
             .padding(.vertical, DesignSystem.Spacing.xs)
             .background(
                 selectedTags.isEmpty
-                    ? DesignSystem.Colors.secondaryBackground
-                    : DesignSystem.Colors.accentColor.opacity(0.15)
+                    ? DesignSystem.Colors.backgroundSecondary
+                    : DesignSystem.Colors.accentPrimary.opacity(0.15)
             )
             .foregroundColor(
                 selectedTags.isEmpty
                     ? DesignSystem.Colors.textSecondary
-                    : DesignSystem.Colors.accentColor
+                    : DesignSystem.Colors.accentPrimary
             )
             .cornerRadius(DesignSystem.CornerRadius.medium)
         }
@@ -199,13 +199,13 @@ struct ProductTypeFilterButton: View {
             .padding(.vertical, DesignSystem.Spacing.xs)
             .background(
                 selectedProductTypes.isEmpty
-                    ? DesignSystem.Colors.secondaryBackground
-                    : DesignSystem.Colors.accentColor.opacity(0.15)
+                    ? DesignSystem.Colors.backgroundSecondary
+                    : DesignSystem.Colors.accentPrimary.opacity(0.15)
             )
             .foregroundColor(
                 selectedProductTypes.isEmpty
                     ? DesignSystem.Colors.textSecondary
-                    : DesignSystem.Colors.accentColor
+                    : DesignSystem.Colors.accentPrimary
             )
             .cornerRadius(DesignSystem.CornerRadius.medium)
         }

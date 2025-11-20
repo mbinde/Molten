@@ -37,7 +37,7 @@ struct CatalogEmptyState: View {
                 .accessibilityHidden(true)
 
             Text("No catalog items available")
-                .font(DesignSystem.Typography.title3)
+                .font(DesignSystem.Typography.subSectionHeader)
                 .fontWeight(DesignSystem.FontWeight.semibold)
                 .foregroundColor(DesignSystem.Colors.textPrimary)
         }
@@ -63,7 +63,7 @@ struct CatalogSearchEmptyState: View {
                 .font(DesignSystem.Typography.body)
                 .foregroundColor(DesignSystem.Colors.textSecondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, DesignSystem.Padding.large)
+                .padding(.horizontal, DesignSystem.Padding.generous)
 
             Button("Clear Filters") {
                 onClearSearch()

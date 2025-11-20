@@ -14,11 +14,11 @@ final class SQLiteItemTagsRepository: ItemTagsRepository {
 
     // MARK: - Properties
 
-    private let databaseManager: CatalogDatabaseManager
+    private let databaseManager: CatalogDatabaseManagerProtocol
 
     // MARK: - Initialization
 
-    init(databaseManager: CatalogDatabaseManager = .shared) {
+    init(databaseManager: CatalogDatabaseManagerProtocol = CatalogDatabaseManager.shared) {
         self.databaseManager = databaseManager
     }
 

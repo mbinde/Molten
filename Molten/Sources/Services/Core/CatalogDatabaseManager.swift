@@ -12,7 +12,7 @@ import Foundation
 import SQLite3
 
 /// Manages catalog database versioning and access
-final class CatalogDatabaseManager: Sendable {
+final class CatalogDatabaseManager: CatalogDatabaseManagerProtocol {
 
     // MARK: - Singleton
 

@@ -25,20 +25,13 @@ struct InventoryTrackingServiceLocationTests {
     @Test("addInventory creates inventory with location")
     func testAddInventoryWithLocation() async throws {
         // Setup
-        let glassItemRepo = deps.glassItemRepository
+        let catalogService = deps.catalogService
         let service = deps.inventoryTrackingService
 
-        // Create a glass item first
-        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Test Glass",
-            sku: "001",
-            manufacturer: "Test Mfr",
-            coe: 96,
-            mfr_status: "available"
-        )
-        _ = try await glassItemRepo.createItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = glassItem.stable_id
 
         // Test
         let inventory = try await service.addInventory(
@@ -57,19 +50,13 @@ struct InventoryTrackingServiceLocationTests {
     @Test("addInventory creates inventory without location")
     func testAddInventoryWithoutLocation() async throws {
         // Setup
-        let glassItemRepo = deps.glassItemRepository
+        let catalogService = deps.catalogService
         let service = deps.inventoryTrackingService
 
-        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Test Glass",
-            sku: "001",
-            manufacturer: "Test Mfr",
-            coe: 96,
-            mfr_status: "available"
-        )
-        _ = try await glassItemRepo.createItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = glassItem.stable_id
 
         // Test - no location specified
         let inventory = try await service.addInventory(
@@ -86,17 +73,13 @@ struct InventoryTrackingServiceLocationTests {
     @Test("createCompleteItem with initial inventory including locations")
     func testCreateCompleteItemWithLocations() async throws {
         // Setup
+        let catalogService = deps.catalogService
         let service = deps.inventoryTrackingService
 
-        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Test Glass",
-            sku: "001",
-            manufacturer: "Test Mfr",
-            coe: 96,
-            mfr_status: "available"
-        )
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = glassItem.stable_id
 
         let initialInventory = [
             InventoryModel(item_stable_id: stableId, type: "rod", quantity: 5, location: "Shelf A"),
@@ -122,21 +105,14 @@ struct InventoryTrackingServiceLocationTests {
     @Test("getCompleteItem includes location information")
     func testGetCompleteItemWithLocations() async throws {
         // Setup
-        let glassItemRepo = deps.glassItemRepository
+        let catalogService = deps.catalogService
         let inventoryRepo = deps.inventoryRepository
         let service = deps.inventoryTrackingService
 
-        // Create glass item
-        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Test Glass",
-            sku: "001",
-            manufacturer: "Test Mfr",
-            coe: 96,
-            mfr_status: "available"
-        )
-        _ = try await glassItemRepo.createItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = glassItem.stable_id
 
         // Create inventory with locations
         _ = try await inventoryRepo.createInventory(
@@ -162,21 +138,14 @@ struct InventoryTrackingServiceLocationTests {
     @Test("getInventorySummary includes location details")
     func testGetInventorySummaryWithLocations() async throws {
         // Setup
-        let glassItemRepo = deps.glassItemRepository
+        let catalogService = deps.catalogService
         let inventoryRepo = deps.inventoryRepository
         let service = deps.inventoryTrackingService
 
-        // Create glass item
-        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Test Glass",
-            sku: "001",
-            manufacturer: "Test Mfr",
-            coe: 96,
-            mfr_status: "available"
-        )
-        _ = try await glassItemRepo.createItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = glassItem.stable_id
 
         // Create inventory with locations
         _ = try await inventoryRepo.createInventory(
@@ -211,20 +180,13 @@ struct InventoryTrackingServiceLocationTests {
     @Test("Multiple locations for same item and type")
     func testMultipleLocationsForSameItemType() async throws {
         // Setup
-        let glassItemRepo = deps.glassItemRepository
+        let catalogService = deps.catalogService
         let service = deps.inventoryTrackingService
 
-        // Create glass item
-        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Test Glass",
-            sku: "001",
-            manufacturer: "Test Mfr",
-            coe: 96,
-            mfr_status: "available"
-        )
-        _ = try await glassItemRepo.createItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = glassItem.stable_id
 
         // Test - add same type to multiple locations
         let inv1 = try await service.addInventory(
@@ -255,21 +217,14 @@ struct InventoryTrackingServiceLocationTests {
     @Test("validateInventoryConsistency checks for negative quantities")
     func testValidateInventoryConsistency() async throws {
         // Setup
-        let glassItemRepo = deps.glassItemRepository
+        let catalogService = deps.catalogService
         let inventoryRepo = deps.inventoryRepository
         let service = deps.inventoryTrackingService
 
-        // Create glass item
-        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Test Glass",
-            sku: "001",
-            manufacturer: "Test Mfr",
-            coe: 96,
-            mfr_status: "available"
-        )
-        _ = try await glassItemRepo.createItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = glassItem.stable_id
 
         // Create valid inventory
         _ = try await inventoryRepo.createInventory(
@@ -285,20 +240,13 @@ struct InventoryTrackingServiceLocationTests {
     @Test("Inventory without location is valid")
     func testInventoryWithoutLocationIsValid() async throws {
         // Setup
-        let glassItemRepo = deps.glassItemRepository
+        let catalogService = deps.catalogService
         let service = deps.inventoryTrackingService
 
-        // Create glass item
-        let stableId = generateStableId(manufacturer: "Test Mfr", sku: "001")
-        let glassItem = GlassItemModel(
-            stable_id: stableId,
-            name: "Test Glass",
-            sku: "001",
-            manufacturer: "Test Mfr",
-            coe: 96,
-            mfr_status: "available"
-        )
-        _ = try await glassItemRepo.createItem(glassItem)
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = glassItem.stable_id
 
         // Add inventory without location
         _ = try await service.addInventory(

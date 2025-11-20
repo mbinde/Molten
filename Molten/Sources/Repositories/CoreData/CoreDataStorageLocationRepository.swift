@@ -88,291 +88,221 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
     }
     
     func createLocations(_ locations: [StorageLocationModel]) async throws -> [StorageLocationModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[StorageLocationModel], Error>) in
-            backgroundContext.perform {
-                do {
-                    var createdLocations: [StorageLocationModel] = []
-                    
-                    for location in locations {
-                        // Create new Core Data entity
-                        guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: self.backgroundContext) else {
-                            throw CoreDataLocationRepositoryError.entityNotFound("StorageLocation")
-                        }
-                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-                        
-                        // Set properties
-                        self.updateCoreDataEntity(coreDataItem, with: location)
-                        createdLocations.append(location)
-                    }
-                    
-                    // Save all changes at once
-                    try self.backgroundContext.save()
-                    
-                    self.log.info("Created \(createdLocations.count) location records in batch")
-                    continuation.resume(returning: createdLocations)
-                    
-                } catch {
-                    self.log.error("Failed to create location records in batch: \(error)")
-                    continuation.resume(throwing: error)
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            var createdLocations: [StorageLocationModel] = []
+
+            for location in locations {
+                // Create new Core Data entity
+                guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: context) else {
+                    throw CoreDataLocationRepositoryError.entityNotFound("StorageLocation")
                 }
+                let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
+
+                // Set properties
+                self.updateCoreDataEntity(coreDataItem, with: location)
+                createdLocations.append(location)
             }
+
+            // Save all changes at once
+            try context.save()
+
+            self.log.info("Created \(createdLocations.count) location records in batch")
+            return createdLocations
         }
     }
     
     func updateLocation(_ location: StorageLocationModel) async throws -> StorageLocationModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<StorageLocationModel, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: location.inventory_id, locationName: location.location) else {
-                        self.log.warning("Attempted to update non-existent location record: \(location.location) for inventory \(location.inventory_id)")
-                        continuation.resume(throwing: CoreDataLocationRepositoryError.itemNotFound("\(location.inventory_id)/\(location.location)"))
-                        return
-                    }
-
-                    // Update properties
-                    self.updateCoreDataEntity(coreDataItem, with: location)
-
-                    // Save context
-                    try self.backgroundContext.save()
-
-                    self.log.info("Updated location record: \(location.location) for inventory \(location.inventory_id)")
-                    continuation.resume(returning: location)
-
-                } catch {
-                    self.log.error("Failed to update location record: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            // Find existing item
+            guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: location.inventory_id, locationName: location.location) else {
+                self.log.warning("Attempted to update non-existent location record: \(location.location) for inventory \(location.inventory_id)")
+                throw CoreDataLocationRepositoryError.itemNotFound("\(location.inventory_id)/\(location.location)")
             }
+
+            // Update properties
+            self.updateCoreDataEntity(coreDataItem, with: location)
+
+            // Save context
+            try context.save()
+
+            self.log.info("Updated location record: \(location.location) for inventory \(location.inventory_id)")
+            return location
         }
     }
     
     func deleteLocation(_ location: StorageLocationModel) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Find existing item
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: location.inventory_id, locationName: location.location) else {
-                        self.log.warning("Attempted to delete non-existent location record: \(location.location) for inventory \(location.inventory_id)")
-                        continuation.resume(throwing: CoreDataLocationRepositoryError.itemNotFound("\(location.inventory_id)/\(location.location)"))
-                        return
-                    }
-
-                    // Delete item
-                    self.backgroundContext.delete(coreDataItem)
-
-                    // Save context
-                    try self.backgroundContext.save()
-
-                    self.log.info("Deleted location record: \(location.location) for inventory \(location.inventory_id)")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete location record: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            // Find existing item
+            guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: location.inventory_id, locationName: location.location) else {
+                self.log.warning("Attempted to delete non-existent location record: \(location.location) for inventory \(location.inventory_id)")
+                throw CoreDataLocationRepositoryError.itemNotFound("\(location.inventory_id)/\(location.location)")
             }
+
+            // Delete item
+            context.delete(coreDataItem)
+
+            // Save context
+            try context.save()
+
+            self.log.info("Deleted location record: \(location.location) for inventory \(location.inventory_id)")
         }
     }
     
     func deleteLocations(forInventory inventory_id: UUID) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
-                    fetchRequest.predicate = NSPredicate(format: "inventory_id == %@", inventory_id as CVarArg)
-                    
-                    let locationsToDelete = try self.backgroundContext.fetch(fetchRequest)
-                    
-                    for location in locationsToDelete {
-                        self.backgroundContext.delete(location)
-                    }
-                    
-                    if !locationsToDelete.isEmpty {
-                        try self.backgroundContext.save()
-                    }
-                    
-                    self.log.info("Deleted \(locationsToDelete.count) location records for inventory: \(inventory_id)")
-                    continuation.resume()
-                    
-                } catch {
-                    self.log.error("Failed to delete location records for inventory: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
+            fetchRequest.predicate = NSPredicate(format: "inventory_id == %@", inventory_id as CVarArg)
+
+            let locationsToDelete = try context.fetch(fetchRequest)
+
+            for location in locationsToDelete {
+                context.delete(location)
             }
+
+            if !locationsToDelete.isEmpty {
+                try context.save()
+            }
+
+            self.log.info("Deleted \(locationsToDelete.count) location records for inventory: \(inventory_id)")
         }
     }
     
     func deleteLocations(withName locationName: String) async throws {
         let cleanLocationName = StorageLocationModel.cleanLocationName(locationName)
-        
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
-                    fetchRequest.predicate = NSPredicate(format: "location == %@", cleanLocationName)
-                    
-                    let locationsToDelete = try self.backgroundContext.fetch(fetchRequest)
-                    
-                    for location in locationsToDelete {
-                        self.backgroundContext.delete(location)
-                    }
-                    
-                    if !locationsToDelete.isEmpty {
-                        try self.backgroundContext.save()
-                    }
-                    
-                    self.log.info("Deleted \(locationsToDelete.count) location records with name: \(cleanLocationName)")
-                    continuation.resume()
-                    
-                } catch {
-                    self.log.error("Failed to delete location records with name: \(error)")
-                    continuation.resume(throwing: error)
-                }
+
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
+            fetchRequest.predicate = NSPredicate(format: "location == %@", cleanLocationName)
+
+            let locationsToDelete = try context.fetch(fetchRequest)
+
+            for location in locationsToDelete {
+                context.delete(location)
             }
+
+            if !locationsToDelete.isEmpty {
+                try context.save()
+            }
+
+            self.log.info("Deleted \(locationsToDelete.count) location records with name: \(cleanLocationName)")
         }
     }
     
     // MARK: - Location Management Operations
     
     func setLocations(_ locations: [(location: String, quantity: Double)], forInventory inventory_id: UUID) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
-                    // First, delete all existing locations for this inventory
-                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
-                    fetchRequest.predicate = NSPredicate(format: "inventory_id == %@", inventory_id as CVarArg)
-                    let existingLocations = try self.backgroundContext.fetch(fetchRequest)
-                    
-                    for location in existingLocations {
-                        self.backgroundContext.delete(location)
-                    }
-                    
-                    // Create new location records
-                    for (locationName, quantity) in locations {
-                        guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: self.backgroundContext) else {
-                            throw CoreDataLocationRepositoryError.entityNotFound("StorageLocation")
-                        }
-                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-                        
-                        let locationModel = StorageLocationModel(
-                            inventory_id: inventory_id,
-                            location: locationName,
-                            quantity: quantity
-                        )
-                        
-                        self.updateCoreDataEntity(coreDataItem, with: locationModel)
-                    }
-                    
-                    // Save all changes
-                    try self.backgroundContext.save()
-                    
-                    self.log.info("Set \(locations.count) locations for inventory: \(inventory_id)")
-                    continuation.resume()
-                    
-                } catch {
-                    self.log.error("Failed to set locations for inventory: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            // First, delete all existing locations for this inventory
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
+            fetchRequest.predicate = NSPredicate(format: "inventory_id == %@", inventory_id as CVarArg)
+            let existingLocations = try context.fetch(fetchRequest)
+
+            for location in existingLocations {
+                context.delete(location)
             }
+
+            // Create new location records
+            for (locationName, quantity) in locations {
+                guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: context) else {
+                    throw CoreDataLocationRepositoryError.entityNotFound("StorageLocation")
+                }
+                let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
+
+                let locationModel = StorageLocationModel(
+                    inventory_id: inventory_id,
+                    location: locationName,
+                    quantity: quantity
+                )
+
+                self.updateCoreDataEntity(coreDataItem, with: locationModel)
+            }
+
+            // Save all changes
+            try context.save()
+
+            self.log.info("Set \(locations.count) locations for inventory: \(inventory_id)")
         }
     }
     
     func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventory_id: UUID) async throws -> StorageLocationModel {
         let cleanLocationName = StorageLocationModel.cleanLocationName(locationName)
-        
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<StorageLocationModel, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Look for existing location record
-                    let existingLocations = try self.fetchLocationSync(forInventory: inventory_id, locationName: cleanLocationName)
-                    
-                    if let existingLocation = existingLocations.first {
-                        // Update existing record
-                        let updatedLocation = StorageLocationModel(
-                            id: existingLocation.id,
-                            inventory_id: existingLocation.inventory_id,
-                            location: existingLocation.location,
-                            quantity: existingLocation.quantity + quantity
-                        )
 
-                        guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: existingLocation.inventory_id, locationName: existingLocation.location) else {
-                            throw CoreDataLocationRepositoryError.itemNotFound("\(existingLocation.inventory_id)/\(existingLocation.location)")
-                        }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            // Look for existing location record
+            let existingLocations = try self.fetchLocationSync(forInventory: inventory_id, locationName: cleanLocationName)
 
-                        self.updateCoreDataEntity(coreDataItem, with: updatedLocation)
-                        try self.backgroundContext.save()
+            if let existingLocation = existingLocations.first {
+                // Update existing record
+                let updatedLocation = StorageLocationModel(
+                    id: existingLocation.id,
+                    inventory_id: existingLocation.inventory_id,
+                    location: existingLocation.location,
+                    quantity: existingLocation.quantity + quantity
+                )
 
-                        continuation.resume(returning: updatedLocation)
-                    } else {
-                        // Create new record
-                        let newLocation = StorageLocationModel(
-                            inventory_id: inventory_id,
-                            location: cleanLocationName,
-                            quantity: quantity
-                        )
-                        
-                        guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: self.backgroundContext) else {
-                            throw CoreDataLocationRepositoryError.entityNotFound("StorageLocation")
-                        }
-                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
-                        
-                        self.updateCoreDataEntity(coreDataItem, with: newLocation)
-                        try self.backgroundContext.save()
-                        
-                        continuation.resume(returning: newLocation)
-                    }
-                    
-                } catch {
-                    self.log.error("Failed to add quantity to location: \(error)")
-                    continuation.resume(throwing: error)
+                guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: existingLocation.inventory_id, locationName: existingLocation.location) else {
+                    throw CoreDataLocationRepositoryError.itemNotFound("\(existingLocation.inventory_id)/\(existingLocation.location)")
                 }
+
+                self.updateCoreDataEntity(coreDataItem, with: updatedLocation)
+                try context.save()
+
+                return updatedLocation
+            } else {
+                // Create new record
+                let newLocation = StorageLocationModel(
+                    inventory_id: inventory_id,
+                    location: cleanLocationName,
+                    quantity: quantity
+                )
+
+                guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: context) else {
+                    throw CoreDataLocationRepositoryError.entityNotFound("StorageLocation")
+                }
+                let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
+
+                self.updateCoreDataEntity(coreDataItem, with: newLocation)
+                try context.save()
+
+                return newLocation
             }
         }
     }
     
     func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventory_id: UUID) async throws -> StorageLocationModel? {
         let cleanLocationName = StorageLocationModel.cleanLocationName(locationName)
-        
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<StorageLocationModel?, Error>) in
-            backgroundContext.perform {
-                do {
-                    // Look for existing location record
-                    let existingLocations = try self.fetchLocationSync(forInventory: inventory_id, locationName: cleanLocationName)
-                    
-                    guard let existingLocation = existingLocations.first else {
-                        throw CoreDataLocationRepositoryError.itemNotFound("Location not found: \(cleanLocationName) for inventory: \(inventory_id)")
-                    }
 
-                    guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: existingLocation.inventory_id, locationName: existingLocation.location) else {
-                        throw CoreDataLocationRepositoryError.itemNotFound("\(existingLocation.inventory_id)/\(existingLocation.location)")
-                    }
-                    
-                    let newQuantity = existingLocation.quantity - quantity
-                    
-                    if newQuantity <= 0 {
-                        // Delete the record if quantity reaches zero or below
-                        self.backgroundContext.delete(coreDataItem)
-                        try self.backgroundContext.save()
-                        continuation.resume(returning: nil)
-                    } else {
-                        // Update the record with new quantity
-                        let updatedLocation = StorageLocationModel(
-                            id: existingLocation.id,
-                            inventory_id: existingLocation.inventory_id,
-                            location: existingLocation.location,
-                            quantity: newQuantity
-                        )
-                        
-                        self.updateCoreDataEntity(coreDataItem, with: updatedLocation)
-                        try self.backgroundContext.save()
-                        continuation.resume(returning: updatedLocation)
-                    }
-                    
-                } catch {
-                    self.log.error("Failed to subtract quantity from location: \(error)")
-                    continuation.resume(throwing: error)
-                }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            // Look for existing location record
+            let existingLocations = try self.fetchLocationSync(forInventory: inventory_id, locationName: cleanLocationName)
+
+            guard let existingLocation = existingLocations.first else {
+                throw CoreDataLocationRepositoryError.itemNotFound("Location not found: \(cleanLocationName) for inventory: \(inventory_id)")
+            }
+
+            guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: existingLocation.inventory_id, locationName: existingLocation.location) else {
+                throw CoreDataLocationRepositoryError.itemNotFound("\(existingLocation.inventory_id)/\(existingLocation.location)")
+            }
+
+            let newQuantity = existingLocation.quantity - quantity
+
+            if newQuantity <= 0 {
+                // Delete the record if quantity reaches zero or below
+                context.delete(coreDataItem)
+                try context.save()
+                return nil
+            } else {
+                // Update the record with new quantity
+                let updatedLocation = StorageLocationModel(
+                    id: existingLocation.id,
+                    inventory_id: existingLocation.inventory_id,
+                    location: existingLocation.location,
+                    quantity: newQuantity
+                )
+
+                self.updateCoreDataEntity(coreDataItem, with: updatedLocation)
+                try context.save()
+                return updatedLocation
             }
         }
     }
@@ -388,25 +318,17 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
     // MARK: - Discovery Operations
     
     func getDistinctLocationNames() async throws -> [String] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String], Error>) in
-            backgroundContext.perform {
-                do {
-                    let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "StorageLocation")
-                    fetchRequest.propertiesToFetch = ["location"]
-                    fetchRequest.returnsDistinctResults = true
-                    fetchRequest.resultType = .dictionaryResultType
-                    
-                    let results = try self.backgroundContext.fetch(fetchRequest)
-                    let locationNames = results.compactMap { $0["location"] as? String }.sorted()
-                    
-                    self.log.debug("Found \(locationNames.count) distinct location names")
-                    continuation.resume(returning: locationNames)
-                    
-                } catch {
-                    self.log.error("Failed to fetch distinct location names: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "StorageLocation")
+            fetchRequest.propertiesToFetch = ["location"]
+            fetchRequest.returnsDistinctResults = true
+            fetchRequest.resultType = .dictionaryResultType
+
+            let results = try context.fetch(fetchRequest)
+            let locationNames = results.compactMap { $0["location"] as? String }.sorted()
+
+            self.log.debug("Found \(locationNames.count) distinct location names")
+            return locationNames
         }
     }
     

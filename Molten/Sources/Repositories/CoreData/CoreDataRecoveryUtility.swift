@@ -79,19 +79,10 @@ struct CoreDataRecoveryUtility {
             return false
         }
         
-        // Try a basic fetch to verify the store works
-        let context = controller.container.viewContext
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "CatalogItem")
-        fetchRequest.fetchLimit = 1
-        
-        do {
-            _ = try context.fetch(fetchRequest)
-            logger.info("✅ Store health check passed")
-            return true
-        } catch {
-            logger.error("❌ Store health check failed: \(error)")
-            return false
-        }
+        // CatalogItem health check removed - legacy code
+        // If health checks are needed in the future, use GlassItem or other current entities
+        logger.info("✅ Store loaded successfully (health check disabled)")
+        return true
     }
     
     /// Generates a report showing entity counts for all entities in the model
@@ -132,62 +123,24 @@ struct CoreDataRecoveryUtility {
             return issues
         }
         
-        for entity in entities {
-            guard let entityName = entity.name else { continue }
-            
-            // Focus on CatalogItem validation for now (we know this entity exists)
-            if entityName == "CatalogItem" {
-                issues.append(contentsOf: validateCatalogItemIntegrity(in: context))
-            }
-        }
-        
+        // CatalogItem validation removed - legacy code
+        // If data integrity validation is needed in the future, add checks for current entities
+
         return issues
     }
-    
-    /// Validates CatalogItem entities for common data integrity issues
-    /// - Parameter context: The managed object context to validate
-    /// - Returns: Array of strings describing any issues found with CatalogItem entities
-    private static func validateCatalogItemIntegrity(in context: NSManagedObjectContext) -> [String] {
-        var issues: [String] = []
-        
-        let fetchRequest = NSFetchRequest<CatalogItem>(entityName: "CatalogItem")
-        
-        do {
-            let catalogItems = try context.fetch(fetchRequest)
-            
-            for (index, item) in catalogItems.enumerated() {
-                // Check for missing name
-                if item.name?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
-                    issues.append("CatalogItem[\(index)]: missing or empty name field")
-                }
-                
-                // Check for missing code
-                if item.code?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
-                    issues.append("CatalogItem[\(index)]: missing or empty code field")
-                }
-                
-                // Check for missing manufacturer
-                if item.manufacturer?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
-                    issues.append("CatalogItem[\(index)]: missing or empty manufacturer field")
-                }
-            }
-        } catch {
-            issues.append("Error fetching CatalogItem entities: \(error.localizedDescription)")
-        }
-        
-        return issues
-    }
+
+    // Legacy CatalogItem validation method removed
     
     /// Measures query performance for common Core Data operations
     /// - Parameter context: The managed object context to test
     /// - Returns: A formatted string report showing query execution times
     static func measureQueryPerformance(in context: NSManagedObjectContext) -> String {
         var report = "Query Performance Report:\n\n"
-        
-        // Measure CatalogItem performance (we know this entity exists)
-        let catalogItemPerf = measureEntityPerformance(entityName: "CatalogItem", in: context)
-        report += catalogItemPerf
-        
+
+        // CatalogItem performance measurement removed - legacy code
+        // If performance measurements are needed, add for current entities (GlassItem, etc.)
+        report += "Performance measurements disabled (CatalogItem removed)\n"
+
         return report
     }
     

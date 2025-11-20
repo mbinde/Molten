@@ -31,10 +31,8 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
     // MARK: - Basic CRUD Operations
 
     func fetchMinimums(matching predicate: NSPredicate?) async throws -> [ItemMinimumModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[ItemMinimumModel], Error>) in
-            nonisolated(unsafe) let predicateCopy = predicate
-            context.perform {
-                do {
+        nonisolated(unsafe) let predicateCopy = predicate
+        return try await CoreDataHelper.performAsync(on: context) { context in
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemMinimum")
                     fetchRequest.predicate = predicateCopy
                     fetchRequest.sortDescriptors = [
@@ -42,16 +40,10 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
                         NSSortDescriptor(key: "type", ascending: true)
                     ]
 
-                    let coreDataItems = try self.context.fetch(fetchRequest)
+                    let coreDataItems = try context.fetch(fetchRequest)
                     let minimums = coreDataItems.compactMap { self.convertToItemMinimumModel($0) }
 
-                    continuation.resume(returning: minimums)
-
-                } catch {
-                    self.log.error("Failed to fetch item minimum records: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+                    return minimums
         }
     }
 
@@ -74,9 +66,7 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
     }
 
     func createMinimum(_ minimum: ItemMinimumModel) async throws -> ItemMinimumModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ItemMinimumModel, Error>) in
-            context.perform {
-                do {
+        return try await CoreDataHelper.performAsync(on: context) { context in
                     // Check for existing record with same item_stable_id + type
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemMinimum")
                     fetchRequest.predicate = NSPredicate(
@@ -84,34 +74,26 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
                         minimum.item_stable_id,
                         minimum.type
                     )
-                    let existing = try self.context.fetch(fetchRequest)
+                    let existing = try context.fetch(fetchRequest)
 
                     if !existing.isEmpty {
                         throw CoreDataItemMinimumRepositoryError.minimumAlreadyExists(minimum.item_stable_id, minimum.type)
                     }
 
                     // Create new Core Data entity
-                    let entity = NSEntityDescription.entity(forEntityName: "ItemMinimum", in: self.context)!
-                    let coreDataItem = NSManagedObject(entity: entity, insertInto: self.context)
+                    let entity = NSEntityDescription.entity(forEntityName: "ItemMinimum", in: context)!
+                    let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
 
                     self.updateCoreDataEntity(coreDataItem, with: minimum)
 
-                    try CoreDataErrorHandler.save(context: self.context)
+                    try CoreDataErrorHandler.save(context: context)
 
-                    continuation.resume(returning: minimum)
-
-                } catch {
-                    self.log.error("Failed to create item minimum: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+                    return minimum
         }
     }
 
     func createMinimums(_ minimums: [ItemMinimumModel]) async throws -> [ItemMinimumModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[ItemMinimumModel], Error>) in
-            context.perform {
-                do {
+        return try await CoreDataHelper.performAsync(on: context) { context in
                     var createdMinimums: [ItemMinimumModel] = []
 
                     for minimum in minimums {
@@ -122,35 +104,27 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
                             minimum.item_stable_id,
                             minimum.type
                         )
-                        let existing = try self.context.fetch(fetchRequest)
+                        let existing = try context.fetch(fetchRequest)
 
                         if !existing.isEmpty {
                             throw CoreDataItemMinimumRepositoryError.minimumAlreadyExists(minimum.item_stable_id, minimum.type)
                         }
 
                         // Create new Core Data entity
-                        let entity = NSEntityDescription.entity(forEntityName: "ItemMinimum", in: self.context)!
-                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.context)
+                        let entity = NSEntityDescription.entity(forEntityName: "ItemMinimum", in: context)!
+                        let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
 
                         self.updateCoreDataEntity(coreDataItem, with: minimum)
                         createdMinimums.append(minimum)
                     }
 
-                    try CoreDataErrorHandler.save(context: self.context)
-                    continuation.resume(returning: createdMinimums)
-
-                } catch {
-                    self.log.error("Failed to create item minimums: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+                    try CoreDataErrorHandler.save(context: context)
+                    return createdMinimums
         }
     }
 
     func updateMinimum(_ minimum: ItemMinimumModel) async throws -> ItemMinimumModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ItemMinimumModel, Error>) in
-            context.perform {
-                do {
+        return try await CoreDataHelper.performAsync(on: context) { context in
                     // Find existing record
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemMinimum")
                     fetchRequest.predicate = NSPredicate(
@@ -158,7 +132,7 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
                         minimum.item_stable_id,
                         minimum.type
                     )
-                    let results = try self.context.fetch(fetchRequest)
+                    let results = try context.fetch(fetchRequest)
 
                     guard let coreDataItem = results.first else {
                         throw CoreDataItemMinimumRepositoryError.minimumNotFound(minimum.item_stable_id, minimum.type)
@@ -166,22 +140,14 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
 
                     self.updateCoreDataEntity(coreDataItem, with: minimum)
 
-                    try CoreDataErrorHandler.save(context: self.context)
+                    try CoreDataErrorHandler.save(context: context)
 
-                    continuation.resume(returning: minimum)
-
-                } catch {
-                    self.log.error("Failed to update item minimum: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+                    return minimum
         }
     }
 
     func deleteMinimum(forItem item_stable_id: String, type: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            context.perform {
-                do {
+        try await CoreDataHelper.performAsyncVoid(on: context) { context in
                     let cleanType = InventoryModel.cleanType(type)
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemMinimum")
                     fetchRequest.predicate = NSPredicate(
@@ -189,68 +155,43 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
                         item_stable_id,
                         cleanType
                     )
-                    let results = try self.context.fetch(fetchRequest)
+                    let results = try context.fetch(fetchRequest)
 
                     for item in results {
-                        self.context.delete(item)
+                        context.delete(item)
                     }
 
-                    try CoreDataErrorHandler.save(context: self.context)
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete item minimum: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
+                    try CoreDataErrorHandler.save(context: context)
+                            }
     }
 
     func deleteMinimums(forItem item_stable_id: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            context.perform {
-                do {
+        try await CoreDataHelper.performAsyncVoid(on: context) { context in
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemMinimum")
                     fetchRequest.predicate = NSPredicate(format: "item_stable_id == %@", item_stable_id)
-                    let results = try self.context.fetch(fetchRequest)
+                    let results = try context.fetch(fetchRequest)
 
                     for item in results {
-                        self.context.delete(item)
+                        context.delete(item)
                     }
 
-                    try CoreDataErrorHandler.save(context: self.context)
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete item minimums: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
+                    try CoreDataErrorHandler.save(context: context)
+                            }
     }
 
     func deleteMinimums(forStore store: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            context.perform {
-                do {
+        try await CoreDataHelper.performAsyncVoid(on: context) { context in
                     let cleanStore = ItemMinimumModel.cleanStoreName(store)
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemMinimum")
                     fetchRequest.predicate = NSPredicate(format: "store == %@", cleanStore)
-                    let results = try self.context.fetch(fetchRequest)
+                    let results = try context.fetch(fetchRequest)
 
                     for item in results {
-                        self.context.delete(item)
+                        context.delete(item)
                     }
 
-                    try CoreDataErrorHandler.save(context: self.context)
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete store minimums: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
+                    try CoreDataErrorHandler.save(context: context)
+                            }
     }
 
     // MARK: - Shopping List Operations
@@ -370,24 +311,16 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
     // MARK: - Store Management Operations
 
     func getDistinctStores() async throws -> [String] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String], Error>) in
-            context.perform {
-                do {
+        return try await CoreDataHelper.performAsync(on: context) { context in
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemMinimum")
                     fetchRequest.propertiesToFetch = ["store"]
                     fetchRequest.returnsDistinctResults = true
                     fetchRequest.resultType = .dictionaryResultType
 
-                    let results = try self.context.fetch(fetchRequest)
+                    let results = try context.fetch(fetchRequest)
                     let stores = results.compactMap { $0.value(forKey: "store") as? String }
 
-                    continuation.resume(returning: stores.sorted())
-
-                } catch {
-                    self.log.error("Failed to fetch distinct stores: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+                    return stores.sorted()
         }
     }
 
@@ -409,29 +342,20 @@ class CoreDataItemMinimumRepository: @unchecked Sendable, ItemMinimumRepository 
     }
 
     func updateStoreName(from oldStoreName: String, to newStoreName: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            context.perform {
-                do {
+        try await CoreDataHelper.performAsyncVoid(on: context) { context in
                     let cleanOldStore = ItemMinimumModel.cleanStoreName(oldStoreName)
                     let cleanNewStore = ItemMinimumModel.cleanStoreName(newStoreName)
 
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "ItemMinimum")
                     fetchRequest.predicate = NSPredicate(format: "store == %@", cleanOldStore)
-                    let results = try self.context.fetch(fetchRequest)
+                    let results = try context.fetch(fetchRequest)
 
                     for item in results {
                         item.setValue(cleanNewStore, forKey: "store")
                     }
 
-                    try CoreDataErrorHandler.save(context: self.context)
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to update store name: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
+                    try CoreDataErrorHandler.save(context: context)
+                            }
     }
 
     // MARK: - Analytics Operations

@@ -642,6 +642,15 @@ struct InventoryDetailView: View {
             onToggle: { toggleSection("glass-item") }
         ) {
             VStack(alignment: .leading, spacing: 12) {
+                // Show color approximation notice if no image permission
+                if !GlassManufacturers.hasProductImagePermission(for: currentItem.glassItem.manufacturer) {
+                    Text("We do not have permission to show glass images from this manufacturer, so have done our best to approximate the color of the glass. If you would like to suggest an image to our catalog, please upload an image to the app and long-press on it to submit it.")
+                        .font(.caption)
+                        .italic()
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 8)
+                }
+
                 if let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
                     expandableNotesCard(title: "Manufacturer Notes", content: notes)
                 }
@@ -665,27 +674,27 @@ struct InventoryDetailView: View {
     private var emptyDetailsMessage: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let manufacturerURL = currentItem.glassItem.url, let url = URL(string: manufacturerURL) {
-                HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    Text("No more details available here. Please check ")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-
-                    Link("the manufacturer's site", destination: url)
-                        .font(.body)
-
-                    Text(" to see if they have more information or add notes of your own.")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                }
+                Text("No more details available here. Please check ") +
+                Text("the manufacturer's site")
+                    .foregroundColor(.blue) +
+                Text(Image(systemName: "arrow.up.forward.square"))
+                    .font(.caption)
+                    .foregroundColor(.blue) +
+                Text(" to see if they have more information or add notes of your own.")
             } else {
                 Text("No more details available here. Add notes of your own using the note button.")
-                    .font(.body)
-                    .foregroundColor(.secondary)
             }
         }
+        .font(.body)
+        .foregroundColor(.secondary)
         .padding()
         .background(Color.gray.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 8))
+        .onTapGesture {
+            if let manufacturerURL = currentItem.glassItem.url, let url = URL(string: manufacturerURL) {
+                UIApplication.shared.open(url)
+            }
+        }
     }
 
     // MARK: - User Notes Section
@@ -1041,21 +1050,7 @@ struct InventoryDetailView: View {
                 .font(.subheadline)
                 .fontWeight(.semibold)
 
-            Text(content)
-                .font(.body)
-                .lineLimit(isManufacturerNotesExpanded ? nil : 4)
-
-            Button(action: {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isManufacturerNotesExpanded.toggle()
-                }
-            }) {
-                Text(isManufacturerNotesExpanded ? "Show Less" : "Show More")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.accentColor)
-            }
-            .buttonStyle(.plain)
+            ExpandableText(content: content, lineLimit: 4, isExpanded: $isManufacturerNotesExpanded)
         }
         .padding()
         .background(Color.gray.opacity(0.05))

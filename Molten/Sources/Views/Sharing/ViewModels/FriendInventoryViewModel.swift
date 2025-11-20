@@ -117,7 +117,7 @@ class FriendInventoryViewModel {
     convenience init(friend: FriendShare, deps: AppDependencies = AppDependencies()) {
         let sharedInventoryRepository = CoreDataSharedInventoryRepository(
             context: PersistenceController.shared.container.viewContext,
-            catalogRepository: deps.glassItemRepository
+            catalogRepository: deps.glassItemRepository as! SQLiteGlassItemRepository
         )
         self.init(
             friend: friend,

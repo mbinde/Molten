@@ -11,7 +11,8 @@ import Foundation
 /// Mock implementation of ToolItemRepository for testing
 /// Stores items in memory using a dictionary
 @MainActor
-final class MockToolItemRepository: ToolItemRepository {
+final class MockToolItemRepository: CatalogItemRepository {
+    typealias ItemType = ToolItemModel
 
     // MARK: - Storage
 

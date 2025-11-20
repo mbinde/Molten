@@ -205,7 +205,7 @@ struct RecommendedSchedulesSection: View {
 
 #Preview {
     let deps = AppDependencies(persistenceController: .createTestController())
-    Form {
+    return Form {
         RecommendedSchedulesSection(
             glassItemId: "bullseye-clear-0",
             kilnScheduleService: deps.kilnScheduleService,

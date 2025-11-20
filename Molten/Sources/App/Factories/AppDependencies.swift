@@ -178,6 +178,7 @@ class AppDependencies {
             self.toolItemRepository = SQLiteToolItemRepository(databaseManager: testDbManager)
         } else {
             // Production: Use CatalogDatabaseManager (copies to Documents, handles OTA updates)
+            // Note: CatalogDatabaseManager will be initialized lazily on first use
             self.glassItemRepository = SQLiteGlassItemRepository(databaseManager: CatalogDatabaseManager.shared)
             self.itemTagsRepository = SQLiteItemTagsRepository(databaseManager: CatalogDatabaseManager.shared)
             self.coatingItemRepository = SQLiteCoatingItemRepository(databaseManager: CatalogDatabaseManager.shared)

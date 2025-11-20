@@ -73,10 +73,8 @@ class SubscriptionManager {
         do {
             let productIdentifiers = SubscriptionProduct.allCases.map { $0.rawValue }
             products = try await Product.products(for: productIdentifiers)
-            print("✅ Loaded \(products.count) subscription products")
         } catch {
             errorMessage = "Failed to load products: \(error.localizedDescription)"
-            print("❌ Failed to load products: \(error)")
         }
 
         isLoading = false
@@ -103,30 +101,25 @@ class SubscriptionManager {
                 // Finish the transaction
                 await transaction.finish()
 
-                print("✅ Purchase successful: \(product.id)")
                 isLoading = false
                 return true
 
             case .userCancelled:
-                print("ℹ️ User cancelled purchase")
                 isLoading = false
                 return false
 
             case .pending:
-                print("⏳ Purchase pending approval")
                 errorMessage = "Purchase is pending approval"
                 isLoading = false
                 return false
 
             @unknown default:
-                print("❌ Unknown purchase result")
                 errorMessage = "Unknown error occurred"
                 isLoading = false
                 return false
             }
         } catch {
             errorMessage = "Purchase failed: \(error.localizedDescription)"
-            print("❌ Purchase failed: \(error)")
             isLoading = false
             return false
         }
@@ -140,10 +133,8 @@ class SubscriptionManager {
         do {
             try await AppStore.sync()
             await checkSubscriptionStatus()
-            print("✅ Purchases restored")
         } catch {
             errorMessage = "Failed to restore purchases: \(error.localizedDescription)"
-            print("❌ Failed to restore purchases: \(error)")
         }
 
         isLoading = false
@@ -153,8 +144,6 @@ class SubscriptionManager {
 
     /// Check current subscription status and update EntitlementService
     func checkSubscriptionStatus() async {
-        print("🔍 [SubscriptionManager] Checking subscription status via RevenueCat...")
-
         // Check RevenueCat for Pro access
         let hasProAccess = await subscriptionService.hasProAccess()
 
@@ -162,14 +151,10 @@ class SubscriptionManager {
         if hasProAccess {
             subscriptionStatus = .subscribed
             entitlementService.updateTier(.premium)
-            print("✅ [SubscriptionManager] Pro access confirmed - tier set to PREMIUM")
         } else {
             subscriptionStatus = .notSubscribed
             entitlementService.updateTier(.free)
-            print("📊 [SubscriptionManager] No Pro access - tier set to FREE")
         }
-
-        print("📊 [SubscriptionManager] Final subscription status: \(subscriptionStatus)")
     }
 
     /// Monitor subscription status changes in real-time
@@ -179,7 +164,6 @@ class SubscriptionManager {
         let notifications = center.notifications(named: .subscriptionStatusChanged)
 
         for await _ in notifications {
-            print("🔄 [SubscriptionManager] Subscription status changed notification received")
             await checkSubscriptionStatus()
         }
     }

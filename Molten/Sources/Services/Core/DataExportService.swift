@@ -25,6 +25,7 @@ class DataExportService {
     #endif
     private let userNotesRepository: UserNotesRepository
 
+    #if os(iOS)
     init(
         catalogService: CatalogService,
         inventoryService: InventoryTrackingService,
@@ -32,7 +33,7 @@ class DataExportService {
         logbookRepository: LogbookRepository,
         purchaseRecordRepository: PurchaseRecordRepository,
         userNotesRepository: UserNotesRepository,
-        userImageRepository: UserImageRepository? = nil
+        userImageRepository: UserImageRepository
     ) {
         self.catalogService = catalogService
         self.inventoryService = inventoryService
@@ -40,14 +41,25 @@ class DataExportService {
         self.logbookRepository = logbookRepository
         self.purchaseRecordRepository = purchaseRecordRepository
         self.userNotesRepository = userNotesRepository
-        #if os(iOS)
-        if let userImageRepository = userImageRepository {
-            self.userImageRepository = userImageRepository
-        } else {
-            fatalError("userImageRepository required on iOS")
-        }
-        #endif
+        self.userImageRepository = userImageRepository
     }
+    #else
+    init(
+        catalogService: CatalogService,
+        inventoryService: InventoryTrackingService,
+        projectRepository: ProjectRepository,
+        logbookRepository: LogbookRepository,
+        purchaseRecordRepository: PurchaseRecordRepository,
+        userNotesRepository: UserNotesRepository
+    ) {
+        self.catalogService = catalogService
+        self.inventoryService = inventoryService
+        self.projectRepository = projectRepository
+        self.logbookRepository = logbookRepository
+        self.purchaseRecordRepository = purchaseRecordRepository
+        self.userNotesRepository = userNotesRepository
+    }
+    #endif
 
     // MARK: - Public API
 

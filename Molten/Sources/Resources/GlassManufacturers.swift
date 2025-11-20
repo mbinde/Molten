@@ -73,31 +73,31 @@ struct GlassManufacturers {
     /// Tracks whether we have permission to use product-specific images from each manufacturer
     /// If false, we must always use the default manufacturer image instead
     nonisolated static let productImagePermissions: [String: Bool] = [
-        "AB": true,           // Asian (Chinese) Boro - permission TBD
-        "BB": true,           // Boro Batch - permission granted
-        "BE": true,           // Bullseye Glass - permission granted
-        "CiM": false,         // Creation is Messy - NO permission
-        "DH": true,           // Double Helix - permission granted
+        "AB": false,           // Asian (Chinese) Boro - NO permission (no idea who to ask)
+        "BB": false,           // Boro Batch - NO permission (no response via instagram)
+        "BE": true,           // Bullseye Glass - permission granted via email
+        "CiM": false,         // Creation is Messy - NO permission (denied)
+        "DH": true,           // Double Helix - permission granted via email
         "DS": false,          // Delphi Superior - NO product images (bot-protected site)
-        "EF": true,           // Effetre - permission granted
-        "GA": true,           // Glass Alchemy - permission granted
+        "EF": true,           // Effetre - permission granted via email
+        "GA": true,           // Glass Alchemy - permission granted via email
         "GAF": false,         // Gaffer - NO product images (bot-protected site)
-        "GRE": true,          // Greasy Glass - permission granted
-        "KUG": true,          // Kugler - permission granted
-        "MA": true,           // Molten Aura Labs - permission granted
-        "MOM": true,          // Momka Glass - permission granted
-        "MOR": true,          // Moretti (same as Effetre) - permission granted
-        "NS": true,           // Northstar Glassworks - permission granted
+        "GRE": true,          // Greasy Glass - permission granted via email
+        "KUG": false,          // Kugler - NO permission (no idea who to ask)
+        "MA": true,           // Molten Aura Labs - NO permission (check again)
+        "MOM": true,          // Momka Glass - permission granted via email
+        "MOR": true,          // Moretti (same as Effetre) - permission granted via email
+        "NS": false,           // Northstar Glassworks - NO permission (no response)
         "OC": true,           // Oceanside Glass - permission granted
-        "OR": true,           // Origin Glass - permission granted
-        "PAR": true,          // Parramore Glass - permission TBD
-        "PDX": true,          // PDX Tubing Co - permission TBD
-        "RE": true,           // Reichenbach - permission granted
-        "TAG": true,          // Trautmann Art Glass - permission granted
-        "UST": true,          // UST Glass - permission TBD
-        "VF": true,           // Vetrofond - permission granted
-        "WM": true,           // Wissmach Glass - permission granted
-        "Y96": true           // Youghiogheny Glass - permission TBD
+        "OR": false,           // Origin Glass - NO permission (no idea who to ask)
+        "PAR": false,          // Parramore Glass - NO permission (no idea who to ask)
+        "PDX": false,          // PDX Tubing Co - NO permission (no idea who to ask)
+        "RE": false,           // Reichenbach - NO permission (no idea who to ask)
+        "TAG": false,          // Trautmann Art Glass - NO permission (need to reach Northstar somehow)
+        "UST": true,          // UST Glass - NO permission (no response)
+        "VF": true,           // Vetrofond - permission granted via email
+        "WM": false,           // Wissmach Glass - NO permission (no idea who to ask)
+        "Y96": true           // Youghiogheny Glass - permission granted via email
     ]
 
     /// Get the default manufacturer image name for a manufacturer code

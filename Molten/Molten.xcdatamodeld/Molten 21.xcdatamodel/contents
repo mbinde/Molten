@@ -1,23 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24299" systemVersion="25A362" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <entity name="CatalogItem" representedClassName="CatalogItem" syncable="YES" codeGenerationType="category">
-        <attribute name="code" optional="YES" attributeType="String"/>
-        <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="id" optional="YES" attributeType="String"/>
-        <attribute name="id2" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="image_path" optional="YES" attributeType="String"/>
-        <attribute name="image_url" optional="YES" attributeType="String"/>
-        <attribute name="item_subtype" optional="YES" attributeType="String"/>
-        <attribute name="item_type" optional="YES" attributeType="String"/>
-        <attribute name="manufacturer" optional="YES" attributeType="String"/>
-        <attribute name="manufacturer_description" optional="YES" attributeType="String"/>
-        <attribute name="manufacturer_url" optional="YES" attributeType="String"/>
-        <attribute name="name" optional="YES" attributeType="String"/>
-        <attribute name="parent" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="stock_type" optional="YES" attributeType="String"/>
-        <attribute name="tags" optional="YES" attributeType="String"/>
-        <attribute name="units" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-    </entity>
     <entity name="CoatingItem" representedClassName="CoatingItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
     <entity name="ExpiringShareRecord" representedClassName="ExpiringShareRecord" syncable="YES" codeGenerationType="class">
         <attribute name="created_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -434,7 +416,6 @@
         <memberEntity name="ExpiringShareRecord"/>
     </configuration>
     <configuration name="Local">
-        <memberEntity name="CatalogItem"/>
         <memberEntity name="CoatingItem"/>
         <memberEntity name="GlassItem"/>
         <memberEntity name="Item"/>

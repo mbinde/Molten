@@ -654,31 +654,9 @@ class PersistenceController {
     }
 
     // MARK: - Fetch Request Helpers
-    
-    /// Creates a properly configured fetch request for CatalogItem with explicit entity resolution
-    /// Use this to avoid "executeFetchRequest:error: A fetch request must have an entity" errors
-    static func createCatalogItemFetchRequest(in context: NSManagedObjectContext) -> NSFetchRequest<CatalogItem>? {
-        guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
-            Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Could not find CatalogItem entity in managed object model")
-            return nil
-        }
-        
-        let fetchRequest = NSFetchRequest<CatalogItem>()
-        fetchRequest.entity = entity
-        fetchRequest.includesSubentities = false
-        return fetchRequest
-    }
-    
-    /// Safely creates a CatalogItem with explicit entity resolution
-    nonisolated static func createCatalogItem(in context: NSManagedObjectContext) -> CatalogItem? {
-        guard let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) else {
-            Logger(subsystem: "com.motleywoods.molten", category: "persistence").error("Could not create CatalogItem - entity not found in managed object model")
-            return nil
-        }
-        
-        return CatalogItem(entity: entity, insertInto: context)
-    }
-    
+
+    // CatalogItem helper methods removed - entity deleted from Core Data model
+
     // MARK: - Test Helpers
 
     /// Forces creation of a new test controller (for when you need true isolation)

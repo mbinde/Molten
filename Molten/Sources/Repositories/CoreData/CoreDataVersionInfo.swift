@@ -186,7 +186,8 @@ class CoreDataVersionInfo {
     
     /// Checks if migration is currently available/needed
     func isMigrationAvailable(in context: NSManagedObjectContext) async throws -> Bool {
-        return try await CoreDataMigrationService.shared.checkIfUnitsMigrationNeeded(in: context)
+        // Migration service removed - CatalogItem is legacy code
+        return false
     }
     
     /// Gets detailed troubleshooting information

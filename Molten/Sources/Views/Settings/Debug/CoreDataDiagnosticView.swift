@@ -99,39 +99,17 @@ struct CoreDataDiagnosticView: View {
         results += "\n2. ENTITY REGISTRATION CHECK:\n"
         let controller = PersistenceController.shared
         let context = controller.container.viewContext
-        
-        // Check if CatalogItem entity can be resolved
-        if let entity = NSEntityDescription.entity(forEntityName: "CatalogItem", in: context) {
-            results += "✅ CatalogItem entity found\n"
-            results += "   Class: \(entity.managedObjectClassName)\n"
-            results += "   Properties: \(entity.properties.count)\n"
-            results += "   Attributes:\n"
-            
-            for (name, attr) in entity.attributesByName.sorted(by: { $0.key < $1.key }) {
-                results += "     - \(name): \(attr.attributeType.rawValue)\n"
-            }
-        } else {
-            results += "❌ CatalogItem entity NOT found\n"
-        }
-        
+
+        // CatalogItem diagnostics removed - legacy code
+        results += "⚠️ CatalogItem entity removed - use GlassItem hierarchy\n"
+
         results += "\n3. FETCH TEST:\n"
-        do {
-            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "CatalogItem")
-            fetchRequest.fetchLimit = 1
-            let testResults = try context.fetch(fetchRequest)
-            results += "✅ Fetch test passed (\(testResults.count) items)\n"
-        } catch {
-            results += "❌ Fetch test failed: \(error.localizedDescription)\n"
-        }
-        
+        results += "⚠️ CatalogItem fetch test removed - use GlassItem\n"
+
         results += "\n4. CREATION TEST:\n"
-        do {
-            let testItem = PersistenceController.createCatalogItem(in: context)
-            if let item = testItem {
-                results += "✅ Creation test passed\n"
-                results += "   Entity name: \(item.entity.name ?? "Unknown")\n"
-                context.delete(item) // Clean up test item
-            } else {
+        results += "⚠️ CatalogItem creation test removed - use GlassItem\n"
+
+        if false {
                 results += "❌ Creation test failed - returned nil\n"
             }
         } catch {

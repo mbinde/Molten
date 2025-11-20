@@ -100,7 +100,7 @@ extension CoreDataUserTagsRepository {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String], Error>) in
             backgroundContext.perform {
                 do {
-                    let cleanTag = UserTagModel.cleanTag(tag)
+                    let cleanTag = CoreDataUserTagsRepository.cleanTag(tag)
 
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
                     fetchRequest.predicate = NSPredicate(
@@ -129,7 +129,7 @@ extension CoreDataUserTagsRepository {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String], Error>) in
             backgroundContext.perform {
                 do {
-                    let cleanTags = tags.map { UserTagModel.cleanTag($0) }
+                    let cleanTags = tags.map { CoreDataUserTagsRepository.cleanTag($0) }
                     guard !cleanTags.isEmpty else {
                         continuation.resume(returning: [])
                         return
@@ -173,7 +173,7 @@ extension CoreDataUserTagsRepository {
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String], Error>) in
             backgroundContext.perform {
                 do {
-                    let cleanTags = tags.map { UserTagModel.cleanTag($0) }
+                    let cleanTags = tags.map { CoreDataUserTagsRepository.cleanTag($0) }
                     guard !cleanTags.isEmpty else {
                         continuation.resume(returning: [])
                         return

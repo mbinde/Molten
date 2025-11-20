@@ -129,8 +129,8 @@ class CoreDataUserTagsRepository: @unchecked Sendable, UserTagsRepository {
             backgroundContext.perform {
                 do {
                     // Clean and validate tag
-                    let cleanTag = UserTagModel.cleanTag(tag)
-                    guard UserTagModel.isValidTag(cleanTag) else {
+                    let cleanTag = CoreDataUserTagsRepository.cleanTag(tag)
+                    guard CoreDataUserTagsRepository.isValidTag(cleanTag) else {
                         throw CoreDataUserTagsRepositoryError.invalidTag(tag)
                     }
 
@@ -169,8 +169,8 @@ class CoreDataUserTagsRepository: @unchecked Sendable, UserTagsRepository {
                 do {
                     // Clean and validate tags
                     let cleanTags = tags.compactMap { tag in
-                        let cleaned = UserTagModel.cleanTag(tag)
-                        return UserTagModel.isValidTag(cleaned) ? cleaned : nil
+                        let cleaned = CoreDataUserTagsRepository.cleanTag(tag)
+                        return CoreDataUserTagsRepository.isValidTag(cleaned) ? cleaned : nil
                     }
 
                     guard !cleanTags.isEmpty else {
@@ -221,7 +221,7 @@ class CoreDataUserTagsRepository: @unchecked Sendable, UserTagsRepository {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             backgroundContext.perform {
                 do {
-                    let cleanTag = UserTagModel.cleanTag(tag)
+                    let cleanTag = CoreDataUserTagsRepository.cleanTag(tag)
 
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserTags")
                     fetchRequest.predicate = NSPredicate(
@@ -289,8 +289,8 @@ class CoreDataUserTagsRepository: @unchecked Sendable, UserTagsRepository {
                 do {
                     // Clean and validate tags
                     let cleanTags = tags.compactMap { tag in
-                        let cleaned = UserTagModel.cleanTag(tag)
-                        return UserTagModel.isValidTag(cleaned) ? cleaned : nil
+                        let cleaned = CoreDataUserTagsRepository.cleanTag(tag)
+                        return CoreDataUserTagsRepository.isValidTag(cleaned) ? cleaned : nil
                     }
                     let cleanTagsSet = Set(cleanTags)
 

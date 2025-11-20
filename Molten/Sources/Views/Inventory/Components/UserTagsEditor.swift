@@ -241,9 +241,9 @@ struct UserTagsEditor: View {
     }
 
     private func addTag(_ tag: String) {
-        // Validate tag
-        let cleanedTag = UserTagModel.cleanTag(tag)
-        guard UserTagModel.isValidTag(cleanedTag) else {
+        // Validate tag using shared protocol extension
+        let cleanedTag = CoreDataUserTagsRepository.cleanTag(tag)
+        guard CoreDataUserTagsRepository.isValidTag(cleanedTag) else {
             errorMessage = "Invalid tag: '\(tag)'. Tags must be 2-30 characters and contain only letters, numbers, hyphens, or spaces."
             showingError = true
             return

@@ -41,7 +41,7 @@ final class MockItemTagsRepository: ItemTagsRepository {
     }
 
     func addTag(_ tag: String, toItem item_stable_id: String) async throws {
-        let cleanedTag = ItemTagModel.cleanTag(tag)
+        let cleanedTag = SQLiteItemTagsRepository.cleanTag(tag)
 
         // Check if already exists
         let tagsArray = Array(tags.values)
@@ -73,7 +73,7 @@ final class MockItemTagsRepository: ItemTagsRepository {
     }
 
     func removeTag(_ tag: String, fromItem item_stable_id: String) async throws {
-        let cleanedTag = ItemTagModel.cleanTag(tag)
+        let cleanedTag = SQLiteItemTagsRepository.cleanTag(tag)
         let tagsArray = Array(self.tags)
 
         for (id, tagModel) in tagsArray {
@@ -128,7 +128,7 @@ final class MockItemTagsRepository: ItemTagsRepository {
     // MARK: - Item Discovery Operations
 
     func fetchItems(withTag tag: String) async throws -> [String] {
-        let cleanedTag = ItemTagModel.cleanTag(tag)
+        let cleanedTag = SQLiteItemTagsRepository.cleanTag(tag)
         let tagsArray = Array(tags.values)
         var itemsSet: Set<String> = []
         for tagModel in tagsArray {
@@ -142,7 +142,7 @@ final class MockItemTagsRepository: ItemTagsRepository {
     }
 
     func fetchItems(withAllTags tags: [String]) async throws -> [String] {
-        let cleanedTags = Set(tags.map { ItemTagModel.cleanTag($0) })
+        let cleanedTags = Set(tags.map { SQLiteItemTagsRepository.cleanTag($0) })
         let tagsArray = Array(self.tags.values)
         var itemIdsSet: Set<String> = []
         for tag in tagsArray {
@@ -162,7 +162,7 @@ final class MockItemTagsRepository: ItemTagsRepository {
     }
 
     func fetchItems(withAnyTags tags: [String]) async throws -> [String] {
-        let cleanedTags = Set(tags.map { ItemTagModel.cleanTag($0) })
+        let cleanedTags = Set(tags.map { SQLiteItemTagsRepository.cleanTag($0) })
         let tagsArray = Array(self.tags.values)
         var itemsSet: Set<String> = []
         for tagModel in tagsArray {
@@ -198,7 +198,7 @@ final class MockItemTagsRepository: ItemTagsRepository {
     }
 
     func tagExists(_ tag: String) async throws -> Bool {
-        let cleanedTag = ItemTagModel.cleanTag(tag)
+        let cleanedTag = SQLiteItemTagsRepository.cleanTag(tag)
         let tagsArray = Array(tags.values)
         for tagModel in tagsArray {
             let modelTag = await tagModel.tag

@@ -26,13 +26,19 @@ enum TagOwnerType: String, CaseIterable, Codable, Sendable {
 
 /// Repository protocol for UserTags data persistence operations
 /// Handles normalized many-to-many relationship between entities and user-created tags
-nonisolated protocol UserTagsRepository: Sendable {
+///
+/// ARCHITECTURE NOTE:
+/// - Extends TagsRepository with multi-entity support (projects, logbooks, recipes, glass items)
+/// - Backed by Core Data with CloudKit sync (read-write, user-created tags)
+/// - User tags are personal organizational tags (e.g., "favorite", "current-project", "wishlist")
+/// - For catalog tags (manufacturer metadata), see ItemTagsRepository (SQLite, read-only)
+nonisolated protocol UserTagsRepository: TagsRepository {
 
-    // MARK: - Generic Tag Operations (Support all owner types)
+    // MARK: - Generic Tag Operations (Multi-Entity Support)
 
     /// Fetch all user tags for a specific owner
     /// - Parameters:
-    ///   - ownerType: Type of owner (glassItem, project, logbook)
+    ///   - ownerType: Type of owner (glassItem, project, logbook, recipe)
     ///   - ownerId: ID of the owner (natural key for glass items, UUID string for projects/logbooks)
     /// - Returns: Array of tag strings for the owner
     func fetchTags(ownerType: TagOwnerType, ownerId: String) async throws -> [String]
@@ -78,11 +84,7 @@ nonisolated protocol UserTagsRepository: Sendable {
     ///   - ownerId: ID of the owner
     func setTags(_ tags: [String], ownerType: TagOwnerType, ownerId: String) async throws
 
-    // MARK: - Tag Discovery Operations
-
-    /// Get all distinct user tags in the system (across all owner types)
-    /// - Returns: Sorted array of all unique tag strings
-    func getAllTags() async throws -> [String]
+    // MARK: - Extended Tag Discovery Operations
 
     /// Get all distinct user tags for a specific owner type
     /// - Parameter ownerType: Type of owner to filter by
@@ -126,7 +128,7 @@ nonisolated protocol UserTagsRepository: Sendable {
     /// - Returns: Array of owner IDs with any of the specified tags
     func fetchOwners(withAnyTags tags: [String], ownerType: TagOwnerType) async throws -> [String]
 
-    // MARK: - Tag Analytics Operations
+    // MARK: - Extended Tag Analytics Operations
 
     /// Get count of owners for each user tag
     /// - Parameter ownerType: Optional owner type to filter by
@@ -147,17 +149,8 @@ nonisolated protocol UserTagsRepository: Sendable {
     /// - Returns: True if the tag is used by at least one owner
     func tagExists(_ tag: String, ownerType: TagOwnerType?) async throws -> Bool
 
-    // MARK: - Legacy Support (for backward compatibility with glass items)
-
-    /// Fetch all user tags for a glass item (legacy method)
-    /// - Parameter item_stable_id: The natural key of the glass item
-    /// - Returns: Array of tag strings for the item
-    func fetchTags(forItem item_stable_id: String) async throws -> [String]
-
-    /// Batch fetch user tags for multiple glass items (legacy method)
-    /// - Parameter item_stable_ids: Array of natural keys to fetch tags for
-    /// - Returns: Dictionary mapping natural key to array of tags
-    func fetchTagsForItems(_ item_stable_ids: [String]) async throws -> [String: [String]]
+    // MARK: - Legacy Support (Glass Items - delegates to TagsRepository base)
+    // Note: These methods delegate to generic owner-based API with ownerType = .glassItem
 
     /// Add a user tag to a glass item (legacy method)
     /// - Parameters:
@@ -186,21 +179,6 @@ nonisolated protocol UserTagsRepository: Sendable {
     ///   - tags: Array of new tag strings
     ///   - item_stable_id: The natural key of the glass item
     func setTags(_ tags: [String], forItem item_stable_id: String) async throws
-
-    /// Find glass items that have a specific user tag (legacy method)
-    /// - Parameter tag: The tag string to search for
-    /// - Returns: Array of natural keys for items with this tag
-    func fetchItems(withTag tag: String) async throws -> [String]
-
-    /// Find glass items that have all of the specified user tags (legacy method)
-    /// - Parameter tags: Array of tag strings that must all be present
-    /// - Returns: Array of natural keys for items with all specified tags
-    func fetchItems(withAllTags tags: [String]) async throws -> [String]
-
-    /// Find glass items that have any of the specified user tags (legacy method)
-    /// - Parameter tags: Array of tag strings, items with any of these will be returned
-    /// - Returns: Array of natural keys for items with any of the specified tags
-    func fetchItems(withAnyTags tags: [String]) async throws -> [String]
 }
 
 /// Domain model representing a user tag relationship
@@ -214,7 +192,8 @@ struct UserTagModel: Identifiable, Equatable, Sendable {
         self.id = id
         self.ownerType = ownerType
         self.ownerId = ownerId
-        self.tag = UserTagModel.cleanTag(tag)
+        // Use shared cleaning logic from TagsRepository protocol
+        self.tag = CoreDataUserTagsRepository.cleanTag(tag)
     }
 
     /// Legacy initializer for backward compatibility with glass items
@@ -222,7 +201,8 @@ struct UserTagModel: Identifiable, Equatable, Sendable {
         self.id = id
         self.ownerType = .glassItem
         self.ownerId = item_stable_id
-        self.tag = UserTagModel.cleanTag(tag)
+        // Use shared cleaning logic from TagsRepository protocol
+        self.tag = CoreDataUserTagsRepository.cleanTag(tag)
     }
 
     /// Legacy support - maps to ownerId for glass items
@@ -239,32 +219,10 @@ extension UserTagModel: Hashable {
     }
 }
 
-// MARK: - Tag Validation and Cleaning Helper
+// MARK: - Common User Tags
 
 extension UserTagModel {
-    /// Validates that a tag string is valid
-    /// - Parameter tag: The tag string to validate
-    /// - Returns: True if valid, false otherwise
-    nonisolated static func isValidTag(_ tag: String) -> Bool {
-        let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !trimmed.isEmpty &&
-               trimmed.count <= 30 &&
-               trimmed.count >= 2 &&
-               trimmed.allSatisfy { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" || $0.isWhitespace }
-    }
-
-    /// Cleans and normalizes a tag string
-    /// - Parameter tag: The raw tag string
-    /// - Returns: Cleaned tag string suitable for storage
-    nonisolated static func cleanTag(_ tag: String) -> String {
-        return tag.trimmingCharacters(in: .whitespacesAndNewlines)
-                  .lowercased()
-                  .replacingOccurrences(of: " ", with: "-")
-                  .replacingOccurrences(of: "_", with: "-")
-                  .replacingOccurrences(of: "--", with: "-")
-    }
-
-    /// Common user tag suggestions for glass items
+    /// Common user tag suggestions for glass items (user-created organizational tags)
     enum CommonTags {
         static let status = ["favorite", "wishlist", "discontinued", "backup", "surplus"]
         static let usage = ["current-project", "test", "sample", "archived"]

@@ -55,27 +55,14 @@ struct CrossEntityIntegrationTests {
         let testGlassItem = try catalogItems.first(where: { $0.sku != nil })!
         let stableId = testGlassItem.stable_id
 
-        let testInventory = [
-            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 5.0)
-        ]
-
-        let testTags = ["red", "bullseye", "transparent"]
-
-        let testLocations = [
-            StorageLocationModel(
-                id: UUID(),
-                inventory_id: testInventory[0].id,
-                location: "Workshop Bin A",
-                quantity: 5.0
-            )
-        ]
-
-        _ = try await inventoryTrackingService.createCompleteItem(
-            testGlassItem,
-            initialInventory: testInventory,
-            tags: testTags
+        // Add inventory and tags to the real catalog item
+        _ = try await inventoryTrackingService.addInventory(
+            quantity: 5.0,
+            type: "rod",
+            toItem: stableId
         )
-        
+
+        // Note: Tags come from the catalog (read-only), can't add custom tags
         // Note: Location testing is skipped since direct repository access is private
         // and no public method exists to add locations through the service layer
         
@@ -109,16 +96,13 @@ struct CrossEntityIntegrationTests {
         let testGlassItem = try catalogItems.first(where: { $0.sku != nil })!
         let stableId = testGlassItem.stable_id
 
-        let testInventory = [
-            InventoryModel(item_stable_id: stableId, type: "rod", quantity: 10.0)
-        ]
-
-        _ = try await inventoryTrackingService.createCompleteItem(
-            testGlassItem,
-            initialInventory: testInventory,
-            tags: []
+        // Add inventory to the real catalog item
+        _ = try await inventoryTrackingService.addInventory(
+            quantity: 10.0,
+            type: "rod",
+            toItem: stableId
         )
-        
+
         // Add purchase record with correlation data in notes (using stable_id for correlation)
         let purchaseRecord = PurchaseRecordModel(
             supplier: "Glass Supply Co",

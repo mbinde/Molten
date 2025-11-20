@@ -34,9 +34,6 @@ struct ShoppingModeCheckoutTests {
         let catalogItems = try await catalogService.getGlassItemsLightweight()
         let glassItem = try catalogItems.first(where: { $0.sku != nil })!
 
-        // Create the item with zero initial inventory
-        _ = try await inventoryService.createCompleteItem(glassItem, initialInventory: [])
-
         // Verify starting inventory is zero
         let startInventory = try await inventoryService.inventoryRepository.getTotalQuantity(
             forItem: glassItem.stable_id,
@@ -68,11 +65,6 @@ struct ShoppingModeCheckoutTests {
         // Use real catalog data (catalog is read-only)
         let catalogItems = try await catalogService.getGlassItemsLightweight()
         let items = Array(catalogItems.filter({ $0.sku != nil }).prefix(3))
-
-        // Create all items
-        for item in items {
-            _ = try await inventoryService.createCompleteItem(item, initialInventory: [])
-        }
 
         // Add inventory to each item
         let quantities = [3.0, 5.0, 2.0]
@@ -106,8 +98,6 @@ struct ShoppingModeCheckoutTests {
         let catalogItems = try await catalogService.getGlassItemsLightweight()
         let glassItem = try catalogItems.first(where: { $0.sku != nil })!
 
-        _ = try await inventoryService.createCompleteItem(glassItem, initialInventory: [])
-
         // Add item to shopping list
         let shoppingItem = ItemShoppingModel(
             item_stable_id: glassItem.stable_id,
@@ -138,9 +128,8 @@ struct ShoppingModeCheckoutTests {
         let catalogItems = try await catalogService.getGlassItemsLightweight()
         let items = Array(catalogItems.filter({ $0.sku != nil }).prefix(3))
 
-        // Create items and add to shopping list
+        // Add items to shopping list
         for item in items {
-            _ = try await inventoryService.createCompleteItem(item, initialInventory: [])
             let shoppingItem = ItemShoppingModel(
                 item_stable_id: item.stable_id,
                 quantity: 5.0,
@@ -178,8 +167,6 @@ struct ShoppingModeCheckoutTests {
         // Use real catalog data (catalog is read-only)
         let catalogItems = try await catalogService.getGlassItemsLightweight()
         let glassItem = try catalogItems.first(where: { $0.sku != nil })!
-
-        _ = try await inventoryService.createCompleteItem(glassItem, initialInventory: [])
 
         // Add to shopping list
         let shoppingItem = ItemShoppingModel(
@@ -230,8 +217,6 @@ struct ShoppingModeCheckoutTests {
         let catalogItems = try await catalogService.getGlassItemsLightweight()
         let glassItem = try catalogItems.first(where: { $0.sku != nil })!
 
-        _ = try await inventoryService.createCompleteItem(glassItem, initialInventory: [])
-
         // Add to shopping list (need 10 units)
         let neededQuantity = 10.0
         let shoppingItem = ItemShoppingModel(
@@ -272,8 +257,6 @@ struct ShoppingModeCheckoutTests {
         // Use real catalog data (catalog is read-only)
         let catalogItems = try await catalogService.getGlassItemsLightweight()
         let glassItem = try catalogItems.first(where: { $0.sku != nil })!
-
-        _ = try await inventoryService.createCompleteItem(glassItem, initialInventory: [])
 
         // Add to shopping list (need 5 units)
         let neededQuantity = 5.0

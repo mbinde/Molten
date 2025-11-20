@@ -481,8 +481,12 @@ class CatalogViewModel: CatalogViewModelProtocol {
         ]
 
         for otherFilter in allFilters {
-            // Skip the filter we're computing counts for
-            if type(of: otherFilter) == type(of: filter) {
+            // Skip the filter we're computing counts for UNLESS it's the tag filter
+            // For tags, we want to show only tags that appear in the current filtered set
+            let isTagFilter = type(of: otherFilter) == TagFilter.self
+            let isComputingTagFilter = type(of: filter) == TagFilter.self
+
+            if type(of: otherFilter) == type(of: filter) && !isTagFilter {
                 continue
             }
 
@@ -492,6 +496,7 @@ class CatalogViewModel: CatalogViewModelProtocol {
             } else if type(of: otherFilter) == COEFilter.self {
                 filtered = COEFilter().applyFilter(to: filtered, viewModel: self)
             } else if type(of: otherFilter) == TagFilter.self {
+                // When computing tag counts, apply the tag filter to show only tags in the filtered results
                 filtered = TagFilter().applyFilter(to: filtered, viewModel: self)
             }
         }

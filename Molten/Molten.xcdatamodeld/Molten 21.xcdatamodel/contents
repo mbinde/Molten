@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24299" systemVersion="25A362" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <entity name="CoatingItem" representedClassName="CoatingItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
+    <entity name="CoatingItem" representedClassName="CoatingItem" parentEntity="Item" syncable="YES" codeGenerationType="class"/>
     <entity name="ExpiringShareRecord" representedClassName="ExpiringShareRecord" syncable="YES" codeGenerationType="class">
         <attribute name="created_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="display_name" optional="YES" attributeType="String"/>
@@ -10,7 +10,7 @@
         <attribute name="share_code" optional="YES" attributeType="String"/>
         <attribute name="share_notes" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="GlassItem" representedClassName="GlassItem" parentEntity="Item" syncable="YES" codeGenerationType="category">
+    <entity name="GlassItem" representedClassName="GlassItem" parentEntity="Item" syncable="YES" codeGenerationType="class">
         <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="recommended_schedule_ids" optional="YES" attributeType="String"/>
     </entity>
@@ -38,7 +38,7 @@
         <attribute name="purchase_record_id" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
-    <entity name="Item" representedClassName="Item" isAbstract="YES" syncable="YES" codeGenerationType="category">
+    <entity name="Item" representedClassName="Item" isAbstract="YES" syncable="YES" codeGenerationType="class">
         <attribute name="dominant_colors" optional="YES" attributeType="String"/>
         <attribute name="image_path" optional="YES" attributeType="String"/>
         <attribute name="image_thumb_path" optional="YES" attributeType="String"/>
@@ -93,7 +93,7 @@
         <attribute name="subtype" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="ItemTags" representedClassName="ItemTags" syncable="YES" codeGenerationType="category">
+    <entity name="ItemTags" representedClassName="ItemTags" syncable="YES" codeGenerationType="class">
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
     </entity>
@@ -363,7 +363,7 @@
         <attribute name="location" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="ToolItem" representedClassName="ToolItem" parentEntity="Item" syncable="YES" codeGenerationType="category"/>
+    <entity name="ToolItem" representedClassName="ToolItem" parentEntity="Item" syncable="YES" codeGenerationType="class"/>
     <entity name="UserImage" representedClassName="UserImage" syncable="YES" codeGenerationType="category">
         <attribute name="dateCreated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="dateModified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>

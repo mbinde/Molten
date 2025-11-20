@@ -19,6 +19,7 @@ struct CatalogLifecycleModifiers: ViewModifier {
     let resetNavigation: () -> Void
     @Binding var catalogUpdateMessage: String
     @Binding var showCatalogUpdateToast: Bool
+    let performanceTimer: PerformanceTimer
 
     func body(content: Content) -> some View {
         content
@@ -105,12 +106,10 @@ struct CatalogLifecycleModifiers: ViewModifier {
             }
             .task {
                 // MIGRATION: Load data from ViewModel
-                let taskStart = CFAbsoluteTimeGetCurrent()
-
                 await viewModel.loadData()
 
-                let dataLoadTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
-                let totalTime = (CFAbsoluteTimeGetCurrent() - taskStart) * 1000
+                // Mark performance timer as complete (DEBUG builds only)
+                performanceTimer.complete()
             }
     }
 }

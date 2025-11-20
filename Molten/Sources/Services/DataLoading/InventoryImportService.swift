@@ -74,14 +74,14 @@ protocol InventoryImportDelegate {
 class InventoryImportService {
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
-    private let locationRepository: LocationRepository
+    private let storageLocationRepository: StorageLocationRepository
 
     var delegate: InventoryImportDelegate?
 
-    init(catalogService: CatalogService, inventoryTrackingService: InventoryTrackingService, locationRepository: LocationRepository) {
+    init(catalogService: CatalogService, inventoryTrackingService: InventoryTrackingService, storageLocationRepository: StorageLocationRepository) {
         self.catalogService = catalogService
         self.inventoryTrackingService = inventoryTrackingService
-        self.locationRepository = locationRepository
+        self.storageLocationRepository = storageLocationRepository
     }
 
     /// Import inventory from a JSON file
@@ -240,7 +240,7 @@ class InventoryImportService {
 
             // Update location if provided
             if let location = item.location, !location.isEmpty {
-                try await locationRepository.setLocations(
+                try await storageLocationRepository.setLocations(
                     [(location: location, quantity: Double(item.quantity))],
                     forInventory: existing.id
                 )
@@ -274,7 +274,7 @@ class InventoryImportService {
                 )
 
                 if let location = item.location, !location.isEmpty {
-                    try await locationRepository.setLocations(
+                    try await storageLocationRepository.setLocations(
                         [(location: location, quantity: Double(item.quantity))],
                         forInventory: existing.id
                     )

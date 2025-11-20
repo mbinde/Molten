@@ -1,5 +1,5 @@
 //
-//  LocationRepository.swift
+//  StorageLocationRepository.swift
 //  Flameworker
 //
 //  Created by Assistant on 10/14/25.
@@ -7,9 +7,9 @@
 
 @preconcurrency import Foundation
 
-/// Repository protocol for Location data persistence operations
-/// Handles location-based inventory storage tracking
-nonisolated protocol LocationRepository: Sendable {
+/// Repository protocol for storage location data persistence operations
+/// Handles physical storage location tracking for inventory (e.g., "Shelf A", "Box 3")
+nonisolated protocol StorageLocationRepository: Sendable {
     
     // MARK: - Basic CRUD Operations
 

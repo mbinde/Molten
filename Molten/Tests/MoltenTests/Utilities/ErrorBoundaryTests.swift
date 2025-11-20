@@ -29,7 +29,7 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
     // MARK: - Test Infrastructure Using Working Pattern
     
     private func createTestServices() async throws -> (
-        repos: (glassItem: MockGlassItemRepository, inventory: MockInventoryRepository, location: MockLocationRepository, itemTags: MockItemTagsRepository, itemMinimum: MockItemMinimumRepository),
+        repos: (glassItem: MockGlassItemRepository, inventory: MockInventoryRepository, location: MockStorageLocationRepository, itemTags: MockItemTagsRepository, itemMinimum: MockItemMinimumRepository),
         catalogService: CatalogService,
         inventoryService: InventoryTrackingService,
         inventoryViewModel: InventoryViewModel

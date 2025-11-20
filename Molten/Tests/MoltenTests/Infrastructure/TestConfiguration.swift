@@ -29,7 +29,7 @@ struct TestConfiguration {
     nonisolated static func createIsolatedMockRepositories() -> (
         glassItem: MockGlassItemRepository,
         inventory: MockInventoryRepository,
-        location: MockLocationRepository,
+        location: MockStorageLocationRepository,
         itemTags: MockItemTagsRepository,
         itemMinimum: MockItemMinimumRepository
     ) {
@@ -37,7 +37,7 @@ struct TestConfiguration {
 
         let glassItemRepo = MockGlassItemRepository()
         let inventoryRepo = MockInventoryRepository()
-        let locationRepo = MockLocationRepository()
+        let locationRepo = MockStorageLocationRepository()
         let itemTagsRepo = MockItemTagsRepository()
         let userTagsRepo = MockUserTagsRepository()
         let itemMinimumRepo = MockItemMinimumRepository()
@@ -61,7 +61,7 @@ struct TestConfiguration {
     nonisolated static func setupMockOnlyTestEnvironment() -> (
         glassItem: MockGlassItemRepository,
         inventory: MockInventoryRepository,
-        location: MockLocationRepository,
+        location: MockStorageLocationRepository,
         itemTags: MockItemTagsRepository,
         itemMinimum: MockItemMinimumRepository
     ) {

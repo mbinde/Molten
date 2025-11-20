@@ -1,5 +1,5 @@
 //
-//  CoreDataLocationRepositoryTests.swift
+//  CoreDataStorageLocationRepositoryTests.swift
 //  Molten
 //
 //  Created by Assistant on 10/19/25.
@@ -12,16 +12,16 @@ import Foundation
 import CoreData
 @testable import Molten
 
-/// Tests for CoreDataLocationRepository to verify Core Data operations work correctly
+/// Tests for CoreDataStorageLocationRepository to verify Core Data operations work correctly
 ///
 /// CRITICAL: These tests verify that the Location entity does NOT have an 'id' field
 /// and that locations are uniquely identified by the composite key (inventory_id + location)
-@Suite("CoreDataLocationRepository Tests")
+@Suite("CoreDataStorageLocationRepository Tests")
 @MainActor
-struct CoreDataLocationRepositoryTests {
+struct CoreDataStorageLocationRepositoryTests {
 
     let testController: PersistenceController
-    let repository: CoreDataLocationRepository
+    let repository: CoreDataStorageLocationRepository
     let inventoryId: UUID
 
     init() async throws {
@@ -29,7 +29,7 @@ struct CoreDataLocationRepositoryTests {
         testController = PersistenceController.createTestController()
 
         // Create repository with test container
-        repository = CoreDataLocationRepository(context: testController.container.viewContext)
+        repository = CoreDataStorageLocationRepository(context: testController.container.viewContext)
 
         // Create a test inventory ID that we'll use across tests
         inventoryId = UUID()

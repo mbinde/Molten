@@ -31,7 +31,7 @@ struct LocationAutoCompleteFieldTests {
     @Test("LocationAutoCompleteField should accept LocationRepository via dependency injection")
     func testLocationAutoCompleteFieldUsesLocationRepository() {
         // Arrange: Create mock location repository
-        let locationRepository = MockLocationRepository()
+        let storageLocationRepository = MockStorageLocationRepository()
 
         // Create a wrapper to hold state properly
         struct TestWrapper {
@@ -43,7 +43,7 @@ struct LocationAutoCompleteFieldTests {
         // Use constant binding since we're just testing the API accepts the parameter
         let locationField = LocationAutoCompleteField(
             location: .constant(wrapper.location),
-            locationRepository: locationRepository
+            storageLocationRepository: locationRepository
         )
 
         // Assert: Should be created successfully with repository injection
@@ -53,13 +53,13 @@ struct LocationAutoCompleteFieldTests {
     @Test("LocationAutoCompleteField should work with AppDependencies pattern")
     func testLocationAutoCompleteFieldWorksWithAppDependencies() {
         // Arrange: Configure factory for testing
-        let locationRepository = deps.locationRepository
+        let storageLocationRepository = deps.locationRepository
 
         // Use constant binding since we're just testing the API works with AppDependencies
         let testLocation = "Workshop"
 
         // Act: Create field using repository from factory
-        let locationField = LocationAutoCompleteField(location: .constant(testLocation), locationRepository: locationRepository)
+        let locationField = LocationAutoCompleteField(location: .constant(testLocation), storageLocationRepository: storageLocationRepository)
 
         // Assert: Should work with factory-created repository
         #expect(locationField != nil, "LocationAutoCompleteField should work with AppDependencies pattern")
@@ -72,7 +72,7 @@ struct LocationAutoCompleteFieldTests {
         // not from Core Data entities directly
 
         // Arrange: Create mock repository with test data
-        let locationRepository = MockLocationRepository()
+        let storageLocationRepository = MockStorageLocationRepository()
 
         // Use constant binding since we're just testing the API accepts repository pattern
         let location = ""
@@ -80,7 +80,7 @@ struct LocationAutoCompleteFieldTests {
         // Act: Create field with repository-based approach
         let locationField = LocationAutoCompleteField(
             location: .constant(location),
-            locationRepository: locationRepository
+            storageLocationRepository: locationRepository
         )
 
         // Assert: Should use repository layer for data access
@@ -90,13 +90,13 @@ struct LocationAutoCompleteFieldTests {
     @Test("LocationAutoCompleteField should provide location suggestions from repository")
     func testLocationAutoCompleteFieldProvidesSuggestions() async throws {
         // Arrange: Create mock repository with test location data
-        let locationRepository = MockLocationRepository()
+        let storageLocationRepository = MockStorageLocationRepository()
         
         // Pre-populate repository with test data
-        try await locationRepository.populateWithTestData()
+        try await storageLocationRepository.populateWithTestData()
         
         // Act: Get distinct location names (this simulates what the field does internally)
-        let locationNames = try await locationRepository.getDistinctLocationNames()
+        let locationNames = try await storageLocationRepository.getDistinctLocationNames()
         
         // Assert: Should provide location suggestions from repository
         #expect(locationNames.count > 0, "LocationRepository should provide location suggestions")
@@ -106,11 +106,11 @@ struct LocationAutoCompleteFieldTests {
     @Test("LocationAutoCompleteField should support prefix-based location search")
     func testLocationAutoCompleteFieldSupportsPrefix() async throws {
         // Arrange: Create mock repository and populate with test data
-        let locationRepository = MockLocationRepository()
-        try await locationRepository.populateWithTestData()
+        let storageLocationRepository = MockStorageLocationRepository()
+        try await storageLocationRepository.populateWithTestData()
         
         // Act: Search for locations with specific prefix (simulates user typing)
-        let workshopLocations = try await locationRepository.getLocationNames(withPrefix: "Bin")
+        let workshopLocations = try await storageLocationRepository.getLocationNames(withPrefix: "Bin")
         
         // Assert: Should return locations matching the prefix
         #expect(workshopLocations.count > 0, "Should find locations with 'Bin' prefix")
@@ -120,11 +120,11 @@ struct LocationAutoCompleteFieldTests {
     @Test("LocationAutoCompleteField should handle empty search gracefully")
     func testLocationAutoCompleteFieldHandlesEmptySearch() async throws {
         // Arrange: Create mock repository
-        let locationRepository = MockLocationRepository()
-        try await locationRepository.populateWithTestData()
+        let storageLocationRepository = MockStorageLocationRepository()
+        try await storageLocationRepository.populateWithTestData()
         
         // Act: Search with empty prefix (should return all locations)
-        let allLocations = try await locationRepository.getLocationNames(withPrefix: "")
+        let allLocations = try await storageLocationRepository.getLocationNames(withPrefix: "")
         
         // Assert: Should return all available locations when search is empty
         #expect(allLocations.count > 0, "Should return all locations for empty search")

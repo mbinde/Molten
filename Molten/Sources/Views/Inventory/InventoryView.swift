@@ -51,7 +51,7 @@ struct InventoryView: View, CachedDataDeletion {
     private let userImageRepository: UserImageRepository
     private let kilnScheduleService: KilnScheduleService
     private let glassItemRepository: GlassItemRepository
-    private let locationRepository: LocationRepository
+    private let storageLocationRepository: StorageLocationRepository
 
     private let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Flameworker", category: "InventoryView")
 
@@ -66,7 +66,7 @@ struct InventoryView: View, CachedDataDeletion {
         userImageRepository: UserImageRepository,
         kilnScheduleService: KilnScheduleService,
         glassItemRepository: GlassItemRepository,
-        locationRepository: LocationRepository
+        storageLocationRepository: StorageLocationRepository
     ) {
         self._viewModel = State(initialValue: viewModel)
         self.catalogService = catalogService
@@ -77,7 +77,7 @@ struct InventoryView: View, CachedDataDeletion {
         self.userImageRepository = userImageRepository
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
-        self.locationRepository = locationRepository
+        self.storageLocationRepository = locationRepository
     }
 
     // Convenience init for production use
@@ -96,7 +96,7 @@ struct InventoryView: View, CachedDataDeletion {
             userImageRepository: deps.userImageRepository,
             kilnScheduleService: deps.kilnScheduleService,
             glassItemRepository: deps.glassItemRepository,
-            locationRepository: deps.locationRepository
+            storageLocationRepository: deps.storageLocationRepository
         )
     }
     
@@ -558,7 +558,7 @@ struct InventoryView: View, CachedDataDeletion {
         // Delete all inventory records and their associated storage locations
         for inventory in item.inventory {
             // Delete storage locations for this inventory record
-            try await locationRepository.deleteLocations(forInventory: inventory.id)
+            try await storageLocationRepository.deleteLocations(forInventory: inventory.id)
 
             // Delete the inventory record itself
             try await inventoryTrackingService.deleteInventory(id: inventory.id)

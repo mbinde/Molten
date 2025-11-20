@@ -1,17 +1,17 @@
 //
-//  MockLocationRepository.swift
+//  MockStorageLocationRepository.swift
 //  RepositoryTests
 //
-//  In-memory mock implementation of LocationRepository for testing
+//  In-memory mock implementation of StorageLocationRepository for testing
 //
 
 import Foundation
 @testable import Molten
 
-/// Mock implementation of LocationRepository for testing
-/// Stores locations in memory using a dictionary
+/// Mock implementation of StorageLocationRepository for testing
+/// Stores storage locations in memory using a dictionary
 @MainActor
-final class MockLocationRepository: LocationRepository {
+final class MockStorageLocationRepository: StorageLocationRepository {
 
     // MARK: - Storage
 

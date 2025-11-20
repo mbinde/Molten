@@ -75,7 +75,7 @@ struct CoreDataLeakDiagnostic {
         // Create isolated mock repositories
         let mockGlassItemRepo = MockGlassItemRepository()
         let mockInventoryRepo = MockInventoryRepository()
-        let mockLocationRepo = MockLocationRepository()
+        let mockLocationRepo = MockStorageLocationRepository()
         let mockItemTagsRepo = MockItemTagsRepository()
         let mockUserTagsRepo = MockUserTagsRepository()
         let mockItemMinimumRepo = MockItemMinimumRepository()

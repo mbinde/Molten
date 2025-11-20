@@ -1,13 +1,13 @@
 //
-//  CoreDataLocationRepository.swift
+//  CoreDataStorageLocationRepository.swift
 //  Flameworker
 //
 //  Created by Assistant on 10/14/25.
 //
 //  ✅ KEEP THIS FILE - This is the correct, complete implementation
-//  🗑️ DELETE any other CoreDataLocationRepository.swift files
-//  
-//  This file contains the complete Core Data implementation for LocationRepository
+//  🗑️ DELETE any other CoreDataStorageLocationRepository.swift files
+//
+//  This file contains the complete Core Data implementation for StorageLocationRepository
 //  following clean architecture principles with async/await patterns.
 //
 
@@ -15,19 +15,19 @@
 import Foundation
 import OSLog
 
-/// Core Data implementation of LocationRepository
-/// Provides persistent storage for location records using Core Data
-class CoreDataLocationRepository: @unchecked Sendable, LocationRepository {
+/// Core Data implementation of StorageLocationRepository
+/// Provides persistent storage for physical storage location records using Core Data
+class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRepository {
     
     // MARK: - Dependencies
     
     private let context: NSManagedObjectContext
     private let backgroundContext: NSManagedObjectContext
-    private let log = Logger(subsystem: "com.motleywoods.molten", category: "location-repository")
-    
+    private let log = Logger(subsystem: "com.motleywoods.molten", category: "storage-location-repository")
+
     // MARK: - Initialization
-    
-    /// Initialize CoreDataLocationRepository with a managed object context
+
+    /// Initialize CoreDataStorageLocationRepository with a managed object context
     /// - Parameter context: The NSManagedObjectContext to use for location data operations
     /// - Note: In production, pass PersistenceController.shared.cloudContext (user data)
     nonisolated init(context: NSManagedObjectContext) {

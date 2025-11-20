@@ -11,7 +11,7 @@ import Foundation
 import CoreData
 @testable import Molten
 
-/// Test file to isolate compilation issues in CoreDataLocationRepository
+/// Test file to isolate compilation issues in CoreDataStorageLocationRepository
 class LocationRepositoryCompilationTest {
     
     func testBasicCompilation() {
@@ -30,8 +30,8 @@ class LocationRepositoryCompilationTest {
     func testRepositoryCreation() {
         // Test creating the repository with explicit container
         let container = NSPersistentContainer(name: "TestModel")
-        let repo = CoreDataLocationRepository(context: container.viewContext)
-        print("CoreDataLocationRepository compiles: \(repo)")
+        let repo = CoreDataStorageLocationRepository(context: container.viewContext)
+        print("CoreDataStorageLocationRepository compiles: \(repo)")
     }
     
     func testStorageLocationModelCreation() {

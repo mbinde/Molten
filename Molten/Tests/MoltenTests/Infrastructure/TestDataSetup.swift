@@ -201,13 +201,13 @@ struct TestDataSetup {
     static func setupCompleteTestEnvironment() async throws -> (
         glassItemRepo: MockGlassItemRepository,
         inventoryRepo: MockInventoryRepository,
-        locationRepo: MockLocationRepository,
+        locationRepo: MockStorageLocationRepository,
         itemTagsRepo: MockItemTagsRepository,
         itemMinimumRepo: MockItemMinimumRepository
     ) {
         let glassItemRepo = MockGlassItemRepository()
         let inventoryRepo = MockInventoryRepository()
-        let locationRepo = MockLocationRepository()
+        let locationRepo = MockStorageLocationRepository()
         let itemTagsRepo = MockItemTagsRepository()
         let itemMinimumRepo = MockItemMinimumRepository()
 
@@ -319,6 +319,6 @@ struct TestDataSetup {
 // Note: This setup requires mock repositories to have these methods:
 // - MockGlassItemRepository: simulateLatency, shouldRandomlyFail, suppressVerboseLogging, clearAllData(), getItemCount()
 // - MockInventoryRepository: clearAllData(), getInventoryCount()
-// - MockLocationRepository: clearAllData()
+// - MockStorageLocationRepository: clearAllData()
 // - MockItemTagsRepository: clearAllData(), getAllTagsCount()
 // - MockItemMinimumRepository: clearAllData()

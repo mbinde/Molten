@@ -32,7 +32,7 @@ struct LocationServiceTests {
     @Test("LocationRepository should support basic CRUD operations")
     func testLocationRepositoryBasicOperations() async throws {
         // Arrange: Create mock location repository
-        let locationRepository = MockLocationRepository()
+        let storageLocationRepository = MockStorageLocationRepository()
         let inventory_id = UUID()
         
         let locationModel = StorageLocationModel(
@@ -42,7 +42,7 @@ struct LocationServiceTests {
         )
         
         // Act: Create a location record
-        let createdLocation = try await locationRepository.createLocation(locationModel)
+        let createdLocation = try await storageLocationRepository.createLocation(locationModel)
         
         // Assert: Location should be created successfully
         #expect(createdLocation.inventory_id == locationModel.inventory_id, "Location should be created with correct inventory ID")
@@ -62,7 +62,7 @@ struct LocationServiceTests {
     @Test("LocationRepository should provide location discovery operations")
     func testLocationRepositoryDiscoveryOperations() async throws {
         // Arrange: Create mock location repository with test data
-        let locationRepository = MockLocationRepository()
+        let storageLocationRepository = MockStorageLocationRepository()
         let inventory_id1 = UUID()
         let inventory_id2 = UUID()
         
@@ -78,11 +78,11 @@ struct LocationServiceTests {
             quantity: 15.0
         )
         
-        _ = try await locationRepository.createLocation(location1)
-        _ = try await locationRepository.createLocation(location2)
+        _ = try await storageLocationRepository.createLocation(location1)
+        _ = try await storageLocationRepository.createLocation(location2)
         
         // Act: Get distinct location names
-        let locationNames = try await locationRepository.getDistinctLocationNames()
+        let locationNames = try await storageLocationRepository.getDistinctLocationNames()
         
         // Assert: Should return unique location names
         #expect(locationNames.contains("Workshop"), "Should include Workshop location")
@@ -92,7 +92,7 @@ struct LocationServiceTests {
     @Test("LocationRepository should support location search and filtering")
     func testLocationRepositorySearchAndFiltering() async throws {
         // Arrange: Create mock location repository
-        let locationRepository = MockLocationRepository()
+        let storageLocationRepository = MockStorageLocationRepository()
         let inventory_id = UUID()
         
         let workshopLocation = StorageLocationModel(
@@ -101,10 +101,10 @@ struct LocationServiceTests {
             quantity: 20.0
         )
         
-        _ = try await locationRepository.createLocation(workshopLocation)
+        _ = try await storageLocationRepository.createLocation(workshopLocation)
         
         // Act: Search for locations with prefix
-        let matchingLocations = try await locationRepository.getLocationNames(withPrefix: "Work")
+        let matchingLocations = try await storageLocationRepository.getLocationNames(withPrefix: "Work")
         
         // Assert: Should find matching locations
         #expect(matchingLocations.contains("Workshop Area"), "Should find locations matching prefix")
@@ -113,11 +113,11 @@ struct LocationServiceTests {
     @Test("LocationRepository should handle quantity operations")
     func testLocationRepositoryQuantityOperations() async throws {
         // Arrange: Create mock location repository
-        let locationRepository = MockLocationRepository()
+        let storageLocationRepository = MockStorageLocationRepository()
         let inventory_id = UUID()
         
         // Act: Add quantity to a new location
-        let updatedLocation = try await locationRepository.addQuantity(
+        let updatedLocation = try await storageLocationRepository.addQuantity(
             25.0,
             toLocation: "Storage Bin A",
             forInventory: inventory_id
@@ -132,7 +132,7 @@ struct LocationServiceTests {
     @Test("LocationRepository should support batch location operations")
     func testLocationRepositoryBatchOperations() async throws {
         // Arrange: Create mock location repository
-        let locationRepository = MockLocationRepository()
+        let storageLocationRepository = MockStorageLocationRepository()
         let inventory_id = UUID()
         
         let locations = [
@@ -142,7 +142,7 @@ struct LocationServiceTests {
         ]
         
         // Act: Create multiple locations in batch
-        let createdLocations = try await locationRepository.createLocations(locations)
+        let createdLocations = try await storageLocationRepository.createLocations(locations)
         
         // Assert: Should create all locations successfully
         #expect(createdLocations.count == 3, "Should create all three locations")
@@ -152,14 +152,14 @@ struct LocationServiceTests {
     @Test("LocationRepository should support moving quantities between locations")
     func testLocationRepositoryMoveQuantity() async throws {
         // Arrange: Create mock location repository with initial locations
-        let locationRepository = MockLocationRepository()
+        let storageLocationRepository = MockStorageLocationRepository()
         let inventory_id = UUID()
         
         // Create initial location with quantity
-        _ = try await locationRepository.addQuantity(30.0, toLocation: "Source Bin", forInventory: inventory_id)
+        _ = try await storageLocationRepository.addQuantity(30.0, toLocation: "Source Bin", forInventory: inventory_id)
         
         // Act: Move quantity from source to destination
-        try await locationRepository.moveQuantity(
+        try await storageLocationRepository.moveQuantity(
             15.0,
             fromLocation: "Source Bin",
             toLocation: "Destination Bin",
@@ -167,8 +167,8 @@ struct LocationServiceTests {
         )
         
         // Assert: Check that quantities were moved correctly
-        let sourceLocations = try await locationRepository.fetchLocations(withName: "Source Bin")
-        let destinationLocations = try await locationRepository.fetchLocations(withName: "Destination Bin")
+        let sourceLocations = try await storageLocationRepository.fetchLocations(withName: "Source Bin")
+        let destinationLocations = try await storageLocationRepository.fetchLocations(withName: "Destination Bin")
         
         // Find locations for our inventory
         let sourceLocation = sourceLocations.first { $0.inventory_id == inventory_id }
@@ -181,21 +181,21 @@ struct LocationServiceTests {
     @Test("LocationRepository should validate location quantities")
     func testLocationRepositoryValidateQuantities() async throws {
         // Arrange: Create mock location repository with test locations
-        let locationRepository = MockLocationRepository()
+        let storageLocationRepository = MockStorageLocationRepository()
         let inventory_id = UUID()
         
         // Add locations with known quantities
-        _ = try await locationRepository.addQuantity(10.0, toLocation: "Location A", forInventory: inventory_id)
-        _ = try await locationRepository.addQuantity(15.0, toLocation: "Location B", forInventory: inventory_id)
-        _ = try await locationRepository.addQuantity(5.0, toLocation: "Location C", forInventory: inventory_id)
+        _ = try await storageLocationRepository.addQuantity(10.0, toLocation: "Location A", forInventory: inventory_id)
+        _ = try await storageLocationRepository.addQuantity(15.0, toLocation: "Location B", forInventory: inventory_id)
+        _ = try await storageLocationRepository.addQuantity(5.0, toLocation: "Location C", forInventory: inventory_id)
         
         // Act: Validate total quantities
-        let isValid = try await locationRepository.validateLocationQuantities(
+        let isValid = try await storageLocationRepository.validateLocationQuantities(
             forInventory: inventory_id,
             expectedTotal: 30.0
         )
         
-        let discrepancy = try await locationRepository.getLocationQuantityDiscrepancy(
+        let discrepancy = try await storageLocationRepository.getLocationQuantityDiscrepancy(
             forInventory: inventory_id,
             expectedTotal: 30.0
         )

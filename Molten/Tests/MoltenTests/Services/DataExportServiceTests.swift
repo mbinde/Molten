@@ -110,12 +110,13 @@ struct DataExportServiceTests {
         case .success(let exportResult):
             let counts = exportResult.entityCounts
 
-            #expect(counts.glassItems == 0)
-            #expect(counts.inventoryRecords == 0)
-            #expect(counts.projects == 0)
-            #expect(counts.logbookEntries == 0)
-            #expect(counts.purchaseRecords == 0)
-            #expect(counts.total == 0)
+            // Catalog has ~3840 items from bundled SQLite database
+            #expect(counts.glassItems > 0, "Should include catalog items from bundled database")
+            #expect(counts.inventoryRecords == 0, "No inventory added yet")
+            #expect(counts.projects == 0, "No projects added yet")
+            #expect(counts.logbookEntries == 0, "No logbook entries added yet")
+            #expect(counts.purchaseRecords == 0, "No purchases added yet")
+            #expect(counts.total == counts.glassItems, "Total should equal catalog items when no user data exists")
 
             // Clean up
             try? FileManager.default.removeItem(at: exportResult.fileURL)
@@ -356,8 +357,9 @@ struct DataExportServiceTests {
 
         switch result {
         case .success(let exportResult):
-            // Should succeed with zero counts
-            #expect(exportResult.entityCounts.total == 0)
+            // Should succeed - catalog has items from bundled database even if no user data exists
+            #expect(exportResult.entityCounts.glassItems > 0, "Should include catalog items")
+            #expect(exportResult.entityCounts.total > 0, "Total should include catalog items")
             #expect(FileManager.default.fileExists(atPath: exportResult.fileURL.path))
 
             // Clean up

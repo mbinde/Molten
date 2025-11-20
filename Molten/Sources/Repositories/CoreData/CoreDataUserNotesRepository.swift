@@ -34,9 +34,7 @@ class CoreDataUserNotesRepository: @unchecked Sendable, UserNotesRepository {
     // MARK: - Basic CRUD Operations
 
     func createNotes(_ notes: UserNotesModel) async throws -> UserNotesModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<UserNotesModel, Error>) in
-            backgroundContext.perform {
-                do {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
                     // Validate notes
                     guard notes.isValid else {
                         throw CoreDataUserNotesRepositoryError.invalidData(notes.validationErrors.joined(separator: ", "))
@@ -48,10 +46,10 @@ class CoreDataUserNotesRepository: @unchecked Sendable, UserNotesRepository {
                     }
 
                     // Create new Core Data entity
-                    guard let entity = NSEntityDescription.entity(forEntityName: "UserNotes", in: self.backgroundContext) else {
+                    guard let entity = NSEntityDescription.entity(forEntityName: "UserNotes", in: context) else {
                         throw CoreDataUserNotesRepositoryError.entityNotFound("UserNotes")
                     }
-                    let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
+                    let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
 
                     // Set properties
                     coreDataItem.setValue(notes.id, forKey: "id")
@@ -59,37 +57,22 @@ class CoreDataUserNotesRepository: @unchecked Sendable, UserNotesRepository {
                     coreDataItem.setValue(notes.notes, forKey: "notes")
 
                     // Save context
-                    try self.backgroundContext.save()
+                    try context.save()
 
                     self.log.info("Created user notes for item: \(notes.item_stable_id)")
-                    continuation.resume(returning: notes)
-
-                } catch {
-                    self.log.error("Failed to create user notes: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+                    return notes
         }
     }
 
     func fetchNotes(forItem item_stable_id: String) async throws -> UserNotesModel? {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<UserNotesModel?, Error>) in
-            backgroundContext.perform {
-                do {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
                     let result = try self.fetchNotesSync(forItem: item_stable_id)
-                    continuation.resume(returning: result)
-                } catch {
-                    self.log.error("Failed to fetch user notes: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+                    return result
         }
     }
 
     func updateNotes(_ notes: UserNotesModel) async throws -> UserNotesModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<UserNotesModel, Error>) in
-            backgroundContext.perform {
-                do {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
                     // Validate notes
                     guard notes.isValid else {
                         throw CoreDataUserNotesRepositoryError.invalidData(notes.validationErrors.joined(separator: ", "))
@@ -105,110 +88,74 @@ class CoreDataUserNotesRepository: @unchecked Sendable, UserNotesRepository {
                     coreDataItem.setValue(notes.notes, forKey: "notes")
 
                     // Save context
-                    try self.backgroundContext.save()
+                    try context.save()
 
                     self.log.info("Updated user notes for item: \(notes.item_stable_id)")
-                    continuation.resume(returning: notes)
-
-                } catch {
-                    self.log.error("Failed to update user notes: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+                    return notes
         }
     }
 
     func deleteNotes(forItem item_stable_id: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
                     // Find existing item
                     guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) else {
                         self.log.warning("Attempted to delete non-existent notes: \(item_stable_id)")
                         // Not throwing error - idempotent delete
-                        continuation.resume()
-                        return
+                                                return
                     }
 
                     // Delete item
-                    self.backgroundContext.delete(coreDataItem)
+                    context.delete(coreDataItem)
 
                     // Save context
-                    try self.backgroundContext.save()
+                    try context.save()
 
                     self.log.info("Deleted user notes for item: \(item_stable_id)")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete user notes: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
+                            }
     }
 
     func deleteNotes(byId id: UUID) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
                     // Find item by UUID
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
                     fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
 
-                    guard let coreDataItem = try self.backgroundContext.fetch(fetchRequest).first else {
+                    guard let coreDataItem = try context.fetch(fetchRequest).first else {
                         self.log.warning("Attempted to delete non-existent notes with id: \(id)")
                         // Not throwing error - idempotent delete
-                        continuation.resume()
-                        return
+                                                return
                     }
 
                     // Delete item
-                    self.backgroundContext.delete(coreDataItem)
+                    context.delete(coreDataItem)
 
                     // Save context
-                    try self.backgroundContext.save()
+                    try context.save()
 
                     self.log.info("Deleted user notes with id: \(id)")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete user notes by id: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
+                            }
     }
 
     // MARK: - Query Operations
 
     func fetchAllNotes() async throws -> [UserNotesModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[UserNotesModel], Error>) in
-            backgroundContext.perform {
-                do {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
                     fetchRequest.sortDescriptors = [NSSortDescriptor(key: "item_stable_id", ascending: true)]
 
-                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
+                    let coreDataItems = try context.fetch(fetchRequest)
                     let notes = coreDataItems.compactMap { self.convertToUserNotesModel($0) }
 
-                    continuation.resume(returning: notes)
-
-                } catch {
-                    self.log.error("Failed to fetch all user notes: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+                    return notes
         }
     }
 
     func fetchNotes(forItems item_stable_ids: [String]) async throws -> [String: UserNotesModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String: UserNotesModel], Error>) in
-            backgroundContext.perform {
-                do {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
                     fetchRequest.predicate = NSPredicate(format: "item_stable_id IN %@", item_stable_ids)
 
-                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
+                    let coreDataItems = try context.fetch(fetchRequest)
                     var result: [String: UserNotesModel] = [:]
 
                     for item in coreDataItems {
@@ -217,19 +164,12 @@ class CoreDataUserNotesRepository: @unchecked Sendable, UserNotesRepository {
                         }
                     }
 
-                    continuation.resume(returning: result)
-
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
+                    return result
         }
     }
 
     func searchNotes(containing searchText: String) async throws -> [UserNotesModel] {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[UserNotesModel], Error>) in
-            backgroundContext.perform {
-                do {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
                     fetchRequest.predicate = NSPredicate(
                         format: "notes CONTAINS[cd] %@ OR item_stable_id CONTAINS[cd] %@",
@@ -237,40 +177,25 @@ class CoreDataUserNotesRepository: @unchecked Sendable, UserNotesRepository {
                     )
                     fetchRequest.sortDescriptors = [NSSortDescriptor(key: "item_stable_id", ascending: true)]
 
-                    let coreDataItems = try self.backgroundContext.fetch(fetchRequest)
+                    let coreDataItems = try context.fetch(fetchRequest)
                     let notes = coreDataItems.compactMap { self.convertToUserNotesModel($0) }
 
                     self.log.debug("Found \(notes.count) notes matching search text")
-                    continuation.resume(returning: notes)
-
-                } catch {
-                    self.log.error("Failed to search user notes: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+                    return notes
         }
     }
 
     func notesExist(forItem item_stable_id: String) async throws -> Bool {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Bool, Error>) in
-            backgroundContext.perform {
-                do {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
                     let exists = try self.fetchNotesSync(forItem: item_stable_id) != nil
-                    continuation.resume(returning: exists)
-                } catch {
-                    self.log.error("Failed to check if notes exist: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+                    return exists
         }
     }
 
     // MARK: - Batch Operations
 
     func setNotes(_ notes: UserNotesModel) async throws -> UserNotesModel {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<UserNotesModel, Error>) in
-            backgroundContext.perform {
-                do {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
                     // Validate notes
                     guard notes.isValid else {
                         throw CoreDataUserNotesRepositoryError.invalidData(notes.validationErrors.joined(separator: ", "))
@@ -280,74 +205,51 @@ class CoreDataUserNotesRepository: @unchecked Sendable, UserNotesRepository {
                     if let existingItem = try self.fetchCoreDataItemSync(forItem: notes.item_stable_id) {
                         // Update existing
                         existingItem.setValue(notes.notes, forKey: "notes")
-                        try self.backgroundContext.save()
+                        try context.save()
 
                         self.log.info("Updated existing user notes for item: \(notes.item_stable_id)")
-                        continuation.resume(returning: notes)
+                        return notes
                     } else {
                         // Create new
-                        guard let entity = NSEntityDescription.entity(forEntityName: "UserNotes", in: self.backgroundContext) else {
+                        guard let entity = NSEntityDescription.entity(forEntityName: "UserNotes", in: context) else {
                             throw CoreDataUserNotesRepositoryError.entityNotFound("UserNotes")
                         }
-                        let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
+                        let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
 
                         // Set properties (no id in Core Data)
                         coreDataItem.setValue(notes.item_stable_id, forKey: "item_stable_id")
                         coreDataItem.setValue(notes.notes, forKey: "notes")
-                        try self.backgroundContext.save()
+                        try context.save()
 
                         self.log.info("Created new user notes for item: \(notes.item_stable_id)")
-                        continuation.resume(returning: notes)
+                        return notes
                     }
-
-                } catch {
-                    self.log.error("Failed to set user notes: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
         }
     }
 
     func deleteAllNotes() async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            backgroundContext.perform {
-                do {
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
-                    let allNotes = try self.backgroundContext.fetch(fetchRequest)
+                    let allNotes = try context.fetch(fetchRequest)
 
                     for note in allNotes {
-                        self.backgroundContext.delete(note)
+                        context.delete(note)
                     }
 
                     if !allNotes.isEmpty {
-                        try self.backgroundContext.save()
+                        try context.save()
                     }
 
                     self.log.info("Deleted all \(allNotes.count) user notes")
-                    continuation.resume()
-
-                } catch {
-                    self.log.error("Failed to delete all user notes: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
+                            }
     }
 
     func getNotesCount() async throws -> Int {
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Int, Error>) in
-            backgroundContext.perform {
-                do {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
                     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
-                    let count = try self.backgroundContext.count(for: fetchRequest)
+                    let count = try context.count(for: fetchRequest)
 
-                    continuation.resume(returning: count)
-
-                } catch {
-                    self.log.error("Failed to get notes count: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
+                    return count
         }
     }
 

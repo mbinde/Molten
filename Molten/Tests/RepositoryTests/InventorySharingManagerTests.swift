@@ -370,7 +370,7 @@ struct InventorySharingManagerTests {
         let testController = PersistenceController.createTestController()
 
         let testContext = testController.container.viewContext
-        let catalogRepo = deps.glassItemRepository
+        let catalogRepo = deps.glassItemRepository as! SQLiteGlassItemRepository
         let metadataRepo = ShareMetadataRepository()
         let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(

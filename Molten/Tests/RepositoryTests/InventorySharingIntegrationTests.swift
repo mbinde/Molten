@@ -60,7 +60,7 @@ struct InventorySharingIntegrationTests {
         let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
             context: testContext,
-            catalogRepository: deps.glassItemRepository
+            catalogRepository: deps.glassItemRepository as! SQLiteGlassItemRepository
         )
 
         let manager = InventorySharingManager(
@@ -138,7 +138,7 @@ struct InventorySharingIntegrationTests {
 
         // Create manager with test repositories
         let shareRecordRepo = CoreDataShareRecordRepository(context: deps.persistenceController.container.viewContext)
-        let catalogRepo = deps.glassItemRepository
+        let catalogRepo = deps.glassItemRepository as! SQLiteGlassItemRepository
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
             context: deps.persistenceController.container.viewContext,
             catalogRepository: catalogRepo
@@ -221,7 +221,7 @@ struct InventorySharingIntegrationTests {
 
         // Create test Core Data controller
         let shareRecordRepo = CoreDataShareRecordRepository(context: deps.persistenceController.container.viewContext)
-        let catalogRepo = deps.glassItemRepository
+        let catalogRepo = deps.glassItemRepository as! SQLiteGlassItemRepository
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
             context: deps.persistenceController.container.viewContext,
             catalogRepository: catalogRepo
@@ -255,7 +255,7 @@ struct InventorySharingIntegrationTests {
         let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
             context: testContext,
-            catalogRepository: deps.glassItemRepository
+            catalogRepository: deps.glassItemRepository as! SQLiteGlassItemRepository
         )
 
         let manager = InventorySharingManager(
@@ -311,7 +311,7 @@ struct InventorySharingIntegrationTests {
         let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
             context: testContext,
-            catalogRepository: deps.glassItemRepository
+            catalogRepository: deps.glassItemRepository as! SQLiteGlassItemRepository
         )
 
         let manager = InventorySharingManager(

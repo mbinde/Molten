@@ -124,8 +124,14 @@ actor CatalogService {
 
         // OPTIMIZED: Batch fetch tags for all items instead of individual calls
         let allItemKeys = filteredItems.map { $0.stable_id }
-        let tagsByItem = try await itemTagsRepository.fetchTagsForItems(allItemKeys)
-        print("🏷️ DEBUG CatalogService: Batch fetched tags for \(allItemKeys.count) items, got tags for \(tagsByItem.count) items")
+        let tagsByItem: [String: [String]]
+        do {
+            tagsByItem = try await itemTagsRepository.fetchTagsForItems(allItemKeys)
+            print("🏷️ DEBUG CatalogService: Batch fetched tags for \(allItemKeys.count) items, got tags for \(tagsByItem.count) items")
+        } catch {
+            // Tags are optional - continue without them if table doesn't exist yet
+            tagsByItem = [:]
+        }
         if let firstItem = tagsByItem.first {
             print("🏷️ DEBUG CatalogService: Sample - item \(firstItem.key) has \(firstItem.value.count) tags: \(firstItem.value.prefix(5).joined(separator: ", "))")
         }

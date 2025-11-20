@@ -456,7 +456,7 @@ struct InventorySharingViewModelTests {
     private func createMockSharingManager() -> InventorySharingManager {
         // Use shared deps to keep PersistenceController alive
         let testContext = deps.persistenceController.container.viewContext
-        let catalogRepo = deps.glassItemRepository
+        let catalogRepo = deps.glassItemRepository as! SQLiteGlassItemRepository
         let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
             context: testContext,
@@ -490,7 +490,7 @@ struct InventorySharingViewModelTests {
     private func createMockSharingManagerWithInvalidSignature() -> InventorySharingManager {
         // Use shared deps to keep PersistenceController alive
         let testContext = deps.persistenceController.container.viewContext
-        let catalogRepo = deps.glassItemRepository
+        let catalogRepo = deps.glassItemRepository as! SQLiteGlassItemRepository
         let shareRecordRepo = CoreDataShareRecordRepository(context: testContext)
         let sharedInventoryRepo = CoreDataSharedInventoryRepository(
             context: testContext,

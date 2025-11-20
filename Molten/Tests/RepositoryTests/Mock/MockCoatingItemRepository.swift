@@ -10,7 +10,8 @@ import Foundation
 
 /// Mock implementation of CoatingItemRepository for testing
 /// Stores items in memory using a dictionary
-final class MockCoatingItemRepository: CoatingItemRepository {
+final class MockCoatingItemRepository: CatalogItemRepository {
+    typealias ItemType = CoatingItemModel
 
     // MARK: - Storage
 

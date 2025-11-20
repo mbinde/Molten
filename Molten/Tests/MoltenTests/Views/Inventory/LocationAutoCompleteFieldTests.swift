@@ -32,15 +32,20 @@ struct LocationAutoCompleteFieldTests {
     func testLocationAutoCompleteFieldUsesLocationRepository() {
         // Arrange: Create mock location repository
         let locationRepository = MockLocationRepository()
-        
-        @State var location = ""
-        
+
+        // Create a wrapper to hold state properly
+        struct TestWrapper {
+            var location = ""
+        }
+        var wrapper = TestWrapper()
+
         // Act: Create LocationAutoCompleteField with location repository
+        // Use constant binding since we're just testing the API accepts the parameter
         let locationField = LocationAutoCompleteField(
-            location: $location,
+            location: .constant(wrapper.location),
             locationRepository: locationRepository
         )
-        
+
         // Assert: Should be created successfully with repository injection
         #expect(locationField != nil, "LocationAutoCompleteField should accept LocationRepository via dependency injection")
     }
@@ -50,10 +55,11 @@ struct LocationAutoCompleteFieldTests {
         // Arrange: Configure factory for testing
         let locationRepository = deps.locationRepository
 
-        @State var testLocation = "Workshop"
+        // Use constant binding since we're just testing the API works with AppDependencies
+        let testLocation = "Workshop"
 
         // Act: Create field using repository from factory
-        let locationField = LocationAutoCompleteField(location: $testLocation, locationRepository: locationRepository)
+        let locationField = LocationAutoCompleteField(location: .constant(testLocation), locationRepository: locationRepository)
 
         // Assert: Should work with factory-created repository
         #expect(locationField != nil, "LocationAutoCompleteField should work with AppDependencies pattern")
@@ -64,18 +70,19 @@ struct LocationAutoCompleteFieldTests {
         // This test verifies that LocationAutoCompleteField gets location data
         // from LocationRepository using the repository pattern,
         // not from Core Data entities directly
-        
+
         // Arrange: Create mock repository with test data
         let locationRepository = MockLocationRepository()
-        
-        @State var location = ""
-        
+
+        // Use constant binding since we're just testing the API accepts repository pattern
+        let location = ""
+
         // Act: Create field with repository-based approach
         let locationField = LocationAutoCompleteField(
-            location: $location,
+            location: .constant(location),
             locationRepository: locationRepository
         )
-        
+
         // Assert: Should use repository layer for data access
         #expect(locationField != nil, "LocationAutoCompleteField should access location data via LocationRepository")
     }

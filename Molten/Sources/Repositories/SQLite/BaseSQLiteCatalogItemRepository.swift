@@ -32,7 +32,7 @@ enum SQLiteError: LocalizedError {
 
 /// Base class for SQLite-based catalog item repositories
 /// Provides common query logic - subclasses provide item-specific parsing and table names
-class BaseSQLiteCatalogItemRepository<ItemType: CatalogItem>: CatalogItemRepository, @unchecked Sendable {
+nonisolated class BaseSQLiteCatalogItemRepository<ItemType: CatalogItem>: CatalogItemRepository, @unchecked Sendable {
 
     // MARK: - Properties
 
@@ -177,7 +177,8 @@ class BaseSQLiteCatalogItemRepository<ItemType: CatalogItem>: CatalogItemReposit
         var statement: OpaquePointer?
 
         guard sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK else {
-            throw SQLiteError.queryFailed(String(cString: sqlite3_errmsg(db)))
+            let error = String(cString: sqlite3_errmsg(db))
+            throw SQLiteError.queryFailed(error)
         }
 
         defer {

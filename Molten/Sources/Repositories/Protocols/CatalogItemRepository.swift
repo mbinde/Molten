@@ -10,7 +10,7 @@ import Foundation
 
 /// Generic repository protocol for all catalog item types
 /// Eliminates duplication by using associated types - one protocol, multiple implementations
-nonisolated protocol CatalogItemRepository: Sendable {
+nonisolated protocol CatalogItemRepository<ItemType>: Sendable {
     associatedtype ItemType: CatalogItem
 
     // MARK: - Basic CRUD Operations

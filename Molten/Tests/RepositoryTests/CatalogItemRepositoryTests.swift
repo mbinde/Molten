@@ -14,6 +14,18 @@ import SQLite3
 @MainActor
 struct CatalogItemRepositoryTests {
 
+    // MARK: - Test Helpers
+
+    /// Create a test database manager pointing to the bundled catalog
+    private func createTestDatabaseManager() throws -> TestCatalogDatabaseManager {
+        guard let dbPath = Bundle.main.url(forResource: "catalog", withExtension: "sqlite")?.path else {
+            throw TestError.noDatabaseFound
+        }
+        let dbManager = TestCatalogDatabaseManager(databasePath: dbPath)
+        try dbManager.initialize()
+        return dbManager
+    }
+
     // MARK: - Test Protocol Conformance
 
     @Test("GlassItemModel conforms to CatalogItem")
@@ -90,7 +102,10 @@ struct CatalogItemRepositoryTests {
 
     @Test("Repository with GlassItemModel has correct ItemType")
     func testGlassRepositoryItemType() async throws {
-        let dbManager = try TestCatalogDatabaseManager()
+        guard let dbPath = Bundle.main.url(forResource: "catalog", withExtension: "sqlite")?.path else {
+            throw TestError.noDatabaseFound
+        }
+        let dbManager = TestCatalogDatabaseManager(databasePath: dbPath)
         try dbManager.initialize()
 
         let repository = SQLiteGlassItemRepository(databaseManager: dbManager)
@@ -108,8 +123,7 @@ struct CatalogItemRepositoryTests {
 
     @Test("Repository with CoatingItemModel has correct ItemType")
     func testCoatingRepositoryItemType() async throws {
-        let dbManager = try TestCatalogDatabaseManager()
-        try dbManager.initialize()
+        let dbManager = try createTestDatabaseManager()
 
         let repository = SQLiteCoatingItemRepository(databaseManager: dbManager)
 
@@ -124,8 +138,7 @@ struct CatalogItemRepositoryTests {
 
     @Test("Repository with ToolItemModel has correct ItemType")
     func testToolRepositoryItemType() async throws {
-        let dbManager = try TestCatalogDatabaseManager()
-        try dbManager.initialize()
+        let dbManager = try createTestDatabaseManager()
 
         let repository = SQLiteToolItemRepository(databaseManager: dbManager)
 
@@ -142,8 +155,7 @@ struct CatalogItemRepositoryTests {
 
     @Test("Glass-specific methods only available for GlassItemRepository")
     func testGlassSpecificMethods() async throws {
-        let dbManager = try TestCatalogDatabaseManager()
-        try dbManager.initialize()
+        let dbManager = try createTestDatabaseManager()
 
         let glassRepo = SQLiteGlassItemRepository(databaseManager: dbManager)
 
@@ -161,8 +173,7 @@ struct CatalogItemRepositoryTests {
 
     @Test("fetchItems(matching:) works for all item types")
     func testFetchItemsWorksForAllTypes() async throws {
-        let dbManager = try TestCatalogDatabaseManager()
-        try dbManager.initialize()
+        let dbManager = try createTestDatabaseManager()
 
         // Glass
         let glassRepo = SQLiteGlassItemRepository(databaseManager: dbManager)
@@ -182,8 +193,7 @@ struct CatalogItemRepositoryTests {
 
     @Test("fetchItem(byStableId:) works for all item types")
     func testFetchItemByStableIdWorksForAllTypes() async throws {
-        let dbManager = try TestCatalogDatabaseManager()
-        try dbManager.initialize()
+        let dbManager = try createTestDatabaseManager()
 
         let glassRepo = SQLiteGlassItemRepository(databaseManager: dbManager)
 
@@ -201,8 +211,7 @@ struct CatalogItemRepositoryTests {
 
     @Test("searchItems(text:) works for all item types")
     func testSearchItemsWorksForAllTypes() async throws {
-        let dbManager = try TestCatalogDatabaseManager()
-        try dbManager.initialize()
+        let dbManager = try createTestDatabaseManager()
 
         let glassRepo = SQLiteGlassItemRepository(databaseManager: dbManager)
 
@@ -213,8 +222,7 @@ struct CatalogItemRepositoryTests {
 
     @Test("Write operations throw for read-only repositories")
     func testWriteOperationsThrow() async throws {
-        let dbManager = try TestCatalogDatabaseManager()
-        try dbManager.initialize()
+        let dbManager = try createTestDatabaseManager()
 
         let glassRepo = SQLiteGlassItemRepository(databaseManager: dbManager)
 
@@ -254,4 +262,5 @@ struct CatalogItemRepositoryTests {
 
 enum TestError: Error {
     case noTestData
+    case noDatabaseFound
 }

@@ -58,7 +58,7 @@ class InventorySharingManager {
         // Use local context for cached inventory, with catalog repository from deps
         let sharedInventoryRepository = CoreDataSharedInventoryRepository(
             context: deps.persistenceController.localContext ?? deps.persistenceController.container.viewContext,
-            catalogRepository: deps.glassItemRepository
+            catalogRepository: deps.glassItemRepository as! SQLiteGlassItemRepository
         )
 
         self.init(

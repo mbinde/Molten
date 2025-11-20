@@ -99,17 +99,136 @@ class AppDependencies {
     // MARK: - Services
 
     public let loggingService: LoggingService
-    let inventoryTrackingService: InventoryTrackingService
-    let catalogService: CatalogService
-    let shoppingListService: ShoppingListService
-    let projectService: ProjectService
-    let purchaseRecordService: PurchaseRecordService
-    let kilnScheduleService: KilnScheduleService
-    let recipeService: RecipeService
-    let unifiedLocationService: UnifiedLocationService
-    let entitlementService: EntitlementService
-    let subscriptionService: SubscriptionServiceProtocol
-    let ratingService: RatingService
+    private let _subscriptionService: SubscriptionServiceProtocol
+
+    // Core services (created lazily via private backing properties)
+    private var _inventoryTrackingService: InventoryTrackingService?
+    var inventoryTrackingService: InventoryTrackingService {
+        if let service = _inventoryTrackingService {
+            return service
+        }
+        let service = InventoryTrackingService(
+            glassItemRepository: glassItemRepository,
+            inventoryRepository: inventoryRepository,
+            itemTagsRepository: itemTagsRepository
+        )
+        _inventoryTrackingService = service
+        return service
+    }
+
+    private var _ratingService: RatingService?
+    var ratingService: RatingService {
+        if let service = _ratingService {
+            return service
+        }
+        let service = RatingService(repository: ratingRepository, logger: loggingService)
+        _ratingService = service
+        return service
+    }
+
+    private var _catalogService: CatalogService?
+    var catalogService: CatalogService {
+        if let service = _catalogService {
+            return service
+        }
+        let service = CatalogService(
+            glassItemRepository: glassItemRepository,
+            coatingItemRepository: coatingItemRepository,
+            toolItemRepository: toolItemRepository,
+            inventoryTrackingService: inventoryTrackingService,
+            itemMinimumRepository: itemMinimumRepository,
+            itemTagsRepository: itemTagsRepository,
+            userTagsRepository: userTagsRepository,
+            ratingService: ratingService
+        )
+        _catalogService = service
+        return service
+    }
+
+    private var _shoppingListService: ShoppingListService?
+    var shoppingListService: ShoppingListService {
+        if let service = _shoppingListService {
+            return service
+        }
+        let service = ShoppingListService(
+            itemMinimumRepository: itemMinimumRepository,
+            shoppingListRepository: shoppingListRepository,
+            inventoryRepository: inventoryRepository,
+            glassItemRepository: glassItemRepository,
+            itemTagsRepository: itemTagsRepository,
+            userTagsRepository: userTagsRepository
+        )
+        _shoppingListService = service
+        return service
+    }
+
+    private var _projectService: ProjectService?
+    var projectService: ProjectService {
+        if let service = _projectService {
+            return service
+        }
+        let service = ProjectService(
+            projectRepository: projectRepository,
+            logbookRepository: logbookRepository,
+            userTagsRepository: userTagsRepository
+        )
+        _projectService = service
+        return service
+    }
+
+    private var _purchaseRecordService: PurchaseRecordService?
+    var purchaseRecordService: PurchaseRecordService {
+        if let service = _purchaseRecordService {
+            return service
+        }
+        let service = PurchaseRecordService(repository: purchaseRecordRepository)
+        _purchaseRecordService = service
+        return service
+    }
+
+    private var _kilnScheduleService: KilnScheduleService?
+    var kilnScheduleService: KilnScheduleService {
+        if let service = _kilnScheduleService {
+            return service
+        }
+        let service = KilnScheduleService(repository: kilnScheduleRepository)
+        _kilnScheduleService = service
+        return service
+    }
+
+    private var _recipeService: RecipeService?
+    var recipeService: RecipeService {
+        if let service = _recipeService {
+            return service
+        }
+        let service = RecipeService(repository: recipeRepository)
+        _recipeService = service
+        return service
+    }
+
+    private var _unifiedLocationService: UnifiedLocationService?
+    var unifiedLocationService: UnifiedLocationService {
+        if let service = _unifiedLocationService {
+            return service
+        }
+        let service = UnifiedLocationService(repository: unifiedLocationRepository)
+        _unifiedLocationService = service
+        return service
+    }
+
+    private var _entitlementService: EntitlementService?
+    var entitlementService: EntitlementService {
+        if let service = _entitlementService {
+            return service
+        }
+        let service = EntitlementService()
+        _entitlementService = service
+        return service
+    }
+
+    var subscriptionService: SubscriptionServiceProtocol {
+        _subscriptionService
+    }
 
     // Background services (created lazily)
     private var _catalogUpdateService: CatalogUpdateService?
@@ -205,38 +324,10 @@ class AppDependencies {
         // Create logging service first (needed by other services)
         self.loggingService = Self.createLoggingService(isTestMode: self.mode == .mock)
 
-        // Create services (using helper to avoid duplication)
-        (
-            self.inventoryTrackingService,
-            self.catalogService,
-            self.shoppingListService,
-            self.projectService,
-            self.purchaseRecordService,
-            self.kilnScheduleService,
-            self.recipeService,
-            self.unifiedLocationService,
-            self.entitlementService,
-            self.subscriptionService,
-            self.ratingService
-        ) = Self.setupServices(
-            glassItemRepository: glassItemRepository,
-            coatingItemRepository: coatingItemRepository,
-            toolItemRepository: toolItemRepository,
-            inventoryRepository: inventoryRepository,
-            itemTagsRepository: itemTagsRepository,
-            userTagsRepository: userTagsRepository,
-            itemMinimumRepository: itemMinimumRepository,
-            shoppingListRepository: shoppingListRepository,
-            projectRepository: projectRepository,
-            logbookRepository: logbookRepository,
-            purchaseRecordRepository: purchaseRecordRepository,
-            kilnScheduleRepository: kilnScheduleRepository,
-            recipeRepository: recipeRepository,
-            unifiedLocationRepository: unifiedLocationRepository,
-            ratingRepository: ratingRepository,
-            subscriptionService: RevenueCatSubscriptionService(),
-            loggingService: self.loggingService
-        )
+        // Create subscription service (not lazy because it's passed through)
+        self._subscriptionService = RevenueCatSubscriptionService()
+
+        // All other services are created lazily when first accessed
     }
 
     // MARK: - Service Setup Helper
@@ -285,116 +376,6 @@ class AppDependencies {
                 minimumRemoteLevel: .error     // Only send errors/critical to Sentry
             )
         }
-    }
-
-    /// Create all services with the provided repositories
-    /// This eliminates duplication between production and test inits
-    private static func setupServices(
-        glassItemRepository: GlassItemRepository,
-        coatingItemRepository: CoatingItemRepository,
-        toolItemRepository: ToolItemRepository,
-        inventoryRepository: InventoryRepository,
-        itemTagsRepository: ItemTagsRepository,
-        userTagsRepository: UserTagsRepository,
-        itemMinimumRepository: ItemMinimumRepository,
-        shoppingListRepository: ShoppingListRepository,
-        projectRepository: ProjectRepository,
-        logbookRepository: LogbookRepository,
-        purchaseRecordRepository: PurchaseRecordRepository,
-        kilnScheduleRepository: KilnScheduleRepository,
-        recipeRepository: RecipeRepository,
-        unifiedLocationRepository: UnifiedLocationRepository,
-        ratingRepository: RatingRepository,
-        subscriptionService: SubscriptionServiceProtocol,
-        loggingService: LoggingService
-    ) -> (
-        InventoryTrackingService,
-        CatalogService,
-        ShoppingListService,
-        ProjectService,
-        PurchaseRecordService,
-        KilnScheduleService,
-        RecipeService,
-        UnifiedLocationService,
-        EntitlementService,
-        SubscriptionServiceProtocol,
-        RatingService
-    ) {
-        // Create inventory tracking service first (needed by catalog service)
-        let inventoryTrackingService = InventoryTrackingService(
-            glassItemRepository: glassItemRepository,
-            inventoryRepository: inventoryRepository,
-            itemTagsRepository: itemTagsRepository
-        )
-
-        // Create rating service (needed by catalog service)
-        let ratingService = RatingService(repository: ratingRepository, logger: loggingService)
-
-        // Create catalog service (depends on inventory tracking service and rating service)
-        let catalogService = CatalogService(
-            glassItemRepository: glassItemRepository,
-            coatingItemRepository: coatingItemRepository,
-            toolItemRepository: toolItemRepository,
-            inventoryTrackingService: inventoryTrackingService,
-            itemMinimumRepository: itemMinimumRepository,
-            itemTagsRepository: itemTagsRepository,
-            userTagsRepository: userTagsRepository,
-            ratingService: ratingService
-        )
-
-        // Create shopping list service
-        let shoppingListService = ShoppingListService(
-            itemMinimumRepository: itemMinimumRepository,
-            shoppingListRepository: shoppingListRepository,
-            inventoryRepository: inventoryRepository,
-            glassItemRepository: glassItemRepository,
-            itemTagsRepository: itemTagsRepository,
-            userTagsRepository: userTagsRepository
-        )
-
-        // Create project service
-        let projectService = ProjectService(
-            projectRepository: projectRepository,
-            logbookRepository: logbookRepository,
-            userTagsRepository: userTagsRepository
-        )
-
-        // Create purchase record service
-        let purchaseRecordService = PurchaseRecordService(
-            repository: purchaseRecordRepository
-        )
-
-        // Create kiln schedule service
-        let kilnScheduleService = KilnScheduleService(
-            repository: kilnScheduleRepository
-        )
-
-        // Create recipe service
-        let recipeService = RecipeService(
-            repository: recipeRepository
-        )
-
-        // Create unified location service
-        let unifiedLocationService = UnifiedLocationService(
-            repository: unifiedLocationRepository
-        )
-
-        // Create entitlement service
-        let entitlementService = EntitlementService()
-
-        return (
-            inventoryTrackingService,
-            catalogService,
-            shoppingListService,
-            projectService,
-            purchaseRecordService,
-            kilnScheduleService,
-            recipeService,
-            unifiedLocationService,
-            entitlementService,
-            subscriptionService,
-            ratingService
-        )
     }
 
     // MARK: - Lazy Services

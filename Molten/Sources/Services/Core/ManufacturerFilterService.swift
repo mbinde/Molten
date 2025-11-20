@@ -55,7 +55,7 @@ final class ManufacturerFilterService {
     }
 
     /// Check if a manufacturer is enabled
-    nonisolated func isManufacturerEnabled(_ manufacturer: String) -> Bool {
+    func isManufacturerEnabled(_ manufacturer: String) -> Bool {
         return model.isManufacturerEnabled(manufacturer)
     }
 
@@ -84,7 +84,7 @@ final class ManufacturerFilterService {
     }
 
     /// Check if an item should be shown based on manufacturer filter
-    nonisolated func shouldShowItem(manufacturer: String?) -> Bool {
+    func shouldShowItem(manufacturer: String?) -> Bool {
         return model.shouldShowItem(manufacturer: manufacturer)
     }
 
@@ -95,22 +95,22 @@ final class ManufacturerFilterService {
     }
 
     /// Number of enabled manufacturers
-    nonisolated var enabledCount: Int {
+    var enabledCount: Int {
         model.enabledCount
     }
 
     /// Total number of available manufacturers
-    nonisolated var totalCount: Int {
+    var totalCount: Int {
         model.totalCount
     }
 
     /// Check if all manufacturers are selected
-    nonisolated var isAllSelected: Bool {
+    var isAllSelected: Bool {
         model.isAllSelected
     }
 
     /// Check if no manufacturers are selected
-    nonisolated var isNoneSelected: Bool {
+    var isNoneSelected: Bool {
         model.isNoneSelected
     }
 

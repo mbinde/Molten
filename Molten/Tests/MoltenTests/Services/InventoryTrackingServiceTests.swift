@@ -327,26 +327,27 @@ struct InventoryTrackingServiceTests {
 
         // Use real catalog data (catalog is read-only)
         let catalogItems = try await catalogService.getGlassItemsLightweight()
-        // Find an item that has tags
-        let itemWithTags = try catalogItems.first(where: { item in
-            if let tags = try? catalogService.getTagsForItem(item.stable_id), !tags.isEmpty {
-                return true
-            }
-            return false
-        })
 
-        guard let item1 = itemWithTags else {
+        // Find an item that has tags by getting complete items
+        var itemWithTags: GlassItemModel? = nil
+        var firstTag: String? = nil
+
+        for item in catalogItems.prefix(20) {
+            if let completeItem = try await service.getCompleteItem(stableId: item.stable_id),
+               !completeItem.tags.isEmpty {
+                itemWithTags = item
+                firstTag = completeItem.tags.first
+                break
+            }
+        }
+
+        guard let item1 = itemWithTags, let tag = firstTag else {
             // Skip test if no catalog items have tags
             return
         }
 
-        let tags = try await catalogService.getTagsForItem(item1.stable_id)
-        guard let firstTag = tags.first else {
-            return // Skip if no tags
-        }
-
         // Search using the real tag from catalog
-        let results = try await service.searchItems(text: item1.name, withTags: [firstTag])
+        let results = try await service.searchItems(text: item1.name, withTags: [tag])
 
         #expect(results.count >= 1)
         #expect(results.contains { $0.glassItem.stable_id == item1.stable_id })

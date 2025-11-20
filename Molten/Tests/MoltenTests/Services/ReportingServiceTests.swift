@@ -237,7 +237,7 @@ struct ReportingServiceTests {
 
         // Find stats for the actual manufacturer from our test data
         let manufacturerStats = report.manufacturerStatistics.first { stat in
-            stat.abbreviation == manufacturerAbbr
+            stat.name == manufacturerAbbr
         }
         #expect(manufacturerStats != nil, "Should have stats for manufacturer \(manufacturerAbbr)")
         #expect((manufacturerStats?.itemCount ?? 0) > 0, "Should have item count")
@@ -258,7 +258,7 @@ struct ReportingServiceTests {
 
         // Find stats for the actual manufacturer from our test data
         let manufacturerStats = report.manufacturerStatistics.first { stat in
-            stat.abbreviation == manufacturerAbbr
+            stat.name == manufacturerAbbr
         }
         #expect(manufacturerStats != nil, "Should have stats for manufacturer \(manufacturerAbbr)")
         #expect((manufacturerStats?.uniqueCoes.count ?? 0) > 0, "Should have at least one unique COE")

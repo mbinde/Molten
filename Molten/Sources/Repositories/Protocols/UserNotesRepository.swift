@@ -34,7 +34,7 @@ nonisolated protocol UserNotesRepository: Sendable {
 
     /// Delete notes by ID
     /// - Parameter id: The ID of the notes to delete
-    func deleteNotes(byId id: String) async throws
+    func deleteNotes(byId id: UUID) async throws
 
     // MARK: - Query Operations
 

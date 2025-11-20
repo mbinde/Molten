@@ -53,7 +53,8 @@ class CoreDataUserNotesRepository: @unchecked Sendable, UserNotesRepository {
                     }
                     let coreDataItem = NSManagedObject(entity: entity, insertInto: self.backgroundContext)
 
-                    // Set properties (no id in Core Data)
+                    // Set properties
+                    coreDataItem.setValue(notes.id, forKey: "id")
                     coreDataItem.setValue(notes.item_stable_id, forKey: "item_stable_id")
                     coreDataItem.setValue(notes.notes, forKey: "notes")
 
@@ -146,11 +147,36 @@ class CoreDataUserNotesRepository: @unchecked Sendable, UserNotesRepository {
         }
     }
 
-    func deleteNotes(byId id: String) async throws {
-        // Since we don't store id in Core Data, we can't delete by id
-        // This method exists for protocol conformance but isn't used
-        // Log a warning and do nothing
-        log.warning("deleteNotes(byId:) called but UserNotes entity doesn't have id field - ignoring")
+    func deleteNotes(byId id: UUID) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            backgroundContext.perform {
+                do {
+                    // Find item by UUID
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "UserNotes")
+                    fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+
+                    guard let coreDataItem = try self.backgroundContext.fetch(fetchRequest).first else {
+                        self.log.warning("Attempted to delete non-existent notes with id: \(id)")
+                        // Not throwing error - idempotent delete
+                        continuation.resume()
+                        return
+                    }
+
+                    // Delete item
+                    self.backgroundContext.delete(coreDataItem)
+
+                    // Save context
+                    try self.backgroundContext.save()
+
+                    self.log.info("Deleted user notes with id: \(id)")
+                    continuation.resume()
+
+                } catch {
+                    self.log.error("Failed to delete user notes by id: \(error)")
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
     }
 
     // MARK: - Query Operations
@@ -352,10 +378,18 @@ class CoreDataUserNotesRepository: @unchecked Sendable, UserNotesRepository {
             return nil
         }
 
-        // Generate a unique id for the model (not stored in Core Data)
-        // Use item_stable_id as the id since it's unique
+        // Get UUID from Core Data, or generate new one for legacy data
+        let id: UUID
+        if let storedId = coreDataItem.value(forKey: "id") as? UUID {
+            id = storedId
+        } else {
+            // Legacy data without UUID - generate one
+            id = UUID()
+            log.warning("UserNotes record missing UUID for item \(item_stable_id) - generating new one")
+        }
+
         return UserNotesModel(
-            id: item_stable_id,
+            id: id,
             item_stable_id: item_stable_id,
             notes: notes
         )

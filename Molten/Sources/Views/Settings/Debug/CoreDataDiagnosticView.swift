@@ -112,7 +112,8 @@ struct CoreDataDiagnosticView: View {
         results += "\n5. MODEL ENTITIES:\n"
         let model = controller.container.managedObjectModel
         for entity in model.entities.sorted(by: { ($0.name ?? "") < ($1.name ?? "") }) {
-            results += "   - \(entity.name?.description ?? "Unknown") (\(entity.managedObjectClassName))\n"
+            let entityName = entity.name ?? "Unknown"
+            results += "   - \(entityName) (\(entity.managedObjectClassName))\n"
         }
         
         results += "\n=== END DIAGNOSTICS ===\n"

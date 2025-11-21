@@ -60,7 +60,7 @@ class JSON5Parser {
         let lines = input.components(separatedBy: .newlines)
         var processedLines: [String] = []
         
-        for (lineNumber, line) in lines.enumerated() {
+        for (_, line) in lines.enumerated() {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             
             // Skip empty lines and lines that are only comments

@@ -3,20 +3,20 @@
 //  Flameworker
 //
 //  Created by Assistant on 10/18/25.
-//  Shared component for searching and selecting glass items
+//  Shared component for searching and selecting catalog items (glass, coatings, tools)
 //
 
 import SwiftUI
 
-/// Shared component for searching and selecting glass items
+/// Shared component for searching and selecting catalog items
 /// Used by AddInventoryItemView and AddShoppingListItemView
-/// Uses lightweight GlassItemModel for optimal search performance
+/// Uses lightweight UnifiedCatalogItem for optimal search performance
 struct GlassItemSearchSelector: View {
-    @Binding var selectedGlassItem: GlassItemModel?
+    @Binding var selectedGlassItem: UnifiedCatalogItem?
     @Binding var searchText: String
     let prefilledNaturalKey: String?
-    let glassItems: [GlassItemModel]
-    let onSelect: (GlassItemModel) -> Void
+    let glassItems: [UnifiedCatalogItem]
+    let onSelect: (UnifiedCatalogItem) -> Void
     let onClear: () -> Void
 
     @State private var localSearchText: String = ""  // Local copy for immediate UI updates
@@ -24,14 +24,14 @@ struct GlassItemSearchSelector: View {
     @FocusState private var isSearchFieldFocused: Bool
 
     var body: some View {
-        Section("Glass Item") {
+        Section("Catalog Item") {
             // Always show search field (even when item is selected)
             if prefilledNaturalKey == nil {
                 searchField
             }
 
-            if let glassItem = selectedGlassItem {
-                selectedItemView(glassItem)
+            if let catalogItem = selectedGlassItem {
+                selectedItemView(catalogItem)
             } else if !searchText.isEmpty && prefilledNaturalKey == nil {
                 // Only show results after debounce completes (searchText is updated)
                 searchResultsView
@@ -110,10 +110,10 @@ struct GlassItemSearchSelector: View {
         }
     }
 
-    private func selectedItemView(_ glassItem: GlassItemModel) -> some View {
+    private func selectedItemView(_ catalogItem: UnifiedCatalogItem) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             selectedItemHeader
-            GlassItemCard(item: glassItem, variant: .compact)
+            GlassItemCard(catalogItem: catalogItem, variant: .compact)
                 .allowsHitTesting(false) // Prevent card clicks from deselecting
         }
         .padding(.vertical, 8)
@@ -152,7 +152,7 @@ struct GlassItemSearchSelector: View {
                         onSelect(item)
                         // Don't clear search text - keep it for refinement
                     }) {
-                        GlassItemCard(item: item, variant: .compact)
+                        GlassItemCard(catalogItem: item, variant: .compact)
                     }
                     .buttonStyle(.plain)
                 }
@@ -195,7 +195,7 @@ struct GlassItemSearchSelector: View {
 
     // MARK: - Computed Properties
 
-    private var filteredGlassItems: [GlassItemModel] {
+    private var filteredGlassItems: [UnifiedCatalogItem] {
         // Use searchText (not localSearchText) so filtering only happens AFTER debounce
         // This prevents expensive image loading during the debounce period
         if searchText.isEmpty {
@@ -237,9 +237,9 @@ struct NotFoundCard: View {
 
 #Preview {
     struct PreviewWrapper: View {
-        @State private var selectedItem: GlassItemModel? = nil
+        @State private var selectedItem: UnifiedCatalogItem? = nil
         @State private var searchText: String = ""
-        @State private var glassItems: [GlassItemModel] = []
+        @State private var catalogItems: [UnifiedCatalogItem] = []
         private let catalogService: CatalogService
 
         init() {
@@ -253,7 +253,7 @@ struct NotFoundCard: View {
                     selectedGlassItem: $selectedItem,
                     searchText: $searchText,
                     prefilledNaturalKey: nil,
-                    glassItems: glassItems,
+                    glassItems: catalogItems,
                     onSelect: { item in
                         selectedItem = item
                         searchText = ""
@@ -266,7 +266,7 @@ struct NotFoundCard: View {
             }
             .task {
                 do {
-                    glassItems = try await catalogService.getGlassItemsLightweight()
+                    catalogItems = try await catalogService.getAllCatalogItemsLightweight()
                 } catch {
                     print("Error loading items: \(error)")
                 }

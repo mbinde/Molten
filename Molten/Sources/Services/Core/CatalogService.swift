@@ -89,6 +89,26 @@ actor CatalogService {
         }
     }
 
+    /// Get all catalog items (glass, coatings, and tools) in lightweight format (no inventory/tags/ratings)
+    /// Use this for search/autocomplete functionality where you only need basic item info
+    func getAllCatalogItemsLightweight() async throws -> [UnifiedCatalogItem] {
+        // Get all three types of catalog items in parallel
+        async let glassItemsTask = glassItemRepository.fetchItems(matching: nil)
+        async let coatingItemsTask = coatingItemRepository.fetchItems(matching: nil)
+        async let toolItemsTask = toolItemRepository.fetchItems(matching: nil)
+
+        let (glassItems, coatingItems, toolItems) = try await (glassItemsTask, coatingItemsTask, toolItemsTask)
+
+        // Convert all items to UnifiedCatalogItem
+        var allCatalogItems: [UnifiedCatalogItem] = []
+        allCatalogItems += glassItems.map { UnifiedCatalogItem(glassItem: $0) }
+        allCatalogItems += coatingItems.map { UnifiedCatalogItem(coatingItem: $0) }
+        allCatalogItems += toolItems.map { UnifiedCatalogItem(toolItem: $0) }
+
+        // Sort by name
+        return allCatalogItems.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
     /// Get all catalog items (glass, coatings, and tools) with complete information and flexible sorting
     func getAllGlassItems(
         sortBy: GlassItemSortOption = .name,

@@ -12,13 +12,13 @@ import SwiftUI
 import Combine
 
 /// Lightweight singleton cache for catalog search data
-/// Only loads GlassItemModel objects (no inventory/tags/locations)
+/// Loads all catalog items (glass, coatings, tools) as UnifiedCatalogItem objects (no inventory/tags/ratings)
 /// Used by search views for fast autocomplete and item selection
 @MainActor
 class CatalogSearchCache: ObservableObject {
     static let shared = CatalogSearchCache()
 
-    @Published private(set) var items: [GlassItemModel] = []
+    @Published private(set) var items: [UnifiedCatalogItem] = []
     @Published private(set) var isLoaded: Bool = false
     @Published private(set) var isLoading: Bool = false
 
@@ -68,7 +68,7 @@ class CatalogSearchCache: ObservableObject {
         isLoading = true
 
         do {
-            let loadedItems = try await catalogService.getGlassItemsLightweight()
+            let loadedItems = try await catalogService.getAllCatalogItemsLightweight()
             items = loadedItems
             isLoaded = true
         } catch {
@@ -85,7 +85,7 @@ class CatalogSearchCache: ObservableObject {
     /// Convenience method to load items using the search cache
     /// Always use this for search/autocomplete functionality
     /// For full item data with inventory/tags, use CatalogDataCache instead
-    static func loadItems(using catalogService: CatalogService) async -> [GlassItemModel] {
+    static func loadItems(using catalogService: CatalogService) async -> [UnifiedCatalogItem] {
         let cache = CatalogSearchCache.shared
         await cache.loadIfNeeded(catalogService: catalogService)
         return cache.items

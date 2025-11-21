@@ -31,16 +31,15 @@ struct TabCustomizationView: View {
                     .foregroundColor(DesignSystem.Colors.textSecondary)
 
                 // Live preview of tab bar
-                VStack(spacing: 8) {
+                VStack(spacing: 4) {
                     Text("Preview")
                         .font(.caption)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     TabBarPreview(config: config)
-                        .padding(.vertical, 8)
                 }
-                .padding(.top, 8)
+                .padding(.top, 4)
             } header: {
                 Text("Tab Bar Size")
             }
@@ -173,7 +172,7 @@ struct TabBarPreview: View {
                 miniMoreButton
             }
         }
-        .frame(height: 50)
+        .frame(height: 44)
         .background(Color.gray.opacity(0.15))
         .cornerRadius(10)
     }

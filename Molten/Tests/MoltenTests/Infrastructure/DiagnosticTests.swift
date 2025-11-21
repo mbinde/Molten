@@ -77,41 +77,48 @@ struct DiagnosticTests: MockOnlyTestSuite {
     @Test("Verify service creation with TestConfiguration")
     func testServiceCreationWithTestConfiguration() async throws {
         print("🔍 DIAGNOSTIC: Testing service creation with TestConfiguration")
-        
+
         // Use TestConfiguration to create completely isolated mock repositories
         let repos = TestConfiguration.setupMockOnlyTestEnvironment()
-        
+
         // Verify they're empty
         let initialGlassCount = await repos.glassItem.getItemCount()
         let initialInventoryCount = await repos.inventory.getInventoryCount()
         print("📊 Initial counts - Glass: \(initialGlassCount), Inventory: \(initialInventoryCount)")
-        
+
         #expect(initialGlassCount == 0, "Glass item repository should start empty")
         #expect(initialInventoryCount == 0, "Inventory repository should start empty")
-        
-        // Create services with TestConfiguration repositories
-        let userTagsRepo = MockUserTagsRepository()
 
-        let shoppingListRepository = MockShoppingListRepository()
-        let shoppingListService = ShoppingListService(
-            itemMinimumRepository: repos.itemMinimum,
-            shoppingListRepository: shoppingListRepository,
-            inventoryRepository: repos.inventory,
+        // Create services directly with mock repositories (don't use AppDependencies)
+        let userTagsRepo = MockUserTagsRepository()
+        let ratingRepo = MockRatingRepository()
+        let mockLogger = MockLogger()
+        let ratingService = RatingService(repository: ratingRepo, logger: LoggingService(backends: [mockLogger]))
+
+        let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
-            itemTagsRepository: repos.itemTags,
-            userTagsRepository: userTagsRepo,
+            coatingItemRepository: repos.coating,
+            toolItemRepository: repos.tool,
+            inventoryRepository: repos.inventory,
+            itemTagsRepository: repos.itemTags
         )
 
-        // Circular dependency workaround: use AppDependencies which handles this properly
-        let testDeps = await MainActor.run { AppDependencies() }
-        let catalogService = await MainActor.run { testDeps.catalogService }
-        let inventoryTrackingService = await MainActor.run { testDeps.inventoryTrackingService }
-        
+        let catalogService = CatalogService(
+            glassItemRepository: repos.glassItem,
+            coatingItemRepository: repos.coating,
+            toolItemRepository: repos.tool,
+            inventoryTrackingService: inventoryTrackingService,
+            itemMinimumRepository: repos.itemMinimum,
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepo,
+            ratingService: ratingService
+        )
+
         // Test that services use the injected repositories
         let catalogItems = try await catalogService.getAllGlassItems()
         print("📊 Catalog items from service: \(catalogItems.count)")
         #expect(catalogItems.count == 0, "Catalog service should show empty repository")
-        
+
         // Add an item through the service
         let testItem = GlassItemModel(
             stable_id: generateStableId(manufacturer: "service", sku: "001"),
@@ -123,19 +130,19 @@ struct DiagnosticTests: MockOnlyTestSuite {
             url: nil,
             mfr_status: "available"
         )
-        
+
         print("📝 Creating item through catalog service")
         let createdCompleteItem = try await catalogService.createGlassItem(testItem, initialInventory: [], tags: ["test"])
         print("✅ Created via service: \(createdCompleteItem.glassItem.name)")
-        
+
         // Verify it appears in both the repository and service
         let finalRepoCount = await repos.glassItem.getItemCount()
         let finalServiceCount = (try await catalogService.getAllGlassItems()).count
-        
+
         print("📊 Final counts - Repo: \(finalRepoCount), Service: \(finalServiceCount)")
         #expect(finalRepoCount == 1, "Repository should have 1 item")
         #expect(finalServiceCount == 1, "Service should show 1 item")
-        
+
         print("✅ DIAGNOSTIC: Service creation with TestConfiguration works correctly")
     }
     

@@ -94,6 +94,24 @@ class UserSettings {
         }
     }
 
+    /// Color chip display mode preference
+    /// - Default: .noPhoto (show gradient chip only when no photo available)
+    /// - Options: .always (always show gradient), .noPhoto (only when no photo), .never (never show gradient)
+    var colorChipDisplayMode: ColorChipDisplayMode {
+        get {
+            if let rawValue = UserDefaults.standard.string(forKey: Keys.colorChipDisplayMode),
+               let mode = ColorChipDisplayMode(rawValue: rawValue) {
+                return mode
+            }
+            return .noPhoto
+        }
+        set {
+            withMutation(keyPath: \.colorChipDisplayMode) {
+                UserDefaults.standard.set(newValue.rawValue, forKey: Keys.colorChipDisplayMode)
+            }
+        }
+    }
+
     // MARK: - Image Quality Settings
 
     /// Controls whether to download full-size images instead of thumbnails
@@ -394,6 +412,7 @@ class UserSettings {
         static let expandUserNotes = "expandUserNotesByDefault"
         static let appearanceMode = "appearanceMode"
         static let thumbnailDisplayMode = "thumbnailDisplayMode"
+        static let colorChipDisplayMode = "colorChipDisplayMode"
         static let showUserTagsInFilter = "showUserTagsInFilter"
         static let showTechnicalTagsInFilter = "showTechnicalTagsInFilter"
         static let inventoryOwner = "inventoryOwner"
@@ -479,6 +498,46 @@ class UserSettings {
                 return .fit
             case .fill:
                 return .fill
+            }
+        }
+    }
+
+    /// Color chip display mode options for catalog items
+    enum ColorChipDisplayMode: String, CaseIterable {
+        case always = "always"
+        case noPhoto = "noPhoto"
+        case never = "never"
+
+        var displayName: String {
+            switch self {
+            case .always:
+                return "Always"
+            case .noPhoto:
+                return "No Photo"
+            case .never:
+                return "Never"
+            }
+        }
+
+        var description: String {
+            switch self {
+            case .always:
+                return "Always show a gradient color chip rather than the manufacturer photo."
+            case .noPhoto:
+                return "Only show a gradient color chip when we don't have a photo from the manufacturer."
+            case .never:
+                return "Never show a gradient color chip; show the manufacturer's logo instead if we don't have a photo."
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .always:
+                return "paintpalette.fill"
+            case .noPhoto:
+                return "photo.badge.plus"
+            case .never:
+                return "photo.slash"
             }
         }
     }

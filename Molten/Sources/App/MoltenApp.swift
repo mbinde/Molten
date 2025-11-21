@@ -27,6 +27,20 @@ struct MoltenApp: App {
     /// Views use @Environment(SubscriptionManager.self) which force-unwraps
     @State private var subscriptionManager: SubscriptionManager
 
+    /// Appearance mode - using AppStorage for immediate reactivity
+    @AppStorage("appearanceMode") private var appearanceModeRawValue: String = "system"
+
+    private var colorScheme: ColorScheme? {
+        guard let mode = UserSettings.AppearanceMode(rawValue: appearanceModeRawValue) else {
+            return nil
+        }
+        switch mode {
+        case .light: return .light
+        case .dark: return .dark
+        case .system: return nil
+        }
+    }
+
     init() {
         // Detect test environment BEFORE initializing dependencies
         let isTest = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
@@ -109,7 +123,7 @@ struct MoltenApp: App {
             .modifier(DependenciesEnvironmentModifier(dependencies: dependencies))
             .environment(dependencies.entitlementService)
             .modifier(SubscriptionEnvironmentModifier(subscriptionManager: subscriptionManager))
-            .preferredColorScheme(UserSettings.shared.colorScheme)
+            .preferredColorScheme(colorScheme)
             .tint(DesignSystem.Colors.accentSecondary)
             #if os(iOS)
             .onShake {

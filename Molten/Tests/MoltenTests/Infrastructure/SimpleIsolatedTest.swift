@@ -88,22 +88,15 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
         #expect(initialGlassCount == 0, "Mock should start empty")
 
         // Create services with explicit injection
-        let inventoryService = InventoryTrackingService(
-            glassItemRepository: mockGlassItemRepo,
-            inventoryRepository: mockInventoryRepo,
-            itemTagsRepository: mockItemTagsRepo
-        )
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
 
-        let shoppingListRepository = MockShoppingListRepository()
-        let shoppingService = ShoppingListService(
-            itemMinimumRepository: mockItemMinimumRepo,
-            shoppingListRepository: shoppingListRepository,
-            inventoryRepository: mockInventoryRepo,
+        let inventoryService = InventoryTrackingService(
             glassItemRepository: mockGlassItemRepo,
-            itemTagsRepository: mockItemTagsRepo,
-            userTagsRepository: mockUserTagsRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
+            inventoryRepository: mockInventoryRepo,
+            itemTagsRepository: mockItemTagsRepo
         )
 
         let catalogService = CatalogService(
@@ -114,7 +107,17 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
             itemMinimumRepository: mockItemMinimumRepo,
             itemTagsRepository: mockItemTagsRepo,
             userTagsRepository: mockUserTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: RatingService()
+        )
+
+        let shoppingListRepository = MockShoppingListRepository()
+        let shoppingService = ShoppingListService(
+            itemMinimumRepository: mockItemMinimumRepo,
+            shoppingListRepository: shoppingListRepository,
+            inventoryRepository: mockInventoryRepo,
+            glassItemRepository: mockGlassItemRepo,
+            itemTagsRepository: mockItemTagsRepo,
+            userTagsRepository: mockUserTagsRepo
         )
         
         // Test: Add item directly to mock repository

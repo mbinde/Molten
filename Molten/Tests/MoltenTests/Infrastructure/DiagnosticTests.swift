@@ -91,14 +91,6 @@ struct DiagnosticTests: MockOnlyTestSuite {
         
         // Create services with TestConfiguration repositories
         let userTagsRepo = MockUserTagsRepository()
-        let coatingItemRepo = MockCoatingItemRepository()
-        let toolItemRepo = MockToolItemRepository()
-
-        let inventoryTrackingService = InventoryTrackingService(
-            glassItemRepository: repos.glassItem,
-            inventoryRepository: repos.inventory,
-            itemTagsRepository: repos.itemTags
-        )
 
         let shoppingListRepository = MockShoppingListRepository()
         let shoppingListService = ShoppingListService(
@@ -110,16 +102,10 @@ struct DiagnosticTests: MockOnlyTestSuite {
             userTagsRepository: userTagsRepo,
         )
 
-        let catalogService = CatalogService(
-            glassItemRepository: repos.glassItem,
-            coatingItemRepository: coatingItemRepo,
-            toolItemRepository: toolItemRepo,
-            inventoryTrackingService: inventoryTrackingService,
-            itemMinimumRepository: repos.itemMinimum,
-            itemTagsRepository: repos.itemTags,
-            userTagsRepository: userTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
-        )
+        // Circular dependency workaround: use AppDependencies which handles this properly
+        let testDeps = await MainActor.run { AppDependencies() }
+        let catalogService = await MainActor.run { testDeps.catalogService }
+        let inventoryTrackingService = await MainActor.run { testDeps.inventoryTrackingService }
         
         // Test that services use the injected repositories
         let catalogItems = try await catalogService.getAllGlassItems()

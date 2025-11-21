@@ -416,6 +416,27 @@ actor CatalogService {
         return try await glassItemRepository.fetchItem(byStableId: stableId)
     }
 
+    /// Get a catalog item (glass, coating, or tool) by stable_id
+    /// Returns UnifiedCatalogItem if found, nil otherwise
+    func getCatalogItem(byStableId stableId: String) async throws -> UnifiedCatalogItem? {
+        // Try glass items first (most common)
+        if let glassItem = try await glassItemRepository.fetchItem(byStableId: stableId) {
+            return UnifiedCatalogItem(glassItem: glassItem)
+        }
+
+        // Try coatings
+        if let coatingItem = try await coatingItemRepository.fetchItem(byStableId: stableId) {
+            return UnifiedCatalogItem(coatingItem: coatingItem)
+        }
+
+        // Try tools
+        if let toolItem = try await toolItemRepository.fetchItem(byStableId: stableId) {
+            return UnifiedCatalogItem(toolItem: toolItem)
+        }
+
+        return nil
+    }
+
     /// Update a glass item with comprehensive data
     func updateGlassItem(
         stableId: String,

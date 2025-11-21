@@ -268,11 +268,26 @@ struct TestDataSetup {
     static func createTestCatalogService() async throws -> CatalogService {
         let (glassItemRepo, inventoryRepo, locationRepo, itemTagsRepo, itemMinimumRepo) = try await setupCompleteTestEnvironment()
         let userTagsRepo = MockUserTagsRepository()
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
 
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: inventoryRepo,
             itemTagsRepository: itemTagsRepo
+        )
+
+        let catalogService = CatalogService(
+            glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
+            inventoryTrackingService: inventoryTrackingService,
+            itemMinimumRepository: itemMinimumRepo,
+            itemTagsRepository: itemTagsRepo,
+            userTagsRepository: userTagsRepo,
+            ratingService: RatingService()
         )
 
         let shoppingListRepository = MockShoppingListRepository()
@@ -282,37 +297,27 @@ struct TestDataSetup {
             inventoryRepository: inventoryRepo,
             glassItemRepository: glassItemRepo,
             itemTagsRepository: itemTagsRepo,
-            userTagsRepository: userTagsRepo,
+            userTagsRepository: userTagsRepo
         )
-        
-        let coatingItemRepo = MockCoatingItemRepository()
-        let toolItemRepo = MockToolItemRepository()
 
-        let ratingService = await MainActor.run {
-            AppDependencies.shared.ratingService
-        }
-
-        return CatalogService(
-            glassItemRepository: glassItemRepo,
-            coatingItemRepository: coatingItemRepo,
-            toolItemRepository: toolItemRepo,
-            inventoryTrackingService: inventoryTrackingService,
-            itemMinimumRepository: itemMinimumRepo,
-            itemTagsRepository: itemTagsRepo,
-            userTagsRepository: userTagsRepo,
-            ratingService: ratingService
-        )
+        return catalogService
     }
 
     /// Create a complete inventory tracking service with populated test data
     static func createTestInventoryTrackingService() async throws -> InventoryTrackingService {
-        let (glassItemRepo, inventoryRepo, locationRepo, itemTagsRepo, _) = try await setupCompleteTestEnvironment()
+        let (glassItemRepo, inventoryRepo, locationRepo, itemTagsRepo, itemMinimumRepo) = try await setupCompleteTestEnvironment()
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
 
-        return InventoryTrackingService(
+        let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: inventoryRepo,
             itemTagsRepository: itemTagsRepo
         )
+
+        return inventoryTrackingService
     }
 }
 

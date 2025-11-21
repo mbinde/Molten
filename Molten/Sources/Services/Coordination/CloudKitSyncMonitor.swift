@@ -102,7 +102,7 @@ class CloudKitSyncMonitor: ObservableObject {
             .sink { [weak self] eventData in
                 let (isImport, endDate, error) = eventData
                 Task { @MainActor [weak self] in
-                    await self?.handleCloudKitEventData(isImport: isImport, endDate: endDate, error: error)
+                    self?.handleCloudKitEventData(isImport: isImport, endDate: endDate, error: error)
                 }
             }
             .store(in: &cancellables)
@@ -111,7 +111,7 @@ class CloudKitSyncMonitor: ObservableObject {
         NotificationCenter.default.publisher(for: NSPersistentCloudKitContainer.eventChangedNotification)
             .sink { [weak self] _ in
                 Task { @MainActor [weak self] in
-                    await self?.updateOnlineStatus()
+                    self?.updateOnlineStatus()
                 }
             }
             .store(in: &cancellables)
@@ -198,8 +198,8 @@ class CloudKitSyncMonitor: ObservableObject {
                 .serverResponseLost,
                 .requestRateLimited,
                 .serviceUnavailable,
-                .zoneBusy,
-                .resultsTruncated
+                .zoneBusy
+                // Note: .resultsTruncated was deprecated in macOS 10.12 and removed from transient errors list
             ]
             if transientErrors.contains(where: { $0.rawValue == nsError.code }) {
                 return

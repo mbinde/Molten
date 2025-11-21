@@ -16,8 +16,16 @@ struct SettingsView: View {
     @AppStorage("defaultInventorySortOption") private var defaultInventorySortOptionRawValue = "Name"
     @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.pounds.rawValue
     @AppStorage("showRatingsInCatalog") private var showRatingsInCatalog = true
+    @AppStorage("appearanceMode") private var appearanceModeString: String = "system"
     @Environment(EntitlementService.self) private var entitlementService
     @Environment(SubscriptionManager.self) private var subscriptionManager
+
+    private var selectedAppearanceMode: Binding<UserSettings.AppearanceMode> {
+        Binding(
+            get: { UserSettings.AppearanceMode(rawValue: appearanceModeString) ?? .system },
+            set: { appearanceModeString = $0.rawValue }
+        )
+    }
 
     private let catalogService: CatalogService
     private let subscriptionService: SubscriptionServiceProtocol
@@ -91,15 +99,23 @@ struct SettingsView: View {
         subscriptionViewModel.hasProAccess ? .yellow : .blue.opacity(0.2)
     }
 
+    private var colorScheme: ColorScheme? {
+        guard let mode = UserSettings.AppearanceMode(rawValue: appearanceModeString) else {
+            return nil
+        }
+        switch mode {
+        case .light: return .light
+        case .dark: return .dark
+        case .system: return nil
+        }
+    }
+
     var body: some View {
         NavigationStack {
             List {
                 // MARK: - General
                 Section("General") {
-                    Picker("Appearance", selection: Binding(
-                        get: { UserSettings.shared.appearanceMode },
-                        set: { UserSettings.shared.appearanceMode = $0 }
-                    )) {
+                    Picker("Appearance", selection: selectedAppearanceMode) {
                         ForEach(UserSettings.AppearanceMode.allCases, id: \.self) { mode in
                             Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
                         }
@@ -124,8 +140,8 @@ struct SettingsView: View {
 
                 }
 
-                // MARK: - Catalog & Display
-                Section("Catalog & Display") {
+                // MARK: - Catalog and Inventory Settings
+                Section("Catalog and Inventory Settings") {
                     NavigationLink {
                         CatalogInfoView(viewModel: catalogUpdateViewModel)
                     } label: {
@@ -146,25 +162,6 @@ struct SettingsView: View {
                         }
                     }
 
-                    HStack {
-                        Picker("Default Catalog Sort Order", selection: defaultSortOptionBinding) {
-                            ForEach(SortOption.allCases, id: \.self) { option in
-                                Text(option.rawValue).tag(option)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                    }
-
-                    HStack {
-                        Picker("Default Inventory Sort Order", selection: defaultInventorySortOptionBinding) {
-                            Text("Name").tag("Name")
-                            Text("Inventory Count").tag("Inventory Count")
-                            Text("Buy Count").tag("Buy Count")
-                            Text("Sell Count").tag("Sell Count")
-                        }
-                        .pickerStyle(.menu)
-                    }
-
                     Toggle("Expand Manufacturer Descriptions by Default", isOn: Binding(
                         get: { UserSettings.shared.expandManufacturerDescriptionsByDefault },
                         set: { UserSettings.shared.expandManufacturerDescriptionsByDefault = $0 }
@@ -181,24 +178,27 @@ struct SettingsView: View {
                         .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
                 }
 
-                // MARK: - Projects and Logs
-                Section("Projects and Logs") {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Picker("Project Thumbnail Style", selection: thumbnailDisplayModeBinding) {
-                            ForEach(UserSettings.ThumbnailDisplayMode.allCases, id: \.self) { mode in
-                                Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
+                // MARK: - Sorting and Filtering
+                Section("Sorting and Filtering") {
+                    HStack {
+                        Picker("Default Catalog Sort Order", selection: defaultSortOptionBinding) {
+                            ForEach(SortOption.allCases, id: \.self) { option in
+                                Text(option.displayName).tag(option)
                             }
                         }
                         .pickerStyle(.menu)
-
-                        Text(thumbnailDisplayMode.description)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
                     }
-                }
 
-                // MARK: - Filtering
-                Section("Filtering") {
+                    HStack {
+                        Picker("Default Inventory Sort Order", selection: defaultInventorySortOptionBinding) {
+                            Text("Name").tag("Name")
+                            Text("Inventory Count").tag("Inventory Count")
+                            Text("Buy Count").tag("Buy Count")
+                            Text("Sell Count").tag("Sell Count")
+                        }
+                        .pickerStyle(.menu)
+                    }
+
                     NavigationLink {
                         COEFilterView()
                     } label: {
@@ -255,11 +255,34 @@ struct SettingsView: View {
                         .frame(maxWidth: 200)
                         .multilineTextAlignment(.trailing)
                     }
-                    .help("Optional name to display on inventory labels (e.g., studio name or artist name)")
+                    .help("Optional name to display on inventory labels (e.g., store name, studio name or artist name)")
                 } header: {
                     Text("Content & Customization")
-                } footer: {
-                    Text("Customize how you interact with your content. The inventory owner will appear on printed labels when set.")
+                }
+
+                // MARK: - Projects and Logs
+                Section("Projects and Logs") {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Picker("Project Thumbnail Style", selection: thumbnailDisplayModeBinding) {
+                            ForEach(UserSettings.ThumbnailDisplayMode.allCases, id: \.self) { mode in
+                                Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.menu)
+
+                        Text(thumbnailDisplayMode.description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                // MARK: - Kiln
+                Section("Kiln") {
+                    NavigationLink {
+                        KilnRatesSettingsView()
+                    } label: {
+                        Label("Kiln Max Rates", systemImage: "gauge.with.dots.needle.67percent")
+                    }
                 }
 
                 // MARK: - Media & Data
@@ -274,15 +297,6 @@ struct SettingsView: View {
                         DataExportView()
                     } label: {
                         Label("Export Data", systemImage: "square.and.arrow.up")
-                    }
-                }
-
-                // MARK: - Kiln
-                Section("Kiln") {
-                    NavigationLink {
-                        KilnRatesSettingsView()
-                    } label: {
-                        Label("Kiln Max Rates", systemImage: "gauge.with.dots.needle.67percent")
                     }
                 }
 
@@ -366,6 +380,7 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
         }
+        .preferredColorScheme(colorScheme)
     }
 }
 
@@ -378,7 +393,7 @@ extension SortOption {
         case .manufacturer:
             return "Manufacturer"
         case .code:
-            return "Code"
+            return "SKU"
         case .rating:
             return "Rating"
         }

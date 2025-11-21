@@ -119,12 +119,12 @@ struct ManufacturerFilterView: View {
                             Task {
                                 if isEnabled {
                                     await manufacturerFilterService.enableManufacturer(manufacturer)
-                                    await MainActor.run {
+                                    _ = await MainActor.run {
                                         localEnabledManufacturers.insert(manufacturer)
                                     }
                                 } else {
                                     await manufacturerFilterService.disableManufacturer(manufacturer)
-                                    await MainActor.run {
+                                    _ = await MainActor.run {
                                         localEnabledManufacturers.remove(manufacturer)
                                     }
                                 }

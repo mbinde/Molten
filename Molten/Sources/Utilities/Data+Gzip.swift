@@ -24,10 +24,10 @@ extension Data {
         let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
         defer { buffer.deallocate() }
 
-        var stream = UnsafeMutablePointer<compression_stream>.allocate(capacity: 1)
+        let stream = UnsafeMutablePointer<compression_stream>.allocate(capacity: 1)
         defer { stream.deallocate() }
 
-        var status = compression_stream_init(stream, COMPRESSION_STREAM_DECODE, COMPRESSION_ZLIB)
+        let status = compression_stream_init(stream, COMPRESSION_STREAM_DECODE, COMPRESSION_ZLIB)
         guard status == COMPRESSION_STATUS_OK else {
             throw CompressionError.streamInitializationFailed
         }
@@ -109,10 +109,10 @@ extension Data {
         let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
         defer { buffer.deallocate() }
 
-        var stream = UnsafeMutablePointer<compression_stream>.allocate(capacity: 1)
+        let stream = UnsafeMutablePointer<compression_stream>.allocate(capacity: 1)
         defer { stream.deallocate() }
 
-        var status = compression_stream_init(stream, COMPRESSION_STREAM_ENCODE, COMPRESSION_ZLIB)
+        let status = compression_stream_init(stream, COMPRESSION_STREAM_ENCODE, COMPRESSION_ZLIB)
         guard status == COMPRESSION_STATUS_OK else {
             throw CompressionError.streamInitializationFailed
         }

@@ -169,7 +169,7 @@ class CatalogUpdateViewModel {
         showError = false
 
         do {
-            let result = try await updateService.downloadAndInstallUpdate(
+            _ = try await updateService.downloadAndInstallUpdate(
                 updateInfo: updateInfo,
                 force: true
             )

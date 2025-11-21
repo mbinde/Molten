@@ -53,7 +53,7 @@ struct AddShoppingListFormView: View {
     private let locationService: UnifiedLocationService
 
     @State private var stableId: String = ""
-    @State private var selectedGlassItem: GlassItemModel?
+    @State private var selectedGlassItem: UnifiedCatalogItem?
     @State private var searchText: String = ""
     @State private var quantity: String = ""
     @State private var store: String = ""
@@ -66,7 +66,7 @@ struct AddShoppingListFormView: View {
     @State private var shoppingItemCount = 0
     @State private var shoppingItemLimit = 0
 
-    @State private var glassItems: [GlassItemModel] = []
+    @State private var glassItems: [UnifiedCatalogItem] = []
     @State private var isLoading = false
 
     init(prefilledNaturalKey: String? = nil,
@@ -229,7 +229,7 @@ struct AddShoppingListFormView: View {
         }
     }
 
-    private func selectGlassItem(_ item: GlassItemModel) {
+    private func selectGlassItem(_ item: UnifiedCatalogItem) {
         selectedGlassItem = item
         stableId = item.stable_id
         // Keep search text for refinement
@@ -307,7 +307,7 @@ struct AddShoppingListFormView: View {
         }
     }
 
-    private func postSuccessNotification(glassItem: GlassItemModel, quantityValue: Double) {
+    private func postSuccessNotification(glassItem: UnifiedCatalogItem, quantityValue: Double) {
         let quantityText = String(format: "%.1f", quantityValue).replacingOccurrences(of: ".0", with: "")
         let message = "\(glassItem.name) (\(quantityText)) added to shopping list."
 
@@ -332,15 +332,15 @@ struct AddShoppingListFormView: View {
         // The cache is ALWAYS loaded during startup (see FirstRunDataLoadingView line 189)
         // If it's not loaded yet, we wait for it to finish loading (don't reload!)
         if CatalogSearchCache.shared.isLoaded {
-            // Cache ready - instant access!
-            glassItems = CatalogSearchCache.shared.items
-            print("✅ [SEARCH] Using pre-loaded cache with \(glassItems.count) items")
+            // Cache ready - instant access! Filter to glass items only (shopping list is glass-only)
+            glassItems = CatalogSearchCache.shared.items.filter { $0.itemType == .glass }
+            print("✅ [SEARCH] Using pre-loaded cache with \(glassItems.count) glass items")
         } else {
             // Cache still loading from FirstRunDataLoadingView, wait for it
             print("⏳ [SEARCH] Cache not ready, waiting for FirstRunDataLoadingView to finish...")
             await CatalogSearchCache.shared.loadIfNeeded(catalogService: catalogService)
-            glassItems = CatalogSearchCache.shared.items
-            print("✅ [SEARCH] Cache now ready with \(glassItems.count) items")
+            glassItems = CatalogSearchCache.shared.items.filter { $0.itemType == .glass }
+            print("✅ [SEARCH] Cache now ready with \(glassItems.count) glass items")
         }
 
         isLoading = false

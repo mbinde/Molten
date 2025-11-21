@@ -13,12 +13,12 @@ struct AddSuggestedGlassView: View {
     let plan: ProjectModel
     let repository: ProjectRepository
 
-    @State private var selectedGlassItem: GlassItemModel?
+    @State private var selectedGlassItem: UnifiedCatalogItem?
     @State private var searchText = ""
     @State private var quantity = ""
     @State private var unit = "rods"
     @State private var notes = ""
-    @State private var glassItems: [GlassItemModel] = []
+    @State private var glassItems: [UnifiedCatalogItem] = []
     @State private var isLoading = false
 
     private let catalogService: CatalogService
@@ -113,15 +113,15 @@ struct AddSuggestedGlassView: View {
         // The cache is ALWAYS loaded during startup (see FirstRunDataLoadingView line 189)
         // If it's not loaded yet, we wait for it to finish loading (don't reload!)
         if CatalogSearchCache.shared.isLoaded {
-            // Cache ready - instant access!
-            glassItems = CatalogSearchCache.shared.items
-            print("✅ [SEARCH] Using pre-loaded cache with \(glassItems.count) items")
+            // Cache ready - instant access! Filter to glass items only
+            glassItems = CatalogSearchCache.shared.items.filter { $0.itemType == .glass }
+            print("✅ [SEARCH] Using pre-loaded cache with \(glassItems.count) glass items")
         } else {
             // Cache still loading from FirstRunDataLoadingView, wait for it
             print("⏳ [SEARCH] Cache not ready, waiting for FirstRunDataLoadingView to finish...")
             await CatalogSearchCache.shared.loadIfNeeded(catalogService: catalogService)
-            glassItems = CatalogSearchCache.shared.items
-            print("✅ [SEARCH] Cache now ready with \(glassItems.count) items")
+            glassItems = CatalogSearchCache.shared.items.filter { $0.itemType == .glass }
+            print("✅ [SEARCH] Cache now ready with \(glassItems.count) glass items")
         }
 
         isLoading = false

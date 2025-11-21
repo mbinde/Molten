@@ -176,7 +176,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Picker("Show Color Chips", selection: colorChipDisplayModeBinding) {
                             ForEach(UserSettings.ColorChipDisplayMode.allCases, id: \.self) { mode in
-                                Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
+                                Text(mode.displayName).tag(mode)
                             }
                         }
                         .pickerStyle(.menu)

@@ -381,8 +381,10 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.mfr_status = coatingItem.mfr_status
         self.image_url = coatingItem.image_url
         self.image_path = coatingItem.image_path
-        self.image_thumb_path = nil  // Coatings don't have thumbnails yet
-        self.dominant_colors = nil  // Coatings don't have dominant colors
+        self.image_thumb_path = coatingItem.image_thumb_path
+        // Parse comma-separated dominant_colors string into array
+        // Format: '"#FF0000", "#00FF00"' -> ["#FF0000", "#00FF00"]
+        self.dominant_colors = Self.parseCommaSeparatedQuotedString(coatingItem.dominant_colors)
         self.itemType = .coating
         self.coe = nil  // Coatings don't have COE
     }
@@ -403,6 +405,34 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.dominant_colors = nil  // Tools don't have dominant colors
         self.itemType = .tool
         self.coe = nil  // Tools don't have COE
+    }
+
+    // MARK: - Helper Methods
+
+    /// Parse comma-separated quoted string into array
+    /// Format: '"value1", "value2", "value3"' -> ["value1", "value2", "value3"]
+    /// Returns nil if input is nil or empty
+    nonisolated private static func parseCommaSeparatedQuotedString(_ input: String?) -> [String]? {
+        guard let input = input, !input.isEmpty else {
+            return nil
+        }
+
+        // Remove leading/trailing whitespace
+        let trimmed = input.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else {
+            return nil
+        }
+
+        // Split by comma and extract quoted values
+        let values = trimmed.components(separatedBy: ",")
+            .compactMap { component -> String? in
+                // Remove whitespace and quotes
+                let cleaned = component.trimmingCharacters(in: .whitespaces)
+                    .trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+                return cleaned.isEmpty ? nil : cleaned
+            }
+
+        return values.isEmpty ? nil : values
     }
 
     // Equatable conformance - based on stable_id

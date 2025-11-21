@@ -418,24 +418,27 @@ struct ShoppingListView: View {
                 }
 
                 // Main content
-                if viewModel.isLoading {
-                    LoadingStateView()
-                } else if filteredShoppingLists.isEmpty {
-                    if shouldShowSearchEmptyState {
-                        ShoppingListEmptyStates.searchResults(
-                            searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
-                            activeFilters: activeFiltersForEmptyState,
-                            onClearFilters: {
-                                viewModel.searchText = ""
-                                viewModel.clearFilters()
-                            }
-                        )
+                Group {
+                    if viewModel.isLoading {
+                        LoadingStateView()
+                    } else if filteredShoppingLists.isEmpty {
+                        if shouldShowSearchEmptyState {
+                            ShoppingListEmptyStates.searchResults(
+                                searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
+                                activeFilters: activeFiltersForEmptyState,
+                                onClearFilters: {
+                                    viewModel.searchText = ""
+                                    viewModel.clearFilters()
+                                }
+                            )
+                        } else {
+                            ShoppingListEmptyStates.standard(onAddItem: { showingAddItem = true })
+                        }
                     } else {
-                        ShoppingListEmptyStates.standard(onAddItem: { showingAddItem = true })
+                        shoppingListContent
                     }
-                } else {
-                    shoppingListContent
                 }
+                .id(refreshTrigger)
             }
             .navigationTitle("Shopping List")
             #if os(iOS)
@@ -704,7 +707,6 @@ struct ShoppingListView: View {
             }
         }
         .accessibilityIdentifier("shopping.list")
-        .id(refreshTrigger)  // Force list to refresh when trigger changes
     }
 
     private func sortedItems(for list: DetailedShoppingListModel) -> [DetailedShoppingListItemModel] {

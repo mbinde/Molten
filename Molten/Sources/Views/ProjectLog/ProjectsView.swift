@@ -107,17 +107,20 @@ struct ProjectsView: View, CachedDataDeletion {
                     )
                 }
 
-                if isLoading {
-                    ProgressView()
-                        .scaleEffect(1.5)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if projects.isEmpty && searchText.isEmpty {
-                    ProjectsEmptyStates.standard(onCreatePlan: createNewPlan)
-                } else if filteredProjects.isEmpty {
-                    ProjectsEmptyStates.searchResults
-                } else {
-                    projectsListView
+                Group {
+                    if isLoading {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else if projects.isEmpty && searchText.isEmpty {
+                        ProjectsEmptyStates.standard(onCreatePlan: createNewPlan)
+                    } else if filteredProjects.isEmpty {
+                        ProjectsEmptyStates.searchResults
+                    } else {
+                        projectsListView
+                    }
                 }
+                .id(refreshTrigger)
             }
             .navigationTitle("Projects")
             #if os(iOS)
@@ -173,7 +176,6 @@ struct ProjectsView: View, CachedDataDeletion {
                 }
             }
         }
-        .id(refreshTrigger)
     }
 
     // MARK: - Toolbar

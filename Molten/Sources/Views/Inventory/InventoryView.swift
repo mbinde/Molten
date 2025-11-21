@@ -292,6 +292,7 @@ struct InventoryView: View, CachedDataDeletion {
                         inventoryListView
                     }
                 }
+                .id(refreshTrigger)
             }
             .performanceTitle("Inventory", timer: performanceTimer)
             #if os(iOS)

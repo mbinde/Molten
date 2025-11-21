@@ -9,6 +9,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import CoreData
 
 /// Singleton cache for catalog data to improve performance
 /// Prevents repeated expensive Core Data queries when switching tabs
@@ -21,12 +22,23 @@ class CatalogDataCache: ObservableObject {
     @Published private(set) var isLoading: Bool = false
 
     private var loadTask: Task<Void, Never>?
+    private weak var catalogService: CatalogService?
 
-    private init() {}
+    // Non-isolated storage for Combine subscriptions (safe because Combine is thread-safe)
+    nonisolated(unsafe) private var cancellables = Set<AnyCancellable>()
+
+    private init() {
+        setupDataChangeObserver()
+    }
 
     /// Load catalog data if not already loaded
     /// Returns immediately if data is already loaded or loading
     func loadIfNeeded(catalogService: CatalogService) async {
+        // Store reference to catalog service for auto-reload
+        if self.catalogService == nil {
+            self.catalogService = catalogService
+        }
+
         // If already loaded or currently loading, return immediately
         guard !isLoaded && !isLoading else {
             print("📦 Cache: Data already loaded or loading, skipping")
@@ -64,6 +76,60 @@ class CatalogDataCache: ObservableObject {
         isLoading = false
         loadTask?.cancel()
         loadTask = nil
+    }
+
+    // MARK: - Auto-Invalidation
+
+    /// Setup observer for Core Data changes to auto-invalidate cache
+    /// This ensures the cache stays fresh when inventory, tags, or other data changes
+    /// Note: Auto-reload is disabled in test environments to avoid race conditions
+    nonisolated private func setupDataChangeObserver() {
+        // Skip auto-reload in tests to avoid race conditions with test setup
+        // Tests should explicitly call reload() when they need fresh data
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            print("📦 Cache: Skipping auto-reload setup in test environment")
+            return
+        }
+        #endif
+
+        NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] notification in
+                // Check if the notification contains changes to entities we care about
+                guard let userInfo = notification.userInfo else { return }
+
+                // Check for changes to Inventory, UserTags, UserNotes, or ItemTags
+                let relevantEntityNames = ["Inventory", "UserTags", "UserNotes", "ItemTags", "ItemRating"]
+                var hasRelevantChanges = false
+
+                for key in [NSInsertedObjectsKey, NSUpdatedObjectsKey, NSDeletedObjectsKey] {
+                    if let objects = userInfo[key] as? Set<NSManagedObject> {
+                        for object in objects {
+                            if relevantEntityNames.contains(object.entity.name ?? "") {
+                                hasRelevantChanges = true
+                                break
+                            }
+                        }
+                    }
+                    if hasRelevantChanges { break }
+                }
+
+                // If we have relevant changes, invalidate and reload cache
+                if hasRelevantChanges {
+                    Task { @MainActor [weak self] in
+                        guard let self = self else { return }
+                        print("📦 Cache: Detected data changes, auto-reloading...")
+                        if let service = self.catalogService {
+                            await self.reload(catalogService: service)
+                        } else {
+                            // Just invalidate if we don't have a service reference yet
+                            self.isLoaded = false
+                        }
+                    }
+                }
+            }
+            .store(in: &cancellables)
     }
 
     private func performLoad(catalogService: CatalogService) async {

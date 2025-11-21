@@ -84,7 +84,7 @@ struct RatingSettingsView: View {
                 .disabled(isDeleting)
 
                 if let count = deletedCount {
-                    Text("Successfully deleted \(count) rating\(count == 1 ? "" : "s") and words")
+                    Text("Successfully deleted \(count) rating\(count == 1 ? "" : "s") and words. It may take the server a few hours to rebuild its cache, but your individual ratings and words have been deleted completely.")
                         .font(.caption)
                         .foregroundColor(.green)
                 }

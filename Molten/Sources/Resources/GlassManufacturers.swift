@@ -24,6 +24,7 @@ struct GlassManufacturers {
         "DH": "Double Helix",
         "DS": "Delphi Superior",
         "EF": "Effetre",
+        "JET": "JetAgeStudio",
         "GA": "Glass Alchemy",
         "GAF": "Gaffer",
         "GRE": "Greasy Glass",
@@ -37,6 +38,7 @@ struct GlassManufacturers {
         "PDX": "PDX Tubing Co",
         "RE": "Reichenbach",
         "TAG": "Trautmann Art Glass",
+        "THMP": "Thompson Enamel",
         "UST": "UST Glass",
         "VF": "Vetrofond",
         "WM": "Wissmach Glass",
@@ -67,7 +69,9 @@ struct GlassManufacturers {
         "PDX": "pdx",
         "UST": "ust",
         "WM": "wm",
-        "Y96": "y96"
+        "Y96": "y96",
+        "JET": "jet",
+        "THMP": "thmp"
     ]
 
     /// Tracks whether we have permission to use product-specific images from each manufacturer
@@ -82,6 +86,7 @@ struct GlassManufacturers {
         "DH": true,           // Double Helix - permission granted via email
         "DS": false,          // Delphi Superior - NO product images (bot-protected site)
         "EF": true,           // Effetre - permission granted via email
+        "JET": false,         // JetAgeStudio -- NO permission (waiting on response)
         "GA": true,           // Glass Alchemy - permission granted via email
         "GAF": false,         // Gaffer - NO product images (bot-protected site)
         "GRE": true,          // Greasy Glass - permission granted via email
@@ -96,6 +101,7 @@ struct GlassManufacturers {
         "PDX": false,          // PDX Tubing Co - NO permission (no idea who to ask)
         "RE": false,           // Reichenbach - NO permission (no idea who to ask)
         "TAG": false,          // Trautmann Art Glass - NO permission (need to reach Northstar somehow)
+        "THMP": false,         // Thompson Enamel - NO permission (emailed, waiting on response)
         "UST": true,          // UST Glass - NO permission (no response)
         "VF": true,           // Vetrofond - permission granted via email
         "WM": false,           // Wissmach Glass - NO permission (no idea who to ask)

@@ -118,7 +118,7 @@ struct CoreDataLeakDiagnostic {
             itemMinimumRepository: mockItemMinimumRepo,
             itemTagsRepository: mockItemTagsRepo,
             userTagsRepository: mockUserTagsRepo,
-            ratingService: RatingService()
+            ratingService: AppDependencies.shared.ratingService
         )
 
         let shoppingListService = ShoppingListService(

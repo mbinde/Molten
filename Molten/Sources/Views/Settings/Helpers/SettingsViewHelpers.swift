@@ -27,7 +27,7 @@ struct SettingsViewHelpers {
     
     /// Check if COE filter section should be shown
     static func shouldShowCOEFilterSection() -> Bool {
-        return DebugConfig.FeatureFlags.coeGlassFilter
+        return FeatureFlags.coeGlassFilter
     }
     
     /// Title for COE filter section

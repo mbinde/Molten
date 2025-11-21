@@ -130,6 +130,22 @@ struct LocationDetailView: View {
                                 .cornerRadius(DesignSystem.CornerRadius.large)
                         }
                         .padding(.horizontal, DesignSystem.Padding.standard)
+
+                        // Suggest change link below map
+                        HStack {
+                            Spacer()
+                            Button {
+                                if let url = URL(string: "https://moltenglass.app/submit-store/") {
+                                    UIApplication.shared.open(url)
+                                }
+                            } label: {
+                                Text("Suggest a Change or Deletion")
+                                    .font(.caption)
+                                    .foregroundStyle(Color.accentColor)
+                            }
+                            .padding(.trailing, DesignSystem.Padding.standard)
+                        }
+                        .padding(.top, 4)
                     }
                 }
 
@@ -149,7 +165,7 @@ struct LocationDetailView: View {
             }
             .padding(.vertical, DesignSystem.Padding.standard)
         }
-        .navigationTitle(location.type.singularName)
+        .navigationTitle(location.type.displayName)
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -175,7 +191,7 @@ struct LocationDetailView: View {
         HStack(spacing: DesignSystem.Spacing.xs) {
             location.type.icon
                 .font(.caption2)
-            Text(location.type.singularName.uppercased())
+            Text(location.type.displayName.uppercased())
                 .font(.caption2)
                 .fontWeight(.semibold)
         }

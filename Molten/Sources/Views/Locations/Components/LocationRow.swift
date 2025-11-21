@@ -52,9 +52,7 @@ struct LocationRow: View {
                 }
             },
             trailing: {
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(DesignSystem.Colors.textTertiary)
+                EmptyView()
             },
             spacing: DesignSystem.Spacing.xs,
             verticalPadding: DesignSystem.Padding.rowVertical

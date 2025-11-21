@@ -288,16 +288,18 @@ struct MainTabView: View {
         return DefaultTab.allCases.filter { tab in
             switch tab {
             case .projects:
-                // Legacy combined Projects tab - no longer used
-                return false
+                // Legacy combined Projects tab - check feature flag
+                return FeatureFlags.ENABLE_PROJECTS
             case .projectPlans:
-                return isProjectPlansEnabled
+                return isProjectPlansEnabled && FeatureFlags.ENABLE_PROJECTS
             case .logbook:
-                return isLogbookEnabled
+                return isLogbookEnabled && FeatureFlags.ENABLE_PROJECTS
             case .recipes:
-                return isRecipesEnabled
+                return isRecipesEnabled && FeatureFlags.ENABLE_RECIPES
             case .purchases:
-                return isPurchaseRecordsEnabled
+                return isPurchaseRecordsEnabled && FeatureFlags.ENABLE_PURCHASES
+            case .kilnSchedules:
+                return FeatureFlags.ENABLE_KILN_SCHEDULES
             case .settings:
                 return true // Allow Settings in tab bar if user customizes
             default:

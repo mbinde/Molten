@@ -24,20 +24,39 @@ struct LocationsView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Filter chips
-                filterChipsView
+                // Search bar
+                searchBarView
                     .padding(.horizontal, DesignSystem.Padding.standard)
                     .padding(.vertical, DesignSystem.Padding.compact)
 
-                // Search bar
-                searchBarView
+                // Filter chips
+                filterChipsView
                     .padding(.horizontal, DesignSystem.Padding.standard)
                     .padding(.bottom, DesignSystem.Padding.compact)
 
                 // Map view (toggleable)
                 if viewModel.showMap {
-                    mapView
-                        .frame(height: 250)
+                    VStack(spacing: 0) {
+                        mapView
+                            .frame(height: 250)
+
+                        // Suggest location link below map
+                        HStack {
+                            Spacer()
+                            Button {
+                                if let url = URL(string: "https://moltenglass.app/submit-store/") {
+                                    UIApplication.shared.open(url)
+                                }
+                            } label: {
+                                Text("Suggest a location")
+                                    .font(.caption)
+                                    .foregroundStyle(Color.accentColor)
+                            }
+                            .padding(.trailing, DesignSystem.Padding.standard)
+                        }
+                        .padding(.vertical, 4)
+                        .padding(.bottom, 4)
+                    }
                 }
 
                 // List view
@@ -53,21 +72,9 @@ struct LocationsView: View {
                     listView
                 }
             }
+            .navigationTitle("Locations")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    HStack {
-                        Text("Locations")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                        Spacer()
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Set Location") {
-                        showLocationPicker = true
-                    }
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         viewModel.toggleMap()
@@ -243,7 +250,7 @@ struct LocationsView: View {
     // MARK: - Map View
 
     private var mapView: some View {
-        Map(position: $mapCameraPosition) {
+        Map(position: $mapCameraPosition, interactionModes: [.pan, .zoom]) {
             ForEach(viewModel.filteredLocations) { location in
                 if location.hasValidLocation {
                     Annotation(location.name, coordinate: location.coordinate) {
@@ -283,10 +290,6 @@ struct LocationsView: View {
             }
         }
         .mapStyle(.standard)
-        .mapControls {
-            MapUserLocationButton()
-            MapCompass()
-        }
         .onMapCameraChange { context in
             // Debounce map updates to avoid updating multiple times per frame
             // Cancel any pending update
@@ -358,6 +361,29 @@ struct LocationsView: View {
 
         // Update ViewModel with restored map center and bounds
         viewModel.updateMapCenter(center)
+        viewModel.updateMapBounds(minLat: minLat, maxLat: maxLat, minLon: minLon, maxLon: maxLon)
+    }
+
+    /// Center map on user's current location
+    private func centerMapOnUserLocation() {
+        guard let userLocation = locationManager.location?.coordinate else {
+            // If no location available, request permission
+            locationManager.requestPermission()
+            return
+        }
+
+        // Center map on user location (approximately 25 miles radius)
+        let span = MKCoordinateSpan(latitudeDelta: 0.36, longitudeDelta: 0.36)
+        let region = MKCoordinateRegion(center: userLocation, span: span)
+        mapCameraPosition = .region(region)
+
+        // Update map bounds
+        let minLat = userLocation.latitude - (span.latitudeDelta / 2)
+        let maxLat = userLocation.latitude + (span.latitudeDelta / 2)
+        let minLon = userLocation.longitude - (span.longitudeDelta / 2)
+        let maxLon = userLocation.longitude + (span.longitudeDelta / 2)
+
+        viewModel.updateMapCenter(userLocation)
         viewModel.updateMapBounds(minLat: minLat, maxLat: maxLat, minLon: minLon, maxLon: maxLon)
     }
 

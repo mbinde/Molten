@@ -9,7 +9,7 @@ import Foundation
 import SQLite3
 
 /// SQLite-based read-only repository for catalog coating items
-final class SQLiteCoatingItemRepository: BaseSQLiteCatalogItemRepository<CoatingItemModel> {
+final class SQLiteCoatingItemRepository: BaseSQLiteCatalogItemRepository<CoatingItemModel>, @unchecked Sendable {
 
     // MARK: - Initialization
 

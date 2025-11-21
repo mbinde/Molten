@@ -16,7 +16,7 @@ final class CatalogDatabaseManager: CatalogDatabaseManagerProtocol {
 
     // MARK: - Singleton
 
-    nonisolated(unsafe) static let shared = CatalogDatabaseManager()
+    nonisolated static let shared = CatalogDatabaseManager()
 
     // MARK: - Properties
 

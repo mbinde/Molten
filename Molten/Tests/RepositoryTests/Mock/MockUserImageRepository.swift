@@ -9,7 +9,6 @@ import Foundation
 #if canImport(UIKit)
 import UIKit
 #endif
-@testable import Molten
 
 #if canImport(UIKit)
 /// Mock implementation of UserImageRepository for testing

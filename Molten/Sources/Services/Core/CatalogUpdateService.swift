@@ -30,7 +30,7 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
     private let apiClient: CatalogAPIClientProtocol
     private let storageService: CatalogStorageServiceProtocol
     private let databaseManager: CatalogDatabaseManager
-    private let networkMonitor: NetworkMonitorProtocol
+    private let networkMonitor: any NetworkMonitorProtocol
     private let log = Logger(subsystem: "Molten", category: "CatalogUpdate")
     private let logger: LoggingService
 
@@ -44,7 +44,7 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
         apiClient: CatalogAPIClientProtocol,
         storageService: CatalogStorageServiceProtocol,
         databaseManager: CatalogDatabaseManager = .shared,
-        networkMonitor: NetworkMonitorProtocol,
+        networkMonitor: any NetworkMonitorProtocol,
         logger: LoggingService = AppDependencies.shared.loggingService
     ) {
         self.apiClient = apiClient

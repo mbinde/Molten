@@ -6,7 +6,6 @@
 //
 
 import Foundation
-@testable import Molten
 
 /// Mock implementation of ProjectRepository for testing
 /// Stores projects in memory using dictionaries

@@ -9,7 +9,7 @@ import Foundation
 import SQLite3
 
 /// SQLite-based read-only repository for catalog tool items
-final class SQLiteToolItemRepository: BaseSQLiteCatalogItemRepository<ToolItemModel> {
+final class SQLiteToolItemRepository: BaseSQLiteCatalogItemRepository<ToolItemModel>, @unchecked Sendable {
 
     // MARK: - Initialization
 

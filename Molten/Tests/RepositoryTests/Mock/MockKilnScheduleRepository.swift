@@ -6,7 +6,6 @@
 //
 
 import Foundation
-@testable import Molten
 
 /// Mock implementation of KilnScheduleRepository for testing
 /// Stores schedules in memory using a dictionary

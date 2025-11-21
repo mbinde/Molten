@@ -15,12 +15,12 @@ private let log = Logger(subsystem: "com.molten", category: "BackgroundUpdateSer
 /// Service for handling automatic catalog updates in the background
 @MainActor
 final class BackgroundUpdateService {
-    private let updateService: CatalogUpdateServiceProtocol
-    private let networkMonitor: NetworkMonitorProtocol
+    private let updateService: any CatalogUpdateServiceProtocol
+    private let networkMonitor: any NetworkMonitorProtocol
 
     init(
-        updateService: CatalogUpdateServiceProtocol,
-        networkMonitor: NetworkMonitorProtocol
+        updateService: any CatalogUpdateServiceProtocol,
+        networkMonitor: any NetworkMonitorProtocol
     ) {
         self.updateService = updateService
         self.networkMonitor = networkMonitor

@@ -368,7 +368,7 @@ struct RecipeDetailView: View {
     // Create some test recipes
     Task {
         let service = deps.recipeService
-        try? await service.createRecipe(RecipeModel(
+        _ = try? await service.createRecipe(RecipeModel(
             title: "Clear Frit Mix",
             descriptionText: "A basic clear frit blend",
             measurementType: .byWeight,
@@ -376,7 +376,7 @@ struct RecipeDetailView: View {
                 RecipeIngredientModel(stableId: "bullseye-clear-001", amount: 100.0)
             ]
         ))
-        try? await service.createRecipe(RecipeModel(
+        _ = try? await service.createRecipe(RecipeModel(
             title: "Blue Tint",
             descriptionText: "Subtle blue color",
             measurementType: .byRatio,

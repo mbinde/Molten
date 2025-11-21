@@ -13,7 +13,7 @@ import OSLog
 @MainActor
 protocol CatalogAPIClientProtocol {
     func getLatestVersion() async throws -> CatalogVersionMetadata
-    func downloadFullCatalog(version: Int?, progressHandler: ((Double) -> Void)?) async throws -> Data
+    func downloadFullCatalog(version: Int?, progressHandler: (@Sendable (Double) -> Void)?) async throws -> Data
 }
 
 /// API client for catalog update operations
@@ -103,7 +103,7 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
     /// - Returns: Catalog SQLite database data (uncompressed binary)
     func downloadFullCatalog(
         version: Int? = nil,
-        progressHandler: ((Double) -> Void)? = nil
+        progressHandler: (@Sendable (Double) -> Void)? = nil
     ) async throws -> Data {
 
         var urlComponents = URLComponents(
@@ -245,11 +245,11 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
 
 // MARK: - Download Progress Delegate
 
-private final class DownloadProgressDelegate: NSObject, URLSessionDownloadDelegate {
+private final class DownloadProgressDelegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
 
-    let progressHandler: ((Double) -> Void)?
+    let progressHandler: (@Sendable (Double) -> Void)?
 
-    init(progressHandler: ((Double) -> Void)?) {
+    init(progressHandler: (@Sendable (Double) -> Void)?) {
         self.progressHandler = progressHandler
         super.init()
     }

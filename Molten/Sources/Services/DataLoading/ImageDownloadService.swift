@@ -42,14 +42,13 @@ final class ImageDownloadService: Sendable {
 
     /// Base URL for image API (R2-backed)
     // Images served from Cloudflare R2 via API with checksum validation
-    nonisolated(unsafe) private static let imageBaseURL = "https://www.moltenglass.app/api/v1/images"
+    nonisolated private static let imageBaseURL = "https://www.moltenglass.app/api/v1/images"
 
     /// URL for image manifest (contains all images with their ETags)
-    nonisolated(unsafe) private static let manifestURL = "https://www.moltenglass.app/api/v1/images/manifest"
+    nonisolated private static let manifestURL = "https://www.moltenglass.app/api/v1/images/manifest"
 
     /// Local cache directory for downloaded images
-    /// Marked nonisolated(unsafe) because it's computed once at class load and never changes
-    nonisolated(unsafe) private static let cacheDirectory: URL? = {
+    nonisolated private static let cacheDirectory: URL? = {
         guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             return nil
         }
@@ -64,8 +63,7 @@ final class ImageDownloadService: Sendable {
     }()
 
     /// URL session for downloading images
-    /// Marked nonisolated(unsafe) because URLSession is thread-safe and this is read-only
-    nonisolated(unsafe) private static let urlSession: URLSession = {
+    nonisolated private static let urlSession: URLSession = {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 10 // 10 second timeout
         config.timeoutIntervalForResource = 30 // 30 second total timeout

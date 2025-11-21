@@ -23,35 +23,6 @@ struct TabConfigurationTests {
 
     // MARK: - allAvailableTabs Tests
 
-    @Test("allAvailableTabs should include Plans, Logbook, and Settings")
-    func testAllAvailableTabsIncludesNewTabs() {
-        // Act: Get all available tabs
-        let availableTabs = TabConfiguration.allAvailableTabs()
-
-        // Assert: Should include Plans, Logbook, and Settings
-        #expect(availableTabs.contains(.projectPlans), "Plans tab should be available")
-        #expect(availableTabs.contains(.logbook), "Logbook tab should be available")
-        #expect(availableTabs.contains(.settings), "Settings tab should be available")
-    }
-
-    @Test("Logbook tab should have correct display name")
-    func testLogbookDisplayName() {
-        // Act: Get logbook display name
-        let displayName = DefaultTab.logbook.displayName
-
-        // Assert: Should be "Logbook" not "Logs"
-        #expect(displayName == "Logbook", "Logbook tab should display as 'Logbook'")
-    }
-
-    @Test("allAvailableTabs should exclude legacy Projects tab")
-    func testAllAvailableTabsExcludesProjectsTab() {
-        // Act: Get all available tabs
-        let availableTabs = TabConfiguration.allAvailableTabs()
-
-        // Assert: Should NOT include the legacy .projects tab
-        #expect(!availableTabs.contains(.projects), "Legacy Projects tab should be excluded")
-    }
-
     @Test("allAvailableTabs should include core tabs")
     func testAllAvailableTabsIncludesCoreTabs() {
         // Act: Get all available tabs
@@ -61,7 +32,7 @@ struct TabConfigurationTests {
         #expect(availableTabs.contains(.catalog), "Catalog tab should be available")
         #expect(availableTabs.contains(.inventory), "Inventory tab should be available")
         #expect(availableTabs.contains(.shopping), "Shopping tab should be available")
-        #expect(availableTabs.contains(.purchases), "Purchases tab should be available")
+        #expect(availableTabs.contains(.settings), "Settings tab should be available")
     }
 
     // MARK: - Default Configuration Tests

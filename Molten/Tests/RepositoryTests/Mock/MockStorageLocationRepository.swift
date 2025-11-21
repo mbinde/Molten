@@ -6,7 +6,6 @@
 //
 
 import Foundation
-@testable import Molten
 
 /// Mock implementation of StorageLocationRepository for testing
 /// Stores storage locations in memory using a dictionary

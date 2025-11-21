@@ -21,6 +21,51 @@ final class SQLiteCoatingItemRepository: BaseSQLiteCatalogItemRepository<Coating
         )
     }
 
+    // MARK: - Manufacturer Filtering
+
+    /// Filter out manufacturers that shouldn't ship with the bundled catalog
+    private func filterByShippedManufacturers(_ items: [CoatingItemModel]) -> [CoatingItemModel] {
+        return items.filter { item in
+            GlassManufacturers.shipsWithBundledCatalog(for: item.manufacturer)
+        }
+    }
+
+    // MARK: - Overridden Methods with Manufacturer Filtering
+
+    override func fetchItems(matching predicate: NSPredicate?) async throws -> [CoatingItemModel] {
+        let items = try await super.fetchItems(matching: predicate)
+        return filterByShippedManufacturers(items)
+    }
+
+    override func fetchItem(byStableId stableId: String) async throws -> CoatingItemModel? {
+        guard let item = try await super.fetchItem(byStableId: stableId) else {
+            return nil
+        }
+        return GlassManufacturers.shipsWithBundledCatalog(for: item.manufacturer) ? item : nil
+    }
+
+    override func searchItems(text: String) async throws -> [CoatingItemModel] {
+        let searchPattern = "%\(text)%"
+        let query = """
+            SELECT * FROM coatings
+            WHERE name LIKE ? OR manufacturer LIKE ? OR manufacturer_description LIKE ?
+            ORDER BY manufacturer, name
+            """
+
+        let items = try databaseManager.performDatabaseOperation { db in
+            try executeQuery(db: db, query: query, parameters: [searchPattern, searchPattern, searchPattern])
+        }
+        return filterByShippedManufacturers(items)
+    }
+
+    override func fetchItems(byManufacturer manufacturer: String) async throws -> [CoatingItemModel] {
+        // Check if this manufacturer should even be queried
+        guard GlassManufacturers.shipsWithBundledCatalog(for: manufacturer) else {
+            return []
+        }
+        return try await super.fetchItems(byManufacturer: manufacturer)
+    }
+
     // MARK: - Coating-Specific Parsing
 
     /// Parse a CoatingItemModel from a SQLite row
@@ -84,20 +129,5 @@ final class SQLiteCoatingItemRepository: BaseSQLiteCatalogItemRepository<Coating
     override func getDistinctStatuses() async throws -> [String] {
         // Since coatings table doesn't have a status column, return default
         return ["available"]
-    }
-
-    // MARK: - Override searchItems to include manufacturer_description field
-
-    override func searchItems(text: String) async throws -> [CoatingItemModel] {
-        let searchPattern = "%\(text)%"
-        let query = """
-            SELECT * FROM coatings
-            WHERE name LIKE ? OR manufacturer LIKE ? OR manufacturer_description LIKE ?
-            ORDER BY manufacturer, name
-            """
-
-        return try databaseManager.performDatabaseOperation { db in
-            try executeQuery(db: db, query: query, parameters: [searchPattern, searchPattern, searchPattern])
-        }
     }
 }

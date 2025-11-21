@@ -23,6 +23,17 @@ final class SQLiteGlassItemRepository: BaseSQLiteCatalogItemRepository<GlassItem
 
     // MARK: - Glass-Specific Parsing
 
+    // MARK: - Manufacturer Filtering
+
+    /// Filter out manufacturers that shouldn't ship with the bundled catalog
+    private func filterByShippedManufacturers(_ items: [GlassItemModel]) -> [GlassItemModel] {
+        return items.filter { item in
+            GlassManufacturers.shipsWithBundledCatalog(for: item.manufacturer)
+        }
+    }
+
+    // MARK: - Glass-Specific Parsing
+
     /// Parse a GlassItemModel from a SQLite row
     nonisolated override func parseItem(from statement: OpaquePointer) throws -> GlassItemModel {
         // Column indices (match schema from build script):
@@ -91,15 +102,53 @@ final class SQLiteGlassItemRepository: BaseSQLiteCatalogItemRepository<GlassItem
         )
     }
 
+    // MARK: - Overridden Methods with Manufacturer Filtering
+
+    override func fetchItems(matching predicate: NSPredicate?) async throws -> [GlassItemModel] {
+        let items = try await super.fetchItems(matching: predicate)
+        return filterByShippedManufacturers(items)
+    }
+
+    override func fetchItem(byStableId stableId: String) async throws -> GlassItemModel? {
+        guard let item = try await super.fetchItem(byStableId: stableId) else {
+            return nil
+        }
+        return GlassManufacturers.shipsWithBundledCatalog(for: item.manufacturer) ? item : nil
+    }
+
+    override func searchItems(text: String) async throws -> [GlassItemModel] {
+        let searchPattern = "%\(text)%"
+        let query = """
+            SELECT * FROM glass_items
+            WHERE name LIKE ? OR manufacturer LIKE ? OR code LIKE ?
+            ORDER BY manufacturer, code
+            """
+
+        let items = try databaseManager.performDatabaseOperation { db in
+            try executeQuery(db: db, query: query, parameters: [searchPattern, searchPattern, searchPattern])
+        }
+        return filterByShippedManufacturers(items)
+    }
+
+    override func fetchItems(byManufacturer manufacturer: String) async throws -> [GlassItemModel] {
+        // Check if this manufacturer should even be queried
+        guard GlassManufacturers.shipsWithBundledCatalog(for: manufacturer) else {
+            return []
+        }
+        return try await super.fetchItems(byManufacturer: manufacturer)
+    }
+
     // MARK: - Glass-Specific Query Methods
 
     /// Fetch glass items by COE (coefficient of expansion)
     func fetchItems(byCOE coe: Int32) async throws -> [GlassItemModel] {
         let query = "SELECT * FROM glass_items WHERE coe = ? ORDER BY manufacturer, code"
 
-        return try databaseManager.performDatabaseOperation { db in
+        let items = try databaseManager.performDatabaseOperation { db in
             try executeQuery(db: db, query: query, parameters: [String(coe)])
         }
+
+        return filterByShippedManufacturers(items)
     }
 
     /// Get all distinct COE values in the system
@@ -147,20 +196,5 @@ final class SQLiteGlassItemRepository: BaseSQLiteCatalogItemRepository<GlassItem
     /// Remove a kiln schedule from a glass item's recommended schedules
     func removeRecommendedSchedule(scheduleId: UUID, fromGlassItem stableId: String) async throws {
         throw SQLiteError.writeOperationNotSupported("Kiln schedules not supported in bundled catalog")
-    }
-
-    // MARK: - Override searchItems to include 'code' field
-
-    override func searchItems(text: String) async throws -> [GlassItemModel] {
-        let searchPattern = "%\(text)%"
-        let query = """
-            SELECT * FROM glass_items
-            WHERE name LIKE ? OR manufacturer LIKE ? OR code LIKE ?
-            ORDER BY manufacturer, code
-            """
-
-        return try databaseManager.performDatabaseOperation { db in
-            try executeQuery(db: db, query: query, parameters: [searchPattern, searchPattern, searchPattern])
-        }
     }
 }

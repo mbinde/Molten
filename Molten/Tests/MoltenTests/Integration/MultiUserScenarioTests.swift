@@ -35,22 +35,16 @@ struct MultiUserScenarioTests {
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
 
+        let shoppingListRepository = MockShoppingListRepository()
+
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: inventoryRepo,
             itemTagsRepository: itemTagsRepo
         )
-        
-        let shoppingListRepository = MockShoppingListRepository()
-        let shoppingListService = ShoppingListService(
-            itemMinimumRepository: itemMinimumRepo,
-            shoppingListRepository: shoppingListRepository,
-            inventoryRepository: inventoryRepo,
-            glassItemRepository: glassItemRepo,
-            itemTagsRepository: itemTagsRepo,
-            userTagsRepository: userTagsRepo
-        )
-        
+
         let catalogService = CatalogService(
             glassItemRepository: glassItemRepo,
             coatingItemRepository: coatingItemRepo,
@@ -59,9 +53,18 @@ struct MultiUserScenarioTests {
             itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: RatingService()
         )
-        
+
+        let shoppingListService = ShoppingListService(
+            itemMinimumRepository: itemMinimumRepo,
+            shoppingListRepository: shoppingListRepository,
+            inventoryRepository: inventoryRepo,
+            glassItemRepository: glassItemRepo,
+            itemTagsRepository: itemTagsRepo,
+            userTagsRepository: userTagsRepo
+        )
+
         return (catalogService, inventoryTrackingService, shoppingListService)
     }
     

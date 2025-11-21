@@ -470,10 +470,13 @@ struct ShoppingListViewTests {
             let inventoryRepository = MockInventoryRepository()
             let storageLocationRepository = MockStorageLocationRepository()
             let itemTagsRepository = MockItemTagsRepository()
+            let coatingItemRepo = MockCoatingItemRepository()
+            let toolItemRepo = MockToolItemRepository()
 
-            // Create service with shared repositories
             let inventoryTrackingService = InventoryTrackingService(
                 glassItemRepository: glassItemRepository,
+                coatingItemRepository: coatingItemRepo,
+                toolItemRepository: toolItemRepo,
                 inventoryRepository: inventoryRepository,
                 itemTagsRepository: itemTagsRepository
             )

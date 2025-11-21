@@ -30,12 +30,26 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         // Use the working TestConfiguration pattern instead of AppDependencies
         let repos = TestConfiguration.setupMockOnlyTestEnvironment()
         let userTagsRepo = MockUserTagsRepository()
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
 
-        // Create services using the same repository instances
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: repos.inventory,
             itemTagsRepository: repos.itemTags
+        )
+
+        let catalogService = CatalogService(
+            glassItemRepository: repos.glassItem,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
+            inventoryTrackingService: inventoryTrackingService,
+            itemMinimumRepository: repos.itemMinimum,
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepo,
+            ratingService: RatingService()
         )
 
         let shoppingListRepository = MockShoppingListRepository()
@@ -47,21 +61,7 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepo
         )
-        
-        let coatingItemRepo = MockCoatingItemRepository()
-        let toolItemRepo = MockToolItemRepository()
 
-        let catalogService = CatalogService(
-            glassItemRepository: repos.glassItem,
-            coatingItemRepository: coatingItemRepo,
-            toolItemRepository: toolItemRepo,
-            inventoryTrackingService: inventoryTrackingService,
-            itemMinimumRepository: repos.itemMinimum,
-            itemTagsRepository: repos.itemTags,
-            userTagsRepository: userTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
-        )
-        
         return (catalogService, inventoryTrackingService, repos)
     }
     

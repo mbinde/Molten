@@ -367,15 +367,12 @@ struct InventoryDetailViewTests {
     @Test("Add inventory uses inventory tracking service")
     func testAddInventoryUsesService() {
         let item = createTestItem()
-        let mockService = InventoryTrackingService(
-            glassItemRepository: MockGlassItemRepository(),
-            inventoryRepository: MockInventoryRepository(),
-            itemTagsRepository: MockItemTagsRepository()
-        )
+        // Circular dependency workaround: use AppDependencies which handles this properly
+        let deps = AppDependencies(persistenceController: .createTestController())
 
         let view = InventoryDetailView(
             item: item,
-            deps: AppDependencies(persistenceController: .createTestController())
+            deps: deps
         )
 
         #expect(view != nil)

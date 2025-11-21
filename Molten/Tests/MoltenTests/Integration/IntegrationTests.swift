@@ -69,21 +69,18 @@ struct IntegrationTests {
         }
         
         // Act - Test integration through services
-        let inventoryTrackingService = InventoryTrackingService(
-            glassItemRepository: repos.glassItem,
-            inventoryRepository: repos.inventory,
-            itemTagsRepository: repos.itemTags
-        )
-
         let shoppingListRepository = MockShoppingListRepository()
         let userTagsRepo = MockUserTagsRepository()
-
-        let userTagsRepository = MockUserTagsRepository()
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
 
-
-
+        let inventoryTrackingService = InventoryTrackingService(
+            glassItemRepository: repos.glassItem,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
+            inventoryRepository: repos.inventory,
+            itemTagsRepository: repos.itemTags
+        )
 
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
@@ -93,9 +90,9 @@ struct IntegrationTests {
             itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: RatingService()
         )
-        
+
         let allItems = try await catalogService.getAllGlassItems()
 
         // Assert - Integration works without Core Data

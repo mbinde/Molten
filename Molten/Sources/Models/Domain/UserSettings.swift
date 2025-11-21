@@ -108,6 +108,8 @@ class UserSettings {
         set {
             withMutation(keyPath: \.colorChipDisplayMode) {
                 UserDefaults.standard.set(newValue.rawValue, forKey: Keys.colorChipDisplayMode)
+                // Post notification to trigger image refresh in all views
+                NotificationCenter.default.post(name: .colorChipDisplayModeChanged, object: nil)
             }
         }
     }

@@ -38,12 +38,6 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         let repos = TestConfiguration.setupMockOnlyTestEnvironment()
         let userTagsRepo = MockUserTagsRepository()
 
-        let inventoryService = InventoryTrackingService(
-            glassItemRepository: repos.glassItem,
-            inventoryRepository: repos.inventory,
-            itemTagsRepository: repos.itemTags
-        )
-
         let shoppingListRepository = MockShoppingListRepository()
         let shoppingService = ShoppingListService(
             itemMinimumRepository: repos.itemMinimum,
@@ -53,9 +47,17 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepo
         )
-        
+
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
+
+        let inventoryService = InventoryTrackingService(
+            glassItemRepository: repos.glassItem,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
+            inventoryRepository: repos.inventory,
+            itemTagsRepository: repos.itemTags
+        )
 
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
@@ -65,16 +67,16 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
             itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: RatingService()
         )
-        
+
         let inventoryViewModel = await MainActor.run {
             InventoryViewModel(
                 inventoryTrackingService: inventoryService,
                 catalogService: catalogService
             )
         }
-        
+
         return (repos, catalogService, inventoryService, inventoryViewModel)
     }
     

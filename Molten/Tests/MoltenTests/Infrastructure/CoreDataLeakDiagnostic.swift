@@ -98,22 +98,16 @@ struct CoreDataLeakDiagnostic {
         #expect(initialInventoryCount == 0, "Inventory repo should start empty")
 
         // Create services with explicit dependency injection
+        let shoppingListRepository = MockShoppingListRepository()
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
+
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: mockGlassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: mockInventoryRepo,
             itemTagsRepository: mockItemTagsRepo
-        )
-
-        let shoppingListRepository = MockShoppingListRepository()
-        let shoppingListService = ShoppingListService(
-            itemMinimumRepository: mockItemMinimumRepo,
-            shoppingListRepository: shoppingListRepository,
-            inventoryRepository: mockInventoryRepo,
-            glassItemRepository: mockGlassItemRepo,
-            itemTagsRepository: mockItemTagsRepo,
-            userTagsRepository: mockUserTagsRepo,
         )
 
         let catalogService = CatalogService(
@@ -124,7 +118,16 @@ struct CoreDataLeakDiagnostic {
             itemMinimumRepository: mockItemMinimumRepo,
             itemTagsRepository: mockItemTagsRepo,
             userTagsRepository: mockUserTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: RatingService()
+        )
+
+        let shoppingListService = ShoppingListService(
+            itemMinimumRepository: mockItemMinimumRepo,
+            shoppingListRepository: shoppingListRepository,
+            inventoryRepository: mockInventoryRepo,
+            glassItemRepository: mockGlassItemRepo,
+            itemTagsRepository: mockItemTagsRepo,
+            userTagsRepository: mockUserTagsRepo
         )
         
         // TEST 1: Add item directly to mock repository

@@ -110,6 +110,8 @@ class AppDependencies {
         }
         let service = InventoryTrackingService(
             glassItemRepository: glassItemRepository,
+            coatingItemRepository: coatingItemRepository,
+            toolItemRepository: toolItemRepository,
             inventoryRepository: inventoryRepository,
             itemTagsRepository: itemTagsRepository
         )

@@ -30,13 +30,17 @@ struct CatalogServiceAdvancedTests {
         let itemTagsRepo = MockItemTagsRepository()
         let userTagsRepo = MockUserTagsRepository()
         let itemMinimumRepo = MockItemMinimumRepository()
-        
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
+
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: inventoryRepo,
             itemTagsRepository: itemTagsRepo
         )
-        
+
         let shoppingListRepository = MockShoppingListRepository()
         let shoppingListService = ShoppingListService(
             itemMinimumRepository: itemMinimumRepo,
@@ -46,10 +50,7 @@ struct CatalogServiceAdvancedTests {
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo
         )
-        
-        let coatingItemRepo = MockCoatingItemRepository()
-        let toolItemRepo = MockToolItemRepository()
-        
+
         return CatalogService(
             glassItemRepository: glassItemRepo,
             coatingItemRepository: coatingItemRepo,
@@ -569,6 +570,8 @@ struct CatalogServiceAdvancedTests {
 
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: inventoryRepo,
             itemTagsRepository: itemTagsRepo
         )

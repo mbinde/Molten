@@ -35,10 +35,27 @@ struct InventoryServiceTests: MockOnlyTestSuite {
         // Use TestConfiguration for consistent setup
         let repos = TestConfiguration.setupMockOnlyTestEnvironment()
 
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
+        let userTagsRepo = MockUserTagsRepository()
+
         let inventoryService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: repos.inventory,
             itemTagsRepository: repos.itemTags
+        )
+
+        let catalogService = CatalogService(
+            glassItemRepository: repos.glassItem,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
+            inventoryTrackingService: inventoryService,
+            itemMinimumRepository: repos.itemMinimum,
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepo,
+            ratingService: RatingService()
         )
 
         return (inventoryService, repos)

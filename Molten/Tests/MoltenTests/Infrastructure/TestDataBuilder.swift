@@ -30,6 +30,8 @@ class TestDataBuilder {
     // MARK: - Properties
 
     private var glassItemRepo: MockGlassItemRepository
+    private var coatingItemRepo: MockCoatingItemRepository
+    private var toolItemRepo: MockToolItemRepository
     private var inventoryRepo: MockInventoryRepository
     private var locationRepo: MockStorageLocationRepository
     private var itemTagsRepo: MockItemTagsRepository
@@ -54,6 +56,8 @@ class TestDataBuilder {
     init() {
         // Create fresh mock repositories
         self.glassItemRepo = MockGlassItemRepository()
+        self.coatingItemRepo = MockCoatingItemRepository()
+        self.toolItemRepo = MockToolItemRepository()
         self.inventoryRepo = MockInventoryRepository()
         self.locationRepo = MockStorageLocationRepository()
         self.itemTagsRepo = MockItemTagsRepository()
@@ -309,15 +313,11 @@ class TestDataBuilder {
             return service
         }
 
-        let inventoryService = inventoryTrackingService
-        let coatingItemRepo = MockCoatingItemRepository()
-        let toolItemRepo = MockToolItemRepository()
-
         let service = CatalogService(
             glassItemRepository: glassItemRepo,
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
-            inventoryTrackingService: inventoryService,
+            inventoryTrackingService: inventoryTrackingService,
             itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo,
@@ -336,6 +336,8 @@ class TestDataBuilder {
 
         let service = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: inventoryRepo,
             itemTagsRepository: itemTagsRepo
         )
@@ -367,6 +369,8 @@ class TestDataBuilder {
 
     var repositories: (
         glassItem: MockGlassItemRepository,
+        coatingItem: MockCoatingItemRepository,
+        toolItem: MockToolItemRepository,
         inventory: MockInventoryRepository,
         location: MockStorageLocationRepository,
         itemTags: MockItemTagsRepository,
@@ -376,6 +380,8 @@ class TestDataBuilder {
     ) {
         return (
             glassItemRepo,
+            coatingItemRepo,
+            toolItemRepo,
             inventoryRepo,
             locationRepo,
             itemTagsRepo,

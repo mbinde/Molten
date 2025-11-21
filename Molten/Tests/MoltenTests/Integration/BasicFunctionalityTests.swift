@@ -31,31 +31,24 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
     
     private func createTestServices() async throws -> (
         repos: (glassItem: MockGlassItemRepository, inventory: MockInventoryRepository, location: MockStorageLocationRepository, itemTags: MockItemTagsRepository, itemMinimum: MockItemMinimumRepository),
-        catalogService: CatalogService, 
+        catalogService: CatalogService,
         inventoryService: InventoryTrackingService
     ) {
         // Use TestConfiguration approach that we know works
         let repos = TestConfiguration.setupMockOnlyTestEnvironment()
-        
+
+        let shoppingListRepository = MockShoppingListRepository()
+        let userTagsRepository = MockUserTagsRepository()
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
+
         let inventoryService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: repos.inventory,
             itemTagsRepository: repos.itemTags
         )
-        
-        let shoppingListRepository = MockShoppingListRepository()
-        let userTagsRepository = MockUserTagsRepository()
-        let shoppingService = ShoppingListService(
-            itemMinimumRepository: repos.itemMinimum,
-            shoppingListRepository: shoppingListRepository,
-            inventoryRepository: repos.inventory,
-            glassItemRepository: repos.glassItem,
-            itemTagsRepository: repos.itemTags,
-            userTagsRepository: userTagsRepository
-        )
-        
-        let coatingItemRepo = MockCoatingItemRepository()
-        let toolItemRepo = MockToolItemRepository()
 
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
@@ -65,9 +58,18 @@ struct BasicFunctionalityTests: MockOnlyTestSuite {
             itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepository,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: RatingService()
         )
-        
+
+        let shoppingService = ShoppingListService(
+            itemMinimumRepository: repos.itemMinimum,
+            shoppingListRepository: shoppingListRepository,
+            inventoryRepository: repos.inventory,
+            glassItemRepository: repos.glassItem,
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepository
+        )
+
         return (repos, catalogService, inventoryService)
     }
     

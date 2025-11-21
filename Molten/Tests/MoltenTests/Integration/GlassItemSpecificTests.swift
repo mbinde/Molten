@@ -60,26 +60,19 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
         }
         
         // Create services using the working repositories
+        let shoppingListRepository = MockShoppingListRepository()
+        let userTagsRepository = MockUserTagsRepository()
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
+
         let inventoryService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: repos.inventory,
             itemTagsRepository: repos.itemTags
         )
-        
-        let shoppingListRepository = MockShoppingListRepository()
-        let userTagsRepository = MockUserTagsRepository()
-        let shoppingService = ShoppingListService(
-            itemMinimumRepository: repos.itemMinimum,
-            shoppingListRepository: shoppingListRepository,
-            inventoryRepository: repos.inventory,
-            glassItemRepository: repos.glassItem,
-            itemTagsRepository: repos.itemTags,
-            userTagsRepository: userTagsRepository
-        )
-        
-        let coatingItemRepo = MockCoatingItemRepository()
-        let toolItemRepo = MockToolItemRepository()
-        
+
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
             coatingItemRepository: coatingItemRepo,
@@ -88,13 +81,22 @@ struct GlassItemSpecificTests: MockOnlyTestSuite {
             itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepository,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: RatingService()
         )
-        
+
+        let shoppingService = ShoppingListService(
+            itemMinimumRepository: repos.itemMinimum,
+            shoppingListRepository: shoppingListRepository,
+            inventoryRepository: repos.inventory,
+            glassItemRepository: repos.glassItem,
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepository
+        )
+
         // Verify setup worked
         let finalCount = await repos.glassItem.getItemCount()
         print("✅ Test environment created with \(finalCount) items")
-        
+
         return (repos, catalogService, inventoryService)
     }
     

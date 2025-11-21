@@ -42,24 +42,17 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
         let userTagsRepo = MockUserTagsRepository()
 
         // Create services using the same repository instances
+        let shoppingListRepository = MockShoppingListRepository()
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
+
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: repos.inventory,
             itemTagsRepository: repos.itemTags
         )
-
-        let shoppingListRepository = MockShoppingListRepository()
-        let shoppingListService = ShoppingListService(
-            itemMinimumRepository: repos.itemMinimum,
-            shoppingListRepository: shoppingListRepository,
-            inventoryRepository: repos.inventory,
-            glassItemRepository: repos.glassItem,
-            itemTagsRepository: repos.itemTags,
-            userTagsRepository: userTagsRepo
-        )
-        
-        let coatingItemRepo = MockCoatingItemRepository()
-        let toolItemRepo = MockToolItemRepository()
 
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
@@ -69,7 +62,16 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: RatingService()
+        )
+
+        let shoppingListService = ShoppingListService(
+            itemMinimumRepository: repos.itemMinimum,
+            shoppingListRepository: shoppingListRepository,
+            inventoryRepository: repos.inventory,
+            glassItemRepository: repos.glassItem,
+            itemTagsRepository: repos.itemTags,
+            userTagsRepository: userTagsRepo
         )
         
         let inventoryViewModel = await InventoryViewModel(

@@ -68,35 +68,39 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
             itemTags: repos.itemTags,
             itemMinimum: repos.itemMinimum
         )
-        
+
+        let shoppingListRepository = MockShoppingListRepository()
+        let userTagsRepo = MockUserTagsRepository()
+
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
+
         let inventoryService = InventoryTrackingService(
-            glassItemRepository: mockRepo, // Use the SAME instance
+            glassItemRepository: mockRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: otherMockRepos.inventory,
             itemTagsRepository: otherMockRepos.itemTags
         )
-        
-        let shoppingListRepository = MockShoppingListRepository()
-        let userTagsRepo = MockUserTagsRepository()
-        let coatingItemRepo = MockCoatingItemRepository()
-        let toolItemRepo = MockToolItemRepository()
-        let shoppingService = ShoppingListService(
-            itemMinimumRepository: otherMockRepos.itemMinimum,
-            shoppingListRepository: shoppingListRepository,
-            inventoryRepository: otherMockRepos.inventory,
-            glassItemRepository: mockRepo, // Use the SAME instance
-            itemTagsRepository: otherMockRepos.itemTags,
-            userTagsRepository: userTagsRepo,
-        )
 
         let catalogService = CatalogService(
-            glassItemRepository: mockRepo, // Use the SAME instance
+            glassItemRepository: mockRepo,
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryService,
             itemMinimumRepository: otherMockRepos.itemMinimum,
             itemTagsRepository: otherMockRepos.itemTags,
             userTagsRepository: userTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: RatingService()
+        )
+
+        let shoppingService = ShoppingListService(
+            itemMinimumRepository: otherMockRepos.itemMinimum,
+            shoppingListRepository: shoppingListRepository,
+            inventoryRepository: otherMockRepos.inventory,
+            glassItemRepository: mockRepo, // Use the SAME instance
+            itemTagsRepository: otherMockRepos.itemTags,
+            userTagsRepository: userTagsRepo
         )
         
         // Test if catalog service sees our marker item

@@ -15,6 +15,8 @@ actor InventoryTrackingService {
     // MARK: - Dependencies
 
     private let glassItemRepository: GlassItemRepository
+    private let coatingItemRepository: CoatingItemRepository
+    private let toolItemRepository: ToolItemRepository
     let inventoryRepository: InventoryRepository
     private let itemTagsRepository: ItemTagsRepository
 
@@ -22,10 +24,14 @@ actor InventoryTrackingService {
 
     init(
         glassItemRepository: GlassItemRepository,
+        coatingItemRepository: CoatingItemRepository,
+        toolItemRepository: ToolItemRepository,
         inventoryRepository: InventoryRepository,
         itemTagsRepository: ItemTagsRepository
     ) {
         self.glassItemRepository = glassItemRepository
+        self.coatingItemRepository = coatingItemRepository
+        self.toolItemRepository = toolItemRepository
         self.inventoryRepository = inventoryRepository
         self.itemTagsRepository = itemTagsRepository
     }
@@ -205,19 +211,30 @@ actor InventoryTrackingService {
         atLocation location: String? = nil
     ) async throws -> InventoryModel {
 
-        // 1. Verify the glass item exists (keep reference for error messages)
-        let glassItem: GlassItemModel
+        // 1. Verify the catalog item exists (glass, coating, or tool)
+        let catalogItem: UnifiedCatalogItem
         do {
-            if let item = try await glassItemRepository.fetchItem(byStableId: stableId) {
-                glassItem = item
-            } else {
+            // Try glass items first (most common)
+            if let glassItem = try await glassItemRepository.fetchItem(byStableId: stableId) {
+                catalogItem = UnifiedCatalogItem(glassItem: glassItem)
+            }
+            // Try coatings
+            else if let coatingItem = try await coatingItemRepository.fetchItem(byStableId: stableId) {
+                catalogItem = UnifiedCatalogItem(coatingItem: coatingItem)
+            }
+            // Try tools
+            else if let toolItem = try await toolItemRepository.fetchItem(byStableId: stableId) {
+                catalogItem = UnifiedCatalogItem(toolItem: toolItem)
+            }
+            // Not found in any repository
+            else {
                 throw InventoryTrackingServiceError.itemNotFound(stableId)
             }
         } catch let error as InventoryTrackingServiceError {
             throw error
         } catch {
             throw InventoryTrackingServiceError.persistenceFailed(
-                context: "Failed to lookup glass item '\(stableId)'",
+                context: "Failed to lookup catalog item '\(stableId)'",
                 underlyingError: error
             )
         }
@@ -243,9 +260,9 @@ actor InventoryTrackingService {
         do {
             return try await self.inventoryRepository.createInventory(newInventory)
         } catch {
-            // Provide context about what failed, including the glass item name for user clarity
+            // Provide context about what failed, including the item name for user clarity
             throw InventoryTrackingServiceError.persistenceFailed(
-                context: "Failed to save inventory for '\(glassItem.name)' (\(stableId))",
+                context: "Failed to save inventory for '\(catalogItem.name)' (\(stableId))",
                 underlyingError: error
             )
         }

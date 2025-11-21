@@ -223,25 +223,18 @@ struct FixedBasicTests {
         }
         
         // Create services with explicit dependency injection
+        let shoppingListRepository = MockShoppingListRepository()
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
+
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: inventoryRepo,
             itemTagsRepository: itemTagsRepo
         )
-        
-        let shoppingListRepository = MockShoppingListRepository()
-        let shoppingListService = ShoppingListService(
-            itemMinimumRepository: itemMinimumRepo,
-            shoppingListRepository: shoppingListRepository,
-            inventoryRepository: inventoryRepo,
-            glassItemRepository: glassItemRepo,
-            itemTagsRepository: itemTagsRepo,
-            userTagsRepository: userTagsRepo
-        )
-        
-        let coatingItemRepo = MockCoatingItemRepository()
-        let toolItemRepo = MockToolItemRepository()
-        
+
         let catalogService = CatalogService(
             glassItemRepository: glassItemRepo,
             coatingItemRepository: coatingItemRepo,
@@ -250,7 +243,16 @@ struct FixedBasicTests {
             itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: RatingService()
+        )
+
+        let shoppingListService = ShoppingListService(
+            itemMinimumRepository: itemMinimumRepo,
+            shoppingListRepository: shoppingListRepository,
+            inventoryRepository: inventoryRepo,
+            glassItemRepository: glassItemRepo,
+            itemTagsRepository: itemTagsRepo,
+            userTagsRepository: userTagsRepo
         )
         
         // Verify setup worked

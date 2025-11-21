@@ -279,7 +279,7 @@ struct TestDataSetup {
             itemTagsRepository: itemTagsRepo
         )
 
-        let catalogService = CatalogService(
+        let catalogService = await CatalogService(
             glassItemRepository: glassItemRepo,
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
@@ -287,7 +287,7 @@ struct TestDataSetup {
             itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo,
-            ratingService: RatingService()
+            ratingService: AppDependencies.shared.ratingService
         )
 
         let shoppingListRepository = MockShoppingListRepository()

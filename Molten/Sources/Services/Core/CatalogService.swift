@@ -92,7 +92,8 @@ actor CatalogService {
     /// Get all catalog items (glass, coatings, and tools) with complete information and flexible sorting
     func getAllGlassItems(
         sortBy: GlassItemSortOption = .name,
-        includeWithoutInventory: Bool = true
+        includeWithoutInventory: Bool = true,
+        includeRatings: Bool? = nil  // nil = auto-detect based on sortBy
     ) async throws -> [CompleteInventoryItemModel] {
         let trackingService = inventoryTrackingService
 
@@ -139,19 +140,31 @@ actor CatalogService {
         // OPTIMIZED: Batch fetch user tags for all items
         let userTagsByItem = try await userTagsRepository.fetchTagsForItems(allItemKeys)
 
-        // OPTIMIZED: Fetch ALL ratings (bulk if available, otherwise per-item)
+        // OPTIMIZED: Conditionally fetch ratings (only when needed for sorting or explicitly requested)
+        // Auto-detect: if sorting by rating, we need to fetch ratings
+        let needsRatingsForSort: Bool
+        switch sortBy {
+        case .rating:
+            needsRatingsForSort = true
+        default:
+            needsRatingsForSort = false
+        }
+        let shouldFetchRatings = includeRatings ?? needsRatingsForSort
+
         var ratingsByItem: [String: AggregatedRatingModel] = [:]
-        do {
-            // Try bulk endpoint first (more efficient)
-            let allRatings = try await ratingService.fetchAllRatingsBulk(forceRefresh: false)
-            ratingsByItem = Dictionary(uniqueKeysWithValues: allRatings.map { ($0.itemStableId, $0) })
-        } catch {
-            // Bulk endpoint not available, fall back to per-item fetch
+        if shouldFetchRatings {
             do {
-                let ratings = try await ratingService.fetchRatings(forItems: allItemKeys, forceRefresh: false)
-                ratingsByItem = Dictionary(uniqueKeysWithValues: ratings.map { ($0.itemStableId, $0) })
+                // Try bulk endpoint first (more efficient)
+                let allRatings = try await ratingService.fetchAllRatingsBulk(forceRefresh: false)
+                ratingsByItem = Dictionary(uniqueKeysWithValues: allRatings.map { ($0.itemStableId, $0) })
             } catch {
-                print("⚠️ [CatalogService] Failed to load ratings")
+                // Bulk endpoint not available, fall back to per-item fetch
+                do {
+                    let ratings = try await ratingService.fetchRatings(forItems: allItemKeys, forceRefresh: false)
+                    ratingsByItem = Dictionary(uniqueKeysWithValues: ratings.map { ($0.itemStableId, $0) })
+                } catch {
+                    print("⚠️ [CatalogService] Failed to load ratings")
+                }
             }
         }
 

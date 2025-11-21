@@ -327,15 +327,23 @@ struct CatalogAPIClientTests {
             attestationManager: mockAttestation
         )
 
-        var progressValues: [Double] = []
+        // Use actor to safely collect progress values from @Sendable closure
+        actor ProgressCollector {
+            var values: [Double] = []
+            func append(_ value: Double) {
+                values.append(value)
+            }
+        }
+        let collector = ProgressCollector()
 
         _ = try await client.downloadFullCatalog { progress in
-            progressValues.append(progress)
+            Task { await collector.append(progress) }
         }
 
         // Note: Progress tracking depends on URLSession delegate callbacks
         // In real usage, progress would be reported; in tests with mock, it may not
         // This test validates the API works without errors
+        let progressValues = await collector.values
         #expect(progressValues.isEmpty || progressValues.allSatisfy { $0 >= 0.0 && $0 <= 1.0 })
     }
 

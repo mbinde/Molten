@@ -36,7 +36,7 @@ class ShareViewController: UIViewController {
         }
 
         container.viewContext.automaticallyMergesChangesFromParent = true
-        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        container.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
 
         return container
     }()
@@ -63,9 +63,26 @@ class ShareViewController: UIViewController {
             return
         }
 
-        // Load all images
+        // Load all images (use thread-safe wrapper for concurrent access)
+        final class ImageCollector: @unchecked Sendable {
+            private let lock = NSLock()
+            private var images: [UIImage] = []
+
+            func append(_ image: UIImage) {
+                lock.lock()
+                images.append(image)
+                lock.unlock()
+            }
+
+            func getImages() -> [UIImage] {
+                lock.lock()
+                defer { lock.unlock() }
+                return images
+            }
+        }
+
         let group = DispatchGroup()
-        var loadedImages: [UIImage] = []
+        let collector = ImageCollector()
 
         for attachment in validAttachments {
             group.enter()
@@ -89,7 +106,7 @@ class ShareViewController: UIViewController {
                 }
 
                 if let image = image {
-                    loadedImages.append(image)
+                    collector.append(image)
                 }
             }
         }
@@ -97,12 +114,13 @@ class ShareViewController: UIViewController {
         group.notify(queue: .main) { [weak self] in
             guard let self = self else { return }
 
-            if loadedImages.isEmpty {
+            let images = collector.getImages()
+            if images.isEmpty {
                 self.completeRequest(withError: ShareExtensionError.failedToLoadPhotos)
                 return
             }
 
-            self.photosToImport = loadedImages
+            self.photosToImport = images
             self.showShareUI()
         }
     }
@@ -132,8 +150,9 @@ class ShareViewController: UIViewController {
     private func saveProject(title: String, notes: String, projectType: String, existingProjectId: UUID?) {
         // Create Project in Core Data with images
         let context = persistentContainer.viewContext
+        let photosToSave = self.photosToImport  // Capture locally to avoid main actor isolation issues
 
-        context.perform {
+        context.perform { [photosToSave] in
             do {
                 // Get or create Project entity
                 let project: Project
@@ -179,7 +198,7 @@ class ShareViewController: UIViewController {
                 // }
 
                 // Create UserImage entities and ProjectImage metadata for each photo
-                for (index, photo) in self.photosToImport.enumerated() {
+                for (index, photo) in photosToSave.enumerated() {
                     guard let jpegData = photo.jpegData(compressionQuality: 0.85) else {
                         print("⚠️ ShareExtension: Failed to convert photo \(index) to JPEG")
                         continue
@@ -214,7 +233,7 @@ class ShareViewController: UIViewController {
                 // Save to Core Data
                 try context.save()
 
-                print("✅ ShareExtension: Created project '\(title)' with \(self.photosToImport.count) photo(s)")
+                print("✅ ShareExtension: Created project '\(title)' with \(photosToSave.count) photo(s)")
 
                 DispatchQueue.main.async {
                     self.completeRequest(withError: nil)

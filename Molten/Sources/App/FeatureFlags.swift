@@ -18,51 +18,51 @@ enum FeatureFlags {
     /// Controls whether tools catalog and inventory are enabled
     /// Set to false to disable tools functionality for launch
     /// IMPLEMENTED: SQLite loading, filter menus
-    nonisolated(unsafe) static let ENABLE_TOOLS = false
+    nonisolated static let ENABLE_TOOLS = false
 
     /// Controls whether coatings catalog and inventory are enabled
     /// Set to false to disable coatings functionality for launch
-    nonisolated(unsafe) static let ENABLE_COATINGS = true
+    nonisolated static let ENABLE_COATINGS = true
 
     // MARK: - Feature Sections
 
     /// Controls whether the Projects section is enabled
     /// Set to false to disable project planning features for launch
     /// IMPLEMENTED: Tab visibility, Settings sections, tab management
-    nonisolated(unsafe) static let ENABLE_PROJECTS = false
+    nonisolated static let ENABLE_PROJECTS = false
 
     /// Controls whether the Kiln Schedules section is enabled
     /// Set to false to disable kiln schedule features for launch
     /// IMPLEMENTED: Tab visibility, Settings sections, tab management
-    nonisolated(unsafe) static let ENABLE_KILN_SCHEDULES = false
+    nonisolated static let ENABLE_KILN_SCHEDULES = false
 
     /// Controls whether the Purchases section is enabled
     /// Set to false to disable purchase tracking for launch
     /// IMPLEMENTED: Tab visibility
-    nonisolated(unsafe) static let ENABLE_PURCHASES = false
+    nonisolated static let ENABLE_PURCHASES = false
 
     /// Controls whether the Shopping Lists section is enabled
     /// Set to false to disable shopping list features for launch
-    nonisolated(unsafe) static let ENABLE_SHOPPING_LISTS = true
+    nonisolated static let ENABLE_SHOPPING_LISTS = true
 
     /// Controls whether the Recipes section is enabled
     /// Set to false to disable recipe features for launch
     /// IMPLEMENTED: Tab visibility
-    nonisolated(unsafe) static let ENABLE_RECIPES = false
+    nonisolated static let ENABLE_RECIPES = false
 
     // MARK: - Advanced Features
 
     /// Controls whether data export functionality is enabled
     /// Set to false to disable export features for launch
-    nonisolated(unsafe) static let ENABLE_DATA_EXPORT = true
+    nonisolated static let ENABLE_DATA_EXPORT = true
 
     /// Controls whether data import functionality is enabled
     /// Set to false to disable import features for launch
-    nonisolated(unsafe) static let ENABLE_DATA_IMPORT = true
+    nonisolated static let ENABLE_DATA_IMPORT = true
 
     /// Controls whether catalog updates/downloads are enabled
     /// Set to false to ship with bundled catalog only
-    nonisolated(unsafe) static let ENABLE_CATALOG_UPDATES = true
+    nonisolated static let ENABLE_CATALOG_UPDATES = true
 
     // MARK: - Debug Feature Flags (from DebugConfig)
 

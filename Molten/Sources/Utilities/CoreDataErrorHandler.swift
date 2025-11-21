@@ -12,7 +12,7 @@ import OSLog
 
 /// Utility for reporting Core Data errors with enhanced context
 enum CoreDataErrorHandler {
-    nonisolated(unsafe) private static let log = Logger(subsystem: "com.flameworker.app", category: "coredata-errors")
+    nonisolated private static let log = Logger(subsystem: "com.flameworker.app", category: "coredata-errors")
 
     /// Saves a Core Data context with enhanced error reporting
     /// - Parameters:

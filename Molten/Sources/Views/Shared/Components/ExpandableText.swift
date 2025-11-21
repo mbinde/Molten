@@ -16,7 +16,7 @@ struct ExpandableText: View {
 
     @State private var isTruncated: Bool = false
     @State private var intrinsicSize: CGSize = .zero
-    @State private private(set) var truncatedSize: CGSize = .zero
+    @State private var truncatedSize: CGSize = .zero
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

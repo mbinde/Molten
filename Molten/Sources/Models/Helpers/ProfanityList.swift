@@ -16,7 +16,7 @@ public enum ProfanityList {
 
     /// Comprehensive set of profane/inappropriate words
     /// Organized by category for maintainability
-    public nonisolated(unsafe) static let words: Set<String> = {
+    public nonisolated static let words: Set<String> = {
         var allWords: Set<String> = []
 
         // MARK: - Strong Profanity

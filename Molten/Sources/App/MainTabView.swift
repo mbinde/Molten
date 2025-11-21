@@ -78,9 +78,10 @@ struct MainTabView: View {
     }
     
     var body: some View {
-        return VStack(spacing: 0) {
+        ZStack {
             // Main content area - use ZStack with opacity to preserve view state
-            ZStack {
+            VStack(spacing: 0) {
+                ZStack {
                 if selectedTab == .catalog || catalogHasBeenViewed {
                     CatalogView(deps: deps)
                         .opacity(selectedTab == .catalog ? 1 : 0)
@@ -171,31 +172,35 @@ struct MainTabView: View {
                         EmptyView()
                     }
                 }
-            }
-            .frame(maxHeight: .infinity)
-
-            // Custom tab bar
-            if let tabConfig = tabConfig {
-                CustomTabBar(
-                    selectedTab: $selectedTab,
-                    onTabTap: handleTabTap,
-                    syncMonitor: syncMonitor,
-                    tabConfig: tabConfig,
-                    showingMoreMenu: $showingMoreMenu,
-                    onMoreTabSelect: { tab in
-                    showingMoreMenu = false
-
-                    // Special handling for Settings - show as sheet
-                    if tab == .settings {
-                        showingSettings = true
-                        return
-                    }
-
-                    // Select the tab directly
-                    selectedTab = tab
-                    markTabAsViewed(tab)
                 }
-                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+
+            // Custom tab bar overlaid at bottom
+            VStack {
+                Spacer()
+                if let tabConfig = tabConfig {
+                    CustomTabBar(
+                        selectedTab: $selectedTab,
+                        onTabTap: handleTabTap,
+                        syncMonitor: syncMonitor,
+                        tabConfig: tabConfig,
+                        showingMoreMenu: $showingMoreMenu,
+                        onMoreTabSelect: { tab in
+                        showingMoreMenu = false
+
+                        // Special handling for Settings - show as sheet
+                        if tab == .settings {
+                            showingSettings = true
+                            return
+                        }
+
+                        // Select the tab directly
+                        selectedTab = tab
+                        markTabAsViewed(tab)
+                    }
+                    )
+                }
             }
         }
         .background(DesignSystem.Colors.background)
@@ -410,28 +415,22 @@ struct CustomTabBar: View {
     let onMoreTabSelect: (DefaultTab) -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Sync status indicator (shown at top of tab bar)
-            if let syncMonitor = syncMonitor {
-                CloudKitSyncStatusView(monitor: syncMonitor)
-                    .padding(.horizontal, DesignSystem.Padding.standard)
-                    .padding(.top, DesignSystem.Padding.compact)
+        HStack(spacing: 0) {
+            // Show tabs from configuration
+            ForEach(tabConfig.tabBarTabs, id: \.self) { tab in
+                tabButton(for: tab)
             }
 
-            HStack(spacing: 0) {
-                // Show tabs from configuration
-                ForEach(tabConfig.tabBarTabs, id: \.self) { tab in
-                    tabButton(for: tab)
-                }
-
-                // Show More button if needed
-                if tabConfig.needsMoreTab {
-                    moreButton
-                }
+            // Show More button if needed
+            if tabConfig.needsMoreTab {
+                moreButton
             }
-            .frame(height: 60)
         }
-        .background(tabBarBackground)
+        .frame(height: 49)
+        .background(
+            tabBarBackground
+                .ignoresSafeArea()
+        )
         .overlay(topSeparator, alignment: .top)
     }
     
@@ -439,9 +438,9 @@ struct CustomTabBar: View {
         Button {
             onTabTap(tab)
         } label: {
-            VStack(spacing: 4) {
+            VStack(spacing: 2) {
                 Image(systemName: tab.systemImage)
-                    .font(.system(size: 22, weight: .medium))
+                    .font(.system(size: 20, weight: .medium))
                 Text(tab.displayName)
                     .font(.caption2)
                     .fontWeight(.medium)
@@ -449,8 +448,8 @@ struct CustomTabBar: View {
             .foregroundColor(selectedTab == tab ? .primary : .secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(selectionBackground(for: tab))
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 2)
         }
         .buttonStyle(.plain)
     }
@@ -471,9 +470,9 @@ struct CustomTabBar: View {
         Button {
             showingMoreMenu = true
         } label: {
-            VStack(spacing: 4) {
+            VStack(spacing: 2) {
                 Image(systemName: "ellipsis")
-                    .font(.system(size: 22, weight: .medium))
+                    .font(.system(size: 20, weight: .medium))
                 Text("More")
                     .font(.caption2)
                     .fontWeight(.medium)
@@ -487,8 +486,8 @@ struct CustomTabBar: View {
                         .opacity(0.8)
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 2)
         }
         .buttonStyle(.plain)
         .popover(isPresented: $showingMoreMenu, arrowEdge: .bottom) {

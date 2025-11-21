@@ -94,10 +94,6 @@ struct SettingsView: View {
     }
 
     // Subscription computed properties
-    private var subscriptionIcon: String {
-        subscriptionViewModel.hasProAccess ? "star.fill" : "star"
-    }
-
     private var subscriptionBadge: String {
         subscriptionViewModel.hasProAccess ? "Pro" : "Free"
     }
@@ -128,7 +124,7 @@ struct SettingsView: View {
                 Section("General") {
                     Picker("Appearance", selection: selectedAppearanceMode) {
                         ForEach(UserSettings.AppearanceMode.allCases, id: \.self) { mode in
-                            Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
+                            Text(mode.displayName).tag(mode)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -136,7 +132,7 @@ struct SettingsView: View {
                     NavigationLink {
                         TabCustomizationView()
                     } label: {
-                        Label("Customize Tabs", systemImage: "square.grid.2x2")
+                        Text("Customize Tabs")
                     }
 
                 }
@@ -147,7 +143,7 @@ struct SettingsView: View {
                         CatalogInfoView(viewModel: catalogUpdateViewModel)
                     } label: {
                         HStack {
-                            Label("Catalog Updates", systemImage: "arrow.down.circle")
+                            Text("Catalog Updates")
 
                             Spacer()
 
@@ -216,13 +212,13 @@ struct SettingsView: View {
                     NavigationLink {
                         COEFilterView()
                     } label: {
-                        Label("COE Filter", systemImage: "flame")
+                        Text("COE Filter")
                     }
 
                     NavigationLink {
                         ManufacturerFilterView()
                     } label: {
-                        Label("Manufacturer Filter", systemImage: "building.2")
+                        Text("Manufacturer Filter")
                     }
 
                     Toggle("Show User Tags in Filters", isOn: Binding(
@@ -243,19 +239,19 @@ struct SettingsView: View {
                     NavigationLink {
                         AuthorSettingsView()
                     } label: {
-                        Label("Author Information", systemImage: "person.circle")
+                        Text("Author Information")
                     }
 
                     NavigationLink {
                         TerminologySettingsView()
                     } label: {
-                        Label("Glass Working Terminology", systemImage: "text.bubble")
+                        Text("Glass Working Terminology")
                     }
 
                     NavigationLink {
                         RatingSettingsView()
                     } label: {
-                        Label("Manage Ratings", systemImage: "star")
+                        Text("Manage Ratings")
                     }
 
                     HStack {
@@ -280,7 +276,7 @@ struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Picker("Project Thumbnail Style", selection: thumbnailDisplayModeBinding) {
                                 ForEach(UserSettings.ThumbnailDisplayMode.allCases, id: \.self) { mode in
-                                    Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
+                                    Text(mode.displayName).tag(mode)
                                 }
                             }
                             .pickerStyle(.menu)
@@ -309,7 +305,7 @@ struct SettingsView: View {
                         NavigationLink {
                             KilnRatesSettingsView()
                         } label: {
-                            Label("Kiln Max Rates", systemImage: "gauge.with.dots.needle.67percent")
+                            Text("Kiln Max Rates")
                         }
                     }
                 }
@@ -319,13 +315,13 @@ struct SettingsView: View {
                     NavigationLink {
                         ImageQualitySettingsView()
                     } label: {
-                        Label("Image Quality & Cache", systemImage: "photo.on.rectangle.angled")
+                        Text("Image Quality & Cache")
                     }
 
                     NavigationLink {
                         DataExportView()
                     } label: {
-                        Label("Export Data", systemImage: "square.and.arrow.up")
+                        Text("Export Data")
                     }
                 }
 
@@ -335,7 +331,7 @@ struct SettingsView: View {
                         SubscriptionStatusView(viewModel: subscriptionViewModel)
                     } label: {
                         HStack {
-                            Label("Manage Subscription", systemImage: subscriptionIcon)
+                            Text("Manage Subscription")
                             Spacer()
                             Text(subscriptionBadge)
                                 .font(.caption.bold())
@@ -357,13 +353,13 @@ struct SettingsView: View {
                     NavigationLink {
                         DebugSettingsView()
                     } label: {
-                        Label("Debug Settings", systemImage: "ladybug")
+                        Text("Debug Settings")
                     }
 
                     NavigationLink {
                         SentryTestView()
                     } label: {
-                        Label("Test Sentry Logging", systemImage: "ant.circle")
+                        Text("Test Sentry Logging")
                     }
 
                     // Subscription tier override for testing
@@ -403,7 +399,7 @@ struct SettingsView: View {
                     NavigationLink {
                         AboutView()
                     } label: {
-                        Label("About", systemImage: "info.circle")
+                        Text("About")
                     }
                 }
             }

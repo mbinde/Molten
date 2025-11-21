@@ -90,6 +90,8 @@ struct DiagnosticTests: MockOnlyTestSuite {
         #expect(initialInventoryCount == 0, "Inventory repository should start empty")
 
         // Create services directly with mock repositories (don't use AppDependencies)
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
         let userTagsRepo = MockUserTagsRepository()
         let ratingRepo = MockRatingRepository()
         let mockLogger = MockLogger()
@@ -97,16 +99,16 @@ struct DiagnosticTests: MockOnlyTestSuite {
 
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
-            coatingItemRepository: repos.coating,
-            toolItemRepository: repos.tool,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryRepository: repos.inventory,
             itemTagsRepository: repos.itemTags
         )
 
         let catalogService = CatalogService(
             glassItemRepository: repos.glassItem,
-            coatingItemRepository: repos.coating,
-            toolItemRepository: repos.tool,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             inventoryTrackingService: inventoryTrackingService,
             itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,

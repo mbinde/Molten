@@ -91,7 +91,7 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
             itemMinimumRepository: otherMockRepos.itemMinimum,
             itemTagsRepository: otherMockRepos.itemTags,
             userTagsRepository: userTagsRepo,
-            ratingService: RatingService()
+            ratingService: AppDependencies.shared.ratingService
         )
 
         let shoppingService = ShoppingListService(

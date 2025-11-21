@@ -107,7 +107,7 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
             itemMinimumRepository: mockItemMinimumRepo,
             itemTagsRepository: mockItemTagsRepo,
             userTagsRepository: mockUserTagsRepo,
-            ratingService: RatingService()
+            ratingService: AppDependencies.shared.ratingService
         )
 
         let shoppingListRepository = MockShoppingListRepository()

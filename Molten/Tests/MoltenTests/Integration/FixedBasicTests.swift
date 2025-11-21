@@ -243,7 +243,7 @@ struct FixedBasicTests {
             itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo,
-            ratingService: RatingService()
+            ratingService: AppDependencies.shared.ratingService
         )
 
         let shoppingListService = ShoppingListService(

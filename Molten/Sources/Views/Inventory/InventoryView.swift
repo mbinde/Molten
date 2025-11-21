@@ -29,12 +29,9 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var showingAddFromCatalog = false
     @State private var showingAllTags = false
     @State private var showingCOESelection = false
-    @State private var selectedProductTypes: Set<String> = []  // Not used in inventory, but required by SearchAndFilterHeader
-    @State private var showingProductTypeSelection = false
     @State private var showingManufacturerSelection = false
     @State private var showingSuccessToast = false
     @State private var successMessage = ""
-    @State private var searchClearedFeedback = false
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
     @State private var showingLabelDesigner = false
     @State private var showingSharing = false
@@ -240,41 +237,18 @@ struct InventoryView: View, CachedDataDeletion {
     var body: some View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
-                // Search and filter controls using shared component
-                // TODO: Migrate to native .searchable() with FilterChipsRow component (see CatalogView)
-                StandardSearchAndFilterHeader(
-                    searchText: $viewModel.searchText,
+                // Filter header using reusable ModernFilterHeader component
+                ModernFilterHeader(
                     searchTitlesOnly: $viewModel.searchTitlesOnly,
+                    sortOption: $viewModel.sortOption,
+                    sortOptions: Array(InventorySortOption.allCases),
+                    sortOptionIcon: { $0.icon },
                     selectedTags: $viewModel.selectedTags,
                     selectedCOEs: $viewModel.selectedCOEs,
                     selectedManufacturers: $viewModel.selectedManufacturers,
-                    selectedProductTypes: $selectedProductTypes,
-                    showingAllTags: $showingAllTags,
-                    showingCOESelection: $showingCOESelection,
-                    showingManufacturerSelection: $showingManufacturerSelection,
-                    showingProductTypeSelection: $showingProductTypeSelection,
-                    allAvailableTags: allAvailableTags,
-                    allAvailableCOEs: allAvailableCOEs,
-                    allAvailableManufacturers: allAvailableManufacturers,
-                    allAvailableProductTypes: ["glass", "coating", "tool"],
-                    manufacturerCounts: manufacturerCounts,
-                    coeCounts: coeCounts,
-                    tagCounts: tagCounts,
-                    sortMenuContent: {
-                        AnyView(
-                            Group {
-                                ForEach(InventorySortOption.allCases, id: \.self) { option in
-                                    Button {
-                                        viewModel.sortOption = option
-                                    } label: {
-                                        Label(option.title, systemImage: option.icon)
-                                    }
-                                }
-                            }
-                        )
-                    },
-                    searchPlaceholder: "Search inventory by name, code, manufacturer...",
-                    searchClearedFeedback: $searchClearedFeedback
+                    showingTagsSheet: $showingAllTags,
+                    showingCOESheet: $showingCOESelection,
+                    showingManufacturerSheet: $showingManufacturerSelection
                 )
 
                 // Usage banner (only show for free tier)
@@ -308,6 +282,13 @@ struct InventoryView: View, CachedDataDeletion {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .searchable(
+                text: $viewModel.searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "Search inventory by name, code, manufacturer..."
+            )
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
             .toolbar {
                 toolbarContent
             }
@@ -323,6 +304,16 @@ struct InventoryView: View, CachedDataDeletion {
                     availableCOEs: allAvailableCOEs,
                     selectedCOEs: $viewModel.selectedCOEs,
                     itemCounts: coeCounts
+                )
+            }
+            .sheet(isPresented: $showingManufacturerSelection) {
+                FilterSelectionSheet.manufacturers(
+                    availableManufacturers: allAvailableManufacturers,
+                    selectedManufacturers: $viewModel.selectedManufacturers,
+                    manufacturerDisplayName: { code in
+                        GlassManufacturers.fullName(for: code) ?? code.uppercased()
+                    },
+                    itemCounts: manufacturerCounts
                 )
             }
             .sheet(isPresented: $showingAddItem, onDismiss: {

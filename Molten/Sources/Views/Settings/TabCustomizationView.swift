@@ -95,9 +95,15 @@ struct TabCustomizationView: View {
                 Text("Tab Order")
             } footer: {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Drag to reorder tabs. The first \(config.maxVisibleTabs) tabs will appear in the tab bar, and the rest in the More menu.")
-                        .font(.caption)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                    if config.tabs.count > config.maxVisibleTabs {
+                        Text("Drag to reorder tabs. The first \(config.maxVisibleTabs) tabs will appear in the tab bar, and the rest in the More menu.")
+                            .font(.caption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    } else {
+                        Text("Drag to reorder tabs.")
+                            .font(.caption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
 
                     HStack(spacing: 16) {
                         Label {

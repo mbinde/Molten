@@ -26,7 +26,7 @@ class InventoryViewModel: InventoryViewModelProtocol {
     var searchText = ""
     var searchTitlesOnly = false
     var selectedTypes: Set<String> = [] // String types instead of enum
-    var selectedProductTypes: Set<String> = ["glass"] // Product type filter (glass, coating, tool) - defaults to glass
+    var selectedProductTypes: Set<String> = [] // Product type filter (glass, coating, tool) - defaults to all
     var selectedTags: Set<String> = []
     var selectedCOEs: Set<Int32> = []
     var selectedManufacturers: Set<String> = []

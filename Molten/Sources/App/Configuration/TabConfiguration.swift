@@ -112,10 +112,18 @@ class TabConfiguration {
         return DefaultTab.allCases.filter { tab in
             switch tab {
             case .projects:
-                // Legacy combined Projects tab - no longer used
-                return false
+                // Legacy combined Projects tab - check feature flag
+                return FeatureFlags.ENABLE_PROJECTS
+            case .projectPlans, .logbook:
+                return FeatureFlags.ENABLE_PROJECTS
+            case .kilnSchedules:
+                return FeatureFlags.ENABLE_KILN_SCHEDULES
+            case .recipes:
+                return FeatureFlags.ENABLE_RECIPES
+            case .purchases:
+                return FeatureFlags.ENABLE_PURCHASES
             default:
-                // Include all tabs: catalog, inventory, shopping, purchases, projectPlans, logbook, kilnSchedules, settings, stores
+                // Include all other tabs: catalog, inventory, shopping, settings, locations
                 return true
             }
         }

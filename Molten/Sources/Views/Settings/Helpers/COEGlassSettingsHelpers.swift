@@ -72,7 +72,7 @@ struct COEGlassSettingsHelper {
     
     /// Check if COE filter feature is available
     static var isFeatureAvailable: Bool {
-        return DebugConfig.FeatureFlags.coeGlassFilter
+        return FeatureFlags.coeGlassFilter
     }
     
     /// Get all available COE options for settings picker

@@ -261,7 +261,7 @@ struct InventoryView: View, CachedDataDeletion {
                     showingManufacturerSheet: $showingManufacturerSelection,
                     productTypeFilter: .init(
                         selectedProductTypes: $viewModel.selectedProductTypes,
-                        availableTypes: ["glass", "coating", "tool"],
+                        availableTypes: FeatureFlags.availableProductTypes,
                         displayName: displayNameForProductType
                     )
                 )

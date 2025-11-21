@@ -62,7 +62,7 @@ struct EndToEndWorkflowTests: MockOnlyTestSuite {
             itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepo,
-            ratingService: RatingService()
+            ratingService: AppDependencies.shared.ratingService
         )
 
         let shoppingListService = ShoppingListService(

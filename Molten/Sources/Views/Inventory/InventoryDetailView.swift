@@ -303,8 +303,8 @@ struct InventoryDetailView: View {
             // Refresh item data after adding inventory
             refreshItemData()
         }) {
-            if let inventoryTrackingService = inventoryTrackingService,
-               let catalogService = catalogService {
+            if let _ = inventoryTrackingService,
+               let _ = catalogService {
                 AddInventoryItemView(
                     prefilledNaturalKey: item.glassItem.stable_id,
                     deps: AppDependencies()
@@ -349,7 +349,7 @@ struct InventoryDetailView: View {
     private func loadInitialData() {
         if let firstInventory = currentItem.inventory.first {
             editingQuantity = String(firstInventory.quantity)
-            selectedType = firstInventory.type ?? ""
+            selectedType = firstInventory.type
             selectedinventory_id = firstInventory.id
         }
     }
@@ -557,7 +557,7 @@ struct InventoryDetailView: View {
                 }
 
                 // Reload images
-                await loadUserImages()
+                loadUserImages()
 
                 // Clear cache to refresh image display across app
                 await MainActor.run {
@@ -673,7 +673,7 @@ struct InventoryDetailView: View {
 
     private var emptyDetailsMessage: some View {
         VStack(alignment: .leading, spacing: 8) {
-            if let manufacturerURL = currentItem.glassItem.url, let url = URL(string: manufacturerURL) {
+            if let manufacturerURL = currentItem.glassItem.url, let _ = URL(string: manufacturerURL) {
                 Text("Please check ") +
                 Text("the manufacturer's site")
                     .foregroundColor(.blue) +

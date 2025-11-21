@@ -288,7 +288,7 @@ struct InventorySharingView: View {
 
     private var expiringSharesSection: some View {
         Section {
-            if let shareCode = viewModel.myShareCode {
+            if viewModel.myShareCode != nil {
                 // Header row (always visible)
                 Button(action: { expiringSharesExpanded.toggle() }) {
                     HStack {

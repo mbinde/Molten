@@ -41,7 +41,7 @@ struct StoreRowView: View {
                 }
 
                 // Distance (if available)
-                if showDistance, let userLocation = userLocation, let distance = store.distance(from: userLocation) {
+                if showDistance, let userLocation = userLocation, let _ = store.distance(from: userLocation) {
                     HStack(spacing: DesignSystem.Spacing.xs) {
                         Image(systemName: "location.fill")
                             .font(.caption)

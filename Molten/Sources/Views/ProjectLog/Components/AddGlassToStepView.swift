@@ -17,8 +17,8 @@ struct AddGlassToStepView: View {
 
     // Search and selection
     @State private var searchText = ""
-    @State private var selectedGlassItem: GlassItemModel?
-    @State private var glassItems: [GlassItemModel] = []
+    @State private var selectedGlassItem: UnifiedCatalogItem?
+    @State private var glassItems: [UnifiedCatalogItem] = []
     @State private var isLoading = false
 
     // Common fields
@@ -253,7 +253,7 @@ struct AddGlassToStepView: View {
         searchText = glass.freeformDescription ?? ""
     }
 
-    private func selectCatalogGlass(_ item: GlassItemModel) {
+    private func selectCatalogGlass(_ item: UnifiedCatalogItem) {
         selectedGlassItem = item
         // Keep search text for refinement
         // Don't pre-fill quantity - let user enter it fresh
@@ -294,10 +294,10 @@ struct AddGlassToStepView: View {
         isLoading = true
 
         if CatalogSearchCache.shared.isLoaded {
-            glassItems = CatalogSearchCache.shared.items
+            glassItems = CatalogSearchCache.shared.items.filter { $0.itemType == .glass }
         } else {
             await CatalogSearchCache.shared.loadIfNeeded(catalogService: catalogService)
-            glassItems = CatalogSearchCache.shared.items
+            glassItems = CatalogSearchCache.shared.items.filter { $0.itemType == .glass }
         }
 
         isLoading = false

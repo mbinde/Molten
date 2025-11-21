@@ -19,13 +19,13 @@ class AddInventoryItemViewModel {
     // MARK: - Dependencies
 
     private let inventoryTrackingService: InventoryTrackingService
-    private let glassItemRepository: GlassItemRepository
+    private let catalogService: CatalogService
     private let prefilledNaturalKey: String?
 
     // MARK: - Form State
 
     var stableId: String = ""
-    var selectedGlassItem: GlassItemModel?
+    var selectedCatalogItem: UnifiedCatalogItem?
     var searchText: String = ""
     var quantity: String = ""
     var selectedType: String = "rod"  // Default type
@@ -37,7 +37,7 @@ class AddInventoryItemViewModel {
 
     // MARK: - UI State
 
-    var glassItems: [GlassItemModel] = []
+    var catalogItems: [UnifiedCatalogItem] = []
     var isLoading: Bool = false
     var isDimensionsExpanded: Bool = false
     var errorMessage: String?
@@ -48,11 +48,11 @@ class AddInventoryItemViewModel {
     init(
         prefilledNaturalKey: String? = nil,
         inventoryTrackingService: InventoryTrackingService,
-        glassItemRepository: GlassItemRepository
+        catalogService: CatalogService
     ) {
         self.prefilledNaturalKey = prefilledNaturalKey
         self.inventoryTrackingService = inventoryTrackingService
-        self.glassItemRepository = glassItemRepository
+        self.catalogService = catalogService
 
         // Set prefilled key if provided
         if let prefilledKey = prefilledNaturalKey {
@@ -103,11 +103,11 @@ class AddInventoryItemViewModel {
         }
     }
 
-    // MARK: - Glass Item Management
+    // MARK: - Catalog Item Management
 
-    /// Load all glass items from cache (pre-loaded during startup)
-    func loadGlassItems() async {
-        print("⏱️ [SEARCH] loadGlassItems() started, cache isLoaded=\(CatalogSearchCache.shared.isLoaded)")
+    /// Load all catalog items from cache (pre-loaded during startup)
+    func loadCatalogItems() async {
+        print("⏱️ [SEARCH] loadCatalogItems() started, cache isLoaded=\(CatalogSearchCache.shared.isLoaded)")
         isLoading = true
         defer { isLoading = false }
 
@@ -116,42 +116,42 @@ class AddInventoryItemViewModel {
         // If it's not loaded yet, we wait for it to finish loading (don't reload!)
         if CatalogSearchCache.shared.isLoaded {
             // Cache ready - instant access!
-            glassItems = CatalogSearchCache.shared.items
-            print("✅ [SEARCH] Using pre-loaded cache with \(glassItems.count) items")
+            catalogItems = CatalogSearchCache.shared.items
+            print("✅ [SEARCH] Using pre-loaded cache with \(catalogItems.count) items")
         } else {
             // Cache still loading from FirstRunDataLoadingView, wait for it
-            print("⏳ [SEARCH] Cache not ready, loading from repository...")
+            print("⏳ [SEARCH] Cache not ready, loading from catalog service...")
             do {
-                glassItems = try await glassItemRepository.fetchItems(matching: nil)
-                print("✅ [SEARCH] Loaded \(glassItems.count) items from repository")
+                catalogItems = try await catalogService.getAllCatalogItemsLightweight()
+                print("✅ [SEARCH] Loaded \(catalogItems.count) items from catalog service")
             } catch {
-                print("Error loading glass items: \(error)")
-                setError("Failed to load glass items: \(error.localizedDescription)")
+                print("Error loading catalog items: \(error)")
+                setError("Failed to load catalog items: \(error.localizedDescription)")
             }
         }
 
         // If we have a prefilled stable_id, retry the lookup now that items are loaded
-        if !stableId.isEmpty && selectedGlassItem == nil {
-            lookupGlassItem(stableId: stableId)
+        if !stableId.isEmpty && selectedCatalogItem == nil {
+            lookupCatalogItem(stableId: stableId)
         }
     }
 
-    /// Select a glass item
-    func selectGlassItem(_ item: GlassItemModel) {
-        selectedGlassItem = item
+    /// Select a catalog item
+    func selectCatalogItem(_ item: UnifiedCatalogItem) {
+        selectedCatalogItem = item
         stableId = item.stable_id
     }
 
     /// Clear selection
     func clearSelection() {
-        selectedGlassItem = nil
+        selectedCatalogItem = nil
         stableId = ""
         searchText = ""
     }
 
-    /// Lookup glass item by stable ID
-    func lookupGlassItem(stableId: String) {
-        selectedGlassItem = glassItems.first { $0.stable_id == stableId }
+    /// Lookup catalog item by stable ID
+    func lookupCatalogItem(stableId: String) {
+        selectedCatalogItem = catalogItems.first { $0.stable_id == stableId }
     }
 
     // MARK: - Type Management
@@ -190,9 +190,9 @@ class AddInventoryItemViewModel {
             return false
         }
 
-        // Verify the glass item exists
-        guard selectedGlassItem != nil else {
-            setError("Please select a glass item")
+        // Verify the catalog item exists
+        guard selectedCatalogItem != nil else {
+            setError("Please select a catalog item")
             return false
         }
 

@@ -39,6 +39,36 @@ struct GlassItemCard: View {
         self.onManageTags = onManageTags
     }
 
+    /// Convenience initializer for UnifiedCatalogItem
+    /// Converts UnifiedCatalogItem to GlassItemModel for display
+    init(
+        catalogItem: UnifiedCatalogItem,
+        variant: Variant,
+        tags: [String] = [],
+        userTags: [String] = [],
+        onManageTags: (() -> Void)? = nil
+    ) {
+        // Convert UnifiedCatalogItem to GlassItemModel
+        self.item = GlassItemModel(
+            stable_id: catalogItem.stable_id,
+            name: catalogItem.name,
+            sku: catalogItem.sku,
+            manufacturer: catalogItem.manufacturer,
+            mfr_notes: catalogItem.mfr_notes,
+            coe: catalogItem.coe ?? 0,  // Default to 0 for non-glass items
+            url: catalogItem.url,
+            mfr_status: catalogItem.mfr_status,
+            image_url: catalogItem.image_url,
+            image_path: catalogItem.image_path,
+            image_thumb_path: catalogItem.image_thumb_path,
+            dominant_colors: catalogItem.dominant_colors
+        )
+        self.variant = variant
+        self.tags = tags
+        self.userTags = userTags
+        self.onManageTags = onManageTags
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Main card content

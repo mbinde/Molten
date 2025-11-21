@@ -15,6 +15,7 @@ import ImageIO
 
 extension Notification.Name {
     static let userImageUploaded = Notification.Name("userImageUploaded")
+    static let colorChipDisplayModeChanged = Notification.Name("colorChipDisplayModeChanged")
 }
 
 #if canImport(UIKit)
@@ -76,11 +77,9 @@ struct ImageHelpers {
                 // Return nil to signal that gradient should be shown
                 return nil
             }
-            // No colors - continue to normal flow (product image → manufacturer logo)
-        }
-
-        // NEVER MODE: Never show gradient - always photo or logo
-        if colorChipMode == .never {
+            // No colors - fall through to try product image or manufacturer logo
+        } else if colorChipMode == .never {
+            // NEVER MODE: Never show gradient - always photo or logo
             // Check if we have permission for product images
             if let manufacturer = manufacturer,
                !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
@@ -105,28 +104,51 @@ struct ImageHelpers {
             return await Task.detached(priority: .background) {
                 ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
             }.value
-        }
+        } else if colorChipMode == .noPhoto {
+            // NO PHOTO MODE (default): Only show gradient when no photo available
+            // Step 1: Check if we have permission for product images
+            if let manufacturer = manufacturer,
+               !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
+                // Special case: PDX Tubing's product photos are too poor quality for color extraction
+                // Always show manufacturer logo instead of gradient
+                let isPDX = manufacturer.caseInsensitiveCompare("PDX") == .orderedSame
 
-        // NO PHOTO MODE (default): Only show gradient when no photo available
-        // Step 1: Check if we have permission for product images
-        if let manufacturer = manufacturer,
-           !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
-            // Special case: PDX Tubing's product photos are too poor quality for color extraction
-            // Always show manufacturer logo instead of gradient
-            let isPDX = manufacturer.caseInsensitiveCompare("PDX") == .orderedSame
+                // No permission - only load manufacturer logo if no color codes available (or PDX)
+                if isPDX || dominantColors == nil || dominantColors?.isEmpty == true {
+                    return await Task.detached(priority: .background) {
+                        ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
+                    }.value
+                } else {
+                    // Return nil to signal that gradient should be shown
+                    return nil
+                }
+            }
 
-            // No permission - only load manufacturer logo if no color codes available (or PDX)
-            if isPDX || dominantColors == nil || dominantColors?.isEmpty == true {
-                return await Task.detached(priority: .background) {
-                    ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
-                }.value
-            } else {
+            // Step 2: Try to load product image from CDN/bundle
+            let useThumbnail = !UserSettings.shared.downloadFullSizeImages
+            if let cdnImage = await ImageDownloadService.loadImage(
+                manufacturer: manufacturer,
+                exactFilename: imagePath,
+                exactThumbnailFilename: imageThumbPath,
+                useThumbnail: useThumbnail
+            ) {
+                return cdnImage
+            }
+
+            // Step 3: No product image found - check if we should show gradient
+            if let colors = dominantColors, !colors.isEmpty {
                 // Return nil to signal that gradient should be shown
                 return nil
             }
+
+            // Final fallback: Try manufacturer logo
+            return await Task.detached(priority: .background) {
+                ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
+            }.value
         }
 
-        // Step 2: Try to load product image from CDN/bundle
+        // Common fallback for ALWAYS mode when no colors (or any other edge cases)
+        // Try to load product image from CDN/bundle
         let useThumbnail = !UserSettings.shared.downloadFullSizeImages
         if let cdnImage = await ImageDownloadService.loadImage(
             manufacturer: manufacturer,
@@ -135,12 +157,6 @@ struct ImageHelpers {
             useThumbnail: useThumbnail
         ) {
             return cdnImage
-        }
-
-        // Step 3: No product image found - check if we should show gradient
-        if let colors = dominantColors, !colors.isEmpty {
-            // Return nil to signal that gradient should be shown
-            return nil
         }
 
         // Final fallback: Try manufacturer logo
@@ -511,6 +527,19 @@ struct ProductImageView: View {
                 Task {
                     await loadImageAsync()
                 }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .colorChipDisplayModeChanged)) { _ in
+            // Skip if image loading is disabled
+            if DebugConfig.disableImageLoading {
+                return
+            }
+
+            // Reload image when color chip display mode changes
+            loadedImage = nil
+            isLoading = true
+            Task {
+                await loadImageAsync()
             }
         }
     }

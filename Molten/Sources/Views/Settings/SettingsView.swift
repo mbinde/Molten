@@ -133,16 +133,6 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.segmented)
 
-                    Picker("Temperature Unit", selection: Binding(
-                        get: { UserSettings.shared.preferredTemperatureUnit },
-                        set: { UserSettings.shared.preferredTemperatureUnit = $0 }
-                    )) {
-                        ForEach(TemperatureUnit.allCases, id: \.self) { unit in
-                            Text(unit.displayName).tag(unit)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .help("Choose your preferred temperature unit for displaying kiln schedules")
                     NavigationLink {
                         TabCustomizationView()
                     } label: {
@@ -285,27 +275,42 @@ struct SettingsView: View {
                 }
 
                 // MARK: - Projects and Logs
-                Section("Projects and Logs") {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Picker("Project Thumbnail Style", selection: thumbnailDisplayModeBinding) {
-                            ForEach(UserSettings.ThumbnailDisplayMode.allCases, id: \.self) { mode in
-                                Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
+                if FeatureFlags.ENABLE_PROJECTS {
+                    Section("Projects and Logs") {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Picker("Project Thumbnail Style", selection: thumbnailDisplayModeBinding) {
+                                ForEach(UserSettings.ThumbnailDisplayMode.allCases, id: \.self) { mode in
+                                    Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
+                                }
                             }
-                        }
-                        .pickerStyle(.menu)
+                            .pickerStyle(.menu)
 
-                        Text(thumbnailDisplayMode.description)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            Text(thumbnailDisplayMode.description)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
 
                 // MARK: - Kiln
-                Section("Kiln") {
-                    NavigationLink {
-                        KilnRatesSettingsView()
-                    } label: {
-                        Label("Kiln Max Rates", systemImage: "gauge.with.dots.needle.67percent")
+                if FeatureFlags.ENABLE_KILN_SCHEDULES {
+                    Section("Kiln") {
+                        Picker("Temperature Unit", selection: Binding(
+                            get: { UserSettings.shared.preferredTemperatureUnit },
+                            set: { UserSettings.shared.preferredTemperatureUnit = $0 }
+                        )) {
+                            ForEach(TemperatureUnit.allCases, id: \.self) { unit in
+                                Text(unit.displayName).tag(unit)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .help("Choose your preferred temperature unit for displaying kiln schedules")
+
+                        NavigationLink {
+                            KilnRatesSettingsView()
+                        } label: {
+                            Label("Kiln Max Rates", systemImage: "gauge.with.dots.needle.67percent")
+                        }
                     }
                 }
 

@@ -26,6 +26,7 @@ class InventoryViewModel: InventoryViewModelProtocol {
     var searchText = ""
     var searchTitlesOnly = false
     var selectedTypes: Set<String> = [] // String types instead of enum
+    var selectedProductTypes: Set<String> = ["glass"] // Product type filter (glass, coating, tool) - defaults to glass
     var selectedTags: Set<String> = []
     var selectedCOEs: Set<Int32> = []
     var selectedManufacturers: Set<String> = []
@@ -111,36 +112,65 @@ class InventoryViewModel: InventoryViewModelProtocol {
         }
     }
     
-    func applyFilters() async {
-        guard !selectedTypes.isEmpty else {
-            await loadInventoryItems()
-            return
+    func applyFilters() {
+        var filtered = completeItems
+
+        // Apply product type filter
+        if !selectedProductTypes.isEmpty {
+            filtered = filtered.filter { item in
+                selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
         }
 
-        do {
-            // Apply type filters via service
-            var items = try await inventoryTrackingService.searchItems(
-                text: searchText,
-                withTags: [],
-                hasInventory: true,
-                inventoryTypes: Array(selectedTypes)
-            )
-
-            // Apply manufacturer filter if selected
-            if !selectedManufacturers.isEmpty {
-                items = items.filter { selectedManufacturers.contains($0.glassItem.manufacturer) }
+        // Apply manufacturer filter
+        if !selectedManufacturers.isEmpty {
+            filtered = filtered.filter { item in
+                selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
             }
-
-            // Apply COE filter if selected
-            if !selectedCOEs.isEmpty {
-                items = items.filter { selectedCOEs.contains($0.glassItem.coe) }
-            }
-
-            filteredItems = items
-
-        } catch {
-            errorMessage = "Filter application failed: \(error.localizedDescription)"
         }
+
+        // Apply COE filter
+        if !selectedCOEs.isEmpty {
+            filtered = filtered.filter { item in
+                if let coe = item.catalogItem.coe {
+                    return selectedCOEs.contains(coe)
+                }
+                return false
+            }
+        }
+
+        // Apply tag filter
+        if !selectedTags.isEmpty {
+            filtered = filtered.filter { item in
+                !selectedTags.isDisjoint(with: Set(item.allTags))
+            }
+        }
+
+        // Apply inventory type filter (rod, tube, frit, etc.)
+        if !selectedTypes.isEmpty {
+            filtered = filtered.filter { item in
+                item.inventory.contains { inventory in
+                    selectedTypes.contains(inventory.type)
+                }
+            }
+        }
+
+        // Apply search text filter
+        if !searchText.isEmpty {
+            filtered = filtered.filter { item in
+                let name = item.catalogItem.name
+                let manufacturer = item.catalogItem.manufacturer
+                let sku = item.catalogItem.sku ?? ""
+                let stableId = item.catalogItem.stable_id
+
+                return name.localizedCaseInsensitiveContains(searchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
+                       sku.localizedCaseInsensitiveContains(searchText) ||
+                       stableId.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        filteredItems = filtered
     }
     
     // MARK: - CRUD Operations - Updated for new architecture

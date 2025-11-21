@@ -107,10 +107,17 @@ struct InventoryView: View, CachedDataDeletion {
         // Only show items with inventory (totalQuantity > 0)
         items = items.filter { $0.totalQuantity > 0 }
 
+        // Apply product type filter
+        if !viewModel.selectedProductTypes.isEmpty {
+            items = items.filter { item in
+                viewModel.selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
         // Apply manufacturer filter
         if !viewModel.selectedManufacturers.isEmpty {
             items = items.filter { item in
-                viewModel.selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                viewModel.selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
             }
         }
 
@@ -124,7 +131,10 @@ struct InventoryView: View, CachedDataDeletion {
         // Apply COE filter
         if !viewModel.selectedCOEs.isEmpty {
             items = items.filter { item in
-                viewModel.selectedCOEs.contains(item.glassItem.coe)
+                if let coe = item.catalogItem.coe {
+                    return viewModel.selectedCOEs.contains(coe)
+                }
+                return false
             }
         }
 
@@ -133,9 +143,9 @@ struct InventoryView: View, CachedDataDeletion {
             let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
             items = items.filter { item in
                 let allFields = [
-                    item.glassItem.name,
-                    item.glassItem.stable_id,
-                    item.glassItem.manufacturer
+                    item.catalogItem.name,
+                    item.catalogItem.stable_id,
+                    item.catalogItem.manufacturer
                 ]
                 return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
             }
@@ -248,7 +258,12 @@ struct InventoryView: View, CachedDataDeletion {
                     selectedManufacturers: $viewModel.selectedManufacturers,
                     showingTagsSheet: $showingAllTags,
                     showingCOESheet: $showingCOESelection,
-                    showingManufacturerSheet: $showingManufacturerSelection
+                    showingManufacturerSheet: $showingManufacturerSelection,
+                    productTypeFilter: .init(
+                        selectedProductTypes: $viewModel.selectedProductTypes,
+                        availableTypes: ["glass", "coating", "tool"],
+                        displayName: displayNameForProductType
+                    )
                 )
 
                 // Usage banner (only show for free tier)
@@ -528,6 +543,15 @@ struct InventoryView: View, CachedDataDeletion {
     }
     
     // MARK: - Helper Methods
+
+    private func displayNameForProductType(_ type: String) -> String {
+        switch type.lowercased() {
+        case "glass": return "Glass"
+        case "coating": return "Coatings"
+        case "tool": return "Tools"
+        default: return type.capitalized
+        }
+    }
 
     private func loadData() async {
         log.info("🔄 InventoryView loadData() called")

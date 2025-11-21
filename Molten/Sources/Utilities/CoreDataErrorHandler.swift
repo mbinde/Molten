@@ -44,7 +44,8 @@ enum CoreDataErrorHandler {
             print("   Domain: \(error.domain), Code: \(error.code)")
 
             // Log userInfo for additional context (especially for configuration errors)
-            if let userInfo = error.userInfo as? [String: Any] {
+            let userInfo = error.userInfo
+            if !userInfo.isEmpty {
                 // Format userInfo for better readability
                 let formattedUserInfo = userInfo.map { key, value in
                     "      \(key): \(value)"

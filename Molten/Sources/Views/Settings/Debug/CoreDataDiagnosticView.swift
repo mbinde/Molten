@@ -98,7 +98,7 @@ struct CoreDataDiagnosticView: View {
         
         results += "\n2. ENTITY REGISTRATION CHECK:\n"
         let controller = PersistenceController.shared
-        let context = controller.container.viewContext
+        _ = controller.container.viewContext
 
         // CatalogItem diagnostics removed - legacy code
         results += "⚠️ CatalogItem entity removed - use GlassItem hierarchy\n"
@@ -112,7 +112,7 @@ struct CoreDataDiagnosticView: View {
         results += "\n5. MODEL ENTITIES:\n"
         let model = controller.container.managedObjectModel
         for entity in model.entities.sorted(by: { ($0.name ?? "") < ($1.name ?? "") }) {
-            results += "   - \(entity.name ?? "Unknown") (\(entity.managedObjectClassName))\n"
+            results += "   - \(entity.name?.description ?? "Unknown") (\(entity.managedObjectClassName))\n"
         }
         
         results += "\n=== END DIAGNOSTICS ===\n"

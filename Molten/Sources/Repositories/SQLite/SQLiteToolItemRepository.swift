@@ -21,6 +21,24 @@ final class SQLiteToolItemRepository: BaseSQLiteCatalogItemRepository<ToolItemMo
         )
     }
 
+    // MARK: - Feature Flag Overrides
+
+    /// Override fetchItems to return empty when tools are disabled
+    override func fetchItems(matching predicate: NSPredicate?) async throws -> [ToolItemModel] {
+        guard FeatureFlags.ENABLE_TOOLS else {
+            return [] // Return empty array when tools are disabled
+        }
+        return try await super.fetchItems(matching: predicate)
+    }
+
+    /// Override fetchItem to return nil when tools are disabled
+    override func fetchItem(byStableId stableId: String) async throws -> ToolItemModel? {
+        guard FeatureFlags.ENABLE_TOOLS else {
+            return nil // Return nil when tools are disabled
+        }
+        return try await super.fetchItem(byStableId: stableId)
+    }
+
     // MARK: - Tool-Specific Parsing
 
     /// Parse a ToolItemModel from a SQLite row
@@ -64,6 +82,10 @@ final class SQLiteToolItemRepository: BaseSQLiteCatalogItemRepository<ToolItemMo
     // MARK: - Override searchItems to include description field
 
     override func searchItems(text: String) async throws -> [ToolItemModel] {
+        guard FeatureFlags.ENABLE_TOOLS else {
+            return [] // Return empty array when tools are disabled
+        }
+
         let searchPattern = "%\(text)%"
         let query = """
             SELECT * FROM tools

@@ -222,6 +222,21 @@ private struct ProductTypeFilterMenu: View {
 
     var body: some View {
         Menu {
+            // "All" option - shows all product types
+            Button {
+                withAnimation {
+                    selectedProductTypes.wrappedValue.removeAll()
+                }
+            } label: {
+                HStack {
+                    Text("All")
+                    Spacer()
+                    if selectedProductTypes.wrappedValue.isEmpty {
+                        Image(systemName: "checkmark")
+                    }
+                }
+            }
+
             // Single-select product type options
             ForEach(availableTypes, id: \.self) { type in
                 Button {
@@ -242,17 +257,15 @@ private struct ProductTypeFilterMenu: View {
             }
         } label: {
             HStack(spacing: DesignSystem.Spacing.sm) {
-                // Show selected type (always has a selection)
+                // Show selected type or "All" if empty
                 if let selectedType = selectedProductTypes.wrappedValue.first {
                     Text(displayName(selectedType))
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
                         .lineLimit(1)
                 } else {
-                    // Fallback if somehow empty
-                    Image(systemName: "square.stack.3d.up")
-                        .font(DesignSystem.Typography.captionSmall)
-                    Text("Type")
+                    // Show "All" when no specific type is selected
+                    Text("All")
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
                 }

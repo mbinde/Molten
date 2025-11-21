@@ -255,7 +255,7 @@ struct CatalogView: View {
             showingManufacturerSheet: $showingManufacturerFilterSelection,
             productTypeFilter: .init(
                 selectedProductTypes: $viewModel.selectedProductTypes,
-                availableTypes: ["glass", "coating", "tool"],
+                availableTypes: FeatureFlags.availableProductTypes,
                 displayName: displayNameForProductType
             )
         )

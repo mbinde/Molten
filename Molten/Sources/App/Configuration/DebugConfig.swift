@@ -8,12 +8,9 @@
 import Foundation
 import SwiftUI
 
-// Global typealias to redirect any remaining FeatureFlags references
-typealias FeatureFlags = DebugConfig.FeatureFlags
-
 /// Debug configuration for development builds
 struct DebugConfig {
-    
+
     // MARK: - Development Utilities
 
     /// Enable verbose logging during development
@@ -47,52 +44,9 @@ struct DebugConfig {
     /// NOTE: Testing confirmed images are NOT causing first-run keyboard delays
     /// (the delay was Xcode debugging overhead)
     static var disableImageLoading = false
-    
-    // MARK: - Built-in Feature Flags for Debug Purposes
-    
-    struct FeatureFlags {
-        // MARK: - Release Configuration
-        static let isFullFeaturesEnabled = false
-        
-        // MARK: - Individual Feature Flags
-        static let advancedSearch = isFullFeaturesEnabled
-        static let advancedImageLoading = isFullFeaturesEnabled
-        static let advancedUIComponents = isFullFeaturesEnabled
-        static let performanceOptimizations = isFullFeaturesEnabled
-        static let batchOperations = isFullFeaturesEnabled
-        static let advancedFiltering = isFullFeaturesEnabled
-        static let coeGlassFilter = true
-        
-        // MARK: - Always Enabled (Core Features)
-        static let basicInventoryManagement = true
-        static let coreDataPersistence = true
-        static let basicSearch = true
-        static let userPreferences = true
-        
-        // MARK: - Feature Flag Helpers
-        static var searchImplementation: SearchType {
-            return advancedSearch ? .advanced : .basic
-        }
-        
-        static var imageLoadingStrategy: ImageLoadingType {
-            return advancedImageLoading ? .async : .sync
-        }
-    }
-    
-    enum SearchType {
-        case basic
-        case advanced
-    }
 
-    enum ImageLoadingType {
-        case sync
-        case async
-    }
-    
-    /// Access to debug feature flags
-    static var allFeatureFlags: FeatureFlags.Type {
-        return FeatureFlags.self
-    }
+    // MARK: - Feature Flags
+    // NOTE: Feature flags have been moved to FeatureFlags.swift for better organization
 }
 
 // MARK: - Debug Utilities

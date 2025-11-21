@@ -106,12 +106,6 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.segmented)
 
-                    NavigationLink {
-                        TabCustomizationView()
-                    } label: {
-                        Label("Customize Tabs", systemImage: "square.grid.2x2")
-                    }
-
                     Picker("Temperature Unit", selection: Binding(
                         get: { UserSettings.shared.preferredTemperatureUnit },
                         set: { UserSettings.shared.preferredTemperatureUnit = $0 }
@@ -122,6 +116,12 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.segmented)
                     .help("Choose your preferred temperature unit for displaying kiln schedules")
+                    NavigationLink {
+                        TabCustomizationView()
+                    } label: {
+                        Label("Customize Tabs", systemImage: "square.grid.2x2")
+                    }
+
                 }
 
                 // MARK: - Catalog & Display
@@ -177,6 +177,12 @@ struct SettingsView: View {
                     ))
                     .help("When enabled, your personal notes in item detail views will be fully expanded by default")
 
+                    Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
+                        .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
+                }
+
+                // MARK: - Projects and Logs
+                Section("Projects and Logs") {
                     VStack(alignment: .leading, spacing: 4) {
                         Picker("Project Thumbnail Style", selection: thumbnailDisplayModeBinding) {
                             ForEach(UserSettings.ThumbnailDisplayMode.allCases, id: \.self) { mode in
@@ -189,9 +195,6 @@ struct SettingsView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-
-                    Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
-                        .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
                 }
 
                 // MARK: - Filtering

@@ -25,6 +25,7 @@ struct GlassManufacturers {
         "DS": "Delphi Superior",
         "EF": "Effetre",
         "JET": "JetAgeStudio",
+        "FM": "Fusemaster",
         "GA": "Glass Alchemy",
         "GAF": "Gaffer",
         "GRE": "Greasy Glass",
@@ -37,6 +38,7 @@ struct GlassManufacturers {
         "PAR": "Parramore Glass",
         "PDX": "PDX Tubing Co",
         "RE": "Reichenbach",
+        "REUSCHE": "Reusche",
         "TAG": "Trautmann Art Glass",
         "THMP": "Thompson Enamel",
         "UST": "UST Glass",
@@ -52,9 +54,11 @@ struct GlassManufacturers {
         "BB": "bb",
         "CiM": "cim",
         "DS": "ds",
+        "FM": "fm",
         "GA": "ga",
         "GAF": "gaf",
         "RE": "re",
+        "REUSCHE": "reusche",
         "TAG": "tag",
         "VF": "vf",
         "NS": "ns",
@@ -86,6 +90,7 @@ struct GlassManufacturers {
         "DH": true,           // Double Helix - permission granted via email
         "DS": false,          // Delphi Superior - NO product images (bot-protected site)
         "EF": true,           // Effetre - permission granted via email
+        "FM": false,          // Fusemaster - NO permission (no product images in catalog)
         "JET": false,         // JetAgeStudio -- NO permission (waiting on response)
         "GA": true,           // Glass Alchemy - permission granted via email
         "GAF": false,         // Gaffer - NO product images (bot-protected site)
@@ -100,12 +105,47 @@ struct GlassManufacturers {
         "PAR": false,          // Parramore Glass - NO permission (no idea who to ask)
         "PDX": false,          // PDX Tubing Co - NO permission (no idea who to ask)
         "RE": false,           // Reichenbach - NO permission (no idea who to ask)
+        "REUSCHE": false,     // Reusche - NO permission (no product images in PDF catalogs)
         "TAG": false,          // Trautmann Art Glass - NO permission (need to reach Northstar somehow)
         "THMP": false,         // Thompson Enamel - NO permission (emailed, waiting on response)
         "UST": true,          // UST Glass - NO permission (no response)
         "VF": true,           // Vetrofond - permission granted via email
         "WM": false,           // Wissmach Glass - NO permission (no idea who to ask)
         "Y96": true           // Youghiogheny Glass - permission granted via email
+    ]
+
+    /// Tracks which manufacturers we actually ship with the catalog
+    /// If false, the manufacturer's products will not be included in the bundled catalog
+    /// Note: This does not affect online catalog updates - only the initial app bundle
+    nonisolated static let shipsWithCatalog: [String: Bool] = [
+        "AB": true,            // Asian (Chinese) Boro
+        "BB": true,            // Boro Batch
+        "BE": true,            // Bullseye Glass
+        "CiM": true,           // Creation is Messy
+        "DH": true,            // Double Helix
+        "DS": true,            // Delphi Superior
+        "EF": true,            // Effetre
+        "FM": true,            // Fusemaster
+        "GA": true,            // Glass Alchemy
+        "GAF": true,           // Gaffer
+        "GRE": true,           // Greasy Glass
+        "JET": true,           // JetAgeStudio
+        "KUG": true,           // Kugler
+        "MA": true,            // Molten Aura Labs
+        "MOM": true,           // Momka Glass
+        "NS": true,            // Northstar Glassworks
+        "OC": true,            // Oceanside Glass
+        "OR": true,            // Origin Glass
+        "PAR": true,           // Parramore Glass
+        "PDX": false,          // PDX Tubing Co - DO NOT SHIP
+        "RE": true,            // Reichenbach
+        "REUSCHE": true,       // Reusche
+        "TAG": true,           // Trautmann Art Glass
+        "THMP": true,          // Thompson Enamel
+        "UST": false,          // UST Glass - DO NOT SHIP
+        "VF": true,            // Vetrofond
+        "WM": true,            // Wissmach Glass
+        "Y96": true            // Youghiogheny Glass
     ]
 
     /// Get the default manufacturer image name for a manufacturer code
@@ -146,6 +186,28 @@ struct GlassManufacturers {
 
         // Default to false (no permission) for unknown manufacturers
         return false
+    }
+
+    /// Check if a manufacturer's products should be included in the bundled catalog
+    /// - Parameter code: The manufacturer code (e.g., "EF", "PDX")
+    /// - Returns: True if the manufacturer ships with the catalog, false otherwise
+    nonisolated static func shipsWithBundledCatalog(for code: String?) -> Bool {
+        guard let code = code?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+            return false
+        }
+
+        // Try exact match first
+        if let ships = shipsWithCatalog[code] {
+            return ships
+        }
+
+        // Try case-insensitive match
+        if let ships = shipsWithCatalog.first(where: { $0.key.caseInsensitiveCompare(code) == .orderedSame })?.value {
+            return ships
+        }
+
+        // Default to true for unknown manufacturers (safer to include than exclude)
+        return true
     }
     
     /// Static mapping of manufacturer codes to their COE (Coefficient of Expansion) values

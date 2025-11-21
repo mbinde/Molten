@@ -95,13 +95,17 @@ struct CoatingItemModel: CatalogItem {
     let mfr_status: String
     let image_url: String?
     let image_path: String?
+    let image_thumb_path: String?
+    let tags: String?  // Comma-separated quoted tags like '"blue", "metallic"'
+    let dominant_colors: String?  // Comma-separated hex codes like '"#FF0000", "#00FF00"'
 
     nonisolated var id: String { stable_id }
 
     /// Initialize with computed URI
     nonisolated init(stable_id: String, name: String, sku: String?, manufacturer: String,
          mfr_notes: String? = nil, url: String? = nil, mfr_status: String,
-         image_url: String? = nil, image_path: String? = nil) {
+         image_url: String? = nil, image_path: String? = nil, image_thumb_path: String? = nil,
+         tags: String? = nil, dominant_colors: String? = nil) {
         self.stable_id = stable_id
         self.name = name
         self.sku = sku
@@ -112,6 +116,9 @@ struct CoatingItemModel: CatalogItem {
         self.mfr_status = mfr_status
         self.image_url = image_url
         self.image_path = image_path
+        self.image_thumb_path = image_thumb_path
+        self.tags = tags
+        self.dominant_colors = dominant_colors
     }
 
     // Equatable conformance - based on business key (manufacturer + SKU when available, else stable_id)

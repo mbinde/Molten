@@ -32,6 +32,7 @@ struct SettingsView: View {
     @State private var subscriptionViewModel: SubscriptionViewModel
     @State private var catalogUpdateViewModel: CatalogUpdateViewModel
     @State private var thumbnailDisplayMode: UserSettings.ThumbnailDisplayMode = UserSettings.shared.thumbnailDisplayMode
+    @State private var colorChipDisplayMode: UserSettings.ColorChipDisplayMode = UserSettings.shared.colorChipDisplayMode
 
     init(
         catalogService: CatalogService = AppDependencies().catalogService,
@@ -78,6 +79,16 @@ struct SettingsView: View {
             set: {
                 thumbnailDisplayMode = $0
                 UserSettings.shared.thumbnailDisplayMode = $0
+            }
+        )
+    }
+
+    private var colorChipDisplayModeBinding: Binding<UserSettings.ColorChipDisplayMode> {
+        Binding(
+            get: { colorChipDisplayMode },
+            set: {
+                colorChipDisplayMode = $0
+                UserSettings.shared.colorChipDisplayMode = $0
             }
         )
     }
@@ -160,6 +171,19 @@ struct SettingsView: View {
                                     .foregroundColor(.secondary)
                             }
                         }
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Picker("Show Color Chips", selection: colorChipDisplayModeBinding) {
+                            ForEach(UserSettings.ColorChipDisplayMode.allCases, id: \.self) { mode in
+                                Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.menu)
+
+                        Text(colorChipDisplayMode.description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
 
                     Toggle("Expand Manufacturer Descriptions by Default", isOn: Binding(

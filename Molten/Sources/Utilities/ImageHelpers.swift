@@ -48,7 +48,7 @@ struct ImageHelpers {
     // MARK: - Centralized Image Loading Logic
 
     /// Single source of truth for product image loading decision tree
-    /// Returns nil if should show gradient (no permission + have colors)
+    /// Returns nil if should show gradient (based on user settings and availability)
     @MainActor
     static func loadProductImageForDisplay(
         itemCode: String,
@@ -58,7 +58,7 @@ struct ImageHelpers {
         imageThumbPath: String?,
         dominantColors: [String]?
     ) async -> UIImage? {
-        // Step 0: User-uploaded image (highest priority)
+        // Step 0: User-uploaded image (highest priority - always wins)
         if let stableId = stableId {
             if let primaryModel = try? await sharedUserImageRepository.getPrimaryImage(ownerType: .glassItem, ownerId: stableId),
                let userImage = try? await sharedUserImageRepository.loadImage(primaryModel) {
@@ -66,8 +66,49 @@ struct ImageHelpers {
             }
         }
 
+        // Get user's color chip display preference
+        let colorChipMode = UserSettings.shared.colorChipDisplayMode
+
+        // ALWAYS MODE: Always show gradient if we have dominant colors
+        if colorChipMode == .always {
+            // Check if we have dominant_colors
+            if let colors = dominantColors, !colors.isEmpty {
+                // Return nil to signal that gradient should be shown
+                return nil
+            }
+            // No colors - continue to normal flow (product image → manufacturer logo)
+        }
+
+        // NEVER MODE: Never show gradient - always photo or logo
+        if colorChipMode == .never {
+            // Check if we have permission for product images
+            if let manufacturer = manufacturer,
+               !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
+                // No permission - skip to manufacturer logo (ignore dominant_colors)
+                return await Task.detached(priority: .background) {
+                    ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
+                }.value
+            }
+
+            // Try to load product image from CDN/bundle
+            let useThumbnail = !UserSettings.shared.downloadFullSizeImages
+            if let cdnImage = await ImageDownloadService.loadImage(
+                manufacturer: manufacturer,
+                exactFilename: imagePath,
+                exactThumbnailFilename: imageThumbPath,
+                useThumbnail: useThumbnail
+            ) {
+                return cdnImage
+            }
+
+            // Final fallback: Try manufacturer logo
+            return await Task.detached(priority: .background) {
+                ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
+            }.value
+        }
+
+        // NO PHOTO MODE (default): Only show gradient when no photo available
         // Step 1: Check if we have permission for product images
-        // If not, show manufacturer logo only if we don't have color codes for gradient
         if let manufacturer = manufacturer,
            !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
             // Special case: PDX Tubing's product photos are too poor quality for color extraction
@@ -85,7 +126,7 @@ struct ImageHelpers {
             }
         }
 
-        // Steps 2→3→4: ImageDownloadService handles: cache → bundle → CDN download
+        // Step 2: Try to load product image from CDN/bundle
         let useThumbnail = !UserSettings.shared.downloadFullSizeImages
         if let cdnImage = await ImageDownloadService.loadImage(
             manufacturer: manufacturer,
@@ -94,6 +135,12 @@ struct ImageHelpers {
             useThumbnail: useThumbnail
         ) {
             return cdnImage
+        }
+
+        // Step 3: No product image found - check if we should show gradient
+        if let colors = dominantColors, !colors.isEmpty {
+            // Return nil to signal that gradient should be shown
+            return nil
         }
 
         // Final fallback: Try manufacturer logo

@@ -44,7 +44,7 @@ struct AddInventoryFormView: View {
         self._viewModel = State(initialValue: AddInventoryItemViewModel(
             prefilledNaturalKey: prefilledNaturalKey,
             inventoryTrackingService: deps.inventoryTrackingService,
-            glassItemRepository: deps.glassItemRepository
+            catalogService: deps.catalogService
         ))
     }
     
@@ -53,12 +53,12 @@ struct AddInventoryFormView: View {
             Form {
                 // Search field back inside Form for better layout
                 GlassItemSearchSelector(
-                    selectedGlassItem: $viewModel.selectedGlassItem,
+                    selectedGlassItem: $viewModel.selectedCatalogItem,
                     searchText: $viewModel.searchText,
                     prefilledNaturalKey: prefilledNaturalKey,
-                    glassItems: viewModel.glassItems,
+                    glassItems: viewModel.catalogItems,
                     onSelect: { item in
-                        viewModel.selectGlassItem(item)
+                        viewModel.selectCatalogItem(item)
                     },
                     onClear: {
                         viewModel.clearSelection()
@@ -80,7 +80,7 @@ struct AddInventoryFormView: View {
                 setupInitialData()
             }
             .onChange(of: viewModel.stableId) { _, newValue in
-                viewModel.lookupGlassItem(stableId: newValue)
+                viewModel.lookupCatalogItem(stableId: newValue)
             }
             .alert("Error", isPresented: $viewModel.showingError) {
                 Button("OK") { viewModel.showingError = false }
@@ -309,7 +309,7 @@ struct AddInventoryFormView: View {
         }
 
         Task {
-            await viewModel.loadGlassItems()
+            await viewModel.loadCatalogItems()
         }
     }
     
@@ -317,18 +317,18 @@ struct AddInventoryFormView: View {
         Task {
             // Limit check now happens BEFORE showing this form, so just save directly
             let success = await viewModel.save()
-            if success, let glassItem = viewModel.selectedGlassItem, let quantityValue = viewModel.parsedQuantity {
+            if success, let catalogItem = viewModel.selectedCatalogItem, let quantityValue = viewModel.parsedQuantity {
                 // Post notification first (for views that aren't currently visible)
-                postSuccessNotification(glassItem: glassItem, quantityValue: quantityValue)
+                postSuccessNotification(catalogItem: catalogItem, quantityValue: quantityValue)
                 // Then dismiss (triggers onDismiss callback in parent view)
                 dismiss()
             }
         }
     }
 
-    private func postSuccessNotification(glassItem: GlassItemModel, quantityValue: Double) {
+    private func postSuccessNotification(catalogItem: UnifiedCatalogItem, quantityValue: Double) {
         let quantityText = String(format: "%.1f", quantityValue).replacingOccurrences(of: ".0", with: "")
-        let message = "\(glassItem.name) (\(quantityText) \(viewModel.selectedType)) added to inventory."
+        let message = "\(catalogItem.name) (\(quantityText) \(viewModel.selectedType)) added to inventory."
 
         NotificationCenter.default.post(
             name: .inventoryItemAdded,

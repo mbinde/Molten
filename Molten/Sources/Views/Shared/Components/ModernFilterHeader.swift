@@ -165,8 +165,8 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
                     }
                 }
 
-                // Optional location filter (only show if multiple locations available)
-                if let locationConfig = locationFilter, locationConfig.availableLocations.count > 1 {
+                // Optional location filter (show if any locations available)
+                if let locationConfig = locationFilter, !locationConfig.availableLocations.isEmpty {
                     Menu {
                         // Clear option
                         Button {

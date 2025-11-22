@@ -50,6 +50,15 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
         let onClear: () -> Void
     }
 
+    // MARK: - Optional Location Filter
+    var locationFilter: LocationFilterConfig?
+
+    struct LocationFilterConfig {
+        var selectedLocation: Binding<String?>
+        let availableLocations: [String]
+        let onClear: () -> Void
+    }
+
     // MARK: - Optional COE Filter
     var coeFilter: COEFilterConfig?
 
@@ -72,6 +81,7 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
         showingManufacturerSheet: Binding<Bool>,
         productTypeFilter: ProductTypeFilterConfig? = nil,
         storeFilter: StoreFilterConfig? = nil,
+        locationFilter: LocationFilterConfig? = nil,
         coeFilter: COEFilterConfig? = nil
     ) {
         self._searchTitlesOnly = searchTitlesOnly
@@ -87,6 +97,7 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
         self._showingManufacturerSheet = showingManufacturerSheet
         self.productTypeFilter = productTypeFilter
         self.storeFilter = storeFilter
+        self.locationFilter = locationFilter
         self.coeFilter = coeFilter
     }
 
@@ -148,6 +159,63 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
                             .padding(.horizontal, DesignSystem.Padding.chip)
                             .padding(.vertical, DesignSystem.Padding.chipVertical)
                             .background(storeConfig.selectedStore.wrappedValue != nil ? DesignSystem.Colors.accentPrimary : Color(.systemGray6))
+                            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                // Optional location filter (only show if multiple locations available)
+                if let locationConfig = locationFilter, locationConfig.availableLocations.count > 1 {
+                    Menu {
+                        // Clear option
+                        Button {
+                            locationConfig.onClear()
+                        } label: {
+                            Text("All Locations")
+                        }
+
+                        Divider()
+
+                        // Location options
+                        ForEach(locationConfig.availableLocations, id: \.self) { location in
+                            Button {
+                                locationConfig.selectedLocation.wrappedValue = location
+                            } label: {
+                                if locationConfig.selectedLocation.wrappedValue == location {
+                                    Label(location, systemImage: "checkmark")
+                                } else {
+                                    Text(location)
+                                }
+                            }
+                        }
+                    } label: {
+                        Button(action: {}) {
+                            HStack(spacing: DesignSystem.Spacing.sm) {
+                                if let selected = locationConfig.selectedLocation.wrappedValue {
+                                    // Show selected location with X to clear
+                                    Text(selected)
+                                        .font(DesignSystem.Typography.captionSmall)
+                                        .fontWeight(DesignSystem.FontWeight.bold)
+                                        .lineLimit(1)
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(DesignSystem.Typography.captionSmall)
+                                        .onTapGesture {
+                                            locationConfig.onClear()
+                                        }
+                                } else {
+                                    // Show "All Locations" label with chevron
+                                    Text("All Locations")
+                                        .font(DesignSystem.Typography.caption)
+                                        .fontWeight(DesignSystem.FontWeight.medium)
+                                    Image(systemName: "chevron.down")
+                                        .font(.caption2)
+                                }
+                            }
+                            .foregroundColor(locationConfig.selectedLocation.wrappedValue != nil ? .white : .secondary)
+                            .padding(.horizontal, DesignSystem.Padding.chip)
+                            .padding(.vertical, DesignSystem.Padding.chipVertical)
+                            .background(locationConfig.selectedLocation.wrappedValue != nil ? DesignSystem.Colors.accentPrimary : Color(.systemGray6))
                             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
                         }
                         .buttonStyle(.plain)

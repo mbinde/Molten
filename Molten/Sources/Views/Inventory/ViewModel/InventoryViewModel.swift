@@ -30,6 +30,7 @@ class InventoryViewModel: InventoryViewModelProtocol {
     var selectedTags: Set<String> = []
     var selectedCOEs: Set<Int32> = []
     var selectedManufacturers: Set<String> = []
+    var selectedLocation: String? = nil // Location filter (nil = all locations)
     var sortOption: InventorySortOption = .name
     
     init(inventoryTrackingService: InventoryTrackingService, catalogService: CatalogService? = nil) {
@@ -151,6 +152,15 @@ class InventoryViewModel: InventoryViewModelProtocol {
             filtered = filtered.filter { item in
                 item.inventory.contains { inventory in
                     selectedTypes.contains(inventory.type)
+                }
+            }
+        }
+
+        // Apply location filter
+        if let location = selectedLocation {
+            filtered = filtered.filter { item in
+                item.inventory.contains { inventory in
+                    inventory.location == location
                 }
             }
         }

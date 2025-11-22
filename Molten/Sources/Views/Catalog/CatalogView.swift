@@ -517,7 +517,6 @@ extension CatalogView {
 
     private func refreshData() async {
         // MIGRATION: Use ViewModel refresh instead of cache
-        print("📊 CatalogView: Refresh requested - reloading via ViewModel")
         await viewModel.refreshData()
     }
     

@@ -60,7 +60,7 @@ nonisolated struct GlassItemTypeSystem {
 
     static let rod = GlassItemType(
         name: "rod",
-        displayName: "Rod",
+        displayName: "Rods",
         subtypes: ["standard", "cane", "pull"],
         subsubtypes: [:],
         dimensionFields: [
@@ -71,18 +71,18 @@ nonisolated struct GlassItemTypeSystem {
 
     static let bigRod = GlassItemType(
         name: "big-rod",
-        displayName: "Bar",
+        displayName: "Bars",
         subtypes: [],
         subsubtypes: [:],
         dimensionFields: [
-            DimensionField(name: "diameter", displayName: "Diameter", unit: "mm", isRequired: false, placeholder: "12mm+ typical"),
+            DimensionField(name: "diameter", displayName: "Diameter", unit: "mm", isRequired: false),
             DimensionField(name: "length", displayName: "Length", unit: "cm", isRequired: false)
         ]
     )
 
     static let stringer = GlassItemType(
         name: "stringer",
-        displayName: "Stringer",
+        displayName: "Stringers",
         subtypes: ["1mm", "2mm", "Hand-pulled"],
         subsubtypes: [:],
         dimensionFields: [
@@ -93,7 +93,7 @@ nonisolated struct GlassItemTypeSystem {
 
     static let sheet = GlassItemType(
         name: "sheet",
-        displayName: "Sheet",
+        displayName: "Sheets",
         subtypes: ["full", "half", "10x10", "other"],
         subsubtypes: [:],
         dimensionFields: [
@@ -108,14 +108,12 @@ nonisolated struct GlassItemTypeSystem {
         displayName: "Frit",
         subtypes: ["#25", "#38", "#70", "#82", "#100", "coarse", "medium", "fine"],
         subsubtypes: [:],
-        dimensionFields: [
-            DimensionField(name: "mesh_size", displayName: "Mesh Size", unit: "mesh", isRequired: false)
-        ]
+        dimensionFields: []
     )
 
     static let tube = GlassItemType(
         name: "tube",
-        displayName: "Tube",
+        displayName: "Tubes",
         subtypes: ["thin wall", "thick wall", "standard"],
         subsubtypes: [:],
         dimensionFields: [
@@ -130,9 +128,7 @@ nonisolated struct GlassItemTypeSystem {
         displayName: "Powder",
         subtypes: [],
         subsubtypes: [:],
-        dimensionFields: [
-            DimensionField(name: "particle_size", displayName: "Particle Size", unit: "μm", isRequired: false)
-        ]
+        dimensionFields: []
     )
 
     static let scrap = GlassItemType(
@@ -145,7 +141,7 @@ nonisolated struct GlassItemTypeSystem {
 
     static let murriniCane = GlassItemType(
         name: "murrini-cane",
-        displayName: "Murrini Cane",
+        displayName: "Murrini Canes",
         subtypes: [],
         subsubtypes: [:],
         dimensionFields: [
@@ -156,7 +152,7 @@ nonisolated struct GlassItemTypeSystem {
 
     static let murriniSlice = GlassItemType(
         name: "murrini-slice",
-        displayName: "Murrini Slice",
+        displayName: "Murrini Slices",
         subtypes: [],
         subsubtypes: [:],
         dimensionFields: [

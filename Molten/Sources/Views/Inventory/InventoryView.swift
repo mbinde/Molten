@@ -579,8 +579,6 @@ struct InventoryView: View, CachedDataDeletion {
         // Update view-specific caches and state
         await MainActor.run {
             let itemsWithInventory = viewModel.completeItems.filter { $0.totalQuantity > 0 }
-            log.info("✅ Loaded \(viewModel.completeItems.count) glass items")
-            log.info("📊 Items with inventory: \(itemsWithInventory.count)")
             updateCaches()  // PERFORMANCE: Update cached filter values
             refreshTrigger += 1  // Force SwiftUI to refresh the list
         }
@@ -651,11 +649,7 @@ struct InventoryView: View, CachedDataDeletion {
     }
 
     func updateDerivedCaches() {
-        log.info("📊 updateDerivedCaches: Before updateCaches()")
-        log.info("📊 sortedFilteredItems.count = \(sortedFilteredItems.count)")
         updateCaches()
-        log.info("📊 updateDerivedCaches: After updateCaches()")
-        log.info("📊 sortedFilteredItems.count = \(sortedFilteredItems.count)")
     }
 
     // Convenience wrapper for .onDelete handler

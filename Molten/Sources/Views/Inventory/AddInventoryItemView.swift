@@ -96,16 +96,6 @@ struct AddInventoryFormView: View {
         Section("Inventory Details") {
             quantityTypeRow
 
-            // Subtype picker (if type has subtypes)
-            if !availableSubtypes.isEmpty {
-                subtypePickerView
-            }
-
-            // Subsubtype picker (if selected subtype has subsubtypes)
-            if !availableSubsubtypes.isEmpty {
-                subsubtypePickerView
-            }
-
             // Dimension fields (if type has dimensions)
             if !availableDimensionFields.isEmpty {
                 dimensionFieldsView
@@ -123,50 +113,84 @@ struct AddInventoryFormView: View {
     // MARK: - Sub-Views
 
     private var quantityTypeRow: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Quantity")
-                .font(.subheadline)
-                .fontWeight(.medium)
+        HStack(alignment: .center, spacing: 12) {
+            // Quantity field - narrow (80pt)
+            TextField("0", text: $viewModel.quantity)
+                #if canImport(UIKit)
+                .keyboardType(.decimalPad)
+                #endif
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 80)
+                .accessibilityIdentifier("inventory.add.quantityField")
+                .accessibilityLabel("Quantity")
 
-            HStack(spacing: 12) {
-                // Quantity field - narrow (80pt)
-                TextField("0", text: $viewModel.quantity)
-                    #if canImport(UIKit)
-                    .keyboardType(.decimalPad)
-                    #endif
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 80)
-                    .accessibilityIdentifier("inventory.add.quantityField")
-                    .accessibilityLabel("Quantity")
+            // Type picker (rod/frit/etc) - right next to quantity field, no label
+            Picker("", selection: $viewModel.selectedType) {
+                ForEach(visibleInventoryTypes, id: \.self) { type in
+                    Text(terminologySettings.displayName(for: type)).tag(type)
+                }
+            }
+            .pickerStyle(.menu)
+            .fixedSize()
+            .onChange(of: viewModel.selectedType) { _, newValue in
+                viewModel.didChangeType()
+            }
+            .accessibilityIdentifier("inventory.add.typePicker")
+            .accessibilityLabel("Type")
 
-                // Unit label (non-editable, based on type)
-                Text(viewModel.quantityUnitLabel)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .frame(minWidth: 60, alignment: .leading)
-
-                // Type picker (no label, clear from context)
-                Picker("", selection: $viewModel.selectedType) {
-                    ForEach(visibleInventoryTypes, id: \.self) { type in
-                        Text(terminologySettings.displayName(for: type)).tag(type)
+            // Subtype picker (if type has subtypes) - inline, no label
+            if !availableSubtypes.isEmpty {
+                Picker("", selection: $viewModel.selectedSubtype) {
+                    Text("---").tag(nil as String?)
+                    ForEach(availableSubtypes, id: \.self) { subtype in
+                        Text(subtype.capitalized).tag(subtype as String?)
                     }
                 }
                 .pickerStyle(.menu)
-                .onChange(of: viewModel.selectedType) { _, newValue in
-                    viewModel.didChangeType()
+                .fixedSize()
+                .onChange(of: viewModel.selectedSubtype) { _, newValue in
+                    viewModel.didChangeSubtype()
                 }
-                .accessibilityIdentifier("inventory.add.typePicker")
-                .accessibilityLabel("Type")
+                .accessibilityIdentifier("inventory.add.subtypePicker")
+                .accessibilityLabel("Subtype")
+            }
 
-                Spacer()
+            // Subsubtype picker (if selected subtype has subsubtypes) - inline, no label
+            if !availableSubsubtypes.isEmpty {
+                Picker("", selection: $viewModel.selectedSubsubtype) {
+                    Text("---").tag(nil as String?)
+                    ForEach(availableSubsubtypes, id: \.self) { subsubtype in
+                        Text(subsubtype.capitalized).tag(subsubtype as String?)
+                    }
+                }
+                .pickerStyle(.menu)
+                .fixedSize()
+                .accessibilityIdentifier("inventory.add.subsubtypePicker")
+                .accessibilityLabel("Sub-subtype")
+            }
+
+            Spacer(minLength: 0)
+
+            // Weight unit picker (if type uses weight) - on the far right
+            if viewModel.isWeightBasedType {
+                Picker("", selection: $viewModel.selectedWeightUnit) {
+                    ForEach(WeightUnit.allCases) { unit in
+                        Text(unit.symbol).tag(unit)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 100)
+                .accessibilityIdentifier("inventory.add.weightUnitPicker")
+                .accessibilityLabel("Weight Unit")
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var subtypePickerView: some View {
         LabeledField("Subtype (Optional)") {
             Picker("Subtype", selection: $viewModel.selectedSubtype) {
-                Text("None").tag(nil as String?)
+                Text("---").tag(nil as String?)
                 ForEach(availableSubtypes, id: \.self) { subtype in
                     Text(subtype.capitalized).tag(subtype as String?)
                 }
@@ -182,7 +206,7 @@ struct AddInventoryFormView: View {
     private var subsubtypePickerView: some View {
         LabeledField("Sub-subtype (Optional)") {
             Picker("Sub-subtype", selection: $viewModel.selectedSubsubtype) {
-                Text("None").tag(nil as String?)
+                Text("---").tag(nil as String?)
                 ForEach(availableSubsubtypes, id: \.self) { subsubtype in
                     Text(subsubtype.capitalized).tag(subsubtype as String?)
                 }
@@ -194,34 +218,47 @@ struct AddInventoryFormView: View {
 
     private var dimensionFieldsView: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Collapsible header
-            Button(action: {
-                withAnimation {
-                    viewModel.isDimensionsExpanded.toggle()
-                }
-            }) {
-                HStack {
-                    Text("Dimensions (Optional)")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
+            // Collapsible header with unit picker
+            HStack {
+                Button(action: {
+                    withAnimation {
+                        viewModel.isDimensionsExpanded.toggle()
+                    }
+                }) {
+                    HStack {
+                        Text("Dimensions (Optional)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
 
-                    Spacer()
-
-                    Image(systemName: viewModel.isDimensionsExpanded ? "chevron.up" : "chevron.down")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        Image(systemName: viewModel.isDimensionsExpanded ? "chevron.up" : "chevron.down")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .contentShape(Rectangle())
                 }
-                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                // Dimension unit picker
+                Picker("", selection: $viewModel.selectedDimensionUnit) {
+                    ForEach(DimensionUnit.allCases) { unit in
+                        Text(unit.symbol).tag(unit)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 150)
+                .accessibilityIdentifier("inventory.add.dimensionUnitPicker")
+                .accessibilityLabel("Dimension Unit")
             }
-            .buttonStyle(.plain)
 
             // Expandable content
             if viewModel.isDimensionsExpanded {
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach(availableDimensionFields, id: \.name) { field in
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("\(field.displayName) (\(field.unit))\(field.isRequired ? " *" : "")")
+                            Text("\(field.displayName) (\(viewModel.selectedDimensionUnit.symbol))\(field.isRequired ? " *" : "")")
                                 .font(.caption)
                                 .foregroundColor(field.isRequired ? .red : .secondary)
 

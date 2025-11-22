@@ -203,16 +203,12 @@ class StoreListViewModel: StoreListViewModelProtocol {
 
             if storeCount == 0 {
                 // First launch - load stores with hybrid approach
-                print("📦 StoreListViewModel: No locations found, loading with hybrid approach...")
                 let result = try await locationService.loadLocationsHybrid()
-                print("✅ StoreListViewModel: Loaded \(result.bundled) from bundle, \(result.web) from web, \(result.total) total")
             } else {
                 // Subsequent launches - refresh from web in background (non-blocking)
-                print("🔄 StoreListViewModel: Refreshing locations from web...")
                 Task {
                     do {
                         let webCount = try await locationService.fetchLocationsFromWeb()
-                        print("✅ StoreListViewModel: Refreshed \(webCount) locations from web")
                         // Reload stores to show updates
                         stores = try await locationService.getRetailLocations()
                     } catch {
@@ -225,13 +221,6 @@ class StoreListViewModel: StoreListViewModelProtocol {
             // Fetch all retail locations (from cache)
             stores = try await locationService.getRetailLocations()
 
-            // Debug: Check if stores have technique data
-            print("📊 Loaded \(stores.count) locations")
-            if let firstLocation = stores.first {
-                print("📊 First location: \(firstLocation.name)")
-                print("📊 Retail techniques: \(firstLocation.retailTechniques.map { $0.displayName })")
-                print("📊 Has retail: \(firstLocation.hasRetail)")
-            }
         } catch {
             errorMessage = error.localizedDescription
         }

@@ -47,8 +47,8 @@ class GlassTerminologySettings: ObservableObject {
 
     private init() {
         // Load custom display names from UserDefaults, or use defaults
-        self.bigRodDisplayName = UserDefaults.standard.string(forKey: "bigRodDisplayName") ?? "Bar"
-        self.rodDisplayName = UserDefaults.standard.string(forKey: "rodDisplayName") ?? "Rod"
+        self.bigRodDisplayName = UserDefaults.standard.string(forKey: "bigRodDisplayName") ?? "Bars"
+        self.rodDisplayName = UserDefaults.standard.string(forKey: "rodDisplayName") ?? "Rods"
     }
 
     // MARK: - Display Logic
@@ -62,8 +62,24 @@ class GlassTerminologySettings: ObservableObject {
             return rodDisplayName
         case Self.bigRodType:
             return bigRodDisplayName
+        case "tube":
+            return "Tubes"
+        case "frit":
+            return "Frit"
+        case "powder":
+            return "Powder"
+        case "stringer":
+            return "Stringers"
+        case "sheet":
+            return "Sheets"
+        case "scrap":
+            return "Scrap"
+        case "murrini-cane":
+            return "Murrini Canes"
+        case "murrini-slice":
+            return "Murrini Slices"
         default:
-            // Other types (frit, tube, stringer, sheet, etc.) use capitalized backend name
+            // Fallback: capitalize first letter
             return backendType.capitalized
         }
     }
@@ -88,8 +104,8 @@ class GlassTerminologySettings: ObservableObject {
 
     /// Reset display names to defaults
     func resetToDefaults() {
-        bigRodDisplayName = "Bar"
-        rodDisplayName = "Rod"
+        bigRodDisplayName = "Bars"
+        rodDisplayName = "Rods"
     }
 }
 
@@ -101,7 +117,7 @@ extension GlassTerminologySettings {
     /// - Parameters:
     ///   - backendType: The backend storage type
     ///   - includeSize: Whether to include size information in parentheses
-    /// - Returns: Display string (e.g., "Rod (5-6mm)" or "Bar (12mm+)")
+    /// - Returns: Display string (e.g., "Rods (5-6mm)" or "Bars (12mm+)")
     func detailedDisplayName(for backendType: String, includeSize: Bool = false) -> String {
         let baseName = displayName(for: backendType)
 

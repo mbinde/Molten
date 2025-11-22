@@ -44,16 +44,12 @@ struct CatalogLifecycleModifiers: ViewModifier {
 
                     while attempts < maxAttempts {
                         freshRatings = try? await ratingService.fetchAllRatingsBulk(forceRefresh: true)
-                        print("📦 [CatalogView] Attempt \(attempts + 1): Fetched \(freshRatings?.count ?? 0) ratings from server")
-
                         // If we're looking for a specific item, check if it's in the results
                         if let itemId = itemId {
                             let itemRating = freshRatings?.first(where: { $0.itemStableId == itemId })
                             if let rating = itemRating {
-                                print("✅ [CatalogView] Found rating for \(itemId): \(rating.averageRating) stars, \(rating.totalRatings) ratings")
                                 break  // Success! Found the new rating
                             } else {
-                                print("⏳ [CatalogView] Rating for \(itemId) not yet available, retrying...")
                                 attempts += 1
                                 if attempts < maxAttempts {
                                     try? await Task.sleep(nanoseconds: 500_000_000)  // Wait 500ms before retry
@@ -65,16 +61,8 @@ struct CatalogLifecycleModifiers: ViewModifier {
                     }
 
                     // Then reload catalog with fresh ratings
-                    print("🔄 [CatalogView] Reloading catalog cache...")
                     await CatalogDataCache.shared.reload(catalogService: viewModel.catalogService)
-                    print("🔄 [CatalogView] Loading data into ViewModel...")
                     await viewModel.loadData()
-                    print("✅ [CatalogView] ViewModel now has \(viewModel.items.count) items")
-
-                    if let itemId = itemId {
-                        let itemInVM = viewModel.items.first(where: { $0.id == itemId })
-                        print("🎯 [CatalogView] Item \(itemId) in ViewModel: rating = \(itemInVM?.rating?.averageRating ?? 0) stars, \(itemInVM?.rating?.totalRatings ?? 0) ratings")
-                    }
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .catalogUpdateCompleted)) { notification in

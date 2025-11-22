@@ -14,7 +14,8 @@ private let isAdvancedFeaturesEnabled = false
 struct SettingsView: View {
     @AppStorage("defaultSortOption") private var defaultSortOptionRawValue = SortOption.name.rawValue
     @AppStorage("defaultInventorySortOption") private var defaultInventorySortOptionRawValue = "Name"
-    @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.pounds.rawValue
+    @AppStorage("defaultUnits") private var defaultUnitsRawValue = DefaultUnits.grams.rawValue
+    @AppStorage("defaultDimensionUnits") private var defaultDimensionUnitsRawValue = DefaultDimensionUnits.metric.rawValue
     @AppStorage("showRatingsInCatalog") private var showRatingsInCatalog = true
     @AppStorage("appearanceMode") private var appearanceModeString: String = "system"
     @Environment(EntitlementService.self) private var entitlementService
@@ -68,8 +69,15 @@ struct SettingsView: View {
 
     private var defaultUnitsBinding: Binding<DefaultUnits> {
         Binding(
-            get: { DefaultUnits(rawValue: defaultUnitsRawValue) ?? .pounds },
+            get: { DefaultUnits(rawValue: defaultUnitsRawValue) ?? .grams },
             set: { defaultUnitsRawValue = $0.rawValue }
+        )
+    }
+
+    private var defaultDimensionUnitsBinding: Binding<DefaultDimensionUnits> {
+        Binding(
+            get: { DefaultDimensionUnits(rawValue: defaultDimensionUnitsRawValue) ?? .metric },
+            set: { defaultDimensionUnitsRawValue = $0.rawValue }
         )
     }
 
@@ -139,6 +147,20 @@ struct SettingsView: View {
 
                 // MARK: - Catalog and Inventory Settings
                 Section("Catalog and Inventory Settings") {
+                    Picker("Weight Unit", selection: defaultUnitsBinding) {
+                        ForEach(DefaultUnits.allCases, id: \.self) { unit in
+                            Text(unit.displayName).tag(unit)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    Picker("Dimension Unit", selection: defaultDimensionUnitsBinding) {
+                        ForEach(DefaultDimensionUnits.allCases, id: \.self) { unit in
+                            Text(unit.displayName).tag(unit)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
                     NavigationLink {
                         CatalogInfoView(viewModel: catalogUpdateViewModel)
                     } label: {

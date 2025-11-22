@@ -32,8 +32,8 @@ class AddInventoryItemViewModel {
     var selectedSubtype: String?
     var selectedSubsubtype: String?
     var selectedWeightUnit: WeightUnit = WeightUnitPreference.current
-    var selectedDimensionUnit: DimensionUnit = DimensionUnitPreference.current.primaryUnit
     var dimensions: [String: String] = [:]
+    var dimensionUnits: [String: DimensionUnit] = [:] // Track unit for each dimension field
     var notes: String = ""
     var location: String = ""
 
@@ -173,7 +173,32 @@ class AddInventoryItemViewModel {
         selectedSubtype = nil
         selectedSubsubtype = nil
         dimensions = [:]
+        dimensionUnits = [:]
         isDimensionsExpanded = false
+    }
+
+    /// Get the default dimension unit for a field based on user preference and field name
+    func getDefaultDimensionUnit(for fieldName: String) -> DimensionUnit {
+        // If already set, return it
+        if let existing = dimensionUnits[fieldName] {
+            return existing
+        }
+
+        // Use smart defaults based on field name and user preference
+        let preference = DimensionUnitPreference.current
+
+        // Thickness is often in mm regardless of preference
+        if fieldName.lowercased().contains("thickness") {
+            return .millimeters
+        }
+
+        // Diameter often in mm for metric users
+        if fieldName.lowercased().contains("diameter") {
+            return preference == .metric ? .millimeters : .inches
+        }
+
+        // Length/width/height use primary unit
+        return preference.primaryUnit
     }
 
     /// Called when subtype changes - resets dependent fields
@@ -226,8 +251,9 @@ class AddInventoryItemViewModel {
             var result: [String: Double] = [:]
             for (key, valueString) in dimensions {
                 if let value = Double(valueString), !valueString.isEmpty {
-                    // Convert to cm if needed
-                    let valueInCm = selectedDimensionUnit.convert(value, to: .centimeters)
+                    // Convert to cm using the unit selected for this specific field
+                    let unit = dimensionUnits[key] ?? .centimeters
+                    let valueInCm = unit.convert(value, to: .centimeters)
                     result[key] = valueInCm
                 }
             }

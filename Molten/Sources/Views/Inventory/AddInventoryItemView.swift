@@ -218,62 +218,74 @@ struct AddInventoryFormView: View {
 
     private var dimensionFieldsView: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Collapsible header with unit picker
-            HStack {
-                Button(action: {
-                    withAnimation {
-                        viewModel.isDimensionsExpanded.toggle()
-                    }
-                }) {
-                    HStack {
-                        Text("Dimensions (Optional)")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(.primary)
-
-                        Image(systemName: viewModel.isDimensionsExpanded ? "chevron.up" : "chevron.down")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .contentShape(Rectangle())
+            // Collapsible header
+            Button(action: {
+                withAnimation {
+                    viewModel.isDimensionsExpanded.toggle()
                 }
-                .buttonStyle(.plain)
+            }) {
+                HStack {
+                    Text("Dimensions (Optional)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+
+                    Spacer()
+
+                    Image(systemName: viewModel.isDimensionsExpanded ? "chevron.up" : "chevron.down")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            // Expandable content
+            if viewModel.isDimensionsExpanded {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(availableDimensionFields, id: \.name) { field in
+                        dimensionFieldRow(for: field)
+                    }
+                }
+                .padding(.top, 4)
+            }
+        }
+    }
+
+    private func dimensionFieldRow(for field: DimensionField) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                // Field name
+                Text(field.displayName + (field.isRequired ? " *" : ""))
+                    .font(.caption)
+                    .foregroundColor(field.isRequired ? .red : .secondary)
 
                 Spacer()
 
-                // Dimension unit picker
-                Picker("", selection: $viewModel.selectedDimensionUnit) {
+                // Unit picker for this field
+                Picker("", selection: Binding(
+                    get: { viewModel.getDefaultDimensionUnit(for: field.name) },
+                    set: { viewModel.dimensionUnits[field.name] = $0 }
+                )) {
                     ForEach(DimensionUnit.allCases) { unit in
                         Text(unit.symbol).tag(unit)
                     }
                 }
                 .pickerStyle(.segmented)
                 .frame(width: 150)
-                .accessibilityIdentifier("inventory.add.dimensionUnitPicker")
-                .accessibilityLabel("Dimension Unit")
+                .accessibilityIdentifier("inventory.add.dimensionUnitPicker.\(field.name)")
+                .accessibilityLabel("\(field.displayName) Unit")
             }
 
-            // Expandable content
-            if viewModel.isDimensionsExpanded {
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(availableDimensionFields, id: \.name) { field in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("\(field.displayName) (\(viewModel.selectedDimensionUnit.symbol))\(field.isRequired ? " *" : "")")
-                                .font(.caption)
-                                .foregroundColor(field.isRequired ? .red : .secondary)
-
-                            DecimalInputField(
-                                placeholder: field.placeholder,
-                                value: Binding(
-                                    get: { viewModel.dimensions[field.name] ?? "" },
-                                    set: { viewModel.dimensions[field.name] = $0 }
-                                )
-                            )
-                        }
-                    }
-                }
-                .padding(.top, 4)
-            }
+            // Value input
+            DecimalInputField(
+                placeholder: field.placeholder,
+                value: Binding(
+                    get: { viewModel.dimensions[field.name] ?? "" },
+                    set: { viewModel.dimensions[field.name] = $0 }
+                )
+            )
+            .accessibilityIdentifier("inventory.add.dimensionField.\(field.name)")
         }
     }
     

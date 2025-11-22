@@ -296,6 +296,8 @@ struct TestDataSetup {
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: inventoryRepo,
             glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo
         )

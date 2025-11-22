@@ -42,13 +42,13 @@ struct GlassItemRowView: View {
         }
 
         init(from detailedShoppingItem: DetailedShoppingListItemModel) {
-            self.name = detailedShoppingItem.glassItem.name
-            self.manufacturer = detailedShoppingItem.glassItem.manufacturer
-            self.sku = detailedShoppingItem.glassItem.sku
-            self.stableId = detailedShoppingItem.glassItem.stable_id
-            self.imagePath = detailedShoppingItem.glassItem.image_path
-            self.imageThumbPath = detailedShoppingItem.glassItem.image_thumb_path
-            self.dominantColors = detailedShoppingItem.glassItem.dominant_colors
+            self.name = detailedShoppingItem.catalogItem.name
+            self.manufacturer = detailedShoppingItem.catalogItem.manufacturer
+            self.sku = detailedShoppingItem.catalogItem.sku
+            self.stableId = detailedShoppingItem.catalogItem.stable_id
+            self.imagePath = detailedShoppingItem.catalogItem.image_path
+            self.imageThumbPath = detailedShoppingItem.catalogItem.image_thumb_path
+            self.dominantColors = detailedShoppingItem.catalogItem.dominant_colors
             self.tags = detailedShoppingItem.allTags
             self.rating = nil  // Shopping list items don't include ratings
         }
@@ -98,88 +98,97 @@ struct GlassItemRowView: View {
                 accessory
             }
 
-            // Product image thumbnail using stable_id (which is what image files are actually named with)
-            ProductImageThumbnail(
-                itemCode: item.stableId,
-                manufacturer: item.manufacturer,
-                stableId: item.stableId,
-                imagePath: item.imagePath,
-                imageThumbPath: item.imageThumbPath,
-                dominantColors: item.dominantColors,
-                size: 60
-            )
+            mainContent
+        }
+        .padding(.vertical, 4)
+    }
 
-            // Item details
-            VStack(alignment: .leading, spacing: 4) {
-                // Item name with rating
-                HStack(spacing: 4) {
-                    Text(item.name)
-                        .font(.headline)
-                        .lineLimit(1)
+    /// The main content (image + text) without the leading accessory
+    /// Use this when you want to wrap only the content in a NavigationLink
+    var mainContent: some View {
+        HStack(spacing: 12) {
+            thumbnail
 
-                    // Show rating inline after name if available, has enough ratings, and setting is enabled
-                    if showRatingsInCatalog, let rating = item.rating, rating.hasEnoughRatings {
-                        Text("•")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        Image(systemName: "star.fill")
-                            .font(.caption)
-                            .foregroundStyle(.yellow)
-
-                        Text(rating.formattedAverageRating)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-
-                        Text("(\(rating.totalRatings))")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .lineLimit(1)
-
-                // Manufacturer and SKU/natural key
-                HStack(spacing: 4) {
-                    // Show full manufacturer name instead of abbreviation
-                    Text(GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    // Only show SKU if it exists and doesn't look synthetic
-                    if shouldDisplaySKU {
-                        Text("•")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        // Show SKU or full stable ID based on preference
-                        Text(showFullCode ? item.stableId : (item.sku ?? ""))
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .lineLimit(1)
-
-                // Optional badge content (quantity, status, etc.)
-                if let badge = badgeContent {
-                    badge
-                }
-
-                // Tags if available
-                if !item.tags.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 4) {
-                            ForEach(item.tags, id: \.self) { tag in
-                                BadgeLabel.tag(tag)
-                            }
-                        }
-                        .padding(.horizontal, 1)
-                    }
-                }
-            }
+            textContent
 
             Spacer()
         }
-        .padding(.vertical, 4)
+    }
+
+    /// Just the thumbnail image
+    var thumbnail: some View {
+        ProductImageThumbnail(
+            itemCode: item.stableId,
+            manufacturer: item.manufacturer,
+            stableId: item.stableId,
+            imagePath: item.imagePath,
+            imageThumbPath: item.imageThumbPath,
+            dominantColors: item.dominantColors,
+            size: 60
+        )
+    }
+
+    /// Just the text content (name, manufacturer, SKU, badges, tags)
+    var textContent: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            // Item name with rating
+            HStack(spacing: 4) {
+                Text(item.name)
+                    .font(.headline)
+                    .lineLimit(1)
+
+                // Show rating inline after name if available, has enough ratings, and setting is enabled
+                if showRatingsInCatalog, let rating = item.rating, rating.hasEnoughRatings {
+                    Text("•")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Image(systemName: "star.fill")
+                        .font(.caption)
+                        .foregroundStyle(.yellow)
+
+                    Text(rating.formattedAverageRating)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    Text("(\(rating.totalRatings))")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .lineLimit(1)
+
+            // Manufacturer on second line
+            Text(GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
+
+            // SKU on third line (only if it exists and doesn't look synthetic)
+            if shouldDisplaySKU {
+                Text(showFullCode ? item.stableId : (item.sku ?? ""))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+
+            // Optional badge content (quantity, status, etc.)
+            if let badge = badgeContent {
+                badge
+            }
+
+            // Tags if available
+            if !item.tags.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 4) {
+                        ForEach(item.tags, id: \.self) { tag in
+                            BadgeLabel.tag(tag)
+                        }
+                    }
+                    .padding(.horizontal, 1)
+                }
+            }
+        }
     }
 
     /// Determines if the SKU should be displayed (not empty, not synthetic)
@@ -188,9 +197,18 @@ struct GlassItemRowView: View {
 
         // Don't show SKUs that look synthetic (manufacturer-hash pattern)
         // Pattern: XXX-[8 hex chars] like "GRE-8bf530c2"
-        let syntheticPattern = /^[A-Z]{2,4}-[a-f0-9]{8}$/
-        if sku.wholeMatch(of: syntheticPattern) != nil {
-            return false
+        let parts = sku.split(separator: "-")
+        if parts.count == 2 {
+            let prefix = String(parts[0])
+            let suffix = String(parts[1])
+
+            // Check if prefix is 2-4 uppercase letters and suffix is 8 hex chars
+            let isValidPrefix = prefix.count >= 2 && prefix.count <= 4 && prefix.allSatisfy { $0.isUppercase && $0.isLetter }
+            let isValidSuffix = suffix.count == 8 && suffix.allSatisfy { $0.isHexDigit }
+
+            if isValidPrefix && isValidSuffix {
+                return false
+            }
         }
 
         return true
@@ -277,67 +295,94 @@ extension GlassItemRowView {
         showStore: Bool = false,
         isShoppingMode: Bool = false,
         isInBasket: Bool = false,
+        quantity: Binding<Double>? = nil,
         onBasketToggle: (() -> Void)? = nil
     ) -> GlassItemRowView {
-        // Leading accessory: checkbox for shopping mode
+        // Leading accessory: checkbox + compact quantity editor for shopping mode
         let leadingAccessory: AnyView? = isShoppingMode ? AnyView(
-            Button(action: {
-                onBasketToggle?()
-            }) {
-                Image(systemName: isInBasket ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
-                    .foregroundColor(isInBasket ? .green : .secondary)
-            }
-            .buttonStyle(.plain)
-        ) : nil
+            HStack(spacing: 8) {
+                // Checkbox (on the left) with quantity difference indicator below
+                VStack(spacing: 2) {
+                    Button(action: {
+                        onBasketToggle?()
+                    }) {
+                        Image(systemName: isInBasket ? "checkmark.circle.fill" : "circle")
+                            .font(.title2)
+                            .foregroundColor(isInBasket ? .accentColor : .secondary)
+                    }
+                    .buttonStyle(.plain)
 
-        // Badge: shopping quantities
-        var badgeComponents: [AnyView] = []
-        badgeComponents.append(AnyView(
-            Text("Need: \(item.shoppingListItem.neededQuantity, specifier: "%.1f")")
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundColor(.orange)
-        ))
+                    // Show quantity difference if user adjusted from needed amount
+                    if let quantityBinding = quantity {
+                        let difference = quantityBinding.wrappedValue - item.shoppingListItem.neededQuantity
+                        if abs(difference) > 0.01 {  // Only show if there's a meaningful difference
+                            Text(difference > 0 ? "+\(Int(difference))" : "\(Int(difference))")
+                                .font(.caption2)
+                                .fontWeight(.semibold)
+                                .foregroundColor(difference > 0 ? .green : .red)
+                        }
+                    }
+                }
 
-        badgeComponents.append(AnyView(
-            Text("•")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-        ))
+                // Compact quantity editor (number with +/- stacked above/below)
+                if let quantityBinding = quantity {
+                    VStack(spacing: 0) {
+                        // Plus button on top
+                        Button(action: {
+                            quantityBinding.wrappedValue += 1.0
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .frame(height: 12)
 
-        badgeComponents.append(AnyView(
-            Text("Current: \(item.shoppingListItem.currentQuantity, specifier: "%.1f")")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        ))
+                        // Editable number field in middle
+                        TextField("Qty", value: quantityBinding, format: .number)
+                            .multilineTextAlignment(.center)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .monospacedDigit()
+                            .frame(width: 40)
+                            #if os(iOS)
+                            .textFieldStyle(.roundedBorder)
+                            .keyboardType(.decimalPad)
+                            #endif
 
-        if showStore {
-            badgeComponents.append(AnyView(
-                Text("•")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            ))
-
-            badgeComponents.append(AnyView(
-                Text(item.shoppingListItem.store)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            ))
-        }
-
-        let badge = AnyView(
-            HStack(spacing: 6) {
-                ForEach(0..<badgeComponents.count, id: \.self) { index in
-                    badgeComponents[index]
+                        // Minus button on bottom
+                        Button(action: {
+                            let newValue = max(0.1, quantityBinding.wrappedValue - 1.0)
+                            quantityBinding.wrappedValue = newValue
+                        }) {
+                            Image(systemName: "minus")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .frame(height: 12)
+                    }
                 }
             }
-        )
+        ) : nil
+
+        // No badge or tags for shopping list - keep it clean and compact
+        // User can tap the row to see full details including need/current/store info
 
         return GlassItemRowView(
-            item: .init(from: item),
+            item: GlassItemRowData(
+                name: item.catalogItem.name,
+                manufacturer: item.catalogItem.manufacturer,
+                sku: item.catalogItem.sku,
+                stableId: item.catalogItem.stable_id,
+                imagePath: item.catalogItem.image_path,
+                imageThumbPath: item.catalogItem.image_thumb_path,
+                dominantColors: item.catalogItem.dominant_colors,
+                tags: [], // Don't show tags in shopping mode
+                rating: nil
+            ),
             leadingAccessory: leadingAccessory,
-            badgeContent: badge,
+            badgeContent: nil, // No badge - keep it clean
             showFullCode: false
         )
     }

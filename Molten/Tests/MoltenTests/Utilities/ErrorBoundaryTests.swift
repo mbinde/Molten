@@ -37,6 +37,8 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
         // Use TestConfiguration approach that we know works
         let repos = TestConfiguration.setupMockOnlyTestEnvironment()
         let userTagsRepo = MockUserTagsRepository()
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
 
         let shoppingListRepository = MockShoppingListRepository()
         let shoppingService = ShoppingListService(
@@ -44,12 +46,11 @@ struct ErrorBoundaryTests: MockOnlyTestSuite {
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: repos.inventory,
             glassItemRepository: repos.glassItem,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepo
         )
-
-        let coatingItemRepo = MockCoatingItemRepository()
-        let toolItemRepo = MockToolItemRepository()
 
         let inventoryService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,

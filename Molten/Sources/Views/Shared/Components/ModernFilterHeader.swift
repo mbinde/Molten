@@ -8,8 +8,9 @@
 
 import SwiftUI
 
-/// Modern filter header with search titles only toggle, sort button, and filter chips
+/// Modern filter header with sort button and filter chips
 /// Designed to work with SwiftUI's native .searchable() modifier
+/// Note: "Search titles only" toggle should be added to .searchable() content block, not here
 struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable>: View where SortOption.RawValue == String {
 
     // MARK: - Search Toggle
@@ -40,6 +41,23 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
         let displayName: (String) -> String
     }
 
+    // MARK: - Optional Store Filter
+    var storeFilter: StoreFilterConfig?
+
+    struct StoreFilterConfig {
+        var selectedStore: Binding<String?>
+        let availableStores: [String]
+        let onClear: () -> Void
+    }
+
+    // MARK: - Optional COE Filter
+    var coeFilter: COEFilterConfig?
+
+    struct COEFilterConfig {
+        var selectedCOEs: Binding<Set<Int32>>
+        let availableCOEs: [Int32]
+    }
+
     init(
         searchTitlesOnly: Binding<Bool>,
         sortOption: Binding<SortOption>,
@@ -52,7 +70,9 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
         showingTagsSheet: Binding<Bool>,
         showingCOESheet: Binding<Bool>,
         showingManufacturerSheet: Binding<Bool>,
-        productTypeFilter: ProductTypeFilterConfig? = nil
+        productTypeFilter: ProductTypeFilterConfig? = nil,
+        storeFilter: StoreFilterConfig? = nil,
+        coeFilter: COEFilterConfig? = nil
     ) {
         self._searchTitlesOnly = searchTitlesOnly
         self._sortOption = sortOption
@@ -66,20 +86,72 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
         self._showingCOESheet = showingCOESheet
         self._showingManufacturerSheet = showingManufacturerSheet
         self.productTypeFilter = productTypeFilter
+        self.storeFilter = storeFilter
+        self.coeFilter = coeFilter
     }
 
     var body: some View {
         VStack(spacing: DesignSystem.Spacing.none) {
-            // Top row: Search titles only toggle and Sort button
+            // Top row: Optional store filter (left) and Sort button (right)
+            // Note: "Search titles only" toggle is in the search bar via .searchScopes() modifier
             HStack {
-                // Compact search titles only toggle
-                HStack(spacing: DesignSystem.Spacing.sm) {
-                    Toggle("", isOn: $searchTitlesOnly)
-                        .labelsHidden()
-                    Text("Search titles only")
-                        .font(DesignSystem.Typography.caption)
-                        .fontWeight(DesignSystem.FontWeight.medium)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                // Optional store filter (only show if multiple stores available)
+                if let storeConfig = storeFilter, storeConfig.availableStores.count > 1 {
+                    // Use FilterChipButton pattern with Menu
+                    Menu {
+                        // Clear option
+                        Button {
+                            storeConfig.onClear()
+                        } label: {
+                            Text("All Stores")
+                        }
+
+                        Divider()
+
+                        // Store options
+                        ForEach(storeConfig.availableStores, id: \.self) { store in
+                            Button {
+                                storeConfig.selectedStore.wrappedValue = store
+                            } label: {
+                                if storeConfig.selectedStore.wrappedValue == store {
+                                    Label(store, systemImage: "checkmark")
+                                } else {
+                                    Text(store)
+                                }
+                            }
+                        }
+                    } label: {
+                        // Match FilterChipButton exactly
+                        Button(action: {}) {
+                            HStack(spacing: DesignSystem.Spacing.sm) {
+                                if let selected = storeConfig.selectedStore.wrappedValue {
+                                    // Show selected store with X to clear
+                                    Text(selected)
+                                        .font(DesignSystem.Typography.captionSmall)
+                                        .fontWeight(DesignSystem.FontWeight.bold)
+                                        .lineLimit(1)
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(DesignSystem.Typography.captionSmall)
+                                        .onTapGesture {
+                                            storeConfig.onClear()
+                                        }
+                                } else {
+                                    // Show "All Stores" label with chevron (no icon)
+                                    Text("All Stores")
+                                        .font(DesignSystem.Typography.caption)
+                                        .fontWeight(DesignSystem.FontWeight.medium)
+                                    Image(systemName: "chevron.down")
+                                        .font(.caption2)
+                                }
+                            }
+                            .foregroundColor(storeConfig.selectedStore.wrappedValue != nil ? .white : .secondary)
+                            .padding(.horizontal, DesignSystem.Padding.chip)
+                            .padding(.vertical, DesignSystem.Padding.chipVertical)
+                            .background(storeConfig.selectedStore.wrappedValue != nil ? DesignSystem.Colors.accentPrimary : Color(.systemGray6))
+                            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
 
                 Spacer()
@@ -124,14 +196,22 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
 
                 // Right: Filter chips (COE, Tags, Mfr from left to right)
                 HStack(spacing: DesignSystem.Spacing.sm) {
-                    // COE filter chip
-                    FilterChipButton(
-                        title: "COE",
-                        icon: nil,
-                        selectedItems: Array(selectedCOEs).map(String.init).sorted(),
-                        action: { showingCOESheet = true },
-                        onClear: { selectedCOEs.removeAll() }
-                    )
+                    // COE filter - use inline menu if coeFilter config provided, otherwise use sheet
+                    if let coeConfig = coeFilter {
+                        COEFilterMenu(
+                            selectedCOEs: coeConfig.selectedCOEs,
+                            availableCOEs: coeConfig.availableCOEs
+                        )
+                    } else {
+                        // Fallback to sheet-based filter chip
+                        FilterChipButton(
+                            title: "COE",
+                            icon: nil,
+                            selectedItems: Array(selectedCOEs).map(String.init).sorted(),
+                            action: { showingCOESheet = true },
+                            onClear: { selectedCOEs.removeAll() }
+                        )
+                    }
 
                     // Tag filter chip
                     FilterChipButton(
@@ -207,7 +287,7 @@ private struct FilterChipButton: View {
             .foregroundColor(selectedItems.isEmpty ? .secondary : .white)
             .padding(.horizontal, DesignSystem.Padding.chip)
             .padding(.vertical, DesignSystem.Padding.chipVertical)
-            .background(selectedItems.isEmpty ? Color(.systemGray6) : Color.accentColor)
+            .background(selectedItems.isEmpty ? Color(.systemGray6) : DesignSystem.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
     }
@@ -222,14 +302,14 @@ private struct ProductTypeFilterMenu: View {
 
     var body: some View {
         Menu {
-            // "All" option - shows all product types
+            // "All types" option - shows all product types
             Button {
                 withAnimation {
                     selectedProductTypes.wrappedValue.removeAll()
                 }
             } label: {
                 HStack {
-                    Text("All")
+                    Text("All types")
                     Spacer()
                     if selectedProductTypes.wrappedValue.isEmpty {
                         Image(systemName: "checkmark")
@@ -257,15 +337,15 @@ private struct ProductTypeFilterMenu: View {
             }
         } label: {
             HStack(spacing: DesignSystem.Spacing.sm) {
-                // Show selected type or "All" if empty
+                // Show selected type or "All types" if empty
                 if let selectedType = selectedProductTypes.wrappedValue.first {
                     Text(displayName(selectedType))
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
                         .lineLimit(1)
                 } else {
-                    // Show "All" when no specific type is selected
-                    Text("All")
+                    // Show "All types" when no specific type is selected
+                    Text("All types")
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
                 }
@@ -275,9 +355,94 @@ private struct ProductTypeFilterMenu: View {
                     .font(.caption2)
             }
             .foregroundColor(DesignSystem.Colors.textSecondary)
-            .padding(.horizontal, DesignSystem.Padding.chip + DesignSystem.Spacing.xs)
-            .padding(.vertical, DesignSystem.Padding.buttonVertical)
+            .padding(.horizontal, DesignSystem.Padding.chip)
+            .padding(.vertical, DesignSystem.Padding.chipVertical)
             .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        }
+    }
+}
+
+// MARK: - COE Filter Menu
+
+private struct COEFilterMenu: View {
+    let selectedCOEs: Binding<Set<Int32>>
+    let availableCOEs: [Int32]
+
+    var body: some View {
+        Menu {
+            // "All COEs" option
+            Button {
+                withAnimation {
+                    selectedCOEs.wrappedValue.removeAll()
+                }
+            } label: {
+                HStack {
+                    Text("All COEs")
+                    Spacer()
+                    if selectedCOEs.wrappedValue.isEmpty {
+                        Image(systemName: "checkmark")
+                    }
+                }
+            }
+
+            Divider()
+
+            // Multi-select COE options
+            ForEach(availableCOEs.sorted(), id: \.self) { coe in
+                Button {
+                    withAnimation {
+                        if selectedCOEs.wrappedValue.contains(coe) {
+                            selectedCOEs.wrappedValue.remove(coe)
+                        } else {
+                            selectedCOEs.wrappedValue.insert(coe)
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Text(String(coe))
+                        Spacer()
+                        if selectedCOEs.wrappedValue.contains(coe) {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                if selectedCOEs.wrappedValue.isEmpty {
+                    // Show "COE" label with chevron
+                    Text("COE")
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                    Image(systemName: "chevron.down")
+                        .font(.caption2)
+                } else {
+                    // Show selected COEs
+                    let sortedCOEs = Array(selectedCOEs.wrappedValue).sorted()
+                    ForEach(Array(sortedCOEs.prefix(2)), id: \.self) { coe in
+                        Text(String(coe))
+                            .font(DesignSystem.Typography.captionSmall)
+                            .fontWeight(DesignSystem.FontWeight.bold)
+                            .lineLimit(1)
+                    }
+                    if sortedCOEs.count > 2 {
+                        Text("+\(sortedCOEs.count - 2)")
+                            .font(DesignSystem.Typography.captionSmall)
+                            .fontWeight(DesignSystem.FontWeight.medium)
+                    }
+                    // X button to clear
+                    Image(systemName: "xmark.circle.fill")
+                        .font(DesignSystem.Typography.captionSmall)
+                        .onTapGesture {
+                            selectedCOEs.wrappedValue.removeAll()
+                        }
+                }
+            }
+            .foregroundColor(selectedCOEs.wrappedValue.isEmpty ? .secondary : .white)
+            .padding(.horizontal, DesignSystem.Padding.chip)
+            .padding(.vertical, DesignSystem.Padding.chipVertical)
+            .background(selectedCOEs.wrappedValue.isEmpty ? Color(.systemGray6) : DesignSystem.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
     }

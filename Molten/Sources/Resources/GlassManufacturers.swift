@@ -107,8 +107,8 @@ struct GlassManufacturers {
         "RE": false,           // Reichenbach - NO permission (no idea who to ask)
         "REUSCHE": false,     // Reusche - NO permission (no product images in PDF catalogs)
         "TAG": false,          // Trautmann Art Glass - NO permission (need to reach Northstar somehow)
-        "THMP": false,         // Thompson Enamel - NO permission (emailed, waiting on response)
-        "UST": true,          // UST Glass - NO permission (no response)
+        "THMP": true,         // Thompson Enamel - permission granted via email
+        "UST": false,          // UST Glass - NO permission (no response)
         "VF": true,           // Vetrofond - permission granted via email
         "WM": false,           // Wissmach Glass - NO permission (no idea who to ask)
         "Y96": true           // Youghiogheny Glass - permission granted via email

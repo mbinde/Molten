@@ -37,6 +37,8 @@ struct ShoppingListServiceTests {
         let shoppingListRepo = MockShoppingListRepository()
         let inventoryRepo = MockInventoryRepository()
         let glassItemRepo = MockGlassItemRepository()
+        let coatingItemRepo = MockCoatingItemRepository()
+        let toolItemRepo = MockToolItemRepository()
         let itemTagsRepo = MockItemTagsRepository()
         let userTagsRepo = MockUserTagsRepository()
 
@@ -45,6 +47,8 @@ struct ShoppingListServiceTests {
             shoppingListRepository: shoppingListRepo,
             inventoryRepository: inventoryRepo,
             glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo
         )
@@ -56,6 +60,8 @@ struct ShoppingListServiceTests {
                 shoppingList: shoppingListRepo,
                 inventory: inventoryRepo,
                 glassItem: glassItemRepo,
+                coatingItem: coatingItemRepo,
+                toolItem: toolItemRepo,
                 itemTags: itemTagsRepo
             )
         )
@@ -66,6 +72,8 @@ struct ShoppingListServiceTests {
         let shoppingList: MockShoppingListRepository
         let inventory: MockInventoryRepository
         let glassItem: MockGlassItemRepository
+        let coatingItem: MockCoatingItemRepository
+        let toolItem: MockToolItemRepository
         let itemTags: MockItemTagsRepository
     }
 
@@ -253,8 +261,8 @@ struct ShoppingListServiceTests {
         #expect(lists["Store B"] != nil)
         #expect(lists["Store A"]?.items.count == 1)
         #expect(lists["Store B"]?.items.count == 1)
-        #expect(lists["Store A"]?.items.first?.glassItem.stable_id == stableIdA)
-        #expect(lists["Store B"]?.items.first?.glassItem.stable_id == stableIdB)
+        #expect(lists["Store A"]?.items.first?.catalogItem.stable_id == stableIdA)
+        #expect(lists["Store B"]?.items.first?.catalogItem.stable_id == stableIdB)
     }
 
     @Test("Manual items without store go to 'Other' store")
@@ -414,8 +422,8 @@ struct ShoppingListServiceTests {
         // Test completeItem property
         let completeItem = detailedItem.completeItem
 
-        #expect(completeItem.glassItem.stable_id == stableId)
-        #expect(completeItem.glassItem.name == "Complete Test Item")
+        #expect(completeItem.catalogItem.stable_id == stableId)
+        #expect(completeItem.catalogItem.name == "Complete Test Item")
         #expect(Set(completeItem.tags) == Set(["transparent", "rod"])) // Check set equality for tags
         #expect(completeItem.inventory.isEmpty) // Shopping list items have no inventory data
         #expect(completeItem.locations.isEmpty) // Shopping list items have no location data

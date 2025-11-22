@@ -49,6 +49,7 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var cachedAllTags: [String] = []
     @State private var cachedAllCOEs: [Int32] = []
     @State private var cachedManufacturers: [String] = []
+    @State private var cachedLocations: [String] = []
 
     // CRITICAL: Service instances (not optional - always provided)
     private let catalogService: CatalogService
@@ -187,7 +188,7 @@ struct InventoryView: View, CachedDataDeletion {
     }
 
     private var shouldShowSearchEmptyState: Bool {
-        !viewModel.completeItems.isEmpty && (!viewModel.searchText.isEmpty || !viewModel.selectedTags.isEmpty || !viewModel.selectedCOEs.isEmpty || !viewModel.selectedManufacturers.isEmpty)
+        !viewModel.completeItems.isEmpty && (!viewModel.searchText.isEmpty || !viewModel.selectedTags.isEmpty || !viewModel.selectedCOEs.isEmpty || !viewModel.selectedManufacturers.isEmpty || viewModel.selectedLocation != nil)
     }
 
     // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
@@ -203,6 +204,11 @@ struct InventoryView: View, CachedDataDeletion {
     // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
     private var allAvailableManufacturers: [String] {
         return cachedManufacturers
+    }
+
+    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
+    private var allAvailableLocations: [String] {
+        return cachedLocations
     }
 
     // Count of unique items with inventory (for subscription banner)
@@ -232,10 +238,11 @@ struct InventoryView: View, CachedDataDeletion {
     private func updateCaches() {
         let itemsWithInventory = viewModel.completeItems.filter { $0.totalQuantity > 0 }
 
-        // Extract all tags, COEs, and manufacturers
+        // Extract all tags, COEs, manufacturers, and locations
         var allTagsSet = Set<String>()
         var allCOEsSet = Set<Int32>()
         var manufacturersSet = Set<String>()
+        var locationsSet = Set<String>()
 
         for item in itemsWithInventory {
             allTagsSet.formUnion(item.tags)
@@ -245,11 +252,19 @@ struct InventoryView: View, CachedDataDeletion {
             if !mfr.isEmpty {
                 manufacturersSet.insert(mfr)
             }
+
+            // Extract locations from inventory records
+            for inventoryRecord in item.inventory {
+                if let location = inventoryRecord.location, !location.isEmpty {
+                    locationsSet.insert(location)
+                }
+            }
         }
 
         cachedAllTags = allTagsSet.sorted()
         cachedAllCOEs = allCOEsSet.sorted()
         cachedManufacturers = manufacturersSet.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+        cachedLocations = locationsSet.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
     var body: some View {
@@ -271,6 +286,11 @@ struct InventoryView: View, CachedDataDeletion {
                         selectedProductTypes: $viewModel.selectedProductTypes,
                         availableTypes: FeatureFlags.availableProductTypes,
                         displayName: displayNameForProductType
+                    ),
+                    locationFilter: .init(
+                        selectedLocation: $viewModel.selectedLocation,
+                        availableLocations: allAvailableLocations,
+                        onClear: { viewModel.selectedLocation = nil }
                     )
                 )
 

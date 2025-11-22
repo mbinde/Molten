@@ -12,11 +12,19 @@ import Foundation
 import OSLog
 import CoreData
 
+enum InventorySearchScope: String, CaseIterable {
+    case allFields = "All fields"
+    case titlesOnly = "Only titles"
+}
+
 /// Repository-based InventoryView that uses the new GlassItem architecture
 struct InventoryView: View, CachedDataDeletion {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data
     @State private var viewModel: InventoryViewModel
     @Environment(EntitlementService.self) private var entitlementService
+
+    // Search scope state
+    @State private var searchScope: InventorySearchScope = .allFields
 
     // Performance timing (DEBUG builds only)
     @State private var performanceTimer = PerformanceTimer()
@@ -303,6 +311,14 @@ struct InventoryView: View, CachedDataDeletion {
                 placement: .navigationBarDrawer(displayMode: .always),
                 prompt: "Search inventory by name, code, manufacturer..."
             )
+            .searchScopes($searchScope, activation: .onSearchPresentation) {
+                ForEach(InventorySearchScope.allCases, id: \.self) { scope in
+                    Text(scope.rawValue)
+                }
+            }
+            .onChange(of: searchScope) { oldValue, newValue in
+                viewModel.searchTitlesOnly = (newValue == .titlesOnly)
+            }
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
             .toolbar {

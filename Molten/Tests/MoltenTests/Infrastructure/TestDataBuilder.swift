@@ -357,6 +357,8 @@ class TestDataBuilder {
             shoppingListRepository: shoppingListRepo,
             inventoryRepository: inventoryRepo,
             glassItemRepository: glassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo
         )

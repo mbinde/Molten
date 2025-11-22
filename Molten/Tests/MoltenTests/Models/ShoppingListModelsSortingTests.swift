@@ -39,6 +39,8 @@ struct DetailedShoppingListItemModelSortingTests {
             mfr_status: "available"
         )
 
+        let catalogItem = UnifiedCatalogItem(glassItem: glassItem)
+
         let shoppingListItem = ShoppingListItemModel(
             item_stable_id: stableId,
             type: "rod",
@@ -49,7 +51,7 @@ struct DetailedShoppingListItemModelSortingTests {
 
         return DetailedShoppingListItemModel(
             shoppingListItem: shoppingListItem,
-            glassItem: glassItem,
+            catalogItem: catalogItem,
             tags: [],
             userTags: []
         )
@@ -66,9 +68,9 @@ struct DetailedShoppingListItemModelSortingTests {
         var items = [medium, low, high]
         items.sort() // Uses Comparable conformance
 
-        #expect(items[0].glassItem.name == "High Need")
-        #expect(items[1].glassItem.name == "Medium Need")
-        #expect(items[2].glassItem.name == "Low Need")
+        #expect(items[0].catalogItem.name == "High Need")
+        #expect(items[1].catalogItem.name == "Medium Need")
+        #expect(items[2].catalogItem.name == "Low Need")
     }
 
     @Test("Should handle equal neededQuantity gracefully")
@@ -134,6 +136,8 @@ struct DetailedMinimumModelSortingTests {
             mfr_status: "available"
         )
 
+        let catalogItem = UnifiedCatalogItem(glassItem: glassItem)
+
         let minimum = ItemMinimumModel(
             item_stable_id: stableId,
             quantity: quantity,
@@ -143,7 +147,7 @@ struct DetailedMinimumModelSortingTests {
 
         return DetailedMinimumModel(
             minimum: minimum,
-            glassItem: glassItem,
+            catalogItem: catalogItem,
             tags: [],
             currentQuantity: 5.0
         )

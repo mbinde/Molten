@@ -228,6 +228,28 @@ class CoreDataShoppingListRepository: @unchecked Sendable, ShoppingListRepositor
         }
     }
 
+    func updateNeededQuantity(forItem item_stable_id: String, neededQuantity: Double) async throws -> ItemShoppingModel {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            // Find existing item
+            guard let coreDataItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) else {
+                throw CoreDataShoppingListRepositoryError.itemNotFound(item_stable_id)
+            }
+
+            // Update needed quantity (stored in the quantity field for ItemShopping)
+            coreDataItem.setValue(max(0, neededQuantity), forKey: "quantity")
+
+            // Save context
+            try context.save()
+
+            guard let updatedModel = self.convertToModel(coreDataItem) else {
+                throw CoreDataShoppingListRepositoryError.conversionFailed
+            }
+
+            self.log.info("Updated needed quantity for shopping list item: \(item_stable_id) to \(neededQuantity)")
+            return updatedModel
+        }
+    }
+
     func addQuantity(_ quantity: Double, toItem item_stable_id: String, store: String?) async throws -> ItemShoppingModel {
         return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
             if let existingItem = try self.fetchCoreDataItemSync(forItem: item_stable_id) {

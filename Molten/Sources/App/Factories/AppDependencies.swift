@@ -158,6 +158,8 @@ class AppDependencies {
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: inventoryRepository,
             glassItemRepository: glassItemRepository,
+            coatingItemRepository: coatingItemRepository,
+            toolItemRepository: toolItemRepository,
             itemTagsRepository: itemTagsRepository,
             userTagsRepository: userTagsRepository
         )

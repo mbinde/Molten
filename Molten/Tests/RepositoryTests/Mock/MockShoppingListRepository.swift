@@ -162,6 +162,36 @@ final class MockShoppingListRepository: ShoppingListRepository {
         return updated
     }
 
+    func updateNeededQuantity(forItem item_stable_id: String, neededQuantity: Double) async throws -> ItemShoppingModel {
+        guard let existing = try await fetchItem(forItem: item_stable_id) else {
+            throw MockShoppingListRepositoryError.itemNotFound
+        }
+
+        let existingId = await existing.id
+        let existingItemId = await existing.item_stable_id
+        let existingQuantity = await existing.quantity
+        let existingStore = await existing.store
+        let existingType = await existing.type
+        let existingSubtype = await existing.subtype
+        let existingSubsubtype = await existing.subsubtype
+        let existingDate = await existing.dateAdded
+
+        let updated = ItemShoppingModel(
+            id: existingId,
+            item_stable_id: existingItemId,
+            quantity: existingQuantity,
+            neededQuantity: neededQuantity,
+            store: existingStore,
+            type: existingType,
+            subtype: existingSubtype,
+            subsubtype: existingSubsubtype,
+            dateAdded: existingDate
+        )
+
+        lock.withLock { items[existingId] = updated }
+        return updated
+    }
+
     func addQuantity(_ quantity: Double, toItem item_stable_id: String, store: String?) async throws -> ItemShoppingModel {
         // Look for existing item
         // - If store is specified: match BOTH item_stable_id AND store (exact match)

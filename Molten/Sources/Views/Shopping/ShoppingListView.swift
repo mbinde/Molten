@@ -19,6 +19,7 @@ struct ShoppingListView: View {
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
     private let purchaseService: PurchaseRecordService
+    private let subscriptionService: SubscriptionServiceProtocol
     private let userNotesRepository: UserNotesRepository
     private let userTagsRepository: UserTagsRepository
     private let shoppingListRepository: ShoppingListRepository
@@ -65,6 +66,7 @@ struct ShoppingListView: View {
          catalogService: CatalogService,
          inventoryTrackingService: InventoryTrackingService,
          purchaseService: PurchaseRecordService,
+         subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService,
          userNotesRepository: UserNotesRepository,
          userTagsRepository: UserTagsRepository,
          shoppingListRepository: ShoppingListRepository,
@@ -76,6 +78,7 @@ struct ShoppingListView: View {
         self.catalogService = catalogService
         self.inventoryTrackingService = inventoryTrackingService
         self.purchaseService = purchaseService
+        self.subscriptionService = subscriptionService
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
@@ -89,6 +92,7 @@ struct ShoppingListView: View {
          catalogService: CatalogService,
          inventoryTrackingService: InventoryTrackingService,
          purchaseService: PurchaseRecordService,
+         subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService,
          userNotesRepository: UserNotesRepository,
          userTagsRepository: UserTagsRepository,
          shoppingListRepository: ShoppingListRepository,
@@ -99,6 +103,7 @@ struct ShoppingListView: View {
         self.catalogService = catalogService
         self.inventoryTrackingService = inventoryTrackingService
         self.purchaseService = purchaseService
+        self.subscriptionService = subscriptionService
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
@@ -625,6 +630,7 @@ struct ShoppingListView: View {
                     inventoryTrackingService: inventoryTrackingService,
                     shoppingListService: shoppingListService,
                     purchaseService: purchaseService,
+                    subscriptionService: subscriptionService,
                     onComplete: {
                         Task {
                             await loadShoppingList()
@@ -1010,6 +1016,7 @@ struct CheckoutSheet: View {
     let inventoryTrackingService: InventoryTrackingService
     let shoppingListService: ShoppingListService
     let purchaseService: PurchaseRecordService?
+    let subscriptionService: SubscriptionServiceProtocol
     let onComplete: () -> Void
     let onExitWithoutCheckout: () -> Void
 
@@ -1019,6 +1026,8 @@ struct CheckoutSheet: View {
     @State private var createPurchaseRecord = false
     @State private var isProcessing = false
     @State private var quantities: [String: Double] = [:] // natural_key -> adjusted quantity
+    @State private var showInventoryLimitWarning = false
+    @State private var currentInventoryCount = 0
 
     // Purchase record fields
     @State private var supplier = ""
@@ -1223,12 +1232,37 @@ struct CheckoutSheet: View {
                             quantities[item.catalogItem.stable_id] = shoppingModeState.getQuantity(for: item.catalogItem.stable_id) ?? item.shoppingListItem.neededQuantity
                         }
                     }
+
+                    // Check inventory limit for free tier users
+                    Task {
+                        let isPro = await subscriptionService.hasProAccess()
+                        let itemsWithInventory = try? await inventoryTrackingService.getItemsWithInventory()
+                        currentInventoryCount = itemsWithInventory?.count ?? 0
+
+                        // Only show warning if user is NOT Pro AND at/over the limit
+                        if !isPro && currentInventoryCount >= FeatureFlags.FREE_TIER_INVENTORY_LIMIT {
+                            showInventoryLimitWarning = true
+                        }
+                    }
                 }
             }
             .navigationTitle("Checkout")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .alert("Inventory Limit Reached", isPresented: $showInventoryLimitWarning) {
+                Button("OK") {
+                    // User acknowledged the warning
+                    // Disable "Add to inventory" toggle if they're at/over limit
+                    addToInventory = false
+                }
+                Button("Upgrade to Pro") {
+                    // TODO: Navigate to subscription upgrade screen
+                    addToInventory = false
+                }
+            } message: {
+                Text("You currently have \(currentInventoryCount) items in your inventory. Free tier users are limited to \(FeatureFlags.FREE_TIER_INVENTORY_LIMIT) items.\n\nIf you complete this checkout, items will not be added to your inventory unless you upgrade to Pro.")
+            }
         }
     }
 

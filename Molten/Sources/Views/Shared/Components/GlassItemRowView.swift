@@ -366,8 +366,60 @@ extension GlassItemRowView {
             }
         ) : nil
 
-        // No badge or tags for shopping list - keep it clean and compact
-        // User can tap the row to see full details including need/current/store info
+        // Badge and tags: show for normal shopping list, hide for shopping mode
+        let badgeContent: AnyView?
+        let tags: [String]
+
+        if isShoppingMode {
+            // Shopping mode: no badge or tags - keep it clean and compact
+            badgeContent = nil
+            tags = []
+        } else {
+            // Normal shopping list: show Need/Current/Store badge
+            var badgeComponents: [AnyView] = []
+            badgeComponents.append(AnyView(
+                Text("Need: \(item.shoppingListItem.neededQuantity, specifier: "%.1f")")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.orange)
+            ))
+
+            badgeComponents.append(AnyView(
+                Text("•")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            ))
+
+            badgeComponents.append(AnyView(
+                Text("Current: \(item.shoppingListItem.currentQuantity, specifier: "%.1f")")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            ))
+
+            if showStore {
+                badgeComponents.append(AnyView(
+                    Text("•")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                ))
+
+                badgeComponents.append(AnyView(
+                    Text(item.shoppingListItem.store)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                ))
+            }
+
+            badgeContent = AnyView(
+                HStack(spacing: 6) {
+                    ForEach(0..<badgeComponents.count, id: \.self) { index in
+                        badgeComponents[index]
+                    }
+                }
+            )
+
+            tags = item.allTags
+        }
 
         return GlassItemRowView(
             item: GlassItemRowData(
@@ -378,11 +430,11 @@ extension GlassItemRowView {
                 imagePath: item.catalogItem.image_path,
                 imageThumbPath: item.catalogItem.image_thumb_path,
                 dominantColors: item.catalogItem.dominant_colors,
-                tags: [], // Don't show tags in shopping mode
+                tags: tags,
                 rating: nil
             ),
             leadingAccessory: leadingAccessory,
-            badgeContent: nil, // No badge - keep it clean
+            badgeContent: badgeContent,
             showFullCode: false
         )
     }

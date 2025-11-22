@@ -64,6 +64,12 @@ enum FeatureFlags {
     /// Set to false to ship with bundled catalog only
     nonisolated static let ENABLE_CATALOG_UPDATES = true
 
+    // MARK: - Free Tier Limits
+
+    /// Maximum number of distinct glass items allowed in inventory for free tier
+    /// Pro members have unlimited inventory items
+    nonisolated static let FREE_TIER_INVENTORY_LIMIT = 50
+
     // MARK: - Debug Feature Flags (from DebugConfig)
 
     /// Master switch for all advanced features

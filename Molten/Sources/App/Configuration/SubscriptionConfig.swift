@@ -35,7 +35,7 @@ struct SubscriptionConfig: Sendable {
 
     struct FreeTierLimits: Sendable {
         /// Maximum inventory items (user may reduce this to increase conversion)
-        nonisolated static let maxInventoryItems = 50
+        nonisolated static let maxInventoryItems = FeatureFlags.FREE_TIER_INVENTORY_LIMIT
 
         /// Maximum shopping list items (user may reduce this)
         nonisolated static let maxShoppingListItems = 15

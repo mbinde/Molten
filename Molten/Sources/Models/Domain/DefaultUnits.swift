@@ -8,32 +8,32 @@
 import Foundation
 
 enum DefaultUnits: String, CaseIterable {
-    case pounds = "Pounds"
-    case kilograms = "Kilograms"
-    
+    case ounces = "Ounces"
+    case grams = "Grams"
+
     var displayName: String {
         switch self {
-        case .pounds:
-            return "Pounds"
-        case .kilograms:
-            return "Kilograms"
+        case .ounces:
+            return "Ounces"
+        case .grams:
+            return "Grams"
         }
     }
-    
+
     var symbol: String {
         switch self {
-        case .pounds:
-            return "lb"
-        case .kilograms:
-            return "kg"
+        case .ounces:
+            return "oz"
+        case .grams:
+            return "g"
         }
     }
-    
+
     var systemImage: String {
         switch self {
-        case .pounds:
+        case .ounces:
             return "scalemass"
-        case .kilograms:
+        case .grams:
             return "scalemass.fill"
         }
     }

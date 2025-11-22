@@ -102,13 +102,8 @@ struct LabelDesignerView: View {
                 Text("Are you sure you want to delete '\(preset.name)'? This action cannot be undone.")
             }
             .task {
-                print("🏷️ LabelDesignerView: .task called")
                 if labelService == nil {
-                    print("🏷️ LabelDesignerView: Creating LabelPrintingService...")
                     labelService = LabelPrintingService()
-                    print("✅ LabelDesignerView: LabelPrintingService created")
-                } else {
-                    print("✅ LabelDesignerView: LabelPrintingService already exists (cached)")
                 }
                 loadLastUsedFormat()
                 await loadSettings()
@@ -511,7 +506,6 @@ struct LabelDesignerView: View {
 
     @MainActor
     private func generatePDF() async {
-        print("🏷️ LabelDesignerView: generatePDF() called")
 
         guard let service = labelService else {
             print("❌ LabelDesignerView: labelService is nil!")
@@ -525,7 +519,6 @@ struct LabelDesignerView: View {
         // Convert CompleteInventoryItemModel to LabelData, duplicating for each quantity
         var labelData: [LabelData] = []
 
-        print("🏷️ LabelDesignerView: Processing \(items.count) items...")
         for item in items {
             let glassItem = item.glassItem
             let inventory = item.inventory.first
@@ -548,7 +541,6 @@ struct LabelDesignerView: View {
             }
         }
 
-        print("🏷️ LabelDesignerView: Generating PDF for \(labelData.count) labels...")
         // Generate PDF with adjustments and start position
         guard let pdfURL = await service.generateLabelSheet(
             labels: labelData,
@@ -566,7 +558,6 @@ struct LabelDesignerView: View {
             return
         }
 
-        print("✅ LabelDesignerView: PDF generated at \(pdfURL.path)")
         generatedPDFURL = pdfURL
         isGenerating = false
 

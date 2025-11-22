@@ -2091,9 +2091,7 @@ class LabelPrintingService {
             // Try to load manufacturer logo
             // Manufacturer codes are uppercase (e.g., "EF", "BE"), but files are lowercase with _print.png suffix
             let imageName = "\(manufacturer.lowercased())_print.png"
-            print("🏷️ LabelPrintingService: Attempting to load manufacturer image: \(imageName)")
             if let logoImage = UIImage(named: imageName) {
-                print("✅ LabelPrintingService: Successfully loaded manufacturer image for \(manufacturer)")
                 switch config.manufacturerImagePosition {
                 case .left:
                     // Draw left image

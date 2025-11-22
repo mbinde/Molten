@@ -23,7 +23,6 @@ struct CoreDataLeakDiagnostic {
 
     @Test("Verify mock repository isolation")
     func testMockRepositoryIsolation() async throws {
-        print("🔍 DIAGNOSTIC: Testing mock repository isolation")
         
         // Create a completely isolated mock repository
         let mockGlassItemRepo = MockGlassItemRepository()
@@ -33,7 +32,6 @@ struct CoreDataLeakDiagnostic {
         
         // Verify it starts empty
         let initialCount = await mockGlassItemRepo.getItemCount()
-        print("📊 Mock repository initial count: \(initialCount)")
         #expect(initialCount == 0, "Mock repository should start empty")
         
         // Add a test item directly to the mock
@@ -52,12 +50,10 @@ struct CoreDataLeakDiagnostic {
         
         // Verify it was added
         let afterCount = await mockGlassItemRepo.getItemCount()
-        print("📊 Mock repository after add: \(afterCount)")
         #expect(afterCount == 1, "Mock repository should have 1 item")
         
         // Retrieve and verify
         let allItems = try await mockGlassItemRepo.fetchItems(matching: nil)
-        print("📊 Retrieved items: \(allItems.count)")
         #expect(allItems.count == 1, "Should retrieve 1 item")
 
         // Verify it's the test item we created (check by manufacturer and SKU since stable_id is auto-generated)
@@ -65,12 +61,10 @@ struct CoreDataLeakDiagnostic {
         #expect(retrievedItem?.manufacturer == "diagnostic", "Should have correct manufacturer")
         #expect(retrievedItem?.sku == "mock", "Should have correct SKU")
         
-        print("✅ Mock repository isolation works correctly")
     }
     
     @Test("Verify service uses injected mock repository")
     func testServiceUsesInjectedMock() async throws {
-        print("🔍 DIAGNOSTIC: Testing if services use injected mocks")
         
         // Create isolated mock repositories
         let mockGlassItemRepo = MockGlassItemRepository()
@@ -93,7 +87,6 @@ struct CoreDataLeakDiagnostic {
         let initialGlassCount = await mockGlassItemRepo.getItemCount()
         let initialInventoryCount = await mockInventoryRepo.getInventoryCount()
 
-        print("📊 Initial counts - Glass: \(initialGlassCount), Inventory: \(initialInventoryCount)")
         #expect(initialGlassCount == 0, "Glass repo should start empty")
         #expect(initialInventoryCount == 0, "Inventory repo should start empty")
 
@@ -150,10 +143,7 @@ struct CoreDataLeakDiagnostic {
         // TEST 2: Check if catalog service sees the same item
         let catalogServiceItems = try await catalogService.getAllGlassItems()
         let directRepositoryItems = try await mockGlassItemRepo.fetchItems(matching: nil)
-        
-        print("📊 Direct repository count: \(directRepositoryItems.count)")
-        print("📊 Catalog service count: \(catalogServiceItems.count)")
-        
+                
         // If these don't match, the service is NOT using our mock
         if directRepositoryItems.count != catalogServiceItems.count {
             print("❌ CORE DATA LEAK DETECTED!")
@@ -169,8 +159,6 @@ struct CoreDataLeakDiagnostic {
             for item in catalogServiceItems {
                 print("  - \(item.glassItem.name) (\(item.glassItem.stable_id))")
             }
-        } else {
-            print("✅ SUCCESS: Service is using injected mock repository")
         }
         
         #expect(directRepositoryItems.count == catalogServiceItems.count, 
@@ -188,20 +176,15 @@ struct CoreDataLeakDiagnostic {
             mfr_status: "available"
         )
         
-        print("🔍 Adding item through catalog service...")
         let _ = try await catalogService.createGlassItem(serviceTestItem, initialInventory: [], tags: [])
         
         // Check if it appears in both
         let finalRepositoryItems = try await mockGlassItemRepo.fetchItems(matching: nil)
         let finalServiceItems = try await catalogService.getAllGlassItems()
         
-        print("📊 Final repository count: \(finalRepositoryItems.count)")
-        print("📊 Final service count: \(finalServiceItems.count)")
-        
-        #expect(finalRepositoryItems.count == finalServiceItems.count, 
+        #expect(finalRepositoryItems.count == finalServiceItems.count,
                 "After service operations, counts should still match")
         #expect(finalRepositoryItems.count == 2, "Should have 2 items total")
         
-        print("✅ Service correctly uses injected mock repositories")
     }
 }

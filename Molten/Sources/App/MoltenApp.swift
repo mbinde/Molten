@@ -444,7 +444,6 @@ extension MoltenApp {
 
             // Log store descriptions
             for (index, store) in cloudKitContainer.persistentStoreDescriptions.enumerated() {
-                log.info("📦 [CloudKit Diagnostics] Store \(index): \(store.url?.lastPathComponent ?? "unknown")")
                 if let cloudKitOptions = store.cloudKitContainerOptions {
                     log.info("   ☁️ CloudKit: \(cloudKitOptions.containerIdentifier) (scope: \(cloudKitOptions.databaseScope.rawValue))")
                 } else {

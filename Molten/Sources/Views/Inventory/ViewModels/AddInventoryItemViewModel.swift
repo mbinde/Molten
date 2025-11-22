@@ -31,6 +31,8 @@ class AddInventoryItemViewModel {
     var selectedType: String = "rod"  // Default type
     var selectedSubtype: String?
     var selectedSubsubtype: String?
+    var selectedWeightUnit: WeightUnit = WeightUnitPreference.current
+    var selectedDimensionUnit: DimensionUnit = DimensionUnitPreference.current.primaryUnit
     var dimensions: [String: String] = [:]
     var notes: String = ""
     var location: String = ""
@@ -79,6 +81,16 @@ class AddInventoryItemViewModel {
 
     // MARK: - Computed Properties
 
+    /// Check if the selected type uses weight units (grams/ounces)
+    var isWeightBasedType: Bool {
+        switch selectedType.lowercased() {
+        case "frit", "powder", "enamel":
+            return true
+        default:
+            return false
+        }
+    }
+
     /// Get the appropriate unit label for quantity based on selected type
     var quantityUnitLabel: String {
         switch selectedType.lowercased() {
@@ -86,8 +98,8 @@ class AddInventoryItemViewModel {
             return selectedType.lowercased()
         case "tube":
             return "tubes"
-        case "frit", "powder":
-            return "lbs"  // TODO: Add user setting for lbs vs kg
+        case "frit", "powder", "enamel":
+            return selectedWeightUnit == .grams ? "g" : "oz"
         case "stringer":
             return "stringers"
         case "sheet":
@@ -199,11 +211,37 @@ class AddInventoryItemViewModel {
         // Prepare location (nil if empty)
         let finalLocation = location.isEmpty ? nil : location
 
+        // Convert weight to grams if needed (always store in grams)
+        let finalQuantity: Double
+        if isWeightBasedType && selectedWeightUnit == .ounces {
+            // Convert ounces to grams
+            finalQuantity = selectedWeightUnit.convert(quantityValue, to: .grams)
+        } else {
+            finalQuantity = quantityValue
+        }
+
+        // Parse dimensions and convert to cm (always store in cm)
+        let parsedDimensions: [String: Double]? = {
+            guard !dimensions.isEmpty else { return nil }
+            var result: [String: Double] = [:]
+            for (key, valueString) in dimensions {
+                if let value = Double(valueString), !valueString.isEmpty {
+                    // Convert to cm if needed
+                    let valueInCm = selectedDimensionUnit.convert(value, to: .centimeters)
+                    result[key] = valueInCm
+                }
+            }
+            return result.isEmpty ? nil : result
+        }()
+
         do {
             _ = try await inventoryTrackingService.addInventory(
-                quantity: quantityValue,
+                quantity: finalQuantity,
                 type: selectedType,
                 toItem: stableId,
+                subtype: selectedSubtype,
+                subsubtype: selectedSubsubtype,
+                dimensions: parsedDimensions,
                 atLocation: finalLocation
             )
 

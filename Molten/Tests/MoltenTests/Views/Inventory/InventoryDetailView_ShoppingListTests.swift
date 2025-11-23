@@ -284,8 +284,8 @@ struct InventoryDetailView_ShoppingListTests {
         )
         #expect(originalItem.quantity == 5.0)
 
-        // Update quantity by replacing (set to new value, not add)
-        try await repository.setQuantity(
+        // Update quantity (set to new value, not add)
+        _ = try await repository.updateQuantity(
             10.0,
             forItem: item.glassItem.stable_id
         )

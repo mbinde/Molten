@@ -317,12 +317,14 @@ struct CatalogView: View {
                     Button("Done") {
                         showingManufacturerFilterSelection = false
                     }
+                    .accessibilityIdentifier("catalog_manufacturer_filter_done")
                 }
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Clear") {
                         viewModel.selectedManufacturers.removeAll()
                     }
                     .disabled(viewModel.selectedManufacturers.isEmpty)
+                    .accessibilityIdentifier("catalog_manufacturer_filter_clear")
                 }
             }
         }
@@ -596,12 +598,14 @@ struct TagFilterView: View {
                         selectedTags.removeAll()
                     }
                     .disabled(selectedTags.isEmpty)
+                    .accessibilityIdentifier("catalog_tag_filter_clear")
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("catalog_tag_filter_done")
                 }
             }
             .onAppear {

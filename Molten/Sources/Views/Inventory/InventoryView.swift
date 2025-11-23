@@ -580,6 +580,7 @@ struct InventoryView: View, CachedDataDeletion {
             } label: {
                 Image(systemName: "plus")
             }
+            .accessibilityIdentifier("inventory_add_button")
         }
 
         ToolbarItem(placement: .confirmationAction) {
@@ -589,6 +590,7 @@ struct InventoryView: View, CachedDataDeletion {
                 } label: {
                     Label("Add Inventory", systemImage: "plus")
                 }
+                .accessibilityIdentifier("inventory_menu_add")
 
                 Divider()
 
@@ -597,6 +599,7 @@ struct InventoryView: View, CachedDataDeletion {
                 } label: {
                     Label("Inventory Sharing", systemImage: "person.2")
                 }
+                .accessibilityIdentifier("inventory_menu_sharing")
 
                 Button {
                     showingLabelDesigner = true
@@ -604,6 +607,7 @@ struct InventoryView: View, CachedDataDeletion {
                     Label("Print Labels", systemImage: "qrcode")
                 }
                 .disabled(sortedFilteredItems.isEmpty)
+                .accessibilityIdentifier("inventory_menu_print_labels")
 
                 ImportInventoryTriggerView {
                     // Refresh inventory after import completes
@@ -615,6 +619,7 @@ struct InventoryView: View, CachedDataDeletion {
             } label: {
                 Image(systemName: "ellipsis.circle")
             }
+            .accessibilityIdentifier("inventory_menu")
         }
     }
     

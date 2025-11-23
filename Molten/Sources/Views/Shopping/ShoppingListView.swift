@@ -755,6 +755,7 @@ struct ShoppingListView: View {
                         } label: {
                             Text("Cancel")
                         }
+                        .accessibilityIdentifier("shopping_cancel_button")
                     }
                 }
 
@@ -766,6 +767,7 @@ struct ShoppingListView: View {
                         } label: {
                             Image(systemName: "cart")
                         }
+                        .accessibilityIdentifier("shopping_start_mode_button")
                     }
                 }
 
@@ -775,6 +777,7 @@ struct ShoppingListView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
+                    .accessibilityIdentifier("shopping_add_item_button")
                 }
             }
             .sheet(isPresented: $showingAllTags) {

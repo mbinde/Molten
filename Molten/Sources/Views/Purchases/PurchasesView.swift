@@ -45,6 +45,7 @@ struct PurchasesView: View {
                             viewModel.clearSearch()
                         }
                         .foregroundColor(.secondary)
+                        .accessibilityIdentifier("purchases_clear_search")
                     }
                 }
                 .padding(.horizontal)
@@ -87,12 +88,14 @@ struct PurchasesView: View {
                     Button(action: { showingAddPurchase = true }) {
                         Image(systemName: "plus")
                     }
+                    .accessibilityIdentifier("purchases_add_button")
                 }
 
                 #if os(iOS)
                 if !viewModel.purchases.isEmpty && !viewModel.isLoading {
                     ToolbarItem(placement: .topBarLeading) {
                         EditButton()
+                            .accessibilityIdentifier("purchases_edit_button")
                     }
                 }
                 #endif

@@ -321,8 +321,8 @@ struct InventoryDetailView_TagManagementTests {
         #expect(CoreDataUserTagsRepository.cleanTag("My-Tag") == "my-tag")
         #expect(CoreDataUserTagsRepository.cleanTag("FAVORITE") == "favorite")
 
-        // Test internal whitespace preservation
-        #expect(CoreDataUserTagsRepository.cleanTag("shelf a") == "shelf a")
+        // Test internal whitespace converted to hyphens
+        #expect(CoreDataUserTagsRepository.cleanTag("shelf a") == "shelf-a")
     }
 
     // MARK: - Tag Display Integration Tests

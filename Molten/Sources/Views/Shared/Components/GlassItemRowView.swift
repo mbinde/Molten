@@ -158,19 +158,25 @@ struct GlassItemRowView: View {
             }
             .lineLimit(1)
 
-            // Manufacturer on second line
-            Text(GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .lineLimit(1)
+            // SKU and Manufacturer on same line (compact layout)
+            HStack(spacing: 4) {
+                // SKU first (only if it exists and doesn't look synthetic)
+                if shouldDisplaySKU {
+                    Text(showFullCode ? item.stableId : (item.sku ?? ""))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
 
-            // SKU on third line (only if it exists and doesn't look synthetic)
-            if shouldDisplaySKU {
-                Text(showFullCode ? item.stableId : (item.sku ?? ""))
+                    Text("•")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+
+                // Manufacturer after SKU
+                Text(GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
-                    .lineLimit(1)
             }
+            .lineLimit(1)
 
             // Optional badge content (quantity, status, etc.)
             if let badge = badgeContent {
@@ -227,24 +233,36 @@ extension GlassItemRowView {
     }
 
     /// Inventory-style row with quantity badge
-    static func inventory(item: CompleteInventoryItemModel) -> GlassItemRowView {
-        let badge = AnyView(
-            HStack(spacing: 6) {
-                Text("\(item.totalQuantity, specifier: "%.1f")")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color.accentColor)
+    static func inventory(item: CompleteInventoryItemModel, selectedLocation: String? = nil) -> GlassItemRowView {
+        // Calculate quantity based on location filter
+        let inventoryToShow: [InventoryModel]
 
-                if !item.inventoryByType.isEmpty {
-                    Text("•")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+        if let location = selectedLocation {
+            // Filter inventory to only show records at the selected location
+            inventoryToShow = item.inventory.filter { $0.location == location }
+        } else {
+            // Show all inventory (no location filter)
+            inventoryToShow = item.inventory
+        }
 
-                    Text("\(item.inventoryByType.count) type\(item.inventoryByType.count == 1 ? "" : "s")")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+        // Group inventory by type and sum quantities
+        var quantityByType: [String: Double] = [:]
+        for inv in inventoryToShow {
+            quantityByType[inv.type, default: 0.0] += inv.quantity
+        }
+
+        // Format as comma-separated list: "5 Rods, 3 Tubes, 4.3 oz Frit"
+        let typesList = quantityByType
+            .sorted { $0.key < $1.key }  // Sort alphabetically
+            .map { type, quantity -> String in
+                return Self.formatQuantityForDisplay(quantity: quantity, type: type)
             }
+            .joined(separator: ", ")
+
+        let badge = AnyView(
+            Text(typesList)
+                .font(.caption)
+                .foregroundColor(.secondary)
         )
 
         return GlassItemRowView(
@@ -252,6 +270,30 @@ extension GlassItemRowView {
             badgeContent: badge,
             showFullCode: false
         )
+    }
+
+    /// Format a quantity for display based on its type
+    /// - Parameters:
+    ///   - quantity: The raw quantity value (always stored in grams for weight-based types)
+    ///   - type: The inventory type (e.g., "frit", "rod", "tube")
+    /// - Returns: Formatted string like "5 Rods", "4.3 oz Frit", "10 g Powder"
+    private static func formatQuantityForDisplay(quantity: Double, type: String) -> String {
+        let typeName = GlassTerminologySettings.shared.displayName(for: type)
+
+        // Check if this is a weight-based type
+        let isWeightBased = ["frit", "powder", "enamel"].contains(type.lowercased())
+
+        if isWeightBased {
+            // Weight-based: convert from grams (storage) to user's preferred unit
+            let preferredUnit = WeightUnitPreference.current
+            let convertedQuantity = WeightUnit.grams.convert(quantity, to: preferredUnit)
+            let quantityText = String(format: "%.1f", convertedQuantity).replacingOccurrences(of: ".0", with: "")
+            return "\(quantityText) \(preferredUnit.symbol) \(typeName)"
+        } else {
+            // Count-based: just format and strip .0
+            let quantityText = String(format: "%.1f", quantity).replacingOccurrences(of: ".0", with: "")
+            return "\(quantityText) \(typeName)"
+        }
     }
 
     /// Friend inventory-style row with quantity and location

@@ -267,6 +267,20 @@ struct ShoppingListView: View {
             }.filter { !$0.value.items.isEmpty }
         }
 
+        // Apply inventory type filter (Kind)
+        if let inventoryType = viewModel.selectedInventoryType {
+            filtered = filtered.mapValues { list in
+                let filteredItems = list.items.filter { item in
+                    item.shoppingListItem.type == inventoryType
+                }
+                return DetailedShoppingListModel(
+                    store: list.store,
+                    items: filteredItems,
+                    totalItems: filteredItems.count
+                )
+            }.filter { !$0.value.items.isEmpty }
+        }
+
         return filtered
     }
 
@@ -388,7 +402,52 @@ struct ShoppingListView: View {
 
     /// Count items per tag based on current filters (excluding tag filter itself)
     private var tagCounts: [String: Int] {
-        let allItems = viewModel.shoppingLists.values.flatMap { $0.items }
+        var allItems = viewModel.shoppingLists.values.flatMap { $0.items }
+
+        // Apply all filters EXCEPT tags
+        // Apply search filter
+        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
+            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
+            allItems = allItems.filter { item in
+                let allFields = [
+                    item.catalogItem.name,
+                    item.catalogItem.stable_id,
+                    item.catalogItem.manufacturer
+                ]
+                return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+            }
+        }
+
+        // Apply product type filter
+        if !viewModel.selectedProductTypes.isEmpty {
+            allItems = allItems.filter { item in
+                viewModel.selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
+        // Apply manufacturer filter
+        if !viewModel.selectedManufacturers.isEmpty {
+            allItems = allItems.filter { item in
+                viewModel.selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        }
+
+        // Apply COE filter
+        if !viewModel.selectedCOEs.isEmpty {
+            allItems = allItems.filter { item in
+                if let coe = item.catalogItem.coe {
+                    return viewModel.selectedCOEs.contains(coe)
+                }
+                return false
+            }
+        }
+
+        // Apply store filter
+        if let selectedStore = viewModel.selectedStore {
+            allItems = allItems.filter { item in
+                item.shoppingListItem.store == selectedStore
+            }
+        }
 
         // Count items per tag
         var counts: [String: Int] = [:]
@@ -401,13 +460,179 @@ struct ShoppingListView: View {
     }
 
     private var manufacturerCounts: [String: Int] {
-        let allItems = viewModel.shoppingLists.values.flatMap { $0.items }
+        var allItems = viewModel.shoppingLists.values.flatMap { $0.items }
+
+        // Apply all filters EXCEPT manufacturer
+        // Apply search filter
+        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
+            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
+            allItems = allItems.filter { item in
+                let allFields = [
+                    item.catalogItem.name,
+                    item.catalogItem.stable_id,
+                    item.catalogItem.manufacturer
+                ]
+                return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+            }
+        }
+
+        // Apply product type filter
+        if !viewModel.selectedProductTypes.isEmpty {
+            allItems = allItems.filter { item in
+                viewModel.selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
+        // Apply tag filter
+        if !viewModel.selectedTags.isEmpty {
+            allItems = allItems.filter { item in
+                !viewModel.selectedTags.isDisjoint(with: Set(item.allTags))
+            }
+        }
+
+        // Apply COE filter
+        if !viewModel.selectedCOEs.isEmpty {
+            allItems = allItems.filter { item in
+                if let coe = item.catalogItem.coe {
+                    return viewModel.selectedCOEs.contains(coe)
+                }
+                return false
+            }
+        }
+
+        // Apply store filter
+        if let selectedStore = viewModel.selectedStore {
+            allItems = allItems.filter { item in
+                item.shoppingListItem.store == selectedStore
+            }
+        }
 
         // Count items per manufacturer
         var counts: [String: Int] = [:]
         for item in allItems {
             let manufacturer = item.catalogItem.manufacturer
             counts[manufacturer, default: 0] += 1
+        }
+        return counts
+    }
+
+    private var storeCounts: [String: Int] {
+        // Count items per store based on current filters (excluding store filter itself)
+        var counts: [String: Int] = [:]
+
+        for (storeName, shoppingList) in viewModel.shoppingLists {
+            var filteredItems = shoppingList.items
+
+            // Apply all filters EXCEPT store
+            // Apply search filter
+            if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
+                let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
+                filteredItems = filteredItems.filter { item in
+                    let allFields = [
+                        item.catalogItem.name,
+                        item.catalogItem.stable_id,
+                        item.catalogItem.manufacturer
+                    ]
+                    return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+                }
+            }
+
+            // Apply product type filter
+            if !viewModel.selectedProductTypes.isEmpty {
+                filteredItems = filteredItems.filter { item in
+                    viewModel.selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+                }
+            }
+
+            // Apply manufacturer filter
+            if !viewModel.selectedManufacturers.isEmpty {
+                filteredItems = filteredItems.filter { item in
+                    viewModel.selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                }
+            }
+
+            // Apply tag filter
+            if !viewModel.selectedTags.isEmpty {
+                filteredItems = filteredItems.filter { item in
+                    !viewModel.selectedTags.isDisjoint(with: Set(item.allTags))
+                }
+            }
+
+            // Apply COE filter
+            if !viewModel.selectedCOEs.isEmpty {
+                filteredItems = filteredItems.filter { item in
+                    if let coe = item.catalogItem.coe {
+                        return viewModel.selectedCOEs.contains(coe)
+                    }
+                    return false
+                }
+            }
+
+            counts[storeName] = filteredItems.count
+        }
+        return counts
+    }
+
+    private var inventoryTypeCounts: [String: Int] {
+        // Count items per inventory type based on current filters (excluding inventory type filter itself)
+        var allItems = viewModel.shoppingLists.values.flatMap { $0.items }
+
+        // Apply all filters EXCEPT inventory type
+        // Apply search filter
+        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
+            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
+            allItems = allItems.filter { item in
+                let allFields = [
+                    item.catalogItem.name,
+                    item.catalogItem.stable_id,
+                    item.catalogItem.manufacturer
+                ]
+                return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+            }
+        }
+
+        // Apply product type filter
+        if !viewModel.selectedProductTypes.isEmpty {
+            allItems = allItems.filter { item in
+                viewModel.selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
+        // Apply manufacturer filter
+        if !viewModel.selectedManufacturers.isEmpty {
+            allItems = allItems.filter { item in
+                viewModel.selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        }
+
+        // Apply tag filter
+        if !viewModel.selectedTags.isEmpty {
+            allItems = allItems.filter { item in
+                !viewModel.selectedTags.isDisjoint(with: Set(item.allTags))
+            }
+        }
+
+        // Apply COE filter
+        if !viewModel.selectedCOEs.isEmpty {
+            allItems = allItems.filter { item in
+                if let coe = item.catalogItem.coe {
+                    return viewModel.selectedCOEs.contains(coe)
+                }
+                return false
+            }
+        }
+
+        // Apply store filter
+        if let selectedStore = viewModel.selectedStore {
+            allItems = allItems.filter { item in
+                item.shoppingListItem.store == selectedStore
+            }
+        }
+
+        // Count items per type
+        var counts: [String: Int] = [:]
+        for item in allItems {
+            counts[item.shoppingListItem.type, default: 0] += 1
         }
         return counts
     }
@@ -435,7 +660,15 @@ struct ShoppingListView: View {
                     storeFilter: .init(
                         selectedStore: $viewModel.selectedStore,
                         availableStores: allAvailableStores,
+                        itemCounts: storeCounts,
                         onClear: { viewModel.selectedStore = nil }
+                    ),
+                    inventoryTypeFilter: .init(
+                        selectedType: $viewModel.selectedInventoryType,
+                        availableTypes: viewModel.availableInventoryTypes,
+                        itemCounts: inventoryTypeCounts,
+                        displayName: { GlassTerminologySettings.shared.displayName(for: $0) },
+                        onClear: { viewModel.selectedInventoryType = nil }
                     ),
                     coeFilter: .init(
                         selectedCOEs: $viewModel.selectedCOEs,

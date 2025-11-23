@@ -219,8 +219,9 @@ struct StoreMapView: View {
 
     /// Open store location in Apple Maps for turn-by-turn directions
     private func openInMaps(store: UnifiedLocationModel) {
-        let placemark = MKPlacemark(coordinate: store.coordinate)
-        let mapItem = MKMapItem(placemark: placemark)
+        // iOS 26+ API: Use MKMapItem(location:address:) instead of MKPlacemark
+        let location = CLLocation(latitude: store.coordinate.latitude, longitude: store.coordinate.longitude)
+        let mapItem = MKMapItem(location: location, address: nil)
         mapItem.name = store.name
         mapItem.openInMaps(launchOptions: [
             MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving

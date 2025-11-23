@@ -38,7 +38,6 @@ final class BackgroundUpdateService {
 
         // Check if enough time has passed since last check
         guard shouldCheckForUpdates() else {
-            log.debug("⏰ Not enough time has passed since last update check")
             return
         }
 
@@ -68,25 +67,19 @@ final class BackgroundUpdateService {
                 return
             }
 
-            log.info("📦 Update available: v\(updateInfo.availableVersion)")
-
             // Mark update as available for badge display
             preferences.hasUpdateAvailable = true
 
             // Check if we should auto-download
             guard shouldAutoDownload() else {
-                log.info("⏸️ Auto-download conditions not met (network policy)")
                 return
             }
 
             // Download and install the update
-            log.info("⬇️ Auto-downloading catalog update")
             let result = try await updateService.downloadAndInstallUpdate(
                 updateInfo: updateInfo,
                 force: false  // Respect network policy
             )
-
-            log.info("✅ Background update completed: v\(result.version), +\(result.itemsCreated) items created, ~\(result.itemsUpdated) items updated")
 
             // Clear update available badge
             preferences.hasUpdateAvailable = false

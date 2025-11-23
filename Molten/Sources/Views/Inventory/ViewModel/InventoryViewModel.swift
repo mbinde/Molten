@@ -26,10 +26,12 @@ class InventoryViewModel: InventoryViewModelProtocol {
     var searchText = ""
     var searchTitlesOnly = false
     var selectedTypes: Set<String> = [] // String types instead of enum
+    var selectedInventoryType: String? = nil // Single inventory type filter for dropdown (nil = all kinds)
     var selectedProductTypes: Set<String> = [] // Product type filter (glass, coating, tool) - defaults to all
     var selectedTags: Set<String> = []
     var selectedCOEs: Set<Int32> = []
     var selectedManufacturers: Set<String> = []
+    var selectedLocation: String? = nil // Location filter (nil = all locations)
     var sortOption: InventorySortOption = .name
     
     init(inventoryTrackingService: InventoryTrackingService, catalogService: CatalogService? = nil) {
@@ -146,11 +148,29 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        // Apply inventory type filter (rod, tube, frit, etc.)
+        // Apply inventory type filter (rod, tube, frit, etc.) - single selection from dropdown
+        if let inventoryType = selectedInventoryType {
+            filtered = filtered.filter { item in
+                item.inventory.contains { inventory in
+                    inventory.type == inventoryType
+                }
+            }
+        }
+
+        // Legacy multi-select inventory type filter (keep for backwards compatibility if used elsewhere)
         if !selectedTypes.isEmpty {
             filtered = filtered.filter { item in
                 item.inventory.contains { inventory in
                     selectedTypes.contains(inventory.type)
+                }
+            }
+        }
+
+        // Apply location filter
+        if let location = selectedLocation {
+            filtered = filtered.filter { item in
+                item.inventory.contains { inventory in
+                    inventory.location == location
                 }
             }
         }
@@ -317,6 +337,14 @@ class InventoryViewModel: InventoryViewModelProtocol {
         computeTagCounts()
     }
 
+    var locationCounts: [String: Int] {
+        computeLocationCounts()
+    }
+
+    var inventoryTypeCounts: [String: Int] {
+        computeInventoryTypeCounts()
+    }
+
     // MARK: - Filter Count Computation
 
     /// Count items per manufacturer based on current filters (excluding manufacturer filter itself)
@@ -324,6 +352,12 @@ class InventoryViewModel: InventoryViewModelProtocol {
         var items = completeItems.filter { $0.totalQuantity > 0 }
 
         // Apply all filters EXCEPT manufacturer
+        if !selectedProductTypes.isEmpty {
+            items = items.filter { item in
+                selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
         if !selectedTags.isEmpty {
             items = items.filter { item in
                 !selectedTags.isDisjoint(with: Set(item.allTags))
@@ -340,6 +374,14 @@ class InventoryViewModel: InventoryViewModelProtocol {
             items = items.filter { item in
                 item.inventory.contains { inventory in
                     selectedTypes.contains(inventory.type)
+                }
+            }
+        }
+
+        if let location = selectedLocation {
+            items = items.filter { item in
+                item.inventory.contains { inventory in
+                    inventory.location == location
                 }
             }
         }
@@ -370,9 +412,142 @@ class InventoryViewModel: InventoryViewModelProtocol {
         var items = completeItems.filter { $0.totalQuantity > 0 }
 
         // Apply all filters EXCEPT COE
+        if !selectedProductTypes.isEmpty {
+            items = items.filter { item in
+                selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
         if !selectedManufacturers.isEmpty {
             items = items.filter { item in
                 selectedManufacturers.contains(item.glassItem.manufacturer)
+            }
+        }
+
+        if !selectedTags.isEmpty {
+            items = items.filter { item in
+                !selectedTags.isDisjoint(with: Set(item.allTags))
+            }
+        }
+
+        if !selectedTypes.isEmpty {
+            items = items.filter { item in
+                item.inventory.contains { inventory in
+                    selectedTypes.contains(inventory.type)
+                }
+            }
+        }
+
+        if let location = selectedLocation {
+            items = items.filter { item in
+                item.inventory.contains { inventory in
+                    inventory.location == location
+                }
+            }
+        }
+
+        if !searchText.isEmpty {
+            items = items.filter { item in
+                let name = item.glassItem.name
+                let manufacturer = item.glassItem.manufacturer
+                let sku = item.glassItem.sku ?? ""
+                let stableId = item.glassItem.stable_id
+
+                return name.localizedCaseInsensitiveContains(searchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
+                       sku.localizedCaseInsensitiveContains(searchText) ||
+                       stableId.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        var counts: [Int32: Int] = [:]
+        for item in items {
+            counts[item.glassItem.coe, default: 0] += 1
+        }
+        return counts
+    }
+
+    /// Count items per tag based on current filters (excluding tag filter itself)
+    private func computeTagCounts() -> [String: Int] {
+        var items = completeItems.filter { $0.totalQuantity > 0 }
+
+        // Apply all filters EXCEPT tags
+        if !selectedProductTypes.isEmpty {
+            items = items.filter { item in
+                selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
+        if !selectedManufacturers.isEmpty {
+            items = items.filter { item in
+                selectedManufacturers.contains(item.glassItem.manufacturer)
+            }
+        }
+
+        if !selectedCOEs.isEmpty {
+            items = items.filter { item in
+                selectedCOEs.contains(item.glassItem.coe)
+            }
+        }
+
+        if !selectedTypes.isEmpty {
+            items = items.filter { item in
+                item.inventory.contains { inventory in
+                    selectedTypes.contains(inventory.type)
+                }
+            }
+        }
+
+        if let location = selectedLocation {
+            items = items.filter { item in
+                item.inventory.contains { inventory in
+                    inventory.location == location
+                }
+            }
+        }
+
+        if !searchText.isEmpty {
+            items = items.filter { item in
+                let name = item.glassItem.name
+                let manufacturer = item.glassItem.manufacturer
+                let sku = item.glassItem.sku ?? ""
+                let stableId = item.glassItem.stable_id
+
+                return name.localizedCaseInsensitiveContains(searchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
+                       sku.localizedCaseInsensitiveContains(searchText) ||
+                       stableId.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        var counts: [String: Int] = [:]
+        for item in items {
+            for tag in item.allTags {
+                counts[tag, default: 0] += 1
+            }
+        }
+        return counts
+    }
+
+    private func computeLocationCounts() -> [String: Int] {
+        var items = completeItems.filter { $0.totalQuantity > 0 }
+
+        // Apply all filters EXCEPT location
+        if !selectedProductTypes.isEmpty {
+            items = items.filter { item in
+                selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
+        if !selectedManufacturers.isEmpty {
+            items = items.filter { item in
+                selectedManufacturers.contains(item.glassItem.manufacturer)
+            }
+        }
+
+        if !selectedCOEs.isEmpty {
+            items = items.filter { item in
+                selectedCOEs.contains(item.glassItem.coe)
             }
         }
 
@@ -404,18 +579,28 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        var counts: [Int32: Int] = [:]
+        var counts: [String: Int] = [:]
         for item in items {
-            counts[item.glassItem.coe, default: 0] += 1
+            // Count each unique item once per location (get distinct locations for this item)
+            let itemLocations = Set(item.inventory.compactMap { $0.location }.filter { !$0.isEmpty })
+            for location in itemLocations {
+                counts[location, default: 0] += 1
+            }
         }
         return counts
     }
 
-    /// Count items per tag based on current filters (excluding tag filter itself)
-    private func computeTagCounts() -> [String: Int] {
+    /// Count items per inventory type based on current filters (excluding inventory type filter itself)
+    private func computeInventoryTypeCounts() -> [String: Int] {
         var items = completeItems.filter { $0.totalQuantity > 0 }
 
-        // Apply all filters EXCEPT tags
+        // Apply all filters EXCEPT inventory type
+        if !selectedProductTypes.isEmpty {
+            items = items.filter { item in
+                selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
         if !selectedManufacturers.isEmpty {
             items = items.filter { item in
                 selectedManufacturers.contains(item.glassItem.manufacturer)
@@ -428,10 +613,16 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        if !selectedTypes.isEmpty {
+        if !selectedTags.isEmpty {
+            items = items.filter { item in
+                !selectedTags.isDisjoint(with: Set(item.allTags))
+            }
+        }
+
+        if let location = selectedLocation {
             items = items.filter { item in
                 item.inventory.contains { inventory in
-                    selectedTypes.contains(inventory.type)
+                    inventory.location == location
                 }
             }
         }
@@ -452,8 +643,10 @@ class InventoryViewModel: InventoryViewModelProtocol {
 
         var counts: [String: Int] = [:]
         for item in items {
-            for tag in item.allTags {
-                counts[tag, default: 0] += 1
+            // Count each unique item once per inventory type (get distinct types for this item)
+            let itemTypes = Set(item.inventory.map { $0.type })
+            for type in itemTypes {
+                counts[type, default: 0] += 1
             }
         }
         return counts

@@ -106,14 +106,13 @@ struct StoreDetailView: View {
     // MARK: - Subviews
 
     private var mapView: some View {
-        Map(coordinateRegion: $region, annotationItems: [store]) { store in
-            MapMarker(
-                coordinate: CLLocationCoordinate2D(
-                    latitude: store.latitude,
-                    longitude: store.longitude
-                ),
-                tint: Color.accentColor
-            )
+        // iOS 17+ API: Use Map with MapContentBuilder
+        Map(position: .constant(.region(region))) {
+            Marker(store.name, coordinate: CLLocationCoordinate2D(
+                latitude: store.latitude,
+                longitude: store.longitude
+            ))
+            .tint(Color.accentColor)
         }
         .frame(height: 200)
         .cornerRadius(DesignSystem.CornerRadius.large)
@@ -320,8 +319,9 @@ struct StoreDetailView: View {
             longitude: store.longitude ?? 0
         )
 
-        let placemark = MKPlacemark(coordinate: coordinate)
-        let mapItem = MKMapItem(placemark: placemark)
+        // iOS 26+ API: Use MKMapItem(location:address:) instead of MKPlacemark
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let mapItem = MKMapItem(location: location, address: nil)
         mapItem.name = store.name
 
         mapItem.openInMaps(launchOptions: [

@@ -16,6 +16,11 @@
 import SwiftUI
 import Foundation
 
+enum CatalogSearchScope: String, CaseIterable {
+    case allFields = "All fields"
+    case titlesOnly = "Only titles"
+}
+
 // Navigation destinations for CatalogView NavigationStack - NEW: Updated for GlassItem architecture
 enum CatalogNavigationDestination: Hashable {
     case addInventoryItem(stableId: String)
@@ -25,6 +30,9 @@ enum CatalogNavigationDestination: Hashable {
 struct CatalogView: View {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data ✓
     @State private var viewModel: CatalogViewModel
+
+    // Search scope state
+    @State private var searchScope: CatalogSearchScope = .allFields
 
     // Performance timing (DEBUG builds only)
     @State private var performanceTimer = PerformanceTimer()
@@ -338,6 +346,14 @@ struct CatalogView: View {
                 placement: .navigationBarDrawer(displayMode: .always),
                 prompt: "Search colors, codes, manufacturers..."
             )
+            .searchScopes($searchScope, activation: .onSearchPresentation) {
+                ForEach(CatalogSearchScope.allCases, id: \.self) { scope in
+                    Text(scope.rawValue)
+                }
+            }
+            .onChange(of: searchScope) { oldValue, newValue in
+                viewModel.searchTitlesOnly = (newValue == .titlesOnly)
+            }
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
             .onChange(of: viewModel.searchText) { oldValue, newValue in
@@ -358,7 +374,7 @@ struct CatalogView: View {
             .modifier(CatalogSheetModifiers(
                 showingAllTags: $showingAllTags,
                 showingCOESelection: $showingCOESelection,
-                showingManufacturerSelection: $showingManufacturerSelection,
+                showingManufacturerSelection: $showingManufacturerFilterSelection,
                 allAvailableTags: allAvailableTags,
                 allUserTags: allUserTags,
                 selectedTags: $viewModel.selectedTags,
@@ -367,8 +383,9 @@ struct CatalogView: View {
                 selectedCOEs: $viewModel.selectedCOEs,
                 coeCounts: coeCounts,
                 availableManufacturers: availableManufacturers,
-                selectedManufacturer: $viewModel.selectedManufacturer,
-                manufacturerDisplayName: manufacturerDisplayName
+                selectedManufacturers: $viewModel.selectedManufacturers,
+                manufacturerDisplayName: manufacturerDisplayName,
+                manufacturerCounts: manufacturerCounts
             ))
             .modifier(CatalogLifecycleModifiers(
                 userDefaults: userDefaults,
@@ -500,7 +517,6 @@ extension CatalogView {
 
     private func refreshData() async {
         // MIGRATION: Use ViewModel refresh instead of cache
-        print("📊 CatalogView: Refresh requested - reloading via ViewModel")
         await viewModel.refreshData()
     }
     

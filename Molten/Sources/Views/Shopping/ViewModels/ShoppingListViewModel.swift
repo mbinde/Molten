@@ -80,6 +80,22 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
         }
     }
 
+    var selectedProductTypes: Set<String> = [] {
+        didSet {
+            if selectedProductTypes != oldValue {
+                applyFilters()
+            }
+        }
+    }
+
+    var selectedInventoryType: String? = nil {
+        didSet {
+            if selectedInventoryType != oldValue {
+                applyFilters()
+            }
+        }
+    }
+
     // MARK: - Sort State
 
     var sortOption: ShoppingListSortOption = .neededQuantity {
@@ -135,13 +151,13 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
 
     var availableCOEs: [Int32] {
         let allItems = shoppingLists.values.flatMap { $0.items }
-        let coeSet = Set(allItems.map { $0.glassItem.coe })
+        let coeSet = Set(allItems.compactMap { $0.catalogItem.coe })
         return Array(coeSet).sorted()
     }
 
     var availableManufacturers: [String] {
         let allItems = shoppingLists.values.flatMap { $0.items }
-        let mfgSet = Set(allItems.map { $0.glassItem.manufacturer })
+        let mfgSet = Set(allItems.map { $0.catalogItem.manufacturer })
         return Array(mfgSet).sorted()
     }
 
@@ -149,6 +165,12 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
         let allItems = shoppingLists.values.flatMap { $0.items }
         let storesSet = Set(allItems.map { $0.shoppingListItem.store })
         return Array(storesSet).sorted()
+    }
+
+    var availableInventoryTypes: [String] {
+        let allItems = shoppingLists.values.flatMap { $0.items }
+        let typesSet = Set(allItems.map { $0.shoppingListItem.type })
+        return Array(typesSet).sorted()
     }
 
     // MARK: - Data Loading
@@ -230,12 +252,19 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
             let searchLower = searchText.lowercased()
             allItems = allItems.filter { item in
                 if searchTitlesOnly {
-                    return item.glassItem.name.lowercased().contains(searchLower)
+                    return item.catalogItem.name.lowercased().contains(searchLower)
                 } else {
-                    return item.glassItem.name.lowercased().contains(searchLower) ||
-                           item.glassItem.manufacturer.lowercased().contains(searchLower) ||
+                    return item.catalogItem.name.lowercased().contains(searchLower) ||
+                           item.catalogItem.manufacturer.lowercased().contains(searchLower) ||
                            item.allTags.contains(where: { $0.lowercased().contains(searchLower) })
                 }
+            }
+        }
+
+        // Apply product type filter
+        if !selectedProductTypes.isEmpty {
+            allItems = allItems.filter { item in
+                selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
             }
         }
 
@@ -246,17 +275,20 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
             }
         }
 
-        // Apply COE filter
+        // Apply COE filter (only for glass items)
         if !selectedCOEs.isEmpty {
             allItems = allItems.filter { item in
-                selectedCOEs.contains(item.glassItem.coe)
+                if let coe = item.catalogItem.coe {
+                    return selectedCOEs.contains(coe)
+                }
+                return false
             }
         }
 
         // Apply manufacturer filter
         if !selectedManufacturers.isEmpty {
             allItems = allItems.filter { item in
-                selectedManufacturers.contains(item.glassItem.manufacturer)
+                selectedManufacturers.contains(item.catalogItem.manufacturer)
             }
         }
 
@@ -264,6 +296,13 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
         if let store = selectedStore {
             allItems = allItems.filter { item in
                 item.shoppingListItem.store == store
+            }
+        }
+
+        // Apply inventory type filter (Kind)
+        if let inventoryType = selectedInventoryType {
+            allItems = allItems.filter { item in
+                item.shoppingListItem.type == inventoryType
             }
         }
 
@@ -278,11 +317,11 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
         case .neededQuantity:
             return items.sorted { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
         case .itemName:
-            return items.sorted { $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending }
+            return items.sorted { $0.catalogItem.name.localizedCaseInsensitiveCompare($1.catalogItem.name) == .orderedAscending }
         case .store:
             return items.sorted { $0.shoppingListItem.store.localizedCaseInsensitiveCompare($1.shoppingListItem.store) == .orderedAscending }
         case .manufacturer:
-            return items.sorted { $0.glassItem.manufacturer.localizedCaseInsensitiveCompare($1.glassItem.manufacturer) == .orderedAscending }
+            return items.sorted { $0.catalogItem.manufacturer.localizedCaseInsensitiveCompare($1.catalogItem.manufacturer) == .orderedAscending }
         }
     }
 }

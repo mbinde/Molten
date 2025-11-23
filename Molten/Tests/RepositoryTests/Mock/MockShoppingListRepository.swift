@@ -118,13 +118,13 @@ final class MockShoppingListRepository: ShoppingListRepository {
         guard exists else {
             throw MockShoppingListRepositoryError.itemNotFound
         }
-        lock.withLock { items.removeValue(forKey: id) }
+        _ = lock.withLock { items.removeValue(forKey: id) }
     }
 
     func deleteItem(forItem item_stable_id: String) async throws {
         if let item = try await fetchItem(forItem: item_stable_id) {
             let itemId = await item.id
-            lock.withLock { items.removeValue(forKey: itemId) }
+            _ = lock.withLock { items.removeValue(forKey: itemId) }
         }
     }
 
@@ -151,6 +151,35 @@ final class MockShoppingListRepository: ShoppingListRepository {
             id: existingId,
             item_stable_id: existingItemId,
             quantity: quantity,
+            store: existingStore,
+            type: existingType,
+            subtype: existingSubtype,
+            subsubtype: existingSubsubtype,
+            dateAdded: existingDate
+        )
+
+        lock.withLock { items[existingId] = updated }
+        return updated
+    }
+
+    func updateNeededQuantity(forItem item_stable_id: String, neededQuantity: Double) async throws -> ItemShoppingModel {
+        guard let existing = try await fetchItem(forItem: item_stable_id) else {
+            throw MockShoppingListRepositoryError.itemNotFound
+        }
+
+        let existingId = await existing.id
+        let existingItemId = await existing.item_stable_id
+        let existingQuantity = await existing.quantity
+        let existingStore = await existing.store
+        let existingType = await existing.type
+        let existingSubtype = await existing.subtype
+        let existingSubsubtype = await existing.subsubtype
+        let existingDate = await existing.dateAdded
+
+        let updated = ItemShoppingModel(
+            id: existingId,
+            item_stable_id: existingItemId,
+            quantity: existingQuantity,
             store: existingStore,
             type: existingType,
             subtype: existingSubtype,

@@ -41,13 +41,11 @@ class CatalogDataCache: ObservableObject {
 
         // If already loaded or currently loading, return immediately
         guard !isLoaded && !isLoading else {
-            print("📦 Cache: Data already loaded or loading, skipping")
             return
         }
 
         // If there's an existing load task, wait for it
         if let existingTask = loadTask {
-            print("📦 Cache: Waiting for existing load task...")
             await existingTask.value
             return
         }
@@ -63,14 +61,12 @@ class CatalogDataCache: ObservableObject {
 
     /// Force reload of catalog data
     func reload(catalogService: CatalogService) async {
-        print("📦 Cache: Force reload requested")
         isLoaded = false
         await loadIfNeeded(catalogService: catalogService)
     }
 
     /// Clear the cache (for testing or logout scenarios)
     func clear() {
-        print("📦 Cache: Clearing cache")
         items = []
         isLoaded = false
         isLoading = false
@@ -88,7 +84,6 @@ class CatalogDataCache: ObservableObject {
         // Tests should explicitly call reload() when they need fresh data
         #if DEBUG
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
-            print("📦 Cache: Skipping auto-reload setup in test environment")
             return
         }
         #endif
@@ -119,7 +114,6 @@ class CatalogDataCache: ObservableObject {
                 if hasRelevantChanges {
                     Task { @MainActor [weak self] in
                         guard let self = self else { return }
-                        print("📦 Cache: Detected data changes, auto-reloading...")
                         if let service = self.catalogService {
                             await self.reload(catalogService: service)
                         } else {
@@ -133,17 +127,14 @@ class CatalogDataCache: ObservableObject {
     }
 
     private func performLoad(catalogService: CatalogService) async {
-        print("📦 Cache: Starting load...")
         isLoading = true
 
         do {
             let loadedItems = try await catalogService.getAllGlassItems()
-            print("📦 Cache: Loaded \(loadedItems.count) items")
 
             items = loadedItems
             isLoaded = true
         } catch {
-            print("📦 Cache: Load failed: \(error)")
             // Keep cache in "not loaded" state so it will retry
             items = []
             isLoaded = false

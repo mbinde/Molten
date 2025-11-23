@@ -7,6 +7,11 @@
 
 import SwiftUI
 
+enum SearchScope: String, CaseIterable {
+    case allFields = "All fields"
+    case titlesOnly = "Only titles"
+}
+
 struct ShoppingListView: View {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data
     @State private var viewModel: ShoppingListViewModel
@@ -14,6 +19,7 @@ struct ShoppingListView: View {
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
     private let purchaseService: PurchaseRecordService
+    private let subscriptionService: SubscriptionServiceProtocol
     private let userNotesRepository: UserNotesRepository
     private let userTagsRepository: UserTagsRepository
     private let shoppingListRepository: ShoppingListRepository
@@ -24,6 +30,7 @@ struct ShoppingListView: View {
     private let glassItemRepository: GlassItemRepository
 
     // UI-only state (not in ViewModel)
+    @State private var searchScope: SearchScope = .allFields
     @State private var showingAllTags = false
     @State private var showingCOESelection = false
     @State private var selectedProductTypes: Set<String> = []  // Not used in shopping list, but required by SearchAndFilterHeader
@@ -40,6 +47,7 @@ struct ShoppingListView: View {
     @State private var showingExitShoppingModeAlert = false
     @State private var showingCheckoutSheet = false
     @State private var shoppingModeInstructionsExpanded = true
+    @State private var toAddToBasketExpanded = true
 
     // Collapsible store sections state
     @State private var expandedStores: Set<String> = []
@@ -58,6 +66,7 @@ struct ShoppingListView: View {
          catalogService: CatalogService,
          inventoryTrackingService: InventoryTrackingService,
          purchaseService: PurchaseRecordService,
+         subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService,
          userNotesRepository: UserNotesRepository,
          userTagsRepository: UserTagsRepository,
          shoppingListRepository: ShoppingListRepository,
@@ -69,6 +78,7 @@ struct ShoppingListView: View {
         self.catalogService = catalogService
         self.inventoryTrackingService = inventoryTrackingService
         self.purchaseService = purchaseService
+        self.subscriptionService = subscriptionService
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
@@ -82,6 +92,7 @@ struct ShoppingListView: View {
          catalogService: CatalogService,
          inventoryTrackingService: InventoryTrackingService,
          purchaseService: PurchaseRecordService,
+         subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService,
          userNotesRepository: UserNotesRepository,
          userTagsRepository: UserTagsRepository,
          shoppingListRepository: ShoppingListRepository,
@@ -92,6 +103,7 @@ struct ShoppingListView: View {
         self.catalogService = catalogService
         self.inventoryTrackingService = inventoryTrackingService
         self.purchaseService = purchaseService
+        self.subscriptionService = subscriptionService
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
@@ -165,9 +177,11 @@ struct ShoppingListView: View {
 
         for item in allItems {
             allTagsSet.formUnion(item.tags)
-            allCOEsSet.insert(item.glassItem.coe)
+            if let coe = item.catalogItem.coe {
+                allCOEsSet.insert(coe)
+            }
 
-            let mfr = item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            let mfr = item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
             if !mfr.isEmpty {
                 manufacturersSet.insert(mfr)
             }
@@ -193,10 +207,10 @@ struct ShoppingListView: View {
             filtered = filtered.mapValues { list in
                 let filteredItems = list.items.filter { item in
                     let allFields = [
-                        item.glassItem.name,
-                        item.glassItem.stable_id,
-                        item.glassItem.manufacturer,
-                        item.glassItem.sku
+                        item.catalogItem.name,
+                        item.catalogItem.stable_id,
+                        item.catalogItem.manufacturer,
+                        item.catalogItem.sku
                     ]
                     return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
                 }
@@ -222,11 +236,14 @@ struct ShoppingListView: View {
             }.filter { !$0.value.items.isEmpty }
         }
 
-        // Apply COE filter
+        // Apply COE filter (only applies to glass items)
         if !viewModel.selectedCOEs.isEmpty {
             filtered = filtered.mapValues { list in
                 let filteredItems = list.items.filter { item in
-                    viewModel.selectedCOEs.contains(item.glassItem.coe)
+                    if let coe = item.catalogItem.coe {
+                        return viewModel.selectedCOEs.contains(coe)
+                    }
+                    return false  // Coatings/tools without COE are excluded
                 }
                 return DetailedShoppingListModel(
                     store: list.store,
@@ -240,7 +257,21 @@ struct ShoppingListView: View {
         if !viewModel.selectedManufacturers.isEmpty {
             filtered = filtered.mapValues { list in
                 let filteredItems = list.items.filter { item in
-                    viewModel.selectedManufacturers.contains(item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                    viewModel.selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                }
+                return DetailedShoppingListModel(
+                    store: list.store,
+                    items: filteredItems,
+                    totalItems: filteredItems.count
+                )
+            }.filter { !$0.value.items.isEmpty }
+        }
+
+        // Apply inventory type filter (Kind)
+        if let inventoryType = viewModel.selectedInventoryType {
+            filtered = filtered.mapValues { list in
+                let filteredItems = list.items.filter { item in
+                    item.shoppingListItem.type == inventoryType
                 }
                 return DetailedShoppingListModel(
                     store: list.store,
@@ -270,7 +301,7 @@ struct ShoppingListView: View {
         case .neededQuantity:
             return allItems.sorted { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
         case .itemName:
-            return allItems.sorted { $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending }
+            return allItems.sorted { $0.catalogItem.name.localizedCaseInsensitiveCompare($1.catalogItem.name) == .orderedAscending }
         case .store, .manufacturer:
             // Group by store or manufacturer (handled separately)
             return allItems
@@ -279,11 +310,19 @@ struct ShoppingListView: View {
 
     // Items split by basket status (for shopping mode)
     private var itemsNotInBasket: [DetailedShoppingListItemModel] {
-        allFlattenedItems.filter { !shoppingModeState.isInBasket(item_stable_id: $0.glassItem.stable_id) }
+        allFlattenedItems.filter { !shoppingModeState.isInBasket(item_stable_id: $0.catalogItem.stable_id) }
     }
 
     private var itemsInBasket: [DetailedShoppingListItemModel] {
-        allFlattenedItems.filter { shoppingModeState.isInBasket(item_stable_id: $0.glassItem.stable_id) }
+        allFlattenedItems.filter { shoppingModeState.isInBasket(item_stable_id: $0.catalogItem.stable_id) }
+    }
+
+    private var itemsInBasketCount: Int {
+        itemsInBasket.count
+    }
+
+    private var totalItemsInViewCount: Int {
+        allFlattenedItems.count
     }
 
     private var sortedStores: [String] {
@@ -310,7 +349,7 @@ struct ShoppingListView: View {
         var grouped: [String: [DetailedShoppingListItemModel]] = [:]
 
         for item in allItems {
-            let manufacturer = item.glassItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
+            let manufacturer = item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines)
             grouped[manufacturer, default: []].append(item)
         }
 
@@ -363,7 +402,52 @@ struct ShoppingListView: View {
 
     /// Count items per tag based on current filters (excluding tag filter itself)
     private var tagCounts: [String: Int] {
-        let allItems = viewModel.shoppingLists.values.flatMap { $0.items }
+        var allItems = viewModel.shoppingLists.values.flatMap { $0.items }
+
+        // Apply all filters EXCEPT tags
+        // Apply search filter
+        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
+            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
+            allItems = allItems.filter { item in
+                let allFields = [
+                    item.catalogItem.name,
+                    item.catalogItem.stable_id,
+                    item.catalogItem.manufacturer
+                ]
+                return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+            }
+        }
+
+        // Apply product type filter
+        if !viewModel.selectedProductTypes.isEmpty {
+            allItems = allItems.filter { item in
+                viewModel.selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
+        // Apply manufacturer filter
+        if !viewModel.selectedManufacturers.isEmpty {
+            allItems = allItems.filter { item in
+                viewModel.selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        }
+
+        // Apply COE filter
+        if !viewModel.selectedCOEs.isEmpty {
+            allItems = allItems.filter { item in
+                if let coe = item.catalogItem.coe {
+                    return viewModel.selectedCOEs.contains(coe)
+                }
+                return false
+            }
+        }
+
+        // Apply store filter
+        if let selectedStore = viewModel.selectedStore {
+            allItems = allItems.filter { item in
+                item.shoppingListItem.store == selectedStore
+            }
+        }
 
         // Count items per tag
         var counts: [String: Int] = [:]
@@ -375,73 +459,294 @@ struct ShoppingListView: View {
         return counts
     }
 
+    private var manufacturerCounts: [String: Int] {
+        var allItems = viewModel.shoppingLists.values.flatMap { $0.items }
+
+        // Apply all filters EXCEPT manufacturer
+        // Apply search filter
+        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
+            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
+            allItems = allItems.filter { item in
+                let allFields = [
+                    item.catalogItem.name,
+                    item.catalogItem.stable_id,
+                    item.catalogItem.manufacturer
+                ]
+                return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+            }
+        }
+
+        // Apply product type filter
+        if !viewModel.selectedProductTypes.isEmpty {
+            allItems = allItems.filter { item in
+                viewModel.selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
+        // Apply tag filter
+        if !viewModel.selectedTags.isEmpty {
+            allItems = allItems.filter { item in
+                !viewModel.selectedTags.isDisjoint(with: Set(item.allTags))
+            }
+        }
+
+        // Apply COE filter
+        if !viewModel.selectedCOEs.isEmpty {
+            allItems = allItems.filter { item in
+                if let coe = item.catalogItem.coe {
+                    return viewModel.selectedCOEs.contains(coe)
+                }
+                return false
+            }
+        }
+
+        // Apply store filter
+        if let selectedStore = viewModel.selectedStore {
+            allItems = allItems.filter { item in
+                item.shoppingListItem.store == selectedStore
+            }
+        }
+
+        // Count items per manufacturer
+        var counts: [String: Int] = [:]
+        for item in allItems {
+            let manufacturer = item.catalogItem.manufacturer
+            counts[manufacturer, default: 0] += 1
+        }
+        return counts
+    }
+
+    private var storeCounts: [String: Int] {
+        // Count items per store based on current filters (excluding store filter itself)
+        var counts: [String: Int] = [:]
+
+        for (storeName, shoppingList) in viewModel.shoppingLists {
+            var filteredItems = shoppingList.items
+
+            // Apply all filters EXCEPT store
+            // Apply search filter
+            if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
+                let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
+                filteredItems = filteredItems.filter { item in
+                    let allFields = [
+                        item.catalogItem.name,
+                        item.catalogItem.stable_id,
+                        item.catalogItem.manufacturer
+                    ]
+                    return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+                }
+            }
+
+            // Apply product type filter
+            if !viewModel.selectedProductTypes.isEmpty {
+                filteredItems = filteredItems.filter { item in
+                    viewModel.selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+                }
+            }
+
+            // Apply manufacturer filter
+            if !viewModel.selectedManufacturers.isEmpty {
+                filteredItems = filteredItems.filter { item in
+                    viewModel.selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                }
+            }
+
+            // Apply tag filter
+            if !viewModel.selectedTags.isEmpty {
+                filteredItems = filteredItems.filter { item in
+                    !viewModel.selectedTags.isDisjoint(with: Set(item.allTags))
+                }
+            }
+
+            // Apply COE filter
+            if !viewModel.selectedCOEs.isEmpty {
+                filteredItems = filteredItems.filter { item in
+                    if let coe = item.catalogItem.coe {
+                        return viewModel.selectedCOEs.contains(coe)
+                    }
+                    return false
+                }
+            }
+
+            counts[storeName] = filteredItems.count
+        }
+        return counts
+    }
+
+    private var inventoryTypeCounts: [String: Int] {
+        // Count items per inventory type based on current filters (excluding inventory type filter itself)
+        var allItems = viewModel.shoppingLists.values.flatMap { $0.items }
+
+        // Apply all filters EXCEPT inventory type
+        // Apply search filter
+        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
+            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
+            allItems = allItems.filter { item in
+                let allFields = [
+                    item.catalogItem.name,
+                    item.catalogItem.stable_id,
+                    item.catalogItem.manufacturer
+                ]
+                return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+            }
+        }
+
+        // Apply product type filter
+        if !viewModel.selectedProductTypes.isEmpty {
+            allItems = allItems.filter { item in
+                viewModel.selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
+        // Apply manufacturer filter
+        if !viewModel.selectedManufacturers.isEmpty {
+            allItems = allItems.filter { item in
+                viewModel.selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        }
+
+        // Apply tag filter
+        if !viewModel.selectedTags.isEmpty {
+            allItems = allItems.filter { item in
+                !viewModel.selectedTags.isDisjoint(with: Set(item.allTags))
+            }
+        }
+
+        // Apply COE filter
+        if !viewModel.selectedCOEs.isEmpty {
+            allItems = allItems.filter { item in
+                if let coe = item.catalogItem.coe {
+                    return viewModel.selectedCOEs.contains(coe)
+                }
+                return false
+            }
+        }
+
+        // Apply store filter
+        if let selectedStore = viewModel.selectedStore {
+            allItems = allItems.filter { item in
+                item.shoppingListItem.store == selectedStore
+            }
+        }
+
+        // Count items per type
+        var counts: [String: Int] = [:]
+        for item in allItems {
+            counts[item.shoppingListItem.type, default: 0] += 1
+        }
+        return counts
+    }
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
-                // Search and filter controls
-                // TODO: Migrate to native .searchable() with FilterChipsRow component (see CatalogView)
-                StandardSearchAndFilterHeader(
-                    searchText: $viewModel.searchText,
+                // Filter header using reusable ModernFilterHeader component
+                ModernFilterHeader(
                     searchTitlesOnly: $viewModel.searchTitlesOnly,
+                    sortOption: $viewModel.sortOption,
+                    sortOptions: Array(ShoppingListSortOption.allCases),
+                    sortOptionIcon: { $0.icon },
                     selectedTags: $viewModel.selectedTags,
                     selectedCOEs: $viewModel.selectedCOEs,
                     selectedManufacturers: $viewModel.selectedManufacturers,
-                    selectedProductTypes: $selectedProductTypes,
-                    showingAllTags: $showingAllTags,
-                    showingCOESelection: $showingCOESelection,
-                    showingManufacturerSelection: $showingManufacturerSelection,
-                    showingProductTypeSelection: $showingProductTypeSelection,
-                    allAvailableTags: allAvailableTags,
-                    allAvailableCOEs: allAvailableCOEs,
-                    allAvailableManufacturers: allAvailableManufacturers,
-                    allAvailableProductTypes: ["glass", "coating", "tool"],
-                    sortMenuContent: { sortMenuView },
-                    searchPlaceholder: "Search shopping list...",
-                    searchClearedFeedback: $searchClearedFeedback
-                )
-
-                // Store filter (if multiple stores available)
-                if allAvailableStores.count > 1 {
-                    StoreFilterButton(
-                        selectedStore: viewModel.selectedStore,
-                        onTap: { showingStoreSelection = true },
+                    showingTagsSheet: $showingAllTags,
+                    showingCOESheet: $showingCOESelection,
+                    showingManufacturerSheet: $showingManufacturerSelection,
+                    productTypeFilter: .init(
+                        selectedProductTypes: $viewModel.selectedProductTypes,
+                        availableTypes: FeatureFlags.availableProductTypes,
+                        displayName: displayNameForProductType
+                    ),
+                    storeFilter: .init(
+                        selectedStore: $viewModel.selectedStore,
+                        availableStores: allAvailableStores,
+                        itemCounts: storeCounts,
                         onClear: { viewModel.selectedStore = nil }
+                    ),
+                    inventoryTypeFilter: .init(
+                        selectedType: $viewModel.selectedInventoryType,
+                        availableTypes: viewModel.availableInventoryTypes,
+                        itemCounts: inventoryTypeCounts,
+                        displayName: { GlassTerminologySettings.shared.displayName(for: $0) },
+                        onClear: { viewModel.selectedInventoryType = nil }
+                    ),
+                    coeFilter: .init(
+                        selectedCOEs: $viewModel.selectedCOEs,
+                        availableCOEs: allAvailableCOEs
                     )
-                    .padding(.horizontal, DesignSystem.Padding.standard)
-                    .padding(.vertical, DesignSystem.Spacing.xs)
-                    .background(DesignSystem.Colors.background)
-                }
+                )
 
                 // Shopping mode instructions
                 if shoppingModeState.isShoppingModeEnabled {
-                    ShoppingModeInstructionsBanner(isExpanded: $shoppingModeInstructionsExpanded)
+                    ShoppingModeInstructionsBanner(
+                        isExpanded: $shoppingModeInstructionsExpanded,
+                        itemsInBasketCount: itemsInBasketCount,
+                        totalItemsInViewCount: totalItemsInViewCount
+                    )
                 }
 
                 // Main content
-                if viewModel.isLoading {
-                    LoadingStateView()
-                } else if filteredShoppingLists.isEmpty {
-                    if shouldShowSearchEmptyState {
-                        ShoppingListEmptyStates.searchResults(
-                            searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
-                            activeFilters: activeFiltersForEmptyState,
-                            onClearFilters: {
-                                viewModel.searchText = ""
-                                viewModel.clearFilters()
-                            }
-                        )
+                Group {
+                    if viewModel.isLoading {
+                        LoadingStateView()
+                    } else if filteredShoppingLists.isEmpty {
+                        if shouldShowSearchEmptyState {
+                            ShoppingListEmptyStates.searchResults(
+                                searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
+                                activeFilters: activeFiltersForEmptyState,
+                                onClearFilters: {
+                                    viewModel.searchText = ""
+                                    viewModel.clearFilters()
+                                }
+                            )
+                        } else {
+                            ShoppingListEmptyStates.standard(onAddItem: { showingAddItem = true })
+                        }
                     } else {
-                        ShoppingListEmptyStates.standard(onAddItem: { showingAddItem = true })
+                        shoppingListContent
                     }
-                } else {
-                    shoppingListContent
                 }
+                .id(refreshTrigger)
             }
-            .navigationTitle("Shopping List")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .searchable(
+                text: $viewModel.searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "Search shopping list..."
+            )
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
             .toolbar {
+                // Custom title: "Shopping List" or green "Checkout" button
+                ToolbarItem(placement: .principal) {
+                    if shoppingModeState.isShoppingModeEnabled {
+                        Button {
+                            if shoppingModeState.basketItemCount == 0 {
+                                // No items in basket - just cancel shopping mode
+                                cancelShoppingMode()
+                            } else {
+                                // Items in basket - proceed to checkout
+                                showingCheckoutSheet = true
+                            }
+                        } label: {
+                            Text("Checkout")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.accentColor)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        .accessibilityIdentifier("shopping.checkoutButton.title")
+                    } else {
+                        Text("Shopping List")
+                            .font(.headline)
+                    }
+                }
+
                 ToolbarItem(placement: .cancellationAction) {
                     if shoppingModeState.isShoppingModeEnabled {
                         // Cancel button when in shopping mode
@@ -454,16 +759,7 @@ struct ShoppingListView: View {
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    if shoppingModeState.isShoppingModeEnabled {
-                        // Checkout button when in shopping mode
-                        Button {
-                            showingCheckoutSheet = true
-                        } label: {
-                            Image(systemName: "checkmark.circle.fill")
-                        }
-                        .accessibilityIdentifier("shopping.checkoutButton")
-                        .disabled(shoppingModeState.basketItemCount == 0)
-                    } else {
+                    if !shoppingModeState.isShoppingModeEnabled {
                         // Start Shopping button when not in shopping mode
                         Button {
                             shoppingModeState.enableShoppingMode()
@@ -500,7 +796,8 @@ struct ShoppingListView: View {
                     selectedManufacturers: $viewModel.selectedManufacturers,
                     manufacturerDisplayName: { code in
                         GlassManufacturers.fullName(for: code) ?? code
-                    }
+                    },
+                    itemCounts: manufacturerCounts
                 )
             }
             .sheet(isPresented: $showingStoreSelection) {
@@ -566,6 +863,7 @@ struct ShoppingListView: View {
                     inventoryTrackingService: inventoryTrackingService,
                     shoppingListService: shoppingListService,
                     purchaseService: purchaseService,
+                    subscriptionService: subscriptionService,
                     onComplete: {
                         Task {
                             await loadShoppingList()
@@ -592,42 +890,125 @@ struct ShoppingListView: View {
             if shoppingModeState.isShoppingModeEnabled {
                 // Shopping mode: split into basket sections
                 if !itemsNotInBasket.isEmpty {
-                    Section(header: Text("To Add to Basket (\(itemsNotInBasket.count))")) {
-                        ForEach(itemsNotInBasket, id: \.shoppingListItem.item_stable_id) { item in
-                            GlassItemRowView.shoppingList(
-                                item: item,
-                                showStore: true,
-                                isShoppingMode: true,
-                                isInBasket: false,
-                                onBasketToggle: {
-                                    shoppingModeState.toggleBasket(item_stable_id: item.glassItem.stable_id)
+                    Section {
+                        if toAddToBasketExpanded {
+                            ForEach(itemsNotInBasket, id: \.shoppingListItem.item_stable_id) { item in
+                                let rowView = GlassItemRowView.shoppingList(
+                                    item: item,
+                                    showStore: true,
+                                    isShoppingMode: true,
+                                    isInBasket: false,
+                                    quantity: Binding(
+                                        get: {
+                                            shoppingModeState.getQuantity(for: item.catalogItem.stable_id) ?? item.shoppingListItem.neededQuantity
+                                        },
+                                        set: { newValue in
+                                            shoppingModeState.setQuantity(for: item.catalogItem.stable_id, quantity: newValue)
+                                        }
+                                    ),
+                                    onBasketToggle: {
+                                        shoppingModeState.toggleBasket(item_stable_id: item.catalogItem.stable_id)
+                                    }
+                                )
+
+                                HStack(spacing: 12) {
+                                    // Leading accessory (checkbox + quantity) stays interactive
+                                    if let leadingAccessory = rowView.leadingAccessory {
+                                        leadingAccessory
+                                    }
+
+                                    // Thumbnail (not clickable)
+                                    rowView.thumbnail
+
+                                    // Only the text content is tappable for navigation
+                                    Button {
+                                        navigationPath.append(toCompleteInventoryItem(item))
+                                    } label: {
+                                        HStack {
+                                            rowView.textContent
+                                            Spacer()
+                                            Image(systemName: "chevron.right")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                            )
-                            .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
-                        }
-                        .onDelete { indexSet in
-                            Task {
-                                for index in indexSet {
-                                    await deleteShoppingItem(itemsNotInBasket[index])
+                                .padding(.vertical, 4)
+                                .accessibilityIdentifier("shopping.item.\(item.catalogItem.stable_id)")
+                            }
+                            .onDelete { indexSet in
+                                Task {
+                                    for index in indexSet {
+                                        await deleteShoppingItem(itemsNotInBasket[index])
+                                    }
                                 }
                             }
                         }
+                    } header: {
+                        Button {
+                            withAnimation {
+                                toAddToBasketExpanded.toggle()
+                            }
+                        } label: {
+                            HStack {
+                                Text("To Add to Basket (\(itemsNotInBasket.count))")
+                                Spacer()
+                                Image(systemName: toAddToBasketExpanded ? "chevron.down" : "chevron.right")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
 
                 if !itemsInBasket.isEmpty {
                     Section(header: Text("In Basket (\(itemsInBasket.count))")) {
                         ForEach(itemsInBasket, id: \.shoppingListItem.item_stable_id) { item in
-                            GlassItemRowView.shoppingList(
+                            let rowView = GlassItemRowView.shoppingList(
                                 item: item,
                                 showStore: true,
                                 isShoppingMode: true,
                                 isInBasket: true,
+                                quantity: Binding(
+                                    get: {
+                                        shoppingModeState.getQuantity(for: item.catalogItem.stable_id) ?? item.shoppingListItem.neededQuantity
+                                    },
+                                    set: { newValue in
+                                        shoppingModeState.setQuantity(for: item.catalogItem.stable_id, quantity: newValue)
+                                    }
+                                ),
                                 onBasketToggle: {
-                                    shoppingModeState.toggleBasket(item_stable_id: item.glassItem.stable_id)
+                                    shoppingModeState.toggleBasket(item_stable_id: item.catalogItem.stable_id)
                                 }
                             )
-                            .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
+
+                            HStack(spacing: 12) {
+                                // Leading accessory (checkbox + quantity) stays interactive
+                                if let leadingAccessory = rowView.leadingAccessory {
+                                    leadingAccessory
+                                }
+
+                                // Thumbnail (not clickable)
+                                rowView.thumbnail
+
+                                // Only the text content is tappable for navigation
+                                Button {
+                                    navigationPath.append(toCompleteInventoryItem(item))
+                                } label: {
+                                    HStack {
+                                        rowView.textContent
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.vertical, 4)
+                            .accessibilityIdentifier("shopping.item.\(item.catalogItem.stable_id)")
                         }
                         .onDelete { indexSet in
                             Task {
@@ -648,7 +1029,7 @@ struct ShoppingListView: View {
                                     NavigationLink(value: item.completeItem) {
                                         GlassItemRowView.shoppingList(item: item)
                                     }
-                                    .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
+                                    .accessibilityIdentifier("shopping.item.\(item.catalogItem.stable_id)")
                                 }
                                 .onDelete { indexSet in
                                     Task {
@@ -672,7 +1053,7 @@ struct ShoppingListView: View {
                                     NavigationLink(value: item.completeItem) {
                                         GlassItemRowView.shoppingList(item: item, showStore: true)
                                     }
-                                    .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
+                                    .accessibilityIdentifier("shopping.item.\(item.catalogItem.stable_id)")
                                 }
                                 .onDelete { indexSet in
                                     Task {
@@ -692,7 +1073,7 @@ struct ShoppingListView: View {
                     NavigationLink(value: item.completeItem) {
                         GlassItemRowView.shoppingList(item: item, showStore: true)
                     }
-                    .accessibilityIdentifier("shopping.item.\(item.glassItem.stable_id)")
+                    .accessibilityIdentifier("shopping.item.\(item.catalogItem.stable_id)")
                 }
                 .onDelete { indexSet in
                     Task {
@@ -704,7 +1085,6 @@ struct ShoppingListView: View {
             }
         }
         .accessibilityIdentifier("shopping.list")
-        .id(refreshTrigger)  // Force list to refresh when trigger changes
     }
 
     private func sortedItems(for list: DetailedShoppingListModel) -> [DetailedShoppingListItemModel] {
@@ -712,7 +1092,7 @@ struct ShoppingListView: View {
         case .neededQuantity:
             return list.items.sorted { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
         case .itemName:
-            return list.items.sorted { $0.glassItem.name.localizedCaseInsensitiveCompare($1.glassItem.name) == .orderedAscending }
+            return list.items.sorted { $0.catalogItem.name.localizedCaseInsensitiveCompare($1.catalogItem.name) == .orderedAscending }
         case .store, .manufacturer:
             // Already sorted by store/manufacturer at the section level
             return list.items.sorted { $0.shoppingListItem.neededQuantity > $1.shoppingListItem.neededQuantity }
@@ -758,6 +1138,19 @@ struct ShoppingListView: View {
         )
     }
 
+    // MARK: - Helper Methods
+
+    /// Convert DetailedShoppingListItemModel to CompleteInventoryItemModel for navigation
+    private func toCompleteInventoryItem(_ item: DetailedShoppingListItemModel) -> CompleteInventoryItemModel {
+        CompleteInventoryItemModel(
+            catalogItem: item.catalogItem,
+            inventory: [], // Will be loaded by detail view
+            tags: item.tags,
+            userTags: item.userTags,
+            rating: nil
+        )
+    }
+
     // MARK: - Custom Deletion Pattern
     //
     // ⚠️ IMPORTANT: This view does NOT use CachedDataDeletion protocol
@@ -780,7 +1173,7 @@ struct ShoppingListView: View {
     private func deleteShoppingItem(_ item: DetailedShoppingListItemModel) async {
         do {
             // Step 1: Delete from database
-            try await shoppingListRepository.deleteItem(forItem: item.glassItem.stable_id)
+            try await shoppingListRepository.deleteItem(forItem: item.catalogItem.stable_id)
 
             // Step 2: Immediately update the view model to remove the deleted item
             // This ensures counters and other UI elements update right away
@@ -788,7 +1181,7 @@ struct ShoppingListView: View {
                 // Remove from the view model's shopping lists by creating new filtered dictionaries
                 // (Custom logic needed because of nested Dictionary<String, DetailedShoppingListModel> structure)
                 viewModel.shoppingLists = viewModel.shoppingLists.mapValues { list in
-                    let filteredItems = list.items.filter { $0.shoppingListItem.item_stable_id != item.glassItem.stable_id }
+                    let filteredItems = list.items.filter { $0.shoppingListItem.item_stable_id != item.catalogItem.stable_id }
                     return DetailedShoppingListModel(
                         store: list.store,
                         items: filteredItems,
@@ -837,6 +1230,15 @@ struct ShoppingListView: View {
             shoppingModeState.disableShoppingMode()
         }
     }
+
+    private func displayNameForProductType(_ type: String) -> String {
+        switch type.lowercased() {
+        case "glass": return "Glass"
+        case "coating": return "Coatings"
+        case "tool": return "Tools"
+        default: return type.capitalized
+        }
+    }
 }
 
 // MARK: - Checkout Sheet
@@ -847,6 +1249,7 @@ struct CheckoutSheet: View {
     let inventoryTrackingService: InventoryTrackingService
     let shoppingListService: ShoppingListService
     let purchaseService: PurchaseRecordService?
+    let subscriptionService: SubscriptionServiceProtocol
     let onComplete: () -> Void
     let onExitWithoutCheckout: () -> Void
 
@@ -856,6 +1259,8 @@ struct CheckoutSheet: View {
     @State private var createPurchaseRecord = false
     @State private var isProcessing = false
     @State private var quantities: [String: Double] = [:] // natural_key -> adjusted quantity
+    @State private var showInventoryLimitWarning = false
+    @State private var currentInventoryCount = 0
 
     // Purchase record fields
     @State private var supplier = ""
@@ -867,38 +1272,23 @@ struct CheckoutSheet: View {
 
     // Helper methods for quantity binding
     private func getQuantity(for item: DetailedShoppingListItemModel) -> Double {
-        quantities[item.glassItem.stable_id] ?? item.shoppingListItem.neededQuantity
+        quantities[item.catalogItem.stable_id] ?? item.shoppingListItem.neededQuantity
     }
 
     private func setQuantity(for item: DetailedShoppingListItemModel, value: Double) {
-        quantities[item.glassItem.stable_id] = value
+        quantities[item.catalogItem.stable_id] = value
+    }
+
+    // Sorted basket items by name
+    private var sortedBasketItems: [DetailedShoppingListItemModel] {
+        basketItems.sorted { $0.catalogItem.name.localizedCaseInsensitiveCompare($1.catalogItem.name) == .orderedAscending }
     }
 
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Action buttons at top
+                // Checkout options at top
                 VStack(spacing: DesignSystem.Spacing.md) {
-                    // Exit without checkout (red button)
-                    Button(action: {
-                        exitWithoutCheckout()
-                    }) {
-                        HStack {
-                            Image(systemName: "xmark.circle.fill")
-                            Text("Exit Shopping Mode Without Checking Out")
-                                .fontWeight(.medium)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.red)
-                    .foregroundColor(.white)
-                    .cornerRadius(DesignSystem.CornerRadius.medium)
-
-                    Divider()
-                        .padding(.vertical, DesignSystem.Spacing.xs)
-
-                    // Checkout options
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
                         Text("Checkout Options")
                             .font(.headline)
@@ -906,18 +1296,21 @@ struct CheckoutSheet: View {
 
                         VStack(spacing: DesignSystem.Spacing.sm) {
                             Toggle("Add to inventory", isOn: $addToInventory)
+                                .tint(.accentColor)
                                 .padding(.horizontal, DesignSystem.Spacing.xs)
                             Toggle("Remove from shopping list", isOn: $removeFromList)
+                                .tint(.accentColor)
                                 .padding(.horizontal, DesignSystem.Spacing.xs)
 
-                            if purchaseService != nil {
+                            if FeatureFlags.ENABLE_PURCHASES && purchaseService != nil {
                                 Toggle("Create purchase record", isOn: $createPurchaseRecord)
+                                    .tint(.accentColor)
                                     .padding(.horizontal, DesignSystem.Spacing.xs)
                             }
                         }
 
                         // Purchase record fields (shown when toggle is enabled)
-                        if createPurchaseRecord && purchaseService != nil {
+                        if FeatureFlags.ENABLE_PURCHASES && createPurchaseRecord && purchaseService != nil {
                             VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
                                 Text("Purchase Details")
                                     .font(.subheadline)
@@ -1027,14 +1420,14 @@ struct CheckoutSheet: View {
 
                 // Items list below
                 List {
-                    Section(header: Text("Items in Basket (\(basketItems.count))")) {
-                        ForEach(basketItems, id: \.glassItem.stable_id) { item in
+                    Section(header: Text("Items in Basket (\(sortedBasketItems.count))")) {
+                        ForEach(sortedBasketItems, id: \.shoppingListItem.item_stable_id) { item in
                             HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {
                                 // Item info
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(item.glassItem.name)
+                                    Text(item.catalogItem.name)
                                         .font(.headline)
-                                    Text(item.glassItem.stable_id)
+                                    Text(item.catalogItem.stable_id)
                                         .secondaryCaption()
                                 }
 
@@ -1065,10 +1458,23 @@ struct CheckoutSheet: View {
                     }
                 }
                 .onAppear {
-                    // Initialize quantities with needed amounts
+                    // Initialize quantities from shoppingModeState (user-adjusted quantities)
                     for item in basketItems {
-                        if quantities[item.glassItem.stable_id] == nil {
-                            quantities[item.glassItem.stable_id] = item.shoppingListItem.neededQuantity
+                        if quantities[item.catalogItem.stable_id] == nil {
+                            // Use the quantity from shopping mode state, or default to needed quantity
+                            quantities[item.catalogItem.stable_id] = shoppingModeState.getQuantity(for: item.catalogItem.stable_id) ?? item.shoppingListItem.neededQuantity
+                        }
+                    }
+
+                    // Check inventory limit for free tier users
+                    Task {
+                        let isPro = await subscriptionService.hasProAccess()
+                        let itemsWithInventory = try? await inventoryTrackingService.getItemsWithInventory()
+                        currentInventoryCount = itemsWithInventory?.count ?? 0
+
+                        // Only show warning if user is NOT Pro AND at/over the limit
+                        if !isPro && currentInventoryCount >= FeatureFlags.FREE_TIER_INVENTORY_LIMIT {
+                            showInventoryLimitWarning = true
                         }
                     }
                 }
@@ -1077,6 +1483,19 @@ struct CheckoutSheet: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .alert("Inventory Limit Reached", isPresented: $showInventoryLimitWarning) {
+                Button("OK") {
+                    // User acknowledged the warning
+                    // Disable "Add to inventory" toggle if they're at/over limit
+                    addToInventory = false
+                }
+                Button("Upgrade to Pro") {
+                    // TODO: Navigate to subscription upgrade screen
+                    addToInventory = false
+                }
+            } message: {
+                Text("You currently have \(currentInventoryCount) items in your inventory. Free tier users are limited to \(FeatureFlags.FREE_TIER_INVENTORY_LIMIT) items.\n\nIf you complete this checkout, items will not be added to your inventory unless you upgrade to Pro.")
+            }
         }
     }
 
@@ -1098,9 +1517,9 @@ struct CheckoutSheet: View {
 
                 // Create line items from basket
                 let purchaseItems = basketItems.enumerated().map { index, item in
-                    let quantity = quantities[item.glassItem.stable_id] ?? item.shoppingListItem.neededQuantity
+                    let quantity = quantities[item.catalogItem.stable_id] ?? item.shoppingListItem.neededQuantity
                     return PurchaseRecordItemModel(
-                        item_stable_id: item.glassItem.stable_id,
+                        item_stable_id: item.catalogItem.stable_id,
                         type: "rod",  // Default type - could be made configurable
                         quantity: quantity,
                         orderIndex: Int32(index)
@@ -1128,8 +1547,8 @@ struct CheckoutSheet: View {
                 print("🛒 Checkout: Adding \(basketItems.count) items to inventory...")
                 for item in basketItems {
                     // Use the adjusted quantity from the text field, or default to needed quantity
-                    let quantity = quantities[item.glassItem.stable_id] ?? item.shoppingListItem.neededQuantity
-                    let itemKey = item.glassItem.stable_id
+                    let quantity = quantities[item.catalogItem.stable_id] ?? item.shoppingListItem.neededQuantity
+                    let itemKey = item.catalogItem.stable_id
 
                     // Add inventory using the adjusted quantity
                     // Type defaults to "rod" but could be made configurable
@@ -1142,14 +1561,28 @@ struct CheckoutSheet: View {
                 }
             }
 
-            // Remove from shopping list
+            // Remove from shopping list or adjust quantities
             if removeFromList {
-                print("🛒 Checkout: Removing \(basketItems.count) items from shopping list...")
+                print("🛒 Checkout: Processing \(basketItems.count) items from shopping list...")
                 for item in basketItems {
-                    try await shoppingListService.shoppingListRepository.deleteItem(
-                        forItem: item.glassItem.stable_id
-                    )
-                    print("  ✓ Removed \(item.glassItem.stable_id)")
+                    let boughtQuantity = quantities[item.catalogItem.stable_id] ?? item.shoppingListItem.neededQuantity
+                    let neededQuantity = item.shoppingListItem.neededQuantity
+
+                    if boughtQuantity >= neededQuantity {
+                        // Bought enough or more - remove from list completely
+                        try await shoppingListService.shoppingListRepository.deleteItem(
+                            forItem: item.catalogItem.stable_id
+                        )
+                        print("  ✓ Removed \(item.catalogItem.stable_id) (bought \(boughtQuantity) of \(neededQuantity) needed)")
+                    } else {
+                        // Bought less than needed - keep the difference in the shopping list
+                        let remainingQuantity = neededQuantity - boughtQuantity
+                        try await shoppingListService.shoppingListRepository.updateNeededQuantity(
+                            forItem: item.catalogItem.stable_id,
+                            neededQuantity: remainingQuantity
+                        )
+                        print("  ✓ Updated \(item.catalogItem.stable_id) to \(remainingQuantity) remaining (bought \(boughtQuantity) of \(neededQuantity) needed)")
+                    }
                 }
             }
 

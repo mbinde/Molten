@@ -42,13 +42,13 @@ struct GlassItemRowView: View {
         }
 
         init(from detailedShoppingItem: DetailedShoppingListItemModel) {
-            self.name = detailedShoppingItem.glassItem.name
-            self.manufacturer = detailedShoppingItem.glassItem.manufacturer
-            self.sku = detailedShoppingItem.glassItem.sku
-            self.stableId = detailedShoppingItem.glassItem.stable_id
-            self.imagePath = detailedShoppingItem.glassItem.image_path
-            self.imageThumbPath = detailedShoppingItem.glassItem.image_thumb_path
-            self.dominantColors = detailedShoppingItem.glassItem.dominant_colors
+            self.name = detailedShoppingItem.catalogItem.name
+            self.manufacturer = detailedShoppingItem.catalogItem.manufacturer
+            self.sku = detailedShoppingItem.catalogItem.sku
+            self.stableId = detailedShoppingItem.catalogItem.stable_id
+            self.imagePath = detailedShoppingItem.catalogItem.image_path
+            self.imageThumbPath = detailedShoppingItem.catalogItem.image_thumb_path
+            self.dominantColors = detailedShoppingItem.catalogItem.dominant_colors
             self.tags = detailedShoppingItem.allTags
             self.rating = nil  // Shopping list items don't include ratings
         }
@@ -98,88 +98,103 @@ struct GlassItemRowView: View {
                 accessory
             }
 
-            // Product image thumbnail using stable_id (which is what image files are actually named with)
-            ProductImageThumbnail(
-                itemCode: item.stableId,
-                manufacturer: item.manufacturer,
-                stableId: item.stableId,
-                imagePath: item.imagePath,
-                imageThumbPath: item.imageThumbPath,
-                dominantColors: item.dominantColors,
-                size: 60
-            )
+            mainContent
+        }
+        .padding(.vertical, 4)
+    }
 
-            // Item details
-            VStack(alignment: .leading, spacing: 4) {
-                // Item name with rating
-                HStack(spacing: 4) {
-                    Text(item.name)
-                        .font(.headline)
-                        .lineLimit(1)
+    /// The main content (image + text) without the leading accessory
+    /// Use this when you want to wrap only the content in a NavigationLink
+    var mainContent: some View {
+        HStack(spacing: 12) {
+            thumbnail
 
-                    // Show rating inline after name if available, has enough ratings, and setting is enabled
-                    if showRatingsInCatalog, let rating = item.rating, rating.hasEnoughRatings {
-                        Text("•")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        Image(systemName: "star.fill")
-                            .font(.caption)
-                            .foregroundStyle(.yellow)
-
-                        Text(rating.formattedAverageRating)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-
-                        Text("(\(rating.totalRatings))")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .lineLimit(1)
-
-                // Manufacturer and SKU/natural key
-                HStack(spacing: 4) {
-                    // Show full manufacturer name instead of abbreviation
-                    Text(GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    // Only show SKU if it exists and doesn't look synthetic
-                    if shouldDisplaySKU {
-                        Text("•")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        // Show SKU or full stable ID based on preference
-                        Text(showFullCode ? item.stableId : (item.sku ?? ""))
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .lineLimit(1)
-
-                // Optional badge content (quantity, status, etc.)
-                if let badge = badgeContent {
-                    badge
-                }
-
-                // Tags if available
-                if !item.tags.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 4) {
-                            ForEach(item.tags, id: \.self) { tag in
-                                BadgeLabel.tag(tag)
-                            }
-                        }
-                        .padding(.horizontal, 1)
-                    }
-                }
-            }
+            textContent
 
             Spacer()
         }
-        .padding(.vertical, 4)
+    }
+
+    /// Just the thumbnail image
+    var thumbnail: some View {
+        ProductImageThumbnail(
+            itemCode: item.stableId,
+            manufacturer: item.manufacturer,
+            stableId: item.stableId,
+            imagePath: item.imagePath,
+            imageThumbPath: item.imageThumbPath,
+            dominantColors: item.dominantColors,
+            size: 60
+        )
+    }
+
+    /// Just the text content (name, manufacturer, SKU, badges, tags)
+    var textContent: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            // Item name with rating
+            HStack(spacing: 4) {
+                Text(item.name)
+                    .font(.headline)
+                    .lineLimit(1)
+
+                // Show rating inline after name if available, has enough ratings, and setting is enabled
+                if showRatingsInCatalog, let rating = item.rating, rating.hasEnoughRatings {
+                    Text("•")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Image(systemName: "star.fill")
+                        .font(.caption)
+                        .foregroundStyle(.yellow)
+
+                    Text(rating.formattedAverageRating)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    Text("(\(rating.totalRatings))")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .lineLimit(1)
+
+            // SKU and Manufacturer on same line (compact layout)
+            HStack(spacing: 4) {
+                // SKU first (only if it exists and doesn't look synthetic)
+                if shouldDisplaySKU {
+                    Text(showFullCode ? item.stableId : (item.sku ?? ""))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+
+                    Text("•")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+
+                // Manufacturer after SKU
+                Text(GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .lineLimit(1)
+
+            // Optional badge content (quantity, status, etc.)
+            if let badge = badgeContent {
+                badge
+            }
+
+            // Tags if available
+            if !item.tags.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 4) {
+                        ForEach(item.tags, id: \.self) { tag in
+                            BadgeLabel.tag(tag)
+                        }
+                    }
+                    .padding(.horizontal, 1)
+                }
+            }
+        }
     }
 
     /// Determines if the SKU should be displayed (not empty, not synthetic)
@@ -188,9 +203,18 @@ struct GlassItemRowView: View {
 
         // Don't show SKUs that look synthetic (manufacturer-hash pattern)
         // Pattern: XXX-[8 hex chars] like "GRE-8bf530c2"
-        let syntheticPattern = /^[A-Z]{2,4}-[a-f0-9]{8}$/
-        if sku.wholeMatch(of: syntheticPattern) != nil {
-            return false
+        let parts = sku.split(separator: "-")
+        if parts.count == 2 {
+            let prefix = String(parts[0])
+            let suffix = String(parts[1])
+
+            // Check if prefix is 2-4 uppercase letters and suffix is 8 hex chars
+            let isValidPrefix = prefix.count >= 2 && prefix.count <= 4 && prefix.allSatisfy { $0.isUppercase && $0.isLetter }
+            let isValidSuffix = suffix.count == 8 && suffix.allSatisfy { $0.isHexDigit }
+
+            if isValidPrefix && isValidSuffix {
+                return false
+            }
         }
 
         return true
@@ -209,24 +233,36 @@ extension GlassItemRowView {
     }
 
     /// Inventory-style row with quantity badge
-    static func inventory(item: CompleteInventoryItemModel) -> GlassItemRowView {
-        let badge = AnyView(
-            HStack(spacing: 6) {
-                Text("\(item.totalQuantity, specifier: "%.1f")")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color.accentColor)
+    static func inventory(item: CompleteInventoryItemModel, selectedLocation: String? = nil) -> GlassItemRowView {
+        // Calculate quantity based on location filter
+        let inventoryToShow: [InventoryModel]
 
-                if !item.inventoryByType.isEmpty {
-                    Text("•")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+        if let location = selectedLocation {
+            // Filter inventory to only show records at the selected location
+            inventoryToShow = item.inventory.filter { $0.location == location }
+        } else {
+            // Show all inventory (no location filter)
+            inventoryToShow = item.inventory
+        }
 
-                    Text("\(item.inventoryByType.count) type\(item.inventoryByType.count == 1 ? "" : "s")")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+        // Group inventory by type and sum quantities
+        var quantityByType: [String: Double] = [:]
+        for inv in inventoryToShow {
+            quantityByType[inv.type, default: 0.0] += inv.quantity
+        }
+
+        // Format as comma-separated list: "5 Rods, 3 Tubes, 4.3 oz Frit"
+        let typesList = quantityByType
+            .sorted { $0.key < $1.key }  // Sort alphabetically
+            .map { type, quantity -> String in
+                return Self.formatQuantityForDisplay(quantity: quantity, type: type)
             }
+            .joined(separator: ", ")
+
+        let badge = AnyView(
+            Text(typesList)
+                .font(.caption)
+                .foregroundColor(.secondary)
         )
 
         return GlassItemRowView(
@@ -234,6 +270,30 @@ extension GlassItemRowView {
             badgeContent: badge,
             showFullCode: false
         )
+    }
+
+    /// Format a quantity for display based on its type
+    /// - Parameters:
+    ///   - quantity: The raw quantity value (always stored in grams for weight-based types)
+    ///   - type: The inventory type (e.g., "frit", "rod", "tube")
+    /// - Returns: Formatted string like "5 Rods", "4.3 oz Frit", "10 g Powder"
+    private static func formatQuantityForDisplay(quantity: Double, type: String) -> String {
+        let typeName = GlassTerminologySettings.shared.displayName(for: type)
+
+        // Check if this is a weight-based type
+        let isWeightBased = ["frit", "powder", "enamel"].contains(type.lowercased())
+
+        if isWeightBased {
+            // Weight-based: convert from grams (storage) to user's preferred unit
+            let preferredUnit = WeightUnitPreference.current
+            let convertedQuantity = WeightUnit.grams.convert(quantity, to: preferredUnit)
+            let quantityText = String(format: "%.1f", convertedQuantity).replacingOccurrences(of: ".0", with: "")
+            return "\(quantityText) \(preferredUnit.symbol) \(typeName)"
+        } else {
+            // Count-based: just format and strip .0
+            let quantityText = String(format: "%.1f", quantity).replacingOccurrences(of: ".0", with: "")
+            return "\(quantityText) \(typeName)"
+        }
     }
 
     /// Friend inventory-style row with quantity and location
@@ -277,42 +337,95 @@ extension GlassItemRowView {
         showStore: Bool = false,
         isShoppingMode: Bool = false,
         isInBasket: Bool = false,
+        quantity: Binding<Double>? = nil,
         onBasketToggle: (() -> Void)? = nil
     ) -> GlassItemRowView {
-        // Leading accessory: checkbox for shopping mode
+        // Leading accessory: checkbox + compact quantity editor for shopping mode
         let leadingAccessory: AnyView? = isShoppingMode ? AnyView(
-            Button(action: {
-                onBasketToggle?()
-            }) {
-                Image(systemName: isInBasket ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
-                    .foregroundColor(isInBasket ? .green : .secondary)
+            HStack(spacing: 8) {
+                // Checkbox (on the left) with quantity difference indicator below
+                VStack(spacing: 2) {
+                    Button(action: {
+                        onBasketToggle?()
+                    }) {
+                        Image(systemName: isInBasket ? "checkmark.circle.fill" : "circle")
+                            .font(.title2)
+                            .foregroundColor(isInBasket ? .accentColor : .secondary)
+                    }
+                    .buttonStyle(.plain)
+
+                    // Show quantity difference if user adjusted from needed amount
+                    if let quantityBinding = quantity {
+                        let difference = quantityBinding.wrappedValue - item.shoppingListItem.neededQuantity
+                        if abs(difference) > 0.01 {  // Only show if there's a meaningful difference
+                            Text(difference > 0 ? "+\(Int(difference))" : "\(Int(difference))")
+                                .font(.caption2)
+                                .fontWeight(.semibold)
+                                .foregroundColor(difference > 0 ? .green : .red)
+                        }
+                    }
+                }
+
+                // Compact quantity editor (number with +/- stacked above/below)
+                if let quantityBinding = quantity {
+                    VStack(spacing: 0) {
+                        // Plus button on top
+                        Button(action: {
+                            quantityBinding.wrappedValue += 1.0
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .frame(height: 12)
+
+                        // Editable number field in middle
+                        TextField("Qty", value: quantityBinding, format: .number)
+                            .multilineTextAlignment(.center)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .monospacedDigit()
+                            .frame(width: 40)
+                            #if os(iOS)
+                            .textFieldStyle(.roundedBorder)
+                            .keyboardType(.decimalPad)
+                            #endif
+
+                        // Minus button on bottom
+                        Button(action: {
+                            let newValue = max(0.1, quantityBinding.wrappedValue - 1.0)
+                            quantityBinding.wrappedValue = newValue
+                        }) {
+                            Image(systemName: "minus")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .frame(height: 12)
+                    }
+                }
             }
-            .buttonStyle(.plain)
         ) : nil
 
-        // Badge: shopping quantities
-        var badgeComponents: [AnyView] = []
-        badgeComponents.append(AnyView(
-            Text("Need: \(item.shoppingListItem.neededQuantity, specifier: "%.1f")")
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundColor(.orange)
-        ))
+        // Badge and tags: show for normal shopping list, hide for shopping mode
+        let badgeContent: AnyView?
+        let tags: [String]
 
-        badgeComponents.append(AnyView(
-            Text("•")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-        ))
+        if isShoppingMode {
+            // Shopping mode: no badge or tags - keep it clean and compact
+            badgeContent = nil
+            tags = []
+        } else {
+            // Normal shopping list: show Need/Current/Store badge
+            var badgeComponents: [AnyView] = []
+            badgeComponents.append(AnyView(
+                Text("Need: \(item.shoppingListItem.neededQuantity, specifier: "%.1f")")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.orange)
+            ))
 
-        badgeComponents.append(AnyView(
-            Text("Current: \(item.shoppingListItem.currentQuantity, specifier: "%.1f")")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        ))
-
-        if showStore {
             badgeComponents.append(AnyView(
                 Text("•")
                     .font(.caption2)
@@ -320,24 +433,50 @@ extension GlassItemRowView {
             ))
 
             badgeComponents.append(AnyView(
-                Text(item.shoppingListItem.store)
+                Text("Current: \(item.shoppingListItem.currentQuantity, specifier: "%.1f")")
                     .font(.caption)
                     .foregroundColor(.secondary)
             ))
+
+            if showStore {
+                badgeComponents.append(AnyView(
+                    Text("•")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                ))
+
+                badgeComponents.append(AnyView(
+                    Text(item.shoppingListItem.store)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                ))
+            }
+
+            badgeContent = AnyView(
+                HStack(spacing: 6) {
+                    ForEach(0..<badgeComponents.count, id: \.self) { index in
+                        badgeComponents[index]
+                    }
+                }
+            )
+
+            tags = item.allTags
         }
 
-        let badge = AnyView(
-            HStack(spacing: 6) {
-                ForEach(0..<badgeComponents.count, id: \.self) { index in
-                    badgeComponents[index]
-                }
-            }
-        )
-
         return GlassItemRowView(
-            item: .init(from: item),
+            item: GlassItemRowData(
+                name: item.catalogItem.name,
+                manufacturer: item.catalogItem.manufacturer,
+                sku: item.catalogItem.sku,
+                stableId: item.catalogItem.stable_id,
+                imagePath: item.catalogItem.image_path,
+                imageThumbPath: item.catalogItem.image_thumb_path,
+                dominantColors: item.catalogItem.dominant_colors,
+                tags: tags,
+                rating: nil
+            ),
             leadingAccessory: leadingAccessory,
-            badgeContent: badge,
+            badgeContent: badgeContent,
             showFullCode: false
         )
     }

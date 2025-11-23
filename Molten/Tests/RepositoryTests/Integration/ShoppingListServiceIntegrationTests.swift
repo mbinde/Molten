@@ -70,7 +70,7 @@ struct ShoppingListServiceIntegrationTests {
         let shoppingList = try await shoppingService.generateShoppingList(forStore: "TestStore")
 
         #expect(shoppingList.items.count == 1)
-        #expect(shoppingList.items.first?.glassItem.stable_id == stableId)
+        #expect(shoppingList.items.first?.catalogItem.stable_id == stableId)
         #expect(shoppingList.items.first?.shoppingListItem.neededQuantity == 7.0) // 10 - 3
     }
 
@@ -134,12 +134,12 @@ struct ShoppingListServiceIntegrationTests {
         let storeAList = try await shoppingService.generateShoppingList(forStore: "Store A")
 
         #expect(storeAList.items.count == 1)
-        #expect(storeAList.items.first?.glassItem.stable_id == itemA.stable_id)
+        #expect(storeAList.items.first?.catalogItem.stable_id == itemA.stable_id)
 
         // Generate list for Store B only
         let storeBList = try await shoppingService.generateShoppingList(forStore: "Store B")
 
         #expect(storeBList.items.count == 1)
-        #expect(storeBList.items.first?.glassItem.stable_id == itemB.stable_id)
+        #expect(storeBList.items.first?.catalogItem.stable_id == itemB.stable_id)
     }
 }

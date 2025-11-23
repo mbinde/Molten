@@ -11,15 +11,15 @@ import SwiftUI
 /// Auto-complete input field for inventory item locations using repository pattern
 struct LocationAutoCompleteField: View {
     @Binding var location: String
-    let storageLocationRepository: StorageLocationRepository
+    let inventoryRepository: InventoryRepository
 
     @State private var showingSuggestions = false
     @State private var locationSuggestions: [String] = []
     @FocusState private var isTextFieldFocused: Bool
 
-    init(location: Binding<String>, storageLocationRepository: StorageLocationRepository) {
+    init(location: Binding<String>, inventoryRepository: InventoryRepository) {
         self._location = location
-        self.storageLocationRepository = storageLocationRepository
+        self.inventoryRepository = inventoryRepository
     }
     
     var body: some View {
@@ -104,31 +104,31 @@ struct LocationAutoCompleteField: View {
     }
     
     // MARK: - Location Service Methods (Repository Pattern)
-    
+
     private func getUniqueLocations() async -> [String] {
         do {
-            // Get all distinct location names from the location repository
-            let locationNames = try await storageLocationRepository.getDistinctLocationNames()
+            // Get all distinct location names from the inventory repository
+            let locationNames = try await inventoryRepository.getDistinctLocations()
             return locationNames
-            
+
         } catch {
             print("❌ Failed to fetch location suggestions: \(error)")
             return []
         }
     }
-    
+
     private func getLocationSuggestions(matching searchText: String) async -> [String] {
         do {
             let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-            
+
             guard !trimmedSearchText.isEmpty else {
-                return try await storageLocationRepository.getDistinctLocationNames()
+                return try await inventoryRepository.getDistinctLocations()
             }
-            
+
             // Use repository method to get location names with prefix
-            let suggestions = try await storageLocationRepository.getLocationNames(withPrefix: trimmedSearchText)
+            let suggestions = try await inventoryRepository.getLocationNames(withPrefix: trimmedSearchText)
             return suggestions
-            
+
         } catch {
             print("❌ Failed to get location suggestions: \(error)")
             return []
@@ -143,7 +143,7 @@ struct LocationAutoCompleteField: View {
     VStack {
         LocationAutoCompleteField(
             location: $location,
-            storageLocationRepository: deps.storageLocationRepository
+            inventoryRepository: deps.inventoryRepository
         )
         Spacer()
     }

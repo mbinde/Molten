@@ -132,7 +132,6 @@
 				Tests/MoltenTests/Infrastructure/CoreDataPreventionSystem.swift,
 				Tests/MoltenTests/Infrastructure/DiagnosticTests.swift,
 				Tests/MoltenTests/Infrastructure/MockRepositoryDebugTest.swift,
-				Tests/MoltenTests/Infrastructure/NewTestTemplate.swift,
 				Tests/MoltenTests/Infrastructure/RepositoryIdentityTest.swift,
 				Tests/MoltenTests/Infrastructure/SimpleIsolatedTest.swift,
 				Tests/MoltenTests/Infrastructure/TestConfiguration.swift,
@@ -166,6 +165,7 @@
 				Tests/MoltenTests/Models/COEGlassTypeTests.swift,
 				Tests/MoltenTests/Models/DataModelValidationTests.swift,
 				Tests/MoltenTests/Models/DefaultUnitsTests.swift,
+				Tests/MoltenTests/Models/DimensionUnitTests.swift,
 				Tests/MoltenTests/Models/GlassItemSearchRequestTests.swift,
 				Tests/MoltenTests/Models/GlassItemSortOptionTests.swift,
 				Tests/MoltenTests/Models/InventoryLocationTests.swift,
@@ -334,7 +334,6 @@
 				Tests/MoltenTests/Infrastructure/CoreDataPreventionSystem.swift,
 				Tests/MoltenTests/Infrastructure/DiagnosticTests.swift,
 				Tests/MoltenTests/Infrastructure/MockRepositoryDebugTest.swift,
-				Tests/MoltenTests/Infrastructure/NewTestTemplate.swift,
 				Tests/MoltenTests/Infrastructure/RepositoryIdentityTest.swift,
 				Tests/MoltenTests/Infrastructure/SimpleIsolatedTest.swift,
 				Tests/MoltenTests/Infrastructure/TestConfiguration.swift,
@@ -368,6 +367,7 @@
 				Tests/MoltenTests/Models/COEGlassTypeTests.swift,
 				Tests/MoltenTests/Models/DataModelValidationTests.swift,
 				Tests/MoltenTests/Models/DefaultUnitsTests.swift,
+				Tests/MoltenTests/Models/DimensionUnitTests.swift,
 				Tests/MoltenTests/Models/GlassItemSearchRequestTests.swift,
 				Tests/MoltenTests/Models/GlassItemSortOptionTests.swift,
 				Tests/MoltenTests/Models/InventoryLocationTests.swift,
@@ -1611,7 +1611,7 @@
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -1663,7 +1663,7 @@
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;

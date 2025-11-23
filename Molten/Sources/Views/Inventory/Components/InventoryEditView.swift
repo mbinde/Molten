@@ -42,7 +42,10 @@ struct InventoryEditView: View {
                 Section("Edit") {
                     TextField("Quantity", text: $quantity)
                         .keyboardType(.decimalPad)
-                    TextField("Location (optional)", text: $location)
+                    LocationAutoCompleteField(
+                        location: $location,
+                        inventoryRepository: inventoryRepository
+                    )
                 }
             }
             .navigationTitle("Edit Inventory")

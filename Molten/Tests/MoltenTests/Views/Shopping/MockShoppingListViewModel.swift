@@ -149,13 +149,13 @@ class MockShoppingListViewModel: ShoppingListViewModelProtocol {
 
     var availableCOEs: [Int32] {
         let allItems = shoppingLists.values.flatMap { $0.items }
-        let coeSet = Set(allItems.map { $0.glassItem.coe })
+        let coeSet = Set(allItems.compactMap { $0.catalogItem.coe })
         return Array(coeSet).sorted()
     }
 
     var availableManufacturers: [String] {
         let allItems = shoppingLists.values.flatMap { $0.items }
-        let mfgSet = Set(allItems.map { $0.glassItem.manufacturer })
+        let mfgSet = Set(allItems.map { $0.catalogItem.manufacturer })
         return Array(mfgSet).sorted()
     }
 
@@ -191,10 +191,10 @@ class MockShoppingListViewModel: ShoppingListViewModelProtocol {
             let searchLower = text.lowercased()
             filteredItems = allItems.filter { item in
                 if searchTitlesOnly {
-                    return item.glassItem.name.lowercased().contains(searchLower)
+                    return item.catalogItem.name.lowercased().contains(searchLower)
                 } else {
-                    return item.glassItem.name.lowercased().contains(searchLower) ||
-                           item.glassItem.manufacturer.lowercased().contains(searchLower)
+                    return item.catalogItem.name.lowercased().contains(searchLower) ||
+                           item.catalogItem.manufacturer.lowercased().contains(searchLower)
                 }
             }
         }
@@ -300,19 +300,19 @@ class MockShoppingListViewModel: ShoppingListViewModelProtocol {
         let items = [
             DetailedShoppingListItemModel(
                 shoppingListItem: clearRodShoppingItem,
-                glassItem: clearRodGlassItem,
+                catalogItem: UnifiedCatalogItem(glassItem: clearRodGlassItem),
                 tags: ["transparent", "coe90"],
                 userTags: []
             ),
             DetailedShoppingListItemModel(
                 shoppingListItem: redSheetShoppingItem,
-                glassItem: redSheetGlassItem,
+                catalogItem: UnifiedCatalogItem(glassItem: redSheetGlassItem),
                 tags: ["opaque", "coe90"],
                 userTags: []
             ),
             DetailedShoppingListItemModel(
                 shoppingListItem: blueFritShoppingItem,
-                glassItem: blueFritGlassItem,
+                catalogItem: UnifiedCatalogItem(glassItem: blueFritGlassItem),
                 tags: ["transparent", "coe96"],
                 userTags: []
             )

@@ -50,7 +50,7 @@ struct LowStockReportModelTests {
 
         return DetailedLowStockItemModel(
             lowStockItem: lowStockItem,
-            glassItem: glassItem,
+            catalogItem: UnifiedCatalogItem(glassItem: glassItem),
             tags: []
         )
     }

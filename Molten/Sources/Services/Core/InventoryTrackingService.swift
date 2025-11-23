@@ -101,7 +101,6 @@ actor InventoryTrackingService {
 
         // 3. Get all tags for this item
         let tags = try await itemTagsRepository.fetchTags(forItem: stableId)
-        print("🏷️ DEBUG: Loaded \(tags.count) tags for item \(stableId): \(tags.prefix(5).joined(separator: ", "))")
 
         return CompleteInventoryItemModel(
             glassItem: glassItem,
@@ -208,6 +207,9 @@ actor InventoryTrackingService {
         quantity: Double,
         type: String,
         toItem stableId: String,
+        subtype: String? = nil,
+        subsubtype: String? = nil,
+        dimensions: [String: Double]? = nil,
         atLocation location: String? = nil
     ) async throws -> InventoryModel {
 
@@ -248,10 +250,13 @@ actor InventoryTrackingService {
             throw InventoryTrackingServiceError.invalidOperation("Inventory type cannot be empty")
         }
 
-        // 3. Create new inventory record with location
+        // 3. Create new inventory record with location and optional subtypes/dimensions
         let newInventory = InventoryModel(
             item_stable_id: stableId,
             type: type,
+            subtype: subtype,
+            subsubtype: subsubtype,
+            dimensions: dimensions,
             quantity: quantity,
             location: location
         )

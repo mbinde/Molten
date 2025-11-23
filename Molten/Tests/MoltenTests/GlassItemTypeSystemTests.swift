@@ -20,8 +20,8 @@ struct GlassItemTypeSystemTests {
         let bigRod = GlassItemTypeSystem.bigRod
 
         // Then: Default display names are set correctly
-        #expect(rod.displayName == "Rod")
-        #expect(bigRod.displayName == "Bar")
+        #expect(rod.displayName == "Rods")
+        #expect(bigRod.displayName == "Bars")
     }
 
     @Test("Backend type names remain stable")
@@ -63,8 +63,8 @@ struct GlassItemTypeSystemTests {
 
         // Then: Capitalized backend names are used
         #expect(fritDisplay == "Frit")
-        #expect(tubeDisplay == "Tube")
-        #expect(stringerDisplay == "Stringer")
+        #expect(tubeDisplay == "Tubes")
+        #expect(stringerDisplay == "Stringers")
     }
 
     @Test("All type names are available")
@@ -96,10 +96,10 @@ struct GlassItemTypeSystemTests {
         settings.resetToDefaults()
 
         // When/Then: Backend types resolve correctly
-        #expect(GlassItemTypeSystem.backendTypeName(from: "Bar") == "big-rod")
-        #expect(GlassItemTypeSystem.backendTypeName(from: "Rod") == "rod")
+        #expect(GlassItemTypeSystem.backendTypeName(from: "Bars") == "big-rod")
+        #expect(GlassItemTypeSystem.backendTypeName(from: "Rods") == "rod")
         #expect(GlassItemTypeSystem.backendTypeName(from: "Frit") == "frit")
-        #expect(GlassItemTypeSystem.backendTypeName(from: "Tube") == "tube")
+        #expect(GlassItemTypeSystem.backendTypeName(from: "Tubes") == "tube")
     }
 
     @Test("Backend type name resolves custom display names")

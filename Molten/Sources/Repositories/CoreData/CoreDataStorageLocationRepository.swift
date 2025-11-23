@@ -343,7 +343,7 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
         let locations = try await fetchLocations(withName: cleanLocationName)
         var inventory_ids = Set<UUID>()
         for location in locations {
-            inventory_ids.insert(await location.inventory_id)
+            inventory_ids.insert(location.inventory_id)
         }
         return Array(inventory_ids).sorted { $0.uuidString < $1.uuidString }
     }
@@ -352,7 +352,7 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
         let allLocations = try await fetchLocations(matching: nil)
         var grouped: [String: [StorageLocationModel]] = [:]
         for location in allLocations {
-            let key = await location.location
+            let key = location.location
             grouped[key, default: []].append(location)
         }
 
@@ -360,7 +360,7 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
         for (key, locations) in grouped {
             var total = 0.0
             for location in locations {
-                total += await location.quantity
+                total += location.quantity
             }
             result[key] = total
         }
@@ -371,7 +371,7 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
         let allLocations = try await fetchLocations(matching: nil)
         var grouped: [String: [StorageLocationModel]] = [:]
         for location in allLocations {
-            let key = await location.location
+            let key = location.location
             grouped[key, default: []].append(location)
         }
 
@@ -388,7 +388,7 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
         let locations = try await fetchLocations(forInventory: inventory_id)
         var actualTotal = 0.0
         for location in locations {
-            actualTotal += await location.quantity
+            actualTotal += location.quantity
         }
         let tolerance = 0.001
         return abs(actualTotal - expectedTotal) <= tolerance
@@ -398,7 +398,7 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
         let locations = try await fetchLocations(forInventory: inventory_id)
         var actualTotal = 0.0
         for location in locations {
-            actualTotal += await location.quantity
+            actualTotal += location.quantity
         }
         return actualTotal - expectedTotal
     }

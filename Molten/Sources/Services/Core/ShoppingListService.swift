@@ -18,6 +18,8 @@ actor ShoppingListService {
     private let _shoppingListRepository: ShoppingListRepository
     private let inventoryRepository: InventoryRepository
     private let glassItemRepository: GlassItemRepository
+    private let coatingItemRepository: CoatingItemRepository
+    private let toolItemRepository: ToolItemRepository
     private let itemTagsRepository: ItemTagsRepository
     private let userTagsRepository: UserTagsRepository
 
@@ -41,6 +43,8 @@ actor ShoppingListService {
         shoppingListRepository: ShoppingListRepository,
         inventoryRepository: InventoryRepository,
         glassItemRepository: GlassItemRepository,
+        coatingItemRepository: CoatingItemRepository,
+        toolItemRepository: ToolItemRepository,
         itemTagsRepository: ItemTagsRepository,
         userTagsRepository: UserTagsRepository
     ) {
@@ -48,6 +52,8 @@ actor ShoppingListService {
         self._shoppingListRepository = shoppingListRepository
         self.inventoryRepository = inventoryRepository
         self.glassItemRepository = glassItemRepository
+        self.coatingItemRepository = coatingItemRepository
+        self.toolItemRepository = toolItemRepository
         self.itemTagsRepository = itemTagsRepository
         self.userTagsRepository = userTagsRepository
     }
@@ -69,15 +75,15 @@ actor ShoppingListService {
         
         // 3. Enhance with detailed item information
         var detailedItems: [DetailedShoppingListItemModel] = []
-        
+
         for basicItem in basicShoppingList {
-            if let glassItem = try await glassItemRepository.fetchItem(byStableId: basicItem.item_stable_id) {
+            if let catalogItem = try await fetchCatalogItem(byStableId: basicItem.item_stable_id) {
                 let tags = try await itemTagsRepository.fetchTags(forItem: basicItem.item_stable_id)
                 let userTags = try await userTagsRepository.fetchTags(forItem: basicItem.item_stable_id)
 
                 let detailedItem = DetailedShoppingListItemModel(
                     shoppingListItem: basicItem,
-                    glassItem: glassItem,
+                    catalogItem: catalogItem,
                     tags: tags,
                     userTags: userTags
                 )
@@ -167,13 +173,13 @@ actor ShoppingListService {
             var detailedItems: [DetailedShoppingListItemModel] = []
 
             for basicItem in basicItems {
-                if let glassItem = try await glassItemRepository.fetchItem(byStableId: basicItem.item_stable_id) {
+                if let catalogItem = try await fetchCatalogItem(byStableId: basicItem.item_stable_id) {
                     let tags = try await itemTagsRepository.fetchTags(forItem: basicItem.item_stable_id)
                     let userTags = try await userTagsRepository.fetchTags(forItem: basicItem.item_stable_id)
 
                     let detailedItem = DetailedShoppingListItemModel(
                         shoppingListItem: basicItem,
-                        glassItem: glassItem,
+                        catalogItem: catalogItem,
                         tags: tags,
                         userTags: userTags
                     )
@@ -205,14 +211,14 @@ actor ShoppingListService {
         
         // 3. Enhance with detailed item information
         var detailedLowStockItems: [DetailedLowStockItemModel] = []
-        
+
         for lowStockItem in lowStockItems {
-            if let glassItem = try await glassItemRepository.fetchItem(byStableId: lowStockItem.item_stable_id) {
+            if let catalogItem = try await fetchCatalogItem(byStableId: lowStockItem.item_stable_id) {
                 let tags = try await itemTagsRepository.fetchTags(forItem: lowStockItem.item_stable_id)
-                
+
                 let detailedItem = DetailedLowStockItemModel(
                     lowStockItem: lowStockItem,
-                    glassItem: glassItem,
+                    catalogItem: catalogItem,
                     tags: tags
                 )
                 detailedLowStockItems.append(detailedItem)
@@ -238,12 +244,13 @@ actor ShoppingListService {
         quantity: Double,
         store: String
     ) async throws -> DetailedMinimumModel {
-        
-        // 1. Verify the glass item exists
-        guard let glassItem = try await glassItemRepository.fetchItem(byStableId: stableId) else {
+
+
+        // 1. Verify the catalog item exists
+        guard let catalogItem = try await fetchCatalogItem(byStableId: stableId) else {
             throw ShoppingListServiceError.itemNotFound(stableId)
         }
-        
+
         // 2. Set the minimum
         let minimum = try await self.itemMinimumRepository.setMinimumQuantity(
             quantity,
@@ -251,14 +258,14 @@ actor ShoppingListService {
             type: type,
             store: store
         )
-        
+
         // 3. Get additional context
         let tags = try await itemTagsRepository.fetchTags(forItem: stableId)
         let currentInventory = try await inventoryRepository.getTotalQuantity(forItem: stableId, type: type)
-        
+
         return DetailedMinimumModel(
             minimum: minimum,
-            glassItem: glassItem,
+            catalogItem: catalogItem,
             tags: tags,
             currentQuantity: currentInventory
         )
@@ -268,34 +275,34 @@ actor ShoppingListService {
     /// - Parameter stableId: Item natural key
     /// - Returns: Array of detailed minimum models
     func getMinimumsForItem(_ stableId: String) async throws -> [DetailedMinimumModel] {
-        // 1. Get the glass item
-        guard let glassItem = try await glassItemRepository.fetchItem(byStableId: stableId) else {
+        // 1. Get the catalog item
+        guard let catalogItem = try await fetchCatalogItem(byStableId: stableId) else {
             throw ShoppingListServiceError.itemNotFound(stableId)
         }
-        
+
         // 2. Get all minimums for this item
         let minimums = try await self.itemMinimumRepository.fetchMinimums(forItem: stableId)
-        
+
         // 3. Get tags once
         let tags = try await itemTagsRepository.fetchTags(forItem: stableId)
-        
+
         // 4. Build detailed models with current inventory
         var detailedMinimums: [DetailedMinimumModel] = []
-        
+
         for minimum in minimums {
             let currentQuantity = try await inventoryRepository.getTotalQuantity(
                 forItem: stableId,
                 type: minimum.type
             )
-            
+
             detailedMinimums.append(DetailedMinimumModel(
                 minimum: minimum,
-                glassItem: glassItem,
+                catalogItem: catalogItem,
                 tags: tags,
                 currentQuantity: currentQuantity
             ))
         }
-        
+
         return detailedMinimums.sorted() // Uses Comparable conformance from model
     }
     
@@ -376,20 +383,42 @@ actor ShoppingListService {
     }
     
     // MARK: - Private Helper Methods
-    
+
     /// Get current inventory state for all items
     private func getCurrentInventoryState() async throws -> [String: [String: Double]] {
         let allSummaries = try await inventoryRepository.getInventorySummary()
-        
+
         var inventoryState: [String: [String: Double]] = [:]
-        
+
         for summary in allSummaries {
             inventoryState[summary.item_stable_id] = summary.inventoryByType
         }
-        
+
         return inventoryState
     }
-    
+
+    /// Fetch catalog item by stable_id from any repository (glass, coating, or tool)
+    /// Tries all three repositories in parallel and returns the first match
+    private func fetchCatalogItem(byStableId stableId: String) async throws -> UnifiedCatalogItem? {
+        // Try fetching from all three repositories in parallel
+        async let glassItemTask = glassItemRepository.fetchItem(byStableId: stableId)
+        async let coatingItemTask = coatingItemRepository.fetchItem(byStableId: stableId)
+        async let toolItemTask = toolItemRepository.fetchItem(byStableId: stableId)
+
+        let (glassItem, coatingItem, toolItem) = try await (glassItemTask, coatingItemTask, toolItemTask)
+
+        // Return whichever one we found (only one should exist for a given stable_id)
+        if let glassItem = glassItem {
+            return UnifiedCatalogItem(glassItem: glassItem)
+        } else if let coatingItem = coatingItem {
+            return UnifiedCatalogItem(coatingItem: coatingItem)
+        } else if let toolItem = toolItem {
+            return UnifiedCatalogItem(toolItem: toolItem)
+        } else {
+            return nil
+        }
+    }
+
 }
 
 // MARK: - Service Models

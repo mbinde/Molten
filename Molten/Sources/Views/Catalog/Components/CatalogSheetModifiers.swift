@@ -19,8 +19,9 @@ struct CatalogSheetModifiers: ViewModifier {
     @Binding var selectedCOEs: Set<Int32>
     let coeCounts: [Int32: Int]
     let availableManufacturers: [String]
-    @Binding var selectedManufacturer: String?
+    @Binding var selectedManufacturers: Set<String>
     let manufacturerDisplayName: (String) -> String
+    let manufacturerCounts: [String: Int]
 
     func body(content: Content) -> some View {
         content
@@ -40,10 +41,11 @@ struct CatalogSheetModifiers: ViewModifier {
                 )
             }
             .sheet(isPresented: $showingManufacturerSelection) {
-                CatalogManufacturerFilterView(
+                FilterSelectionSheet.manufacturers(
                     availableManufacturers: availableManufacturers,
-                    selectedManufacturer: $selectedManufacturer,
-                    manufacturerDisplayName: manufacturerDisplayName
+                    selectedManufacturers: $selectedManufacturers,
+                    manufacturerDisplayName: manufacturerDisplayName,
+                    itemCounts: manufacturerCounts
                 )
             }
     }

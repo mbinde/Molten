@@ -21,22 +21,62 @@ final class SQLiteToolItemRepository: BaseSQLiteCatalogItemRepository<ToolItemMo
         )
     }
 
-    // MARK: - Feature Flag Overrides
+    // MARK: - Manufacturer Filtering
 
-    /// Override fetchItems to return empty when tools are disabled
+    /// Filter out manufacturers that shouldn't ship with the bundled catalog
+    private func filterByShippedManufacturers(_ items: [ToolItemModel]) -> [ToolItemModel] {
+        return items.filter { item in
+            GlassManufacturers.shipsWithBundledCatalog(for: item.manufacturer)
+        }
+    }
+
+    // MARK: - Overridden Methods with Feature Flags and Manufacturer Filtering
+
     override func fetchItems(matching predicate: NSPredicate?) async throws -> [ToolItemModel] {
         guard FeatureFlags.ENABLE_TOOLS else {
             return [] // Return empty array when tools are disabled
         }
-        return try await super.fetchItems(matching: predicate)
+        let items = try await super.fetchItems(matching: predicate)
+        return filterByShippedManufacturers(items)
     }
 
-    /// Override fetchItem to return nil when tools are disabled
     override func fetchItem(byStableId stableId: String) async throws -> ToolItemModel? {
         guard FeatureFlags.ENABLE_TOOLS else {
             return nil // Return nil when tools are disabled
         }
-        return try await super.fetchItem(byStableId: stableId)
+        guard let item = try await super.fetchItem(byStableId: stableId) else {
+            return nil
+        }
+        return GlassManufacturers.shipsWithBundledCatalog(for: item.manufacturer) ? item : nil
+    }
+
+    override func searchItems(text: String) async throws -> [ToolItemModel] {
+        guard FeatureFlags.ENABLE_TOOLS else {
+            return [] // Return empty array when tools are disabled
+        }
+
+        let searchPattern = "%\(text)%"
+        let query = """
+            SELECT * FROM tools
+            WHERE name LIKE ? OR manufacturer LIKE ? OR description LIKE ?
+            ORDER BY manufacturer, name
+            """
+
+        let items = try databaseManager.performDatabaseOperation { db in
+            try executeQuery(db: db, query: query, parameters: [searchPattern, searchPattern, searchPattern])
+        }
+        return filterByShippedManufacturers(items)
+    }
+
+    override func fetchItems(byManufacturer manufacturer: String) async throws -> [ToolItemModel] {
+        guard FeatureFlags.ENABLE_TOOLS else {
+            return []
+        }
+        // Check if this manufacturer should even be queried
+        guard GlassManufacturers.shipsWithBundledCatalog(for: manufacturer) else {
+            return []
+        }
+        return try await super.fetchItems(byManufacturer: manufacturer)
     }
 
     // MARK: - Tool-Specific Parsing
@@ -77,24 +117,5 @@ final class SQLiteToolItemRepository: BaseSQLiteCatalogItemRepository<ToolItemMo
             image_url: image_url,
             image_path: image_path
         )
-    }
-
-    // MARK: - Override searchItems to include description field
-
-    override func searchItems(text: String) async throws -> [ToolItemModel] {
-        guard FeatureFlags.ENABLE_TOOLS else {
-            return [] // Return empty array when tools are disabled
-        }
-
-        let searchPattern = "%\(text)%"
-        let query = """
-            SELECT * FROM tools
-            WHERE name LIKE ? OR manufacturer LIKE ? OR description LIKE ?
-            ORDER BY manufacturer, name
-            """
-
-        return try databaseManager.performDatabaseOperation { db in
-            try executeQuery(db: db, query: query, parameters: [searchPattern, searchPattern, searchPattern])
-        }
     }
 }

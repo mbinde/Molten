@@ -22,40 +22,40 @@ struct DefaultUnitsTests {
 
     // MARK: - Raw Value Tests
 
-    @Test("pounds has correct raw value")
-    func testPoundsRawValue() {
-        #expect(DefaultUnits.pounds.rawValue == "Pounds")
+    @Test("ounces has correct raw value")
+    func testOuncesRawValue() {
+        #expect(DefaultUnits.ounces.rawValue == "Ounces")
     }
 
-    @Test("kilograms has correct raw value")
-    func testKilogramsRawValue() {
-        #expect(DefaultUnits.kilograms.rawValue == "Kilograms")
+    @Test("grams has correct raw value")
+    func testGramsRawValue() {
+        #expect(DefaultUnits.grams.rawValue == "Grams")
     }
 
     @Test("DefaultUnits can be initialized from raw value")
     func testInitFromRawValue() {
-        #expect(DefaultUnits(rawValue: "Pounds") == .pounds)
-        #expect(DefaultUnits(rawValue: "Kilograms") == .kilograms)
+        #expect(DefaultUnits(rawValue: "Ounces") == .ounces)
+        #expect(DefaultUnits(rawValue: "Grams") == .grams)
     }
 
     @Test("DefaultUnits returns nil for invalid raw value")
     func testInvalidRawValue() {
         #expect(DefaultUnits(rawValue: "invalid") == nil)
         #expect(DefaultUnits(rawValue: "") == nil)
-        #expect(DefaultUnits(rawValue: "pounds") == nil) // Case-sensitive
+        #expect(DefaultUnits(rawValue: "ounces") == nil) // Case-sensitive
         #expect(DefaultUnits(rawValue: "kg") == nil)
     }
 
     // MARK: - Display Name Tests
 
-    @Test("pounds has correct display name")
-    func testPoundsDisplayName() {
-        #expect(DefaultUnits.pounds.displayName == "Pounds")
+    @Test("ounces has correct display name")
+    func testOuncesDisplayName() {
+        #expect(DefaultUnits.ounces.displayName == "Ounces")
     }
 
-    @Test("kilograms has correct display name")
-    func testKilogramsDisplayName() {
-        #expect(DefaultUnits.kilograms.displayName == "Kilograms")
+    @Test("grams has correct display name")
+    func testGramsDisplayName() {
+        #expect(DefaultUnits.grams.displayName == "Grams")
     }
 
     @Test("Display name matches raw value")
@@ -67,14 +67,14 @@ struct DefaultUnitsTests {
 
     // MARK: - Symbol Tests
 
-    @Test("pounds has correct symbol")
-    func testPoundsSymbol() {
-        #expect(DefaultUnits.pounds.symbol == "lb")
+    @Test("ounces has correct symbol")
+    func testOuncesSymbol() {
+        #expect(DefaultUnits.ounces.symbol == "oz")
     }
 
-    @Test("kilograms has correct symbol")
-    func testKilogramsSymbol() {
-        #expect(DefaultUnits.kilograms.symbol == "kg")
+    @Test("grams has correct symbol")
+    func testGramsSymbol() {
+        #expect(DefaultUnits.grams.symbol == "g")
     }
 
     @Test("Symbols are short abbreviations")
@@ -94,14 +94,14 @@ struct DefaultUnitsTests {
 
     // MARK: - System Image Tests
 
-    @Test("pounds has correct system image")
-    func testPoundsSystemImage() {
-        #expect(DefaultUnits.pounds.systemImage == "scalemass")
+    @Test("ounces has correct system image")
+    func testOuncesSystemImage() {
+        #expect(DefaultUnits.ounces.systemImage == "scalemass")
     }
 
-    @Test("kilograms has correct system image")
-    func testKilogramsSystemImage() {
-        #expect(DefaultUnits.kilograms.systemImage == "scalemass.fill")
+    @Test("grams has correct system image")
+    func testGramsSystemImage() {
+        #expect(DefaultUnits.grams.systemImage == "scalemass.fill")
     }
 
     @Test("All system images are valid SF Symbol names")
@@ -128,25 +128,25 @@ struct DefaultUnitsTests {
         let allCases = DefaultUnits.allCases
 
         #expect(allCases.count == 2)
-        #expect(allCases.contains(.pounds))
-        #expect(allCases.contains(.kilograms))
+        #expect(allCases.contains(.ounces))
+        #expect(allCases.contains(.grams))
     }
 
     @Test("allCases order is consistent")
     func testAllCasesOrder() {
         let allCases = DefaultUnits.allCases
 
-        #expect(allCases[0] == .pounds)
-        #expect(allCases[1] == .kilograms)
+        #expect(allCases[0] == .ounces)
+        #expect(allCases[1] == .grams)
     }
 
     // MARK: - Equatable Tests
 
     @Test("DefaultUnits equality works correctly")
     func testEquality() {
-        #expect(DefaultUnits.pounds == DefaultUnits.pounds)
-        #expect(DefaultUnits.pounds != DefaultUnits.kilograms)
-        #expect(DefaultUnits.kilograms == DefaultUnits.kilograms)
+        #expect(DefaultUnits.ounces == DefaultUnits.ounces)
+        #expect(DefaultUnits.ounces != DefaultUnits.grams)
+        #expect(DefaultUnits.grams == DefaultUnits.grams)
     }
 
     // MARK: - Comprehensive Coverage Tests
@@ -190,20 +190,20 @@ struct DefaultUnitsTests {
 
     // MARK: - Real-World Usage Tests
 
-    @Test("Pounds for imperial/US measurements")
-    func testPoundsForImperial() {
-        let unit = DefaultUnits.pounds
+    @Test("Ounces for imperial/US measurements")
+    func testOuncesForImperial() {
+        let unit = DefaultUnits.ounces
 
-        #expect(unit.symbol == "lb")
-        #expect(unit.displayName.contains("Pounds"))
+        #expect(unit.symbol == "oz")
+        #expect(unit.displayName.contains("Ounces"))
     }
 
-    @Test("Kilograms for metric measurements")
-    func testKilogramsForMetric() {
-        let unit = DefaultUnits.kilograms
+    @Test("Grams for metric measurements")
+    func testGramsForMetric() {
+        let unit = DefaultUnits.grams
 
-        #expect(unit.symbol == "kg")
-        #expect(unit.displayName.contains("Kilograms"))
+        #expect(unit.symbol == "g")
+        #expect(unit.displayName.contains("Grams"))
     }
 
     @Test("Units can be used in UserDefaults storage")

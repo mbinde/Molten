@@ -29,6 +29,8 @@ struct ShoppingListViewTests {
             shoppingListRepository: MockShoppingListRepository(),
             inventoryRepository: MockInventoryRepository(),
             glassItemRepository: MockGlassItemRepository(),
+            coatingItemRepository: MockCoatingItemRepository(),
+            toolItemRepository: MockToolItemRepository(),
             itemTagsRepository: MockItemTagsRepository(),
             userTagsRepository: MockUserTagsRepository()
         )
@@ -58,6 +60,8 @@ struct ShoppingListViewTests {
             mfr_status: "available"
         )
 
+        let catalogItem = UnifiedCatalogItem(glassItem: glassItem)
+
         let shoppingListItem = ShoppingListItemModel(
             item_stable_id: naturalKey,
             type: type,
@@ -68,7 +72,7 @@ struct ShoppingListViewTests {
 
         return DetailedShoppingListItemModel(
             shoppingListItem: shoppingListItem,
-            glassItem: glassItem,
+            catalogItem: catalogItem,
             tags: tags,
             userTags: userTags
         )
@@ -132,11 +136,11 @@ struct ShoppingListViewTests {
         let item3 = createTestShoppingListItem(naturalKey: "test-003", name: "Mango")
 
         let items = [item1, item2, item3]
-        let sorted = items.sorted { $0.glassItem.name < $1.glassItem.name }
+        let sorted = items.sorted { $0.catalogItem.name < $1.catalogItem.name }
 
-        #expect(sorted[0].glassItem.name == "Apple")
-        #expect(sorted[1].glassItem.name == "Mango")
-        #expect(sorted[2].glassItem.name == "Zebra")
+        #expect(sorted[0].catalogItem.name == "Apple")
+        #expect(sorted[1].catalogItem.name == "Mango")
+        #expect(sorted[2].catalogItem.name == "Zebra")
     }
 
     @Test("Sorting by store orders items alphabetically by store")
@@ -191,10 +195,10 @@ struct ShoppingListViewTests {
         let item3 = createTestShoppingListItem(naturalKey: "test-003", coe: 104)
 
         let items = [item1, item2, item3]
-        let filtered = items.filter { $0.glassItem.coe == 104 }
+        let filtered = items.filter { $0.catalogItem.coe == 104 }
 
         #expect(filtered.count == 2)
-        #expect(filtered.allSatisfy { $0.glassItem.coe == 104 })
+        #expect(filtered.allSatisfy { $0.catalogItem.coe == 104 })
     }
 
     @Test("Filter by tags filters items correctly")
@@ -224,12 +228,12 @@ struct ShoppingListViewTests {
         let searchText = "red"
 
         let filtered = items.filter { item in
-            item.glassItem.name.localizedCaseInsensitiveContains(searchText) ||
-            item.glassItem.stable_id.localizedCaseInsensitiveContains(searchText)
+            item.catalogItem.name.localizedCaseInsensitiveContains(searchText) ||
+            item.catalogItem.stable_id.localizedCaseInsensitiveContains(searchText)
         }
 
         #expect(filtered.count == 2)
-        #expect(filtered.allSatisfy { $0.glassItem.name.localizedCaseInsensitiveContains("red") })
+        #expect(filtered.allSatisfy { $0.catalogItem.name.localizedCaseInsensitiveContains("red") })
     }
 
     @Test("Multiple filters combine correctly")
@@ -257,11 +261,11 @@ struct ShoppingListViewTests {
 
         // Filter by COE 104 AND opaque tag
         let filtered = items.filter { item in
-            item.glassItem.coe == 104 && item.tags.contains("opaque")
+            item.catalogItem.coe == 104 && item.tags.contains("opaque")
         }
 
         #expect(filtered.count == 2)
-        #expect(filtered.allSatisfy { $0.glassItem.coe == 104 })
+        #expect(filtered.allSatisfy { $0.catalogItem.coe == 104 })
         #expect(filtered.allSatisfy { $0.tags.contains("opaque") })
     }
 
@@ -317,7 +321,7 @@ struct ShoppingListViewTests {
     //     let view = ShoppingListRowView(item: item, showStore: true)
     //
     //     #expect(view != nil)
-    //     #expect(item.glassItem.name == "Test Glass")
+    //     #expect(item.catalogItem.name == "Test Glass")
     //     #expect(item.shoppingListItem.neededQuantity == 10.0)
     //     #expect(item.shoppingListItem.store == "Test Store")
     // }
@@ -349,8 +353,8 @@ struct ShoppingListViewTests {
     //     let view = ShoppingListRowView(item: item, showStore: true)
     //
     //     #expect(view != nil)
-    //     #expect(item.glassItem.manufacturer == "be")
-    //     #expect(item.glassItem.coe == 104)
+    //     #expect(item.catalogItem.manufacturer == "be")
+    //     #expect(item.catalogItem.coe == 104)
     // }
 
     // MARK: - Data Loading Tests
@@ -451,7 +455,7 @@ struct ShoppingListViewTests {
             name: "Test & Special < > Characters"
         )
 
-        #expect(item.glassItem.name == "Test & Special < > Characters")
+        #expect(item.catalogItem.name == "Test & Special < > Characters")
     }
 
     // MARK: - Checkout Notification Tests

@@ -87,8 +87,6 @@ final class SQLiteItemTagsRepository: ItemTagsRepository {
                 }
             }
 
-            print("🏷️ DEBUG SQLiteItemTagsRepository: Querying SQLite for \(item_stable_ids.count) items")
-
             // Execute query and collect results
             var rowCount = 0
             while sqlite3_step(statement) == SQLITE_ROW {
@@ -105,11 +103,6 @@ final class SQLiteItemTagsRepository: ItemTagsRepository {
                     tagsByItem[stableId] = []
                 }
                 tagsByItem[stableId]?.append(tag)
-            }
-
-            print("🏷️ DEBUG SQLiteItemTagsRepository: Fetched \(rowCount) tag rows, grouped into \(tagsByItem.count) items")
-            if let firstItem = tagsByItem.first {
-                print("🏷️ DEBUG SQLiteItemTagsRepository: Sample - item \(firstItem.key) has \(firstItem.value.count) tags: \(firstItem.value.prefix(5).joined(separator: ", "))")
             }
 
             return tagsByItem

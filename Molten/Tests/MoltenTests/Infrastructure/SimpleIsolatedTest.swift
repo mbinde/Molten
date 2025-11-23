@@ -116,6 +116,8 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: mockInventoryRepo,
             glassItemRepository: mockGlassItemRepo,
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             itemTagsRepository: mockItemTagsRepo,
             userTagsRepository: mockUserTagsRepo
         )

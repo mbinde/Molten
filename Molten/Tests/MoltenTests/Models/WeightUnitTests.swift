@@ -409,11 +409,6 @@ struct WeightUnitPreferenceTests {
         WeightUnitPreference.setUserDefaults(UserDefaults(suiteName: "test.weightunits")!)
     }
 
-    deinit {
-        // Clean up
-        WeightUnitPreference.resetToStandard()
-    }
-
     @Test("default preference is grams")
     func testDefaultPreference() {
         // Clear any stored preference

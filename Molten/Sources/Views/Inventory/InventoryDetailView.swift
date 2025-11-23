@@ -674,16 +674,15 @@ struct InventoryDetailView: View {
     private var emptyDetailsMessage: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let manufacturerURL = currentItem.glassItem.url, let _ = URL(string: manufacturerURL) {
-                // Use HStack to compose text with different styles (iOS 26+ approach)
-                HStack(spacing: 2) {
-                    Text("Please check ")
-                    Text("the manufacturer's site")
+                // Use Text concatenation for proper inline flow
+                Text("Please check ")
+                    + Text("the manufacturer's site")
                         .foregroundColor(.blue)
-                    Image(systemName: "arrow.up.forward.square")
+                    + Text(" ")
+                    + Text(Image(systemName: "arrow.up.forward.square"))
                         .font(.caption)
                         .foregroundColor(.blue)
-                    Text(" to see if they have more information available or add notes of your own.")
-                }
+                    + Text(" to see if they have more information available or add notes of your own.")
             } else {
                 Text("No more details available here. Add notes of your own using the note button.")
             }

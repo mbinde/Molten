@@ -47,6 +47,7 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
     struct StoreFilterConfig {
         var selectedStore: Binding<String?>
         let availableStores: [String]
+        let itemCounts: [String: Int]
         let onClear: () -> Void
     }
 
@@ -56,6 +57,18 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
     struct LocationFilterConfig {
         var selectedLocation: Binding<String?>
         let availableLocations: [String]
+        let itemCounts: [String: Int]
+        let onClear: () -> Void
+    }
+
+    // MARK: - Optional Inventory Type Filter (Kind)
+    var inventoryTypeFilter: InventoryTypeFilterConfig?
+
+    struct InventoryTypeFilterConfig {
+        var selectedType: Binding<String?>
+        let availableTypes: [String]
+        let itemCounts: [String: Int]
+        let displayName: (String) -> String
         let onClear: () -> Void
     }
 
@@ -82,6 +95,7 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
         productTypeFilter: ProductTypeFilterConfig? = nil,
         storeFilter: StoreFilterConfig? = nil,
         locationFilter: LocationFilterConfig? = nil,
+        inventoryTypeFilter: InventoryTypeFilterConfig? = nil,
         coeFilter: COEFilterConfig? = nil
     ) {
         self._searchTitlesOnly = searchTitlesOnly
@@ -98,6 +112,7 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
         self.productTypeFilter = productTypeFilter
         self.storeFilter = storeFilter
         self.locationFilter = locationFilter
+        self.inventoryTypeFilter = inventoryTypeFilter
         self.coeFilter = coeFilter
     }
 
@@ -106,120 +121,38 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
             // Top row: Optional store filter (left) and Sort button (right)
             // Note: "Search titles only" toggle is in the search bar via .searchScopes() modifier
             HStack {
-                // Optional store filter (only show if multiple stores available)
-                if let storeConfig = storeFilter, storeConfig.availableStores.count > 1 {
-                    // Use FilterChipButton pattern with Menu
-                    Menu {
-                        // Clear option
-                        Button {
-                            storeConfig.onClear()
-                        } label: {
-                            Text("All Stores")
-                        }
-
-                        Divider()
-
-                        // Store options
-                        ForEach(storeConfig.availableStores, id: \.self) { store in
-                            Button {
-                                storeConfig.selectedStore.wrappedValue = store
-                            } label: {
-                                if storeConfig.selectedStore.wrappedValue == store {
-                                    Label(store, systemImage: "checkmark")
-                                } else {
-                                    Text(store)
-                                }
-                            }
-                        }
-                    } label: {
-                        // Match FilterChipButton exactly
-                        Button(action: {}) {
-                            HStack(spacing: DesignSystem.Spacing.sm) {
-                                if let selected = storeConfig.selectedStore.wrappedValue {
-                                    // Show selected store with X to clear
-                                    Text(selected)
-                                        .font(DesignSystem.Typography.captionSmall)
-                                        .fontWeight(DesignSystem.FontWeight.bold)
-                                        .lineLimit(1)
-                                    Image(systemName: "xmark.circle.fill")
-                                        .font(DesignSystem.Typography.captionSmall)
-                                        .onTapGesture {
-                                            storeConfig.onClear()
-                                        }
-                                } else {
-                                    // Show "All Stores" label with chevron (no icon)
-                                    Text("All Stores")
-                                        .font(DesignSystem.Typography.caption)
-                                        .fontWeight(DesignSystem.FontWeight.medium)
-                                    Image(systemName: "chevron.down")
-                                        .font(.caption2)
-                                }
-                            }
-                            .foregroundColor(storeConfig.selectedStore.wrappedValue != nil ? .white : .secondary)
-                            .padding(.horizontal, DesignSystem.Padding.chip)
-                            .padding(.vertical, DesignSystem.Padding.chipVertical)
-                            .background(storeConfig.selectedStore.wrappedValue != nil ? DesignSystem.Colors.accentPrimary : Color(.systemGray6))
-                            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
-                        }
-                        .buttonStyle(.plain)
-                    }
+                // Optional store filter
+                if let storeConfig = storeFilter {
+                    StoreFilterMenu(
+                        selectedStore: storeConfig.selectedStore,
+                        availableStores: storeConfig.availableStores,
+                        itemCounts: storeConfig.itemCounts,
+                        onClear: storeConfig.onClear
+                    )
+                    .id("store-filter") // Force stable identity
                 }
 
-                // Optional location filter (show if any locations available)
-                if let locationConfig = locationFilter, !locationConfig.availableLocations.isEmpty {
-                    Menu {
-                        // Clear option
-                        Button {
-                            locationConfig.onClear()
-                        } label: {
-                            Text("All Locations")
-                        }
+                // Optional location filter
+                if let locationConfig = locationFilter {
+                    LocationFilterMenu(
+                        selectedLocation: locationConfig.selectedLocation,
+                        availableLocations: locationConfig.availableLocations,
+                        itemCounts: locationConfig.itemCounts,
+                        onClear: locationConfig.onClear
+                    )
+                    .id("location-filter") // Force stable identity
+                }
 
-                        Divider()
-
-                        // Location options
-                        ForEach(locationConfig.availableLocations, id: \.self) { location in
-                            Button {
-                                locationConfig.selectedLocation.wrappedValue = location
-                            } label: {
-                                if locationConfig.selectedLocation.wrappedValue == location {
-                                    Label(location, systemImage: "checkmark")
-                                } else {
-                                    Text(location)
-                                }
-                            }
-                        }
-                    } label: {
-                        Button(action: {}) {
-                            HStack(spacing: DesignSystem.Spacing.sm) {
-                                if let selected = locationConfig.selectedLocation.wrappedValue {
-                                    // Show selected location with X to clear
-                                    Text(selected)
-                                        .font(DesignSystem.Typography.captionSmall)
-                                        .fontWeight(DesignSystem.FontWeight.bold)
-                                        .lineLimit(1)
-                                    Image(systemName: "xmark.circle.fill")
-                                        .font(DesignSystem.Typography.captionSmall)
-                                        .onTapGesture {
-                                            locationConfig.onClear()
-                                        }
-                                } else {
-                                    // Show "All Locations" label with chevron
-                                    Text("All Locations")
-                                        .font(DesignSystem.Typography.caption)
-                                        .fontWeight(DesignSystem.FontWeight.medium)
-                                    Image(systemName: "chevron.down")
-                                        .font(.caption2)
-                                }
-                            }
-                            .foregroundColor(locationConfig.selectedLocation.wrappedValue != nil ? .white : .secondary)
-                            .padding(.horizontal, DesignSystem.Padding.chip)
-                            .padding(.vertical, DesignSystem.Padding.chipVertical)
-                            .background(locationConfig.selectedLocation.wrappedValue != nil ? DesignSystem.Colors.accentPrimary : Color(.systemGray6))
-                            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
-                        }
-                        .buttonStyle(.plain)
-                    }
+                // Optional inventory type filter (Kind)
+                if let typeConfig = inventoryTypeFilter {
+                    InventoryTypeFilterMenu(
+                        selectedType: typeConfig.selectedType,
+                        availableTypes: typeConfig.availableTypes,
+                        itemCounts: typeConfig.itemCounts,
+                        displayName: typeConfig.displayName,
+                        onClear: typeConfig.onClear
+                    )
+                    .id("kind-filter") // Force stable identity
                 }
 
                 Spacer()
@@ -252,7 +185,7 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
             // Bottom row: Product type (left, optional) and filter chips (right)
             HStack(spacing: DesignSystem.Spacing.md) {
                 // Left: Product type filter (optional)
-                if var productTypeConfig = productTypeFilter {
+                if let productTypeConfig = productTypeFilter {
                     ProductTypeFilterMenu(
                         selectedProductTypes: productTypeConfig.selectedProductTypes,
                         availableTypes: productTypeConfig.availableTypes,
@@ -426,6 +359,215 @@ private struct ProductTypeFilterMenu: View {
             .padding(.horizontal, DesignSystem.Padding.chip)
             .padding(.vertical, DesignSystem.Padding.chipVertical)
             .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        }
+    }
+}
+
+// MARK: - Store Filter Menu
+
+private struct StoreFilterMenu: View {
+    let selectedStore: Binding<String?>
+    let availableStores: [String]
+    let itemCounts: [String: Int]
+    let onClear: () -> Void
+
+    var body: some View {
+        Menu {
+            // Clear option
+            Button {
+                onClear()
+            } label: {
+                Text("All Stores")
+            }
+
+            Divider()
+
+            // Store options
+            ForEach(availableStores, id: \.self) { store in
+                Button {
+                    selectedStore.wrappedValue = store
+                } label: {
+                    if selectedStore.wrappedValue == store {
+                        if let count = itemCounts[store] {
+                            Label("\(store) (\(count))", systemImage: "checkmark")
+                        } else {
+                            Label(store, systemImage: "checkmark")
+                        }
+                    } else {
+                        if let count = itemCounts[store] {
+                            Text("\(store) (\(count))")
+                        } else {
+                            Text(store)
+                        }
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                if let selected = selectedStore.wrappedValue {
+                    Text(selected)
+                        .font(DesignSystem.Typography.captionSmall)
+                        .fontWeight(DesignSystem.FontWeight.bold)
+                        .lineLimit(1)
+                    // X button to clear
+                    Image(systemName: "xmark.circle.fill")
+                        .font(DesignSystem.Typography.captionSmall)
+                        .onTapGesture {
+                            onClear()
+                        }
+                } else {
+                    Text("All Stores")
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                    Image(systemName: "chevron.down")
+                        .font(.caption2)
+                }
+            }
+            .foregroundColor(selectedStore.wrappedValue != nil ? .white : .secondary)
+            .padding(.horizontal, DesignSystem.Padding.chip)
+            .padding(.vertical, DesignSystem.Padding.chipVertical)
+            .background(selectedStore.wrappedValue != nil ? DesignSystem.Colors.accentPrimary : Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        }
+    }
+}
+
+// MARK: - Location Filter Menu
+
+private struct LocationFilterMenu: View {
+    let selectedLocation: Binding<String?>
+    let availableLocations: [String]
+    let itemCounts: [String: Int]
+    let onClear: () -> Void
+
+    var body: some View {
+        Menu {
+            // Clear option
+            Button {
+                onClear()
+            } label: {
+                Text("All Locations")
+            }
+
+            Divider()
+
+            // Location options
+            ForEach(availableLocations, id: \.self) { location in
+                Button {
+                    selectedLocation.wrappedValue = location
+                } label: {
+                    if selectedLocation.wrappedValue == location {
+                        if let count = itemCounts[location] {
+                            Label("\(location) (\(count))", systemImage: "checkmark")
+                        } else {
+                            Label(location, systemImage: "checkmark")
+                        }
+                    } else {
+                        if let count = itemCounts[location] {
+                            Text("\(location) (\(count))")
+                        } else {
+                            Text(location)
+                        }
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                if let selected = selectedLocation.wrappedValue {
+                    Text(selected)
+                        .font(DesignSystem.Typography.captionSmall)
+                        .fontWeight(DesignSystem.FontWeight.bold)
+                        .lineLimit(1)
+                    // X button to clear
+                    Image(systemName: "xmark.circle.fill")
+                        .font(DesignSystem.Typography.captionSmall)
+                        .onTapGesture {
+                            onClear()
+                        }
+                } else {
+                    Text("All Locations")
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                    Image(systemName: "chevron.down")
+                        .font(.caption2)
+                }
+            }
+            .foregroundColor(selectedLocation.wrappedValue != nil ? .white : .secondary)
+            .padding(.horizontal, DesignSystem.Padding.chip)
+            .padding(.vertical, DesignSystem.Padding.chipVertical)
+            .background(selectedLocation.wrappedValue != nil ? DesignSystem.Colors.accentPrimary : Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        }
+    }
+}
+
+// MARK: - Inventory Type Filter Menu
+
+private struct InventoryTypeFilterMenu: View {
+    let selectedType: Binding<String?>
+    let availableTypes: [String]
+    let itemCounts: [String: Int]
+    let displayName: (String) -> String
+    let onClear: () -> Void
+
+    var body: some View {
+        Menu {
+            // Clear option
+            Button {
+                onClear()
+            } label: {
+                Text("All Kinds")
+            }
+
+            Divider()
+
+            // Inventory type options
+            ForEach(availableTypes, id: \.self) { type in
+                Button {
+                    selectedType.wrappedValue = type
+                } label: {
+                    let displayName = displayName(type)
+                    if selectedType.wrappedValue == type {
+                        if let count = itemCounts[type] {
+                            Label("\(displayName) (\(count))", systemImage: "checkmark")
+                        } else {
+                            Label(displayName, systemImage: "checkmark")
+                        }
+                    } else {
+                        if let count = itemCounts[type] {
+                            Text("\(displayName) (\(count))")
+                        } else {
+                            Text(displayName)
+                        }
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                if let selected = selectedType.wrappedValue {
+                    Text(displayName(selected))
+                        .font(DesignSystem.Typography.captionSmall)
+                        .fontWeight(DesignSystem.FontWeight.bold)
+                        .lineLimit(1)
+                    // X button to clear
+                    Image(systemName: "xmark.circle.fill")
+                        .font(DesignSystem.Typography.captionSmall)
+                        .onTapGesture {
+                            onClear()
+                        }
+                } else {
+                    Text("All Kinds")
+                        .font(DesignSystem.Typography.caption)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                    Image(systemName: "chevron.down")
+                        .font(.caption2)
+                }
+            }
+            .foregroundColor(selectedType.wrappedValue != nil ? .white : .secondary)
+            .padding(.horizontal, DesignSystem.Padding.chip)
+            .padding(.vertical, DesignSystem.Padding.chipVertical)
+            .background(selectedType.wrappedValue != nil ? DesignSystem.Colors.accentPrimary : Color(.systemGray6))
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
     }

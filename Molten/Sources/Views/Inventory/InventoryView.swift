@@ -147,6 +147,33 @@ struct InventoryView: View, CachedDataDeletion {
             }
         }
 
+        // Apply inventory type filter (rod, tube, frit, etc.) - single selection from dropdown
+        if let inventoryType = viewModel.selectedInventoryType {
+            items = items.filter { item in
+                item.inventory.contains { inventory in
+                    inventory.type == inventoryType
+                }
+            }
+        }
+
+        // Legacy multi-select inventory type filter (keep for backwards compatibility if used elsewhere)
+        if !viewModel.selectedTypes.isEmpty {
+            items = items.filter { item in
+                item.inventory.contains { inventory in
+                    viewModel.selectedTypes.contains(inventory.type)
+                }
+            }
+        }
+
+        // Apply location filter
+        if let location = viewModel.selectedLocation {
+            items = items.filter { item in
+                item.inventory.contains { inventory in
+                    inventory.location == location
+                }
+            }
+        }
+
         // Apply search filter using SearchTextParser for advanced search (including grey/gray synonyms)
         if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
             let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
@@ -233,6 +260,10 @@ struct InventoryView: View, CachedDataDeletion {
         viewModel.tagCounts
     }
 
+    private var locationCounts: [String: Int] {
+        viewModel.locationCounts
+    }
+
     /// Recompute caches when inventory data changes
     /// This is expensive (O(n)) so only call when data actually changes
     private func updateCaches() {
@@ -290,14 +321,22 @@ struct InventoryView: View, CachedDataDeletion {
                     locationFilter: .init(
                         selectedLocation: $viewModel.selectedLocation,
                         availableLocations: allAvailableLocations,
+                        itemCounts: locationCounts,
                         onClear: { viewModel.selectedLocation = nil }
+                    ),
+                    inventoryTypeFilter: .init(
+                        selectedType: $viewModel.selectedInventoryType,
+                        availableTypes: viewModel.availableInventoryTypes,
+                        itemCounts: viewModel.inventoryTypeCounts,
+                        displayName: { GlassTerminologySettings.shared.displayName(for: $0) },
+                        onClear: { viewModel.selectedInventoryType = nil }
                     )
                 )
 
                 // Usage banner (only show for free tier)
                 if entitlementService.tier == .free {
                     UsageBanner(
-                        featureName: "inventory items",
+                        featureName: "unique inventory items",
                         currentCount: inventoryItemCount,
                         limit: entitlementService.getInventoryLimit(),
                         onUpgradeTap: {
@@ -510,7 +549,7 @@ struct InventoryView: View, CachedDataDeletion {
         List {
             ForEach(sortedFilteredItems, id: \.id) { item in
                 NavigationLink(value: item) {
-                    GlassItemRowView.inventory(item: item)
+                    GlassItemRowView.inventory(item: item, selectedLocation: viewModel.selectedLocation)
                 }
                 .id("\(item.id)-\(item.rating?.totalRatings ?? 0)-\(item.rating?.averageRating ?? 0)")  // Force re-render when rating changes
                 .accessibilityIdentifier("inventory.item.\(item.glassItem.stable_id)")

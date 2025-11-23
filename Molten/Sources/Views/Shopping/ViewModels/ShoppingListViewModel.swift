@@ -88,6 +88,14 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
         }
     }
 
+    var selectedInventoryType: String? = nil {
+        didSet {
+            if selectedInventoryType != oldValue {
+                applyFilters()
+            }
+        }
+    }
+
     // MARK: - Sort State
 
     var sortOption: ShoppingListSortOption = .neededQuantity {
@@ -157,6 +165,12 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
         let allItems = shoppingLists.values.flatMap { $0.items }
         let storesSet = Set(allItems.map { $0.shoppingListItem.store })
         return Array(storesSet).sorted()
+    }
+
+    var availableInventoryTypes: [String] {
+        let allItems = shoppingLists.values.flatMap { $0.items }
+        let typesSet = Set(allItems.map { $0.shoppingListItem.type })
+        return Array(typesSet).sorted()
     }
 
     // MARK: - Data Loading
@@ -282,6 +296,13 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
         if let store = selectedStore {
             allItems = allItems.filter { item in
                 item.shoppingListItem.store == store
+            }
+        }
+
+        // Apply inventory type filter (Kind)
+        if let inventoryType = selectedInventoryType {
+            allItems = allItems.filter { item in
+                item.shoppingListItem.type == inventoryType
             }
         }
 

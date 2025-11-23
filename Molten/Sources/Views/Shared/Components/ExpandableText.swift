@@ -13,10 +13,18 @@ struct ExpandableText: View {
     let content: String
     let lineLimit: Int
     @Binding var isExpanded: Bool
+    let accessibilityId: String?
 
     @State private var isTruncated: Bool = false
     @State private var intrinsicSize: CGSize = .zero
     @State private var truncatedSize: CGSize = .zero
+
+    init(content: String, lineLimit: Int, isExpanded: Binding<Bool>, accessibilityId: String? = nil) {
+        self.content = content
+        self.lineLimit = lineLimit
+        self._isExpanded = isExpanded
+        self.accessibilityId = accessibilityId
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -53,6 +61,7 @@ struct ExpandableText: View {
                         .font(.caption)
                         .foregroundColor(.blue)
                 }
+                .accessibilityIdentifier(accessibilityId ?? "")
             }
         }
         .onAppear {

@@ -13,7 +13,24 @@ struct ExpandableSection<Content: View>: View {
     let systemImage: String
     let isExpanded: Bool
     let onToggle: () -> Void
+    let accessibilityId: String?
     @ViewBuilder let content: Content
+
+    init(
+        title: String,
+        systemImage: String,
+        isExpanded: Bool,
+        onToggle: @escaping () -> Void,
+        accessibilityId: String? = nil,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.title = title
+        self.systemImage = systemImage
+        self.isExpanded = isExpanded
+        self.onToggle = onToggle
+        self.accessibilityId = accessibilityId
+        self.content = content()
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -33,6 +50,7 @@ struct ExpandableSection<Content: View>: View {
                 .padding(.vertical, 8)
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier(accessibilityId ?? "")
 
             if isExpanded {
                 content

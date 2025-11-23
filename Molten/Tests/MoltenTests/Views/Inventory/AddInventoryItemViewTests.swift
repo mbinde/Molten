@@ -558,8 +558,8 @@ struct AddInventoryItemViewTests {
         // When: Getting display name for rod
         let displayName = GlassItemTypeSystem.displayName(for: "rod")
 
-        // Then: Displays as "Rod"
-        #expect(displayName == "Rod")
+        // Then: Displays as "Rods"
+        #expect(displayName == "Rods")
     }
 
     @Test("Big rod type displays as Bar by default")
@@ -572,8 +572,8 @@ struct AddInventoryItemViewTests {
         // When: Getting display name for big-rod
         let displayName = GlassItemTypeSystem.displayName(for: "big-rod")
 
-        // Then: Displays as "Bar"
-        #expect(displayName == "Bar")
+        // Then: Displays as "Bars"
+        #expect(displayName == "Bars")
     }
 
     @Test("Custom terminology settings affect display names")

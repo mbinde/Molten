@@ -251,6 +251,7 @@ struct GlassItemCard: View {
                             }
                             .foregroundColor(.purple)
                         }
+                        .accessibilityIdentifier("glass_item_card_manage_tags")
                     }
                 }
             }

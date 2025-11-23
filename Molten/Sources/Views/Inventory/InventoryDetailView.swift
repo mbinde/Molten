@@ -229,30 +229,35 @@ struct InventoryDetailView: View {
                             } label: {
                                 Label("Add to Inventory", systemImage: "archivebox.fill")
                             }
+                            .accessibilityIdentifier("fab_add_inventory")
 
                             Button {
                                 showingShoppingListOptions = true
                             } label: {
                                 Label("Add to Shopping List", systemImage: "cart.fill")
                             }
+                            .accessibilityIdentifier("fab_add_shopping_list")
 
                             Button {
                                 showingImagePicker = true
                             } label: {
                                 Label("Add an Image", systemImage: "photo.fill")
                             }
+                            .accessibilityIdentifier("fab_add_image")
 
                             Button {
                                 showingUserNotesEditor = true
                             } label: {
                                 Label("Add a Note", systemImage: "note.text")
                             }
+                            .accessibilityIdentifier("fab_add_note")
 
                             Button {
                                 showingUserTagsEditor = true
                             } label: {
                                 Label("Manage Tags", systemImage: "tag.fill")
                             }
+                            .accessibilityIdentifier("fab_manage_tags")
                         } label: {
                             Image(systemName: "ellipsis.circle")
                                 .accessibilityLabel("Actions")
@@ -639,7 +644,8 @@ struct InventoryDetailView: View {
             title: "Glass Item Details",
             systemImage: "info.circle",
             isExpanded: expandedSections.contains("glass-item"),
-            onToggle: { toggleSection("glass-item") }
+            onToggle: { toggleSection("glass-item") },
+            accessibilityId: "section_glass_item"
         ) {
             VStack(alignment: .leading, spacing: 12) {
                 // Show color approximation notice if no image permission
@@ -652,7 +658,7 @@ struct InventoryDetailView: View {
                 }
 
                 if let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
-                    expandableNotesCard(title: "Manufacturer Notes", content: notes)
+                    expandableNotesCard(title: "Manufacturer Notes", content: notes, accessibilityId: "expand_manufacturer_notes")
                 }
 
                 // User notes section - only show if notes exist
@@ -697,6 +703,7 @@ struct InventoryDetailView: View {
                 UIApplication.shared.open(url)
             }
         }
+        .accessibilityIdentifier("manufacturer_website_link")
     }
 
     // MARK: - User Notes Section
@@ -740,6 +747,7 @@ struct InventoryDetailView: View {
                                 .foregroundColor(.accentColor)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityIdentifier("expand_user_notes")
                     }
                 }
                 .padding()
@@ -761,7 +769,8 @@ struct InventoryDetailView: View {
             title: "Inventory Details",
             systemImage: "cube.box",
             isExpanded: expandedSections.contains("inventory"),
-            onToggle: { toggleSection("inventory") }
+            onToggle: { toggleSection("inventory") },
+            accessibilityId: "section_inventory"
         ) {
             if currentItem.inventory.isEmpty {
                 // Empty state
@@ -822,7 +831,8 @@ struct InventoryDetailView: View {
             title: "Shopping List",
             systemImage: "cart",
             isExpanded: expandedSections.contains("shopping-list"),
-            onToggle: { toggleSection("shopping-list") }
+            onToggle: { toggleSection("shopping-list") },
+            accessibilityId: "section_shopping_list"
         ) {
             if let shoppingItem = shoppingListItem {
                 // Show shopping list item details
@@ -906,7 +916,8 @@ struct InventoryDetailView: View {
             title: "Custom Images",
             systemImage: "photo.on.rectangle",
             isExpanded: expandedSections.contains("custom-images"),
-            onToggle: { toggleSection("custom-images") }
+            onToggle: { toggleSection("custom-images") },
+            accessibilityId: "section_images"
         ) {
             if isLoadingImages {
                 ProgressView()
@@ -1046,13 +1057,13 @@ struct InventoryDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
-    private func expandableNotesCard(title: String, content: String) -> some View {
+    private func expandableNotesCard(title: String, content: String, accessibilityId: String? = nil) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.subheadline)
                 .fontWeight(.semibold)
 
-            ExpandableText(content: content, lineLimit: 4, isExpanded: $isManufacturerNotesExpanded)
+            ExpandableText(content: content, lineLimit: 4, isExpanded: $isManufacturerNotesExpanded, accessibilityId: accessibilityId)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()

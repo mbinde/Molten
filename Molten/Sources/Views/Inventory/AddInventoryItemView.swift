@@ -33,6 +33,7 @@ struct AddInventoryFormView: View {
 
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
+    private let inventoryRepository: InventoryRepository
     private let prefilledNaturalKey: String?
     @State private var viewModel: AddInventoryItemViewModel
     @StateObject private var terminologySettings = GlassTerminologySettings.shared
@@ -40,6 +41,7 @@ struct AddInventoryFormView: View {
     init(prefilledNaturalKey: String? = nil, deps: AppDependencies = AppDependencies()) {
         self.catalogService = deps.catalogService
         self.inventoryTrackingService = deps.inventoryTrackingService
+        self.inventoryRepository = deps.inventoryRepository
         self.prefilledNaturalKey = prefilledNaturalKey
         self._viewModel = State(initialValue: AddInventoryItemViewModel(
             prefilledNaturalKey: prefilledNaturalKey,
@@ -291,9 +293,11 @@ struct AddInventoryFormView: View {
     
     private var locationField: some View {
         LabeledField("Location (optional)") {
-            TextField("Location (optional)", text: $viewModel.location)
-                .textFieldStyle(.roundedBorder)
-                .accessibilityIdentifier("inventory.add.locationField")
+            LocationAutoCompleteField(
+                location: $viewModel.location,
+                inventoryRepository: inventoryRepository
+            )
+            .accessibilityIdentifier("inventory.add.locationField")
         }
     }
 
@@ -316,7 +320,7 @@ struct AddInventoryFormView: View {
         }
 
         ToolbarItem(placement: .confirmationAction) {
-            Button("Save") {
+            Button("Add") {
                 saveInventoryItem()
             }
             .disabled(!viewModel.isValid)

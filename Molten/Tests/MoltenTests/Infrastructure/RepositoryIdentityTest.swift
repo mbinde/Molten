@@ -99,6 +99,8 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: otherMockRepos.inventory,
             glassItemRepository: mockRepo, // Use the SAME instance
+            coatingItemRepository: coatingItemRepo,
+            toolItemRepository: toolItemRepo,
             itemTagsRepository: otherMockRepos.itemTags,
             userTagsRepository: userTagsRepo
         )

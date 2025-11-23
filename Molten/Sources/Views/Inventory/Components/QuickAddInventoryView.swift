@@ -41,7 +41,10 @@ struct QuickAddInventoryView: View {
                     TextField("Quantity", text: $quantity)
                         .keyboardType(.decimalPad)
 
-                    TextField("Location (optional)", text: $location)
+                    LocationAutoCompleteField(
+                        location: $location,
+                        inventoryRepository: inventoryRepository
+                    )
                 }
             }
             .navigationTitle("Add Inventory")

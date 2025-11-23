@@ -12,11 +12,19 @@ import Foundation
 import OSLog
 import CoreData
 
+enum InventorySearchScope: String, CaseIterable {
+    case allFields = "All fields"
+    case titlesOnly = "Only titles"
+}
+
 /// Repository-based InventoryView that uses the new GlassItem architecture
 struct InventoryView: View, CachedDataDeletion {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data
     @State private var viewModel: InventoryViewModel
     @Environment(EntitlementService.self) private var entitlementService
+
+    // Search scope state
+    @State private var searchScope: InventorySearchScope = .allFields
 
     // Performance timing (DEBUG builds only)
     @State private var performanceTimer = PerformanceTimer()
@@ -41,6 +49,7 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var cachedAllTags: [String] = []
     @State private var cachedAllCOEs: [Int32] = []
     @State private var cachedManufacturers: [String] = []
+    @State private var cachedLocations: [String] = []
 
     // CRITICAL: Service instances (not optional - always provided)
     private let catalogService: CatalogService
@@ -138,6 +147,33 @@ struct InventoryView: View, CachedDataDeletion {
             }
         }
 
+        // Apply inventory type filter (rod, tube, frit, etc.) - single selection from dropdown
+        if let inventoryType = viewModel.selectedInventoryType {
+            items = items.filter { item in
+                item.inventory.contains { inventory in
+                    inventory.type == inventoryType
+                }
+            }
+        }
+
+        // Legacy multi-select inventory type filter (keep for backwards compatibility if used elsewhere)
+        if !viewModel.selectedTypes.isEmpty {
+            items = items.filter { item in
+                item.inventory.contains { inventory in
+                    viewModel.selectedTypes.contains(inventory.type)
+                }
+            }
+        }
+
+        // Apply location filter
+        if let location = viewModel.selectedLocation {
+            items = items.filter { item in
+                item.inventory.contains { inventory in
+                    inventory.location == location
+                }
+            }
+        }
+
         // Apply search filter using SearchTextParser for advanced search (including grey/gray synonyms)
         if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
             let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
@@ -179,7 +215,7 @@ struct InventoryView: View, CachedDataDeletion {
     }
 
     private var shouldShowSearchEmptyState: Bool {
-        !viewModel.completeItems.isEmpty && (!viewModel.searchText.isEmpty || !viewModel.selectedTags.isEmpty || !viewModel.selectedCOEs.isEmpty || !viewModel.selectedManufacturers.isEmpty)
+        !viewModel.completeItems.isEmpty && (!viewModel.searchText.isEmpty || !viewModel.selectedTags.isEmpty || !viewModel.selectedCOEs.isEmpty || !viewModel.selectedManufacturers.isEmpty || viewModel.selectedLocation != nil)
     }
 
     // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
@@ -195,6 +231,11 @@ struct InventoryView: View, CachedDataDeletion {
     // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
     private var allAvailableManufacturers: [String] {
         return cachedManufacturers
+    }
+
+    // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
+    private var allAvailableLocations: [String] {
+        return cachedLocations
     }
 
     // Count of unique items with inventory (for subscription banner)
@@ -219,15 +260,20 @@ struct InventoryView: View, CachedDataDeletion {
         viewModel.tagCounts
     }
 
+    private var locationCounts: [String: Int] {
+        viewModel.locationCounts
+    }
+
     /// Recompute caches when inventory data changes
     /// This is expensive (O(n)) so only call when data actually changes
     private func updateCaches() {
         let itemsWithInventory = viewModel.completeItems.filter { $0.totalQuantity > 0 }
 
-        // Extract all tags, COEs, and manufacturers
+        // Extract all tags, COEs, manufacturers, and locations
         var allTagsSet = Set<String>()
         var allCOEsSet = Set<Int32>()
         var manufacturersSet = Set<String>()
+        var locationsSet = Set<String>()
 
         for item in itemsWithInventory {
             allTagsSet.formUnion(item.tags)
@@ -237,11 +283,19 @@ struct InventoryView: View, CachedDataDeletion {
             if !mfr.isEmpty {
                 manufacturersSet.insert(mfr)
             }
+
+            // Extract locations from inventory records
+            for inventoryRecord in item.inventory {
+                if let location = inventoryRecord.location, !location.isEmpty {
+                    locationsSet.insert(location)
+                }
+            }
         }
 
         cachedAllTags = allTagsSet.sorted()
         cachedAllCOEs = allCOEsSet.sorted()
         cachedManufacturers = manufacturersSet.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+        cachedLocations = locationsSet.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
     var body: some View {
@@ -263,13 +317,26 @@ struct InventoryView: View, CachedDataDeletion {
                         selectedProductTypes: $viewModel.selectedProductTypes,
                         availableTypes: FeatureFlags.availableProductTypes,
                         displayName: displayNameForProductType
+                    ),
+                    locationFilter: .init(
+                        selectedLocation: $viewModel.selectedLocation,
+                        availableLocations: allAvailableLocations,
+                        itemCounts: locationCounts,
+                        onClear: { viewModel.selectedLocation = nil }
+                    ),
+                    inventoryTypeFilter: .init(
+                        selectedType: $viewModel.selectedInventoryType,
+                        availableTypes: viewModel.availableInventoryTypes,
+                        itemCounts: viewModel.inventoryTypeCounts,
+                        displayName: { GlassTerminologySettings.shared.displayName(for: $0) },
+                        onClear: { viewModel.selectedInventoryType = nil }
                     )
                 )
 
                 // Usage banner (only show for free tier)
                 if entitlementService.tier == .free {
                     UsageBanner(
-                        featureName: "inventory items",
+                        featureName: "unique inventory items",
                         currentCount: inventoryItemCount,
                         limit: entitlementService.getInventoryLimit(),
                         onUpgradeTap: {
@@ -292,6 +359,7 @@ struct InventoryView: View, CachedDataDeletion {
                         inventoryListView
                     }
                 }
+                .id(refreshTrigger)
             }
             .performanceTitle("Inventory", timer: performanceTimer)
             #if os(iOS)
@@ -302,6 +370,14 @@ struct InventoryView: View, CachedDataDeletion {
                 placement: .navigationBarDrawer(displayMode: .always),
                 prompt: "Search inventory by name, code, manufacturer..."
             )
+            .searchScopes($searchScope, activation: .onSearchPresentation) {
+                ForEach(InventorySearchScope.allCases, id: \.self) { scope in
+                    Text(scope.rawValue)
+                }
+            }
+            .onChange(of: searchScope) { oldValue, newValue in
+                viewModel.searchTitlesOnly = (newValue == .titlesOnly)
+            }
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
             .toolbar {
@@ -473,7 +549,7 @@ struct InventoryView: View, CachedDataDeletion {
         List {
             ForEach(sortedFilteredItems, id: \.id) { item in
                 NavigationLink(value: item) {
-                    GlassItemRowView.inventory(item: item)
+                    GlassItemRowView.inventory(item: item, selectedLocation: viewModel.selectedLocation)
                 }
                 .id("\(item.id)-\(item.rating?.totalRatings ?? 0)-\(item.rating?.averageRating ?? 0)")  // Force re-render when rating changes
                 .accessibilityIdentifier("inventory.item.\(item.glassItem.stable_id)")
@@ -562,8 +638,6 @@ struct InventoryView: View, CachedDataDeletion {
         // Update view-specific caches and state
         await MainActor.run {
             let itemsWithInventory = viewModel.completeItems.filter { $0.totalQuantity > 0 }
-            log.info("✅ Loaded \(viewModel.completeItems.count) glass items")
-            log.info("📊 Items with inventory: \(itemsWithInventory.count)")
             updateCaches()  // PERFORMANCE: Update cached filter values
             refreshTrigger += 1  // Force SwiftUI to refresh the list
         }
@@ -634,11 +708,7 @@ struct InventoryView: View, CachedDataDeletion {
     }
 
     func updateDerivedCaches() {
-        log.info("📊 updateDerivedCaches: Before updateCaches()")
-        log.info("📊 sortedFilteredItems.count = \(sortedFilteredItems.count)")
         updateCaches()
-        log.info("📊 updateDerivedCaches: After updateCaches()")
-        log.info("📊 sortedFilteredItems.count = \(sortedFilteredItems.count)")
     }
 
     // Convenience wrapper for .onDelete handler

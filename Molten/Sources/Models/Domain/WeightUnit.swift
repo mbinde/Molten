@@ -2,40 +2,40 @@ import Foundation
 
 /// Units for weight measurements
 enum WeightUnit: String, CaseIterable, Identifiable {
-    case pounds
-    case kilograms
-    
+    case ounces
+    case grams
+
     var id: String { rawValue }
-    
+
     var displayName: String {
         switch self {
-        case .pounds: return "Pounds"
-        case .kilograms: return "Kilograms"
+        case .ounces: return "Ounces"
+        case .grams: return "Grams"
         }
     }
-    
+
     /// Short symbol for display alongside numeric values
     var symbol: String {
         switch self {
-        case .pounds: return "lb"
-        case .kilograms: return "kg"
+        case .ounces: return "oz"
+        case .grams: return "g"
         }
     }
-    
+
     /// System image to use in UI where appropriate
     var systemImage: String { "scalemass" }
-    
+
     /// Convert weight from one unit to another
     func convert(_ value: Double, to targetUnit: WeightUnit) -> Double {
         if self == targetUnit {
             return value
         }
-        
+
         switch (self, targetUnit) {
-        case (.pounds, .kilograms):
-            return value * 0.453592 // 1 lb = 0.453592 kg
-        case (.kilograms, .pounds):
-            return value / 0.453592 // 1 kg = 2.20462 lb
+        case (.ounces, .grams):
+            return value * 28.3495 // 1 oz = 28.3495 g
+        case (.grams, .ounces):
+            return value / 28.3495 // 1 g = 0.03527 oz
         default:
             return value
         }
@@ -71,19 +71,19 @@ struct WeightUnitPreference {
     nonisolated static var current: WeightUnit {
         let defaults = userDefaults
         guard let raw = defaults.string(forKey: storageKey), !raw.isEmpty else {
-            // No preference set - default to pounds
-            return .pounds
+            // No preference set - default to grams
+            return .grams
         }
-        
+
         // Convert from DefaultUnits to WeightUnit
         switch raw {
-        case "Pounds":
-            return .pounds
-        case "Kilograms":
-            return .kilograms
+        case "Ounces":
+            return .ounces
+        case "Grams":
+            return .grams
         default:
-            // Invalid preference - default to pounds
-            return .pounds
+            // Invalid preference - default to grams
+            return .grams
         }
     }
     
@@ -108,52 +108,52 @@ struct WeightUnitPreference {
 struct UnitsDisplayHelper {
     static func displayName(for units: CatalogUnits) -> String {
         switch units {
-        case .pounds:
-            return "lb"
-        case .kilograms:
-            return "kg"
+        case .ounces:
+            return "oz"
+        case .grams:
+            return "g"
         case .shorts:
             return "Shorts"
         case .rods:
             return units.displayName
         }
     }
-    
+
     /// Get the CatalogUnits case that matches the current weight unit preference
     static func preferredWeightUnit() -> CatalogUnits {
         switch WeightUnitPreference.current {
-        case .pounds:
-            return .pounds
-        case .kilograms:
-            return .kilograms
+        case .ounces:
+            return .ounces
+        case .grams:
+            return .grams
         }
     }
-    
+
     /// Convert count and unit directly without needing an InventoryItem
     static func convertCount(_ count: Double, from sourceUnits: CatalogUnits) -> (count: Double, unit: String) {
         // Only convert weight units, leave others as-is
         switch sourceUnits {
-        case .pounds, .kilograms:
+        case .ounces, .grams:
             // Stage 1: Get the normalized weight unit (no small units to convert from)
             let normalizedCount = count
             let normalizedWeightUnit: WeightUnit
-            
+
             switch sourceUnits {
-            case .pounds:
-                normalizedWeightUnit = .pounds
-            case .kilograms:
-                normalizedWeightUnit = .kilograms
+            case .ounces:
+                normalizedWeightUnit = .ounces
+            case .grams:
+                normalizedWeightUnit = .grams
             default:
-                normalizedWeightUnit = .pounds // fallback
+                normalizedWeightUnit = .grams // fallback
             }
-            
-            // Stage 2: Convert to user's preferred weight system (pounds ↔ kilograms)
+
+            // Stage 2: Convert to user's preferred weight system (ounces ↔ grams)
             let preferredWeightUnit = WeightUnitPreference.current
             let convertedCount = normalizedWeightUnit.convert(normalizedCount, to: preferredWeightUnit)
             let displayUnit = preferredWeightUnit.symbol
-            
+
             return (count: convertedCount, unit: displayUnit)
-            
+
         case .shorts, .rods:
             return (count: count, unit: sourceUnits.displayName)
         }

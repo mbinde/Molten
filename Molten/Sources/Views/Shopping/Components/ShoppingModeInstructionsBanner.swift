@@ -9,6 +9,8 @@ import SwiftUI
 
 struct ShoppingModeInstructionsBanner: View {
     @Binding var isExpanded: Bool
+    let itemsInBasketCount: Int
+    let totalItemsInViewCount: Int
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
@@ -24,6 +26,12 @@ struct ShoppingModeInstructionsBanner: View {
                         .font(.headline)
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)
+                    Text("•")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    Text("\(itemsInBasketCount)/\(totalItemsInViewCount) in basket")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .secondaryCaptionStyle()

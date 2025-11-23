@@ -22,28 +22,28 @@ struct WeightUnitTests {
 
     // MARK: - Raw Value Tests
 
-    @Test("pounds has correct raw value")
-    func testPoundsRawValue() {
-        #expect(WeightUnit.pounds.rawValue == "pounds")
+    @Test("ounces has correct raw value")
+    func testOuncesRawValue() {
+        #expect(WeightUnit.ounces.rawValue == "ounces")
     }
 
-    @Test("kilograms has correct raw value")
-    func testKilogramsRawValue() {
-        #expect(WeightUnit.kilograms.rawValue == "kilograms")
+    @Test("grams has correct raw value")
+    func testGramsRawValue() {
+        #expect(WeightUnit.grams.rawValue == "grams")
     }
 
     @Test("WeightUnit can be initialized from raw value")
     func testInitFromRawValue() {
-        #expect(WeightUnit(rawValue: "pounds") == .pounds)
-        #expect(WeightUnit(rawValue: "kilograms") == .kilograms)
+        #expect(WeightUnit(rawValue: "ounces") == .ounces)
+        #expect(WeightUnit(rawValue: "grams") == .grams)
     }
 
     @Test("WeightUnit returns nil for invalid raw value")
     func testInvalidRawValue() {
         #expect(WeightUnit(rawValue: "invalid") == nil)
         #expect(WeightUnit(rawValue: "") == nil)
-        #expect(WeightUnit(rawValue: "lbs") == nil)
-        #expect(WeightUnit(rawValue: "kg") == nil)
+        #expect(WeightUnit(rawValue: "oz") == nil)
+        #expect(WeightUnit(rawValue: "g") == nil)
     }
 
     // MARK: - CaseIterable Tests
@@ -53,28 +53,28 @@ struct WeightUnitTests {
         let allCases = WeightUnit.allCases
 
         #expect(allCases.count == 2)
-        #expect(allCases.contains(.pounds))
-        #expect(allCases.contains(.kilograms))
+        #expect(allCases.contains(.ounces))
+        #expect(allCases.contains(.grams))
     }
 
     @Test("allCases order is consistent")
     func testAllCasesOrder() {
         let allCases = WeightUnit.allCases
 
-        #expect(allCases[0] == .pounds)
-        #expect(allCases[1] == .kilograms)
+        #expect(allCases[0] == .ounces)
+        #expect(allCases[1] == .grams)
     }
 
     // MARK: - Identifiable Tests
 
-    @Test("pounds has correct ID")
-    func testPoundsID() {
-        #expect(WeightUnit.pounds.id == "pounds")
+    @Test("ounces has correct ID")
+    func testOuncesID() {
+        #expect(WeightUnit.ounces.id == "ounces")
     }
 
-    @Test("kilograms has correct ID")
-    func testKilogramsID() {
-        #expect(WeightUnit.kilograms.id == "kilograms")
+    @Test("grams has correct ID")
+    func testGramsID() {
+        #expect(WeightUnit.grams.id == "grams")
     }
 
     @Test("ID matches raw value")
@@ -94,14 +94,14 @@ struct WeightUnitTests {
 
     // MARK: - Display Name Tests
 
-    @Test("pounds has correct display name")
-    func testPoundsDisplayName() {
-        #expect(WeightUnit.pounds.displayName == "Pounds")
+    @Test("ounces has correct display name")
+    func testOuncesDisplayName() {
+        #expect(WeightUnit.ounces.displayName == "Ounces")
     }
 
-    @Test("kilograms has correct display name")
-    func testKilogramsDisplayName() {
-        #expect(WeightUnit.kilograms.displayName == "Kilograms")
+    @Test("grams has correct display name")
+    func testGramsDisplayName() {
+        #expect(WeightUnit.grams.displayName == "Grams")
     }
 
     @Test("All display names are capitalized")
@@ -121,14 +121,14 @@ struct WeightUnitTests {
 
     // MARK: - Symbol Tests
 
-    @Test("pounds has correct symbol")
-    func testPoundsSymbol() {
-        #expect(WeightUnit.pounds.symbol == "lb")
+    @Test("ounces has correct symbol")
+    func testOuncesSymbol() {
+        #expect(WeightUnit.ounces.symbol == "oz")
     }
 
-    @Test("kilograms has correct symbol")
-    func testKilogramsSymbol() {
-        #expect(WeightUnit.kilograms.symbol == "kg")
+    @Test("grams has correct symbol")
+    func testGramsSymbol() {
+        #expect(WeightUnit.grams.symbol == "g")
     }
 
     @Test("Symbols are short abbreviations")
@@ -156,14 +156,14 @@ struct WeightUnitTests {
 
     // MARK: - System Image Tests
 
-    @Test("pounds has correct system image")
-    func testPoundsSystemImage() {
-        #expect(WeightUnit.pounds.systemImage == "scalemass")
+    @Test("ounces has correct system image")
+    func testOuncesSystemImage() {
+        #expect(WeightUnit.ounces.systemImage == "scalemass")
     }
 
-    @Test("kilograms has correct system image")
-    func testKilogramsSystemImage() {
-        #expect(WeightUnit.kilograms.systemImage == "scalemass")
+    @Test("grams has correct system image")
+    func testGramsSystemImage() {
+        #expect(WeightUnit.grams.systemImage == "scalemass")
     }
 
     @Test("All system images are valid SF Symbol names")
@@ -185,143 +185,152 @@ struct WeightUnitTests {
 
     // MARK: - Conversion Tests
 
-    @Test("Convert pounds to pounds returns same value")
-    func testConvertPoundsToPounds() {
+    @Test("Convert ounces to ounces returns same value")
+    func testConvertOuncesToOunces() {
         let value = 10.0
-        let result = WeightUnit.pounds.convert(value, to: .pounds)
+        let result = WeightUnit.ounces.convert(value, to: .ounces)
 
         #expect(result == value)
     }
 
-    @Test("Convert kilograms to kilograms returns same value")
-    func testConvertKilogramsToKilograms() {
-        let value = 5.0
-        let result = WeightUnit.kilograms.convert(value, to: .kilograms)
+    @Test("Convert grams to grams returns same value")
+    func testConvertGramsToGrams() {
+        let value = 100.0
+        let result = WeightUnit.grams.convert(value, to: .grams)
 
         #expect(result == value)
     }
 
-    @Test("Convert pounds to kilograms")
-    func testConvertPoundsToKilograms() {
-        let pounds = 10.0
-        let kilograms = WeightUnit.pounds.convert(pounds, to: .kilograms)
+    @Test("Convert ounces to grams")
+    func testConvertOuncesToGrams() {
+        let ounces = 10.0
+        let grams = WeightUnit.ounces.convert(ounces, to: .grams)
 
-        // 10 lb * 0.453592 = 4.53592 kg
-        let expected = 4.53592
-        #expect(abs(kilograms - expected) < 0.00001)
+        // 10 oz * 28.3495 = 283.495 g
+        let expected = 283.495
+        #expect(abs(grams - expected) < 0.001)
     }
 
-    @Test("Convert kilograms to pounds")
-    func testConvertKilogramsToPounds() {
-        let kilograms = 5.0
-        let pounds = WeightUnit.kilograms.convert(kilograms, to: .pounds)
+    @Test("Convert grams to ounces")
+    func testConvertGramsToOunces() {
+        let grams = 100.0
+        let ounces = WeightUnit.grams.convert(grams, to: .ounces)
 
-        // 5 kg / 0.453592 = 11.0231 lb
-        let expected = 11.0231
-        #expect(abs(pounds - expected) < 0.001)
+        // 100 g / 28.3495 = 3.527 oz
+        let expected = 3.527
+        #expect(abs(ounces - expected) < 0.001)
     }
 
-    @Test("Convert zero pounds to kilograms")
-    func testConvertZeroPoundsToKilograms() {
-        let result = WeightUnit.pounds.convert(0.0, to: .kilograms)
+    @Test("Convert zero ounces to grams")
+    func testConvertZeroOuncesToGrams() {
+        let result = WeightUnit.ounces.convert(0.0, to: .grams)
         #expect(result == 0.0)
     }
 
-    @Test("Convert zero kilograms to pounds")
-    func testConvertZeroKilogramsToPounds() {
-        let result = WeightUnit.kilograms.convert(0.0, to: .pounds)
+    @Test("Convert zero grams to ounces")
+    func testConvertZeroGramsToOunces() {
+        let result = WeightUnit.grams.convert(0.0, to: .ounces)
         #expect(result == 0.0)
     }
 
-    @Test("Conversion is reversible (pounds)")
-    func testConversionReversiblePounds() {
-        let original = 100.0
-        let converted = WeightUnit.pounds.convert(original, to: .kilograms)
-        let backToOriginal = WeightUnit.kilograms.convert(converted, to: .pounds)
+    @Test("Conversion is reversible (ounces)")
+    func testConversionReversibleOunces() {
+        let original = 5.0
+        let converted = WeightUnit.ounces.convert(original, to: .grams)
+        let backToOriginal = WeightUnit.grams.convert(converted, to: .ounces)
 
         #expect(abs(backToOriginal - original) < 0.001)
     }
 
-    @Test("Conversion is reversible (kilograms)")
-    func testConversionReversibleKilograms() {
-        let original = 50.0
-        let converted = WeightUnit.kilograms.convert(original, to: .pounds)
-        let backToOriginal = WeightUnit.pounds.convert(converted, to: .kilograms)
+    @Test("Conversion is reversible (grams)")
+    func testConversionReversibleGrams() {
+        let original = 250.0
+        let converted = WeightUnit.grams.convert(original, to: .ounces)
+        let backToOriginal = WeightUnit.ounces.convert(converted, to: .grams)
 
         #expect(abs(backToOriginal - original) < 0.001)
     }
 
-    @Test("Convert fractional pounds to kilograms")
-    func testConvertFractionalPounds() {
-        let pounds = 2.5
-        let kilograms = WeightUnit.pounds.convert(pounds, to: .kilograms)
+    @Test("Convert fractional ounces to grams")
+    func testConvertFractionalOunces() {
+        let ounces = 0.5
+        let grams = WeightUnit.ounces.convert(ounces, to: .grams)
 
-        // 2.5 lb * 0.453592 = 1.13398 kg
-        let expected = 1.13398
-        #expect(abs(kilograms - expected) < 0.00001)
+        // 0.5 oz * 28.3495 = 14.17475 g
+        let expected = 14.17475
+        #expect(abs(grams - expected) < 0.001)
     }
 
-    @Test("Convert large value pounds to kilograms")
+    @Test("Convert large value ounces to grams")
     func testConvertLargeValue() {
-        let pounds = 1000.0
-        let kilograms = WeightUnit.pounds.convert(pounds, to: .kilograms)
+        let ounces = 100.0
+        let grams = WeightUnit.ounces.convert(ounces, to: .grams)
 
-        // 1000 lb * 0.453592 = 453.592 kg
-        let expected = 453.592
-        #expect(abs(kilograms - expected) < 0.001)
+        // 100 oz * 28.3495 = 2834.95 g
+        let expected = 2834.95
+        #expect(abs(grams - expected) < 0.01)
     }
 
-    @Test("Conversion factor accuracy (1 lb to kg)")
+    @Test("Conversion factor accuracy (1 oz to g)")
     func testConversionFactorAccuracy() {
-        let onePoundInKg = WeightUnit.pounds.convert(1.0, to: .kilograms)
+        let oneOunceInGrams = WeightUnit.ounces.convert(1.0, to: .grams)
 
-        #expect(abs(onePoundInKg - 0.453592) < 0.000001)
+        #expect(abs(oneOunceInGrams - 28.3495) < 0.0001)
     }
 
-    @Test("Conversion factor accuracy (1 kg to lb)")
+    @Test("Conversion factor accuracy (1 g to oz)")
     func testConversionFactorAccuracyReverse() {
-        let oneKgInPounds = WeightUnit.kilograms.convert(1.0, to: .pounds)
+        let oneGramInOunces = WeightUnit.grams.convert(1.0, to: .ounces)
 
-        // 1 kg = 2.20462 lb
-        #expect(abs(oneKgInPounds - 2.20462) < 0.00001)
+        // 1 g / 28.3495 = 0.03527 oz
+        #expect(abs(oneGramInOunces - 0.03527) < 0.00001)
     }
 
     // MARK: - Equatable Tests
 
     @Test("WeightUnit equality works correctly")
     func testEquality() {
-        #expect(WeightUnit.pounds == WeightUnit.pounds)
-        #expect(WeightUnit.pounds != WeightUnit.kilograms)
-        #expect(WeightUnit.kilograms == WeightUnit.kilograms)
+        #expect(WeightUnit.ounces == WeightUnit.ounces)
+        #expect(WeightUnit.ounces != WeightUnit.grams)
+        #expect(WeightUnit.grams == WeightUnit.grams)
     }
 
-    // MARK: - Real-World Usage Tests
+    // MARK: - Real-World Glass Usage Tests
 
-    @Test("Convert typical glass rod weight (0.25 lb)")
-    func testTypicalGlassRodWeight() {
-        let pounds = 0.25
-        let kilograms = WeightUnit.pounds.convert(pounds, to: .kilograms)
+    @Test("Convert typical frit weight (4 oz jar)")
+    func testTypicalFritWeight() {
+        let ounces = 4.0
+        let grams = WeightUnit.ounces.convert(ounces, to: .grams)
 
-        // 0.25 lb ≈ 0.113 kg
-        #expect(kilograms > 0.1 && kilograms < 0.15)
+        // 4 oz ≈ 113.4 g
+        #expect(grams > 113.0 && grams < 114.0)
     }
 
-    @Test("Convert glass sheet weight (10 lbs)")
-    func testGlassSheetWeight() {
-        let pounds = 10.0
-        let kilograms = WeightUnit.pounds.convert(pounds, to: .kilograms)
+    @Test("Convert powder sample (50g)")
+    func testPowderSampleWeight() {
+        let grams = 50.0
+        let ounces = WeightUnit.grams.convert(grams, to: .ounces)
 
-        // 10 lb ≈ 4.54 kg
-        #expect(kilograms > 4.5 && kilograms < 4.6)
+        // 50 g ≈ 1.76 oz
+        #expect(ounces > 1.7 && ounces < 1.8)
     }
 
-    @Test("Convert bulk glass order (50 kg)")
-    func testBulkGlassOrder() {
-        let kilograms = 50.0
-        let pounds = WeightUnit.kilograms.convert(kilograms, to: .pounds)
+    @Test("Convert enamel jar (2 oz)")
+    func testEnamelJarWeight() {
+        let ounces = 2.0
+        let grams = WeightUnit.ounces.convert(ounces, to: .grams)
 
-        // 50 kg ≈ 110 lb
-        #expect(pounds > 110.0 && pounds < 111.0)
+        // 2 oz ≈ 56.7 g
+        #expect(grams > 56.0 && grams < 57.0)
+    }
+
+    @Test("Convert bulk frit order (500g)")
+    func testBulkFritOrder() {
+        let grams = 500.0
+        let ounces = WeightUnit.grams.convert(grams, to: .ounces)
+
+        // 500 g ≈ 17.6 oz
+        #expect(ounces > 17.0 && ounces < 18.0)
     }
 
     @Test("Units can be used in UserDefaults storage")
@@ -349,20 +358,20 @@ struct WeightUnitTests {
 
     @Test("Convert very small weight")
     func testConvertVerySmallWeight() {
-        let smallPounds = 0.001
-        let kilograms = WeightUnit.pounds.convert(smallPounds, to: .kilograms)
+        let smallOunces = 0.001
+        let grams = WeightUnit.ounces.convert(smallOunces, to: .grams)
 
-        #expect(kilograms > 0.0)
-        #expect(kilograms < 0.001)
+        #expect(grams > 0.0)
+        #expect(grams < 0.03)
     }
 
     @Test("Convert negative weight (edge case)")
     func testConvertNegativeWeight() {
         // Negative weights don't make physical sense, but conversion should still work mathematically
-        let negativePounds = -5.0
-        let kilograms = WeightUnit.pounds.convert(negativePounds, to: .kilograms)
+        let negativeOunces = -5.0
+        let grams = WeightUnit.ounces.convert(negativeOunces, to: .grams)
 
-        #expect(kilograms < 0.0)
+        #expect(grams < 0.0)
     }
 
     @Test("Symbols are suitable for inline display")
@@ -376,15 +385,42 @@ struct WeightUnitTests {
 
     @Test("Conversion maintains precision for common weights")
     func testConversionPrecision() {
-        let testWeights = [0.1, 0.5, 1.0, 5.0, 10.0, 25.0, 100.0]
+        let testWeights = [0.1, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0]
 
         for weight in testWeights {
-            let kg = WeightUnit.pounds.convert(weight, to: .kilograms)
-            let backToPounds = WeightUnit.kilograms.convert(kg, to: .pounds)
+            let g = WeightUnit.ounces.convert(weight, to: .grams)
+            let backToOunces = WeightUnit.grams.convert(g, to: .ounces)
 
             // Should maintain precision within 0.1%
-            let percentError = abs(backToPounds - weight) / weight
+            let percentError = abs(backToOunces - weight) / weight
             #expect(percentError < 0.001)
         }
+    }
+}
+
+// MARK: - WeightUnitPreference Tests
+
+@MainActor
+@Suite("WeightUnitPreference Tests")
+struct WeightUnitPreferenceTests {
+
+    init() {
+        // Set up test UserDefaults
+        WeightUnitPreference.setUserDefaults(UserDefaults(suiteName: "test.weightunits")!)
+    }
+
+    @Test("default preference is grams")
+    func testDefaultPreference() {
+        // Clear any stored preference
+        if let testDefaults = UserDefaults(suiteName: "test.weightunits") {
+            testDefaults.removeObject(forKey: WeightUnitPreference.storageKey)
+        }
+
+        #expect(WeightUnitPreference.current == .grams)
+    }
+
+    @Test("storage key is correct")
+    func testStorageKey() {
+        #expect(WeightUnitPreference.storageKey == "defaultUnits")
     }
 }

@@ -23,6 +23,10 @@ class ShoppingModeState: ObservableObject {
     /// Set of item natural keys that are currently in the basket
     @Published private(set) var basketItems: Set<String> = []
 
+    /// Dictionary of item stable_id -> quantity for items in shopping mode
+    /// Tracks the quantity user wants to purchase (different from needed quantity)
+    @Published var basketQuantities: [String: Double] = [:]
+
     // MARK: - Computed Properties
 
     /// Number of items in the basket
@@ -39,6 +43,7 @@ class ShoppingModeState: ObservableObject {
 
     private let shoppingModeEnabledKey = "com.motleywoods.molten.shoppingMode.enabled"
     private let basketItemsKey = "com.motleywoods.molten.shoppingMode.basketItems"
+    private let basketQuantitiesKey = "com.motleywoods.molten.shoppingMode.basketQuantities"
 
     // MARK: - Initialization
 
@@ -98,6 +103,7 @@ class ShoppingModeState: ObservableObject {
     /// Clear all items from the basket
     func clearBasket() {
         basketItems.removeAll()
+        basketQuantities.removeAll()
         save()
     }
 
@@ -113,12 +119,36 @@ class ShoppingModeState: ObservableObject {
         }
     }
 
+    // MARK: - Quantity Management
+
+    /// Get the quantity for an item (returns nil if not set)
+    func getQuantity(for item_stable_id: String) -> Double? {
+        basketQuantities[item_stable_id]
+    }
+
+    /// Set the quantity for an item
+    func setQuantity(for item_stable_id: String, quantity: Double) {
+        basketQuantities[item_stable_id] = quantity
+        save()
+    }
+
+    /// Remove quantity tracking for an item
+    func removeQuantity(for item_stable_id: String) {
+        basketQuantities.removeValue(forKey: item_stable_id)
+        save()
+    }
+
     // MARK: - Persistence
 
     /// Save current state to UserDefaults
     func save() {
         UserDefaults.standard.set(isShoppingModeEnabled, forKey: shoppingModeEnabledKey)
         UserDefaults.standard.set(Array(basketItems), forKey: basketItemsKey)
+
+        // Save quantities dictionary as JSON
+        if let encoded = try? JSONEncoder().encode(basketQuantities) {
+            UserDefaults.standard.set(encoded, forKey: basketQuantitiesKey)
+        }
     }
 
     /// Load state from UserDefaults
@@ -128,13 +158,21 @@ class ShoppingModeState: ObservableObject {
         if let savedBasketItems = UserDefaults.standard.array(forKey: basketItemsKey) as? [String] {
             basketItems = Set(savedBasketItems)
         }
+
+        // Load quantities dictionary from JSON
+        if let data = UserDefaults.standard.data(forKey: basketQuantitiesKey),
+           let decoded = try? JSONDecoder().decode([String: Double].self, from: data) {
+            basketQuantities = decoded
+        }
     }
 
     /// Clear all state (both in-memory and persisted)
     func clearAll() {
         isShoppingModeEnabled = false
         basketItems.removeAll()
+        basketQuantities.removeAll()
         UserDefaults.standard.removeObject(forKey: shoppingModeEnabledKey)
         UserDefaults.standard.removeObject(forKey: basketItemsKey)
+        UserDefaults.standard.removeObject(forKey: basketQuantitiesKey)
     }
 }

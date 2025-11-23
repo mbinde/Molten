@@ -80,7 +80,7 @@ struct UserTagsIntegrationTests {
 
         let item = DetailedShoppingListItemModel(
             shoppingListItem: shoppingListItem,
-            glassItem: glassItem,
+            catalogItem: UnifiedCatalogItem(glassItem: glassItem),
             tags: ["clear", "rod"],  // Manufacturer tags
             userTags: ["urgent", "clear"]  // User tags (with duplicate "clear")
         )

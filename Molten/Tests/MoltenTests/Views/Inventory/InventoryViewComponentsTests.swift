@@ -135,14 +135,14 @@ struct InventoryViewComponentsTests {
     func testInventoryCountUnitsViewEditing() async throws {
         let editingView = InventoryCountUnitsView(
             count: 5.0,
-            units: CatalogUnits.pounds,
+            units: CatalogUnits.ounces,
             type: "inventory",
             isEditing: true
         )
         
         #expect(editingView.isEditing == true, "Should be in editing mode")
         #expect(editingView.count == 5.0, "Should have correct count")
-        #expect(editingView.units == CatalogUnits.pounds, "Should have correct units")
+        #expect(editingView.units == CatalogUnits.ounces, "Should have correct units")
         #expect(editingView.type == "inventory", "Should have correct type")
     }
     
@@ -150,14 +150,14 @@ struct InventoryViewComponentsTests {
     func testInventoryCountUnitsViewDisplay() async throws {
         let displayView = InventoryCountUnitsView(
             count: 3.0,
-            units: CatalogUnits.kilograms,
+            units: CatalogUnits.grams,
             type: "buy",
             isEditing: false
         )
         
         #expect(displayView.isEditing == false, "Should be in display mode")
         #expect(displayView.count == 3.0, "Should have correct count")
-        #expect(displayView.units == CatalogUnits.kilograms, "Should have correct units")
+        #expect(displayView.units == CatalogUnits.grams, "Should have correct units")
         #expect(displayView.type == "buy", "Should have correct type")
     }
     
@@ -184,7 +184,7 @@ struct InventoryViewComponentsTests {
         // Test zero count
         let zeroView = InventoryCountUnitsView(
             count: 0.0,
-            units: CatalogUnits.pounds,
+            units: CatalogUnits.ounces,
             type: "inventory",
             isEditing: false
         )
@@ -194,7 +194,7 @@ struct InventoryViewComponentsTests {
         // Test very small count
         let smallView = InventoryCountUnitsView(
             count: 0.001,
-            units: CatalogUnits.pounds,
+            units: CatalogUnits.ounces,
             type: "inventory",
             isEditing: false
         )
@@ -204,7 +204,7 @@ struct InventoryViewComponentsTests {
         // Test large count
         let largeView = InventoryCountUnitsView(
             count: 999999.99,
-            units: CatalogUnits.kilograms,
+            units: CatalogUnits.grams,
             type: "buy",
             isEditing: false
         )
@@ -309,7 +309,7 @@ struct InventoryViewComponentsTests {
         
         let countView = InventoryCountUnitsView(
             count: count,
-            units: CatalogUnits.pounds,
+            units: CatalogUnits.ounces,
             type: "inventory",
             isEditing: false
         )
@@ -337,7 +337,7 @@ struct InventoryViewComponentsTests {
         
         let countView = InventoryCountUnitsView(
             count: lowCount,
-            units: CatalogUnits.pounds,
+            units: CatalogUnits.ounces,
             type: "inventory",
             isEditing: false
         )
@@ -360,7 +360,7 @@ struct InventoryViewComponentsTests {
     func testComponentPropertyVariations() async throws {
         // Test various property combinations
         let counts = [0.0, 0.1, 1.0, 10.0, 100.0, 1000.0]
-        let units: [CatalogUnits] = [.pounds, .kilograms, .rods, .shorts]
+        let units: [CatalogUnits] = [.ounces, .grams, .rods, .shorts]
         let types = ["inventory", "buy", "sell"]
         let editingStates = [true, false]
         
@@ -396,7 +396,7 @@ struct InventoryViewComponentsTests {
         // Should handle very large numbers
         let largeCountView = InventoryCountUnitsView(
             count: extremeCount,
-            units: CatalogUnits.pounds,
+            units: CatalogUnits.ounces,
             type: "inventory",
             isEditing: false
         )
@@ -406,7 +406,7 @@ struct InventoryViewComponentsTests {
         // Should handle very small numbers
         let smallCountView = InventoryCountUnitsView(
             count: tinyCount,
-            units: CatalogUnits.pounds,
+            units: CatalogUnits.ounces,
             type: "inventory",
             isEditing: false
         )
@@ -432,7 +432,7 @@ struct InventoryViewComponentsTests {
     func testComponentImmutability() async throws {
         // Create component with specific values
         let originalCount = 5.0
-        let originalUnits = CatalogUnits.pounds
+        let originalUnits = CatalogUnits.ounces
         let originalType = "inventory"
         let originalNotes = "Original notes"
         

@@ -31,7 +31,9 @@ class AddInventoryItemViewModel {
     var selectedType: String = "rod"  // Default type
     var selectedSubtype: String?
     var selectedSubsubtype: String?
+    var selectedWeightUnit: WeightUnit = WeightUnitPreference.current
     var dimensions: [String: String] = [:]
+    var dimensionUnits: [String: DimensionUnit] = [:] // Track unit for each dimension field
     var notes: String = ""
     var location: String = ""
 
@@ -79,6 +81,16 @@ class AddInventoryItemViewModel {
 
     // MARK: - Computed Properties
 
+    /// Check if the selected type uses weight units (grams/ounces)
+    var isWeightBasedType: Bool {
+        switch selectedType.lowercased() {
+        case "frit", "powder", "enamel":
+            return true
+        default:
+            return false
+        }
+    }
+
     /// Get the appropriate unit label for quantity based on selected type
     var quantityUnitLabel: String {
         switch selectedType.lowercased() {
@@ -86,8 +98,8 @@ class AddInventoryItemViewModel {
             return selectedType.lowercased()
         case "tube":
             return "tubes"
-        case "frit", "powder":
-            return "lbs"  // TODO: Add user setting for lbs vs kg
+        case "frit", "powder", "enamel":
+            return selectedWeightUnit == .grams ? "g" : "oz"
         case "stringer":
             return "stringers"
         case "sheet":
@@ -161,7 +173,32 @@ class AddInventoryItemViewModel {
         selectedSubtype = nil
         selectedSubsubtype = nil
         dimensions = [:]
+        dimensionUnits = [:]
         isDimensionsExpanded = false
+    }
+
+    /// Get the default dimension unit for a field based on user preference and field name
+    func getDefaultDimensionUnit(for fieldName: String) -> DimensionUnit {
+        // If already set, return it
+        if let existing = dimensionUnits[fieldName] {
+            return existing
+        }
+
+        // Use smart defaults based on field name and user preference
+        let preference = DimensionUnitPreference.current
+
+        // Thickness is often in mm regardless of preference
+        if fieldName.lowercased().contains("thickness") {
+            return .millimeters
+        }
+
+        // Diameter often in mm for metric users
+        if fieldName.lowercased().contains("diameter") {
+            return preference == .metric ? .millimeters : .inches
+        }
+
+        // Length/width/height use primary unit
+        return preference.primaryUnit
     }
 
     /// Called when subtype changes - resets dependent fields
@@ -199,11 +236,38 @@ class AddInventoryItemViewModel {
         // Prepare location (nil if empty)
         let finalLocation = location.isEmpty ? nil : location
 
+        // Convert weight to grams if needed (always store in grams)
+        let finalQuantity: Double
+        if isWeightBasedType && selectedWeightUnit == .ounces {
+            // Convert ounces to grams
+            finalQuantity = selectedWeightUnit.convert(quantityValue, to: .grams)
+        } else {
+            finalQuantity = quantityValue
+        }
+
+        // Parse dimensions and convert to cm (always store in cm)
+        let parsedDimensions: [String: Double]? = {
+            guard !dimensions.isEmpty else { return nil }
+            var result: [String: Double] = [:]
+            for (key, valueString) in dimensions {
+                if let value = Double(valueString), !valueString.isEmpty {
+                    // Convert to cm using the unit selected for this specific field
+                    let unit = dimensionUnits[key] ?? .centimeters
+                    let valueInCm = unit.convert(value, to: .centimeters)
+                    result[key] = valueInCm
+                }
+            }
+            return result.isEmpty ? nil : result
+        }()
+
         do {
             _ = try await inventoryTrackingService.addInventory(
-                quantity: quantityValue,
+                quantity: finalQuantity,
                 type: selectedType,
                 toItem: stableId,
+                subtype: selectedSubtype,
+                subsubtype: selectedSubsubtype,
+                dimensions: parsedDimensions,
                 atLocation: finalLocation
             )
 

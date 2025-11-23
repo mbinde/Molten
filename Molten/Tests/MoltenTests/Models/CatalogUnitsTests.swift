@@ -24,12 +24,12 @@ struct CatalogUnitsTests {
 
     @Test("pounds has correct raw value")
     func testPoundsRawValue() {
-        #expect(CatalogUnits.pounds.rawValue == 0)
+        #expect(CatalogUnits.ounces.rawValue == 0)
     }
 
     @Test("kilograms has correct raw value")
     func testKilogramsRawValue() {
-        #expect(CatalogUnits.kilograms.rawValue == 1)
+        #expect(CatalogUnits.grams.rawValue == 1)
     }
 
     @Test("shorts has correct raw value")
@@ -44,8 +44,8 @@ struct CatalogUnitsTests {
 
     @Test("CatalogUnits can be initialized from raw value")
     func testInitFromRawValue() {
-        #expect(CatalogUnits(rawValue: 0) == .pounds)
-        #expect(CatalogUnits(rawValue: 1) == .kilograms)
+        #expect(CatalogUnits(rawValue: 0) == .ounces)
+        #expect(CatalogUnits(rawValue: 1) == .grams)
         #expect(CatalogUnits(rawValue: 2) == .shorts)
         #expect(CatalogUnits(rawValue: 3) == .rods)
     }
@@ -65,7 +65,7 @@ struct CatalogUnitsTests {
         let decoder = JSONDecoder()
         let unit = try decoder.decode(CatalogUnits.self, from: jsonData)
 
-        #expect(unit == .pounds)
+        #expect(unit == .ounces)
     }
 
     @Test("Custom init with invalid value falls back to pounds")
@@ -74,19 +74,19 @@ struct CatalogUnitsTests {
         let decoder = JSONDecoder()
         let unit = try decoder.decode(CatalogUnits.self, from: jsonData)
 
-        #expect(unit == .pounds)  // Fallback to default
+        #expect(unit == .grams)  // Fallback to default
     }
 
     // MARK: - Display Name Tests
 
     @Test("pounds has correct display name")
     func testPoundsDisplayName() {
-        #expect(CatalogUnits.pounds.displayName == "lbs")
+        #expect(CatalogUnits.ounces.displayName == "oz")
     }
 
     @Test("kilograms has correct display name")
     func testKilogramsDisplayName() {
-        #expect(CatalogUnits.kilograms.displayName == "kg")
+        #expect(CatalogUnits.grams.displayName == "g")
     }
 
     @Test("shorts has correct display name")
@@ -112,12 +112,12 @@ struct CatalogUnitsTests {
 
     @Test("pounds has correct full name")
     func testPoundsFullName() {
-        #expect(CatalogUnits.pounds.fullName == "Pounds")
+        #expect(CatalogUnits.ounces.fullName == "Ounces")
     }
 
     @Test("kilograms has correct full name")
     func testKilogramsFullName() {
-        #expect(CatalogUnits.kilograms.fullName == "Kilograms")
+        #expect(CatalogUnits.grams.fullName == "Grams")
     }
 
     @Test("shorts has correct full name")
@@ -149,12 +149,12 @@ struct CatalogUnitsTests {
 
     @Test("pounds is a weight unit")
     func testPoundsIsWeight() {
-        #expect(CatalogUnits.pounds.isWeightUnit == true)
+        #expect(CatalogUnits.ounces.isWeightUnit == true)
     }
 
     @Test("kilograms is a weight unit")
     func testKilogramsIsWeight() {
-        #expect(CatalogUnits.kilograms.isWeightUnit == true)
+        #expect(CatalogUnits.grams.isWeightUnit == true)
     }
 
     @Test("shorts is not a weight unit")
@@ -184,8 +184,8 @@ struct CatalogUnitsTests {
         let allCases = CatalogUnits.allCases
 
         #expect(allCases.count == 4)
-        #expect(allCases.contains(.pounds))
-        #expect(allCases.contains(.kilograms))
+        #expect(allCases.contains(.ounces))
+        #expect(allCases.contains(.grams))
         #expect(allCases.contains(.shorts))
         #expect(allCases.contains(.rods))
     }
@@ -194,8 +194,8 @@ struct CatalogUnitsTests {
     func testAllCasesOrder() {
         let allCases = CatalogUnits.allCases
 
-        #expect(allCases[0] == .pounds)
-        #expect(allCases[1] == .kilograms)
+        #expect(allCases[0] == .ounces)
+        #expect(allCases[1] == .grams)
         #expect(allCases[2] == .shorts)
         #expect(allCases[3] == .rods)
     }
@@ -204,12 +204,12 @@ struct CatalogUnitsTests {
 
     @Test("pounds has correct ID")
     func testPoundsID() {
-        #expect(CatalogUnits.pounds.id == 0)
+        #expect(CatalogUnits.ounces.id == 0)
     }
 
     @Test("kilograms has correct ID")
     func testKilogramsID() {
-        #expect(CatalogUnits.kilograms.id == 1)
+        #expect(CatalogUnits.grams.id == 1)
     }
 
     @Test("shorts has correct ID")
@@ -241,8 +241,8 @@ struct CatalogUnitsTests {
 
     @Test("CatalogUnits equality works correctly")
     func testEquality() {
-        #expect(CatalogUnits.pounds == CatalogUnits.pounds)
-        #expect(CatalogUnits.pounds != CatalogUnits.kilograms)
+        #expect(CatalogUnits.ounces == CatalogUnits.ounces)
+        #expect(CatalogUnits.ounces != CatalogUnits.grams)
         #expect(CatalogUnits.shorts == CatalogUnits.shorts)
         #expect(CatalogUnits.rods != CatalogUnits.shorts)
     }
@@ -251,7 +251,7 @@ struct CatalogUnitsTests {
 
     @Test("CatalogUnits can be encoded")
     func testEncoding() throws {
-        let unit = CatalogUnits.pounds
+        let unit = CatalogUnits.ounces
         let encoder = JSONEncoder()
         let data = try encoder.encode(unit)
 
@@ -264,7 +264,7 @@ struct CatalogUnitsTests {
         let decoder = JSONDecoder()
         let unit = try decoder.decode(CatalogUnits.self, from: jsonData)
 
-        #expect(unit == .kilograms)
+        #expect(unit == .grams)
     }
 
     @Test("CatalogUnits round-trip encoding works")
@@ -318,8 +318,8 @@ struct CatalogUnitsTests {
     func testWeightUnitsInventory() {
         let weightUnits = CatalogUnits.allCases.filter { $0.isWeightUnit }
 
-        #expect(weightUnits.contains(.pounds))
-        #expect(weightUnits.contains(.kilograms))
+        #expect(weightUnits.contains(.ounces))
+        #expect(weightUnits.contains(.grams))
         #expect(weightUnits.count == 2)
     }
 
@@ -390,18 +390,18 @@ struct CatalogUnitsTests {
 
     @Test("Display names match expected abbreviations")
     func testDisplayNameAbbreviations() {
-        #expect(CatalogUnits.pounds.displayName == "lbs")  // Standard abbreviation
-        #expect(CatalogUnits.kilograms.displayName == "kg")  // Standard abbreviation
+        #expect(CatalogUnits.ounces.displayName == "oz")  // Standard abbreviation
+        #expect(CatalogUnits.grams.displayName == "g")  // Standard abbreviation
     }
 
     @Test("Decoding handles out of bounds gracefully")
     func testDecodingOutOfBounds() throws {
-        // Custom init should fall back to .pounds for invalid values
+        // Custom init should fall back to .grams for invalid values
         let invalidJSONData = "999".data(using: .utf8)!
         let decoder = JSONDecoder()
         let unit = try decoder.decode(CatalogUnits.self, from: invalidJSONData)
 
-        #expect(unit == .pounds)  // Fallback behavior
+        #expect(unit == .grams)  // Fallback behavior
     }
 
     @Test("Decoding handles negative values gracefully")
@@ -410,14 +410,14 @@ struct CatalogUnitsTests {
         let decoder = JSONDecoder()
         let unit = try decoder.decode(CatalogUnits.self, from: negativeJSONData)
 
-        #expect(unit == .pounds)  // Fallback behavior
+        #expect(unit == .grams)  // Fallback behavior
     }
 
     @Test("Weight vs count categorization is logical")
     func testWeightCountCategorization() {
         // Weight units are for measuring mass
-        #expect(CatalogUnits.pounds.isWeightUnit == true)
-        #expect(CatalogUnits.kilograms.isWeightUnit == true)
+        #expect(CatalogUnits.ounces.isWeightUnit == true)
+        #expect(CatalogUnits.grams.isWeightUnit == true)
 
         // Count units are for discrete items
         #expect(CatalogUnits.shorts.isWeightUnit == false)

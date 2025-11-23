@@ -67,6 +67,13 @@ nonisolated protocol ShoppingListRepository: Sendable {
     /// - Returns: The updated ItemShoppingModel
     func updateQuantity(_ quantity: Double, forItem item_stable_id: String) async throws -> ItemShoppingModel
 
+    /// Update needed quantity for a shopping list item
+    /// - Parameters:
+    ///   - neededQuantity: New needed quantity value
+    ///   - item_stable_id: The natural key of the glass item
+    /// - Returns: The updated ItemShoppingModel
+    func updateNeededQuantity(forItem item_stable_id: String, neededQuantity: Double) async throws -> ItemShoppingModel
+
     /// Add quantity to existing shopping list item or create new if doesn't exist
     /// - Parameters:
     ///   - quantity: Amount to add

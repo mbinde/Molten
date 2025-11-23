@@ -108,8 +108,6 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
                 checksum: latestMetadata.checksum
             )
 
-            log.info("📦 Update available: v\(currentVersion) → v\(updateInfo.availableVersion)")
-
             // Post notification
             NotificationCenter.default.post(
                 name: .catalogUpdateAvailable,

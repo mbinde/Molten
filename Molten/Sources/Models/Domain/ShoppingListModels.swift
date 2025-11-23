@@ -26,14 +26,14 @@ struct DetailedShoppingListModel {
 
     /// Items grouped by manufacturer for easier shopping
     nonisolated var itemsByManufacturer: [String: [DetailedShoppingListItemModel]] {
-        Dictionary(grouping: items) { $0.glassItem.manufacturer }
+        Dictionary(grouping: items) { $0.catalogItem.manufacturer }
     }
 }
 
-/// Shopping list item with complete glass item information
+/// Shopping list item with complete catalog item information (glass, coating, or tool)
 struct DetailedShoppingListItemModel {
     let shoppingListItem: ShoppingListItemModel
-    let glassItem: GlassItemModel
+    let catalogItem: UnifiedCatalogItem
     let tags: [String]  // Manufacturer/system tags
     let userTags: [String]  // User-created tags
 
@@ -52,10 +52,30 @@ struct DetailedShoppingListItemModel {
     /// Note: inventory will be empty for shopping list items
     nonisolated var completeItem: CompleteInventoryItemModel {
         CompleteInventoryItemModel(
-            glassItem: glassItem,
+            catalogItem: catalogItem,
             inventory: [],
             tags: tags,
             userTags: userTags
+        )
+    }
+
+    /// Backward compatibility: access as GlassItemModel
+    /// Returns nil if this is a coating or tool item
+    nonisolated var glassItem: GlassItemModel? {
+        guard catalogItem.itemType == .glass else { return nil }
+        return GlassItemModel(
+            stable_id: catalogItem.stable_id,
+            name: catalogItem.name,
+            sku: catalogItem.sku,
+            manufacturer: catalogItem.manufacturer,
+            mfr_notes: catalogItem.mfr_notes,
+            coe: catalogItem.coe ?? 0,
+            url: catalogItem.url,
+            mfr_status: catalogItem.mfr_status,
+            image_url: catalogItem.image_url,
+            image_path: catalogItem.image_path,
+            image_thumb_path: catalogItem.image_thumb_path,
+            dominant_colors: catalogItem.dominant_colors
         )
     }
 }
@@ -100,7 +120,7 @@ struct LowStockReportModel {
 /// Low stock item with complete context
 struct DetailedLowStockItemModel {
     let lowStockItem: LowStockItemModel
-    let glassItem: GlassItemModel
+    let catalogItem: UnifiedCatalogItem
     let tags: [String]
 
     /// Urgency level based on how far below minimum we are
@@ -115,6 +135,26 @@ struct DetailedLowStockItemModel {
         } else {
             return .low
         }
+    }
+
+    /// Backward compatibility: access as GlassItemModel
+    /// Returns nil if this is a coating or tool item
+    nonisolated var glassItem: GlassItemModel? {
+        guard catalogItem.itemType == .glass else { return nil }
+        return GlassItemModel(
+            stable_id: catalogItem.stable_id,
+            name: catalogItem.name,
+            sku: catalogItem.sku,
+            manufacturer: catalogItem.manufacturer,
+            mfr_notes: catalogItem.mfr_notes,
+            coe: catalogItem.coe ?? 0,
+            url: catalogItem.url,
+            mfr_status: catalogItem.mfr_status,
+            image_url: catalogItem.image_url,
+            image_path: catalogItem.image_path,
+            image_thumb_path: catalogItem.image_thumb_path,
+            dominant_colors: catalogItem.dominant_colors
+        )
     }
 }
 
@@ -142,7 +182,7 @@ extension DetailedLowStockItemModel: Comparable {
 /// Minimum with complete context
 struct DetailedMinimumModel: Sendable {
     let minimum: ItemMinimumModel
-    let glassItem: GlassItemModel
+    let catalogItem: UnifiedCatalogItem
     let tags: [String]
     let currentQuantity: Double
 
@@ -154,6 +194,26 @@ struct DetailedMinimumModel: Sendable {
     /// How much more is needed to meet minimum
     nonisolated var shortfall: Double {
         max(0, minimum.quantity - currentQuantity)
+    }
+
+    /// Backward compatibility: access as GlassItemModel
+    /// Returns nil if this is a coating or tool item
+    nonisolated var glassItem: GlassItemModel? {
+        guard catalogItem.itemType == .glass else { return nil }
+        return GlassItemModel(
+            stable_id: catalogItem.stable_id,
+            name: catalogItem.name,
+            sku: catalogItem.sku,
+            manufacturer: catalogItem.manufacturer,
+            mfr_notes: catalogItem.mfr_notes,
+            coe: catalogItem.coe ?? 0,
+            url: catalogItem.url,
+            mfr_status: catalogItem.mfr_status,
+            image_url: catalogItem.image_url,
+            image_path: catalogItem.image_path,
+            image_thumb_path: catalogItem.image_thumb_path,
+            dominant_colors: catalogItem.dominant_colors
+        )
     }
 }
 

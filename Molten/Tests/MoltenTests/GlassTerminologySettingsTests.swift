@@ -20,36 +20,36 @@ struct GlassTerminologySettingsTests {
         settings.resetToDefaults()
 
         // Then: Default display names should be set
-        #expect(settings.bigRodDisplayName == "Bar")
-        #expect(settings.rodDisplayName == "Rod")
+        #expect(settings.bigRodDisplayName == "Bars")
+        #expect(settings.rodDisplayName == "Rods")
     }
 
     @Test("Display name returns correct value for backend types")
     func testDisplayNameForBackendTypes() {
         // Given: Settings with default names
         let settings = GlassTerminologySettings.shared
-        settings.bigRodDisplayName = "Bar"
-        settings.rodDisplayName = "Rod"
+        settings.bigRodDisplayName = "Bars"
+        settings.rodDisplayName = "Rods"
 
         // When/Then: Display names match backend types
-        #expect(settings.displayName(for: "big-rod") == "Bar")
-        #expect(settings.displayName(for: "rod") == "Rod")
+        #expect(settings.displayName(for: "big-rod") == "Bars")
+        #expect(settings.displayName(for: "rod") == "Rods")
         #expect(settings.displayName(for: "frit") == "Frit")
-        #expect(settings.displayName(for: "tube") == "Tube")
+        #expect(settings.displayName(for: "tube") == "Tubes")
     }
 
     @Test("Backend type returns correct value from display names")
     func testBackendTypeFromDisplayName() {
         // Given: Settings with default names
         let settings = GlassTerminologySettings.shared
-        settings.bigRodDisplayName = "Bar"
-        settings.rodDisplayName = "Rod"
+        settings.bigRodDisplayName = "Bars"
+        settings.rodDisplayName = "Rods"
 
         // When/Then: Backend types resolve correctly
-        #expect(settings.backendType(from: "Bar") == "big-rod")
-        #expect(settings.backendType(from: "bar") == "big-rod")  // Case insensitive
-        #expect(settings.backendType(from: "Rod") == "rod")
-        #expect(settings.backendType(from: "rod") == "rod")
+        #expect(settings.backendType(from: "Bars") == "big-rod")
+        #expect(settings.backendType(from: "bars") == "big-rod")  // Case insensitive
+        #expect(settings.backendType(from: "Rods") == "rod")
+        #expect(settings.backendType(from: "rods") == "rod")
         #expect(settings.backendType(from: "Frit") == "frit")
     }
 
@@ -82,25 +82,25 @@ struct GlassTerminologySettingsTests {
         settings.resetToDefaults()
 
         // Then: Names are restored
-        #expect(settings.bigRodDisplayName == "Bar")
-        #expect(settings.rodDisplayName == "Rod")
+        #expect(settings.bigRodDisplayName == "Bars")
+        #expect(settings.rodDisplayName == "Rods")
     }
 
     @Test("Detailed display name with size information")
     func testDetailedDisplayNameWithSize() {
         // Given: Settings with default names
         let settings = GlassTerminologySettings.shared
-        settings.bigRodDisplayName = "Bar"
-        settings.rodDisplayName = "Rod"
+        settings.bigRodDisplayName = "Bars"
+        settings.rodDisplayName = "Rods"
 
         // When/Then: Detailed names include size info when requested
-        #expect(settings.detailedDisplayName(for: "big-rod", includeSize: true) == "Bar (12mm+)")
-        #expect(settings.detailedDisplayName(for: "rod", includeSize: true) == "Rod (5-6mm)")
+        #expect(settings.detailedDisplayName(for: "big-rod", includeSize: true) == "Bars (12mm+)")
+        #expect(settings.detailedDisplayName(for: "rod", includeSize: true) == "Rods (5-6mm)")
         #expect(settings.detailedDisplayName(for: "frit", includeSize: true) == "Frit")
 
         // And: Without size info, just returns display name
-        #expect(settings.detailedDisplayName(for: "big-rod", includeSize: false) == "Bar")
-        #expect(settings.detailedDisplayName(for: "rod", includeSize: false) == "Rod")
+        #expect(settings.detailedDisplayName(for: "big-rod", includeSize: false) == "Bars")
+        #expect(settings.detailedDisplayName(for: "rod", includeSize: false) == "Rods")
     }
 
     @Test("Backend type constants remain stable")

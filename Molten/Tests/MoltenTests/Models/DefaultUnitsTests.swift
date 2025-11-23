@@ -69,12 +69,12 @@ struct DefaultUnitsTests {
 
     @Test("ounces has correct symbol")
     func testOuncesSymbol() {
-        #expect(DefaultUnits.ounces.symbol == "lb")
+        #expect(DefaultUnits.ounces.symbol == "oz")
     }
 
     @Test("grams has correct symbol")
     func testGramsSymbol() {
-        #expect(DefaultUnits.grams.symbol == "kg")
+        #expect(DefaultUnits.grams.symbol == "g")
     }
 
     @Test("Symbols are short abbreviations")
@@ -194,7 +194,7 @@ struct DefaultUnitsTests {
     func testOuncesForImperial() {
         let unit = DefaultUnits.ounces
 
-        #expect(unit.symbol == "lb")
+        #expect(unit.symbol == "oz")
         #expect(unit.displayName.contains("Ounces"))
     }
 
@@ -202,7 +202,7 @@ struct DefaultUnitsTests {
     func testGramsForMetric() {
         let unit = DefaultUnits.grams
 
-        #expect(unit.symbol == "kg")
+        #expect(unit.symbol == "g")
         #expect(unit.displayName.contains("Grams"))
     }
 

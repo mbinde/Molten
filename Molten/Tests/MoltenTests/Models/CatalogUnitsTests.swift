@@ -74,19 +74,19 @@ struct CatalogUnitsTests {
         let decoder = JSONDecoder()
         let unit = try decoder.decode(CatalogUnits.self, from: jsonData)
 
-        #expect(unit == .ounces)  // Fallback to default
+        #expect(unit == .grams)  // Fallback to default
     }
 
     // MARK: - Display Name Tests
 
     @Test("pounds has correct display name")
     func testPoundsDisplayName() {
-        #expect(CatalogUnits.ounces.displayName == "lbs")
+        #expect(CatalogUnits.ounces.displayName == "oz")
     }
 
     @Test("kilograms has correct display name")
     func testKilogramsDisplayName() {
-        #expect(CatalogUnits.grams.displayName == "kg")
+        #expect(CatalogUnits.grams.displayName == "g")
     }
 
     @Test("shorts has correct display name")
@@ -112,12 +112,12 @@ struct CatalogUnitsTests {
 
     @Test("pounds has correct full name")
     func testPoundsFullName() {
-        #expect(CatalogUnits.ounces.fullName == "Pounds")
+        #expect(CatalogUnits.ounces.fullName == "Ounces")
     }
 
     @Test("kilograms has correct full name")
     func testKilogramsFullName() {
-        #expect(CatalogUnits.grams.fullName == "Kilograms")
+        #expect(CatalogUnits.grams.fullName == "Grams")
     }
 
     @Test("shorts has correct full name")
@@ -390,18 +390,18 @@ struct CatalogUnitsTests {
 
     @Test("Display names match expected abbreviations")
     func testDisplayNameAbbreviations() {
-        #expect(CatalogUnits.ounces.displayName == "lbs")  // Standard abbreviation
-        #expect(CatalogUnits.grams.displayName == "kg")  // Standard abbreviation
+        #expect(CatalogUnits.ounces.displayName == "oz")  // Standard abbreviation
+        #expect(CatalogUnits.grams.displayName == "g")  // Standard abbreviation
     }
 
     @Test("Decoding handles out of bounds gracefully")
     func testDecodingOutOfBounds() throws {
-        // Custom init should fall back to .ounces for invalid values
+        // Custom init should fall back to .grams for invalid values
         let invalidJSONData = "999".data(using: .utf8)!
         let decoder = JSONDecoder()
         let unit = try decoder.decode(CatalogUnits.self, from: invalidJSONData)
 
-        #expect(unit == .ounces)  // Fallback behavior
+        #expect(unit == .grams)  // Fallback behavior
     }
 
     @Test("Decoding handles negative values gracefully")
@@ -410,7 +410,7 @@ struct CatalogUnitsTests {
         let decoder = JSONDecoder()
         let unit = try decoder.decode(CatalogUnits.self, from: negativeJSONData)
 
-        #expect(unit == .ounces)  // Fallback behavior
+        #expect(unit == .grams)  // Fallback behavior
     }
 
     @Test("Weight vs count categorization is logical")

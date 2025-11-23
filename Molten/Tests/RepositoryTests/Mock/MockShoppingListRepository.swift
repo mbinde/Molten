@@ -118,13 +118,13 @@ final class MockShoppingListRepository: ShoppingListRepository {
         guard exists else {
             throw MockShoppingListRepositoryError.itemNotFound
         }
-        lock.withLock { items.removeValue(forKey: id) }
+        _ = lock.withLock { items.removeValue(forKey: id) }
     }
 
     func deleteItem(forItem item_stable_id: String) async throws {
         if let item = try await fetchItem(forItem: item_stable_id) {
             let itemId = await item.id
-            lock.withLock { items.removeValue(forKey: itemId) }
+            _ = lock.withLock { items.removeValue(forKey: itemId) }
         }
     }
 
@@ -180,7 +180,6 @@ final class MockShoppingListRepository: ShoppingListRepository {
             id: existingId,
             item_stable_id: existingItemId,
             quantity: existingQuantity,
-            neededQuantity: neededQuantity,
             store: existingStore,
             type: existingType,
             subtype: existingSubtype,

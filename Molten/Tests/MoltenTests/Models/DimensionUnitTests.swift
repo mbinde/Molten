@@ -511,11 +511,6 @@ struct DimensionUnitPreferenceTests {
         DimensionUnitPreference.setUserDefaults(UserDefaults(suiteName: "test.dimensionunits")!)
     }
 
-    deinit {
-        // Clean up
-        DimensionUnitPreference.resetUserDefaults()
-    }
-
     @Test("default preference is metric")
     func testDefaultPreference() {
         // Clear any stored preference

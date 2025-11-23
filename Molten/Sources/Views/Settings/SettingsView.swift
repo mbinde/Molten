@@ -142,6 +142,7 @@ struct SettingsView: View {
                     } label: {
                         Text("Customize Tabs")
                     }
+                    .accessibilityIdentifier("settings_customize_tabs")
 
                 }
 
@@ -180,6 +181,7 @@ struct SettingsView: View {
                             }
                         }
                     }
+                    .accessibilityIdentifier("settings_catalog_updates")
 
                     VStack(alignment: .leading, spacing: 4) {
                         Picker("Show Color Chips", selection: colorChipDisplayModeBinding) {
@@ -208,6 +210,7 @@ struct SettingsView: View {
 
                     Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
                         .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
+                        .accessibilityIdentifier("settings_show_ratings")
                 }
 
                 // MARK: - Sorting and Filtering

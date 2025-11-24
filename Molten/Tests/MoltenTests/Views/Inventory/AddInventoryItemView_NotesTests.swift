@@ -47,7 +47,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: nil,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
 
         #expect(viewModel.notes.isEmpty)
@@ -58,7 +59,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: nil,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
 
         // Set required fields
@@ -81,7 +83,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: nil,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
 
         let testNotes = "These are my test notes for this glass item"
@@ -95,7 +98,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: nil,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
 
         let multilineNotes = """
@@ -114,7 +118,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: nil,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
 
         let notesWithSpecialChars = "Temperature: 1050°F • Strikes @1400° • Use 50/50 mix & test!"
@@ -128,7 +133,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: nil,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
 
         let longNotes = String(repeating: "This glass is great for various applications. ", count: 20)
@@ -226,7 +232,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel2 = AddInventoryItemViewModel(
             prefilledNaturalKey: item2.stable_id,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
         await viewModel2.loadCatalogItems()
         viewModel2.lookupCatalogItem(stableId: item2.stable_id)
@@ -324,7 +331,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel1 = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
         await viewModel1.loadCatalogItems()
         viewModel1.lookupCatalogItem(stableId: glassItem.stable_id)
@@ -367,7 +375,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel1 = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
         await viewModel1.loadCatalogItems()
         viewModel1.lookupCatalogItem(stableId: glassItem.stable_id)
@@ -529,7 +538,8 @@ struct AddInventoryItemView_NotesTests {
             let viewModel = AddInventoryItemViewModel(
                 prefilledNaturalKey: item.stable_id,
                 inventoryTrackingService: deps.inventoryTrackingService,
-                catalogService: deps.catalogService
+                catalogService: deps.catalogService,
+                userNotesRepository: deps.userNotesRepository
             )
             await viewModel.loadCatalogItems()
             viewModel.lookupCatalogItem(stableId: item.stable_id)

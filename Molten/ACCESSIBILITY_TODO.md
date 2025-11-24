@@ -7,7 +7,7 @@
 - [x] Catalog/Components/CatalogFilterButtons.swift (4 IDs: manufacturer, coe, tags, product_type)
 - [x] Catalog/Components/CatalogFilterHeader.swift (1 ID: search_titles_only)
 - [x] Catalog/Components/CatalogManufacturerFilterView.swift (2 IDs: all, done)
-- [ ] Catalog/Components/CatalogSheetModifiers.swift
+- [x] Catalog/Components/CatalogSheetModifiers.swift (N/A - ViewModifier, no interactive elements)
 - [x] Catalog/Components/CatalogTagFilterView.swift (3 IDs: clear, show_all, more)
 - [x] Catalog/Components/CatalogToolbar.swift (1 ID: sort_menu)
 - [x] Catalog/Components/CatalogToolbarContent.swift (8 IDs)
@@ -157,3 +157,9 @@ Total accessibility identifiers added: 120+
 26. ImportScheduleView
 
 **Total IDs Added: 50+**
+
+### Additional Files Completed (Post-100% Verification):
+- COEToggleRow.swift (1 ID)
+- ManufacturerToggleRow.swift (1 ID)
+
+**Final Total: 122+ accessibility identifiers across 90 reviewed files**

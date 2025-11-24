@@ -609,22 +609,16 @@ class CatalogViewModel: CatalogViewModelProtocol {
                 continue
             }
 
-            // Apply filters that are active
+            // Apply filters
             if type(of: otherFilter) == ManufacturerFilter.self {
                 let mfrFilter = ManufacturerFilter()
-                if mfrFilter.isActive(in: self) {
-                    filtered = mfrFilter.applyFilter(to: filtered, viewModel: self)
-                }
+                filtered = mfrFilter.applyFilter(to: filtered, viewModel: self)
             } else if type(of: otherFilter) == COEFilter.self {
                 let coeFilter = COEFilter()
-                if coeFilter.isActive(in: self) {
-                    filtered = coeFilter.applyFilter(to: filtered, viewModel: self)
-                }
+                filtered = coeFilter.applyFilter(to: filtered, viewModel: self)
             } else if type(of: otherFilter) == TagFilter.self {
                 let tagFilter = TagFilter()
-                if tagFilter.isActive(in: self) {
-                    filtered = tagFilter.applyFilter(to: filtered, viewModel: self)
-                }
+                filtered = tagFilter.applyFilter(to: filtered, viewModel: self)
             }
         }
 

@@ -249,8 +249,8 @@ struct EntitlementServiceTests {
         let service = EntitlementService(tier: .free)
 
         #expect(service.canUseBatchLabelPrinting() == false)
-        #expect(service.canUseCSVImport() == false)
-        #expect(service.canUseBulkEditing() == false)
+        #expect(service.canUseCSVImport() == true)  // CSV Import is universal
+        #expect(service.canUseBulkEditing() == true)  // Bulk Editing is universal
         #expect(service.canUseCustomFields() == false)
     }
 
@@ -268,13 +268,13 @@ struct EntitlementServiceTests {
     func testFeatureEnforcementThrowsForFreeTier() {
         let service = EntitlementService(tier: .free)
 
+        // Batch Label Printing is premium-only
         #expect(throws: EntitlementError.self) {
             try service.enforceFeatureAccess(.batchLabelPrinting)
         }
 
-        #expect(throws: EntitlementError.self) {
-            try service.enforceFeatureAccess(.csvImport)
-        }
+        // CSV Import and Bulk Editing are universal features, so they don't throw
+        // Only test premium-only features here
     }
 
     @Test("Feature enforcement succeeds for pro tier")

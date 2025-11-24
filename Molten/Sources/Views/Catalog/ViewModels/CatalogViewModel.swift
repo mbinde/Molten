@@ -611,11 +611,20 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
             // Apply filters that are active
             if type(of: otherFilter) == ManufacturerFilter.self {
-                filtered = ManufacturerFilter().applyFilter(to: filtered, viewModel: self)
+                let mfrFilter = ManufacturerFilter()
+                if mfrFilter.isActive(in: self) {
+                    filtered = mfrFilter.applyFilter(to: filtered, viewModel: self)
+                }
             } else if type(of: otherFilter) == COEFilter.self {
-                filtered = COEFilter().applyFilter(to: filtered, viewModel: self)
+                let coeFilter = COEFilter()
+                if coeFilter.isActive(in: self) {
+                    filtered = coeFilter.applyFilter(to: filtered, viewModel: self)
+                }
             } else if type(of: otherFilter) == TagFilter.self {
-                filtered = TagFilter().applyFilter(to: filtered, viewModel: self)
+                let tagFilter = TagFilter()
+                if tagFilter.isActive(in: self) {
+                    filtered = tagFilter.applyFilter(to: filtered, viewModel: self)
+                }
             }
         }
 

@@ -40,6 +40,18 @@ struct InventoryDetailView_EntitlementTests {
         )
     }
 
+    /// Get a real catalog item for tests that need to add inventory (catalog is read-only)
+    func getRealCatalogItem() async throws -> GlassItemModel {
+        let catalogService = deps.catalogService
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+
+        guard let glassItem = catalogItems.first(where: { $0.sku != nil }) else {
+            throw NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "No catalog items available for testing"])
+        }
+
+        return glassItem
+    }
+
     func createEntitlementService(tier: SubscriptionTier) -> EntitlementService {
         return EntitlementService(tier: tier)
     }
@@ -459,14 +471,14 @@ struct InventoryDetailView_EntitlementTests {
     func testCountUniqueItemsWithInventory() async throws {
         let service = deps.inventoryTrackingService
 
-        // Create test items
-        let item1 = createTestItem()
+        // Get a real catalog item (catalog is read-only, can't create test items)
+        let glassItem = try await getRealCatalogItem()
 
-        // Add inventory to item1
+        // Add inventory to the item
         _ = try await service.addInventory(
             quantity: 5.0,
             type: "rod",
-            toItem: item1.glassItem.stable_id,
+            toItem: glassItem.stable_id,
             atLocation: nil
         )
 
@@ -477,7 +489,7 @@ struct InventoryDetailView_EntitlementTests {
         #expect(itemsWithInventory.count >= 1)
 
         // Verify our item is in the list
-        let hasOurItem = itemsWithInventory.contains { $0.glassItem.stable_id == item1.glassItem.stable_id }
+        let hasOurItem = itemsWithInventory.contains { $0.glassItem.stable_id == glassItem.stable_id }
         #expect(hasOurItem)
     }
 

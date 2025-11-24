@@ -265,6 +265,10 @@ struct CatalogView: View {
                 selectedProductTypes: $viewModel.selectedProductTypes,
                 availableTypes: FeatureFlags.availableProductTypes,
                 displayName: displayNameForProductType
+            ),
+            coeFilter: .init(
+                selectedCOEs: $viewModel.selectedCOEs,
+                availableCOEs: allAvailableCOEs
             )
         )
     }

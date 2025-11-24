@@ -234,6 +234,9 @@ class CatalogViewModel: CatalogViewModelProtocol {
     private var cachedAllCOEs: [Int32] = []
     private var cachedManufacturers: [String] = []
 
+    // Observer for UserDefaults changes
+    nonisolated(unsafe) private var userDefaultsObserver: NSObjectProtocol?
+
     // MARK: - Initialization
 
     init(catalogService: CatalogService) {
@@ -251,6 +254,15 @@ class CatalogViewModel: CatalogViewModelProtocol {
         // Set up debouncing for search text (300ms delay)
         // This prevents expensive filtering operations on every keystroke
         setupSearchDebouncing()
+
+        // Set up observer for COE and manufacturer preference changes
+        setupUserDefaultsObserver()
+    }
+
+    nonisolated deinit {
+        if let observer = userDefaultsObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     /// Configure Combine publisher to debounce search text updates
@@ -261,6 +273,19 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
         // For now, we'll rely on the view to handle debouncing via onChange
         // The debouncedSearchText will be set by the view after 300ms delay
+    }
+
+    /// Set up observer for UserDefaults changes to COE and manufacturer preferences
+    private func setupUserDefaultsObserver() {
+        userDefaultsObserver = NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            // When UserDefaults changes, reapply filters
+            // This catches changes made in Settings view for COE and manufacturer filters
+            self?.applyFilters()
+        }
     }
 
     // MARK: - Computed Properties

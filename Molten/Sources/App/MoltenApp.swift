@@ -47,21 +47,35 @@ struct MoltenApp: App {
 
         if isTest {
             // Test mode - use mocks
-            _dependencies = State(initialValue: AppDependencies(persistenceController: .createTestController()))
+            let testDeps = AppDependencies(persistenceController: .createTestController())
+            _dependencies = State(initialValue: testDeps)
+            // Skip SubscriptionManager during tests (requires RevenueCat configuration)
+            _subscriptionManager = State(initialValue: SubscriptionManager(
+                entitlementService: testDeps.entitlementService,
+                subscriptionService: MockSubscriptionService()
+            ))
         } else {
             // Production mode - real Core Data (will init in background during launch screen)
-            _dependencies = State(initialValue: AppDependencies())
-        }
+            let prodDeps = AppDependencies()
+            _dependencies = State(initialValue: prodDeps)
 
-        // Initialize subscription manager with proper entitlement service
-        _subscriptionManager = State(initialValue: SubscriptionManager(entitlementService: _dependencies.wrappedValue.entitlementService))
+            // MUST initialize subscriptionManager before calling instance methods (Swift 6 requirement)
+            // Initialize with mock first, will be properly set up after SDK configuration
+            _subscriptionManager = State(initialValue: SubscriptionManager(
+                entitlementService: prodDeps.entitlementService,
+                subscriptionService: MockSubscriptionService()
+            ))
+
+            // Configure SDKs now that all @State properties are initialized
+            configureSentry()
+            configureRevenueCat()
+
+            // Now reinitialize SubscriptionManager with real RevenueCat service
+            _subscriptionManager = State(initialValue: SubscriptionManager(entitlementService: prodDeps.entitlementService))
+        }
 
         // Note: AppDependencies automatically detects test environment
         // and provides appropriate dependencies (mocks for tests, Core Data for production)
-
-        // Configure SDKs
-        configureSentry()
-        configureRevenueCat()
     }
 
     // DO NOT initialize PersistenceController here!

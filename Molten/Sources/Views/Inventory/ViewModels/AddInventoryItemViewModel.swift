@@ -279,7 +279,7 @@ class AddInventoryItemViewModel {
             if !trimmedNotes.isEmpty {
                 do {
                     let userNotes = UserNotesModel(
-                        itemStableId: stableId,
+                        item_stable_id: stableId,
                         notes: trimmedNotes
                     )
                     _ = try await userNotesRepository.setNotes(userNotes)

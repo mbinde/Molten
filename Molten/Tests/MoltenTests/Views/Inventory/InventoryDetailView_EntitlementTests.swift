@@ -464,11 +464,10 @@ struct InventoryDetailView_EntitlementTests {
 
         // Add inventory to item1
         _ = try await service.addInventory(
-            toItem: item1.glassItem.stable_id,
             quantity: 5.0,
             type: "rod",
-            location: nil,
-            notes: nil
+            toItem: item1.glassItem.stable_id,
+            atLocation: nil
         )
 
         // Search for items with inventory

@@ -17,9 +17,9 @@ struct EntitlementServiceTests {
         #expect(limit == 10)
     }
 
-    @Test("Pro tier should have unlimited shopping list items")
-    func testProTierShoppingListLimit() {
-        let service = EntitlementService(tier: .pro)
+    @Test("Premium tier should have unlimited shopping list items")
+    func testPremiumTierShoppingListLimit() {
+        let service = EntitlementService(tier: .premium)
 
         let limit = service.getShoppingListLimit()
 
@@ -64,7 +64,7 @@ struct EntitlementServiceTests {
 
     @Test("Pro tier can add unlimited shopping list items")
     func testProTierCanAddUnlimitedShoppingListItems() {
-        let service = EntitlementService(tier: .pro)
+        let service = EntitlementService(tier: .premium)
 
         let canAdd1 = service.canAddShoppingListItem(currentCount: 10)
         let canAdd2 = service.canAddShoppingListItem(currentCount: 100)
@@ -94,7 +94,7 @@ struct EntitlementServiceTests {
 
     @Test("Pro tier enforceShoppingListLimit never throws")
     func testProTierEnforceShoppingListLimitNeverThrows() throws {
-        let service = EntitlementService(tier: .pro)
+        let service = EntitlementService(tier: .premium)
 
         try service.enforceShoppingListLimit(currentCount: 100)
         try service.enforceShoppingListLimit(currentCount: 1000)
@@ -131,7 +131,7 @@ struct EntitlementServiceTests {
 
     @Test("Pro tier should have unlimited inventory items")
     func testProTierInventoryLimit() {
-        let service = EntitlementService(tier: .pro)
+        let service = EntitlementService(tier: .premium)
 
         let limit = service.getInventoryLimit()
 
@@ -158,7 +158,7 @@ struct EntitlementServiceTests {
 
     @Test("Pro tier can add unlimited inventory items")
     func testProTierCanAddUnlimitedInventoryItems() {
-        let service = EntitlementService(tier: .pro)
+        let service = EntitlementService(tier: .premium)
 
         let canAdd = service.canAddInventoryItem(currentCount: 1000)
 
@@ -170,10 +170,10 @@ struct EntitlementServiceTests {
     @Test("EntitlementService initializes with specified tier")
     func testInitializesWithTier() {
         let freeService = EntitlementService(tier: .free)
-        let proService = EntitlementService(tier: .pro)
+        let proService = EntitlementService(tier: .premium)
 
         #expect(freeService.tier == .free)
-        #expect(proService.tier == .pro)
+        #expect(proService.tier == .premium)
     }
 
     @Test("EntitlementService defaults to free tier")
@@ -189,9 +189,9 @@ struct EntitlementServiceTests {
 
         #expect(service.tier == .free)
 
-        service.updateTier(.pro)
+        service.updateTier(.premium)
 
-        #expect(service.tier == .pro)
+        #expect(service.tier == .premium)
     }
 
     @Test("Updating tier affects shopping list limits")
@@ -207,7 +207,7 @@ struct EntitlementServiceTests {
         #expect(canAdd == false)
 
         // Upgrade to Pro
-        service.updateTier(.pro)
+        service.updateTier(.premium)
 
         // Now unlimited
         limit = service.getShoppingListLimit()
@@ -231,7 +231,7 @@ struct EntitlementServiceTests {
         #expect(canAdd == false)
 
         // Upgrade to Pro
-        service.updateTier(.pro)
+        service.updateTier(.premium)
 
         // Now unlimited
         limit = service.getInventoryLimit()
@@ -256,7 +256,7 @@ struct EntitlementServiceTests {
 
     @Test("Pro tier has all features")
     func testProTierFeatureAccess() {
-        let service = EntitlementService(tier: .pro)
+        let service = EntitlementService(tier: .premium)
 
         #expect(service.canUseBatchLabelPrinting() == true)
         #expect(service.canUseCSVImport() == true)
@@ -279,7 +279,7 @@ struct EntitlementServiceTests {
 
     @Test("Feature enforcement succeeds for pro tier")
     func testFeatureEnforcementSucceedsForProTier() throws {
-        let service = EntitlementService(tier: .pro)
+        let service = EntitlementService(tier: .premium)
 
         try service.enforceFeatureAccess(.batchLabelPrinting)
         try service.enforceFeatureAccess(.csvImport)

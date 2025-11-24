@@ -104,9 +104,11 @@ struct COEFilter: Filterable {
 
         return items.filter { item in
             if let coe = item.catalogItem.coe {
+                // Item has COE - check if it matches filter
                 return activeCOEFilter.contains(coe)
             }
-            return false
+            // Item has no COE (tools, coatings) - pass through unchanged
+            return true
         }
     }
 }

@@ -519,12 +519,16 @@
 				Tests/MoltenTests/Views/Shopping/ShoppingModeStateTests.swift,
 				Tests/MoltenTests/Views/Shopping/StoreAutoCompleteFieldTests.swift,
 				Tests/MoltenTests/Views/SubscriptionViewModelTests.swift,
+				Tests/MoltenUITests/AddInventoryUITests.swift,
 				Tests/MoltenUITests/AppLaunchUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITestsLaunchTests.swift,
 				Tests/MoltenUITests/Helpers/BaseUITest.swift,
 				"Tests/MoltenUITests/Helpers/XCUIElement+Helpers.swift",
+				Tests/MoltenUITests/InventoryDetailUITests.swift,
+				Tests/MoltenUITests/LabelPrintingUITests.swift,
 				Tests/MoltenUITests/ProjectsUITests.swift,
+				Tests/MoltenUITests/ShoppingListUITests.swift,
 				Tests/PerformanceTests/ImageHelpers_PerformanceTests.swift,
 				Tests/PerformanceTests/ResourceManagementTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataHelpersTests.swift,
@@ -587,12 +591,16 @@
 		F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Molten" folder in "MoltenUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Tests/MoltenUITests/AddInventoryUITests.swift,
 				Tests/MoltenUITests/AppLaunchUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITests.swift,
 				Tests/MoltenUITests/FlameworkerUITestsLaunchTests.swift,
 				Tests/MoltenUITests/Helpers/BaseUITest.swift,
 				"Tests/MoltenUITests/Helpers/XCUIElement+Helpers.swift",
+				Tests/MoltenUITests/InventoryDetailUITests.swift,
+				Tests/MoltenUITests/LabelPrintingUITests.swift,
 				Tests/MoltenUITests/ProjectsUITests.swift,
+				Tests/MoltenUITests/ShoppingListUITests.swift,
 			);
 			target = F551A4262E9DAA1A00C9C2F1 /* MoltenUITests */;
 		};
@@ -1512,7 +1520,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = Flameworker;
+				TEST_TARGET_NAME = Molten;
 			};
 			name = Debug;
 		};
@@ -1537,7 +1545,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = Flameworker;
+				TEST_TARGET_NAME = Molten;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

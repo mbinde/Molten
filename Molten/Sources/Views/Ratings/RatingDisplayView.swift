@@ -134,6 +134,7 @@ struct RatingDisplayView: View {
                     .font(.caption)
             }
             .buttonStyle(.bordered)
+            .accessibilityIdentifier("rating_display_rate")
         }
         .padding()
         .background(.quaternary.opacity(0.3))
@@ -160,6 +161,7 @@ struct RatingDisplayView: View {
                 Label("Rate This Item", systemImage: "star.fill")
             }
             .buttonStyle(.bordered)
+            .accessibilityIdentifier("rating_display_rate_first")
         }
         .padding()
         .background(.quaternary.opacity(0.3))

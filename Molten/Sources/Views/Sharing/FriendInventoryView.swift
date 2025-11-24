@@ -118,6 +118,7 @@ struct FriendInventoryView: View {
                 Text("Load Inventory")
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier("friend_inventory_load")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -165,6 +166,7 @@ struct FriendInventoryView: View {
                     Image(systemName: "arrow.clockwise")
                 }
                 .disabled(viewModel.isLoading)
+                .accessibilityIdentifier("friend_inventory_refresh")
             }
         }
     }

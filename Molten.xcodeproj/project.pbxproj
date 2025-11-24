@@ -115,6 +115,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F51BCA4D2ED4F476003799A4 /* Exceptions for "Molten" folder in "PerformanceTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Tests/PerformanceTests/ImageHelpers_PerformanceTests.swift,
+			);
+			target = F5D3D6362E9DCB0100DAA195 /* PerformanceTests */;
+		};
 		F58C7A602E90AE620052C821 /* Exceptions for "Molten" folder in "MoltenTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -262,7 +269,6 @@
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemView_NotesTests.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailView_EntitlementTests.swift,
-				Tests/MoltenTests/Views/Inventory/InventoryDetailView_ImageUploadTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailView_ShoppingListTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailView_TagManagementTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailViewTests.swift,
@@ -472,7 +478,6 @@
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemView_NotesTests.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailView_EntitlementTests.swift,
-				Tests/MoltenTests/Views/Inventory/InventoryDetailView_ImageUploadTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailView_ShoppingListTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailView_TagManagementTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailViewTests.swift,
@@ -518,6 +523,7 @@
 				Tests/MoltenUITests/Helpers/BaseUITest.swift,
 				"Tests/MoltenUITests/Helpers/XCUIElement+Helpers.swift",
 				Tests/MoltenUITests/ProjectsUITests.swift,
+				Tests/PerformanceTests/ImageHelpers_PerformanceTests.swift,
 				Tests/PerformanceTests/ResourceManagementTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataHelpersTests.swift,
 				Tests/RepositoryTests/CoreData/CoreDataInventoryLocationTests.swift,
@@ -566,6 +572,7 @@
 				Tests/RepositoryTests/ShareMetadataRepositoryTests.swift,
 				Tests/RepositoryTests/SQLite/SQLiteGlassItemRepositoryTests.swift,
 				Tests/RepositoryTests/SQLite/SQLiteItemTagsRepositoryTests.swift,
+				Tests/RepositoryTests/UserImageRepository_IntegrationTests.swift,
 				Tools/Documentation/check_core_data_violations.sh,
 				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
 				Tools/Documentation/CORE_DATA_PREVENTION_GUIDE.md,
@@ -660,6 +667,7 @@
 				Tests/RepositoryTests/ShareMetadataRepositoryTests.swift,
 				Tests/RepositoryTests/SQLite/SQLiteGlassItemRepositoryTests.swift,
 				Tests/RepositoryTests/SQLite/SQLiteItemTagsRepositoryTests.swift,
+				Tests/RepositoryTests/UserImageRepository_IntegrationTests.swift,
 			);
 			target = F5FACB0A2EA0B4830084A6D0 /* RepositoryTests */;
 		};
@@ -677,6 +685,7 @@
 				F58D50C22E8B91F1005B18B3 /* Exceptions for "Molten" folder in "Molten" target */,
 				F58C7A602E90AE620052C821 /* Exceptions for "Molten" folder in "MoltenTests" target */,
 				F5D3D6A42E9DCCC200DAA195 /* Exceptions for "Molten" folder in "MoltenUITests" target */,
+				F51BCA4D2ED4F476003799A4 /* Exceptions for "Molten" folder in "PerformanceTests" target */,
 				F5FACB172EA0B4A10084A6D0 /* Exceptions for "Molten" folder in "RepositoryTests" target */,
 				F5DBC4B82EAB1A8C00F6E879 /* Exceptions for "Molten" folder in "MoltenShareExtension" target */,
 				F5F58EE52EAECD830017A02E /* Exceptions for "Molten" folder in "InventoryImport" target */,

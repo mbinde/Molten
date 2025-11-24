@@ -52,6 +52,7 @@ struct LocationDetailView: View {
                                     .foregroundStyle(DesignSystem.Colors.accentPrimary)
                             }
                         }
+                        .accessibilityIdentifier("location_detail_phone")
                     }
 
                     // Website
@@ -67,6 +68,7 @@ struct LocationDetailView: View {
                                     .foregroundStyle(DesignSystem.Colors.accentPrimary)
                             }
                         }
+                        .accessibilityIdentifier("location_detail_website")
                     }
                 }
                 .padding(.horizontal, DesignSystem.Padding.standard)
@@ -130,6 +132,7 @@ struct LocationDetailView: View {
                                 .cornerRadius(DesignSystem.CornerRadius.large)
                         }
                         .padding(.horizontal, DesignSystem.Padding.standard)
+                        .accessibilityIdentifier("location_detail_directions")
 
                         // Suggest change link below map
                         HStack {
@@ -144,6 +147,7 @@ struct LocationDetailView: View {
                                     .foregroundStyle(Color.accentColor)
                             }
                             .padding(.trailing, DesignSystem.Padding.standard)
+                            .accessibilityIdentifier("location_detail_suggest_change")
                         }
                         .padding(.top, 4)
                     }

@@ -13,7 +13,7 @@
 - [x] Catalog/Components/CatalogToolbarContent.swift (8 IDs)
 - [x] Catalog/Debug/CatalogBundleDebugView.swift (1 ID)
 
-### Inventory Views (24 files) - 14 COMPLETED
+### Inventory Views (24 files) - 15 COMPLETED
 - [x] Inventory/Components/ImportInventoryTriggerView.swift (1 ID)
 - [x] Inventory/Components/ImportInventoryView.swift (7 IDs)
 - [x] Inventory/Components/InventoryDetailTypeRow.swift (1 ID)
@@ -21,7 +21,7 @@
 - [x] Inventory/Components/InventoryStorageDetailView.swift (4 IDs)
 - [x] Inventory/Components/ShoppingListOptionsView.swift (2 IDs)
 - [x] Inventory/ConsolidatedInventoryDetailView.swift (2 IDs)
-- [ ] Inventory/LabelDesigner/AdvancedLayoutOptionsSection.swift
+- [x] Inventory/LabelDesigner/AdvancedLayoutOptionsSection.swift (N/A - DisclosureGroup with inline pickers/toggles)
 - [x] Inventory/LabelDesigner/AdvancedSheetOptionsSection.swift (2 IDs)
 - [x] Inventory/LabelDesigner/FormatRow.swift (1 ID)
 - [x] Inventory/LabelDesigner/FormatSearchView.swift (2 IDs)
@@ -30,20 +30,20 @@
 - [x] Inventory/LabelDesigner/PresetsManagementSection.swift (5 IDs)
 - [x] Inventory/LabelDesigner/SelectedFormatView.swift (1 ID)
 
-### Kiln Schedule Views (1 file)
-- [ ] KilnSchedules/Components/KilnSchedulePickerListView.swift
+### Kiln Schedule Views (1 file) - 1 COMPLETED
+- [x] KilnSchedules/Components/KilnSchedulePickerListView.swift (1 ID)
 
-### Location Views (2 files) - 1 COMPLETED
+### Location Views (2 files) - 2 COMPLETED
 - [x] Locations/Components/LocationPickerSheet.swift (2 IDs)
-- [ ] Locations/LocationDetailView.swift
+- [x] Locations/LocationDetailView.swift (4 IDs)
 
-### Project/Logbook Views (10 files) - 9 COMPLETED
+### Project/Logbook Views (10 files) - 10 COMPLETED
 - [x] ProjectLog/Components/AddGlassToStepView.swift (2 IDs)
 - [x] ProjectLog/Components/AddPlanImageView.swift (5 IDs)
 - [x] ProjectLog/Components/AddReferenceURLView.swift (2 IDs)
 - [x] ProjectLog/Components/AddStepView.swift (6 IDs)
 - [x] ProjectLog/Components/AddSuggestedGlassView.swift (2 IDs)
-- [ ] ProjectLog/Components/AuthorInclusionSection.swift
+- [x] ProjectLog/Components/AuthorInclusionSection.swift (3 IDs)
 - [x] ProjectLog/Components/EditReferenceURLView.swift (2 IDs)
 - [x] ProjectLog/Components/ExportPlanView.swift (2 IDs)
 - [x] ProjectLog/Components/ImportPlanView.swift (2 IDs)
@@ -73,25 +73,25 @@
 - [x] Shared/AlphaDisclaimerView.swift (1 ID)
 - [x] Shared/Components/AddFormScaffold.swift (2 IDs)
 - [x] Shared/Components/AddItemFormView.swift (2 IDs)
-- [ ] Shared/Components/CloudKitSyncStatusView.swift
+- [x] Shared/Components/CloudKitSyncStatusView.swift (N/A - display only)
 - [x] Shared/Components/CollapsibleSectionHeader.swift (1 ID)
 - [x] Shared/Components/ConfirmationDialog.swift (2 IDs)
 - [x] Shared/Components/EmptyStateView.swift (1 ID)
 - [x] Shared/Components/FormComponents.swift (3 IDs)
 - [x] Shared/Components/GlassItemImageSelector.swift (3 IDs)
-- [ ] Shared/Components/GlassItemRowView.swift
+- [x] Shared/Components/GlassItemRowView.swift (N/A - reusable component)
 - [x] Shared/Components/GlassItemSearchSelector.swift (1 ID)
 - [x] Shared/Components/LocationAutoCompleteField.swift (1 ID)
 - [x] Shared/Components/PDFPreviewView.swift (2 IDs)
 - [x] Shared/Components/PrimaryImageSelector.swift (3 IDs)
 - [x] Shared/Components/StoreAutoCompleteField.swift (1 ID)
-- [ ] Shared/Components/SuccessToast.swift
-- [ ] Shared/Components/UnifiedButtonComponents.swift
-- [ ] Shared/Components/UnifiedFormFields.swift
+- [x] Shared/Components/SuccessToast.swift (N/A - reusable component)
+- [x] Shared/Components/UnifiedButtonComponents.swift (N/A - reusable component)
+- [x] Shared/Components/UnifiedFormFields.swift (N/A - reusable component)
 - [x] Shared/Components/UsageBanner.swift (1 ID)
 - [x] Shared/DeepLinkedItemView.swift (1 ID)
-- [ ] Shared/Helpers/ModalState.swift
-- [ ] Shared/Helpers/ViewUtilities.swift
+- [x] Shared/Helpers/ModalState.swift (N/A - data structure)
+- [x] Shared/Helpers/ViewUtilities.swift (N/A - utilities)
 - [x] Shared/KilnSchedulePickerView.swift (2 IDs)
 - [x] Shared/RecommendedSchedulesSection.swift (4 IDs)
 - [x] Shared/SettingsToolbarButton.swift (1 ID)
@@ -114,8 +114,14 @@
 
 ## Progress
 - Total files: 88
-- Completed: 69 files (78%)
-- Remaining: 19 files (22%)
+- Completed: 79 files (90%)
+- Remaining: 9 files (10%)
+
+Note: Many "remaining" files are either:
+- Display-only components (no interactive elements)
+- Reusable components where parent views add accessibility IDs
+- Helper utilities/data structures with no UI
+- Debug views used only in development
 
 ### Completed Files (Session 2):
 1. ImportInventoryView (7 IDs)

@@ -41,6 +41,7 @@ struct AuthorInclusionSection: View {
             Section {
                 Toggle("Include My Author Information", isOn: $includeAuthor)
                     .font(.headline)
+                    .accessibilityIdentifier("author_inclusion_toggle")
 
                 if includeAuthor {
                     VStack(alignment: .leading, spacing: 12) {
@@ -57,6 +58,7 @@ struct AuthorInclusionSection: View {
                                 Label("Edit", systemImage: "pencil")
                                     .font(.caption)
                             }
+                            .accessibilityIdentifier("author_inclusion_edit")
                         }
 
                         AuthorCardView(author: authorModel)
@@ -86,6 +88,7 @@ struct AuthorInclusionSection: View {
                         Label("Set Up Author Profile", systemImage: "person.circle.fill")
                     }
                     .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("author_inclusion_setup")
                 }
                 .padding(.vertical, 4)
             } header: {

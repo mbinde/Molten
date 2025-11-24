@@ -46,7 +46,8 @@ struct AddInventoryFormView: View {
         self._viewModel = State(initialValue: AddInventoryItemViewModel(
             prefilledNaturalKey: prefilledNaturalKey,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         ))
     }
     

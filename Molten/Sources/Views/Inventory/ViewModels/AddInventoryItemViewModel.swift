@@ -20,6 +20,7 @@ class AddInventoryItemViewModel {
 
     private let inventoryTrackingService: InventoryTrackingService
     private let catalogService: CatalogService
+    private let userNotesRepository: UserNotesRepository
     private let prefilledNaturalKey: String?
 
     // MARK: - Form State
@@ -50,11 +51,13 @@ class AddInventoryItemViewModel {
     init(
         prefilledNaturalKey: String? = nil,
         inventoryTrackingService: InventoryTrackingService,
-        catalogService: CatalogService
+        catalogService: CatalogService,
+        userNotesRepository: UserNotesRepository
     ) {
         self.prefilledNaturalKey = prefilledNaturalKey
         self.inventoryTrackingService = inventoryTrackingService
         self.catalogService = catalogService
+        self.userNotesRepository = userNotesRepository
 
         // Set prefilled key if provided
         if let prefilledKey = prefilledNaturalKey {
@@ -270,6 +273,22 @@ class AddInventoryItemViewModel {
                 dimensions: parsedDimensions,
                 atLocation: finalLocation
             )
+
+            // Save notes if provided (non-empty after trimming)
+            let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedNotes.isEmpty {
+                do {
+                    let userNotes = UserNotesModel(
+                        itemStableId: stableId,
+                        notes: trimmedNotes
+                    )
+                    _ = try await userNotesRepository.setNotes(userNotes)
+                } catch {
+                    // Log warning but don't fail the whole operation
+                    // Inventory save is primary, notes are secondary
+                    print("⚠️ Warning: Failed to save notes for \(stableId): \(error.localizedDescription)")
+                }
+            }
 
             errorMessage = nil
             return true

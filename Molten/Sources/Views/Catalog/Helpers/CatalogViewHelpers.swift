@@ -56,15 +56,13 @@ struct CatalogViewHelpers {
     
     /// Get COE preferences as Int32 values suitable for the new architecture
     private static func getCOEPreferences() -> Set<Int32> {
-        // Try to access COEGlassPreference if it exists
+        // Get selected COE types from user preferences
+        let selectedCOETypes = COEGlassPreference.selectedCOETypes
+
         // Convert COEGlassType enum values to Int32 COE values
-        
-        // Common COE values for glass types
-        let commonCOEValues: Set<Int32> = [90, 96, 104] // Bullseye, Spectrum/Gaffer, Effetre
-        
-        // TODO: Replace with actual preference system
-        // This is a fallback implementation
-        return commonCOEValues
+        let coeValues = Set(selectedCOETypes.map { Int32($0.rawValue) })
+
+        return coeValues
     }
     
     // MARK: - Legacy Support (Deprecated)

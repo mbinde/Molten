@@ -35,14 +35,40 @@ struct ManufacturerFilter: Filterable {
     }
 
     func isActive(in viewModel: CatalogViewModel) -> Bool {
-        return !viewModel.selectedManufacturers.isEmpty
+        // Active if either manual selection OR global preference is set
+        if !viewModel.selectedManufacturers.isEmpty {
+            return true
+        }
+        // Check if global preference is set
+        return getGlobalManufacturerPreference() != nil
     }
 
     func applyFilter(to items: [CompleteInventoryItemModel], viewModel: CatalogViewModel) -> [CompleteInventoryItemModel] {
-        guard !viewModel.selectedManufacturers.isEmpty else { return items }
-        return items.filter { item in
-            viewModel.selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+        // Determine active manufacturer filter (manual selection OR global preference)
+        let activeManufacturers: Set<String>
+        if !viewModel.selectedManufacturers.isEmpty {
+            // User manually selected specific manufacturers in catalog filter UI
+            activeManufacturers = viewModel.selectedManufacturers
+        } else if let globalPref = getGlobalManufacturerPreference() {
+            // Use global manufacturer preference from settings
+            activeManufacturers = globalPref
+        } else {
+            // No filter active
+            return items
         }
+
+        return items.filter { item in
+            activeManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+    }
+
+    /// Read global manufacturer preference from UserDefaults
+    private func getGlobalManufacturerPreference() -> Set<String>? {
+        guard let data = UserDefaults.standard.data(forKey: "selectedManufacturerFilter"),
+              let manufacturers = try? JSONDecoder().decode(Set<String>.self, from: data) else {
+            return nil
+        }
+        return manufacturers
     }
 }
 
@@ -53,14 +79,32 @@ struct COEFilter: Filterable {
     }
 
     func isActive(in viewModel: CatalogViewModel) -> Bool {
-        return !viewModel.selectedCOEs.isEmpty
+        // Active if either manual selection OR global preference is set
+        if !viewModel.selectedCOEs.isEmpty {
+            return true
+        }
+        // Check if global preference differs from "all COEs"
+        let globalCOEs = COEGlassPreference.selectedCOETypes
+        return !globalCOEs.isEmpty && globalCOEs.count < COEGlassType.allCases.count
     }
 
     func applyFilter(to items: [CompleteInventoryItemModel], viewModel: CatalogViewModel) -> [CompleteInventoryItemModel] {
-        guard !viewModel.selectedCOEs.isEmpty else { return items }
+        // Determine active COE filter (manual selection OR global preference)
+        let activeCOEFilter: Set<Int32>
+        if !viewModel.selectedCOEs.isEmpty {
+            // User manually selected specific COEs in catalog filter UI
+            activeCOEFilter = viewModel.selectedCOEs
+        } else {
+            // Use global COE preference from settings
+            activeCOEFilter = Set(COEGlassPreference.selectedCOETypes.map { Int32($0.rawValue) })
+        }
+
+        // If all COEs are selected, don't filter
+        guard !activeCOEFilter.isEmpty else { return items }
+
         return items.filter { item in
             if let coe = item.catalogItem.coe {
-                return viewModel.selectedCOEs.contains(coe)
+                return activeCOEFilter.contains(coe)
             }
             return false
         }
@@ -332,10 +376,26 @@ class CatalogViewModel: CatalogViewModelProtocol {
             }
         }
 
-        // Apply manufacturer filter
+        // Apply manufacturer filter (global preference from settings OR manual selection in catalog)
+        // Global preference: UserDefaults "selectedManufacturerFilter" (set in Settings)
+        // Manual selection: selectedManufacturers (set by checkboxes in Catalog filter UI)
+        // Logic: If user manually selected manufacturers in catalog, use those. Otherwise, apply global preference.
+
+        let activeManufacturerFilter: Set<String>?
         if !selectedManufacturers.isEmpty {
+            // User manually selected specific manufacturers in catalog filter UI
+            activeManufacturerFilter = selectedManufacturers
+        } else if let data = UserDefaults.standard.data(forKey: "selectedManufacturerFilter"),
+                  let globalPref = try? JSONDecoder().decode(Set<String>.self, from: data) {
+            // Use global manufacturer preference from settings
+            activeManufacturerFilter = globalPref
+        } else {
+            activeManufacturerFilter = nil
+        }
+
+        if let manufacturers = activeManufacturerFilter {
             filtered = filtered.filter { item in
-                selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                manufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
             }
         }
 
@@ -353,11 +413,25 @@ class CatalogViewModel: CatalogViewModelProtocol {
             }
         }
 
-        // Apply COE filter (only for glass items)
+        // Apply COE filter (global COE preference from settings OR manual selection in catalog)
+        // Global preference: COEGlassPreference.selectedCOETypes (set in Settings)
+        // Manual selection: selectedCOEs (set by checkboxes in Catalog filter UI)
+        // Logic: If user manually selected COEs in catalog, use those. Otherwise, apply global preference.
+
+        let activeCOEFilter: Set<Int32>
         if !selectedCOEs.isEmpty {
+            // User manually selected specific COEs in catalog filter UI
+            activeCOEFilter = selectedCOEs
+        } else {
+            // Use global COE preference from settings
+            activeCOEFilter = Set(COEGlassPreference.selectedCOETypes.map { Int32($0.rawValue) })
+        }
+
+        // Apply the active COE filter (only for glass items)
+        if !activeCOEFilter.isEmpty {
             filtered = filtered.filter { item in
                 if let coe = item.catalogItem.coe {
-                    return selectedCOEs.contains(coe)
+                    return activeCOEFilter.contains(coe)
                 }
                 return false  // Non-glass items don't match COE filter
             }
@@ -481,12 +555,32 @@ class CatalogViewModel: CatalogViewModelProtocol {
         ]
 
         for otherFilter in allFilters {
-            // Skip the filter we're computing counts for UNLESS it's the tag filter
-            // For tags, we want to show only tags that appear in the current filtered set
-            let isTagFilter = type(of: otherFilter) == TagFilter.self
-            let isComputingTagFilter = type(of: filter) == TagFilter.self
+            // CRITICAL: Always apply filters with global preferences (COE, Manufacturer)
+            // even when computing counts for that same filter type, because we want to
+            // show only the values present in the currently filtered items.
+            //
+            // For tags, we also always apply the tag filter to show only tags in the current filtered set.
+            //
+            // Skip ONLY filters that are manually selected in the catalog UI when computing their own counts.
 
-            if type(of: otherFilter) == type(of: filter) && !isTagFilter {
+            let isSameFilterType = type(of: otherFilter) == type(of: filter)
+            let shouldSkip: Bool
+
+            if type(of: otherFilter) == ManufacturerFilter.self {
+                // Skip only if computing manufacturer counts AND user has manual selection (no global pref active)
+                shouldSkip = isSameFilterType && !selectedManufacturers.isEmpty
+            } else if type(of: otherFilter) == COEFilter.self {
+                // Skip only if computing COE counts AND user has manual selection (no global pref active)
+                shouldSkip = isSameFilterType && !selectedCOEs.isEmpty
+            } else if type(of: otherFilter) == TagFilter.self {
+                // Never skip tags - always apply to show only tags in filtered results
+                shouldSkip = false
+            } else {
+                // Default: skip if same filter type
+                shouldSkip = isSameFilterType
+            }
+
+            if shouldSkip {
                 continue
             }
 
@@ -496,7 +590,6 @@ class CatalogViewModel: CatalogViewModelProtocol {
             } else if type(of: otherFilter) == COEFilter.self {
                 filtered = COEFilter().applyFilter(to: filtered, viewModel: self)
             } else if type(of: otherFilter) == TagFilter.self {
-                // When computing tag counts, apply the tag filter to show only tags in the filtered results
                 filtered = TagFilter().applyFilter(to: filtered, viewModel: self)
             }
         }

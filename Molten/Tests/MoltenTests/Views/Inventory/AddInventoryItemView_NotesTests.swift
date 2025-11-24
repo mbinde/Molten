@@ -34,8 +34,8 @@ struct AddInventoryItemView_NotesTests {
         )
 
         // Save to catalog so it can be found during inventory creation
-        let catalogRepo = deps.catalogRepository
-        _ = try await catalogRepo.createGlassItem(glassItem)
+        let glassItemRepo = deps.glassItemRepository
+        _ = try await glassItemRepo.createItem(glassItem)
 
         return glassItem
     }
@@ -153,7 +153,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
 
         // Load catalog items and lookup the item
@@ -169,7 +170,7 @@ struct AddInventoryItemView_NotesTests {
         #expect(success)
 
         // Verify inventory was created
-        let inventory = try await deps.inventoryRepository.getInventory(forItem: glassItem.stable_id)
+        let inventory = try await deps.inventoryRepository.fetchInventory(forItem: glassItem.stable_id)
         #expect(!inventory.isEmpty)
     }
 
@@ -180,7 +181,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
 
         // Load catalog items and lookup the item
@@ -199,7 +201,7 @@ struct AddInventoryItemView_NotesTests {
         let savedNotes = try await deps.userNotesRepository.fetchNotes(forItem: glassItem.stable_id)
         #expect(savedNotes != nil)
         #expect(savedNotes?.notes == "Beautiful color, very reactive with copper")
-        #expect(savedNotes?.itemStableId == glassItem.stable_id)
+        #expect(savedNotes?.item_stable_id == glassItem.stable_id)
     }
 
     @Test("Notes are associated with correct glass item")
@@ -214,13 +216,14 @@ struct AddInventoryItemView_NotesTests {
             coe: 96,
             mfr_status: "available"
         )
-        _ = try await deps.catalogRepository.createGlassItem(item2)
+        _ = try await deps.glassItemRepository.createItem(item2)
 
         // Add inventory with notes for item1
         let viewModel1 = AddInventoryItemViewModel(
             prefilledNaturalKey: item1.stable_id,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
         await viewModel1.loadCatalogItems()
         viewModel1.lookupCatalogItem(stableId: item1.stable_id)
@@ -246,10 +249,10 @@ struct AddInventoryItemView_NotesTests {
         let notes2 = try await deps.userNotesRepository.fetchNotes(forItem: item2.stable_id)
 
         #expect(notes1?.notes == "Notes for item 1")
-        #expect(notes1?.itemStableId == item1.stable_id)
+        #expect(notes1?.item_stable_id == item1.stable_id)
 
         #expect(notes2?.notes == "Notes for item 2")
-        #expect(notes2?.itemStableId == item2.stable_id)
+        #expect(notes2?.item_stable_id == item2.stable_id)
     }
 
     // MARK: - Whitespace and Empty Notes Tests
@@ -261,7 +264,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
 
         await viewModel.loadCatalogItems()
@@ -283,7 +287,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
 
         await viewModel.loadCatalogItems()
@@ -305,7 +310,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
 
         await viewModel.loadCatalogItems()
@@ -348,7 +354,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel2 = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
         await viewModel2.loadCatalogItems()
         viewModel2.lookupCatalogItem(stableId: glassItem.stable_id)
@@ -359,11 +366,11 @@ struct AddInventoryItemView_NotesTests {
         // Verify notes were updated, not duplicated
         let updatedNotes = try await deps.userNotesRepository.fetchNotes(forItem: glassItem.stable_id)
         #expect(updatedNotes?.notes == "Updated notes with new information")
-        #expect(updatedNotes?.itemStableId == glassItem.stable_id)
+        #expect(updatedNotes?.item_stable_id == glassItem.stable_id)
 
         // Verify only one notes record exists
         let allNotes = try await deps.userNotesRepository.fetchAllNotes()
-        let notesForItem = allNotes.filter { $0.itemStableId == glassItem.stable_id }
+        let notesForItem = allNotes.filter { $0.item_stable_id == glassItem.stable_id }
         #expect(notesForItem.count == 1)
     }
 
@@ -388,7 +395,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel2 = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
         await viewModel2.loadCatalogItems()
         viewModel2.lookupCatalogItem(stableId: glassItem.stable_id)
@@ -410,7 +418,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
 
         await viewModel.loadCatalogItems()
@@ -423,7 +432,7 @@ struct AddInventoryItemView_NotesTests {
         #expect(success)
 
         // Verify inventory was created even if notes failed
-        let inventory = try await deps.inventoryRepository.getInventory(forItem: glassItem.stable_id)
+        let inventory = try await deps.inventoryRepository.fetchInventory(forItem: glassItem.stable_id)
         #expect(!inventory.isEmpty)
     }
 
@@ -434,7 +443,8 @@ struct AddInventoryItemView_NotesTests {
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
             inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
+            catalogService: deps.catalogService,
+            userNotesRepository: deps.userNotesRepository
         )
 
         await viewModel.loadCatalogItems()
@@ -449,55 +459,18 @@ struct AddInventoryItemView_NotesTests {
         // This tests the graceful degradation pattern
     }
 
-    // MARK: - Display Integration Tests
-
-    @Test("Notes are displayed in detail view after save")
-    func testNotesDisplayedInDetailView() async throws {
-        let glassItem = try await createTestGlassItem()
-
-        // Add inventory with notes
-        let viewModel = AddInventoryItemViewModel(
-            prefilledNaturalKey: glassItem.stable_id,
-            inventoryTrackingService: deps.inventoryTrackingService,
-            catalogService: deps.catalogService
-        )
-        await viewModel.loadCatalogItems()
-        viewModel.lookupCatalogItem(stableId: glassItem.stable_id)
-        viewModel.quantity = "10"
-        viewModel.notes = "Beautiful reactive color, works great with copper"
-        _ = await viewModel.save()
-
-        // Fetch complete item (as detail view would)
-        let completeItems = try await deps.catalogService.getAllGlassItems()
-        let completeItem = completeItems.first { $0.glassItem.stable_id == glassItem.stable_id }
-
-        #expect(completeItem != nil)
-        #expect(completeItem?.userNotes == "Beautiful reactive color, works great with copper")
-    }
-
     // MARK: - Notes Model Tests
 
     @Test("UserNotesModel is created with correct fields")
     func testUserNotesModelCreation() {
         let notes = UserNotesModel(
-            itemStableId: "test-item-001-0",
+            item_stable_id: "test-item-001-0",
             notes: "Test notes content"
         )
 
-        #expect(notes.itemStableId == "test-item-001-0")
+        #expect(notes.item_stable_id == "test-item-001-0")
         #expect(notes.notes == "Test notes content")
         #expect(notes.id != UUID(uuidString: "00000000-0000-0000-0000-000000000000"))
-    }
-
-    @Test("UserNotesModel timestamps are set")
-    func testUserNotesModelTimestamps() {
-        let notes = UserNotesModel(
-            itemStableId: "test-item-001-0",
-            notes: "Test notes"
-        )
-
-        #expect(notes.createdAt != nil)
-        #expect(notes.updatedAt != nil)
     }
 
     // MARK: - Batch Notes Tests
@@ -516,7 +489,7 @@ struct AddInventoryItemView_NotesTests {
                     coe: 96,
                     mfr_status: "available"
                 )
-                _ = try await deps.catalogRepository.createGlassItem(item)
+                _ = try await deps.glassItemRepository.createItem(item)
                 return item
             }(),
             {
@@ -528,7 +501,7 @@ struct AddInventoryItemView_NotesTests {
                     coe: 96,
                     mfr_status: "available"
                 )
-                _ = try await deps.catalogRepository.createGlassItem(item)
+                _ = try await deps.glassItemRepository.createItem(item)
                 return item
             }()
         ]

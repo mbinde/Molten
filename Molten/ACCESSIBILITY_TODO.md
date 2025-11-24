@@ -96,9 +96,9 @@
 - [x] Shared/RecommendedSchedulesSection.swift (4 IDs)
 - [x] Shared/SettingsToolbarButton.swift (1 ID)
 
-### Sharing Views (2 files) - 2 COMPLETED (in progress)
+### Sharing Views (2 files) - 2 COMPLETED
 - [x] Sharing/FriendInventoryView.swift (2 IDs)
-- [ ] Sharing/InventorySharingView.swift (6 IDs so far)
+- [x] Sharing/InventorySharingView.swift (11 IDs)
 
 ### Shopping Views (4 files) - 4 COMPLETED
 - [x] Shopping/AddShoppingListItemView.swift (N/A - uses AddItemFormView which has IDs)
@@ -114,8 +114,8 @@
 
 ## Progress
 - Total files: 88
-- Completed: 85 files (97%)
-- Remaining: 3 files (3%)
+- Completed: 86 files (98%)
+- Remaining: 2 files (2%)
 
 Note: Many "remaining" files are either:
 - Display-only components (no interactive elements)

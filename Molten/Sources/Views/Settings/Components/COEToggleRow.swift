@@ -26,6 +26,7 @@ struct COEToggleRow: View {
                         COEGlassPreference.removeCOEType(coeType)
                     }
                 }
+                .accessibilityIdentifier("coe_toggle_\(coeType.displayName.lowercased().replacingOccurrences(of: " ", with: "_"))")
         }
         .onAppear {
             isSelected = COEGlassPreference.selectedCOETypes.contains(coeType)

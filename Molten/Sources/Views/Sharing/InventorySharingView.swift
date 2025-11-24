@@ -119,6 +119,7 @@ struct InventorySharingView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("inventory_sharing_my_inventory_toggle")
 
                 if myShareExpanded {
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
@@ -134,6 +135,7 @@ struct InventorySharingView: View {
                                 Image(systemName: "doc.on.doc")
                             }
                             .buttonStyle(.borderless)
+                            .accessibilityIdentifier("inventory_sharing_copy_code")
 
                             Spacer()
 
@@ -143,6 +145,7 @@ struct InventorySharingView: View {
                                 Image(systemName: "square.and.arrow.up")
                             }
                             .buttonStyle(.borderless)
+                            .accessibilityIdentifier("inventory_sharing_share_code")
                         }
 
                         // QR Code for easy scanning (deep link to add friend)
@@ -184,6 +187,7 @@ struct InventorySharingView: View {
                                     Image(systemName: "pencil")
                                 }
                                 .buttonStyle(.borderless)
+                                .accessibilityIdentifier("inventory_sharing_edit_metadata")
                             }
                         }
                         .padding(.vertical, DesignSystem.Spacing.xs)
@@ -201,6 +205,7 @@ struct InventorySharingView: View {
                             }
                         }
                         .disabled(viewModel.isLoading)
+                        .accessibilityIdentifier("inventory_sharing_refresh")
 
                         Text("Re-uploads your current inventory to update what friends see. If you don't do this, it will refresh every 24 hours as long as you open the app during that time. All refreshes, whether automatic or manual, also reset the 90-day auto-deletion timer.")
                             .font(.caption)
@@ -219,6 +224,7 @@ struct InventorySharingView: View {
                         }
                     }
                     .disabled(viewModel.isLoading)
+                    .accessibilityIdentifier("inventory_sharing_delete")
                 }
 
             } else {

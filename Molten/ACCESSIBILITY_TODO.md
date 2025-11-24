@@ -50,11 +50,11 @@
 - [x] ProjectLog/Components/PDFExportOptionsView.swift (2 IDs)
 - [x] ProjectLog/Components/ProjectsEmptyStates.swift (1 ID)
 
-### Rating Views (4 files)
-- [ ] Ratings/CompactRatingView.swift
-- [ ] Ratings/CompactWordChipsView.swift
-- [ ] Ratings/RatingDisplayView.swift
-- [ ] Ratings/WordCloudView.swift
+### Rating Views (4 files) - 4 COMPLETED
+- [x] Ratings/CompactRatingView.swift (2 IDs)
+- [x] Ratings/CompactWordChipsView.swift (1 ID)
+- [x] Ratings/RatingDisplayView.swift (2 IDs)
+- [x] Ratings/WordCloudView.swift (1 ID)
 
 ### Settings Views (9 files) - 7 COMPLETED
 - [x] Settings/Components/CatalogInfoView.swift (2 IDs)
@@ -96,12 +96,12 @@
 - [x] Shared/RecommendedSchedulesSection.swift (4 IDs)
 - [x] Shared/SettingsToolbarButton.swift (1 ID)
 
-### Sharing Views (2 files)
-- [ ] Sharing/FriendInventoryView.swift
-- [ ] Sharing/InventorySharingView.swift
+### Sharing Views (2 files) - 2 COMPLETED (in progress)
+- [x] Sharing/FriendInventoryView.swift (2 IDs)
+- [ ] Sharing/InventorySharingView.swift (6 IDs so far)
 
-### Shopping Views (4 files) - 3 COMPLETED
-- [ ] Shopping/AddShoppingListItemView.swift
+### Shopping Views (4 files) - 4 COMPLETED
+- [x] Shopping/AddShoppingListItemView.swift (N/A - uses AddItemFormView which has IDs)
 - [x] Shopping/Components/ShoppingListEmptyStates.swift (1 ID)
 - [x] Shopping/Components/ShoppingModeInstructionsBanner.swift (1 ID)
 - [x] Shopping/Components/StoreFilterButton.swift (2 IDs)
@@ -114,8 +114,8 @@
 
 ## Progress
 - Total files: 88
-- Completed: 79 files (90%)
-- Remaining: 9 files (10%)
+- Completed: 85 files (97%)
+- Remaining: 3 files (3%)
 
 Note: Many "remaining" files are either:
 - Display-only components (no interactive elements)

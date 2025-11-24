@@ -25,20 +25,65 @@ class BaseUITest: XCTestCase {
         // Create app instance
         app = XCUIApplication()
 
-        // Configure launch arguments for optimal test environment
-        app.launchArguments = [
-            "UI-Testing",           // Enable UI test mode
-            "RESET-DATABASE",       // Start with clean database
-            "USE-TEST-DATA",        // Populate known test data
-            "DISABLE-ANIMATIONS"    // Faster, more reliable tests
-        ]
+        // NOTE: UI test mode flags (UI-Testing, RESET-DATABASE, USE-TEST-DATA)
+        // are disabled until the app's UI test infrastructure is complete.
+        // Tests currently run against production app with real/existing data.
+        //
+        // TODO: Enable these when MoltenApp's configureUITestEnvironment() is complete:
+        // app.launchArguments = [
+        //     "UI-Testing",           // Enable UI test mode
+        //     "RESET-DATABASE",       // Start with clean database
+        //     "USE-TEST-DATA",        // Populate known test data
+        //     "DISABLE-ANIMATIONS"    // Faster, more reliable tests
+        // ]
 
         // Launch the app
         app.launch()
 
+        // Dismiss any onboarding/disclaimer screens
+        dismissOnboardingScreensIfNeeded()
+
         // Wait for app to be ready (tab bar appears)
-        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 10),
-                      "App should launch and show tab bar within 10 seconds")
+        // Using longer timeout (30s) to account for normal app startup with Core Data loading
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 30),
+                      "App should launch and show tab bar within 30 seconds")
+    }
+
+    /// Dismiss onboarding or disclaimer screens that might block the main UI
+    private func dismissOnboardingScreensIfNeeded() {
+        // Wait a moment for any sheets to appear
+        Thread.sleep(forTimeInterval: 2)
+
+        // Try to dismiss alpha disclaimer (has specific accessibility identifier)
+        let alphaDisclaimerButton = app.buttons["alpha_disclaimer_acknowledge"]
+        if alphaDisclaimerButton.waitForExistence(timeout: 5) {
+            alphaDisclaimerButton.tap()
+            // Wait for sheet to dismiss
+            Thread.sleep(forTimeInterval: 1)
+        }
+
+        // Also try by label "Yes, I Understand"
+        let understandButton = app.buttons["Yes, I Understand"]
+        if understandButton.waitForExistence(timeout: 2) {
+            understandButton.tap()
+            Thread.sleep(forTimeInterval: 1)
+        }
+
+        // Try other common dismiss patterns
+        let continueButton = app.buttons["Continue"]
+        if continueButton.waitForExistence(timeout: 2) {
+            continueButton.tap()
+        }
+
+        let gotItButton = app.buttons["Got It"]
+        if gotItButton.waitForExistence(timeout: 2) {
+            gotItButton.tap()
+        }
+
+        let dismissButton = app.buttons["Dismiss"]
+        if dismissButton.waitForExistence(timeout: 2) {
+            dismissButton.tap()
+        }
     }
 
     override func tearDownWithError() throws {

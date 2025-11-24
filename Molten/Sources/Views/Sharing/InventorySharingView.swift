@@ -314,6 +314,7 @@ struct InventorySharingView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("inventory_sharing_temporary_toggle")
 
                 if expiringSharesExpanded {
                     ForEach(viewModel.expiringShares) { share in
@@ -328,6 +329,7 @@ struct InventorySharingView: View {
                             Text("Create Temporary Share")
                         }
                     }
+                    .accessibilityIdentifier("inventory_sharing_create_temporary")
                 }
             }
         }
@@ -354,6 +356,7 @@ struct InventorySharingView: View {
                             Text("Add Friend")
                         }
                     }
+                    .accessibilityIdentifier("inventory_sharing_add_friend")
                 }
                 .padding(.vertical, DesignSystem.Spacing.xs)
 
@@ -371,6 +374,7 @@ struct InventorySharingView: View {
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
+                        .accessibilityIdentifier("inventory_sharing_friend_delete_swipe")
                     }
                     .contextMenu {
                         Button {
@@ -379,6 +383,7 @@ struct InventorySharingView: View {
                         } label: {
                             Label("Customize", systemImage: "slider.horizontal.3")
                         }
+                        .accessibilityIdentifier("inventory_sharing_friend_customize")
 
                         Button(role: .destructive) {
                             friendToDelete = friend
@@ -386,6 +391,7 @@ struct InventorySharingView: View {
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
+                        .accessibilityIdentifier("inventory_sharing_friend_delete_context")
                     }
                 }
 
@@ -397,6 +403,7 @@ struct InventorySharingView: View {
                         Text("Add Friend")
                     }
                 }
+                .accessibilityIdentifier("inventory_sharing_add_friend")
             }
         } header: {
             Text("Friends")

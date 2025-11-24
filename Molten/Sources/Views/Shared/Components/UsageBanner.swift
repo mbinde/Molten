@@ -62,6 +62,7 @@ struct UsageBanner: View {
                             .background(Color.accentColor)
                             .cornerRadius(8)
                     }
+                    .accessibilityIdentifier("usage_banner_upgrade")
                 }
             }
             .padding(12)

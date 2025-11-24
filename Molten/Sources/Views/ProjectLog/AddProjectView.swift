@@ -184,6 +184,7 @@ struct AddProjectView: View {
                 Button("Cancel") {
                     dismiss()
                 }
+                .accessibilityIdentifier("add_project_cancel")
             }
 
             ToolbarItem(placement: .confirmationAction) {
@@ -193,6 +194,7 @@ struct AddProjectView: View {
                     }
                 }
                 .disabled(title.isEmpty)
+                .accessibilityIdentifier("add_project_save")
             }
         }
         .sheet(isPresented: $showingTagEditor) {

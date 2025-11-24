@@ -60,6 +60,7 @@ struct CreateShareView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("create_share_cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -72,6 +73,7 @@ struct CreateShareView: View {
                         }
                     }
                     .disabled(viewModel.displayName.trimmingCharacters(in: .whitespaces).isEmpty || viewModel.isCreatingShare)
+                    .accessibilityIdentifier("create_share_create")
                 }
             }
         }

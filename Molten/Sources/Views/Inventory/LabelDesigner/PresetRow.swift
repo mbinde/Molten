@@ -34,5 +34,6 @@ struct PresetRow: View {
             }
             .padding(.vertical, 4)
         }
+        .accessibilityIdentifier("preset_row_\(preset.name.lowercased().replacingOccurrences(of: " ", with: "_"))")
     }
 }

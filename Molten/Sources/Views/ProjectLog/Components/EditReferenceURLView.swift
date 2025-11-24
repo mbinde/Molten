@@ -85,6 +85,7 @@ struct EditReferenceURLView: View {
                     dismiss()
                 }
                 .disabled(isFetchingTitle)
+                .accessibilityIdentifier("edit_reference_url_cancel")
             }
 
             ToolbarItem(placement: .confirmationAction) {
@@ -97,6 +98,7 @@ struct EditReferenceURLView: View {
                         }
                     }
                     .disabled(url.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .accessibilityIdentifier("edit_reference_url_save")
                 }
             }
         }

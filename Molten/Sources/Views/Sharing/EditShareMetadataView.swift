@@ -42,6 +42,7 @@ struct EditShareMetadataView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("edit_share_cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -54,6 +55,7 @@ struct EditShareMetadataView: View {
                         }
                     }
                     .disabled(viewModel.displayName.trimmingCharacters(in: .whitespaces).isEmpty || viewModel.isLoading)
+                    .accessibilityIdentifier("edit_share_save")
                 }
             }
         }

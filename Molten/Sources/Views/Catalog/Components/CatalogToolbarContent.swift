@@ -37,21 +37,29 @@ struct CatalogToolbarContent: ToolbarContent {
             } label: {
                 Label("Sort", systemImage: "arrow.up.arrow.down")
             }
-            
+            .accessibilityIdentifier("catalog_toolbar_sort")
+
             Button("Tags") {
                 showingAllTags = true
             }
-            
+            .accessibilityIdentifier("catalog_toolbar_tags")
+
             Button("Refresh") {
                 refreshAction()
             }
+            .accessibilityIdentifier("catalog_toolbar_refresh")
+
             Button("Debug") {
                 debugBundleAction()
                 showingBundleDebug = true
             }
+            .accessibilityIdentifier("catalog_toolbar_debug")
+
             Button("Inspect JSON") {
                 inspectJSONAction()
             }
+            .accessibilityIdentifier("catalog_toolbar_inspect_json")
+
             Menu("Load Data") {
                 Button("Load JSON (Clear & Reload)") {
                     loadJSONAction()
@@ -63,12 +71,17 @@ struct CatalogToolbarContent: ToolbarContent {
                     loadIfEmptyAction()
                 }
             }
+            .accessibilityIdentifier("catalog_toolbar_load_data")
+
             Button("Reset", role: .destructive) {
                 showingDeleteAlert = true
             }
+            .accessibilityIdentifier("catalog_toolbar_reset")
+
             Button(action: addItemAction) {
                 Label("Add", systemImage: "plus")
             }
+            .accessibilityIdentifier("catalog_toolbar_add")
         }
     }
 }

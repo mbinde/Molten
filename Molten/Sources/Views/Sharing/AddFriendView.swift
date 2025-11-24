@@ -58,6 +58,7 @@ struct AddFriendView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("add_friend_cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -70,6 +71,7 @@ struct AddFriendView: View {
                         }
                     }
                     .disabled(viewModel.friendShareCode.isEmpty || viewModel.isAddingFriend)
+                    .accessibilityIdentifier("add_friend_add")
                 }
             }
         }

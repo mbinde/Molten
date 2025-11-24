@@ -159,6 +159,7 @@ struct StoreDetailView: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("store_detail_call_phone")
             }
 
             // Website
@@ -186,6 +187,7 @@ struct StoreDetailView: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("store_detail_open_website")
             }
         }
     }
@@ -265,6 +267,7 @@ struct StoreDetailView: View {
                     .foregroundStyle(.white)
                     .cornerRadius(DesignSystem.CornerRadius.medium)
                 }
+                .accessibilityIdentifier("store_detail_view_shopping_list")
             }
 
             // Get Directions button
@@ -277,6 +280,7 @@ struct StoreDetailView: View {
                         .foregroundStyle(hasShoppingListItems ? .primary : Color.white)
                         .cornerRadius(DesignSystem.CornerRadius.medium)
                 }
+                .accessibilityIdentifier("store_detail_get_directions")
             }
 
             // Share button
@@ -289,6 +293,7 @@ struct StoreDetailView: View {
                         .foregroundStyle(.primary)
                         .cornerRadius(DesignSystem.CornerRadius.medium)
                 }
+                .accessibilityIdentifier("store_detail_share")
             }
         }
     }

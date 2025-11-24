@@ -34,6 +34,7 @@ struct PresetsManagementSection: View {
                         .foregroundColor(.secondary)
                 }
             }
+            .accessibilityIdentifier("presets_load")
 
             // Current preset name display
             if let presetName = currentPresetName {
@@ -64,6 +65,7 @@ struct PresetsManagementSection: View {
                                 .font(.caption)
                         }
                         .buttonStyle(.borderless)
+                        .accessibilityIdentifier("presets_edit")
                     }
 
                     // Delete button (only for user presets, not built-in)
@@ -79,6 +81,7 @@ struct PresetsManagementSection: View {
                                 .font(.caption)
                         }
                         .buttonStyle(.borderless)
+                        .accessibilityIdentifier("presets_delete")
                     }
                 }
                 .padding(.vertical, 4)
@@ -97,6 +100,7 @@ struct PresetsManagementSection: View {
                     }
                 }
                 .foregroundColor(.orange)
+                .accessibilityIdentifier("presets_overwrite")
             }
 
             Button {
@@ -107,6 +111,7 @@ struct PresetsManagementSection: View {
                     Text("Save Current as a New Preset")
                 }
             }
+            .accessibilityIdentifier("presets_save_new")
         } header: {
             Text("Presets")
         } footer: {

@@ -59,6 +59,7 @@ struct ZipCodeEntryView: View {
                 .foregroundStyle(.white)
                 .cornerRadius(DesignSystem.CornerRadius.medium)
                 .disabled(zipCode.isEmpty || isGeocoding)
+                .accessibilityIdentifier("zip_code_set_location")
 
                 Spacer()
             }
@@ -70,6 +71,7 @@ struct ZipCodeEntryView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("zip_code_cancel")
                 }
             }
         }

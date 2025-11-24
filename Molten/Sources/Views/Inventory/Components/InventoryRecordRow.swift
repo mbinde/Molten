@@ -65,6 +65,7 @@ struct InventoryRecordRow: View {
                 Button(role: .destructive, action: onDelete) {
                     Label("Delete", systemImage: "trash")
                 }
+                .accessibilityIdentifier("inventory_record_delete")
             }
         } else {
             content
@@ -72,6 +73,7 @@ struct InventoryRecordRow: View {
                     Button(role: .destructive, action: onDelete) {
                         Label("Delete", systemImage: "trash")
                     }
+                    .accessibilityIdentifier("inventory_record_delete")
                 }
         }
     }

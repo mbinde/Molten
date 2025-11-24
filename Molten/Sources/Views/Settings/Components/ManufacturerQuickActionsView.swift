@@ -34,6 +34,7 @@ struct ManufacturerQuickActionsView: View {
             }
             .buttonStyle(.bordered)
             .disabled(localEnabledManufacturers.count == allManufacturers.count)
+            .accessibilityIdentifier("manufacturer_quick_actions_select_all")
 
             Spacer()
 
@@ -47,6 +48,7 @@ struct ManufacturerQuickActionsView: View {
             }
             .buttonStyle(.bordered)
             .disabled(localEnabledManufacturers.isEmpty)
+            .accessibilityIdentifier("manufacturer_quick_actions_select_none")
         }
         .padding(.top, 8)
     }

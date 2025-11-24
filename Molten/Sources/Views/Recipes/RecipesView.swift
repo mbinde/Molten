@@ -40,6 +40,7 @@ struct RecipesView: View {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundStyle(.secondary)
                         }
+                        .accessibilityIdentifier("recipes_clear_search")
                     }
                 }
                 .padding(DesignSystem.Padding.standard)
@@ -71,6 +72,7 @@ struct RecipesView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
+                    .accessibilityIdentifier("recipes_add_button")
                 }
             }
             .sheet(isPresented: $showingAddRecipe) {

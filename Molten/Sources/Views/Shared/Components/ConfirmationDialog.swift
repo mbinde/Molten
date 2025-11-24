@@ -78,6 +78,7 @@ struct ConfirmationDialog: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundColor(.primary)
+                    .accessibilityIdentifier("confirmation_dialog_cancel")
 
                     Divider()
                         .frame(height: 44)
@@ -94,6 +95,7 @@ struct ConfirmationDialog: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundColor(confirmRole == .destructive ? .red : .blue)
+                    .accessibilityIdentifier("confirmation_dialog_confirm")
                 }
             }
             .background(

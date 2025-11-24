@@ -61,6 +61,7 @@ struct PrimaryImageSelector: View {
                 }
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier("primary_image_add")
         }
         .frame(maxWidth: .infinity)
         .padding(DesignSystem.Padding.standard)
@@ -94,6 +95,7 @@ struct PrimaryImageSelector: View {
                         .font(.caption)
                 }
                 .buttonStyle(.bordered)
+                .accessibilityIdentifier("primary_image_add_more")
             }
         }
     }
@@ -197,6 +199,7 @@ private struct ImageViewer: View {
                             .foregroundColor(.white)
                             .padding()
                     }
+                    .accessibilityIdentifier("primary_image_viewer_close")
                 }
                 Spacer()
             }

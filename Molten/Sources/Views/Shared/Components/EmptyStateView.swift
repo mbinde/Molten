@@ -74,6 +74,7 @@ struct CustomEmptyStateView: View {
                         .background(DesignSystem.Colors.accentSecondary)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
+                .accessibilityIdentifier("empty_state_action")
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

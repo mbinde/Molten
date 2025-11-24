@@ -69,6 +69,7 @@ struct CatalogSearchEmptyState: View {
                 onClearSearch()
             }
             .buttonStyle(.bordered)
+            .accessibilityIdentifier("catalog_clear_filters")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(DesignSystem.Colors.background)

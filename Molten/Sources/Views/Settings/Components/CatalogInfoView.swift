@@ -79,6 +79,7 @@ struct CatalogInfoView: View {
                     }
                 }
                 .disabled(viewModel.isChecking || viewModel.isDownloading)
+                .accessibilityIdentifier("catalog_check_updates")
             } header: {
                 Text("Updates")
             } footer: {
@@ -90,6 +91,7 @@ struct CatalogInfoView: View {
             // Download settings
             Section {
                 Toggle("Auto-Update Catalog", isOn: $viewModel.autoUpdateEnabled)
+                    .accessibilityIdentifier("catalog_auto_update_toggle")
 
                 Picker("Update Frequency", selection: $viewModel.updateFrequency) {
                     ForEach(CatalogUpdatePreferences.UpdateFrequency.allCases, id: \.self) { frequency in

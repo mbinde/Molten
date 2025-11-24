@@ -35,6 +35,7 @@ struct ProjectsEmptyStates {
                 }
                 .buttonStyle(.borderedProminent)
                 .padding(.top, 8)
+                .accessibilityIdentifier("projects_empty_create_first")
             }
 
             Spacer()

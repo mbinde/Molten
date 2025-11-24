@@ -61,6 +61,7 @@ struct AddPlanImageView: View {
                             showingPhotoPicker = true
                         }
                         .foregroundColor(Color.accentColor)
+                        .accessibilityIdentifier("add_plan_image_choose_different")
                     }
                 } else {
                     Button {
@@ -68,6 +69,7 @@ struct AddPlanImageView: View {
                     } label: {
                         Label("Choose from Photos", systemImage: "photo")
                     }
+                    .accessibilityIdentifier("add_plan_image_choose_photos")
 
                     #if !targetEnvironment(macCatalyst)
                     Button {
@@ -75,6 +77,7 @@ struct AddPlanImageView: View {
                     } label: {
                         Label("Take Photo", systemImage: "camera")
                     }
+                    .accessibilityIdentifier("add_plan_image_take_photo")
                     #endif
                 }
             }
@@ -93,6 +96,7 @@ struct AddPlanImageView: View {
                 Button("Cancel") {
                     dismiss()
                 }
+                .accessibilityIdentifier("add_plan_image_cancel")
             }
 
             if selectedImage != nil {
@@ -102,6 +106,7 @@ struct AddPlanImageView: View {
                             await saveImage()
                         }
                     }
+                    .accessibilityIdentifier("add_plan_image_save")
                 }
             }
         }

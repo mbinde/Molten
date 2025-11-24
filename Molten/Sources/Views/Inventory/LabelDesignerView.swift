@@ -262,6 +262,7 @@ struct LabelDesignerView: View {
                     dismiss()
                 }
             }
+            .accessibilityIdentifier("label_designer_cancel")
         }
 
         ToolbarItem(placement: .primaryAction) {
@@ -271,6 +272,7 @@ struct LabelDesignerView: View {
                 }
             }
             .disabled(isGenerating || items.isEmpty)
+            .accessibilityIdentifier("label_designer_generate_pdf")
         }
     }
 

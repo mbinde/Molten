@@ -102,6 +102,7 @@ struct UpgradePromptView: View {
                     .foregroundColor(.white)
                     .cornerRadius(12)
                     .disabled(selectedProduct == nil || subscriptionManager.isLoading)
+                    .accessibilityIdentifier("upgrade_purchase_button")
 
                     Button {
                         dismiss()
@@ -110,6 +111,7 @@ struct UpgradePromptView: View {
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityIdentifier("upgrade_dismiss_button")
                 }
                 .padding(.horizontal, 32)
                 .padding(.bottom, 40)
@@ -123,6 +125,7 @@ struct UpgradePromptView: View {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundStyle(.secondary)
                     }
+                    .accessibilityIdentifier("upgrade_close_button")
                 }
             }
             .alert("Purchase Failed", isPresented: $showingPurchaseError) {

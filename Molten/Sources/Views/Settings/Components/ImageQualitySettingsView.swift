@@ -26,6 +26,7 @@ struct ImageQualitySettingsView: View {
                             .foregroundColor(.secondary)
                     }
                 }
+                .accessibilityIdentifier("image_quality_full_size_toggle")
             } footer: {
                 if UserSettings.shared.downloadFullSizeImages {
                     Text("Full-size images provide better quality but use significantly more storage space. A typical full-size image is 200-500 KB vs 20-50 KB for thumbnails.")
@@ -51,6 +52,7 @@ struct ImageQualitySettingsView: View {
                     }
                 }
                 .disabled(cacheSize == 0)
+                .accessibilityIdentifier("image_quality_clear_cache")
             } header: {
                 Text("Storage Management")
             } footer: {

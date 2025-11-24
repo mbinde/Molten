@@ -90,6 +90,7 @@ struct BugReportSheet: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("bug_report_cancel")
                 }
 
                 ToolbarItem(placement: .primaryAction) {
@@ -97,6 +98,7 @@ struct BugReportSheet: View {
                         submitBugReport()
                     }
                     .disabled(bugDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSubmitting)
+                    .accessibilityIdentifier("bug_report_submit")
                 }
             }
             .alert("Bug Report Sent", isPresented: $showSuccess) {

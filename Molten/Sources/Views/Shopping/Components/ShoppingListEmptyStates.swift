@@ -17,7 +17,8 @@ struct ShoppingListEmptyStates {
             actionButton: .init(
                 title: "Add to Shopping List",
                 action: onAddItem,
-                style: .prominent
+                style: .prominent,
+                accessibilityId: "shopping_list_empty_add"
             )
         )
     }

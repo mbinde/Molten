@@ -106,6 +106,7 @@ struct GlassItemSearchSelector: View {
                         .foregroundColor(.secondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("glass_item_search_clear")
             }
         }
     }

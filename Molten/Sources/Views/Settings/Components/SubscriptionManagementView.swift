@@ -97,6 +97,7 @@ struct SubscriptionManagementView: View {
                     }
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
+                    .accessibilityIdentifier("subscription_upgrade_button")
                 } header: {
                     Text("Upgrade")
                 } footer: {
@@ -113,6 +114,7 @@ struct SubscriptionManagementView: View {
                     }) {
                         Label("Manage Subscription in App Store", systemImage: "gear")
                     }
+                    .accessibilityIdentifier("subscription_manage")
 
                     Button(action: {
                         Task {
@@ -121,6 +123,7 @@ struct SubscriptionManagementView: View {
                     }) {
                         Label("Restore Purchases", systemImage: "arrow.clockwise")
                     }
+                    .accessibilityIdentifier("subscription_restore")
                 } header: {
                     Text("Manage")
                 }

@@ -58,11 +58,11 @@ struct LocationAutoCompleteField: View {
                                 Image(systemName: "location")
                                     .foregroundColor(.secondary)
                                     .font(.caption)
-                                
+
                                 Text(suggestion)
                                     .foregroundColor(.primary)
                                     .multilineTextAlignment(.leading)
-                                
+
                                 Spacer()
                             }
                             .padding(.horizontal, 12)
@@ -71,6 +71,7 @@ struct LocationAutoCompleteField: View {
                         }
                         .buttonStyle(.plain)
                         .background(Color(white: 1.0))
+                        .accessibilityIdentifier("location_autocomplete_\(suggestion.replacingOccurrences(of: " ", with: "_").lowercased())")
                         
                         if suggestion != locationSuggestions.prefix(5).last {
                             Divider()

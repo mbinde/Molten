@@ -44,6 +44,7 @@ struct ConsolidatedInventoryDetailView: View {
                         loadInventorySummary()
                     }
                     .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("consolidated_inventory_retry")
                 }
                 .padding()
             } else {
@@ -134,6 +135,7 @@ struct ConsolidatedInventoryDetailView: View {
                         Button("Done") {
                             dismiss()
                         }
+                        .accessibilityIdentifier("consolidated_inventory_done")
                     }
                 }
             }

@@ -28,6 +28,7 @@ struct PDFPreviewView: View {
                         Button("Done") {
                             dismiss()
                         }
+                        .accessibilityIdentifier("pdf_preview_done")
                     }
                     ToolbarItem(placement: .primaryAction) {
                         Button {
@@ -35,6 +36,7 @@ struct PDFPreviewView: View {
                         } label: {
                             Image(systemName: "square.and.arrow.up")
                         }
+                        .accessibilityIdentifier("pdf_preview_share")
                     }
                 }
                 .sheet(isPresented: $showingShare) {

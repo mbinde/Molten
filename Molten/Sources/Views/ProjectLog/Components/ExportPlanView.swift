@@ -88,6 +88,7 @@ struct ExportPlanView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("export_plan_cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -95,6 +96,7 @@ struct ExportPlanView: View {
                         checkAuthorInfoBeforeExport()
                     }
                     .disabled(isExporting)
+                    .accessibilityIdentifier("export_plan_export")
                 }
             }
             .task {

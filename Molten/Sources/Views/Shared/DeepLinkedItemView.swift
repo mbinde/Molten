@@ -105,6 +105,7 @@ struct DeepLinkedItemView: View {
                     Button("Close") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("deep_linked_item_close")
                 }
             }
             .task {

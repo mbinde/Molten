@@ -87,6 +87,7 @@ struct AddRecipeView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("add_recipe_cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -96,6 +97,7 @@ struct AddRecipeView: View {
                         }
                     }
                     .disabled(!isValid || isSaving)
+                    .accessibilityIdentifier("add_recipe_save")
                 }
             }
             .task {

@@ -52,6 +52,7 @@ struct LocationPickerSheet: View {
                 }
                 .buttonStyle(.bordered)
                 .frame(maxWidth: .infinity)
+                .accessibilityIdentifier("location_picker_cancel")
 
                 Button("Go") {
                     geocodeLocation()
@@ -59,6 +60,7 @@ struct LocationPickerSheet: View {
                 .buttonStyle(.borderedProminent)
                 .frame(maxWidth: .infinity)
                 .disabled(searchText.isEmpty)
+                .accessibilityIdentifier("location_picker_go")
             }
             .padding(.horizontal, DesignSystem.Padding.standard)
             .padding(.bottom, DesignSystem.Padding.standard)

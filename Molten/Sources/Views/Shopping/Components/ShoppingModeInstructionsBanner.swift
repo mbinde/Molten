@@ -38,6 +38,7 @@ struct ShoppingModeInstructionsBanner: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("shopping_mode_instructions_toggle")
 
             if isExpanded {
                 Text("Tap on items to confirm that you've added them to your basket. When you're done, click \"Checkout\" and they'll be removed from your list and added to your inventory.")

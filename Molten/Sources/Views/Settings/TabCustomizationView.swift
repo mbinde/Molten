@@ -137,6 +137,7 @@ struct TabCustomizationView: View {
                         Text("Reset to Defaults")
                     }
                 }
+                .accessibilityIdentifier("tab_customization_reset")
             }
         }
         .navigationTitle("Edit Tabs")
@@ -148,6 +149,7 @@ struct TabCustomizationView: View {
                 Button("Done") {
                     dismiss()
                 }
+                .accessibilityIdentifier("tab_customization_done")
             }
         }
         .environment(\.editMode, .constant(.active))

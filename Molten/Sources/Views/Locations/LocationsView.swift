@@ -81,6 +81,7 @@ struct LocationsView: View {
                     } label: {
                         Image(systemName: viewModel.showMap ? "map.fill" : "map")
                     }
+                    .accessibilityIdentifier("locations_toggle_map")
                 }
             }
             .sheet(isPresented: $showLocationPicker) {
@@ -240,6 +241,7 @@ struct LocationsView: View {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(DesignSystem.Colors.textTertiary)
                 }
+                .accessibilityIdentifier("locations_clear_search")
             }
         }
         .padding(DesignSystem.Padding.compact)

@@ -70,6 +70,7 @@ struct UserTagsEditor: View {
                         dismiss()
                     }
                     .disabled(isSaving)
+                    .accessibilityIdentifier("user_tags_done")
                 }
             }
             .onAppear {

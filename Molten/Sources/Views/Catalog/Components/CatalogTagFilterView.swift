@@ -26,12 +26,14 @@ struct CatalogTagFilterView: View {
                     }
                     .font(.caption)
                     .foregroundColor(.accentColor)
+                    .accessibilityIdentifier("catalog_tags_clear")
                 }
                 Button("All Tags") {
                     showingAllTags = true
                 }
                 .font(.caption)
                 .foregroundColor(.accentColor)
+                .accessibilityIdentifier("catalog_tags_show_all")
             }
             
             // Show selected tags
@@ -108,6 +110,7 @@ struct CatalogTagFilterView: View {
                         .background(Color.gray.opacity(0.1))
                         .foregroundColor(.secondary)
                         .clipShape(Capsule())
+                        .accessibilityIdentifier("catalog_tags_more")
                     }
                 }
                 .padding(.horizontal, 1)

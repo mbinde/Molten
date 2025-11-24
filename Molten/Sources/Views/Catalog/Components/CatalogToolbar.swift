@@ -26,6 +26,7 @@ struct CatalogToolbar: ToolbarContent {
                 Image(systemName: "arrow.up.arrow.down")
                     .accessibilityLabel("Sort")
             }
+            .accessibilityIdentifier("catalog_sort_menu")
         }
     }
 }

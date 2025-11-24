@@ -161,6 +161,7 @@ struct CatalogItemSearchField: View {
                     }
                     .font(.caption)
                     .foregroundColor(Color.accentColor)
+                    .accessibilityIdentifier("catalog_item_search_change")
                 }
                 .padding(12)
                 .background(Color.gray.opacity(0.15))
@@ -480,8 +481,9 @@ struct InventoryFormView: View {
                     dismiss()
                 }
                 .disabled(formState.isLoading)
+                .accessibilityIdentifier("inventory_form_cancel")
             }
-            
+
             ToolbarItem(placement: .confirmationAction) {
                 Button(editinginventory_id == nil ? "Add" : "Save") {
                     Task {
@@ -489,6 +491,7 @@ struct InventoryFormView: View {
                     }
                 }
                 .disabled(formState.isLoading)
+                .accessibilityIdentifier("inventory_form_save")
             }
         }
         .alert("Error", isPresented: $formState.showingError) {

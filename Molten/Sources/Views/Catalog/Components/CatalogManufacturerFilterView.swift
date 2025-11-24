@@ -21,6 +21,7 @@ struct CatalogManufacturerFilterView: View {
                     dismiss()
                 }
                 .foregroundColor(.primary)
+                .accessibilityIdentifier("catalog_manufacturer_all")
 
                 ForEach(availableManufacturers, id: \.self) { manufacturer in
                     Button(action: {
@@ -48,6 +49,7 @@ struct CatalogManufacturerFilterView: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("catalog_manufacturer_done")
                 }
             }
         }

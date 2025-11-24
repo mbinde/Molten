@@ -54,6 +54,7 @@ struct ManufacturerFilterButton: View {
             .cornerRadius(DesignSystem.CornerRadius.medium)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("catalog_filter_manufacturer")
     }
 }
 
@@ -104,6 +105,7 @@ struct COEFilterButton: View {
             .cornerRadius(DesignSystem.CornerRadius.medium)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("catalog_filter_coe")
     }
 }
 
@@ -155,6 +157,7 @@ struct TagFilterButton: View {
             .cornerRadius(DesignSystem.CornerRadius.medium)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("catalog_filter_tags")
     }
 }
 
@@ -210,5 +213,6 @@ struct ProductTypeFilterButton: View {
             .cornerRadius(DesignSystem.CornerRadius.medium)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("catalog_filter_product_type")
     }
 }

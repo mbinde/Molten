@@ -59,6 +59,7 @@ struct PresetSelectionSheet: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("preset_selection_cancel")
                 }
             }
         }

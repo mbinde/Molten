@@ -33,6 +33,7 @@ struct StoreFilterButton: View {
                                 onClear()
                             }
                         }
+                        .accessibilityIdentifier("store_filter_clear")
                 } else {
                     Text("All Stores")
                         .font(DesignSystem.Typography.caption)
@@ -48,5 +49,6 @@ struct StoreFilterButton: View {
             .background(selectedStore == nil ? DesignSystem.Colors.backgroundInput : DesignSystem.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
+        .accessibilityIdentifier("store_filter_button")
     }
 }

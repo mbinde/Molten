@@ -34,6 +34,7 @@ struct FormatSearchView: View {
                             .foregroundColor(.secondary)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityIdentifier("format_search_clear")
                 }
 
                 Button("Cancel") {
@@ -43,6 +44,7 @@ struct FormatSearchView: View {
                     }
                 }
                 .font(.body)
+                .accessibilityIdentifier("format_search_cancel")
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 12)

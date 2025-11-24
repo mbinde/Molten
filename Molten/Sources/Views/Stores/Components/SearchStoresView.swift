@@ -55,6 +55,7 @@ struct SearchStoresView: View {
                         .cornerRadius(DesignSystem.CornerRadius.medium)
                 }
                 .disabled(searchText.isEmpty)
+                .accessibilityIdentifier("search_stores_search")
 
                 Spacer()
             }
@@ -66,6 +67,7 @@ struct SearchStoresView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("search_stores_cancel")
                 }
             }
             .onAppear {

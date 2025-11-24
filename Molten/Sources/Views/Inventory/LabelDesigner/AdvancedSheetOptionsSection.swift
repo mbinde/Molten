@@ -91,6 +91,7 @@ struct AdvancedSheetOptionsSection: View {
                                         .font(.caption)
                                 }
                                 .buttonStyle(.bordered)
+                                .accessibilityIdentifier("label_designer_reset_sheet")
                             }
                         }
 
@@ -169,6 +170,7 @@ struct AdvancedSheetOptionsSection: View {
                                         .font(.caption)
                                 }
                                 .buttonStyle(.bordered)
+                                .accessibilityIdentifier("label_designer_reset_position")
                             }
                         }
                     }

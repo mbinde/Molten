@@ -89,6 +89,7 @@ struct ShoppingListOptionsView: View {
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
                     .disabled(isSaving || quantity.isEmpty)
+                    .accessibilityIdentifier("shopping_list_options_add")
 
                     Spacer()
                 }
@@ -104,6 +105,7 @@ struct ShoppingListOptionsView: View {
                         dismiss()
                     }
                     .disabled(isSaving)
+                    .accessibilityIdentifier("shopping_list_options_cancel")
                 }
             }
             .alert("Error", isPresented: $showingError) {

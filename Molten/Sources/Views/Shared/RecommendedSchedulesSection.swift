@@ -83,6 +83,7 @@ struct RecommendedSchedulesSection: View {
                         } label: {
                             Label("Remove", systemImage: "trash")
                         }
+                        .accessibilityIdentifier("recommended_schedules_remove")
                     }
                 }
 
@@ -98,6 +99,7 @@ struct RecommendedSchedulesSection: View {
                     .foregroundColor(Color.accentColor)
                 }
                 .padding(.top, 8)
+                .accessibilityIdentifier("recommended_schedules_add")
             }
         } header: {
             Label("Recommended Kiln Schedules", systemImage: "flame")
@@ -121,6 +123,7 @@ struct RecommendedSchedulesSection: View {
                         Button("Done") {
                             selectedSchedule = nil
                         }
+                        .accessibilityIdentifier("recommended_schedules_detail_done")
                     }
                 }
             }
@@ -143,6 +146,7 @@ struct RecommendedSchedulesSection: View {
                         Button("Cancel") {
                             showingSchedulePicker = false
                         }
+                        .accessibilityIdentifier("recommended_schedules_picker_cancel")
                     }
                 }
             }

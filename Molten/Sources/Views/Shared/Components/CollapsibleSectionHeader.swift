@@ -67,6 +67,7 @@ struct CollapsibleSectionHeader: View {
             .contentShape(Rectangle()) // Makes entire area tappable
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("collapsible_section_header_\(title.lowercased().replacingOccurrences(of: " ", with: "_"))")
     }
 
     private func formatCount(_ count: Int) -> String {

@@ -20,7 +20,10 @@ struct CatalogViewModelTests {
 
     init() {
         // Clean UserDefaults before each test suite to prevent pollution
+        // These filters are loaded from UserDefaults by CatalogViewModel init()
         UserDefaults.standard.removeObject(forKey: "catalog.selectedProductTypes")
+        UserDefaults.standard.removeObject(forKey: "selectedManufacturerFilter")
+        UserDefaults.standard.removeObject(forKey: "selectedCOETypes")
         UserDefaults.standard.synchronize()
     }
 

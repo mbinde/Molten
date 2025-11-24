@@ -127,10 +127,9 @@ final class AddInventoryUITests: BaseUITest {
         }
     }
 
-    // MARK: - Notes Field Tests (BUG VERIFICATION)
+    // MARK: - Notes Field Tests
 
     /// Test notes field exists and accepts input
-    /// NOTE: There's a BUG where notes are collected but never saved!
     func testNotesFieldExists() throws {
         openAddInventoryForm()
 
@@ -145,8 +144,8 @@ final class AddInventoryUITests: BaseUITest {
         XCTAssertTrue(app.exists, "App should remain responsive after entering notes")
     }
 
-    /// BUG VERIFICATION TEST: Notes should be saved with inventory
-    /// This test documents the bug where notes are collected but not saved
+    /// Regression test: Notes should be saved with inventory
+    /// Verifies the fix for the bug where notes were collected but not saved
     func testNotesAreSavedWithInventory() throws {
         openAddInventoryForm()
 
@@ -195,14 +194,11 @@ final class AddInventoryUITests: BaseUITest {
                 let yourNotesLabel = app.staticTexts["Your Notes"]
                 let testNoteText = app.staticTexts["UI Test Note - Should Be Saved"]
 
-                // BUG: This assertion may fail if notes aren't being saved!
+                // Verify notes were saved
                 let notesExist = yourNotesLabel.waitToExist(timeout: 5) || testNoteText.waitToExist(timeout: 5)
 
-                // Document the bug - this test may fail until bug is fixed
-                if !notesExist {
-                    XCTFail("BUG DETECTED: Notes were entered but do not appear in item detail. " +
-                           "This confirms the bug where notes are collected but never saved via UserNotesRepository.")
-                }
+                XCTAssertTrue(notesExist,
+                              "Notes should appear in item detail after saving inventory with notes")
             }
         }
     }

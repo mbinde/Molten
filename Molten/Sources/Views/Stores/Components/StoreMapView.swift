@@ -271,6 +271,7 @@ struct StoreMapCalloutView: View {
                         .foregroundStyle(.secondary)
                         .font(.title3)
                 }
+                .accessibilityIdentifier("store_map_callout_close")
             }
 
             // Address
@@ -302,6 +303,7 @@ struct StoreMapCalloutView: View {
                         .fontWeight(.medium)
                 }
                 .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("store_map_callout_directions")
 
                 // Phone button (if available)
                 if let phone = store.phone {
@@ -313,6 +315,7 @@ struct StoreMapCalloutView: View {
                         Image(systemName: "phone.fill")
                     }
                     .buttonStyle(.bordered)
+                    .accessibilityIdentifier("store_map_callout_phone")
                 }
 
                 // Website button (if available)
@@ -324,6 +327,7 @@ struct StoreMapCalloutView: View {
                         Image(systemName: "safari.fill")
                     }
                     .buttonStyle(.bordered)
+                    .accessibilityIdentifier("store_map_callout_website")
                 }
             }
         }

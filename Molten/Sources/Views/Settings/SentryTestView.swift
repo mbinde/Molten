@@ -33,6 +33,7 @@ struct SentryTestView: View {
                 } label: {
                     Label("Test Catalog Download Error", systemImage: "arrow.down.circle")
                 }
+                .accessibilityIdentifier("sentry_test_catalog_error")
 
                 Button {
                     testCatalogDownloadSuccess()
@@ -40,6 +41,7 @@ struct SentryTestView: View {
                     Label("Test Catalog Download Success", systemImage: "checkmark.circle")
                         .foregroundColor(.green)
                 }
+                .accessibilityIdentifier("sentry_test_catalog_success")
             } header: {
                 Text("Catalog Download (operation:catalog-download)")
             } footer: {

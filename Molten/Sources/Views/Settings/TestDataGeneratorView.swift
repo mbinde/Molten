@@ -56,6 +56,7 @@ struct TestDataGeneratorView: View {
                     Label("Add 25 Random Inventory Items", systemImage: "cube.box")
                 }
                 .disabled(isGenerating)
+                .accessibilityIdentifier("test_data_generate_inventory")
             } header: {
                 Text("Inventory Test Data")
             } footer: {
@@ -69,6 +70,7 @@ struct TestDataGeneratorView: View {
                     Label("Add 10 Random Shopping Items", systemImage: "cart")
                 }
                 .disabled(isGenerating)
+                .accessibilityIdentifier("test_data_generate_shopping")
             } header: {
                 Text("Shopping List Test Data")
             } footer: {

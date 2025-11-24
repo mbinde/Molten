@@ -644,8 +644,11 @@ struct InventoryDetailView: View {
             accessibilityId: "section_glass_item"
         ) {
             VStack(alignment: .leading, spacing: 12) {
-                // Show color approximation notice if no image permission
-                if !GlassManufacturers.hasProductImagePermission(for: currentItem.glassItem.manufacturer) {
+                // Show color approximation notice only when gradient is displayed
+                // (no image permission AND have dominant colors to show)
+                if !GlassManufacturers.hasProductImagePermission(for: currentItem.glassItem.manufacturer),
+                   let colors = currentItem.glassItem.dominant_colors,
+                   !colors.isEmpty {
                     Text("We do not have permission to show glass images from this manufacturer, so have done our best to approximate the color of the glass. If you would like to suggest an image to our catalog, please upload an image to the app and long-press on it to submit it.")
                         .font(.caption)
                         .italic()

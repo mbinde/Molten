@@ -270,11 +270,7 @@ struct InventoryDetailView: View {
             // Reload shopping list after adding
             loadShoppingList()
         }) {
-            ShoppingListOptionsView(
-                item: item,
-                shoppingListRepository: shoppingListRepository,
-                locationService: locationService
-            )
+            ShoppingListOptionsView(item: item)
         }
         .sheet(item: $selectedInventoryType) { selection in
             InventoryStorageDetailView(

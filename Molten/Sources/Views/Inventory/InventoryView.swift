@@ -44,6 +44,7 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var showingLabelDesigner = false
     @State private var showingSharing = false
     @State private var pendingShareCode: String? = nil
+    @State private var filterRefreshTrigger = 0  // Force re-evaluation when Settings filters change
 
     // Performance optimization: Cache computed values to avoid recomputation on every view refresh
     @State private var cachedAllTags: [String] = []
@@ -111,6 +112,8 @@ struct InventoryView: View, CachedDataDeletion {
     
     // Computed properties
     private var filteredItems: [CompleteInventoryItemModel] {
+        // Reference filterRefreshTrigger to force re-evaluation when Settings filters change
+        _ = filterRefreshTrigger
         var items = viewModel.completeItems
 
         // Only show items with inventory (totalQuantity > 0)
@@ -124,9 +127,20 @@ struct InventoryView: View, CachedDataDeletion {
         }
 
         // Apply manufacturer filter
+        // First apply manual filter (from UI)
         if !viewModel.selectedManufacturers.isEmpty {
             items = items.filter { item in
                 viewModel.selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        }
+        // Then apply global manufacturer filter from Settings (if enabled)
+        if UserSettings.shared.applyFiltersToInventory {
+            if let data = UserDefaults.standard.data(forKey: "selectedManufacturerFilter"),
+               let selectedManufacturers = try? JSONDecoder().decode(Set<String>.self, from: data),
+               !selectedManufacturers.isEmpty {
+                items = items.filter { item in
+                    selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                }
             }
         }
 
@@ -138,12 +152,27 @@ struct InventoryView: View, CachedDataDeletion {
         }
 
         // Apply COE filter
+        // First apply manual filter (from UI)
         if !viewModel.selectedCOEs.isEmpty {
             items = items.filter { item in
                 if let coe = item.catalogItem.coe {
                     return viewModel.selectedCOEs.contains(coe)
                 }
                 return false
+            }
+        }
+        // Then apply global COE filter from Settings (if enabled)
+        if UserSettings.shared.applyFiltersToInventory {
+            let globalCOEs = COEGlassPreference.selectedCOETypes
+            // Only apply if it's a subset (not all COEs selected)
+            if !globalCOEs.isEmpty && globalCOEs.count < COEGlassType.allCases.count {
+                let globalCOEValues = Set(globalCOEs.map { Int32($0.rawValue) })
+                items = items.filter { item in
+                    if let coe = item.catalogItem.coe {
+                        return globalCOEValues.contains(coe)
+                    }
+                    return false
+                }
             }
         }
 
@@ -243,6 +272,25 @@ struct InventoryView: View, CachedDataDeletion {
         return viewModel.completeItems.filter { $0.totalQuantity > 0 }.count
     }
 
+    // Check if Settings filters (COE/Manufacturer) are active and filtering items
+    private var hasSettingsFiltersActive: Bool {
+        guard UserSettings.shared.applyFiltersToInventory else { return false }
+
+        // Check if COE filter is active (not all COEs selected)
+        let globalCOEs = COEGlassPreference.selectedCOETypes
+        let hasCOEFilter = !globalCOEs.isEmpty && globalCOEs.count < COEGlassType.allCases.count
+
+        // Check if manufacturer filter is active
+        var hasManufacturerFilter = false
+        if let data = UserDefaults.standard.data(forKey: "selectedManufacturerFilter"),
+           let selectedManufacturers = try? JSONDecoder().decode(Set<String>.self, from: data),
+           !selectedManufacturers.isEmpty {
+            hasManufacturerFilter = true
+        }
+
+        return hasCOEFilter || hasManufacturerFilter
+    }
+
     // MARK: - Filter Counts (for display in filter selection sheets)
 
     // MARK: - Filter Counts
@@ -339,6 +387,8 @@ struct InventoryView: View, CachedDataDeletion {
                         featureName: "unique inventory items",
                         currentCount: inventoryItemCount,
                         limit: entitlementService.getInventoryLimit(),
+                        filteredCount: filteredItems.count,
+                        hasSettingsFilters: hasSettingsFiltersActive,
                         onUpgradeTap: {
                             showingUpgradePrompt = true
                         }
@@ -507,6 +557,11 @@ struct InventoryView: View, CachedDataDeletion {
                     pendingShareCode = shareCode
                     showingSharing = true
                 }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
+                // When UserDefaults changes (e.g., COE filter, manufacturer filter, or applyFiltersToInventory in Settings),
+                // increment the trigger to force filteredItems to re-evaluate
+                filterRefreshTrigger += 1
             }
         }
     }

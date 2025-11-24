@@ -234,18 +234,6 @@ struct SettingsView: View {
                         .pickerStyle(.menu)
                     }
 
-                    NavigationLink {
-                        COEFilterView()
-                    } label: {
-                        Text("COE Filter")
-                    }
-
-                    NavigationLink {
-                        ManufacturerFilterView()
-                    } label: {
-                        Text("Manufacturer Filter")
-                    }
-
                     Toggle("Show User Tags in Filters", isOn: Binding(
                         get: { UserSettings.shared.showUserTagsInFilter },
                         set: { UserSettings.shared.showUserTagsInFilter = $0 }
@@ -257,6 +245,26 @@ struct SettingsView: View {
                         set: { UserSettings.shared.showTechnicalTagsInFilter = $0 }
                     ))
                     .help("When enabled, technical property tags (reducing, seeded, reactive, striker, uv, cfl, luster, etc.) will appear in the tag filter menu")
+                }
+                
+                // MARK: - Reduce Catalog Size
+                Section("Reduce Catalog Size") {
+                    NavigationLink {
+                        COEFilterView()
+                    } label: {
+                        Text("COE Filter")
+                    }
+                    
+                    NavigationLink {
+                        ManufacturerFilterView()
+                    } label: {
+                        Text("Manufacturer Filter")
+                    }
+                    Toggle("Apply these filters to Inventory and Shopping List", isOn: Binding(
+                        get: { UserSettings.shared.applyFiltersToInventory },
+                        set: { UserSettings.shared.applyFiltersToInventory = $0 }
+                    ))
+                    .help("When enabled, the COE filter and Manufacturer filter show here will also limit what is shown in your inventory and your shopping list. This may make some of your items in those two lists invisible unless you re-enable their COEs or Manufacturers here.")
                 }
 
                 // MARK: - Content & Customization

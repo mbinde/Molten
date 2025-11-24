@@ -162,6 +162,23 @@ class UserSettings {
         }
     }
 
+    // MARK: - Catalog Filter Settings
+
+    /// Controls whether COE and Manufacturer filters also apply to Inventory and Shopping List views
+    /// - Default: false (filters only apply to Catalog)
+    /// - When true, COE and Manufacturer limitations set in Settings are applied to Inventory and Shopping List
+    /// - When false, only Catalog view is filtered
+    /// - Note: This helps reduce clutter when you only work with specific COE types or manufacturers
+    var applyFiltersToInventory: Bool {
+        get {
+            // Default to false if not set
+            UserDefaults.standard.object(forKey: Keys.applyFiltersToInventory) as? Bool ?? false
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: Keys.applyFiltersToInventory)
+        }
+    }
+
     // MARK: - Label Settings
 
     /// Inventory owner name (optional)
@@ -429,6 +446,7 @@ class UserSettings {
         static let kilnCooldownRate540to815 = "kilnCooldownRate540to815"
         static let kilnCooldownRate815Plus = "kilnCooldownRate815Plus"
         static let downloadFullSizeImages = "downloadFullSizeImages"
+        static let applyFiltersToInventory = "applyFiltersToInventory"
     }
 
     // MARK: - Enums

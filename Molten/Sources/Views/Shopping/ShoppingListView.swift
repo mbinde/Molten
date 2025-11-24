@@ -1354,14 +1354,17 @@ struct CheckoutSheet: View {
                             Toggle("Add to inventory", isOn: $addToInventory)
                                 .tint(.accentColor)
                                 .padding(.horizontal, DesignSystem.Spacing.xs)
+                                .accessibilityIdentifier("checkout_add_to_inventory_toggle")
                             Toggle("Remove from shopping list", isOn: $removeFromList)
                                 .tint(.accentColor)
                                 .padding(.horizontal, DesignSystem.Spacing.xs)
+                                .accessibilityIdentifier("checkout_remove_from_list_toggle")
 
                             if FeatureFlags.ENABLE_PURCHASES && purchaseService != nil {
                                 Toggle("Create purchase record", isOn: $createPurchaseRecord)
                                     .tint(.accentColor)
                                     .padding(.horizontal, DesignSystem.Spacing.xs)
+                                    .accessibilityIdentifier("checkout_create_purchase_toggle")
                             }
                         }
 
@@ -1443,6 +1446,7 @@ struct CheckoutSheet: View {
                             .background(Color.gray.opacity(0.2))
                             .foregroundColor(.primary)
                             .cornerRadius(DesignSystem.CornerRadius.medium)
+                            .accessibilityIdentifier("checkout_cancel_button")
 
                             Button(action: {
                                 Task {
@@ -1464,6 +1468,7 @@ struct CheckoutSheet: View {
                             .foregroundColor(.white)
                             .cornerRadius(DesignSystem.CornerRadius.medium)
                             .disabled(isProcessing)
+                            .accessibilityIdentifier("checkout_confirm_button")
                         }
                     }
                 }

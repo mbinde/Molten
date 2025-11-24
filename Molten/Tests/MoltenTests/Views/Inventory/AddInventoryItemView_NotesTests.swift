@@ -23,19 +23,15 @@ struct AddInventoryItemView_NotesTests {
 
     // MARK: - Test Helpers
 
-    func createTestGlassItem() async throws -> GlassItemModel {
-        let glassItem = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "notes-001"),
-            name: "Test Glass for Notes",
-            sku: "notes-001",
-            manufacturer: "test",
-            coe: 96,
-            mfr_status: "available"
-        )
+    /// Get a real catalog item for testing (catalog is read-only, can't create test items)
+    func getRealCatalogItem() async throws -> GlassItemModel {
+        let catalogService = deps.catalogService
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
 
-        // Save to catalog so it can be found during inventory creation
-        let glassItemRepo = deps.glassItemRepository
-        _ = try await glassItemRepo.createItem(glassItem)
+        // Get first item that has a SKU
+        guard let glassItem = catalogItems.first(where: { $0.sku != nil }) else {
+            throw NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "No catalog items available for testing"])
+        }
 
         return glassItem
     }
@@ -148,7 +144,8 @@ struct AddInventoryItemView_NotesTests {
 
     @Test("Save works without notes (notes optional)")
     func testSaveWorksWithoutNotes() async throws {
-        let glassItem = try await createTestGlassItem()
+        // Use real catalog item (catalog is read-only, can't create test items)
+        let glassItem = try await getRealCatalogItem()
 
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
@@ -176,7 +173,7 @@ struct AddInventoryItemView_NotesTests {
 
     @Test("Notes are saved when inventory is created")
     func testNotesAreSavedWithInventory() async throws {
-        let glassItem = try await createTestGlassItem()
+        let glassItem = try await getRealCatalogItem()
 
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
@@ -206,17 +203,15 @@ struct AddInventoryItemView_NotesTests {
 
     @Test("Notes are associated with correct glass item")
     func testNotesAssociatedWithCorrectItem() async throws {
-        // Create two different glass items
-        let item1 = try await createTestGlassItem()
-        let item2 = GlassItemModel(
-            stable_id: generateStableId(manufacturer: "test", sku: "notes-002"),
-            name: "Second Test Glass",
-            sku: "notes-002",
-            manufacturer: "test",
-            coe: 96,
-            mfr_status: "available"
-        )
-        _ = try await deps.glassItemRepository.createItem(item2)
+        // Get two different real catalog items (catalog is read-only, can't create test items)
+        let catalogService = deps.catalogService
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let itemsWithSKU = catalogItems.filter { $0.sku != nil }
+        guard itemsWithSKU.count >= 2 else {
+            throw NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Need at least 2 catalog items for testing"])
+        }
+        let item1 = itemsWithSKU[0]
+        let item2 = itemsWithSKU[1]
 
         // Add inventory with notes for item1
         let viewModel1 = AddInventoryItemViewModel(
@@ -259,7 +254,7 @@ struct AddInventoryItemView_NotesTests {
 
     @Test("Empty notes are not saved to repository")
     func testEmptyNotesNotSaved() async throws {
-        let glassItem = try await createTestGlassItem()
+        let glassItem = try await getRealCatalogItem()
 
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
@@ -282,7 +277,7 @@ struct AddInventoryItemView_NotesTests {
 
     @Test("Whitespace-only notes are not saved")
     func testWhitespaceOnlyNotesNotSaved() async throws {
-        let glassItem = try await createTestGlassItem()
+        let glassItem = try await getRealCatalogItem()
 
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
@@ -305,7 +300,7 @@ struct AddInventoryItemView_NotesTests {
 
     @Test("Notes with leading/trailing whitespace are trimmed before save")
     func testNotesAreTrimmedBeforeSave() async throws {
-        let glassItem = try await createTestGlassItem()
+        let glassItem = try await getRealCatalogItem()
 
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
@@ -331,7 +326,7 @@ struct AddInventoryItemView_NotesTests {
 
     @Test("Existing notes are updated when adding more inventory to same item")
     func testExistingNotesAreUpdated() async throws {
-        let glassItem = try await createTestGlassItem()
+        let glassItem = try await getRealCatalogItem()
 
         // First save: Add inventory with initial notes
         let viewModel1 = AddInventoryItemViewModel(
@@ -376,7 +371,7 @@ struct AddInventoryItemView_NotesTests {
 
     @Test("Empty notes on second save preserve existing notes")
     func testEmptyNotesOnSecondSavePreserveExisting() async throws {
-        let glassItem = try await createTestGlassItem()
+        let glassItem = try await getRealCatalogItem()
 
         // First save: Add inventory with notes
         let viewModel1 = AddInventoryItemViewModel(
@@ -413,7 +408,7 @@ struct AddInventoryItemView_NotesTests {
 
     @Test("Save succeeds even if notes save fails (graceful degradation)")
     func testSaveSucceedsEvenIfNotesFail() async throws {
-        let glassItem = try await createTestGlassItem()
+        let glassItem = try await getRealCatalogItem()
 
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
@@ -438,7 +433,7 @@ struct AddInventoryItemView_NotesTests {
 
     @Test("Error message indicates notes save failure without blocking inventory save")
     func testErrorMessageForNotesFailure() async throws {
-        let glassItem = try await createTestGlassItem()
+        let glassItem = try await getRealCatalogItem()
 
         let viewModel = AddInventoryItemViewModel(
             prefilledNaturalKey: glassItem.stable_id,
@@ -477,34 +472,14 @@ struct AddInventoryItemView_NotesTests {
 
     @Test("Multiple items can have notes simultaneously")
     func testMultipleItemsWithNotes() async throws {
-        // Create three items with notes
-        let items = try await [
-            createTestGlassItem(),
-            {
-                let item = GlassItemModel(
-                    stable_id: generateStableId(manufacturer: "test", sku: "notes-multi-1"),
-                    name: "Multi Test 1",
-                    sku: "notes-multi-1",
-                    manufacturer: "test",
-                    coe: 96,
-                    mfr_status: "available"
-                )
-                _ = try await deps.glassItemRepository.createItem(item)
-                return item
-            }(),
-            {
-                let item = GlassItemModel(
-                    stable_id: generateStableId(manufacturer: "test", sku: "notes-multi-2"),
-                    name: "Multi Test 2",
-                    sku: "notes-multi-2",
-                    manufacturer: "test",
-                    coe: 96,
-                    mfr_status: "available"
-                )
-                _ = try await deps.glassItemRepository.createItem(item)
-                return item
-            }()
-        ]
+        // Get three real catalog items (catalog is read-only, can't create test items)
+        let catalogService = deps.catalogService
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let itemsWithSKU = catalogItems.filter { $0.sku != nil }
+        guard itemsWithSKU.count >= 3 else {
+            throw NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Need at least 3 catalog items for testing"])
+        }
+        let items = Array(itemsWithSKU.prefix(3))
 
         // Add inventory with notes for each
         for (index, item) in items.enumerated() {

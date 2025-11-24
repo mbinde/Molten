@@ -38,7 +38,7 @@ struct SubscriptionConfigTests {
 
     @Test("FreeTierLimits.maxShoppingListItems has correct value")
     func testMaxShoppingListItems() {
-        #expect(SubscriptionConfig.FreeTierLimits.maxShoppingListItems == 15)
+        #expect(SubscriptionConfig.FreeTierLimits.maxShoppingListItems == 10)
     }
 
     @Test("FreeTierLimits.maxProjects has correct value")
@@ -149,7 +149,7 @@ struct SubscriptionConfigTests {
     func testShoppingListLimitForFree() {
         let limit = SubscriptionConfig.shoppingListLimit(for: .free)
         #expect(limit == SubscriptionConfig.FreeTierLimits.maxShoppingListItems)
-        #expect(limit == 15)
+        #expect(limit == 10)
     }
 
     @Test("shoppingListLimit for premium tier returns nil (unlimited)")

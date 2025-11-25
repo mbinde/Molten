@@ -232,10 +232,18 @@ class CatalogAPIClient: NSObject, CatalogAPIClientProtocol {
         }
     }
 
+    /// Default timeout for API requests (30 seconds)
+    private static let defaultTimeout: TimeInterval = 30
+
     /// Execute request and validate response
     private func executeRequest(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        var requestWithTimeout = request
+        // Set timeout if not already configured
+        if requestWithTimeout.timeoutInterval == 60 { // 60 is the default
+            requestWithTimeout.timeoutInterval = Self.defaultTimeout
+        }
         do {
-            return try await session.data(for: request)
+            return try await session.data(for: requestWithTimeout)
         } catch {
             log.error("Network request failed: \(error.localizedDescription)")
             throw CatalogUpdateError.downloadFailed(underlying: error)

@@ -127,15 +127,12 @@ struct SubscriptionManagementView: View {
             }
 
             // Premium features section
-            Section("Premium Features") {
+            Section("Pro Features") {
                 FeatureRow(icon: "infinity", title: "Unlimited Inventory Items")
                 FeatureRow(icon: "cart.fill", title: "Unlimited Shopping Lists")
                 FeatureRow(icon: "folder.fill", title: "Unlimited Projects")
                 FeatureRow(icon: "book.fill", title: "Unlimited Logbook Entries")
-                FeatureRow(icon: "printer.fill", title: "Batch Label Printing")
-                FeatureRow(icon: "qrcode.viewfinder", title: "QR Code Scanning for Inventory")
-                FeatureRow(icon: "tag.fill", title: "Custom Tags & Notes for Inventory")
-                FeatureRow(icon: "photo.fill", title: "Add Images to Inventory Items")
+                FeatureRow(icon: "clock.arrow.circlepath", title: "Versioned Cloud Backups")
             }
         }
         .navigationTitle("Subscription")

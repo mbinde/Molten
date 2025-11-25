@@ -133,44 +133,9 @@ class EntitlementService {
 
     // MARK: - Feature Access
 
-    /// Check if user can use batch label printing
-    func canUseBatchLabelPrinting() -> Bool {
-        return SubscriptionConfig.allowsBatchLabelPrinting(for: currentTier)
-    }
-
-    /// Check if user can use CSV import
-    func canUseCSVImport() -> Bool {
-        return SubscriptionConfig.allowsCSVImport(for: currentTier)
-    }
-
-    /// Check if user can use bulk editing
-    func canUseBulkEditing() -> Bool {
-        return SubscriptionConfig.allowsBulkEditing(for: currentTier)
-    }
-
-    /// Check if user can use QR code scanning for inventory
-    func canUseQRCodeScanning() -> Bool {
-        return SubscriptionConfig.allowsQRCodeScanning(for: currentTier)
-    }
-
-    /// Check if user can add custom tags to inventory items
-    func canAddCustomTagsToInventory() -> Bool {
-        return SubscriptionConfig.allowsCustomInventoryTags(for: currentTier)
-    }
-
-    /// Check if user can add images to inventory items
-    func canAddImagesToInventory() -> Bool {
-        return SubscriptionConfig.allowsInventoryItemImages(for: currentTier)
-    }
-
-    /// Check if user can add custom notes to inventory items
-    func canAddCustomNotesToInventory() -> Bool {
-        return SubscriptionConfig.allowsCustomInventoryNotes(for: currentTier)
-    }
-
-    /// Check if user can use custom fields
-    func canUseCustomFields() -> Bool {
-        return SubscriptionConfig.allowsCustomFields(for: currentTier)
+    /// Check if user can use versioned cloud backups
+    func canUseVersionedCloudBackups() -> Bool {
+        return SubscriptionConfig.allowsVersionedCloudBackups(for: currentTier)
     }
 
     // MARK: - Enforcement Helpers
@@ -204,23 +169,11 @@ class EntitlementService {
     }
 
     /// Check and throw error if feature is not available
-    func enforceFeatureAccess(_ feature: PremiumFeature) throws {
+    func enforceFeatureAccess(_ feature: ProFeature) throws {
         switch feature {
-        case .batchLabelPrinting:
-            if !canUseBatchLabelPrinting() {
-                throw EntitlementError.featureRequiresPremium(feature: feature)
-            }
-        case .csvImport:
-            if !canUseCSVImport() {
-                throw EntitlementError.featureRequiresPremium(feature: feature)
-            }
-        case .bulkEditing:
-            if !canUseBulkEditing() {
-                throw EntitlementError.featureRequiresPremium(feature: feature)
-            }
-        case .customFields:
-            if !canUseCustomFields() {
-                throw EntitlementError.featureRequiresPremium(feature: feature)
+        case .versionedCloudBackups:
+            if !canUseVersionedCloudBackups() {
+                throw EntitlementError.featureRequiresPro(feature: feature)
             }
         }
     }
@@ -228,12 +181,9 @@ class EntitlementService {
 
 // MARK: - Supporting Types
 
-/// Premium features that can be gated
-enum PremiumFeature: String, Sendable {
-    case batchLabelPrinting = "Batch Label Printing"
-    case csvImport = "CSV Import"
-    case bulkEditing = "Bulk Editing"
-    case customFields = "Custom Fields"
+/// Pro features that can be gated
+enum ProFeature: String, Sendable {
+    case versionedCloudBackups = "Versioned Cloud Backups"
 }
 
 /// Errors thrown when entitlement checks fail
@@ -242,20 +192,20 @@ enum EntitlementError: Error, LocalizedError {
     case shoppingListLimitReached(limit: Int)
     case projectsLimitReached(limit: Int)
     case logbookEntriesLimitReached(limit: Int)
-    case featureRequiresPremium(feature: PremiumFeature)
+    case featureRequiresPro(feature: ProFeature)
 
     var errorDescription: String? {
         switch self {
         case .inventoryLimitReached(let limit):
-            return "You've reached the free tier limit of \(limit) inventory items. Upgrade to premium for unlimited items."
+            return "You've reached the free tier limit of \(limit) inventory items. Upgrade to Pro for unlimited items."
         case .shoppingListLimitReached(let limit):
-            return "You've reached the free tier limit of \(limit) shopping list items. Upgrade to premium for unlimited items."
+            return "You've reached the free tier limit of \(limit) shopping list items. Upgrade to Pro for unlimited items."
         case .projectsLimitReached(let limit):
-            return "You've reached the free tier limit of \(limit) projects. Upgrade to premium for unlimited projects."
+            return "You've reached the free tier limit of \(limit) projects. Upgrade to Pro for unlimited projects."
         case .logbookEntriesLimitReached(let limit):
-            return "You've reached the free tier limit of \(limit) logbook entries. Upgrade to premium for unlimited entries."
-        case .featureRequiresPremium(let feature):
-            return "\(feature.rawValue) requires a premium subscription. Upgrade to unlock this feature."
+            return "You've reached the free tier limit of \(limit) logbook entries. Upgrade to Pro for unlimited entries."
+        case .featureRequiresPro(let feature):
+            return "\(feature.rawValue) requires Molten Pro. Upgrade to unlock this feature."
         }
     }
 }

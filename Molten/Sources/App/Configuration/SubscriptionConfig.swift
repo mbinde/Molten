@@ -34,32 +34,22 @@ struct SubscriptionConfig: Sendable {
     // These can be easily adjusted as the product evolves
 
     struct FreeTierLimits: Sendable {
-        /// Maximum inventory items (user may reduce this to increase conversion)
-        nonisolated static let maxInventoryItems = FeatureFlags.FREE_TIER_INVENTORY_LIMIT
+        /// Maximum inventory items
+        nonisolated static let maxInventoryItems = 25
 
-        /// Maximum shopping list items (user may reduce this)
+        /// Maximum shopping list items
         nonisolated static let maxShoppingListItems = 15
 
-        /// Maximum projects (user may reduce this)
+        /// Maximum projects
         nonisolated static let maxProjects = 5
 
-        /// Maximum logbook entries (user may reduce this)
-        nonisolated static let maxLogbookEntries = 30
-
-        /// Label printing: one template page at a time (no batch printing)
-        nonisolated static let allowBatchLabelPrinting = false
-
-        /// Maximum images per project (nil = unlimited for now)
-        /// NOTE: May change to limit per-project rather than per-user in future
-        nonisolated static let maxImagesPerProject: Int? = nil
-
-        /// Maximum images per logbook entry (nil = unlimited for now)
-        nonisolated static let maxImagesPerLogbookEntry: Int? = nil
+        /// Maximum logbook entries
+        nonisolated static let maxLogbookEntries = 10
     }
 
-    // MARK: - Premium Tier Features
+    // MARK: - Pro Tier Features
 
-    struct PremiumFeatures: Sendable {
+    struct ProFeatures: Sendable {
         /// Unlimited inventory items
         nonisolated static let unlimitedInventory = true
 
@@ -72,51 +62,36 @@ struct SubscriptionConfig: Sendable {
         /// Unlimited logbook entries
         nonisolated static let unlimitedLogbookEntries = true
 
-        /// Batch label printing with templates
-        nonisolated static let batchLabelPrinting = true
-
-        /// QR code scanning for inventory increment/decrement
-        nonisolated static let qrCodeScanning = true
-
-        /// Adding custom tags to inventory items
-        nonisolated static let customInventoryTags = true
-
-        /// Adding images to inventory items
-        nonisolated static let inventoryItemImages = true
-
-        /// Adding custom notes to inventory items
-        nonisolated static let customInventoryNotes = true
-
-        /// Custom fields (when implemented)
-        nonisolated static let customFields = true
-
-        /// Unlimited images
-        nonisolated static let unlimitedImages = true
+        /// Versioned cloud backups
+        nonisolated static let versionedCloudBackups = true
     }
 
     // MARK: - Features Available to All Tiers
 
     struct UniversalFeatures: Sendable {
-        /// Full catalog access (read-only reference data)
+        /// Full catalog access
         nonisolated static let catalogAccess = true
 
-        /// CloudKit sync (no gating sync behind paywall)
+        /// CloudKit sync
         nonisolated static let cloudKitSync = true
 
-        /// Export capabilities (free for now)
+        /// Export capabilities
         nonisolated static let exportData = true
 
-        /// Photo uploads (free for now, may limit per-project later)
-        nonisolated static let photoUploads = true
+        /// Label printing
+        nonisolated static let labelPrinting = true
 
-        /// Basic label printing (one page at a time)
-        nonisolated static let basicLabelPrinting = true
+        /// QR code scanning
+        nonisolated static let qrCodeScanning = true
 
-        /// CSV import (available to all users)
-        nonisolated static let csvImport = true
+        /// Custom tags on inventory items
+        nonisolated static let customInventoryTags = true
 
-        /// Bulk editing (available to all users)
-        nonisolated static let bulkEditing = true
+        /// Images on inventory items
+        nonisolated static let inventoryItemImages = true
+
+        /// Custom notes on inventory items
+        nonisolated static let customInventoryNotes = true
     }
 
     // MARK: - Helper Methods
@@ -161,73 +136,13 @@ struct SubscriptionConfig: Sendable {
         }
     }
 
-    /// Check if batch label printing is allowed for a given tier
-    nonisolated static func allowsBatchLabelPrinting(for tier: SubscriptionTier) -> Bool {
-        switch tier {
-        case .free:
-            return FreeTierLimits.allowBatchLabelPrinting
-        case .premium:
-            return PremiumFeatures.batchLabelPrinting
-        }
-    }
-
-    /// Check if CSV import is allowed for a given tier
-    nonisolated static func allowsCSVImport(for tier: SubscriptionTier) -> Bool {
-        return UniversalFeatures.csvImport  // Available to all tiers
-    }
-
-    /// Check if bulk editing is allowed for a given tier
-    nonisolated static func allowsBulkEditing(for tier: SubscriptionTier) -> Bool {
-        return UniversalFeatures.bulkEditing  // Available to all tiers
-    }
-
-    /// Check if QR code scanning is allowed for a given tier
-    nonisolated static func allowsQRCodeScanning(for tier: SubscriptionTier) -> Bool {
+    /// Check if versioned cloud backups are allowed for a given tier
+    nonisolated static func allowsVersionedCloudBackups(for tier: SubscriptionTier) -> Bool {
         switch tier {
         case .free:
             return false
         case .premium:
-            return PremiumFeatures.qrCodeScanning
-        }
-    }
-
-    /// Check if custom tags for inventory items are allowed for a given tier
-    nonisolated static func allowsCustomInventoryTags(for tier: SubscriptionTier) -> Bool {
-        switch tier {
-        case .free:
-            return false
-        case .premium:
-            return PremiumFeatures.customInventoryTags
-        }
-    }
-
-    /// Check if images for inventory items are allowed for a given tier
-    nonisolated static func allowsInventoryItemImages(for tier: SubscriptionTier) -> Bool {
-        switch tier {
-        case .free:
-            return false
-        case .premium:
-            return PremiumFeatures.inventoryItemImages
-        }
-    }
-
-    /// Check if custom notes for inventory items are allowed for a given tier
-    nonisolated static func allowsCustomInventoryNotes(for tier: SubscriptionTier) -> Bool {
-        switch tier {
-        case .free:
-            return false
-        case .premium:
-            return PremiumFeatures.customInventoryNotes
-        }
-    }
-
-    /// Check if custom fields are allowed for a given tier
-    nonisolated static func allowsCustomFields(for tier: SubscriptionTier) -> Bool {
-        switch tier {
-        case .free:
-            return false
-        case .premium:
-            return PremiumFeatures.customFields
+            return ProFeatures.versionedCloudBackups
         }
     }
 }

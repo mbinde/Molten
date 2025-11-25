@@ -118,7 +118,7 @@ struct InventoryDetailTypeRow: View {
     /// Check if this is a weight-based type
     private var isWeightBasedType: Bool {
         switch type.lowercased() {
-        case "frit", "powder", "enamel":
+        case "frit", "powder", "enamel", "flakes":
             return true
         default:
             return false

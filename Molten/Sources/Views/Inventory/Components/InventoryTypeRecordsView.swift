@@ -65,6 +65,10 @@ struct InventoryTypeRecordsView: View {
         quantities.values.reduce(0.0, +)
     }
 
+    private var totalContainerCount: Double {
+        records.compactMap { $0.containerCount }.reduce(0.0, +)
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -78,6 +82,7 @@ struct InventoryTypeRecordsView: View {
                         InventoryCountBadge.forInventory(
                             type: type,
                             quantity: totalQuantity,
+                            containerCount: totalContainerCount > 0 ? totalContainerCount : nil,
                             style: .large
                         )
                     }

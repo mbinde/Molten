@@ -98,7 +98,6 @@ public class RatingService: RatingServiceProtocol {
                 // Check if any are stale (if at least one is fresh, use the cache)
                 let hasAnythingFresh = allCached.values.contains { !$0.isStale(threshold: updateInterval) }
                 if hasAnythingFresh {
-                    print("✅ [RatingService] Using cached bulk ratings (\(allCached.count) items)")
                     return Array(allCached.values)
                 }
             }
@@ -112,13 +111,11 @@ public class RatingService: RatingServiceProtocol {
             // Save to cache
             try await repository.saveAggregatedRatings(freshRatings)
 
-            print("✅ [RatingService] Fetched and cached \(freshRatings.count) ratings in bulk\(forceRefresh ? " (cache busted)" : "")")
             return freshRatings
         } catch {
             // If network error and we have some cached data, return cached (even if stale)
             let allCached = try await repository.fetchAllAggregatedRatings()
             if isNetworkError(error) && !allCached.isEmpty {
-                print("⚠️ [RatingService] Network error, returning stale cache (\(allCached.count) items)")
                 return Array(allCached.values)
             }
             throw error

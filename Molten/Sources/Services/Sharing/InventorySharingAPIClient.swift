@@ -140,13 +140,10 @@ class InventorySharingAPIClient: NSObject {
         let shareNotes = json["shareNotes"] as? String
         let expiresAt: Date?
         if let expiresAtString = json["expiresAt"] as? String {
-            print("🔍 [DOWNLOAD] Server returned expiresAt: \(expiresAtString)")
             let formatter = ISO8601DateFormatter()
             formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
             expiresAt = formatter.date(from: expiresAtString)
-            print("🔍 [DOWNLOAD] Parsed expiresAt: \(expiresAt?.description ?? "nil")")
         } else {
-            print("⚠️ [DOWNLOAD] Server did NOT return expiresAt field")
             expiresAt = nil
         }
 
@@ -168,9 +165,6 @@ class InventorySharingAPIClient: NSObject {
     open func deleteShare(shareCode: String, ownershipSignature: Data) async throws {
         let url = baseURL.appendingPathComponent("api/v1/share").appendingPathComponent(shareCode)
 
-        print("🔐 [API] DELETE URL: \(url)")
-        print("🔐 [API] Ownership signature (base64): \(ownershipSignature.base64EncodedString())")
-
         // Create request
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
@@ -181,21 +175,12 @@ class InventorySharingAPIClient: NSObject {
         // Add App Attest assertion
         try await addAttestation(to: &request)
 
-        print("🔐 [API] Request headers: \(request.allHTTPHeaderFields ?? [:])")
-
         // Execute request
-        let (data, response) = try await executeRequest(request)
+        let (_, response) = try await executeRequest(request)
 
         // Check status code
         guard let httpResponse = response as? HTTPURLResponse else {
             throw SharingAPIError.invalidResponse
-        }
-
-        print("🔐 [API] Response status: \(httpResponse.statusCode)")
-
-        // Log response body for debugging
-        if let responseBody = String(data: data, encoding: .utf8) {
-            print("🔐 [API] Response body: \(responseBody)")
         }
 
         switch httpResponse.statusCode {
@@ -308,9 +293,6 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.invalidResponse
         }
 
-        print("🔍 [CREATE EXPIRING] Status: \(httpResponse.statusCode)")
-        print("🔍 [CREATE EXPIRING] Response data: \(String(data: data, encoding: .utf8) ?? "nil")")
-
         switch httpResponse.statusCode {
         case 201:
             break // Success - 201 Created is the ONLY valid response for POST
@@ -329,7 +311,6 @@ class InventorySharingAPIClient: NSObject {
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               let shareCode = json["shareCode"] as? String,
               let expiresAtString = json["expiresAt"] as? String else {
-            print("🔍 [CREATE EXPIRING] Failed to parse JSON")
             throw SharingAPIError.invalidData
         }
 
@@ -337,7 +318,6 @@ class InventorySharingAPIClient: NSObject {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         guard let expiresAt = formatter.date(from: expiresAtString) else {
-            print("🔍 [CREATE EXPIRING] Failed to parse date: \(expiresAtString)")
             throw SharingAPIError.invalidData
         }
 

@@ -113,8 +113,8 @@ struct InventoryView: View, CachedDataDeletion {
     private var filteredItems: [CompleteInventoryItemModel] {
         var items = viewModel.completeItems
 
-        // Only show items with inventory (totalQuantity > 0)
-        items = items.filter { $0.totalQuantity > 0 }
+        // Only show items with inventory (weight OR containers)
+        items = items.filter { $0.hasInventory }
 
         // Apply product type filter
         if !viewModel.selectedProductTypes.isEmpty {
@@ -137,9 +137,13 @@ struct InventoryView: View, CachedDataDeletion {
             }
         }
 
-        // Apply COE filter
+        // Apply COE filter (only affects glass items - coatings/tools don't have COE)
         if !viewModel.selectedCOEs.isEmpty {
             items = items.filter { item in
+                // Non-glass items (coatings, tools) don't have COE - don't filter them out
+                if item.catalogItem.itemType != .glass {
+                    return true
+                }
                 if let coe = item.catalogItem.coe {
                     return viewModel.selectedCOEs.contains(coe)
                 }
@@ -240,7 +244,7 @@ struct InventoryView: View, CachedDataDeletion {
 
     // Count of unique items with inventory (for subscription banner)
     private var inventoryItemCount: Int {
-        return viewModel.completeItems.filter { $0.totalQuantity > 0 }.count
+        return viewModel.completeItems.filter { $0.hasInventory }.count
     }
 
     // MARK: - Filter Counts (for display in filter selection sheets)
@@ -267,7 +271,7 @@ struct InventoryView: View, CachedDataDeletion {
     /// Recompute caches when inventory data changes
     /// This is expensive (O(n)) so only call when data actually changes
     private func updateCaches() {
-        let itemsWithInventory = viewModel.completeItems.filter { $0.totalQuantity > 0 }
+        let itemsWithInventory = viewModel.completeItems.filter { $0.hasInventory }
 
         // Extract all tags, COEs, manufacturers, and locations
         var allTagsSet = Set<String>()
@@ -316,7 +320,8 @@ struct InventoryView: View, CachedDataDeletion {
                     productTypeFilter: .init(
                         selectedProductTypes: $viewModel.selectedProductTypes,
                         availableTypes: FeatureFlags.availableProductTypes,
-                        displayName: displayNameForProductType
+                        displayName: displayNameForProductType,
+                        typeCounts: viewModel.productTypeCounts
                     ),
                     locationFilter: .init(
                         selectedLocation: $viewModel.selectedLocation,
@@ -533,6 +538,18 @@ struct InventoryView: View, CachedDataDeletion {
     
     private var inventoryListView: some View {
         List {
+            // Limit warning banner (shows at 75%+ usage for free tier)
+            if let limit = entitlementService.getInventoryLimit() {
+                LimitWarningBanner(
+                    currentCount: inventoryItemCount,
+                    limit: limit,
+                    featureName: "items",
+                    onUpgradeTap: { showingUpgradePrompt = true }
+                )
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                .listRowSeparator(.hidden)
+            }
+
             ForEach(sortedFilteredItems, id: \.id) { item in
                 NavigationLink(value: item) {
                     GlassItemRowView.inventory(item: item, selectedLocation: viewModel.selectedLocation)

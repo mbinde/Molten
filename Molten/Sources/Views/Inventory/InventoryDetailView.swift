@@ -339,11 +339,13 @@ struct InventoryDetailView: View {
             // Refresh item data after potentially editing records
             refreshItemData()
         }) {
-            if let typeRecords = selectedTypeRecords {
+            if let typeRecords = selectedTypeRecords,
+               let service = inventoryTrackingService {
                 InventoryTypeRecordsView(
                     records: typeRecords.records,
                     type: typeRecords.type,
-                    itemName: currentItem.glassItem.name
+                    itemName: currentItem.glassItem.name,
+                    inventoryRepository: service.inventoryRepository
                 )
             }
         }

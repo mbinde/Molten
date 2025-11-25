@@ -59,6 +59,10 @@ struct COEFilter: Filterable {
     func applyFilter(to items: [CompleteInventoryItemModel], viewModel: CatalogViewModel) -> [CompleteInventoryItemModel] {
         guard !viewModel.selectedCOEs.isEmpty else { return items }
         return items.filter { item in
+            // Non-glass items (coatings, tools) don't have COE - don't filter them out
+            if item.catalogItem.itemType != .glass {
+                return true
+            }
             if let coe = item.catalogItem.coe {
                 return viewModel.selectedCOEs.contains(coe)
             }
@@ -250,6 +254,10 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
     var tagCounts: [String: Int] {
         computeTagCounts()
+    }
+
+    var productTypeCounts: [String: Int] {
+        computeProductTypeCounts()
     }
 
     var emptyStateMessage: String {
@@ -540,6 +548,17 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
     private func computeTagCounts() -> [String: Int] {
         return computeAvailableValues(TagFilter())
+    }
+
+    private func computeProductTypeCounts() -> [String: Int] {
+        // Count all items by product type (glass, coating, tool)
+        // No filter exclusion needed - we always want the full count
+        var counts: [String: Int] = [:]
+        for item in items {
+            let productType = item.catalogItem.itemType.rawValue
+            counts[productType, default: 0] += 1
+        }
+        return counts
     }
 
     private func generateEmptyStateMessage() -> String {

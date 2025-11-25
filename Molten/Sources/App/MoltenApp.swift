@@ -886,7 +886,7 @@ extension MoltenApp {
         // To re-enable: Purchases.logLevel = .debug
 
         Purchases.configure(
-            with: Configuration.Builder(withAPIKey: "test_oIPjDwQxUqwuGvJpuCZEuaWmQTL")
+            with: Configuration.Builder(withAPIKey: "appl_FrYVVHssDBIlhEAZreHfEgwBJUH")
                 .with(entitlementVerificationMode: .informational) // Recommended for production
                 .build()
         )

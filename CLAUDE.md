@@ -401,6 +401,88 @@ let builder = try await TestDataBuilder()
 
 ---
 
+## 🎨 Design System (MANDATORY)
+
+**All UI code MUST use the design system. No exceptions.**
+
+### Color Rules
+
+**NEVER use raw SwiftUI colors in Views:**
+```swift
+// ❌ WRONG - These are violations
+Color.red
+Color.orange
+Color.green
+Color.blue
+Color.yellow
+Color.purple
+Color.pink
+Color.cyan
+
+// ✅ CORRECT - Use design system
+DesignSystem.Colors.accentDanger      // instead of Color.red
+DesignSystem.Colors.accentWarning     // instead of Color.orange/yellow
+DesignSystem.Colors.accentSuccess     // instead of Color.green
+DesignSystem.Colors.accentSecondary   // instead of Color.blue
+DesignSystem.Colors.accentUser        // instead of Color.purple
+
+// ✅ ALSO CORRECT - Use Color.molten* extensions
+Color.moltenOrange   // primary brand
+Color.moltenAmber    // warnings, low stock
+Color.moltenTeal     // links, success, in-stock
+Color.moltenDanger   // errors, destructive
+Color.moltenUser     // user-created content
+```
+
+### Detect Violations
+
+Run this command to find color violations:
+```bash
+grep -r "Color\.\(red\|blue\|green\|orange\|yellow\|purple\|pink\|cyan\)" Molten/Sources/Views/
+```
+
+**If this returns results, those are bugs that need fixing.**
+
+### Brand Colors ("Luminous Precision" Palette)
+
+| Name | Hex | Usage |
+|------|-----|-------|
+| Molten Orange | `#FF5722` | Primary actions, active states, tint color |
+| Warm Amber | `#FFC107` | Warnings, low-stock indicators |
+| Slate Teal | `#00796B` | Links, success, in-stock counts |
+| Charcoal | `#212121` | Primary text |
+| Off-White Ash | `#F8F9FA` | Backgrounds |
+
+### Typography, Spacing, Corners
+
+Always use `DesignSystem.*` constants:
+```swift
+// Typography
+DesignSystem.Typography.pageTitle
+DesignSystem.Typography.sectionHeader
+DesignSystem.Typography.rowTitle
+DesignSystem.Typography.caption
+
+// Spacing
+DesignSystem.Spacing.xs   // 4pt
+DesignSystem.Spacing.sm   // 6pt
+DesignSystem.Spacing.md   // 8pt (most common)
+DesignSystem.Spacing.lg   // 12pt
+DesignSystem.Spacing.xl   // 16pt
+
+// Corner Radius
+DesignSystem.CornerRadius.small   // 4pt
+DesignSystem.CornerRadius.medium  // 8pt (most common)
+DesignSystem.CornerRadius.large   // 10pt
+```
+
+### Reference
+
+- **Design system file**: `Molten/Sources/Utilities/DesignSystem.swift`
+- **Design notes**: `design-notes/DESIGN-ANALYSIS.md`
+
+---
+
 ## File Organization
 
 ```

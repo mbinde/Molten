@@ -60,6 +60,10 @@ struct LabelDesignerView: View {
     // Preview item selection
     @State private var selectedPreviewIndex: Int = 0
 
+    // Weight-based label count overrides (key: "stableId:type", value: label count)
+    @State private var labelCountOverrides: [String: Int] = [:]
+    @State private var showingLabelCountInput: Bool = false
+
     var body: some View {
         NavigationStack {
             Form {
@@ -78,6 +82,21 @@ struct LabelDesignerView: View {
             }
             .sheet(isPresented: $showingEditPreset) {
                 editPresetSheet
+            }
+            .sheet(isPresented: $showingLabelCountInput) {
+                WeightBasedLabelCountSheet(
+                    items: items,
+                    labelCountOverrides: $labelCountOverrides,
+                    onComplete: {
+                        showingLabelCountInput = false
+                        Task {
+                            await generatePDF()
+                        }
+                    },
+                    onCancel: {
+                        showingLabelCountInput = false
+                    }
+                )
             }
             .alert("Unsaved Changes", isPresented: $showingUnsavedChangesAlert) {
                 Button("Discard Changes", role: .destructive) {
@@ -266,8 +285,19 @@ struct LabelDesignerView: View {
 
         ToolbarItem(placement: .primaryAction) {
             Button("Generate PDF") {
-                Task {
-                    await generatePDF()
+                // Check if we need to ask for label counts for weight-based items
+                let needsInput = itemsNeedingLabelCountInput.filter { item in
+                    // Only show sheet if user hasn't already set an override
+                    labelCountOverrides[item.id] == nil
+                }
+
+                if !needsInput.isEmpty {
+                    // Show sheet to get label counts
+                    showingLabelCountInput = true
+                } else {
+                    Task {
+                        await generatePDF()
+                    }
                 }
             }
             .disabled(isGenerating || items.isEmpty)
@@ -470,12 +500,14 @@ struct LabelDesignerView: View {
         }
     }
 
-    /// Total number of labels to print (sum of all inventory quantities)
+    /// Total number of labels to print (uses LabelCountCalculator for proper handling of weight-based types)
     private var totalLabelCount: Int {
-        items.reduce(0) { total, item in
-            let quantity = item.inventory.first?.quantity ?? 1.0
-            return total + Int(quantity)
-        }
+        LabelCountCalculator.calculateTotalLabelCount(for: items, userOverrides: labelCountOverrides)
+    }
+
+    /// Items that need user input for label count (weight-based items without containerCount)
+    private var itemsNeedingLabelCountInput: [LabelCountCalculator.WeightBasedItem] {
+        LabelCountCalculator.itemsNeedingLabelCountInput(from: items)
     }
 
     private var numberOfSheets: Int {
@@ -516,18 +548,17 @@ struct LabelDesignerView: View {
         isGenerating = true
         errorMessage = nil
 
-        // Convert CompleteInventoryItemModel to LabelData, duplicating for each quantity
+        // Convert CompleteInventoryItemModel to LabelData, using LabelCountCalculator for proper handling
         var labelData: [LabelData] = []
 
         for item in items {
             let glassItem = item.glassItem
-            let inventory = item.inventory.first
             let location = item.locations.first
 
-            // Calculate number of labels to generate (default to 1 if no inventory)
-            let labelCount = inventory.map { Int($0.quantity) } ?? 1
+            // Use LabelCountCalculator which handles weight-based types properly
+            let labelCount = LabelCountCalculator.calculateLabelCount(for: item, userOverrides: labelCountOverrides)
 
-            // Create one label for each physical item (e.g., 7 rods = 7 labels)
+            // Create one label for each item (uses quantity for count-based, or user-specified for weight-based)
             for _ in 0..<labelCount {
                 labelData.append(LabelData(
                     stableId: glassItem.stable_id,
@@ -753,6 +784,162 @@ struct LabelDesignerView: View {
         if let configData = try? JSONEncoder().encode(builderConfig) {
             defaults.set(configData, forKey: "\(settingsKey).builderConfig")
         }
+    }
+}
+
+// MARK: - Weight-Based Label Count Input Sheet
+
+/// Sheet for asking how many labels to print for weight-based items (frit, powder, enamel)
+/// Similar to the checkout sheet in ShoppingListView that asks for jar counts
+struct WeightBasedLabelCountSheet: View {
+    let items: [CompleteInventoryItemModel]
+    @Binding var labelCountOverrides: [String: Int]
+    let onComplete: () -> Void
+    let onCancel: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var localCounts: [String: Int] = [:]
+
+    /// Get the weight-based inventory records that need label count input
+    private var weightBasedItems: [WeightBasedItemInfo] {
+        var result: [WeightBasedItemInfo] = []
+        for item in items {
+            for inventory in item.inventory {
+                if inventory.isWeightBasedType {
+                    // Include if no containerCount set, or if user might want to override
+                    result.append(WeightBasedItemInfo(item: item, inventory: inventory))
+                }
+            }
+        }
+        return result
+    }
+
+    struct WeightBasedItemInfo: Identifiable {
+        let item: CompleteInventoryItemModel
+        let inventory: InventoryModel
+
+        var id: String { "\(item.catalogItem.stable_id):\(inventory.type)" }
+    }
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Header explanation
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+                    Text("How many labels?")
+                        .font(.headline)
+
+                    Text("For weight-based items like frit and powder, enter how many labels you want to print (typically one per jar).")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                #if os(iOS)
+                .background(Color(UIColor.systemGroupedBackground))
+                #else
+                .background(Color(nsColor: NSColor.windowBackgroundColor))
+                #endif
+
+                // Items list
+                List {
+                    ForEach(weightBasedItems) { item in
+                        HStack(alignment: .center, spacing: DesignSystem.Spacing.md) {
+                            // Item info
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(item.item.catalogItem.name)
+                                    .font(.headline)
+                                    .lineLimit(1)
+
+                                HStack(spacing: 4) {
+                                    Text(item.inventory.type.capitalized)
+                                        .font(.caption)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.orange.opacity(0.2))
+                                        .foregroundColor(.orange)
+                                        .cornerRadius(4)
+
+                                    if let containerCount = item.inventory.containerCount, containerCount > 0 {
+                                        Text("\(Int(containerCount)) jar\(containerCount == 1 ? "" : "s") tracked")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+
+                            Spacer()
+
+                            // Label count input
+                            VStack(alignment: .trailing, spacing: 2) {
+                                TextField("Labels", value: Binding(
+                                    get: { localCounts[item.id] ?? defaultCount(for: item) },
+                                    set: { localCounts[item.id] = max(0, $0) }
+                                ), format: .number)
+                                #if os(iOS)
+                                .keyboardType(.numberPad)
+                                #endif
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 60)
+                                #if os(iOS)
+                                .textFieldStyle(.roundedBorder)
+                                #endif
+
+                                Text("label\(labelCount(for: item) == 1 ? "" : "s")")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+            }
+            .navigationTitle("Label Counts")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        onCancel()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Continue") {
+                        // Save local counts to the binding
+                        for (key, value) in localCounts {
+                            labelCountOverrides[key] = value
+                        }
+                        // Also save defaults for items that weren't modified
+                        for item in weightBasedItems {
+                            if labelCountOverrides[item.id] == nil {
+                                labelCountOverrides[item.id] = defaultCount(for: item)
+                            }
+                        }
+                        onComplete()
+                    }
+                }
+            }
+            .onAppear {
+                // Initialize local counts from existing overrides or defaults
+                for item in weightBasedItems {
+                    localCounts[item.id] = labelCountOverrides[item.id] ?? defaultCount(for: item)
+                }
+            }
+        }
+    }
+
+    private func defaultCount(for item: WeightBasedItemInfo) -> Int {
+        // Use containerCount if available, otherwise default to 1
+        if let containerCount = item.inventory.containerCount, containerCount > 0 {
+            return Int(containerCount)
+        }
+        return 1
+    }
+
+    private func labelCount(for item: WeightBasedItemInfo) -> Int {
+        localCounts[item.id] ?? defaultCount(for: item)
     }
 }
 

@@ -42,6 +42,12 @@ struct MoltenApp: App {
     }
 
     init() {
+        // Debug: Log all launch arguments to help diagnose UI test issues
+        let args = ProcessInfo.processInfo.arguments
+        let logger = Logger(subsystem: "com.motleywoods.molten", category: "uitest-debug")
+        logger.warning("🚀 [MoltenApp] Launch arguments: \(args, privacy: .public)")
+        logger.warning("🚀 [MoltenApp] Contains UI-Testing: \(args.contains("UI-Testing"), privacy: .public)")
+
         // Detect test environment BEFORE initializing dependencies
         let isTest = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 
@@ -130,6 +136,10 @@ struct MoltenApp: App {
             // CRITICAL: Show LaunchScreenView IMMEDIATELY by avoiding complex conditionals
             // This prevents SwiftUI from evaluating the entire view tree on first launch
             Group {
+                let _ = {
+                    let log = Logger(subsystem: "com.motleywoods.molten", category: "uitest-debug")
+                    log.warning("🧪 [body] isRunningTests=\(self.isRunningTests), isRunningUITests=\(self.isRunningUITests)")
+                }()
                 if isRunningTests || isRunningUITests {
                     // During tests, show main content with test configuration
                     uiTestContentView
@@ -186,13 +196,23 @@ extension MoltenApp {
     @ViewBuilder
     private var uiTestContentView: some View {
         // For UI tests: Skip launch sequence, go straight to main content
+        let _ = {
+            let log = Logger(subsystem: "com.motleywoods.molten", category: "uitest-debug")
+            log.warning("🧪 [uiTestContentView] mainTabView is nil: \(self.mainTabView == nil)")
+        }()
         if mainTabView == nil {
-            Color.clear
-                .onAppear {
+            // Show loading indicator while test data populates
+            ProgressView("Loading test data...")
+                .task {
+                    let log = Logger(subsystem: "com.motleywoods.molten", category: "uitest-debug")
+                    log.warning("🧪 [uiTestContentView.task] Starting configuration...")
                     // Configure test-specific settings (skipping onboarding, etc.)
-                    configureUITestEnvironment()
+                    // This now awaits test data population before showing main content
+                    await configureUITestEnvironmentAsync()
+                    log.warning("🧪 [uiTestContentView.task] Configuration complete, creating mainTabView...")
                     // THEN create main view (dependencies already initialized in body)
                     mainTabView = createMainTabView()
+                    log.warning("🧪 [uiTestContentView.task] mainTabView created")
                 }
         } else {
             mainTabView!
@@ -483,19 +503,10 @@ extension MoltenApp {
 
     /// Check if user needs to acknowledge the alpha disclaimer
     /// Shows only once per install (or until UserDefaults is cleared)
+    /// NOTE: Disabled - leaving alpha, no longer needed
     private func checkAlphaDisclaimer() {
-        // Check if user has already acknowledged the disclaimer
-        let hasAcknowledged = UserDefaults.standard.bool(forKey: "hasAcknowledgedAlphaDisclaimer")
-
-        guard !hasAcknowledged else {
-            return  // User has already seen and acknowledged
-        }
-
-        // Show disclaimer for first-time users
-        Task { @MainActor in
-            try? await Task.sleep(for: .seconds(0.3))
-            showAlphaDisclaimer = true
-        }
+        // DISABLED: Alpha disclaimer no longer needed
+        return
     }
 
     /// Perform background catalog update check on app startup
@@ -612,12 +623,30 @@ extension MoltenApp {
         #endif
     }
 
-    /// Configure environment for UI testing
+    /// Configure environment for UI testing (async version that awaits test data)
     @MainActor
-    private func configureUITestEnvironment() {
+    private func configureUITestEnvironmentAsync() async {
+        let log = Logger(subsystem: "com.motleywoods.molten", category: "uitest-debug")
 
         // Skip all onboarding screens
         UserDefaults.standard.set(true, forKey: "hasAcknowledgedAlphaDisclaimer")
+
+        // CRITICAL: Clear all filters that might hide inventory items
+        // These UserDefaults filters could filter out all test data if set from previous runs
+        log.warning("🧪 [configureUITest] Clearing UserDefaults filters...")
+        UserDefaults.standard.removeObject(forKey: "selectedManufacturerFilter")
+        UserDefaults.standard.removeObject(forKey: "selectedCOEFilter")
+        UserDefaults.standard.removeObject(forKey: "applyFiltersToInventory")
+        // Also clear the COE preference used by COEGlassPreference
+        UserDefaults.standard.removeObject(forKey: "preferredCOETypes")
+        log.warning("🧪 [configureUITest] Filters cleared")
+
+        // CRITICAL: Enable premium mode for UI tests to unlock all features
+        // This uses the DebugConfig subscription tier override
+        log.warning("🧪 [configureUITest] Enabling premium mode for testing...")
+        UserDefaults.standard.set(true, forKey: "debugOverrideSubscriptionTier")
+        UserDefaults.standard.set(1, forKey: "debugSubscriptionTierValue")  // 1 = premium
+        log.warning("🧪 [configureUITest] Premium mode enabled")
 
         // Disable animations for faster, more reliable tests
         if shouldDisableAnimations {
@@ -629,8 +658,29 @@ extension MoltenApp {
         // Note: Dependencies already initialized in body via ensureDependenciesInitialized()
         // This method only handles test-specific UI configuration
 
-        // Note: Database reset and test data population deferred to Phase 4
-        // when we properly set up Core Data for UI tests
+        // Reset database for clean test state if requested
+        if shouldResetDatabase {
+            resetCoreDataStore()
+        }
+
+        // CRITICAL: Initialize the catalog database before creating test data
+        // The normal launch flow does this in FirstRunDataLoadingView, but UI tests skip that
+        log.warning("🧪 [configureUITest] Initializing Core Data...")
+        await PersistenceController.shared.initialize()
+        log.warning("🧪 [configureUITest] Core Data initialized")
+
+        log.warning("🧪 [configureUITest] Initializing catalog database...")
+        do {
+            try await CatalogDatabaseManager.shared.initialize()
+            log.warning("🧪 [configureUITest] Catalog database initialized")
+        } catch {
+            log.error("❌ [configureUITest] Failed to initialize catalog: \(error.localizedDescription)")
+        }
+
+        // Populate test data if requested (await to ensure data is ready before UI appears)
+        if shouldUseTestData {
+            await populateTestData()
+        }
     }
 
     /// Handle URLs opened from outside the app (e.g., .molten files, deep links)
@@ -780,58 +830,107 @@ extension MoltenApp {
         }
     }
 
-    /// Populate database with known test data
+    /// Populate database with known test data for UI tests
+    /// Creates inventory and shopping list items from existing catalog data
     @MainActor
     private func populateTestData() async {
+        let log = Logger(subsystem: "com.motleywoods.molten", category: "uitest-debug")
+        log.warning("🧪 [populateTestData] Starting test data population...")
+
         do {
-            let glassItemRepo = dependencies.glassItemRepository
-            let inventoryRepo = dependencies.inventoryRepository
+            let catalogService = dependencies.catalogService
+            let inventoryService = dependencies.inventoryTrackingService
+            let shoppingListService = dependencies.shoppingListService
 
-            // Create a few known glass items that tests can rely on
-            let testItems = [
-                GlassItemModel(
-                    stable_id: generateStableId(manufacturer: "bullseye", sku: "001"),
-                    name: "Clear",
-                    sku: "001",
-                    manufacturer: "bullseye",
-                    coe: 90,
-                    mfr_status: "available"
-                ),
-                GlassItemModel(
-                    stable_id: generateStableId(manufacturer: "bullseye", sku: "254"),
-                    name: "Pomegranate Red",
-                    sku: "254",
-                    manufacturer: "bullseye",
-                    coe: 90,
-                    mfr_status: "available"
-                ),
-                GlassItemModel(
-                    stable_id: generateStableId(manufacturer: "effetre", sku: "006"),
-                    name: "Ivory",
-                    sku: "006",
-                    manufacturer: "effetre",
-                    coe: 104,
-                    mfr_status: "available"
-                )
-            ]
+            // Get existing glass items from catalog
+            log.warning("🧪 [populateTestData] Fetching glass items from catalog...")
+            let allItems = try await catalogService.getAllGlassItems()
+            log.warning("🧪 [populateTestData] Got \(allItems.count) total items")
+            let glassItems = allItems.filter { $0.catalogItem.itemType == .glass }
+            log.warning("🧪 [populateTestData] Filtered to \(glassItems.count) glass items")
 
-            // Add items to database
-            for item in testItems {
-                try await glassItemRepo.createItem(item)
+            guard !glassItems.isEmpty else {
+                log.warning("⚠️ [populateTestData] No catalog items found - skipping test data population")
+                return
             }
 
-            // Add some inventory for the first item
-            let inventory = InventoryModel(
-                item_stable_id: testItems[0].stable_id,
-                type: "rod",
-                subtype: nil,
-                subsubtype: nil,
-                dimensions: nil,
-                quantity: 10.0
-            )
-            _ = try await inventoryRepo.createInventory(inventory)
+            log.warning("🧪 [populateTestData] Creating 10 inventory items...")
+
+            // Generate 10 inventory items for tests
+            let types = ["rod", "tube", "frit", "sheet", "stringer"]
+            let locations = ["Studio", "Storage Room", "Shelf A", nil]
+            var inventoryCreated = 0
+
+            for i in 0..<10 {
+                guard let randomItem = glassItems.randomElement(),
+                      let type = types.randomElement() else { continue }
+
+                let quantity = Double(Int.random(in: 1...25))
+                let location = locations.randomElement() ?? nil
+
+                do {
+                    _ = try await inventoryService.addInventory(
+                        quantity: quantity,
+                        type: type,
+                        toItem: randomItem.glassItem.stable_id,
+                        atLocation: location
+                    )
+                    inventoryCreated += 1
+                    log.warning("🧪 [populateTestData] Created inventory \(i+1)/10")
+                } catch {
+                    log.error("❌ [populateTestData] Failed to create inventory \(i+1): \(error.localizedDescription)")
+                }
+            }
+
+            log.warning("🧪 [populateTestData] Created \(inventoryCreated) inventory items")
+
+            // Generate 5 shopping list items for tests
+            let stores = ["Frantz", "Hot Glass Color", "Mountain Glass"]
+            var shoppingCreated = 0
+
+            log.warning("🧪 [populateTestData] Creating 5 shopping list items...")
+
+            for i in 0..<5 {
+                guard let randomItem = glassItems.randomElement(),
+                      let type = types.randomElement(),
+                      let store = stores.randomElement() else { continue }
+
+                let neededQuantity = Double(Int.random(in: 1...10))
+
+                let newItem = ItemShoppingModel(
+                    item_stable_id: randomItem.glassItem.stable_id,
+                    quantity: neededQuantity,
+                    store: store,
+                    type: type,
+                    subtype: nil,
+                    subsubtype: nil
+                )
+
+                do {
+                    _ = try await shoppingListService.shoppingListRepository.createItem(newItem)
+                    shoppingCreated += 1
+                    log.warning("🧪 [populateTestData] Created shopping item \(i+1)/5")
+                } catch {
+                    log.error("❌ [populateTestData] Failed to create shopping item \(i+1): \(error.localizedDescription)")
+                }
+            }
+
+            log.warning("🧪 [populateTestData] Created \(shoppingCreated) shopping list items")
+
+            // CRITICAL: Clear the catalog cache so InventoryView reloads with new inventory data
+            // The cache was populated before inventory existed, so items have totalQuantity = 0
+            log.warning("🧪 [populateTestData] Clearing CatalogDataCache to include new inventory...")
+            CatalogDataCache.shared.clear()
+
+            // Verify the inventory was actually saved by reading it back
+            log.warning("🧪 [populateTestData] Verifying inventory was persisted...")
+            let allInventory = try await inventoryService.fetchAllInventory(matching: nil)
+            log.warning("🧪 [populateTestData] Read back \(allInventory.count) inventory items from Core Data")
+
+            log.warning("✅ [populateTestData] Test data population complete!")
+
         } catch {
-            print("❌ Failed to populate test data: \(error)")
+            log.error("❌ [populateTestData] Failed to populate test data: \(error.localizedDescription)")
         }
     }
 

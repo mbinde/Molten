@@ -25,65 +25,27 @@ class BaseUITest: XCTestCase {
         // Create app instance
         app = XCUIApplication()
 
-        // NOTE: UI test mode flags (UI-Testing, RESET-DATABASE, USE-TEST-DATA)
-        // are disabled until the app's UI test infrastructure is complete.
-        // Tests currently run against production app with real/existing data.
-        //
-        // TODO: Enable these when MoltenApp's configureUITestEnvironment() is complete:
-        // app.launchArguments = [
-        //     "UI-Testing",           // Enable UI test mode
-        //     "RESET-DATABASE",       // Start with clean database
-        //     "USE-TEST-DATA",        // Populate known test data
-        //     "DISABLE-ANIMATIONS"    // Faster, more reliable tests
-        // ]
+        // Enable UI test mode with test data population
+        // These flags tell the app to:
+        // - Skip onboarding screens (alpha disclaimer)
+        // - Disable animations for faster/more reliable tests
+        // - Populate test data (inventory and shopping list items)
+        app.launchArguments = [
+            "UI-Testing",           // Enable UI test mode
+            "USE-TEST-DATA",        // Populate known test data
+            "DISABLE-ANIMATIONS"    // Faster, more reliable tests
+        ]
 
         // Launch the app
         app.launch()
 
-        // Dismiss any onboarding/disclaimer screens
-        dismissOnboardingScreensIfNeeded()
-
-        // Wait for app to be ready (tab bar appears)
+        // Wait for app to be ready (custom tab bar button appears)
+        // The app uses a custom tab bar implementation (not TabView), so we look for
+        // one of the tab buttons by name instead of app.tabBars
         // Using longer timeout (30s) to account for normal app startup with Core Data loading
-        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 30),
+        let catalogButton = app.buttons["Catalog"]
+        XCTAssertTrue(catalogButton.waitForExistence(timeout: 30),
                       "App should launch and show tab bar within 30 seconds")
-    }
-
-    /// Dismiss onboarding or disclaimer screens that might block the main UI
-    private func dismissOnboardingScreensIfNeeded() {
-        // Wait a moment for any sheets to appear
-        Thread.sleep(forTimeInterval: 2)
-
-        // Try to dismiss alpha disclaimer (has specific accessibility identifier)
-        let alphaDisclaimerButton = app.buttons["alpha_disclaimer_acknowledge"]
-        if alphaDisclaimerButton.waitForExistence(timeout: 5) {
-            alphaDisclaimerButton.tap()
-            // Wait for sheet to dismiss
-            Thread.sleep(forTimeInterval: 1)
-        }
-
-        // Also try by label "Yes, I Understand"
-        let understandButton = app.buttons["Yes, I Understand"]
-        if understandButton.waitForExistence(timeout: 2) {
-            understandButton.tap()
-            Thread.sleep(forTimeInterval: 1)
-        }
-
-        // Try other common dismiss patterns
-        let continueButton = app.buttons["Continue"]
-        if continueButton.waitForExistence(timeout: 2) {
-            continueButton.tap()
-        }
-
-        let gotItButton = app.buttons["Got It"]
-        if gotItButton.waitForExistence(timeout: 2) {
-            gotItButton.tap()
-        }
-
-        let dismissButton = app.buttons["Dismiss"]
-        if dismissButton.waitForExistence(timeout: 2) {
-            dismissButton.tap()
-        }
     }
 
     override func tearDownWithError() throws {
@@ -112,9 +74,52 @@ class BaseUITest: XCTestCase {
         app.buttons["Project Log"].tapWhenHittable()
     }
 
-    /// Navigate to the Settings tab
+    /// Navigate to the Locations tab
+    func navigateToLocations() {
+        app.buttons["Locations"].tapWhenHittable()
+    }
+
+    /// Navigate to the Shopping tab
+    func navigateToShopping() {
+        app.buttons["Shopping"].tapWhenHittable()
+    }
+
+    /// Navigate to the Settings view
+    /// Note: Settings is presented as a sheet, not a tab. Access via "More" menu.
     func navigateToSettings() {
-        app.buttons["Settings"].tapWhenHittable()
+        // Settings is accessed via the "More" button in the tab bar
+        // First try direct Settings button (in case it's visible in tab bar)
+        let settingsButton = app.buttons["Settings"]
+        if settingsButton.waitToExist(timeout: 2) && settingsButton.isHittable {
+            settingsButton.tapWhenHittable()
+        } else {
+            // Settings is in the More menu
+            let moreButton = app.buttons["More"]
+            if moreButton.waitToExist(timeout: 2) {
+                moreButton.tapWhenHittable()
+
+                // Wait for popover menu to appear
+                Thread.sleep(forTimeInterval: 0.5)
+
+                // Look for Settings in the More menu
+                let settingsInMore = app.buttons["Settings"]
+                if settingsInMore.waitToExist(timeout: 3) {
+                    settingsInMore.tapWhenHittable()
+                }
+            }
+        }
+
+        // Wait for Settings sheet to fully appear
+        // Settings is presented in a NavigationStack with "Settings" navigation title
+        let navTitle = app.navigationBars["Settings"]
+        _ = navTitle.waitForExistence(timeout: 5)
+
+        // Wait a bit more for sheet content to render
+        Thread.sleep(forTimeInterval: 1.0)
+
+        // Wait for content to load - look for General section which should always be visible
+        let generalSection = app.staticTexts["General"]
+        _ = generalSection.waitForExistence(timeout: 5)
     }
 
     // MARK: - Common Actions
@@ -149,6 +154,137 @@ class BaseUITest: XCTestCase {
         let loadingIndicator = app.activityIndicators.firstMatch
         if loadingIndicator.exists {
             _ = loadingIndicator.waitToDisappear(timeout: timeout)
+        }
+    }
+
+    // MARK: - Test Data Generation
+
+    /// Generate test inventory data if needed (navigates to Settings > Test Data Generator)
+    /// Use this at the start of tests that require inventory items
+    func ensureTestInventoryExists() {
+        // Check if inventory already has items
+        navigateToInventory()
+        waitForLoadingToComplete()
+
+        // On iOS 17+, SwiftUI List renders as CollectionView
+        let inventoryList = app.collectionViews["inventory.list"]
+        guard inventoryList.waitForExistence(timeout: 10) else {
+            // No inventory list found - try generating data
+            generateTestInventory()
+            return
+        }
+
+        // Check for cells in the inventory list
+        let firstCell = inventoryList.cells.firstMatch
+        if firstCell.waitToExist(timeout: 3) {
+            // Already have inventory, no need to generate
+            return
+        }
+
+        // No inventory found, generate test data
+        generateTestInventory()
+    }
+
+    /// Generate test shopping list data if needed
+    /// Use this at the start of tests that require shopping list items
+    func ensureTestShoppingListExists() {
+        // Navigate to shopping and check for items
+        app.buttons["Shopping"].tapWhenHittable()
+        waitForLoadingToComplete()
+
+        let shoppingItem = app.cells.matching(NSPredicate(format: "identifier BEGINSWITH 'shopping.item.'")).firstMatch
+        if shoppingItem.waitToExist(timeout: 3) {
+            // Already have shopping items, no need to generate
+            return
+        }
+
+        // No shopping items found, generate test data
+        generateTestShoppingList()
+    }
+
+    /// Navigate to Test Data Generator (Settings → Debug Settings → Test Data Generator)
+    private func navigateToTestDataGenerator() {
+        navigateToSettings()
+        waitForLoadingToComplete()
+
+        // Scroll down to find "Debug Settings" in Advanced section
+        var foundDebugSettings = false
+        for _ in 0..<3 {
+            let debugSettingsText = app.staticTexts["Debug Settings"]
+            if debugSettingsText.waitToExist(timeout: 2) {
+                debugSettingsText.tapWhenHittable()
+                foundDebugSettings = true
+                break
+            }
+            app.swipeUp()
+        }
+
+        guard foundDebugSettings else { return }
+
+        // Wait for Debug Settings to load
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Now tap "Test Data Generator" in Debug Settings
+        let testDataGeneratorText = app.staticTexts["Test Data Generator"]
+        if testDataGeneratorText.waitToExist(timeout: 3) {
+            testDataGeneratorText.tapWhenHittable()
+        }
+    }
+
+    /// Navigate to Test Data Generator and create inventory items
+    private func generateTestInventory() {
+        navigateToTestDataGenerator()
+
+        // Tap the generate inventory button
+        let generateButton = app.buttons["test_data_generate_inventory"]
+        if generateButton.waitToExist(timeout: 5) {
+            generateButton.tapWhenHittable()
+
+            // Wait for generation to complete (watch for success message or progress to finish)
+            let successText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Added'")).firstMatch
+            _ = successText.waitToExist(timeout: 60) // Generation can take a while (25 items)
+
+            // Navigate back to dismiss any open views
+            dismissAnyOpenViews()
+        }
+    }
+
+    /// Navigate to Test Data Generator and create shopping list items
+    private func generateTestShoppingList() {
+        navigateToTestDataGenerator()
+
+        // Tap the generate shopping button
+        let generateButton = app.buttons["test_data_generate_shopping"]
+        if generateButton.waitToExist(timeout: 5) {
+            generateButton.tapWhenHittable()
+
+            // Wait for generation to complete
+            let successText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Added'")).firstMatch
+            _ = successText.waitToExist(timeout: 30)
+
+            // Navigate back to dismiss any open views
+            dismissAnyOpenViews()
+        }
+    }
+
+    /// Dismiss any open modals, sheets, or navigation detail views to get back to main tab view
+    private func dismissAnyOpenViews() {
+        // Try tapping "Done" button if visible (often used in modals)
+        let doneButton = app.buttons["Done"]
+        if doneButton.waitToExist(timeout: 1) {
+            doneButton.tapWhenHittable()
+            Thread.sleep(forTimeInterval: 0.3)
+        }
+
+        // Try to dismiss any sheets by swiping down
+        app.swipeDown()
+        Thread.sleep(forTimeInterval: 0.3)
+
+        // Tap Catalog tab first (this will definitely leave settings)
+        let catalogButton = app.buttons["Catalog"]
+        if catalogButton.waitToExist(timeout: 2) {
+            catalogButton.tapWhenHittable()
+            Thread.sleep(forTimeInterval: 0.3)
         }
     }
 

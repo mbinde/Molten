@@ -682,6 +682,13 @@ struct InventoryView: View, CachedDataDeletion {
         // Update view-specific caches and state
         await MainActor.run {
             let itemsWithInventory = viewModel.completeItems.filter { $0.totalQuantity > 0 }
+            #if DEBUG
+            let uitestLog = Logger(subsystem: "com.motleywoods.molten", category: "uitest-debug")
+            uitestLog.warning("📋 [InventoryView] loadData complete: \(viewModel.completeItems.count) total, \(itemsWithInventory.count) with inventory")
+            if let firstItem = itemsWithInventory.first {
+                uitestLog.warning("📋 [InventoryView] First item: \(firstItem.glassItem.stable_id), qty=\(firstItem.totalQuantity)")
+            }
+            #endif
             updateCaches()  // PERFORMANCE: Update cached filter values
             refreshTrigger += 1  // Force SwiftUI to refresh the list
         }

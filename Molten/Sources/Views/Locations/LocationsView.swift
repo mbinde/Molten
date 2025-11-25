@@ -76,12 +76,26 @@ struct LocationsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        viewModel.toggleMap()
-                    } label: {
-                        Image(systemName: viewModel.showMap ? "map.fill" : "map")
+                    HStack(spacing: 12) {
+                        // Clear search button - placed in toolbar for reliable accessibility
+                        if !viewModel.searchText.isEmpty {
+                            Button {
+                                viewModel.updateSearchText("")
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(DesignSystem.Colors.textTertiary)
+                            }
+                            .accessibilityIdentifier("locations_clear_search")
+                            .accessibilityLabel("Clear search")
+                        }
+
+                        Button {
+                            viewModel.toggleMap()
+                        } label: {
+                            Image(systemName: viewModel.showMap ? "map.fill" : "map")
+                        }
+                        .accessibilityIdentifier("locations_toggle_map")
                     }
-                    .accessibilityIdentifier("locations_toggle_map")
                 }
             }
             .sheet(isPresented: $showLocationPicker) {
@@ -234,15 +248,8 @@ struct LocationsView: View {
             .textFieldStyle(.plain)
             .autocorrectionDisabled()
 
-            if !viewModel.searchText.isEmpty {
-                Button {
-                    viewModel.updateSearchText("")
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(DesignSystem.Colors.textTertiary)
-                }
-                .accessibilityIdentifier("locations_clear_search")
-            }
+            // Clear button moved to toolbar for reliable accessibility
+            // (in-field button can be obscured by keyboard on some devices)
         }
         .padding(DesignSystem.Padding.compact)
         .background(DesignSystem.Colors.backgroundSecondary)

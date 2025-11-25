@@ -161,17 +161,10 @@ nonisolated struct GlassItemTypeSystem {
         ]
     )
 
-    static let enamel = GlassItemType(
-        name: "enamel",
-        displayName: "Enamel",
-        subtypes: ["opaque", "transparent"],
-        subsubtypes: [:],
-        dimensionFields: []
-    )
-
     // MARK: - Type Registry
 
     /// All available glass item types (backend storage types)
+    /// Note: Enamel is NOT a glass type - it's a coating (see CoatingItemTypeSystem)
     nonisolated static let allTypes: [GlassItemType] = [
         rod,
         bigRod,
@@ -182,8 +175,7 @@ nonisolated struct GlassItemTypeSystem {
         powder,
         scrap,
         murriniCane,
-        murriniSlice,
-        enamel
+        murriniSlice
     ]
 
     /// Map of type name to GlassItemType for quick lookup

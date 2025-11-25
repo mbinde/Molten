@@ -408,6 +408,10 @@ struct InventoryDetailView: View {
             loadUserImages()
             loadRecommendedSchedules()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
+            // Refresh when inventory is added (e.g., from three-dots menu)
+            refreshItemData()
+        }
     }
 
     // MARK: - Data Loading
@@ -516,34 +520,24 @@ struct InventoryDetailView: View {
 
     /// Check inventory limit and show either the add form or upgrade prompt
     private func checkLimitAndShowAddInventory() {
-        guard let inventoryTrackingService = inventoryTrackingService else { return }
+        guard let catalogService = catalogService else { return }
 
         Task {
-            do {
-                // Count unique items with inventory (not individual inventory records)
-                let allItemsWithInventory = try await inventoryTrackingService.searchItems(
-                    text: "",
-                    hasInventory: true
-                )
-                let currentInventoryCount = allItemsWithInventory.count
-                let canAdd = entitlementService.canAddInventoryItem(currentCount: currentInventoryCount)
+            // Use the same counting method as InventoryView for consistency:
+            // CatalogDataCache + hasInventory (which checks hasStock)
+            let items = await CatalogDataCache.loadItems(using: catalogService)
+            let currentInventoryCount = items.filter { $0.hasInventory }.count
+            let canAdd = entitlementService.canAddInventoryItem(currentCount: currentInventoryCount)
 
-                await MainActor.run {
-                    if !canAdd {
-                        // Hit the limit - show upgrade prompt immediately
-                        let limit = entitlementService.getInventoryLimit() ?? 0
-                        inventoryItemCount = currentInventoryCount
-                        inventoryItemLimit = limit
-                        showingUpgradePrompt = true
-                    } else {
-                        // Under limit - show add inventory form
-                        showingAddInventory = true
-                    }
-                }
-            } catch {
-                // If we can't check the limit, allow the add to proceed
-                print("⚠️ Failed to check inventory limit: \(error)")
-                await MainActor.run {
+            await MainActor.run {
+                if !canAdd {
+                    // Hit the limit - show upgrade prompt immediately
+                    let limit = entitlementService.getInventoryLimit() ?? 0
+                    inventoryItemCount = currentInventoryCount
+                    inventoryItemLimit = limit
+                    showingUpgradePrompt = true
+                } else {
+                    // Under limit - show add inventory form
                     showingAddInventory = true
                 }
             }
@@ -663,9 +657,11 @@ struct InventoryDetailView: View {
 
     private func refreshItemData() {
         guard let service = inventoryTrackingService else {
-            print("No inventory tracking service available for refresh")
+            print("⚠️ No inventory tracking service available for refresh")
             return
         }
+
+        print("🔄 refreshItemData() called for \(item.glassItem.stable_id)")
 
         Task {
             isRefreshing = true
@@ -674,12 +670,19 @@ struct InventoryDetailView: View {
             do {
                 // Fetch the updated complete item
                 if let updatedItem = try await service.getCompleteItem(stableId: item.glassItem.stable_id) {
+                    print("✅ Got updated item with \(updatedItem.inventory.count) inventory records")
+                    for inv in updatedItem.inventory {
+                        print("   - \(inv.type): qty=\(inv.quantity), containers=\(inv.containerCount ?? 0)")
+                    }
                     await MainActor.run {
                         currentItem = updatedItem
+                        print("✅ Updated currentItem state")
                     }
+                } else {
+                    print("⚠️ getCompleteItem returned nil")
                 }
             } catch {
-                print("Error refreshing item data: \(error)")
+                print("❌ Error refreshing item data: \(error)")
             }
         }
     }

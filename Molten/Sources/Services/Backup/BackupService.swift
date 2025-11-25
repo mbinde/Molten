@@ -66,9 +66,19 @@ open class BackupService {
 
     // MARK: - Setup
 
-    /// Check if backups are set up
+    /// Check if backups are set up and active (not paused)
     var isSetUp: Bool {
+        preferences.backupKey != nil && preferences.isEnabled && !preferences.isPaused
+    }
+
+    /// Check if backups are configured (may be paused)
+    var isConfigured: Bool {
         preferences.backupKey != nil && preferences.isEnabled
+    }
+
+    /// Check if backups are paused
+    var isPaused: Bool {
+        preferences.isPaused
     }
 
     /// Get the current backup key (for display to user)
@@ -99,6 +109,9 @@ open class BackupService {
                 preferences.lastInventoryChecksum = nil
                 preferences.lastTagsChecksum = nil
 
+                // Perform first backup immediately
+                _ = try? await performBackup()
+
                 return backupKey
             } catch BackupAPIError.conflict {
                 // Key already exists, retry with new key
@@ -109,8 +122,18 @@ open class BackupService {
         throw BackupAPIError.conflict
     }
 
-    /// Disable backups and clear stored data
-    func disableBackups() {
+    /// Pause backups (keeps key, stops automatic backups)
+    func pauseBackups() {
+        preferences.isPaused = true
+    }
+
+    /// Resume backups after pausing
+    func resumeBackups() {
+        preferences.isPaused = false
+    }
+
+    /// Delete backup key and clear all stored data
+    func deleteBackupKey() {
         preferences.reset()
         try? keyPairManager.deletePrivateKey(identifier: Self.backupKeyIdentifier)
     }
@@ -148,6 +171,9 @@ open class BackupService {
                 preferences.lastBackupTimestamp = nil
                 preferences.lastInventoryChecksum = nil
                 preferences.lastTagsChecksum = nil
+
+                // Perform backup immediately to the new key
+                _ = try? await performBackup()
 
                 return newBackupKey
             } catch BackupAPIError.conflict {

@@ -11,6 +11,7 @@ import SwiftUI
 struct BackupSettingsView: View {
     @Environment(\.appDependencies) private var dependencies
     @State private var isEnabled: Bool = false
+    @State private var isPaused: Bool = false
     @State private var backupKey: String?
     @State private var isEnabling = false
     @State private var isRerolling = false
@@ -18,6 +19,7 @@ struct BackupSettingsView: View {
     @State private var errorMessage: String?
     @State private var successMessage: String?
     @State private var showingRerollConfirmation = false
+    @State private var showingDeleteConfirmation = false
     @State private var lastBackupTimestamp: Date?
     @State private var showCopiedFeedback = false
 
@@ -33,15 +35,28 @@ struct BackupSettingsView: View {
                     // Backup is enabled - show key
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.green)
-                            Text("Backups Enabled")
-                                .font(.headline)
+                            if isPaused {
+                                Image(systemName: "pause.circle.fill")
+                                    .foregroundColor(.orange)
+                                Text("Backups Paused")
+                                    .font(.headline)
+                            } else {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                Text("Backups Enabled")
+                                    .font(.headline)
+                            }
                         }
 
-                        Text("Your inventory is automatically backed up to the cloud.")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                        if isPaused {
+                            Text("Automatic backups are paused. Your backup key is still saved and you can resume anytime.")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("Your inventory is automatically backed up to our servers. No name or other identifyable information is associated with it, just the random backup key.")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     .padding(.vertical, 4)
 
@@ -127,20 +142,41 @@ struct BackupSettingsView: View {
             // Actions Section (only show when enabled)
             if isEnabled {
                 Section {
-                    Button {
-                        backupNow()
-                    } label: {
-                        HStack {
-                            Image(systemName: "icloud.and.arrow.up")
-                            Text("Backup Now")
-                            if isBackingUp {
-                                Spacer()
-                                ProgressView()
-                                    .progressViewStyle(.circular)
+                    // Pause/Resume toggle
+                    if isPaused {
+                        Button {
+                            resumeBackups()
+                        } label: {
+                            HStack {
+                                Image(systemName: "play.circle")
+                                Text("Resume Backups")
+                            }
+                        }
+                    } else {
+                        Button {
+                            backupNow()
+                        } label: {
+                            HStack {
+                                Image(systemName: "icloud.and.arrow.up")
+                                Text("Backup Now")
+                                if isBackingUp {
+                                    Spacer()
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                }
+                            }
+                        }
+                        .disabled(isBackingUp)
+
+                        Button {
+                            pauseBackups()
+                        } label: {
+                            HStack {
+                                Image(systemName: "pause.circle")
+                                Text("Pause Backups")
                             }
                         }
                     }
-                    .disabled(isBackingUp)
 
                     Button(role: .destructive) {
                         showingRerollConfirmation = true
@@ -158,17 +194,17 @@ struct BackupSettingsView: View {
                     .disabled(isRerolling)
 
                     Button(role: .destructive) {
-                        disableBackups()
+                        showingDeleteConfirmation = true
                     } label: {
                         HStack {
-                            Image(systemName: "xmark.circle")
-                            Text("Disable Backups")
+                            Image(systemName: "trash")
+                            Text("Delete Backup Key")
                         }
                     }
                 } header: {
                     Text("Actions")
                 } footer: {
-                    Text("Generating a new key will invalidate the old one. Existing backups under the old key will remain but won't be accessible with the new key.")
+                    Text("Generating a new key will invalidate the old one. Deleting your backup key removes it permanently.")
                 }
             }
 
@@ -224,12 +260,25 @@ struct BackupSettingsView: View {
         } message: {
             Text("This will create a new backup key. Your old key will no longer work. Make sure to save the new key.")
         }
+        .confirmationDialog(
+            "Delete Backup Key?",
+            isPresented: $showingDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete Backup Key", role: .destructive) {
+                deleteBackupKey()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will permanently delete your backup key. You'll need to set up backups again if you want to use them in the future.")
+        }
     }
 
     // MARK: - Private Methods
 
     private func loadState() {
-        isEnabled = backupService.isSetUp
+        isEnabled = backupService.isConfigured
+        isPaused = backupService.isPaused
         backupKey = backupService.backupKey
         lastBackupTimestamp = BackupPreferences().lastBackupTimestamp
     }
@@ -250,9 +299,20 @@ struct BackupSettingsView: View {
         }
     }
 
-    private func disableBackups() {
-        backupService.disableBackups()
+    private func pauseBackups() {
+        backupService.pauseBackups()
+        isPaused = true
+    }
+
+    private func resumeBackups() {
+        backupService.resumeBackups()
+        isPaused = false
+    }
+
+    private func deleteBackupKey() {
+        backupService.deleteBackupKey()
         isEnabled = false
+        isPaused = false
         backupKey = nil
         lastBackupTimestamp = nil
     }

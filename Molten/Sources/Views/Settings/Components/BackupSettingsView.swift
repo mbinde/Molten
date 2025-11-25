@@ -14,7 +14,9 @@ struct BackupSettingsView: View {
     @State private var backupKey: String?
     @State private var isEnabling = false
     @State private var isRerolling = false
+    @State private var isBackingUp = false
     @State private var errorMessage: String?
+    @State private var successMessage: String?
     @State private var showingRerollConfirmation = false
     @State private var lastBackupTimestamp: Date?
     @State private var showCopiedFeedback = false
@@ -125,6 +127,21 @@ struct BackupSettingsView: View {
             // Actions Section (only show when enabled)
             if isEnabled {
                 Section {
+                    Button {
+                        backupNow()
+                    } label: {
+                        HStack {
+                            Image(systemName: "icloud.and.arrow.up")
+                            Text("Backup Now")
+                            if isBackingUp {
+                                Spacer()
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                            }
+                        }
+                    }
+                    .disabled(isBackingUp)
+
                     Button(role: .destructive) {
                         showingRerollConfirmation = true
                     } label: {
@@ -152,6 +169,18 @@ struct BackupSettingsView: View {
                     Text("Actions")
                 } footer: {
                     Text("Generating a new key will invalidate the old one. Existing backups under the old key will remain but won't be accessible with the new key.")
+                }
+            }
+
+            // Success Message
+            if let success = successMessage {
+                Section {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text(success)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
 
@@ -240,6 +269,38 @@ struct BackupSettingsView: View {
                 errorMessage = error.localizedDescription
             }
             isRerolling = false
+        }
+    }
+
+    private func backupNow() {
+        isBackingUp = true
+        errorMessage = nil
+        successMessage = nil
+
+        Task { @MainActor in
+            do {
+                let results = try await backupService.performBackup()
+                let skippedAll = results.allSatisfy { $0.skipped }
+
+                if skippedAll {
+                    successMessage = "Backup unchanged (no new data)"
+                } else {
+                    successMessage = "Backup completed successfully"
+                }
+
+                // Update last backup timestamp
+                lastBackupTimestamp = BackupPreferences().lastBackupTimestamp
+
+                // Clear success message after a few seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                    withAnimation {
+                        successMessage = nil
+                    }
+                }
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            isBackingUp = false
         }
     }
 }

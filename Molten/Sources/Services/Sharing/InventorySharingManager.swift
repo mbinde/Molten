@@ -56,9 +56,15 @@ class InventorySharingManager {
         )
 
         // Use local context for cached inventory, with catalog repository from deps
+        // Note: CoreDataSharedInventoryRepository requires SQLiteGlassItemRepository specifically
+        // for efficient shared inventory lookups. This cast is safe because AppDependencies
+        // always creates SQLiteGlassItemRepository for glassItemRepository.
+        guard let sqliteRepo = deps.glassItemRepository as? SQLiteGlassItemRepository else {
+            fatalError("InventorySharingManager requires SQLiteGlassItemRepository, but got \(type(of: deps.glassItemRepository))")
+        }
         let sharedInventoryRepository = CoreDataSharedInventoryRepository(
             context: deps.persistenceController.localContext ?? deps.persistenceController.container.viewContext,
-            catalogRepository: deps.glassItemRepository as! SQLiteGlassItemRepository
+            catalogRepository: sqliteRepo
         )
 
         self.init(

@@ -18,11 +18,20 @@ class BackupAPIClient: NSObject {
     private let baseURL: URL
     private let attestationManager: AttestationManagerProtocol
 
+    /// Default base URL for production API
+    /// Using static let ensures URL parsing happens once at startup, not at runtime
+    private static let defaultBaseURL: URL = {
+        guard let url = URL(string: "https://www.moltenglass.app") else {
+            fatalError("Invalid BackupAPIClient base URL configuration")
+        }
+        return url
+    }()
+
     // MARK: - Initialization
 
     init(
         session: URLSessionProtocol = URLSession.shared,
-        baseURL: URL = URL(string: "https://www.moltenglass.app")!,
+        baseURL: URL = BackupAPIClient.defaultBaseURL,
         attestationManager: AttestationManagerProtocol = AttestationManager()
     ) {
         self.session = session

@@ -381,6 +381,20 @@ struct InventoryView: View, CachedDataDeletion {
                     )
                 )
 
+                // Usage banner (only show for free tier)
+                if entitlementService.currentTier == .free {
+                    UsageBanner(
+                        featureName: "unique inventory items",
+                        currentCount: inventoryItemCount,
+                        limit: entitlementService.getInventoryLimit(),
+                        onUpgradeTap: {
+                            showingUpgradePrompt = true
+                        }
+                    )
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                }
+
                 // Main content
                 Group {
                     if isEmpty {

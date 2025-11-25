@@ -494,13 +494,17 @@ private class MockServiceURLSession: URLSessionProtocol {
     func data(for request: URLRequest) async throws -> (Data, URLResponse) {
         return (Data(), HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
     }
+
+    func download(for request: URLRequest, delegate: (any URLSessionTaskDelegate)?) async throws -> (URL, URLResponse) {
+        throw URLError(.unsupportedURL) // Not used in backup tests
+    }
 }
 
 private class MockServiceAttestationManager: AttestationManager {
     override var isSupported: Bool { false }
 }
 
-class MockInventoryRepository: InventoryRepository {
+final class MockInventoryRepository: InventoryRepository, @unchecked Sendable {
     var inventoryRecords: [InventoryModel] = []
 
     func fetchInventory(matching predicate: NSPredicate?) async throws -> [InventoryModel] {

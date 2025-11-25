@@ -536,6 +536,10 @@ class MockBackupURLSession: URLSessionProtocol {
 
         return (nextData ?? Data(), response)
     }
+
+    func download(for request: URLRequest, delegate: (any URLSessionTaskDelegate)?) async throws -> (URL, URLResponse) {
+        throw URLError(.unsupportedURL) // Not used in backup tests
+    }
 }
 
 class MockBackupAttestationManager: AttestationManager {

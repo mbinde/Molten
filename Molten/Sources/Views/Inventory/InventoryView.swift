@@ -381,22 +381,6 @@ struct InventoryView: View, CachedDataDeletion {
                     )
                 )
 
-                // Usage banner (only show for free tier)
-                if entitlementService.tier == .free {
-                    UsageBanner(
-                        featureName: "inventory items",
-                        currentCount: inventoryItemCount,
-                        limit: entitlementService.getInventoryLimit(),
-                        filteredCount: filteredItems.count,
-                        hasSettingsFilters: hasSettingsFiltersActive,
-                        onUpgradeTap: {
-                            showingUpgradePrompt = true
-                        }
-                    )
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                }
-
                 // Main content
                 Group {
                     if isEmpty {

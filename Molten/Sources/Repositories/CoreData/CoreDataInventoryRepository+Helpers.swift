@@ -44,10 +44,14 @@ extension CoreDataInventoryRepository {
         let date_added = coreDataItem.value(forKey: "date_added") as? Date ?? Date()
         let date_modified = coreDataItem.value(forKey: "date_modified") as? Date ?? Date()
 
-        // Optional new fields - subtype, subsubtype, dimensions, location
+        // Optional new fields - subtype, subsubtype, dimensions, location, containerCount
         let subtype = coreDataItem.value(forKey: "subtype") as? String
         let subsubtype = coreDataItem.value(forKey: "subsubtype") as? String
         let location = coreDataItem.value(forKey: "location") as? String
+        let containerCount = (coreDataItem.value(forKey: "container_count") as? NSNumber)?.doubleValue
+
+        // Future-proofing fields
+        let workspace_id = coreDataItem.value(forKey: "workspace_id") as? String ?? "default"
 
         // Deserialize dimensions from JSON string stored in dimensions_x
         var dimensions: [String: Double]? = nil
@@ -65,9 +69,11 @@ extension CoreDataInventoryRepository {
             subsubtype: subsubtype,
             dimensions: dimensions,
             quantity: quantityNumber.doubleValue,
+            containerCount: containerCount,
             location: location,
             date_added: date_added,
-            date_modified: date_modified
+            date_modified: date_modified,
+            workspace_id: workspace_id
         )
     }
 
@@ -89,9 +95,20 @@ extension CoreDataInventoryRepository {
         }
 
         coreDataItem.setValue(NSNumber(value: inventory.quantity), forKey: "quantity")
+
+        // Container count (for weight-based types like frit/powder/enamel)
+        if let containerCount = inventory.containerCount {
+            coreDataItem.setValue(NSNumber(value: containerCount), forKey: "container_count")
+        } else {
+            coreDataItem.setValue(nil, forKey: "container_count")
+        }
+
         coreDataItem.setValue(inventory.location, forKey: "location")
         coreDataItem.setValue(inventory.date_added, forKey: "date_added")
         coreDataItem.setValue(inventory.date_modified, forKey: "date_modified")
+
+        // Future-proofing fields
+        coreDataItem.setValue(inventory.workspace_id, forKey: "workspace_id")
     }
 }
 

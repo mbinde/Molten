@@ -37,7 +37,7 @@ struct CatalogEmptyState: View {
                 .accessibilityHidden(true)
 
             Text("No catalog items available")
-                .font(DesignSystem.Typography.subSectionHeader)
+                .font(DesignSystem.Typography.subsectionTitle)
                 .fontWeight(DesignSystem.FontWeight.semibold)
                 .foregroundColor(DesignSystem.Colors.textPrimary)
         }

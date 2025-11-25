@@ -17,50 +17,50 @@ struct InventoryDetailTypeRow: View {
     var body: some View {
         Button(action: onTap) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                     Text(type.capitalized)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
+                        .font(DesignSystem.Typography.formLabel)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
 
                     // Show subtypes if present
                     if !subtypesSummary.isEmpty {
                         Text(subtypesSummary)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
 
                     // Show dimensions summary if present
                     if !dimensionsSummary.isEmpty {
                         Text(dimensionsSummary)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
 
                     Text("\(inventoryRecords.count) record\(inventoryRecords.count == 1 ? "" : "s")")
-                        .font(.caption2)
-                        .foregroundColor(.secondary.opacity(0.8))
+                        .font(DesignSystem.Typography.listItemCaptionSmall)
+                        .foregroundColor(DesignSystem.Colors.textTertiary)
                 }
 
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: 4) {
+                VStack(alignment: .trailing, spacing: DesignSystem.Spacing.xs) {
                     Text(formatQuantity(quantity))
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.accentColor)
+                        .font(DesignSystem.Typography.prominentNumberSmall)
+                        .fontWeight(DesignSystem.FontWeight.semibold)
+                        .foregroundColor(DesignSystem.Colors.moltenTeal)
                     Text("units")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .font(DesignSystem.Typography.listItemCaptionSmall)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
 
                 Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundColor(Color.secondary.opacity(0.6))
+                    .font(DesignSystem.Typography.listItemCaption)
+                    .foregroundColor(DesignSystem.Colors.textTertiary)
             }
             .padding()
-            .background(Color.gray.opacity(0.05))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .background(DesignSystem.Colors.backgroundTertiary)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
         .buttonStyle(.plain)
     }

@@ -11,8 +11,8 @@ import Observation
 
 /// Product identifiers for subscriptions
 enum SubscriptionProduct: String, CaseIterable {
-    case monthly = "com.moltenglass.premium.monthly"
-    case annual = "com.moltenglass.premium.annual"
+    case monthly = "monthly499"
+    case annual = "annual3999"  // TODO: Create this in App Store Connect
 }
 
 /// Manager for handling StoreKit 2 subscriptions

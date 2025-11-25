@@ -129,13 +129,20 @@ struct AddInventoryFormView: View {
                     .accessibilityIdentifier("inventory.add.quantityField")
                     .accessibilityLabel("Quantity")
 
-                // Unit label or type name
-                Text(quantityUnitDisplay)
-                    .foregroundColor(.secondary)
-                    .font(.subheadline)
-                    .fixedSize()
+                // Weight unit picker (g/oz) - right after quantity field for weight mode
+                if viewModel.isWeightBasedType && viewModel.selectedContainerInputMode == .weight {
+                    Picker("", selection: $viewModel.selectedWeightUnit) {
+                        ForEach(WeightUnit.allCases) { unit in
+                            Text(unit.symbol).tag(unit)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 80)
+                    .accessibilityIdentifier("inventory.add.weightUnitPicker")
+                    .accessibilityLabel("Weight Unit")
+                }
 
-                // Type picker (rod/frit/etc)
+                // Type picker (rod/frit/etc) - this IS the label, no separate unit text needed
                 Picker("", selection: $viewModel.selectedType) {
                     ForEach(visibleInventoryTypes, id: \.self) { type in
                         Text(terminologySettings.displayName(for: type)).tag(type)
@@ -181,19 +188,6 @@ struct AddInventoryFormView: View {
                 }
 
                 Spacer(minLength: 0)
-
-                // Weight unit picker (if type uses weight and in weight mode) - on the far right
-                if viewModel.isWeightBasedType && viewModel.selectedContainerInputMode == .weight {
-                    Picker("", selection: $viewModel.selectedWeightUnit) {
-                        ForEach(WeightUnit.allCases) { unit in
-                            Text(unit.symbol).tag(unit)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .frame(width: 80)
-                    .accessibilityIdentifier("inventory.add.weightUnitPicker")
-                    .accessibilityLabel("Weight Unit")
-                }
             }
 
             // Second row: Jars/Weight toggle (only for weight-based types)
@@ -215,19 +209,6 @@ struct AddInventoryFormView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    /// Display text for the quantity unit (e.g., "rods", "jars", "g")
-    private var quantityUnitDisplay: String {
-        if viewModel.isWeightBasedType {
-            if viewModel.selectedContainerInputMode == .jars {
-                return "jars"
-            } else {
-                return ""  // Weight unit is shown in separate picker
-            }
-        } else {
-            return viewModel.quantityUnitLabel
-        }
     }
 
     /// Shows the value entered in the other mode (e.g., if in Jars mode, shows weight if entered)

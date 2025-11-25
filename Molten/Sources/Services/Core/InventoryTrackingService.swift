@@ -247,7 +247,9 @@ actor InventoryTrackingService {
         }
 
         // 2. Validate input parameters
-        guard quantity > 0 else {
+        // Allow quantity=0 if containerCount is provided (for jar-only tracking)
+        let hasContainerCount = containerCount != nil && containerCount! > 0
+        guard quantity > 0 || hasContainerCount else {
             throw InventoryTrackingServiceError.invalidOperation("Quantity must be positive (got \(quantity))")
         }
 

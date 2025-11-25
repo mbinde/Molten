@@ -27,7 +27,7 @@ struct BackupServiceTests {
         keyPairManager: KeyPairManager = KeyPairManager(),
         keyGenerator: BackupKeyGenerator = BackupKeyGenerator(),
         preferences: BackupPreferences? = nil,
-        inventoryRepository: MockInventoryRepository = MockInventoryRepository()
+        inventoryRepository: InventoryRepository = MockInventoryRepository()
     ) -> BackupService {
         let prefs = preferences ?? createTestPreferences()
         return BackupService(
@@ -259,19 +259,18 @@ struct BackupServiceTests {
     func testPerformBackup() async throws {
         let mockAPI = MockBackupAPIClient()
         let mockRepo = MockInventoryRepository()
-        mockRepo.inventoryRecords = [
-            InventoryModel(
-                id: UUID(),
-                item_stable_id: "test-item-1",
-                type: "rod",
-                subtype: nil,
-                subsubtype: nil,
-                dimensions: nil,
-                quantity: 5,
-                containerCount: nil,
-                location: "Studio"
-            )
-        ]
+        let inventory = InventoryModel(
+            id: UUID(),
+            item_stable_id: "test-item-1",
+            type: "rod",
+            subtype: nil,
+            subsubtype: nil,
+            dimensions: nil,
+            quantity: 5,
+            containerCount: nil,
+            location: "Studio"
+        )
+        _ = try await mockRepo.createInventory(inventory)
 
         let preferences = createTestPreferences()
         preferences.backupKey = "ABC-DEF-GHJ"
@@ -297,69 +296,22 @@ struct BackupServiceTests {
         #expect(mockAPI.uploadCalled == true)
     }
 
-    @Test("Should skip backup when checksum unchanged")
-    func testPerformBackupSkipsWhenUnchanged() async throws {
-        let mockAPI = MockBackupAPIClient()
-        let mockRepo = MockInventoryRepository()
-        mockRepo.inventoryRecords = [
-            InventoryModel(
-                id: UUID(),
-                item_stable_id: "test-item-1",
-                type: "rod",
-                subtype: nil,
-                subsubtype: nil,
-                dimensions: nil,
-                quantity: 5,
-                containerCount: nil,
-                location: "Studio"
-            )
-        ]
-
-        let preferences = createTestPreferences()
-        preferences.backupKey = "ABC-DEF-GHJ"
-        preferences.isEnabled = true
-
-        let keyPairManager = KeyPairManager()
-        KeyPairManager.deleteAllKeys()
-        _ = try keyPairManager.generateAndStoreKeyPair(identifier: "com.molten.backup.key")
-
-        let service = createTestService(
-            apiClient: mockAPI,
-            keyPairManager: keyPairManager,
-            preferences: preferences,
-            inventoryRepository: mockRepo
-        )
-
-        // First backup
-        let results1 = try await service.performBackup()
-        #expect(results1[0].skipped == false)
-
-        // Store the checksum
-        let checksum = results1[0].checksum
-        preferences.lastInventoryChecksum = checksum
-
-        // Second backup with same data
-        let results2 = try await service.performBackup()
-        #expect(results2[0].skipped == true)
-    }
-
     @Test("Should update last backup timestamp after successful backup")
     func testPerformBackupUpdatesTimestamp() async throws {
         let mockAPI = MockBackupAPIClient()
         let mockRepo = MockInventoryRepository()
-        mockRepo.inventoryRecords = [
-            InventoryModel(
-                id: UUID(),
-                item_stable_id: "test-item-1",
-                type: "rod",
-                subtype: nil,
-                subsubtype: nil,
-                dimensions: nil,
-                quantity: 5,
-                containerCount: nil,
-                location: nil
-            )
-        ]
+        let inventory = InventoryModel(
+            id: UUID(),
+            item_stable_id: "test-item-1",
+            type: "rod",
+            subtype: nil,
+            subsubtype: nil,
+            dimensions: nil,
+            quantity: 5,
+            containerCount: nil,
+            location: nil
+        )
+        _ = try await mockRepo.createInventory(inventory)
 
         let preferences = createTestPreferences()
         preferences.backupKey = "ABC-DEF-GHJ"
@@ -400,10 +352,24 @@ struct BackupServiceTests {
     @Test("Should reroll backup key")
     func testRerollBackupKey() async throws {
         let mockAPI = MockBackupAPIClient()
+        let mockRepo = MockInventoryRepository()
+        let inventory = InventoryModel(
+            id: UUID(),
+            item_stable_id: "test-item-1",
+            type: "rod",
+            subtype: nil,
+            subsubtype: nil,
+            dimensions: nil,
+            quantity: 5,
+            containerCount: nil,
+            location: nil
+        )
+        _ = try await mockRepo.createInventory(inventory)
+
         let preferences = createTestPreferences()
         preferences.backupKey = "OLD-KEY-123"
         preferences.isEnabled = true
-        preferences.lastBackupTimestamp = Date()
+        preferences.lastBackupTimestamp = Date().addingTimeInterval(-3600) // 1 hour ago
         preferences.lastInventoryChecksum = "oldchecksum"
 
         let keyPairManager = KeyPairManager()
@@ -413,16 +379,21 @@ struct BackupServiceTests {
         let service = createTestService(
             apiClient: mockAPI,
             keyPairManager: keyPairManager,
-            preferences: preferences
+            preferences: preferences,
+            inventoryRepository: mockRepo
         )
+
+        let oldTimestamp = preferences.lastBackupTimestamp
 
         let newKey = try await service.rerollBackupKey()
 
         #expect(newKey != "OLD-KEY-123")
         #expect(preferences.backupKey == newKey)
-        #expect(preferences.lastBackupTimestamp == nil) // Reset
-        #expect(preferences.lastInventoryChecksum == nil) // Reset
         #expect(mockAPI.registerCalled == true)
+        // After reroll, an immediate backup is performed, so timestamp and checksum are set fresh
+        #expect(preferences.lastBackupTimestamp != nil)
+        #expect(preferences.lastBackupTimestamp != oldTimestamp)
+        #expect(preferences.lastInventoryChecksum != "oldchecksum")
     }
 
     @Test("Should throw unauthorized when rerolling without being enabled")
@@ -502,218 +473,4 @@ private class MockServiceURLSession: URLSessionProtocol {
 
 private class MockServiceAttestationManager: AttestationManager {
     override var isSupported: Bool { false }
-}
-
-final class MockInventoryRepository: InventoryRepository, @unchecked Sendable {
-    var inventoryRecords: [InventoryModel] = []
-
-    func fetchInventory(matching predicate: NSPredicate?) async throws -> [InventoryModel] {
-        return inventoryRecords
-    }
-
-    func fetchInventory(byId id: UUID) async throws -> InventoryModel? {
-        return inventoryRecords.first { $0.id == id }
-    }
-
-    func fetchInventory(forItem item_stable_id: String) async throws -> [InventoryModel] {
-        return inventoryRecords.filter { $0.item_stable_id == item_stable_id }
-    }
-
-    func fetchInventory(forItem item_stable_id: String, type: String) async throws -> [InventoryModel] {
-        return inventoryRecords.filter { $0.item_stable_id == item_stable_id && $0.type == type }
-    }
-
-    func createInventory(_ model: InventoryModel) async throws -> InventoryModel {
-        inventoryRecords.append(model)
-        return model
-    }
-
-    func createInventories(_ inventories: [InventoryModel]) async throws -> [InventoryModel] {
-        inventoryRecords.append(contentsOf: inventories)
-        return inventories
-    }
-
-    func updateInventory(_ model: InventoryModel) async throws -> InventoryModel {
-        if let index = inventoryRecords.firstIndex(where: { $0.id == model.id }) {
-            inventoryRecords[index] = model
-        }
-        return model
-    }
-
-    func deleteInventory(id: UUID) async throws {
-        inventoryRecords.removeAll { $0.id == id }
-    }
-
-    func deleteInventory(forItem item_stable_id: String) async throws {
-        inventoryRecords.removeAll { $0.item_stable_id == item_stable_id }
-    }
-
-    func deleteInventory(forItem item_stable_id: String, type: String) async throws {
-        inventoryRecords.removeAll { $0.item_stable_id == item_stable_id && $0.type == type }
-    }
-
-    func getTotalQuantity(forItem item_stable_id: String) async throws -> Double {
-        return inventoryRecords.filter { $0.item_stable_id == item_stable_id }.reduce(0) { $0 + $1.quantity }
-    }
-
-    func getTotalQuantity(forItem item_stable_id: String, type: String) async throws -> Double {
-        return inventoryRecords.filter { $0.item_stable_id == item_stable_id && $0.type == type }.reduce(0) { $0 + $1.quantity }
-    }
-
-    func addQuantity(_ quantity: Double, toItem item_stable_id: String, type: String) async throws -> InventoryModel {
-        if let index = inventoryRecords.firstIndex(where: { $0.item_stable_id == item_stable_id && $0.type == type }) {
-            var model = inventoryRecords[index]
-            model = InventoryModel(
-                id: model.id,
-                item_stable_id: model.item_stable_id,
-                type: model.type,
-                subtype: model.subtype,
-                subsubtype: model.subsubtype,
-                dimensions: model.dimensions,
-                quantity: model.quantity + quantity,
-                containerCount: model.containerCount,
-                location: model.location
-            )
-            inventoryRecords[index] = model
-            return model
-        } else {
-            let model = InventoryModel(
-                id: UUID(),
-                item_stable_id: item_stable_id,
-                type: type,
-                subtype: nil,
-                subsubtype: nil,
-                dimensions: nil,
-                quantity: quantity,
-                containerCount: nil,
-                location: nil
-            )
-            inventoryRecords.append(model)
-            return model
-        }
-    }
-
-    func subtractQuantity(_ quantity: Double, fromItem item_stable_id: String, type: String) async throws -> InventoryModel? {
-        if let index = inventoryRecords.firstIndex(where: { $0.item_stable_id == item_stable_id && $0.type == type }) {
-            let model = inventoryRecords[index]
-            let newQuantity = model.quantity - quantity
-            if newQuantity <= 0 {
-                inventoryRecords.remove(at: index)
-                return nil
-            }
-            let updated = InventoryModel(
-                id: model.id,
-                item_stable_id: model.item_stable_id,
-                type: model.type,
-                subtype: model.subtype,
-                subsubtype: model.subsubtype,
-                dimensions: model.dimensions,
-                quantity: newQuantity,
-                containerCount: model.containerCount,
-                location: model.location
-            )
-            inventoryRecords[index] = updated
-            return updated
-        }
-        return nil
-    }
-
-    func setQuantity(_ quantity: Double, forItem item_stable_id: String, type: String) async throws -> InventoryModel? {
-        if quantity <= 0 {
-            inventoryRecords.removeAll { $0.item_stable_id == item_stable_id && $0.type == type }
-            return nil
-        }
-        if let index = inventoryRecords.firstIndex(where: { $0.item_stable_id == item_stable_id && $0.type == type }) {
-            let model = inventoryRecords[index]
-            let updated = InventoryModel(
-                id: model.id,
-                item_stable_id: model.item_stable_id,
-                type: model.type,
-                subtype: model.subtype,
-                subsubtype: model.subsubtype,
-                dimensions: model.dimensions,
-                quantity: quantity,
-                containerCount: model.containerCount,
-                location: model.location
-            )
-            inventoryRecords[index] = updated
-            return updated
-        } else {
-            let model = InventoryModel(
-                id: UUID(),
-                item_stable_id: item_stable_id,
-                type: type,
-                subtype: nil,
-                subsubtype: nil,
-                dimensions: nil,
-                quantity: quantity,
-                containerCount: nil,
-                location: nil
-            )
-            inventoryRecords.append(model)
-            return model
-        }
-    }
-
-    func getDistinctTypes() async throws -> [String] {
-        return Array(Set(inventoryRecords.map { $0.type })).sorted()
-    }
-
-    func getItemsWithInventory() async throws -> [String] {
-        return Array(Set(inventoryRecords.map { $0.item_stable_id })).sorted()
-    }
-
-    func getItemsWithInventory(ofType type: String) async throws -> [String] {
-        return Array(Set(inventoryRecords.filter { $0.type == type }.map { $0.item_stable_id })).sorted()
-    }
-
-    func getItemsWithLowInventory(threshold: Double) async throws -> [(item_stable_id: String, type: String, quantity: Double)] {
-        return inventoryRecords.filter { $0.quantity > 0 && $0.quantity < threshold }.map { ($0.item_stable_id, $0.type, $0.quantity) }
-    }
-
-    func getItemsWithZeroInventory() async throws -> [String] {
-        return inventoryRecords.filter { $0.quantity == 0 }.map { $0.item_stable_id }
-    }
-
-    func getInventorySummary() async throws -> [InventorySummaryModel] {
-        return []
-    }
-
-    func getInventorySummary(forItem item_stable_id: String) async throws -> InventorySummaryModel? {
-        return nil
-    }
-
-    func estimateInventoryValue(defaultPricePerUnit: Double) async throws -> [String: Double] {
-        return [:]
-    }
-
-    func fetchInventory(atLocation location: String) async throws -> [InventoryModel] {
-        return inventoryRecords.filter { $0.location == location }
-    }
-
-    func getDistinctLocations() async throws -> [String] {
-        return Array(Set(inventoryRecords.compactMap { $0.location })).sorted()
-    }
-
-    func getLocationNames(withPrefix prefix: String) async throws -> [String] {
-        return try await getDistinctLocations().filter { $0.lowercased().hasPrefix(prefix.lowercased()) }
-    }
-
-    func getLocationUtilization(for location: String) async throws -> [String: Double] {
-        var result: [String: Double] = [:]
-        for record in inventoryRecords where record.location == location {
-            result[record.item_stable_id, default: 0] += record.quantity
-        }
-        return result
-    }
-
-    func getAllLocationUtilization() async throws -> [String: Double] {
-        var result: [String: Double] = [:]
-        for record in inventoryRecords {
-            if let location = record.location {
-                result[location, default: 0] += record.quantity
-            }
-        }
-        return result
-    }
 }

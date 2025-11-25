@@ -266,13 +266,23 @@ struct DeepLinkedItemView: View {
     }
 
     private func removeOneFromInventory(item: CompleteInventoryItemModel, service: InventoryTrackingService) async throws {
-        // Find the first inventory record with quantity > 0
-        guard let inventory = item.inventory.first(where: { $0.quantity > 0 }) else {
+        // Find the first inventory record with stock (quantity OR containers)
+        guard let inventory = item.inventory.first(where: { $0.hasStock }) else {
             throw NSError(domain: "DeepLinkedItemView", code: 1, userInfo: [NSLocalizedDescriptionKey: "No inventory to remove"])
         }
 
-        // Decrement by 1
-        let newQuantity = max(0, inventory.quantity - 1)
+        // Decrement by 1 - for quantity if present, otherwise containers
+        let newQuantity: Double
+        let newContainerCount: Double?
+        if inventory.quantity > 0 {
+            newQuantity = max(0, inventory.quantity - 1)
+            newContainerCount = inventory.containerCount
+        } else {
+            // Jar-only tracking - decrement containers
+            newQuantity = 0
+            newContainerCount = max(0, (inventory.containerCount ?? 0) - 1)
+        }
+
         let updatedInventory = InventoryModel(
             id: inventory.id,
             item_stable_id: inventory.item_stable_id,
@@ -281,6 +291,7 @@ struct DeepLinkedItemView: View {
             subsubtype: inventory.subsubtype,
             dimensions: inventory.dimensions,
             quantity: newQuantity,
+            containerCount: newContainerCount,
             date_added: inventory.date_added,
             date_modified: Date()
         )

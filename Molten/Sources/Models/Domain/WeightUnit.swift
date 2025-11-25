@@ -1,5 +1,85 @@
 import Foundation
 
+// MARK: - Container Input Mode
+
+/// Input mode for weight-based inventory types (frit, powder, enamel)
+/// Controls whether the user primarily enters quantity by jars or by weight
+enum ContainerInputMode: String, CaseIterable, Identifiable {
+    case jars
+    case weight
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .jars: return "Jars"
+        case .weight: return "Weight"
+        }
+    }
+}
+
+/// Centralized access to the stored container input mode preference
+struct ContainerInputModePreference {
+    nonisolated static let storageKey = "defaultContainerInputMode"
+
+    // Private storage for dependency injection during testing - using a lock for thread safety
+    private nonisolated(unsafe) static var _userDefaults: UserDefaults? = nil
+    private nonisolated static let lock = NSLock()
+
+    private nonisolated static var userDefaults: UserDefaults {
+        lock.lock()
+        defer { lock.unlock() }
+
+        // If a custom UserDefaults has been set (for testing), use it
+        if let customDefaults = _userDefaults {
+            return customDefaults
+        }
+
+        // Use isolated UserDefaults during testing to prevent Core Data conflicts
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            let testSuiteName = "Test_ContainerInputModePreference_\(storageKey)"
+            return UserDefaults(suiteName: testSuiteName) ?? UserDefaults.standard
+        } else {
+            return UserDefaults.standard
+        }
+    }
+
+    /// Get the current container input mode preference (default: jars)
+    nonisolated static var current: ContainerInputMode {
+        let defaults = userDefaults
+        guard let raw = defaults.string(forKey: storageKey), !raw.isEmpty else {
+            // No preference set - default to jars (per user request)
+            return .jars
+        }
+
+        return ContainerInputMode(rawValue: raw) ?? .jars
+    }
+
+    /// Set the container input mode preference
+    nonisolated static func setCurrent(_ mode: ContainerInputMode) {
+        let defaults = userDefaults
+        defaults.set(mode.rawValue, forKey: storageKey)
+    }
+
+    // MARK: - Testing Support
+
+    /// Set a custom UserDefaults instance for testing
+    nonisolated static func setUserDefaults(_ userDefaults: UserDefaults) {
+        lock.lock()
+        defer { lock.unlock() }
+        _userDefaults = userDefaults
+    }
+
+    /// Reset to using the standard UserDefaults
+    nonisolated static func resetToStandard() {
+        lock.lock()
+        defer { lock.unlock() }
+        _userDefaults = nil
+    }
+}
+
+// MARK: - Weight Unit
+
 /// Units for weight measurements
 enum WeightUnit: String, CaseIterable, Identifiable {
     case ounces

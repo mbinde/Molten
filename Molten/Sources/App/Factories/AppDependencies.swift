@@ -253,6 +253,7 @@ class AppDependencies {
     private var _backgroundUpdateService: BackgroundUpdateService?
     private var _dataExportService: DataExportService?
     private var _inventorySharingManager: InventorySharingManager?
+    private var _backupService: BackupService?
 
     // MARK: - Initialization
 
@@ -467,6 +468,18 @@ class AppDependencies {
 
         _inventorySharingManager = manager
         return manager
+    }
+
+    /// Backup service (created lazily)
+    var backupService: BackupService {
+        if let service = _backupService {
+            return service
+        }
+        let service = BackupService(
+            inventoryRepository: inventoryRepository
+        )
+        _backupService = service
+        return service
     }
 }
 

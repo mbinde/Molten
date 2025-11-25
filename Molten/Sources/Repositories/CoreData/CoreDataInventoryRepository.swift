@@ -104,6 +104,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                 subsubtype: inventory.subsubtype,
                 dimensions: inventory.dimensions,
                 quantity: inventory.quantity,
+                containerCount: inventory.containerCount,
                 location: inventory.location,
                 date_added: inventory.date_added,
                 date_modified: inventory.date_modified
@@ -140,6 +141,7 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     subsubtype: inventory.subsubtype,
                     dimensions: inventory.dimensions,
                     quantity: inventory.quantity,
+                    containerCount: inventory.containerCount,
                     location: inventory.location,
                     date_added: inventory.date_added,
                     date_modified: inventory.date_modified

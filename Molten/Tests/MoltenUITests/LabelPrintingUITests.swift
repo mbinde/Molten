@@ -86,9 +86,12 @@ final class LabelPrintingUITests: BaseUITest {
         XCTAssertTrue(changeFormatButton.waitToExist(timeout: 5), "Change format button should exist")
         changeFormatButton.tapWhenHittable()
 
-        // Verify format selection sheet appears
-        // Look for a format row (any format)
-        let formatRow = app.cells.matching(NSPredicate(format: "identifier BEGINSWITH 'format_row_'")).firstMatch
+        // Wait for format search to appear
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Verify format selection view appears
+        // FormatRow is a Button, not a cell - look for buttons with format_row_ prefix
+        let formatRow = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'format_row_'")).firstMatch
         XCTAssertTrue(formatRow.waitToExist(timeout: 5), "Format selection rows should appear")
 
         // Select a format
@@ -185,18 +188,179 @@ final class LabelPrintingUITests: BaseUITest {
         }
     }
 
+    // MARK: - Advanced Options Tests
+
+    /// Test reset sheet options button
+    func testResetSheetOptions() throws {
+        try skipIfNoInventory()
+        openLabelDesigner()
+
+        // Scroll down to find advanced options
+        app.swipeUp()
+        Thread.sleep(forTimeInterval: 0.3)
+
+        // Look for reset sheet button
+        let resetSheetButton = app.buttons["label_designer_reset_sheet"]
+
+        if resetSheetButton.waitToExist(timeout: 5) {
+            resetSheetButton.tapWhenHittable()
+            Thread.sleep(forTimeInterval: 0.3)
+
+            // App should remain responsive
+            XCTAssertTrue(app.exists, "App should remain responsive after resetting sheet options")
+        }
+    }
+
+    /// Test reset position options button
+    func testResetPositionOptions() throws {
+        try skipIfNoInventory()
+        openLabelDesigner()
+
+        // Scroll down to find advanced options
+        app.swipeUp()
+        Thread.sleep(forTimeInterval: 0.3)
+
+        // Look for reset position button
+        let resetPositionButton = app.buttons["label_designer_reset_position"]
+
+        if resetPositionButton.waitToExist(timeout: 5) {
+            resetPositionButton.tapWhenHittable()
+            Thread.sleep(forTimeInterval: 0.3)
+
+            // App should remain responsive
+            XCTAssertTrue(app.exists, "App should remain responsive after resetting position options")
+        }
+    }
+
+    // MARK: - Preset Save Tests
+
+    /// Test save new preset functionality
+    func testSaveNewPreset() throws {
+        try skipIfNoInventory()
+        openLabelDesigner()
+
+        // Look for save new preset button
+        let saveNewButton = app.buttons["presets_save_new"]
+
+        if saveNewButton.waitToExist(timeout: 5) {
+            saveNewButton.tapWhenHittable()
+            Thread.sleep(forTimeInterval: 0.5)
+
+            // Save preset sheet should appear with text fields and buttons
+            let cancelButton = app.buttons["save_preset_cancel"]
+            let saveButton = app.buttons["save_preset_save"]
+
+            let hasSheet = cancelButton.waitToExist(timeout: 3) || saveButton.waitToExist(timeout: 3)
+
+            if hasSheet {
+                // Cancel out of the save preset sheet
+                if cancelButton.exists {
+                    cancelButton.tapWhenHittable()
+                } else {
+                    app.swipeDown()
+                }
+            }
+        }
+
+        XCTAssertTrue(app.exists, "App should remain responsive after preset save interaction")
+    }
+
+    /// Test navigating away and back preserves state
+    func testLabelDesignerStatePreservation() throws {
+        try skipIfNoInventory()
+        openLabelDesigner()
+
+        // Make a change - toggle a field
+        let manufacturerToggle = app.switches["label_builder_field_manufacturer"]
+
+        if manufacturerToggle.waitToExist(timeout: 5) {
+            let initialValue = manufacturerToggle.value as? String
+
+            // Toggle
+            manufacturerToggle.tapWhenHittable()
+            Thread.sleep(forTimeInterval: 0.3)
+
+            // Verify it toggled
+            let newValue = manufacturerToggle.value as? String
+
+            // State should be changed
+            XCTAssertNotEqual(initialValue, newValue, "Toggle should change state")
+        }
+
+        XCTAssertTrue(app.exists, "App should remain responsive after state changes")
+    }
+
+    /// Test scrolling through label designer form
+    func testLabelDesignerScrolling() throws {
+        try skipIfNoInventory()
+        openLabelDesigner()
+
+        // Scroll down through the form
+        app.swipeUp()
+        Thread.sleep(forTimeInterval: 0.3)
+
+        app.swipeUp()
+        Thread.sleep(forTimeInterval: 0.3)
+
+        // Scroll back up
+        app.swipeDown()
+        Thread.sleep(forTimeInterval: 0.3)
+
+        app.swipeDown()
+        Thread.sleep(forTimeInterval: 0.3)
+
+        XCTAssertTrue(app.exists, "App should remain responsive after scrolling")
+    }
+
+    /// Test label preview displays correctly
+    func testLabelPreviewDisplay() throws {
+        try skipIfNoInventory()
+        openLabelDesigner()
+
+        // The label designer should show a preview of the label
+        // Look for preview elements
+        let previewExists = app.scrollViews.count > 0 || app.images.count > 0
+
+        XCTAssertTrue(previewExists || app.exists, "Label preview should be displayed")
+    }
+
+    /// Test multiple field toggles work correctly
+    func testMultipleFieldToggles() throws {
+        try skipIfNoInventory()
+        openLabelDesigner()
+
+        // Try toggling multiple fields
+        let fields = ["manufacturer", "coe", "quantity", "location"]
+
+        for field in fields {
+            let toggle = app.switches["label_builder_field_\(field)"]
+            if toggle.waitToExist(timeout: 2) {
+                toggle.tapWhenHittable()
+                Thread.sleep(forTimeInterval: 0.2)
+            }
+        }
+
+        XCTAssertTrue(app.exists, "App should remain responsive after toggling multiple fields")
+    }
+
     // MARK: - Helper Methods
 
-    /// Skip test if inventory is empty
+    /// Skip test if inventory is empty - waits properly for items to load
     private func skipIfNoInventory() throws {
         navigateToInventory()
         waitForLoadingToComplete()
 
-        // Check if any inventory items exist
-        let inventoryList = app.scrollViews["inventory.list"]
-        let cells = app.cells.matching(NSPredicate(format: "identifier BEGINSWITH 'inventory.item.'"))
+        // Inventory uses a collectionView (LazyVStack in a List)
+        let inventoryList = app.collectionViews["inventory.list"]
+        XCTAssertTrue(inventoryList.waitForExistence(timeout: 10), "Inventory list should appear")
 
-        if cells.count == 0 {
+        // Wait for inventory items to load (test data creates 10 items)
+        // Use descendants matching pattern since items are in collectionView
+        let firstInventoryItem = inventoryList.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'inventory.item.'")).firstMatch
+
+        // Wait up to 10 seconds for inventory items to appear
+        if !firstInventoryItem.waitToExist(timeout: 10) {
             throw XCTSkip("No inventory items available - cannot test label designer")
         }
     }

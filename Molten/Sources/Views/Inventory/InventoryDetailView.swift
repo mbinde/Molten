@@ -262,6 +262,7 @@ struct InventoryDetailView: View {
                             Image(systemName: "ellipsis.circle")
                                 .accessibilityLabel("Actions")
                         }
+                        .accessibilityIdentifier("detail_actions_menu")
                     }
                 }
             }

@@ -254,12 +254,14 @@ struct SettingsView: View {
                     } label: {
                         Text("COE Filter")
                     }
-                    
+                    .accessibilityIdentifier("settings_coe_filter")
+
                     NavigationLink {
                         ManufacturerFilterView()
                     } label: {
                         Text("Manufacturer Filter")
                     }
+                    .accessibilityIdentifier("settings_manufacturer_filter")
                     Toggle("Apply these filters to Inventory and Shopping List", isOn: Binding(
                         get: { UserSettings.shared.applyFiltersToInventory },
                         set: { UserSettings.shared.applyFiltersToInventory = $0 }
@@ -274,18 +276,21 @@ struct SettingsView: View {
                     } label: {
                         Text("Author Information")
                     }
+                    .accessibilityIdentifier("settings_author_information")
 
                     NavigationLink {
                         TerminologySettingsView()
                     } label: {
                         Text("Glass Working Terminology")
                     }
+                    .accessibilityIdentifier("settings_terminology")
 
                     NavigationLink {
                         RatingSettingsView()
                     } label: {
                         Text("Manage Ratings")
                     }
+                    .accessibilityIdentifier("settings_manage_ratings")
 
                     HStack {
                         Text("Inventory Owner")
@@ -340,6 +345,7 @@ struct SettingsView: View {
                         } label: {
                             Text("Kiln Max Rates")
                         }
+                        .accessibilityIdentifier("settings_kiln_rates")
                     }
                 }
 
@@ -350,12 +356,14 @@ struct SettingsView: View {
                     } label: {
                         Text("Image Quality & Cache")
                     }
+                    .accessibilityIdentifier("settings_image_quality")
 
                     NavigationLink {
                         DataExportView()
                     } label: {
                         Text("Export Data")
                     }
+                    .accessibilityIdentifier("settings_export_data")
 
                     NavigationLink {
                         BackupSettingsView()
@@ -388,6 +396,7 @@ struct SettingsView: View {
                                 .cornerRadius(6)
                         }
                     }
+                    .accessibilityIdentifier("settings_manage_subscription")
                 }
                 .task {
                     // Load subscription status when settings view appears
@@ -401,12 +410,14 @@ struct SettingsView: View {
                     } label: {
                         Text("Debug Settings")
                     }
+                    .accessibilityIdentifier("settings_debug")
 
                     NavigationLink {
                         SentryTestView()
                     } label: {
                         Text("Test Sentry Logging")
                     }
+                    .accessibilityIdentifier("settings_sentry_test")
 
                     // Subscription tier override for testing
                     Toggle(isOn: Binding(
@@ -447,6 +458,7 @@ struct SettingsView: View {
                     } label: {
                         Text("About")
                     }
+                    .accessibilityIdentifier("settings_about")
                 }
             }
             .navigationTitle("Settings")

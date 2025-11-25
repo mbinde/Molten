@@ -10,6 +10,7 @@ import Foundation
 import SwiftUI
 import Combine
 import CoreData
+import OSLog
 
 /// Singleton cache for catalog data to improve performance
 /// Prevents repeated expensive Core Data queries when switching tabs
@@ -129,12 +130,25 @@ class CatalogDataCache: ObservableObject {
     private func performLoad(catalogService: CatalogService) async {
         isLoading = true
 
+        #if DEBUG
+        let log = Logger(subsystem: "com.motleywoods.molten", category: "uitest-debug")
+        log.warning("📦 [CatalogDataCache] performLoad starting...")
+        #endif
+
         do {
             let loadedItems = try await catalogService.getAllGlassItems()
+
+            #if DEBUG
+            let itemsWithInventory = loadedItems.filter { $0.totalQuantity > 0 }
+            log.warning("📦 [CatalogDataCache] Loaded \(loadedItems.count) items, \(itemsWithInventory.count) with inventory")
+            #endif
 
             items = loadedItems
             isLoaded = true
         } catch {
+            #if DEBUG
+            log.error("❌ [CatalogDataCache] performLoad failed: \(error.localizedDescription)")
+            #endif
             // Keep cache in "not loaded" state so it will retry
             items = []
             isLoaded = false

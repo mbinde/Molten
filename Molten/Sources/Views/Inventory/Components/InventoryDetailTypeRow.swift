@@ -45,11 +45,11 @@ struct InventoryDetailTypeRow: View {
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text(formatQuantity(quantity))
+                    Text(formattedTotalDisplay)
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(.accentColor)
-                    Text("units")
+                    Text(quantityUnitLabel)
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -112,5 +112,91 @@ struct InventoryDetailTypeRow: View {
         } else {
             return String(format: "%.1f", quantity)
         }
+    }
+
+    /// Check if this is a weight-based type
+    private var isWeightBasedType: Bool {
+        switch type.lowercased() {
+        case "frit", "powder", "enamel":
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// Total container count across all records
+    private var totalContainerCount: Double {
+        inventoryRecords.compactMap { $0.containerCount }.reduce(0, +)
+    }
+
+    /// Format the total display for weight-based types
+    private var formattedTotalDisplay: String {
+        if isWeightBasedType {
+            let hasJars = totalContainerCount > 0
+            let hasWeight = quantity > 0
+            let preferredUnit = WeightUnitPreference.current
+
+            if hasJars && hasWeight {
+                // Both jars and weight
+                let jarText = formatJarCount(totalContainerCount)
+                let weightText = formatWeight(quantity, unit: preferredUnit)
+
+                if ContainerInputModePreference.current == .jars {
+                    return "\(jarText) (~\(weightText))"
+                } else {
+                    return "\(weightText) (\(jarText))"
+                }
+            } else if hasJars {
+                return formatJarCount(totalContainerCount)
+            } else if hasWeight {
+                return formatWeight(quantity, unit: preferredUnit)
+            } else {
+                return "0"
+            }
+        } else {
+            return formatQuantity(quantity)
+        }
+    }
+
+    /// Unit label for the quantity
+    private var quantityUnitLabel: String {
+        if isWeightBasedType {
+            let hasJars = totalContainerCount > 0
+            let hasWeight = quantity > 0
+
+            if hasJars && !hasWeight {
+                return ""  // "jars" is in the number itself
+            } else if !hasJars && hasWeight {
+                return ""  // unit symbol is in the number
+            } else {
+                return ""  // Combined display handles its own labels
+            }
+        } else {
+            return "units"
+        }
+    }
+
+    /// Format jar count
+    private func formatJarCount(_ count: Double) -> String {
+        let countStr = count.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", count)
+            : String(format: "%.1f", count)
+        let label = count == 1 ? "jar" : "jars"
+        return "\(countStr) \(label)"
+    }
+
+    /// Format weight with unit
+    private func formatWeight(_ grams: Double, unit: WeightUnit) -> String {
+        let value: Double
+        if unit == .ounces {
+            value = WeightUnit.grams.convert(grams, to: .ounces)
+        } else {
+            value = grams
+        }
+
+        let valueStr = value.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", value)
+            : String(format: "%.1f", value)
+        return "\(valueStr)\(unit.symbol)"
     }
 }

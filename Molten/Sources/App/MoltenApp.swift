@@ -99,6 +99,9 @@ struct MoltenApp: App {
     @State private var showingBugReport = false
     #endif
 
+    // Scene phase for background backup
+    @Environment(\.scenePhase) private var scenePhase
+
     // Detect if we're running in test environment
     private var isRunningTests: Bool {
         return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
@@ -150,6 +153,12 @@ struct MoltenApp: App {
                 BugReportSheet()
             }
             #endif
+            .onChange(of: scenePhase) { oldPhase, newPhase in
+                if newPhase == .background {
+                    // Opportunistic backup when app goes to background
+                    performBackgroundBackup()
+                }
+            }
         }
     }
 
@@ -278,6 +287,9 @@ extension MoltenApp {
 
                 // Refresh stale friend shares (> 24 hours old)
                 await refreshStaleFriendShares()
+
+                // Perform automatic backup if enabled and due
+                await performBackupIfNeeded()
             }
     }
 
@@ -514,6 +526,90 @@ extension MoltenApp {
 
         let sharingManager = dependencies.inventorySharingManager
         await sharingManager.refreshMyShareIfStale()
+    }
+
+    /// Perform automatic backup if enabled and due (20+ hours since last backup, checksum differs)
+    @MainActor
+    private func performBackupIfNeeded() async {
+        // Skip if running tests
+        guard !isRunningTests && !isRunningUITests else {
+            return
+        }
+
+        // Small delay to let app finish loading
+        try? await Task.sleep(for: .seconds(4))
+
+        let backupService = dependencies.backupService
+
+        // Only backup if enabled and due
+        guard backupService.shouldBackupOnAppOpen() else {
+            return
+        }
+
+        do {
+            let results = try await backupService.backupOnAppOpenIfNeeded()
+            for result in results {
+                if result.skipped {
+                    print("📦 [Backup] \(result.type.rawValue) unchanged (checksum match)")
+                } else {
+                    print("📦 [Backup] \(result.type.rawValue) backed up successfully at \(result.timestamp ?? "unknown")")
+                }
+            }
+        } catch {
+            // Log error but don't disrupt user experience
+            print("⚠️ [Backup] Automatic backup failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Perform opportunistic backup when app goes to background
+    /// Uses UIApplication.beginBackgroundTask to get ~30 seconds to complete
+    @MainActor
+    private func performBackgroundBackup() {
+        // Skip if running tests
+        guard !isRunningTests && !isRunningUITests else {
+            return
+        }
+
+        // Skip if backups not enabled
+        guard dependencies.backupService.isSetUp else {
+            return
+        }
+
+        #if os(iOS)
+        // Request background time
+        var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
+        backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: "BackupTask") {
+            // Time expired - clean up
+            if backgroundTaskID != .invalid {
+                UIApplication.shared.endBackgroundTask(backgroundTaskID)
+                backgroundTaskID = .invalid
+            }
+        }
+
+        // Perform backup asynchronously
+        Task { @MainActor in
+            defer {
+                // Always end the background task when done
+                if backgroundTaskID != .invalid {
+                    UIApplication.shared.endBackgroundTask(backgroundTaskID)
+                    backgroundTaskID = .invalid
+                }
+            }
+
+            do {
+                let results = try await dependencies.backupService.backupOnBackground()
+                for result in results {
+                    if result.skipped {
+                        print("📦 [Background Backup] \(result.type.rawValue) unchanged")
+                    } else {
+                        print("📦 [Background Backup] \(result.type.rawValue) backed up at \(result.timestamp ?? "unknown")")
+                    }
+                }
+            } catch {
+                print("⚠️ [Background Backup] Failed: \(error.localizedDescription)")
+            }
+        }
+        #endif
     }
 
     /// Configure environment for UI testing

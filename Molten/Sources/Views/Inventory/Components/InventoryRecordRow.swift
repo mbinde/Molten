@@ -50,7 +50,7 @@ struct InventoryRecordRow: View {
 
             Spacer()
 
-            Text(formatQuantity(record.quantity))
+            Text(record.formattedQuantityDisplay())
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundColor(.accentColor)
@@ -75,14 +75,6 @@ struct InventoryRecordRow: View {
                     }
                     .accessibilityIdentifier("inventory_record_delete")
                 }
-        }
-    }
-
-    private func formatQuantity(_ quantity: Double) -> String {
-        if quantity.truncatingRemainder(dividingBy: 1) == 0 {
-            return String(format: "%.0f", quantity)
-        } else {
-            return String(format: "%.1f", quantity)
         }
     }
 }

@@ -28,11 +28,22 @@ struct InventoryStatusCard: View {
         self.onTapDetails = onTapDetails
     }
 
-    /// Group inventory by type, summing quantities
-    private var inventoryByType: [String: Double] {
-        var result: [String: Double] = [:]
+    /// Aggregated data for each inventory type
+    private struct TypeAggregate {
+        var quantity: Double = 0  // Weight in grams for weight-based, count for others
+        var containerCount: Double = 0  // Total jars for weight-based types
+    }
+
+    /// Group inventory by type, summing quantities and container counts
+    private var inventoryByType: [String: TypeAggregate] {
+        var result: [String: TypeAggregate] = [:]
         for record in inventory {
-            result[record.type, default: 0] += record.quantity
+            var aggregate = result[record.type, default: TypeAggregate()]
+            aggregate.quantity += record.quantity
+            if let containers = record.containerCount {
+                aggregate.containerCount += containers
+            }
+            result[record.type] = aggregate
         }
         return result
     }
@@ -47,7 +58,7 @@ struct InventoryStatusCard: View {
     }
 
     private var primaryType: String? {
-        inventoryByType.max(by: { $0.value < $1.value })?.key
+        inventoryByType.max(by: { $0.value.quantity < $1.value.quantity })?.key
     }
 
     var body: some View {
@@ -76,8 +87,8 @@ struct InventoryStatusCard: View {
                 // Inventory type cards
                 VStack(spacing: DesignSystem.Spacing.md) {
                     ForEach(Array(inventoryByType.keys.sorted()), id: \.self) { type in
-                        let quantity = inventoryByType[type] ?? 0
-                        inventoryTypeRow(type: type, quantity: quantity)
+                        let aggregate = inventoryByType[type] ?? TypeAggregate()
+                        inventoryTypeRow(type: type, aggregate: aggregate)
                     }
                 }
             }
@@ -109,7 +120,7 @@ struct InventoryStatusCard: View {
     // MARK: - Inventory Type Row
 
     @ViewBuilder
-    private func inventoryTypeRow(type: String, quantity: Double) -> some View {
+    private func inventoryTypeRow(type: String, aggregate: TypeAggregate) -> some View {
         let records = recordsForType(type)
 
         Button(action: {
@@ -153,7 +164,8 @@ struct InventoryStatusCard: View {
                 // Quantity with SF Rounded - use InventoryCountBadge for consistent formatting
                 InventoryCountBadge.forInventory(
                     type: type,
-                    quantity: quantity,
+                    quantity: aggregate.quantity,
+                    containerCount: aggregate.containerCount > 0 ? aggregate.containerCount : nil,
                     style: .compact
                 )
 
@@ -177,6 +189,7 @@ struct InventoryStatusCard: View {
     private func iconForType(_ type: String) -> String {
         switch type.lowercased() {
         case "rod", "rods": return "line.3.horizontal"
+        case "big-rod", "bar", "bars": return "equal"
         case "tube", "tubes": return "cylinder"
         case "sheet", "sheets": return "rectangle"
         case "frit": return "circle.grid.3x3"

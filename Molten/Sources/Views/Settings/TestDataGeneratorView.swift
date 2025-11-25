@@ -13,6 +13,8 @@ struct TestDataGeneratorView: View {
     @State private var isGenerating = false
     @State private var lastGeneratedMessage = ""
     @State private var showingSuccess = false
+    @State private var inventoryItemCount = 19
+    @State private var shoppingItemCount = 10
 
     private let inventoryTrackingService: InventoryTrackingService
     private let shoppingListService: ShoppingListService
@@ -50,31 +52,49 @@ struct TestDataGeneratorView: View {
             }
 
             Section {
+                HStack {
+                    Text("Items to add:")
+                    TextField("", value: $inventoryItemCount, format: .number)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 60)
+                    Stepper("", value: $inventoryItemCount, in: 1...1000)
+                        .labelsHidden()
+                }
                 Button {
-                    generate25InventoryItems()
+                    generateInventoryItems(count: inventoryItemCount)
                 } label: {
-                    Label("Add 25 Random Inventory Items", systemImage: "cube.box")
+                    Label("Add \(inventoryItemCount) Random Inventory Items", systemImage: "cube.box")
                 }
                 .disabled(isGenerating)
                 .accessibilityIdentifier("test_data_generate_inventory")
             } header: {
                 Text("Inventory Test Data")
             } footer: {
-                Text("Adds 25 random inventory records with varying quantities and types")
+                Text("Adds random inventory records with varying quantities and types")
             }
 
             Section {
+                HStack {
+                    Text("Items to add:")
+                    TextField("", value: $shoppingItemCount, format: .number)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 60)
+                    Stepper("", value: $shoppingItemCount, in: 1...1000)
+                        .labelsHidden()
+                }
                 Button {
-                    generate10ShoppingItems()
+                    generateShoppingItems(count: shoppingItemCount)
                 } label: {
-                    Label("Add 10 Random Shopping Items", systemImage: "cart")
+                    Label("Add \(shoppingItemCount) Random Shopping Items", systemImage: "cart")
                 }
                 .disabled(isGenerating)
                 .accessibilityIdentifier("test_data_generate_shopping")
             } header: {
                 Text("Shopping List Test Data")
             } footer: {
-                Text("Adds 10 random items to your shopping list with various stores")
+                Text("Adds random items to your shopping list with various stores")
             }
 
             if !lastGeneratedMessage.isEmpty {
@@ -104,7 +124,7 @@ struct TestDataGeneratorView: View {
 
     // MARK: - Data Generation
 
-    private func generate25InventoryItems() {
+    private func generateInventoryItems(count: Int) {
         guard !isGenerating else { return }
 
         isGenerating = true
@@ -129,12 +149,12 @@ struct TestDataGeneratorView: View {
                     throw TestDataError.noCatalogItems
                 }
 
-                // Generate 25 random inventory items
+                // Generate random inventory items
                 var createdCount = 0
                 let types = ["rod", "tube", "frit", "sheet", "stringer"]
                 let locations = ["Studio", "Storage Room", "Shelf A", "Drawer B", "Cabinet 1", ""]
 
-                for i in 0..<25 {
+                for i in 0..<count {
                     let itemStartTime = Date()
 
                     // Pick a random glass item
@@ -160,18 +180,21 @@ struct TestDataGeneratorView: View {
 
                     createdCount += 1
                     let itemDuration = Date().timeIntervalSince(itemStartTime)
-                    print("🔧 [TestData] Item \(i+1)/25: Created inventory for '\(randomItem.glassItem.name)' in \(String(format: "%.3f", itemDuration))s")
+                    print("🔧 [TestData] Item \(i+1)/\(count): Created inventory for '\(randomItem.glassItem.name)' in \(String(format: "%.3f", itemDuration))s")
                 }
 
                 let totalDuration = Date().timeIntervalSince(startTime)
                 print("🔧 [TestData] ✅ Completed: Created \(createdCount) items in \(String(format: "%.2f", totalDuration))s (avg: \(String(format: "%.3f", totalDuration / Double(createdCount)))s per item)")
+
+                // Reload the cache so data is ready when user navigates to Inventory
+                await CatalogDataCache.shared.reload(catalogService: catalogService)
 
                 await MainActor.run {
                     isGenerating = false
                     lastGeneratedMessage = "✅ Added \(createdCount) inventory items in \(String(format: "%.1f", totalDuration))s"
                     showingSuccess = true
 
-                    // Post notification to refresh InventoryView
+                    // Post notification to refresh InventoryView (if it's currently visible)
                     NotificationCenter.default.post(name: .inventoryItemAdded, object: nil)
                 }
 
@@ -187,7 +210,7 @@ struct TestDataGeneratorView: View {
         }
     }
 
-    private func generate10ShoppingItems() {
+    private func generateShoppingItems(count: Int) {
         guard !isGenerating else { return }
 
         isGenerating = true
@@ -205,12 +228,12 @@ struct TestDataGeneratorView: View {
                     throw TestDataError.noCatalogItems
                 }
 
-                // Generate 10 random shopping list items
+                // Generate random shopping list items
                 var createdCount = 0
                 let stores = ["Frantz", "Hot Glass Color", "Mountain Glass"]
                 let types = ["rod", "tube", "frit", "sheet"]
 
-                for _ in 0..<10 {
+                for _ in 0..<count {
                     // Pick a random glass item
                     guard let randomItem = glassItems.randomElement() else { continue }
 

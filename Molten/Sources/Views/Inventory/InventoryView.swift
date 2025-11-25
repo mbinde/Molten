@@ -334,7 +334,7 @@ struct InventoryView: View, CachedDataDeletion {
                 )
 
                 // Usage banner (only show for free tier)
-                if entitlementService.tier == .free {
+                if entitlementService.currentTier == .free {
                     UsageBanner(
                         featureName: "unique inventory items",
                         currentCount: inventoryItemCount,

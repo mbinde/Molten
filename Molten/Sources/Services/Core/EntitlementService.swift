@@ -8,6 +8,7 @@
 
 import Foundation
 import Observation
+import SwiftUI
 
 /// Service that manages subscription entitlements and limit enforcement
 @Observable
@@ -20,13 +21,32 @@ class EntitlementService {
     /// TODO: In production, this should be fetched from StoreKit/App Store
     private(set) var tier: SubscriptionTier
 
+    /// Debug override flag - observed property that triggers view updates
+    /// This is set by the settings view and causes currentTier to be re-evaluated
+    var debugRefreshTrigger: Int = 0
+
     /// Expose current tier for checking
     /// In debug/test builds, this can be overridden via DebugConfig
     var currentTier: SubscriptionTier {
-        if DebugConfig.debugOverrideSubscriptionTier {
-            return DebugConfig.debugSubscriptionTier
+        // Access the trigger to ensure this property is observed when it changes
+        _ = debugRefreshTrigger
+        // Read fresh from UserDefaults to get the most current debug settings
+        let overrideEnabled = UserDefaults.standard.bool(forKey: "debugOverrideSubscriptionTier")
+        let tierValue = UserDefaults.standard.integer(forKey: "debugSubscriptionTierValue")
+        print("🔍 [EntitlementService] currentTier check - overrideEnabled: \(overrideEnabled), tierValue: \(tierValue), baseTier: \(tier)")
+        if overrideEnabled {
+            let result: SubscriptionTier = tierValue == 1 ? .premium : .free
+            print("🔍 [EntitlementService] Using debug override: \(result)")
+            return result
         }
+        print("🔍 [EntitlementService] Using base tier: \(tier)")
         return tier
+    }
+
+    /// Force a refresh of the current tier (call after changing debug settings)
+    func refreshTier() {
+        // Increment trigger to cause views observing currentTier to re-evaluate
+        debugRefreshTrigger += 1
     }
 
     // MARK: - Initialization

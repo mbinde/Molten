@@ -9,7 +9,7 @@ import RevenueCat
 @MainActor
 public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, Sendable {
 
-    private let proEntitlementIdentifier = "Molten Glass Pro"
+    private let proEntitlementIdentifier = "pro"
 
     public init() {}
 

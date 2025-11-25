@@ -22,6 +22,14 @@ extension CompleteInventoryItemModel {
         inventory.reduce(0.0) { $0 + $1.quantity }
     }
 
+    /// Total container count across all inventory records (for jar-based tracking)
+    ///
+    /// Business rule: Sum of all container counts
+    /// Performance: O(n) where n = number of inventory records
+    nonisolated var totalContainerCount: Double {
+        inventory.reduce(0.0) { $0 + ($1.containerCount ?? 0) }
+    }
+
     // MARK: - Groupings
 
     /// Inventory grouped by type with total quantities

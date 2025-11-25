@@ -280,11 +280,19 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     /// Check if this inventory type uses weight units (frit, powder, enamel)
     nonisolated var isWeightBasedType: Bool {
         switch type.lowercased() {
-        case "frit", "powder", "enamel":
+        case "frit", "powder", "enamel", "flakes":
             return true
         default:
             return false
         }
+    }
+
+    /// Check if this inventory record has any stock (quantity OR containers)
+    ///
+    /// Use this instead of `quantity > 0` to properly handle jar-only tracking
+    /// for weight-based items like frit, powder, and coatings.
+    nonisolated var hasStock: Bool {
+        quantity > 0 || (containerCount ?? 0) > 0
     }
 
     /// Format the quantity for display, considering both weight and container count

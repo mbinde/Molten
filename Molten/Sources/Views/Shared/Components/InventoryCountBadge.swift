@@ -113,15 +113,38 @@ struct InventoryCountBadge: View {
 extension InventoryCountBadge {
     /// Create badge from inventory type and quantity
     /// Automatically determines the display unit based on type
+    /// For weight-based types, will show jars if containerCount is provided and quantity is 0
+    /// - Parameters:
+    ///   - type: The inventory type (e.g., "frit", "rod")
+    ///   - quantity: The quantity (weight in grams for weight-based, count for others)
+    ///   - containerCount: Optional number of jars/containers
+    ///   - style: Badge display style
+    ///   - includeTypeForJars: If true, appends type name for jar-only display (e.g., "3 jars frit")
     static func forInventory(
         type: String,
         quantity: Double,
-        style: Style = .compact
+        containerCount: Double? = nil,
+        style: Style = .compact,
+        includeTypeForJars: Bool = true
     ) -> InventoryCountBadge {
+        let isWeightBased = ["frit", "powder", "enamel", "flakes"].contains(type.lowercased())
+
+        // For weight-based types with jars but no weight, show jars
+        if isWeightBased, let jars = containerCount, jars > 0, quantity <= 0 {
+            let jarLabel = jars == 1 ? "jar" : "jars"
+            // Append type name for glass items (e.g., "3 jars frit")
+            let unit = includeTypeForJars ? "\(jarLabel) \(type.lowercased())" : jarLabel
+            return InventoryCountBadge(
+                quantity: jars,
+                unit: unit,
+                style: style
+            )
+        }
+
+        // For weight-based types with both jars and weight, show weight with jars in parens
+        // (or just weight if that's all we have)
         let unit = displayUnit(for: type)
-        // For weight-based types, convert from grams to user preference
         let displayQuantity: Double
-        let isWeightBased = ["frit", "powder", "enamel"].contains(type.lowercased())
         if isWeightBased {
             displayQuantity = WeightUnit.grams.convert(quantity, to: WeightUnitPreference.current)
         } else {
@@ -157,7 +180,7 @@ extension InventoryCountBadge {
     /// Get display unit for a type - uses GlassTerminologySettings for consistency
     private static func displayUnit(for type: String) -> String {
         // Weight-based types use weight unit preference
-        let isWeightBased = ["frit", "powder", "enamel"].contains(type.lowercased())
+        let isWeightBased = ["frit", "powder", "enamel", "flakes"].contains(type.lowercased())
         if isWeightBased {
             return WeightUnitPreference.current.symbol
         }

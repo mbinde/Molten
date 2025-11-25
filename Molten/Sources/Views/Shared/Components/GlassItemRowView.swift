@@ -255,50 +255,48 @@ extension GlassItemRowView {
             inventoryToShow = item.inventory
         }
 
-        // Group inventory by type and sum quantities
-        var quantityByType: [String: Double] = [:]
+        // Group inventory by type, summing quantities and container counts
+        struct TypeAggregate {
+            var quantity: Double = 0
+            var containerCount: Double = 0
+        }
+        var aggregateByType: [String: TypeAggregate] = [:]
         for inv in inventoryToShow {
-            quantityByType[inv.type, default: 0.0] += inv.quantity
+            var aggregate = aggregateByType[inv.type, default: TypeAggregate()]
+            aggregate.quantity += inv.quantity
+            if let containers = inv.containerCount {
+                aggregate.containerCount += containers
+            }
+            aggregateByType[inv.type] = aggregate
         }
 
-        // Determine primary type (the one with most quantity) for the badge
-        let primaryType = quantityByType.max(by: { $0.value < $1.value })?.key
-
-        // Format the trailing badge quantity and unit based on primary type
-        let (badgeQuantity, badgeUnit) = Self.formatQuantityAndUnit(
-            quantity: quantityByType[primaryType ?? ""] ?? 0,
-            type: primaryType ?? ""
-        )
-
-        // Format type breakdown as comma-separated list for the inline badge
-        // "5 Rods, 3 Tubes, 4.3 oz Frit"
-        let typesList = quantityByType
-            .sorted { $0.key < $1.key }  // Sort alphabetically
-            .map { type, quantity -> String in
-                return Self.formatQuantityForDisplay(quantity: quantity, type: type)
+        // Trailing accessory: vertical stack of up to 3 inventory types
+        let sortedTypes = aggregateByType
+            .sorted { a, b in
+                // Sort by quantity (or container count if no quantity), descending
+                let aValue = a.value.quantity > 0 ? a.value.quantity : a.value.containerCount
+                let bValue = b.value.quantity > 0 ? b.value.quantity : b.value.containerCount
+                return aValue > bValue
             }
-            .joined(separator: ", ")
+            .prefix(3)  // Show at most 3 types
 
-        // Trailing accessory: prominent inventory count badge (SF Rounded, color-coded)
         let trailingBadge = AnyView(
-            InventoryCountBadge(
-                quantity: badgeQuantity,
-                unit: badgeUnit,
-                style: .compact
-            )
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                ForEach(Array(sortedTypes), id: \.key) { type, aggregate in
+                    InventoryCountBadge.forInventory(
+                        type: type,
+                        quantity: aggregate.quantity,
+                        containerCount: aggregate.containerCount > 0 ? aggregate.containerCount : nil,
+                        style: .compact
+                    )
+                }
+            }
         )
-
-        // Badge content: type breakdown shown below subtitle (only if multiple types)
-        let badge: AnyView? = quantityByType.count > 1 ? AnyView(
-            Text(typesList)
-                .font(DesignSystem.Typography.listItemCaption)
-                .foregroundColor(DesignSystem.Colors.textSecondary)
-        ) : nil
 
         return GlassItemRowView(
             item: .init(from: item),
             trailingAccessory: trailingBadge,
-            badgeContent: badge,
+            badgeContent: nil,  // No longer need the inline breakdown text
             showFullCode: false
         )
     }
@@ -306,7 +304,7 @@ extension GlassItemRowView {
     /// Format quantity and unit for display, handling weight conversion for frit/powder/enamel
     /// - Returns: Tuple of (displayQuantity, unitString) e.g. (4.5, "oz") or (10, "rods")
     private static func formatQuantityAndUnit(quantity: Double, type: String) -> (Double, String) {
-        let isWeightBased = ["frit", "powder", "enamel"].contains(type.lowercased())
+        let isWeightBased = ["frit", "powder", "enamel", "flakes"].contains(type.lowercased())
 
         if isWeightBased {
             // Weight-based: convert from grams (storage) to user's preferred unit
@@ -323,16 +321,26 @@ extension GlassItemRowView {
     /// Format a quantity for display based on its type
     /// - Parameters:
     ///   - quantity: The raw quantity value (always stored in grams for weight-based types)
+    ///   - containerCount: Optional number of containers/jars for weight-based types
     ///   - type: The inventory type (e.g., "frit", "rod", "tube")
-    /// - Returns: Formatted string like "5 Rods", "4.3 oz Frit", "10 g Powder"
-    private static func formatQuantityForDisplay(quantity: Double, type: String) -> String {
+    /// - Returns: Formatted string like "5 Rods", "4.3 oz Frit", "3 jars Frit"
+    private static func formatQuantityForDisplay(quantity: Double, containerCount: Double = 0, type: String) -> String {
         let typeName = GlassTerminologySettings.shared.displayName(for: type)
 
         // Check if this is a weight-based type
-        let isWeightBased = ["frit", "powder", "enamel"].contains(type.lowercased())
+        let isWeightBased = ["frit", "powder", "enamel", "flakes"].contains(type.lowercased())
 
         if isWeightBased {
-            // Weight-based: convert from grams (storage) to user's preferred unit
+            // For weight-based types with jars but no weight, show jars
+            if containerCount > 0 && quantity <= 0 {
+                let jarLabel = containerCount == 1 ? "jar" : "jars"
+                let jarText = containerCount.truncatingRemainder(dividingBy: 1) == 0
+                    ? String(format: "%.0f", containerCount)
+                    : String(format: "%.1f", containerCount)
+                return "\(jarText) \(jarLabel) \(typeName)"
+            }
+
+            // Weight-based with weight: convert from grams (storage) to user's preferred unit
             let preferredUnit = WeightUnitPreference.current
             let convertedQuantity = WeightUnit.grams.convert(quantity, to: preferredUnit)
             let quantityText = String(format: "%.1f", convertedQuantity).replacingOccurrences(of: ".0", with: "")

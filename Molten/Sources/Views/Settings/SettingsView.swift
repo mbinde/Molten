@@ -345,6 +345,19 @@ struct SettingsView: View {
                     } label: {
                         Text("Export Data")
                     }
+
+                    NavigationLink {
+                        BackupSettingsView()
+                    } label: {
+                        HStack {
+                            Text("Automatic Backups")
+                            Spacer()
+                            if BackupPreferences().isEnabled {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                            }
+                        }
+                    }
                 }
 
                 // MARK: - Subscription

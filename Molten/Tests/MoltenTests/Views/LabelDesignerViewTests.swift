@@ -93,6 +93,14 @@ struct LabelDesignerViewTests {
         #expect(inventory.isWeightBasedType == true)
     }
 
+    @Test("Should identify flakes as weight-based type")
+    func testFlakesIsWeightBased() {
+        let item = createTestItem(type: "flakes", quantity: 30)
+        let inventory = item.inventory.first!
+
+        #expect(inventory.isWeightBasedType == true)
+    }
+
     @Test("Should identify rod as NOT weight-based type")
     func testRodIsNotWeightBased() {
         let item = createTestItem(type: "rod", quantity: 10)

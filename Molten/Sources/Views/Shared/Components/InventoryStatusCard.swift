@@ -11,19 +11,39 @@ import SwiftUI
 /// Prominent card showing inventory status with large SF Rounded count
 /// Used in detail views to highlight current stock levels
 struct InventoryStatusCard: View {
-    let inventoryByType: [String: Double]
-    let onTapType: ((String) -> Void)?
+    let inventory: [InventoryModel]
+    let onTapRecord: ((InventoryModel) -> Void)?
+    let onTapRecordsForType: (([InventoryModel], String) -> Void)?
+    let onTapDetails: (() -> Void)?
 
     init(
-        inventoryByType: [String: Double],
-        onTapType: ((String) -> Void)? = nil
+        inventory: [InventoryModel],
+        onTapRecord: ((InventoryModel) -> Void)? = nil,
+        onTapRecordsForType: (([InventoryModel], String) -> Void)? = nil,
+        onTapDetails: (() -> Void)? = nil
     ) {
-        self.inventoryByType = inventoryByType
-        self.onTapType = onTapType
+        self.inventory = inventory
+        self.onTapRecord = onTapRecord
+        self.onTapRecordsForType = onTapRecordsForType
+        self.onTapDetails = onTapDetails
+    }
+
+    /// Group inventory by type, summing quantities
+    private var inventoryByType: [String: Double] {
+        var result: [String: Double] = [:]
+        for record in inventory {
+            result[record.type, default: 0] += record.quantity
+        }
+        return result
+    }
+
+    /// Get the first record for each type (for editing)
+    private func recordsForType(_ type: String) -> [InventoryModel] {
+        inventory.filter { $0.type == type }
     }
 
     private var totalQuantity: Double {
-        inventoryByType.values.reduce(0, +)
+        inventory.reduce(0) { $0 + $1.quantity }
     }
 
     private var primaryType: String? {
@@ -32,11 +52,23 @@ struct InventoryStatusCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
-            // Section header
-            Text("Inventory Status")
-                .font(DesignSystem.Typography.subsectionTitle)
-                .fontWeight(DesignSystem.FontWeight.semibold)
-                .foregroundColor(DesignSystem.Colors.textPrimary)
+            // Section header with optional "Details" link
+            HStack {
+                Text("Inventory Status")
+                    .font(DesignSystem.Typography.subsectionTitle)
+                    .fontWeight(DesignSystem.FontWeight.semibold)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                Spacer()
+
+                if onTapDetails != nil && !inventoryByType.isEmpty {
+                    Button(action: { onTapDetails?() }) {
+                        Text("Details")
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.accentPrimary)
+                    }
+                }
+            }
 
             if inventoryByType.isEmpty {
                 emptyState
@@ -76,9 +108,18 @@ struct InventoryStatusCard: View {
 
     // MARK: - Inventory Type Row
 
+    @ViewBuilder
     private func inventoryTypeRow(type: String, quantity: Double) -> some View {
+        let records = recordsForType(type)
+
         Button(action: {
-            onTapType?(type)
+            // If single record, edit it directly; otherwise show records for this type
+            if records.count == 1, let record = records.first {
+                onTapRecord?(record)
+            } else {
+                // Multiple records - show just this type's records
+                onTapRecordsForType?(records, type)
+            }
         }) {
             HStack(alignment: .center) {
                 // Type icon and name
@@ -88,10 +129,23 @@ struct InventoryStatusCard: View {
                         .foregroundColor(DesignSystem.Colors.accentPrimary)
                         .frame(width: 28)
 
-                    Text(displayNameForType(type))
-                        .font(DesignSystem.Typography.formLabel)
-                        .fontWeight(DesignSystem.FontWeight.medium)
-                        .foregroundColor(DesignSystem.Colors.textPrimary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(displayNameForType(type))
+                            .font(DesignSystem.Typography.formLabel)
+                            .fontWeight(DesignSystem.FontWeight.medium)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                        // Show location if single record
+                        if records.count == 1, let location = records.first?.location, !location.isEmpty {
+                            Text(location)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                        } else if records.count > 1 {
+                            Text("\(records.count) locations")
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                        }
+                    }
                 }
 
                 Spacer()
@@ -104,7 +158,7 @@ struct InventoryStatusCard: View {
                 )
 
                 // Chevron if tappable
-                if onTapType != nil {
+                if onTapRecord != nil || onTapDetails != nil {
                     Image(systemName: "chevron.right")
                         .font(DesignSystem.Typography.listItemCaption)
                         .foregroundColor(DesignSystem.Colors.textTertiary)
@@ -115,7 +169,7 @@ struct InventoryStatusCard: View {
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
         .buttonStyle(.plain)
-        .disabled(onTapType == nil)
+        .disabled(onTapRecord == nil && onTapDetails == nil)
     }
 
     // MARK: - Helper Methods
@@ -140,15 +194,21 @@ struct InventoryStatusCard: View {
 // MARK: - Preview
 
 #Preview("With Inventory") {
+    let sampleInventory = [
+        InventoryModel(id: UUID(), item_stable_id: "test", type: "sheet", quantity: 8, location: "Cabinet 1"),
+        InventoryModel(id: UUID(), item_stable_id: "test", type: "rod", quantity: 5, location: "Studio"),
+        InventoryModel(id: UUID(), item_stable_id: "test", type: "rod", quantity: 7, location: "Garage"),
+        InventoryModel(id: UUID(), item_stable_id: "test", type: "frit", quantity: 250, location: "Cabinet 2")
+    ]
+
     ScrollView {
         InventoryStatusCard(
-            inventoryByType: [
-                "sheet": 8,
-                "rod": 12,
-                "frit": 250
-            ],
-            onTapType: { type in
-                print("Tapped: \(type)")
+            inventory: sampleInventory,
+            onTapRecord: { record in
+                print("Tapped record: \(record.type) at \(record.location ?? "unknown")")
+            },
+            onTapDetails: {
+                print("Tapped details")
             }
         )
         .padding()
@@ -157,16 +217,20 @@ struct InventoryStatusCard: View {
 
 #Preview("Empty") {
     InventoryStatusCard(
-        inventoryByType: [:],
-        onTapType: nil
+        inventory: [],
+        onTapRecord: nil
     )
     .padding()
 }
 
 #Preview("Single Type") {
+    let sampleInventory = [
+        InventoryModel(id: UUID(), item_stable_id: "test", type: "sheet", quantity: 8, location: "Cabinet 1")
+    ]
+
     InventoryStatusCard(
-        inventoryByType: ["sheet": 8],
-        onTapType: { _ in }
+        inventory: sampleInventory,
+        onTapRecord: { _ in }
     )
     .padding()
 }

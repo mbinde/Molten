@@ -13,11 +13,6 @@ import PhotosUI
 import AppKit
 #endif
 
-/// Wrapper to make String identifiable for sheet presentation
-private struct InventoryTypeSelection: Identifiable {
-    let id = UUID()
-    let type: String
-}
 
 /// Comprehensive inventory detail view showing complete item information
 /// including inventory breakdown by type, location distribution, and shopping list integration
@@ -38,7 +33,9 @@ struct InventoryDetailView: View {
     @State private var isEditing = false
 
     // State for managing UI interactions
-    @State private var selectedInventoryType: InventoryTypeSelection?
+    @State private var editingInventoryRecord: InventoryModel?
+    @State private var showingInventoryDetails = false
+    @State private var selectedTypeRecords: (records: [InventoryModel], type: String)?
     @State private var showingShoppingListOptions = false
     @State private var showingUserNotesEditor = false
     @State private var showingUserTagsEditor = false
@@ -142,6 +139,16 @@ struct InventoryDetailView: View {
         self._currentItem = State(initialValue: item)
     }
 
+    // MARK: - Computed Properties
+
+    /// Binding for showing type records sheet (converts optional tuple to Bool)
+    private var showingTypeRecordsBinding: Binding<Bool> {
+        Binding(
+            get: { selectedTypeRecords != nil },
+            set: { if !$0 { selectedTypeRecords = nil } }
+        )
+    }
+
     // MARK: - View Body
 
     private var scrollableContent: some View {
@@ -170,9 +177,15 @@ struct InventoryDetailView: View {
                     // Inventory Status Card (only show if there's inventory)
                     if !currentItem.inventory.isEmpty {
                         InventoryStatusCard(
-                            inventoryByType: currentItem.inventoryByType,
-                            onTapType: { type in
-                                selectedInventoryType = InventoryTypeSelection(type: type)
+                            inventory: currentItem.inventory,
+                            onTapRecord: { record in
+                                editingInventoryRecord = record
+                            },
+                            onTapRecordsForType: { records, type in
+                                selectedTypeRecords = (records, type)
+                            },
+                            onTapDetails: {
+                                showingInventoryDetails = true
                             }
                         )
                     }
@@ -202,11 +215,6 @@ struct InventoryDetailView: View {
                     // Shopping List Section - only show if on shopping list
                     if shoppingListItem != nil {
                         shoppingListSection
-                    }
-
-                    // Location Distribution Section
-                    if !currentItem.locations.isEmpty {
-                        locationDistributionSection
                     }
 
                     // Tags Section
@@ -305,14 +313,38 @@ struct InventoryDetailView: View {
         }) {
             ShoppingListOptionsView(item: item)
         }
-        .sheet(item: $selectedInventoryType) { selection in
+        .sheet(isPresented: $showingInventoryDetails) {
             InventoryStorageDetailView(
                 item: currentItem,
-                inventoryType: selection.type
+                inventoryType: ""  // Show all types
             )
             .onDisappear {
-                // Refresh item data after location details might have changed
+                // Refresh item data after details might have changed
                 refreshItemData()
+            }
+        }
+        .sheet(item: $editingInventoryRecord) { record in
+            if let service = inventoryTrackingService {
+                InventoryEditView(
+                    record: record,
+                    inventoryRepository: service.inventoryRepository
+                )
+                .onDisappear {
+                    // Refresh item data after editing
+                    refreshItemData()
+                }
+            }
+        }
+        .sheet(isPresented: showingTypeRecordsBinding, onDismiss: {
+            // Refresh item data after potentially editing records
+            refreshItemData()
+        }) {
+            if let typeRecords = selectedTypeRecords {
+                InventoryTypeRecordsView(
+                    records: typeRecords.records,
+                    type: typeRecords.type,
+                    itemName: currentItem.glassItem.name
+                )
             }
         }
         .sheet(isPresented: $showingUserNotesEditor, onDismiss: {
@@ -902,68 +934,6 @@ struct InventoryDetailView: View {
         }
     }
 
-    // MARK: - Inventory Breakdown Section
-
-    private var inventoryBreakdownSection: some View {
-        ExpandableSection(
-            title: "Inventory Details",
-            systemImage: "cube.box",
-            isExpanded: expandedSections.contains("inventory"),
-            onToggle: { toggleSection("inventory") },
-            accessibilityId: "section_inventory"
-        ) {
-            if currentItem.inventory.isEmpty {
-                // Empty state
-                VStack(spacing: DesignSystem.Spacing.lg) {
-                    Image(systemName: "cube.box")
-                        .font(.system(size: 30))
-                        .foregroundColor(DesignSystem.Colors.textTertiary)
-                    Text("No inventory recorded")
-                        .font(DesignSystem.Typography.formLabel)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                    Button("Add Inventory") {
-                        checkLimitAndShowAddInventory()
-                    }
-                    .buttonStyle(.bordered)
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(DesignSystem.Colors.backgroundTertiary)
-                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
-            } else {
-                LazyVStack(spacing: DesignSystem.Spacing.md) {
-                    // Group by type using inventoryByType computed property
-                    ForEach(Array(currentItem.inventoryByType.keys.sorted()), id: \.self) { type in
-                        let quantity = currentItem.inventoryByType[type] ?? 0
-                        let typeInventory = currentItem.inventory.filter { $0.type == type }
-
-                        InventoryDetailTypeRow(
-                            type: type,
-                            quantity: quantity,
-                            inventoryRecords: typeInventory,
-                            onTap: {
-                                selectedInventoryType = InventoryTypeSelection(type: type)
-                            }
-                        )
-                    }
-
-                    // Add More button when inventory exists
-                    Button {
-                        checkLimitAndShowAddInventory()
-                    } label: {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                            Text("Add More Inventory")
-                        }
-                        .font(DesignSystem.Typography.formLabel)
-                        .foregroundColor(DesignSystem.Colors.accentPrimary)
-                    }
-                    .padding(.top, DesignSystem.Spacing.md)
-                }
-            }
-        }
-    }
-
     // MARK: - Shopping List Section
 
     private var shoppingListSection: some View {
@@ -1079,52 +1049,6 @@ struct InventoryDetailView: View {
                         handleDeleteImage(imageId)
                     }
                 )
-            }
-        }
-    }
-
-    // MARK: - Location Distribution Section
-
-    private var locationDistributionSection: some View {
-        ExpandableSection(
-            title: "Location Distribution",
-            systemImage: "location",
-            isExpanded: expandedSections.contains("locations"),
-            onToggle: { toggleSection("locations") }
-        ) {
-            LazyVStack(spacing: DesignSystem.Spacing.md) {
-                ForEach(Array(currentItem.inventoryByLocation.keys.sorted()), id: \.self) { locationName in
-                    let quantity = currentItem.inventoryByLocation[locationName] ?? 0
-
-                    HStack {
-                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
-                            Text(locationName)
-                                .font(DesignSystem.Typography.formLabel)
-                                .fontWeight(DesignSystem.FontWeight.medium)
-                            Text("Qty: \(formatQuantity(quantity))")
-                                .font(DesignSystem.Typography.listItemCaption)
-                                .foregroundColor(DesignSystem.Colors.textSecondary)
-                        }
-
-                        Spacer()
-
-                        // Progress bar showing relative quantity
-                        let maxQuantity = currentItem.inventoryByLocation.values.max() ?? 1
-                        let percentage = quantity / maxQuantity
-
-                        HStack(spacing: DesignSystem.Spacing.md) {
-                            ProgressView(value: percentage)
-                                .frame(width: 60)
-                                .tint(DesignSystem.Colors.moltenTeal)
-                            Text("\(Int(percentage * 100))%")
-                                .font(DesignSystem.Typography.listItemCaption)
-                                .foregroundColor(DesignSystem.Colors.textSecondary)
-                        }
-                    }
-                    .padding()
-                    .background(DesignSystem.Colors.backgroundTertiary)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
-                }
             }
         }
     }

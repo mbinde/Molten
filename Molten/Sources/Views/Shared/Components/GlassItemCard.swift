@@ -249,7 +249,7 @@ struct GlassItemCard: View {
                                     .font(DesignSystem.Typography.captionSmall)
                                     .fontWeight(DesignSystem.FontWeight.medium)
                             }
-                            .foregroundColor(.purple)
+                            .foregroundColor(DesignSystem.Colors.accentUser)
                         }
                     }
                 }
@@ -423,7 +423,7 @@ private struct TagChip: View {
             if isUserTag {
                 Image(systemName: "person.fill")
                     .font(.caption2)
-                    .foregroundColor(.purple)
+                    .foregroundColor(DesignSystem.Colors.accentUser)
             }
             Text(tag)
                 .font(DesignSystem.Typography.captionSmall)
@@ -431,8 +431,8 @@ private struct TagChip: View {
         }
         .padding(.horizontal, DesignSystem.Spacing.sm)
         .padding(.vertical, DesignSystem.Spacing.xs)
-        .background(isUserTag ? Color.purple.opacity(0.1) : DesignSystem.Colors.accentPrimary.opacity(0.1))
-        .foregroundColor(isUserTag ? .purple : DesignSystem.Colors.accentPrimary)
+        .background(isUserTag ? DesignSystem.Colors.tintUser : DesignSystem.Colors.tintPrimary)
+        .foregroundColor(isUserTag ? DesignSystem.Colors.accentUser : DesignSystem.Colors.accentPrimary)
         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
     }
 

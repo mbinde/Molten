@@ -17,43 +17,43 @@ struct InventoryRecordRow: View {
 
     var body: some View {
         let content = HStack {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                 // Show type if requested (when grouped by location)
                 if showType {
                     Text((record.type ?? "").capitalized)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
+                        .font(DesignSystem.Typography.formLabel)
+                        .fontWeight(DesignSystem.FontWeight.semibold)
                 }
 
                 // Show subtype if present
                 if let subtype = record.subtype {
                     Text(subtype.capitalized)
-                        .font(showType ? .caption : .subheadline)
-                        .fontWeight(showType ? .regular : .medium)
-                        .foregroundColor(showType ? .secondary : .primary)
+                        .font(showType ? DesignSystem.Typography.listItemCaption : DesignSystem.Typography.formLabel)
+                        .fontWeight(showType ? .regular : DesignSystem.FontWeight.medium)
+                        .foregroundColor(showType ? DesignSystem.Colors.textSecondary : DesignSystem.Colors.textPrimary)
                 }
 
                 // Show dimensions if present
                 if let dimensions = record.dimensions, !dimensions.isEmpty {
                     Text(GlassItemTypeSystem.formatDimensions(dimensions, for: record.type ?? ""))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
 
                 // Show location if requested (when grouped by type)
                 if showLocation, let location = record.location {
                     Text("📍 \(location)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
 
             Spacer()
 
             Text(formatQuantity(record.quantity))
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(.accentColor)
+                .font(DesignSystem.Typography.prominentNumberSmall)
+                .fontWeight(DesignSystem.FontWeight.semibold)
+                .foregroundColor(DesignSystem.Colors.moltenTeal)
         }
 
         if let onTap = onTap {

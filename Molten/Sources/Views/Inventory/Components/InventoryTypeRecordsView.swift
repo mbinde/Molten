@@ -27,12 +27,12 @@ struct InventoryTypeRecordsView: View {
         records: [InventoryModel],
         type: String,
         itemName: String,
-        deps: AppDependencies = AppDependencies()
+        inventoryRepository: InventoryRepository
     ) {
         self.initialRecords = records
         self.type = type
         self.itemName = itemName
-        self.inventoryRepository = deps.inventoryRepository
+        self.inventoryRepository = inventoryRepository
         self._records = State(initialValue: records)
         // Initialize quantities from records
         var initialQuantities: [UUID: Double] = [:]
@@ -40,6 +40,21 @@ struct InventoryTypeRecordsView: View {
             initialQuantities[record.id] = record.quantity
         }
         self._quantities = State(initialValue: initialQuantities)
+    }
+
+    /// Convenience init using AppDependencies
+    init(
+        records: [InventoryModel],
+        type: String,
+        itemName: String,
+        deps: AppDependencies = AppDependencies()
+    ) {
+        self.init(
+            records: records,
+            type: type,
+            itemName: itemName,
+            inventoryRepository: deps.inventoryRepository
+        )
     }
 
     private var displayType: String {

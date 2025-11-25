@@ -204,6 +204,13 @@ struct ToolItemModel: CatalogItem {
 }
 
 /// Inventory model for tracking quantities by type with optional subtypes and dimensions
+///
+/// For weight-based types (frit, powder, enamel), users can track by:
+/// - `quantity`: Weight in grams (always stored in grams, converted from user's preferred unit)
+/// - `containerCount`: Number of jars/containers (optional, user enters directly)
+///
+/// Both fields are optional for weight-based types - users can track by weight only,
+/// jars only, or both. For non-weight types (rod, tube, etc.), only `quantity` is used.
 struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     let id: UUID
     let item_stable_id: String
@@ -212,6 +219,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     let subsubtype: String?
     let dimensions: [String: Double]?
     let quantity: Double
+    let containerCount: Double?  // For weight-based types: number of jars/containers
     let location: String?
     let date_added: Date
     let date_modified: Date
@@ -224,6 +232,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
         subsubtype: String? = nil,
         dimensions: [String: Double]? = nil,
         quantity: Double,
+        containerCount: Double? = nil,
         location: String? = nil,
         date_added: Date = Date(),
         date_modified: Date = Date()
@@ -235,6 +244,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
         self.subsubtype = subsubtype.map { Self.cleanType($0) }
         self.dimensions = dimensions
         self.quantity = max(0.0, quantity)  // Validate: ensure non-negative quantity
+        self.containerCount = containerCount.map { max(0.0, $0) }  // Validate: ensure non-negative if present
         self.location = location.map { StorageLocationModel.cleanLocationName($0) }
         self.date_added = date_added
         self.date_modified = date_modified
@@ -260,6 +270,84 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
             }
         }
         return path
+    }
+
+    /// Check if this inventory type uses weight units (frit, powder, enamel)
+    nonisolated var isWeightBasedType: Bool {
+        switch type.lowercased() {
+        case "frit", "powder", "enamel":
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// Format the quantity for display, considering both weight and container count
+    /// Returns a string like "3 jars", "142g", or "3 jars (~142g)"
+    nonisolated func formattedQuantityDisplay(preferredUnit: WeightUnit = WeightUnitPreference.current) -> String {
+        if isWeightBasedType {
+            let hasJars = containerCount != nil && containerCount! > 0
+            let hasWeight = quantity > 0
+
+            if hasJars && hasWeight {
+                // Both jars and weight - show primary based on user preference, secondary in parens
+                let jarText = formatJarCount(containerCount!)
+                let weightText = formatWeight(quantity, unit: preferredUnit)
+
+                // Default to jars-first display (matching default input mode)
+                if ContainerInputModePreference.current == .jars {
+                    return "\(jarText) (~\(weightText))"
+                } else {
+                    return "\(weightText) (\(jarText))"
+                }
+            } else if hasJars {
+                return formatJarCount(containerCount!)
+            } else if hasWeight {
+                return formatWeight(quantity, unit: preferredUnit)
+            } else {
+                return "0"
+            }
+        } else {
+            // Non-weight type: just show the count
+            return formatCount(quantity)
+        }
+    }
+
+    /// Format a jar count for display
+    private nonisolated func formatJarCount(_ count: Double) -> String {
+        let countStr = count.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", count)
+            : String(format: "%.1f", count)
+        let label = count == 1 ? "jar" : "jars"
+        return "\(countStr) \(label)"
+    }
+
+    /// Format a weight value for display, converting to user's preferred unit
+    private nonisolated func formatWeight(_ grams: Double, unit: WeightUnit) -> String {
+        let value: Double
+        let unitSymbol: String
+        if unit == .ounces {
+            // Convert grams to ounces: 1 g = 0.03527 oz
+            value = grams / 28.3495
+            unitSymbol = "oz"
+        } else {
+            value = grams
+            unitSymbol = "g"
+        }
+
+        let valueStr = value.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", value)
+            : String(format: "%.1f", value)
+        return "\(valueStr)\(unitSymbol)"
+    }
+
+    /// Format a simple count for display
+    private nonisolated func formatCount(_ count: Double) -> String {
+        if count.truncatingRemainder(dividingBy: 1) == 0 {
+            return String(format: "%.0f", count)
+        } else {
+            return String(format: "%.1f", count)
+        }
     }
 
     // Equatable conformance

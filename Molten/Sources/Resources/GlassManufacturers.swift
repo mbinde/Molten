@@ -91,7 +91,7 @@ struct GlassManufacturers {
         "DS": false,          // Delphi Superior - NO product images (bot-protected site)
         "EF": true,           // Effetre - permission granted via email
         "FM": false,          // Fusemaster - NO permission (no product images in catalog)
-        "JET": false,         // JetAgeStudio -- NO permission (waiting on response)
+        "JET": true,         // JetAgeStudio -- permission granted on Etsy
         "GA": true,           // Glass Alchemy - permission granted via email
         "GAF": false,         // Gaffer - NO product images (bot-protected site)
         "GRE": true,          // Greasy Glass - permission granted via email

@@ -180,15 +180,16 @@ public class RatingAPIClient: RatingAPIClientProtocol {
         }
 
         let json = try decoder.decode(BulkRatingsResponse.self, from: data)
-        print("✅ [RatingAPIClient] Fetched \(json.count) ratings in bulk")
         return json.ratings
     }
 
     /// Fetch specific ratings by item IDs (deprecated - use fetchAllRatingsBulk instead)
     public func fetchRatings(itemStableIds: [String]) async throws -> [AggregatedRatingModel] {
-        // Build URL with query parameters
+        // Build URL with query parameters using URLComponents for proper encoding
         let itemsParam = itemStableIds.joined(separator: ",")
-        guard let url = URL(string: "\(baseURL)/api/v1/ratings/fetch?items=\(itemsParam)") else {
+        var components = URLComponents(string: "\(baseURL)/api/v1/ratings/fetch")
+        components?.queryItems = [URLQueryItem(name: "items", value: itemsParam)]
+        guard let url = components?.url else {
             throw RatingAPIError.invalidURL
         }
 

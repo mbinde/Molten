@@ -117,8 +117,25 @@ struct AddInventoryFormView: View {
 
     private var quantityTypeRow: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Row 1: Type picker and subtypes
+            // Main row: Quantity + Type + Subtypes all on one line
             HStack(alignment: .center, spacing: 12) {
+                // Quantity field - narrow (80pt)
+                TextField("0", text: viewModel.isWeightBasedType && viewModel.selectedContainerInputMode == .jars
+                          ? $viewModel.containerCount : $viewModel.quantity)
+                    #if canImport(UIKit)
+                    .keyboardType(.decimalPad)
+                    #endif
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 80)
+                    .accessibilityIdentifier("inventory.add.quantityField")
+                    .accessibilityLabel("Quantity")
+
+                // Unit label or type name
+                Text(quantityUnitDisplay)
+                    .foregroundColor(.secondary)
+                    .font(.subheadline)
+                    .fixedSize()
+
                 // Type picker (rod/frit/etc)
                 Picker("", selection: $viewModel.selectedType) {
                     ForEach(visibleInventoryTypes, id: \.self) { type in
@@ -165,78 +182,9 @@ struct AddInventoryFormView: View {
                 }
 
                 Spacer(minLength: 0)
-            }
 
-            // Row 2: Quantity input (different UI for weight-based vs count-based types)
-            if viewModel.isWeightBasedType {
-                weightBasedQuantityRow
-            } else {
-                countBasedQuantityRow
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    /// Quantity row for non-weight types (rod, tube, etc.) - simple count input
-    private var countBasedQuantityRow: some View {
-        HStack(alignment: .center, spacing: 8) {
-            TextField("0", text: $viewModel.quantity)
-                #if canImport(UIKit)
-                .keyboardType(.decimalPad)
-                #endif
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 80)
-                .accessibilityIdentifier("inventory.add.quantityField")
-                .accessibilityLabel("Quantity")
-
-            Text(viewModel.quantityUnitLabel)
-                .foregroundColor(.secondary)
-                .font(.subheadline)
-        }
-    }
-
-    /// Quantity row for weight-based types (frit, powder, enamel) - jars/weight toggle
-    private var weightBasedQuantityRow: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Jars/Weight segmented control
-            Picker("", selection: $viewModel.selectedContainerInputMode) {
-                ForEach(ContainerInputMode.allCases) { mode in
-                    Text(mode.displayName).tag(mode)
-                }
-            }
-            .pickerStyle(.segmented)
-            .frame(width: 160)
-            .accessibilityIdentifier("inventory.add.containerInputModePicker")
-            .accessibilityLabel("Input Mode")
-
-            // Show the appropriate input based on selected mode
-            HStack(alignment: .center, spacing: 8) {
-                if viewModel.selectedContainerInputMode == .jars {
-                    // Jars input
-                    TextField("0", text: $viewModel.containerCount)
-                        #if canImport(UIKit)
-                        .keyboardType(.decimalPad)
-                        #endif
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 80)
-                        .accessibilityIdentifier("inventory.add.containerCountField")
-                        .accessibilityLabel("Jar Count")
-
-                    Text("jars")
-                        .foregroundColor(.secondary)
-                        .font(.subheadline)
-                } else {
-                    // Weight input
-                    TextField("0", text: $viewModel.quantity)
-                        #if canImport(UIKit)
-                        .keyboardType(.decimalPad)
-                        #endif
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 80)
-                        .accessibilityIdentifier("inventory.add.quantityField")
-                        .accessibilityLabel("Weight")
-
-                    // Weight unit picker (g/oz)
+                // Weight unit picker (if type uses weight and in weight mode) - on the far right
+                if viewModel.isWeightBasedType && viewModel.selectedContainerInputMode == .weight {
                     Picker("", selection: $viewModel.selectedWeightUnit) {
                         ForEach(WeightUnit.allCases) { unit in
                             Text(unit.symbol).tag(unit)
@@ -249,8 +197,37 @@ struct AddInventoryFormView: View {
                 }
             }
 
-            // Show the "other" value if entered (for context)
-            otherValueIndicator
+            // Second row: Jars/Weight toggle (only for weight-based types)
+            if viewModel.isWeightBasedType {
+                HStack(spacing: 12) {
+                    Picker("", selection: $viewModel.selectedContainerInputMode) {
+                        ForEach(ContainerInputMode.allCases) { mode in
+                            Text(mode.displayName).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 140)
+                    .accessibilityIdentifier("inventory.add.containerInputModePicker")
+                    .accessibilityLabel("Input Mode")
+
+                    // Show the "other" value if entered (for context)
+                    otherValueIndicator
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Display text for the quantity unit (e.g., "rods", "jars", "g")
+    private var quantityUnitDisplay: String {
+        if viewModel.isWeightBasedType {
+            if viewModel.selectedContainerInputMode == .jars {
+                return "jars"
+            } else {
+                return ""  // Weight unit is shown in separate picker
+            }
+        } else {
+            return viewModel.quantityUnitLabel
         }
     }
 

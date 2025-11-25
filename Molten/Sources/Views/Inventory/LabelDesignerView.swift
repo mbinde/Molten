@@ -801,13 +801,17 @@ struct WeightBasedLabelCountSheet: View {
     @State private var localCounts: [String: Int] = [:]
 
     /// Get the weight-based inventory records that need label count input
+    /// Only includes items stored by weight (no containerCount), not items stored by jars
     private var weightBasedItems: [WeightBasedItemInfo] {
         var result: [WeightBasedItemInfo] = []
         for item in items {
             for inventory in item.inventory {
                 if inventory.isWeightBasedType {
-                    // Include if no containerCount set, or if user might want to override
-                    result.append(WeightBasedItemInfo(item: item, inventory: inventory))
+                    // Only include if stored by weight (no containerCount set)
+                    // If they track by jars, we already know how many labels to print
+                    if inventory.containerCount == nil || inventory.containerCount == 0 {
+                        result.append(WeightBasedItemInfo(item: item, inventory: inventory))
+                    }
                 }
             }
         }

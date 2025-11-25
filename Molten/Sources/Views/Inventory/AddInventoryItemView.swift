@@ -417,18 +417,27 @@ struct AddInventoryFormView: View {
         Task {
             // Limit check now happens BEFORE showing this form, so just save directly
             let success = await viewModel.save()
-            if success, let catalogItem = viewModel.selectedCatalogItem, let quantityValue = viewModel.parsedQuantity {
+            if success, let catalogItem = viewModel.selectedCatalogItem {
                 // Post notification first (for views that aren't currently visible)
-                postSuccessNotification(catalogItem: catalogItem, quantityValue: quantityValue)
+                postSuccessNotification(catalogItem: catalogItem)
                 // Then dismiss (triggers onDismiss callback in parent view)
                 dismiss()
             }
         }
     }
 
-    private func postSuccessNotification(catalogItem: UnifiedCatalogItem, quantityValue: Double) {
-        let quantityText = String(format: "%.1f", quantityValue).replacingOccurrences(of: ".0", with: "")
-        let message = "\(catalogItem.name) (\(quantityText) \(viewModel.selectedType)) added to inventory."
+    private func postSuccessNotification(catalogItem: UnifiedCatalogItem) {
+        let message: String
+        if let jarCount = viewModel.parsedContainerCount {
+            let jarText = String(format: "%.1f", jarCount).replacingOccurrences(of: ".0", with: "")
+            let jarLabel = jarCount == 1 ? "jar" : "jars"
+            message = "\(catalogItem.name) (\(jarText) \(jarLabel) of \(viewModel.selectedType)) added to inventory."
+        } else if let quantityValue = viewModel.parsedQuantity {
+            let quantityText = String(format: "%.1f", quantityValue).replacingOccurrences(of: ".0", with: "")
+            message = "\(catalogItem.name) (\(quantityText) \(viewModel.selectedType)) added to inventory."
+        } else {
+            message = "\(catalogItem.name) added to inventory."
+        }
 
         NotificationCenter.default.post(
             name: .inventoryItemAdded,

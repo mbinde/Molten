@@ -30,12 +30,15 @@ struct AddInventoryItemView: View {
 
 struct AddInventoryFormView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(EntitlementService.self) private var entitlementService
 
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
     private let inventoryRepository: InventoryRepository
     private let prefilledNaturalKey: String?
     @State private var viewModel: AddInventoryItemViewModel
+    @State private var showingUpgradePrompt = false
+    @State private var currentInventoryCount = 0
     @StateObject private var terminologySettings = GlassTerminologySettings.shared
 
     init(prefilledNaturalKey: String? = nil, deps: AppDependencies = AppDependencies()) {
@@ -53,6 +56,18 @@ struct AddInventoryFormView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // Limit warning banner (shows at 75%+ usage for free tier)
+                if let limit = entitlementService.getInventoryLimit() {
+                    LimitWarningBanner(
+                        currentCount: currentInventoryCount,
+                        limit: limit,
+                        featureName: "items",
+                        onUpgradeTap: { showingUpgradePrompt = true }
+                    )
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                    .listRowSeparator(.hidden)
+                }
+
                 // Search field back inside Form for better layout
                 GlassItemSearchSelector(
                     selectedGlassItem: $viewModel.selectedCatalogItem,
@@ -84,10 +99,36 @@ struct AddInventoryFormView: View {
             .onChange(of: viewModel.stableId) { _, newValue in
                 viewModel.lookupCatalogItem(stableId: newValue)
             }
+            .onChange(of: viewModel.selectedCatalogItem?.itemType) { _, newItemType in
+                // When item type changes (e.g., selecting a coating vs glass), reset to appropriate default type
+                if let itemType = newItemType {
+                    if itemType == .coating {
+                        viewModel.selectedType = CoatingItemTypeSystem.defaultType
+                    } else {
+                        viewModel.selectedType = GlassTerminologySettings.rodType
+                    }
+                    // Clear subtypes when switching item types
+                    viewModel.selectedSubtype = nil
+                    viewModel.selectedSubsubtype = nil
+                }
+            }
             .alert("Error", isPresented: $viewModel.showingError) {
                 Button("OK") { viewModel.showingError = false }
             } message: {
                 Text(viewModel.errorMessage ?? "")
+            }
+            .sheet(isPresented: $showingUpgradePrompt) {
+                UpgradePromptView(
+                    feature: "inventory",
+                    currentCount: currentInventoryCount,
+                    limit: entitlementService.getInventoryLimit() ?? 0
+                )
+            }
+            .task {
+                // Load current inventory count for limit banner
+                // Use the same cache and hasInventory check as InventoryView for consistency
+                let items = await CatalogDataCache.loadItems(using: catalogService)
+                currentInventoryCount = items.filter { $0.hasInventory }.count
             }
         }
     }
@@ -118,16 +159,24 @@ struct AddInventoryFormView: View {
         VStack(alignment: .leading, spacing: 8) {
             // Main row: Quantity + Type + Subtypes all on one line
             HStack(alignment: .center, spacing: 12) {
-                // Quantity field - narrow (80pt)
-                TextField("0", text: viewModel.isWeightBasedType && viewModel.selectedContainerInputMode == .jars
-                          ? $viewModel.containerCount : $viewModel.quantity)
-                    #if canImport(UIKit)
-                    .keyboardType(.decimalPad)
-                    #endif
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 80)
-                    .accessibilityIdentifier("inventory.add.quantityField")
-                    .accessibilityLabel("Quantity")
+                // Quantity/Container field - use the appropriate binding based on mode
+                // Note: Using Group with if/else to ensure binding updates correctly
+                Group {
+                    if viewModel.isWeightBasedType && viewModel.selectedContainerInputMode == .jars {
+                        TextField("0", text: $viewModel.containerCount)
+                            .accessibilityIdentifier("inventory.add.containerCountField")
+                            .accessibilityLabel("Jar Count")
+                    } else {
+                        TextField("0", text: $viewModel.quantity)
+                            .accessibilityIdentifier("inventory.add.quantityField")
+                            .accessibilityLabel("Quantity")
+                    }
+                }
+                #if canImport(UIKit)
+                .keyboardType(.decimalPad)
+                #endif
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 80)
 
                 // Weight unit picker (g/oz) - right after quantity field for weight mode
                 if viewModel.isWeightBasedType && viewModel.selectedContainerInputMode == .weight {
@@ -377,26 +426,46 @@ struct AddInventoryFormView: View {
     
     // MARK: - Computed Properties
 
-    /// Get all available inventory types
+    /// Check if the selected item is a coating (vs glass)
+    private var isCoatingItem: Bool {
+        return viewModel.selectedCatalogItem?.itemType == .coating
+    }
+
+    /// Get all available inventory types based on item type
     private var visibleInventoryTypes: [String] {
+        if isCoatingItem {
+            return CoatingItemTypeSystem.allTypeNames
+        }
         return GlassItemTypeSystem.allTypeNames
     }
 
-    /// Get the default inventory type (rod)
+    /// Get the default inventory type based on item type
     private var defaultInventoryType: String {
-        return GlassTerminologySettings.rodType  // "rod" as default
+        if isCoatingItem {
+            return CoatingItemTypeSystem.defaultType  // "powder" for coatings
+        }
+        return GlassTerminologySettings.rodType  // "rod" for glass
     }
 
     private var availableSubtypes: [String] {
+        if isCoatingItem {
+            return []  // Coatings don't have subtypes
+        }
         return GlassItemTypeSystem.getSubtypes(for: viewModel.selectedType)
     }
 
     private var availableSubsubtypes: [String] {
+        if isCoatingItem {
+            return []  // Coatings don't have subsubtypes
+        }
         guard let subtype = viewModel.selectedSubtype else { return [] }
         return GlassItemTypeSystem.getSubsubtypes(for: viewModel.selectedType, subtype: subtype)
     }
 
     private var availableDimensionFields: [DimensionField] {
+        if isCoatingItem {
+            return []  // Coatings don't have dimensions
+        }
         return GlassItemTypeSystem.getDimensionFields(for: viewModel.selectedType)
     }
 

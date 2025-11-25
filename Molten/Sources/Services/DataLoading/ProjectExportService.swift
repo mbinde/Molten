@@ -72,10 +72,14 @@ class ProjectExportService {
     ///   - skipCompression: If true, returns directory instead of ZIP (for testing)
     /// - Returns: URL to the exported .molten file (or directory if skipCompression=true) in temp directory
     func exportPlan(_ plan: ProjectModel, quality: ExportQuality = .optimized, skipCompression: Bool = false) async throws -> URL {
-        // Create temporary directory for export
+        // Create temporary directory for export with file protection
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("MoltenExport-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: tempDir,
+            withIntermediateDirectories: true,
+            attributes: [.protectionKey: FileProtectionType.complete]
+        )
 
         // 1. Export plan metadata as JSON
         let planJSON = try encodePlanToJSON(plan)

@@ -122,7 +122,7 @@ struct BackupKeyGeneratorTests {
         #expect(generator.isValid("ABC-DEF-GH!") == false)
         #expect(generator.isValid("ABC-DEF-GH@") == false)
         #expect(generator.isValid("ABC-DEF-GH ") == false)
-        #expect(generator.isValid("abc-def-ghj") == false) // lowercase (validation normalizes)
+        #expect(generator.isValid("ABC-DEF-GH#") == false)
     }
 
     @Test("Should validate lowercase keys (case insensitive)")

@@ -387,7 +387,15 @@ struct SettingsView: View {
                     // Subscription tier override for testing
                     Toggle(isOn: Binding(
                         get: { DebugConfig.debugOverrideSubscriptionTier },
-                        set: { DebugConfig.debugOverrideSubscriptionTier = $0 }
+                        set: { newValue in
+                            DebugConfig.debugOverrideSubscriptionTier = newValue
+                            // When enabling override, default to Premium (the typical test case)
+                            if newValue {
+                                DebugConfig.debugSubscriptionTierValue = 1  // 1 = premium
+                            }
+                            // Trigger refresh so views pick up the change immediately
+                            entitlementService.refreshTier()
+                        }
                     )) {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Override Subscription Tier")
@@ -401,7 +409,11 @@ struct SettingsView: View {
                     if DebugConfig.debugOverrideSubscriptionTier {
                         Picker("Debug Tier", selection: Binding(
                             get: { DebugConfig.debugSubscriptionTierValue },
-                            set: { DebugConfig.debugSubscriptionTierValue = $0 }
+                            set: { newValue in
+                                DebugConfig.debugSubscriptionTierValue = newValue
+                                // Trigger refresh so views pick up the change immediately
+                                entitlementService.refreshTier()
+                            }
                         )) {
                             Text("Free").tag(0)
                             Text("Premium").tag(1)

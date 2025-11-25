@@ -224,6 +224,9 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     let date_added: Date
     let date_modified: Date
 
+    // Future-proofing fields (added pre-release for easier migrations)
+    let workspace_id: String  // For multi-inventory sets: "default", or future workspace identifier
+
     nonisolated init(
         id: UUID = UUID(),
         item_stable_id: String,
@@ -235,7 +238,8 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
         containerCount: Double? = nil,
         location: String? = nil,
         date_added: Date = Date(),
-        date_modified: Date = Date()
+        date_modified: Date = Date(),
+        workspace_id: String = "default"
     ) {
         self.id = id
         self.item_stable_id = item_stable_id
@@ -248,6 +252,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
         self.location = location.map { StorageLocationModel.cleanLocationName($0) }
         self.date_added = date_added
         self.date_modified = date_modified
+        self.workspace_id = workspace_id
     }
 
     /// Clean and normalize inventory type string

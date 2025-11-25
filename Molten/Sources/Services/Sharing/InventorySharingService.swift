@@ -133,8 +133,11 @@ open class InventorySharingService {
         )
 
         // Create ownership signature (sign the share code with private key)
+        guard let shareCodeData = shareCode.data(using: .utf8) else {
+            throw SharingAPIError.invalidData
+        }
         let ownershipSignature = try keyPairManager.sign(
-            data: shareCode.data(using: .utf8)!,
+            data: shareCodeData,
             privateKey: keyPair.privateKey
         )
 
@@ -161,8 +164,11 @@ open class InventorySharingService {
 
         // Create ownership signature (sign the share code with private key)
         print("🔐 [DELETE] Signing share code with private key...")
+        guard let shareCodeData = shareCode.data(using: .utf8) else {
+            throw SharingAPIError.invalidData
+        }
         let ownershipSignature = try keyPairManager.sign(
-            data: shareCode.data(using: .utf8)!,
+            data: shareCodeData,
             privateKey: keyPair.privateKey
         )
         print("🔐 [DELETE] Created signature: \(ownershipSignature.base64EncodedString().prefix(20))...")

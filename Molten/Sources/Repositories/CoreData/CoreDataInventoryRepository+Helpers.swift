@@ -50,6 +50,9 @@ extension CoreDataInventoryRepository {
         let location = coreDataItem.value(forKey: "location") as? String
         let containerCount = (coreDataItem.value(forKey: "container_count") as? NSNumber)?.doubleValue
 
+        // Future-proofing fields
+        let workspace_id = coreDataItem.value(forKey: "workspace_id") as? String ?? "default"
+
         // Deserialize dimensions from JSON string stored in dimensions_x
         var dimensions: [String: Double]? = nil
         if let dimensionsJSON = coreDataItem.value(forKey: "dimensions_x") as? String,
@@ -69,7 +72,8 @@ extension CoreDataInventoryRepository {
             containerCount: containerCount,
             location: location,
             date_added: date_added,
-            date_modified: date_modified
+            date_modified: date_modified,
+            workspace_id: workspace_id
         )
     }
 
@@ -102,6 +106,9 @@ extension CoreDataInventoryRepository {
         coreDataItem.setValue(inventory.location, forKey: "location")
         coreDataItem.setValue(inventory.date_added, forKey: "date_added")
         coreDataItem.setValue(inventory.date_modified, forKey: "date_modified")
+
+        // Future-proofing fields
+        coreDataItem.setValue(inventory.workspace_id, forKey: "workspace_id")
     }
 }
 

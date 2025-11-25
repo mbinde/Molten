@@ -19,6 +19,7 @@ final class BackupPreferences {
     private static let keyLastInventoryChecksum = "molten.backup.lastInventoryChecksum"
     private static let keyLastTagsChecksum = "molten.backup.lastTagsChecksum"
     private static let keyBackupEnabled = "molten.backup.enabled"
+    private static let keyBackupPaused = "molten.backup.paused"
 
     // MARK: - Properties
 
@@ -44,6 +45,12 @@ final class BackupPreferences {
     var isEnabled: Bool {
         get { userDefaults.bool(forKey: Self.keyBackupEnabled) }
         set { userDefaults.set(newValue, forKey: Self.keyBackupEnabled) }
+    }
+
+    /// Whether automatic backups are paused (key still exists, just not backing up)
+    var isPaused: Bool {
+        get { userDefaults.bool(forKey: Self.keyBackupPaused) }
+        set { userDefaults.set(newValue, forKey: Self.keyBackupPaused) }
     }
 
     // MARK: - Last Backup Timestamp
@@ -83,5 +90,6 @@ final class BackupPreferences {
         userDefaults.removeObject(forKey: Self.keyLastInventoryChecksum)
         userDefaults.removeObject(forKey: Self.keyLastTagsChecksum)
         userDefaults.removeObject(forKey: Self.keyBackupEnabled)
+        userDefaults.removeObject(forKey: Self.keyBackupPaused)
     }
 }

@@ -39,6 +39,7 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
         var selectedProductTypes: Binding<Set<String>>
         let availableTypes: [String]
         let displayName: (String) -> String
+        let typeCounts: [String: Int]
     }
 
     // MARK: - Optional Store Filter
@@ -189,7 +190,8 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
                     ProductTypeFilterMenu(
                         selectedProductTypes: productTypeConfig.selectedProductTypes,
                         availableTypes: productTypeConfig.availableTypes,
-                        displayName: productTypeConfig.displayName
+                        displayName: productTypeConfig.displayName,
+                        typeCounts: productTypeConfig.typeCounts
                     )
                 }
 
@@ -300,6 +302,12 @@ private struct ProductTypeFilterMenu: View {
     let selectedProductTypes: Binding<Set<String>>
     let availableTypes: [String]
     let displayName: (String) -> String
+    let typeCounts: [String: Int]
+
+    /// Total count across all types
+    private var totalCount: Int {
+        typeCounts.values.reduce(0, +)
+    }
 
     var body: some View {
         Menu {
@@ -309,12 +317,10 @@ private struct ProductTypeFilterMenu: View {
                     selectedProductTypes.wrappedValue.removeAll()
                 }
             } label: {
-                HStack {
-                    Text("All types")
-                    Spacer()
-                    if selectedProductTypes.wrappedValue.isEmpty {
-                        Image(systemName: "checkmark")
-                    }
+                if selectedProductTypes.wrappedValue.isEmpty {
+                    Label("All types (\(totalCount))", systemImage: "checkmark")
+                } else {
+                    Text("All types (\(totalCount))")
                 }
             }
 
@@ -327,12 +333,10 @@ private struct ProductTypeFilterMenu: View {
                         selectedProductTypes.wrappedValue.insert(type)
                     }
                 } label: {
-                    HStack {
-                        Text(displayName(type))
-                        Spacer()
-                        if selectedProductTypes.wrappedValue.contains(type) {
-                            Image(systemName: "checkmark")
-                        }
+                    if selectedProductTypes.wrappedValue.contains(type) {
+                        Label("\(displayName(type)) (\(typeCounts[type] ?? 0))", systemImage: "checkmark")
+                    } else {
+                        Text("\(displayName(type)) (\(typeCounts[type] ?? 0))")
                     }
                 }
             }

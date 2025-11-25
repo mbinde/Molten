@@ -264,7 +264,8 @@ struct CatalogView: View {
             productTypeFilter: .init(
                 selectedProductTypes: $viewModel.selectedProductTypes,
                 availableTypes: FeatureFlags.availableProductTypes,
-                displayName: displayNameForProductType
+                displayName: displayNameForProductType,
+                typeCounts: viewModel.productTypeCounts
             ),
             coeFilter: .init(
                 selectedCOEs: $viewModel.selectedCOEs,

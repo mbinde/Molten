@@ -115,8 +115,70 @@ struct AddInventoryFormView: View {
     // MARK: - Sub-Views
 
     private var quantityTypeRow: some View {
-        HStack(alignment: .center, spacing: 12) {
-            // Quantity field - narrow (80pt)
+        VStack(alignment: .leading, spacing: 8) {
+            // Row 1: Type picker and subtypes
+            HStack(alignment: .center, spacing: 12) {
+                // Type picker (rod/frit/etc)
+                Picker("", selection: $viewModel.selectedType) {
+                    ForEach(visibleInventoryTypes, id: \.self) { type in
+                        Text(terminologySettings.displayName(for: type)).tag(type)
+                    }
+                }
+                .pickerStyle(.menu)
+                .fixedSize()
+                .onChange(of: viewModel.selectedType) { _, newValue in
+                    viewModel.didChangeType()
+                }
+                .accessibilityIdentifier("inventory.add.typePicker")
+                .accessibilityLabel("Type")
+
+                // Subtype picker (if type has subtypes) - inline, no label
+                if !availableSubtypes.isEmpty {
+                    Picker("", selection: $viewModel.selectedSubtype) {
+                        Text("---").tag(nil as String?)
+                        ForEach(availableSubtypes, id: \.self) { subtype in
+                            Text(subtype.capitalized).tag(subtype as String?)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .fixedSize()
+                    .onChange(of: viewModel.selectedSubtype) { _, newValue in
+                        viewModel.didChangeSubtype()
+                    }
+                    .accessibilityIdentifier("inventory.add.subtypePicker")
+                    .accessibilityLabel("Subtype")
+                }
+
+                // Subsubtype picker (if selected subtype has subsubtypes) - inline, no label
+                if !availableSubsubtypes.isEmpty {
+                    Picker("", selection: $viewModel.selectedSubsubtype) {
+                        Text("---").tag(nil as String?)
+                        ForEach(availableSubsubtypes, id: \.self) { subsubtype in
+                            Text(subsubtype.capitalized).tag(subsubtype as String?)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .fixedSize()
+                    .accessibilityIdentifier("inventory.add.subsubtypePicker")
+                    .accessibilityLabel("Sub-subtype")
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            // Row 2: Quantity input (different UI for weight-based vs count-based types)
+            if viewModel.isWeightBasedType {
+                weightBasedQuantityRow
+            } else {
+                countBasedQuantityRow
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Quantity row for non-weight types (rod, tube, etc.) - simple count input
+    private var countBasedQuantityRow: some View {
+        HStack(alignment: .center, spacing: 8) {
             TextField("0", text: $viewModel.quantity)
                 #if canImport(UIKit)
                 .keyboardType(.decimalPad)
@@ -126,67 +188,94 @@ struct AddInventoryFormView: View {
                 .accessibilityIdentifier("inventory.add.quantityField")
                 .accessibilityLabel("Quantity")
 
-            // Type picker (rod/frit/etc) - right next to quantity field, no label
-            Picker("", selection: $viewModel.selectedType) {
-                ForEach(visibleInventoryTypes, id: \.self) { type in
-                    Text(terminologySettings.displayName(for: type)).tag(type)
+            Text(viewModel.quantityUnitLabel)
+                .foregroundColor(.secondary)
+                .font(.subheadline)
+        }
+    }
+
+    /// Quantity row for weight-based types (frit, powder, enamel) - jars/weight toggle
+    private var weightBasedQuantityRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Jars/Weight segmented control
+            Picker("", selection: $viewModel.selectedContainerInputMode) {
+                ForEach(ContainerInputMode.allCases) { mode in
+                    Text(mode.displayName).tag(mode)
                 }
             }
-            .pickerStyle(.menu)
-            .fixedSize()
-            .onChange(of: viewModel.selectedType) { _, newValue in
-                viewModel.didChangeType()
-            }
-            .accessibilityIdentifier("inventory.add.typePicker")
-            .accessibilityLabel("Type")
+            .pickerStyle(.segmented)
+            .frame(width: 160)
+            .accessibilityIdentifier("inventory.add.containerInputModePicker")
+            .accessibilityLabel("Input Mode")
 
-            // Subtype picker (if type has subtypes) - inline, no label
-            if !availableSubtypes.isEmpty {
-                Picker("", selection: $viewModel.selectedSubtype) {
-                    Text("---").tag(nil as String?)
-                    ForEach(availableSubtypes, id: \.self) { subtype in
-                        Text(subtype.capitalized).tag(subtype as String?)
+            // Show the appropriate input based on selected mode
+            HStack(alignment: .center, spacing: 8) {
+                if viewModel.selectedContainerInputMode == .jars {
+                    // Jars input
+                    TextField("0", text: $viewModel.containerCount)
+                        #if canImport(UIKit)
+                        .keyboardType(.decimalPad)
+                        #endif
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 80)
+                        .accessibilityIdentifier("inventory.add.containerCountField")
+                        .accessibilityLabel("Jar Count")
+
+                    Text("jars")
+                        .foregroundColor(.secondary)
+                        .font(.subheadline)
+                } else {
+                    // Weight input
+                    TextField("0", text: $viewModel.quantity)
+                        #if canImport(UIKit)
+                        .keyboardType(.decimalPad)
+                        #endif
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 80)
+                        .accessibilityIdentifier("inventory.add.quantityField")
+                        .accessibilityLabel("Weight")
+
+                    // Weight unit picker (g/oz)
+                    Picker("", selection: $viewModel.selectedWeightUnit) {
+                        ForEach(WeightUnit.allCases) { unit in
+                            Text(unit.symbol).tag(unit)
+                        }
                     }
+                    .pickerStyle(.segmented)
+                    .frame(width: 80)
+                    .accessibilityIdentifier("inventory.add.weightUnitPicker")
+                    .accessibilityLabel("Weight Unit")
                 }
-                .pickerStyle(.menu)
-                .fixedSize()
-                .onChange(of: viewModel.selectedSubtype) { _, newValue in
-                    viewModel.didChangeSubtype()
-                }
-                .accessibilityIdentifier("inventory.add.subtypePicker")
-                .accessibilityLabel("Subtype")
             }
 
-            // Subsubtype picker (if selected subtype has subsubtypes) - inline, no label
-            if !availableSubsubtypes.isEmpty {
-                Picker("", selection: $viewModel.selectedSubsubtype) {
-                    Text("---").tag(nil as String?)
-                    ForEach(availableSubsubtypes, id: \.self) { subsubtype in
-                        Text(subsubtype.capitalized).tag(subsubtype as String?)
-                    }
-                }
-                .pickerStyle(.menu)
-                .fixedSize()
-                .accessibilityIdentifier("inventory.add.subsubtypePicker")
-                .accessibilityLabel("Sub-subtype")
+            // Show the "other" value if entered (for context)
+            otherValueIndicator
+        }
+    }
+
+    /// Shows the value entered in the other mode (e.g., if in Jars mode, shows weight if entered)
+    @ViewBuilder
+    private var otherValueIndicator: some View {
+        if viewModel.selectedContainerInputMode == .jars {
+            // Currently in Jars mode - show weight if entered
+            if let weight = viewModel.parsedQuantity {
+                let displayWeight = viewModel.selectedWeightUnit == .ounces
+                    ? WeightUnit.grams.convert(weight, to: .ounces)
+                    : weight
+                let unit = viewModel.selectedWeightUnit.symbol
+                Text("(\(String(format: "%.1f", displayWeight))\(unit))")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
-
-            Spacer(minLength: 0)
-
-            // Weight unit picker (if type uses weight) - on the far right
-            if viewModel.isWeightBasedType {
-                Picker("", selection: $viewModel.selectedWeightUnit) {
-                    ForEach(WeightUnit.allCases) { unit in
-                        Text(unit.symbol).tag(unit)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 100)
-                .accessibilityIdentifier("inventory.add.weightUnitPicker")
-                .accessibilityLabel("Weight Unit")
+        } else {
+            // Currently in Weight mode - show jars if entered
+            if let jars = viewModel.parsedContainerCount {
+                let jarLabel = jars == 1 ? "jar" : "jars"
+                Text("(\(String(format: "%.1f", jars).replacingOccurrences(of: ".0", with: "")) \(jarLabel))")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var subtypePickerView: some View {

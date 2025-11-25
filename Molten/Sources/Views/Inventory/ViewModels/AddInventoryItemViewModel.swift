@@ -27,11 +27,13 @@ class AddInventoryItemViewModel {
     var stableId: String = ""
     var selectedCatalogItem: UnifiedCatalogItem?
     var searchText: String = ""
-    var quantity: String = ""
+    var quantity: String = ""  // Weight input (for weight mode)
+    var containerCount: String = ""  // Jar count input (for jars mode)
     var selectedType: String = "rod"  // Default type
     var selectedSubtype: String?
     var selectedSubsubtype: String?
     var selectedWeightUnit: WeightUnit = WeightUnitPreference.current
+    var selectedContainerInputMode: ContainerInputMode = ContainerInputModePreference.current
     var dimensions: [String: String] = [:]
     var dimensionUnits: [String: DimensionUnit] = [:] // Track unit for each dimension field
     var notes: String = ""
@@ -64,15 +66,35 @@ class AddInventoryItemViewModel {
 
     // MARK: - Validation
 
-    /// Check if the form is valid (stableId and quantity are required)
+    /// Check if the form is valid
+    /// For weight-based types: need at least jars OR weight entered
+    /// For other types: need quantity entered
     var isValid: Bool {
-        !stableId.isEmpty && !quantity.isEmpty
+        guard !stableId.isEmpty else { return false }
+
+        if isWeightBasedType {
+            // For weight-based types, need at least one of jars or weight
+            return parsedContainerCount != nil || parsedQuantity != nil
+        } else {
+            // For other types, need quantity
+            return !quantity.isEmpty && parsedQuantity != nil
+        }
     }
 
-    /// Parse quantity as Double
+    /// Parse quantity (weight) as Double
     var parsedQuantity: Double? {
         guard !quantity.isEmpty,
               let value = Double(quantity),
+              value > 0 else {
+            return nil
+        }
+        return value
+    }
+
+    /// Parse container count as Double
+    var parsedContainerCount: Double? {
+        guard !containerCount.isEmpty,
+              let value = Double(containerCount),
               value > 0 else {
             return nil
         }
@@ -217,33 +239,54 @@ class AddInventoryItemViewModel {
             return false
         }
 
-        guard !quantity.isEmpty else {
-            setError("Please enter a quantity")
-            return false
-        }
-
-        guard let quantityValue = parsedQuantity else {
-            setError("Invalid quantity format")
-            return false
-        }
-
         // Verify the catalog item exists
         guard selectedCatalogItem != nil else {
             setError("Please select a catalog item")
             return false
         }
 
+        // For weight-based types, need at least jars or weight
+        // For other types, need quantity
+        let finalQuantity: Double
+        let finalContainerCount: Double?
+
+        if isWeightBasedType {
+            // Weight-based type: can have jars, weight, or both
+            let hasJars = parsedContainerCount != nil
+            let hasWeight = parsedQuantity != nil
+
+            guard hasJars || hasWeight else {
+                setError("Please enter jars or weight")
+                return false
+            }
+
+            // Get container count if entered
+            finalContainerCount = parsedContainerCount
+
+            // Get weight, converting to grams if needed
+            if let weightValue = parsedQuantity {
+                if selectedWeightUnit == .ounces {
+                    finalQuantity = selectedWeightUnit.convert(weightValue, to: .grams)
+                } else {
+                    finalQuantity = weightValue
+                }
+            } else {
+                // No weight entered - use 0 (will be tracked by jars only)
+                // Note: The model allows quantity=0 when containerCount is set
+                finalQuantity = 0
+            }
+        } else {
+            // Non-weight type: need quantity
+            guard let quantityValue = parsedQuantity else {
+                setError("Please enter a quantity")
+                return false
+            }
+            finalQuantity = quantityValue
+            finalContainerCount = nil
+        }
+
         // Prepare location (nil if empty)
         let finalLocation = location.isEmpty ? nil : location
-
-        // Convert weight to grams if needed (always store in grams)
-        let finalQuantity: Double
-        if isWeightBasedType && selectedWeightUnit == .ounces {
-            // Convert ounces to grams
-            finalQuantity = selectedWeightUnit.convert(quantityValue, to: .grams)
-        } else {
-            finalQuantity = quantityValue
-        }
 
         // Parse dimensions and convert to cm (always store in cm)
         let parsedDimensions: [String: Double]? = {
@@ -268,6 +311,7 @@ class AddInventoryItemViewModel {
                 subtype: selectedSubtype,
                 subsubtype: selectedSubsubtype,
                 dimensions: parsedDimensions,
+                containerCount: finalContainerCount,
                 atLocation: finalLocation
             )
 

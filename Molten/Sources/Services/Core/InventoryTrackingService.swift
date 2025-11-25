@@ -196,13 +196,17 @@ actor InventoryTrackingService {
         return try await inventoryRepository.createInventory(inventory)
     }
 
-    /// Add inventory to an item with optional location
+    /// Add inventory to an item with optional location and container count
     /// - Parameters:
-    ///   - quantity: Quantity to add
+    ///   - quantity: Quantity to add (weight in grams for frit/powder/enamel, count for others)
     ///   - type: Inventory type
     ///   - stableId: Item natural key
+    ///   - subtype: Optional subtype
+    ///   - subsubtype: Optional sub-subtype
+    ///   - dimensions: Optional dimensions dictionary
+    ///   - containerCount: Optional number of containers/jars (for weight-based types)
     ///   - location: Optional location where inventory is stored
-    /// - Returns: Updated inventory model
+    /// - Returns: Created inventory model
     func addInventory(
         quantity: Double,
         type: String,
@@ -210,6 +214,7 @@ actor InventoryTrackingService {
         subtype: String? = nil,
         subsubtype: String? = nil,
         dimensions: [String: Double]? = nil,
+        containerCount: Double? = nil,
         atLocation location: String? = nil
     ) async throws -> InventoryModel {
 
@@ -250,7 +255,7 @@ actor InventoryTrackingService {
             throw InventoryTrackingServiceError.invalidOperation("Inventory type cannot be empty")
         }
 
-        // 3. Create new inventory record with location and optional subtypes/dimensions
+        // 3. Create new inventory record with location, optional subtypes/dimensions, and container count
         let newInventory = InventoryModel(
             item_stable_id: stableId,
             type: type,
@@ -258,6 +263,7 @@ actor InventoryTrackingService {
             subsubtype: subsubtype,
             dimensions: dimensions,
             quantity: quantity,
+            containerCount: containerCount,
             location: location
         )
 

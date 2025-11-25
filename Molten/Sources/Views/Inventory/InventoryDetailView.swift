@@ -48,6 +48,7 @@ struct InventoryDetailView: View {
     @State private var inventoryItemLimit = 0
     @State private var expandedSections: Set<String> = ["glass-item", "inventory"]
     @State private var isManufacturerNotesExpanded: Bool
+    @State private var showNavTitle = false
 
     // User notes state
     @State private var userNotes: UserNotesModel?
@@ -146,15 +147,43 @@ struct InventoryDetailView: View {
     private var scrollableContent: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 20) {
-                    // Header with glass item image and basic info (includes tags)
-                    headerSection
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+                    // Hero header with large product image, with scroll tracking
+                    heroHeaderSection
                         .id("header")
+                        .background(
+                            GeometryReader { geo -> Color in
+                                // This runs during layout, updating the scroll position
+                                DispatchQueue.main.async {
+                                    let minY = geo.frame(in: .named("scroll")).minY
+                                    let shouldShow = minY < -270  // Hero is ~280pt tall, show title when title bar scrolls off
+                                    if showNavTitle != shouldShow {
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            showNavTitle = shouldShow
+                                        }
+                                    }
+                                }
+                                return Color.clear
+                            }
+                        )
+
+                    // Inventory Status Card (only show if there's inventory)
+                    if !currentItem.inventory.isEmpty {
+                        InventoryStatusCard(
+                            inventoryByType: currentItem.inventoryByType,
+                            onTapType: { type in
+                                selectedInventoryType = InventoryTypeSelection(type: type)
+                            }
+                        )
+                    }
+
+                    // Specifications tile grid
+                    specificationsSection
 
                     // Rating Words Section
                     RatingWordsSection(itemStableId: currentItem.glassItem.stable_id)
 
-                    // Glass Item Details Section
+                    // Glass Item Details Section (manufacturer notes, user notes)
                     glassItemDetailsSection
                         .id("glass-item-section")
 
@@ -170,11 +199,6 @@ struct InventoryDetailView: View {
                         )
                     }
 
-                    // Inventory Breakdown Section - only show if inventory exists
-                    if !currentItem.inventory.isEmpty {
-                        inventoryBreakdownSection
-                    }
-
                     // Shopping List Section - only show if on shopping list
                     if shoppingListItem != nil {
                         shoppingListSection
@@ -185,6 +209,11 @@ struct InventoryDetailView: View {
                         locationDistributionSection
                     }
 
+                    // Tags Section
+                    if !currentItem.tags.isEmpty || !userTags.isEmpty {
+                        tagsSection
+                    }
+
                     // Custom Images Section - only show if images exist
                     if !userImages.isEmpty {
                         customImagesSection
@@ -192,8 +221,10 @@ struct InventoryDetailView: View {
 
                     Spacer(minLength: 100)
                 }
-                .padding()
+                .padding(.horizontal)
+                .padding(.bottom)
             }
+            .coordinateSpace(name: "scroll")
             .onChange(of: isManufacturerNotesExpanded) { _, newValue in
                 // When collapsing, scroll to the top of the view
                 if !newValue {
@@ -216,9 +247,10 @@ struct InventoryDetailView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             scrollableContent
-                .navigationTitle(currentItem.glassItem.name)
+                .navigationTitle(showNavTitle ? currentItem.glassItem.name : "")
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
             #endif
             .toolbar {
                 if !isEditing {
@@ -618,18 +650,126 @@ struct InventoryDetailView: View {
         }
     }
 
-    // MARK: - Header Section
+    // MARK: - Hero Header Section
 
-    private var headerSection: some View {
-        GlassItemCard(
-            item: currentItem.glassItem,
-            variant: .large,
-            tags: currentItem.tags,
-            userTags: userTags,
-            onManageTags: {
-                showingUserTagsEditor = true
+    private var heroHeaderSection: some View {
+        HeroHeader(item: currentItem.glassItem, extendsToTop: true)
+    }
+
+    // MARK: - Specifications Section
+
+    private var specificationsSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            Text("Specifications")
+                .font(DesignSystem.Typography.subsectionTitle)
+                .fontWeight(DesignSystem.FontWeight.semibold)
+                .foregroundColor(DesignSystem.Colors.textPrimary)
+
+            SpecificationTileGrid(tiles: specificationTiles)
+        }
+    }
+
+    private var specificationTiles: [SpecificationTileGrid.TileData] {
+        var tiles: [SpecificationTileGrid.TileData] = []
+
+        // COE Rating - expansion/contraction compatibility (e.g., "90 COE")
+        tiles.append(.init(
+            icon: "arrow.left.and.right",
+            value: "\(currentItem.glassItem.coe) COE"
+        ))
+
+        // Manufacturer (just the name)
+        let manufacturerName = GlassManufacturers.fullName(for: currentItem.glassItem.manufacturer)
+            ?? currentItem.glassItem.manufacturer.capitalized
+        tiles.append(.init(
+            icon: "building.2",
+            value: manufacturerName
+        ))
+
+        // SKU (if available and not synthetic)
+        if let sku = currentItem.glassItem.sku, !sku.isEmpty, !isSyntheticSKU(sku) {
+            tiles.append(.init(
+                icon: "tag",
+                value: sku
+            ))
+        }
+
+        // Status (mfr_status is non-optional)
+        let status = currentItem.glassItem.mfr_status
+        if !status.isEmpty {
+            let statusDisplay = status.capitalized
+            let statusColor = status.lowercased() == "available"
+                ? DesignSystem.Colors.moltenTeal
+                : DesignSystem.Colors.textSecondary
+            tiles.append(.init(
+                icon: "checkmark.circle",
+                value: statusDisplay,
+                tintColor: statusColor
+            ))
+        }
+
+        return tiles
+    }
+
+    private func isSyntheticSKU(_ sku: String) -> Bool {
+        // Pattern: XXX-[8 hex chars] like "GRE-8bf530c2"
+        let syntheticPattern = /^[A-Z]{2,4}-[a-f0-9]{8}$/
+        return sku.wholeMatch(of: syntheticPattern) != nil
+    }
+
+    // MARK: - Tags Section
+
+    private var tagsSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            HStack {
+                Text("Tags")
+                    .font(DesignSystem.Typography.subsectionTitle)
+                    .fontWeight(DesignSystem.FontWeight.semibold)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                Spacer()
+
+                Button(action: { showingUserTagsEditor = true }) {
+                    HStack(spacing: DesignSystem.Spacing.xs) {
+                        Image(systemName: "pencil")
+                        Text("Manage")
+                    }
+                    .font(DesignSystem.Typography.listItemCaption)
+                    .foregroundColor(DesignSystem.Colors.accentUser)
+                }
             }
-        )
+
+            // Tags flow layout
+            FlowLayout(spacing: DesignSystem.Spacing.sm) {
+                ForEach(allTags, id: \.self) { tag in
+                    tagChip(tag: tag, isUserTag: userTags.contains(tag))
+                }
+            }
+        }
+        .padding(DesignSystem.Padding.standard)
+        .background(DesignSystem.Colors.backgroundSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.extraLarge))
+    }
+
+    private var allTags: [String] {
+        Array(Set(currentItem.tags + userTags)).sorted()
+    }
+
+    private func tagChip(tag: String, isUserTag: Bool) -> some View {
+        HStack(spacing: DesignSystem.Spacing.xs) {
+            if isUserTag {
+                Image(systemName: "person.fill")
+                    .font(.caption2)
+            }
+            Text(tag)
+                .font(DesignSystem.Typography.listItemCaptionSmall)
+                .fontWeight(DesignSystem.FontWeight.medium)
+        }
+        .padding(.horizontal, DesignSystem.Spacing.sm)
+        .padding(.vertical, DesignSystem.Spacing.xs)
+        .background(isUserTag ? DesignSystem.Colors.tintUser : DesignSystem.Colors.tintPrimary)
+        .foregroundColor(isUserTag ? DesignSystem.Colors.accentUser : DesignSystem.Colors.accentPrimary)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
     }
 
     // MARK: - Glass Item Details Section
@@ -641,14 +781,14 @@ struct InventoryDetailView: View {
             isExpanded: expandedSections.contains("glass-item"),
             onToggle: { toggleSection("glass-item") }
         ) {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
                 // Show color approximation notice if no image permission
                 if !GlassManufacturers.hasProductImagePermission(for: currentItem.glassItem.manufacturer) {
                     Text("We do not have permission to show glass images from this manufacturer, so have done our best to approximate the color of the glass. If you would like to suggest an image to our catalog, please upload an image to the app and long-press on it to submit it.")
-                        .font(.caption)
+                        .font(DesignSystem.Typography.listItemCaption)
                         .italic()
-                        .foregroundColor(.secondary)
-                        .padding(.vertical, 8)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .padding(.vertical, DesignSystem.Spacing.md)
                 }
 
                 if let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
@@ -672,26 +812,26 @@ struct InventoryDetailView: View {
     // MARK: - Empty Details Message
 
     private var emptyDetailsMessage: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             if let manufacturerURL = currentItem.glassItem.url, let _ = URL(string: manufacturerURL) {
                 // Use Text concatenation for proper inline flow
                 Text("Please check ")
                     + Text("the manufacturer's site")
-                        .foregroundColor(.blue)
+                        .foregroundColor(DesignSystem.Colors.accentSecondary)
                     + Text(" ")
                     + Text(Image(systemName: "arrow.up.forward.square"))
-                        .font(.caption)
-                        .foregroundColor(.blue)
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .foregroundColor(DesignSystem.Colors.accentSecondary)
                     + Text(" to see if they have more information available or add notes of your own.")
             } else {
                 Text("No more details available here. Add notes of your own using the note button.")
             }
         }
-        .font(.body)
-        .foregroundColor(.secondary)
+        .font(DesignSystem.Typography.formValue)
+        .foregroundColor(DesignSystem.Colors.textSecondary)
         .padding()
-        .background(Color.gray.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(DesignSystem.Colors.backgroundTertiary)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         .onTapGesture {
             if let manufacturerURL = currentItem.glassItem.url, let url = URL(string: manufacturerURL) {
                 UIApplication.shared.open(url)
@@ -702,29 +842,29 @@ struct InventoryDetailView: View {
     // MARK: - User Notes Section
 
     private var userNotesSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             // User Notes
             if let notes = userNotes {
                 // Show existing notes
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
                     HStack {
                         Text("Your Notes")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                            .font(DesignSystem.Typography.formLabel)
+                            .fontWeight(DesignSystem.FontWeight.semibold)
                         Spacer()
                         Button(action: {
                             showingUserNotesEditor = true
                         }) {
                             Text("Edit")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.accentColor)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .fontWeight(DesignSystem.FontWeight.medium)
+                                .foregroundColor(DesignSystem.Colors.accentPrimary)
                         }
                     }
 
                     Text(notes.notes)
-                        .font(.body)
-                        .foregroundColor(.primary)
+                        .font(DesignSystem.Typography.formValue)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                         .lineLimit(isUserNotesExpanded ? nil : 4)
 
                     // Show More/Less button if notes are long
@@ -735,20 +875,20 @@ struct InventoryDetailView: View {
                             }
                         }) {
                             Text(isUserNotesExpanded ? "Show Less" : "Show More")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.accentColor)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .fontWeight(DesignSystem.FontWeight.medium)
+                                .foregroundColor(DesignSystem.Colors.accentPrimary)
                         }
                         .buttonStyle(.plain)
                     }
                 }
                 .padding()
-                .background(Color.accentColor.opacity(0.05))
+                .background(DesignSystem.Colors.tintUser)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.accentColor.opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                        .stroke(DesignSystem.Colors.accentUser.opacity(0.2), lineWidth: 1)
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
                 .id("user-notes") // Anchor for scrolling
             }
         }
@@ -765,13 +905,13 @@ struct InventoryDetailView: View {
         ) {
             if currentItem.inventory.isEmpty {
                 // Empty state
-                VStack(spacing: 12) {
+                VStack(spacing: DesignSystem.Spacing.lg) {
                     Image(systemName: "cube.box")
                         .font(.system(size: 30))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textTertiary)
                     Text("No inventory recorded")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(DesignSystem.Typography.formLabel)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     Button("Add Inventory") {
                         checkLimitAndShowAddInventory()
                     }
@@ -779,10 +919,10 @@ struct InventoryDetailView: View {
                 }
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(Color.gray.opacity(0.05))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .background(DesignSystem.Colors.backgroundTertiary)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
             } else {
-                LazyVStack(spacing: 8) {
+                LazyVStack(spacing: DesignSystem.Spacing.md) {
                     // Group by type using inventoryByType computed property
                     ForEach(Array(currentItem.inventoryByType.keys.sorted()), id: \.self) { type in
                         let quantity = currentItem.inventoryByType[type] ?? 0
@@ -806,10 +946,10 @@ struct InventoryDetailView: View {
                             Image(systemName: "plus.circle.fill")
                             Text("Add More Inventory")
                         }
-                        .font(.subheadline)
-                        .foregroundColor(.accentColor)
+                        .font(DesignSystem.Typography.formLabel)
+                        .foregroundColor(DesignSystem.Colors.accentPrimary)
                     }
-                    .padding(.top, 8)
+                    .padding(.top, DesignSystem.Spacing.md)
                 }
             }
         }
@@ -826,40 +966,40 @@ struct InventoryDetailView: View {
         ) {
             if let shoppingItem = shoppingListItem {
                 // Show shopping list item details
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
                     HStack {
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                             Text("Quantity")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                             Text(shoppingItem.formattedQuantity)
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
+                                .font(DesignSystem.Typography.formLabel)
+                                .fontWeight(DesignSystem.FontWeight.semibold)
                         }
 
                         Spacer()
 
                         if let store = shoppingItem.store {
-                            VStack(alignment: .trailing, spacing: 4) {
+                            VStack(alignment: .trailing, spacing: DesignSystem.Spacing.xs) {
                                 Text("Store")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .font(DesignSystem.Typography.listItemCaption)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                 Text(store)
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
+                                    .font(DesignSystem.Typography.formLabel)
+                                    .fontWeight(DesignSystem.FontWeight.medium)
                             }
                         }
                     }
                     .padding()
-                    .background(Color.orange.opacity(0.05))
+                    .background(DesignSystem.Colors.tintWarning.opacity(0.5))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.orange.opacity(0.2), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                            .stroke(DesignSystem.Colors.moltenAmber.opacity(0.3), lineWidth: 1)
                     )
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
 
                     // Edit/Remove buttons
-                    HStack(spacing: 12) {
+                    HStack(spacing: DesignSystem.Spacing.lg) {
                         Button(action: {
                             showingShoppingListOptions = true
                         }) {
@@ -879,13 +1019,13 @@ struct InventoryDetailView: View {
                 }
             } else {
                 // Empty state - no shopping list item
-                VStack(spacing: 12) {
+                VStack(spacing: DesignSystem.Spacing.lg) {
                     Image(systemName: "cart")
                         .font(.system(size: 30))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textTertiary)
                     Text("Not on shopping list")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(DesignSystem.Typography.formLabel)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     Button("Add to Shopping List") {
                         showingShoppingListOptions = true
                     }
@@ -893,8 +1033,8 @@ struct InventoryDetailView: View {
                 }
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(Color.gray.opacity(0.05))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .background(DesignSystem.Colors.backgroundTertiary)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
             }
         }
     }
@@ -941,18 +1081,18 @@ struct InventoryDetailView: View {
             isExpanded: expandedSections.contains("locations"),
             onToggle: { toggleSection("locations") }
         ) {
-            LazyVStack(spacing: 8) {
+            LazyVStack(spacing: DesignSystem.Spacing.md) {
                 ForEach(Array(currentItem.inventoryByLocation.keys.sorted()), id: \.self) { locationName in
                     let quantity = currentItem.inventoryByLocation[locationName] ?? 0
 
                     HStack {
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
                             Text(locationName)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
+                                .font(DesignSystem.Typography.formLabel)
+                                .fontWeight(DesignSystem.FontWeight.medium)
                             Text("Qty: \(formatQuantity(quantity))")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
 
                         Spacer()
@@ -961,17 +1101,18 @@ struct InventoryDetailView: View {
                         let maxQuantity = currentItem.inventoryByLocation.values.max() ?? 1
                         let percentage = quantity / maxQuantity
 
-                        HStack(spacing: 8) {
+                        HStack(spacing: DesignSystem.Spacing.md) {
                             ProgressView(value: percentage)
                                 .frame(width: 60)
+                                .tint(DesignSystem.Colors.moltenTeal)
                             Text("\(Int(percentage * 100))%")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                     .padding()
-                    .background(Color.gray.opacity(0.05))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .background(DesignSystem.Colors.backgroundTertiary)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
                 }
             }
         }
@@ -1034,40 +1175,40 @@ struct InventoryDetailView: View {
     }
 
     private func detailCard(title: String, content: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             Text(title)
-                .font(.subheadline)
-                .fontWeight(.semibold)
+                .font(DesignSystem.Typography.formLabel)
+                .fontWeight(DesignSystem.FontWeight.semibold)
             Text(content)
-                .font(.body)
+                .font(DesignSystem.Typography.formValue)
         }
         .padding()
-        .background(Color.gray.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(DesignSystem.Colors.backgroundTertiary)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
     }
 
     private func expandableNotesCard(title: String, content: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             Text(title)
-                .font(.subheadline)
-                .fontWeight(.semibold)
+                .font(DesignSystem.Typography.formLabel)
+                .fontWeight(DesignSystem.FontWeight.semibold)
 
             ExpandableText(content: content, lineLimit: 4, isExpanded: $isManufacturerNotesExpanded)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(Color.gray.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(DesignSystem.Colors.backgroundTertiary)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
     }
 
     private func specificationItem(title: String, value: String) -> some View {
-        VStack(alignment: .center, spacing: 4) {
+        VStack(alignment: .center, spacing: DesignSystem.Spacing.xs) {
             Text(title)
-                .font(.caption2)
-                .foregroundColor(.secondary)
+                .font(DesignSystem.Typography.listItemCaptionSmall)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             Text(value)
-                .font(.caption)
-                .fontWeight(.medium)
+                .font(DesignSystem.Typography.listItemCaption)
+                .fontWeight(DesignSystem.FontWeight.medium)
         }
         .frame(maxWidth: .infinity)
     }

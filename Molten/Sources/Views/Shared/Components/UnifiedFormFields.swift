@@ -355,10 +355,12 @@ struct InventoryTypeSegmentedPicker: View {
     private func iconForType(_ type: String) -> String {
         switch type.lowercased() {
         case "rod": return "rectangle.stack"
+        case "big-rod", "bar", "bars": return "equal"
         case "sheet": return "rectangle.3.offgrid"
         case "frit": return "circle.grid.cross"
         case "stringer": return "line.diagonal"
         case "powder": return "aqi.medium"
+        case "murrini-slice": return "cylinder.split.1x2"
         default: return "square.grid.2x2"
         }
     }
@@ -366,6 +368,7 @@ struct InventoryTypeSegmentedPicker: View {
     private func colorForType(_ type: String) -> Color {
         switch type.lowercased() {
         case "rod": return .blue
+        case "big-rod", "bar", "bars": return .indigo
         case "sheet": return .green
         case "frit": return .orange
         case "stringer": return .purple

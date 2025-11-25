@@ -57,6 +57,7 @@ final class KeyPairManager {
         var status = SecItemAdd(syncQuery as CFDictionary, nil)
 
         // If sync storage fails (e.g., iCloud Keychain disabled), try local-only storage
+        // Use ThisDeviceOnly for stricter security when not syncing
         if status != errSecSuccess {
             #if DEBUG
             print("🔐 [KEYCHAIN] Failed to store with sync (\(status)), trying local-only...")
@@ -66,8 +67,8 @@ final class KeyPairManager {
                 kSecAttrService as String: Self.keychainService,
                 kSecAttrAccount as String: identifier,
                 kSecValueData as String: privateKey,
-                kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked
-                // NO kSecAttrSynchronizable - local device only
+                kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+                // NO kSecAttrSynchronizable - local device only, stricter protection
             ]
             status = SecItemAdd(localQuery as CFDictionary, nil)
         }

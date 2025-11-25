@@ -89,7 +89,7 @@ public class RatingAPIClient: RatingAPIClientProtocol {
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         // Execute request
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await executeRequest(request)
 
         // Check response
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -136,7 +136,7 @@ public class RatingAPIClient: RatingAPIClientProtocol {
         request.httpMethod = "GET"
 
         // Execute request
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await executeRequest(request)
 
         // Check response
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -198,7 +198,7 @@ public class RatingAPIClient: RatingAPIClientProtocol {
         request.httpMethod = "GET"
 
         // Execute request
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await executeRequest(request)
 
         // Check response
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -240,7 +240,7 @@ public class RatingAPIClient: RatingAPIClientProtocol {
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         // Execute request
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await executeRequest(request)
 
         // Check response
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -258,6 +258,24 @@ public class RatingAPIClient: RatingAPIClientProtocol {
         }
 
         return 0
+    }
+
+    // MARK: - Private Helpers
+
+    /// Default timeout for API requests (30 seconds)
+    private static let defaultTimeout: TimeInterval = 30
+
+    private func executeRequest(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        var requestWithTimeout = request
+        // Set timeout if not already configured
+        if requestWithTimeout.timeoutInterval == 60 { // 60 is the default
+            requestWithTimeout.timeoutInterval = Self.defaultTimeout
+        }
+        do {
+            return try await session.data(for: requestWithTimeout)
+        } catch {
+            throw RatingAPIError.networkError(error)
+        }
     }
 }
 

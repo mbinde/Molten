@@ -11,6 +11,7 @@ import SwiftUI
 struct InventoryEditView: View {
     let record: InventoryModel
     let inventoryRepository: InventoryRepository
+    let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
 
     @Environment(\.dismiss) private var dismiss
     @State private var quantity: String
@@ -19,9 +20,10 @@ struct InventoryEditView: View {
     @State private var showingError = false
     @State private var errorMessage = ""
 
-    init(record: InventoryModel, inventoryRepository: InventoryRepository) {
+    init(record: InventoryModel, inventoryRepository: InventoryRepository, storageLocationDefinitionRepository: StorageLocationDefinitionRepository) {
         self.record = record
         self.inventoryRepository = inventoryRepository
+        self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
         self._quantity = State(initialValue: String(format: "%.1f", record.quantity))
         self._location = State(initialValue: record.location ?? "")
     }
@@ -44,7 +46,7 @@ struct InventoryEditView: View {
                         .keyboardType(.decimalPad)
                     LocationAutoCompleteField(
                         location: $location,
-                        inventoryRepository: inventoryRepository
+                        storageLocationDefinitionRepository: storageLocationDefinitionRepository
                     )
                 }
             }

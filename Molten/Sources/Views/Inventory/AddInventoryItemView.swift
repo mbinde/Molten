@@ -34,6 +34,7 @@ struct AddInventoryFormView: View {
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
     private let inventoryRepository: InventoryRepository
+    private let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
     private let prefilledNaturalKey: String?
     @State private var viewModel: AddInventoryItemViewModel
     @StateObject private var terminologySettings = GlassTerminologySettings.shared
@@ -42,6 +43,7 @@ struct AddInventoryFormView: View {
         self.catalogService = deps.catalogService
         self.inventoryTrackingService = deps.inventoryTrackingService
         self.inventoryRepository = deps.inventoryRepository
+        self.storageLocationDefinitionRepository = deps.storageLocationDefinitionRepository
         self.prefilledNaturalKey = prefilledNaturalKey
         self._viewModel = State(initialValue: AddInventoryItemViewModel(
             prefilledNaturalKey: prefilledNaturalKey,
@@ -385,7 +387,7 @@ struct AddInventoryFormView: View {
         LabeledField("Location (optional)") {
             LocationAutoCompleteField(
                 location: $viewModel.location,
-                inventoryRepository: inventoryRepository
+                storageLocationDefinitionRepository: storageLocationDefinitionRepository
             )
             .accessibilityIdentifier("inventory.add.locationField")
         }

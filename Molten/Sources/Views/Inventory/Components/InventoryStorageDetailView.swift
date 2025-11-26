@@ -25,12 +25,14 @@ struct InventoryStorageDetailView: View {
 
     private let inventoryRepository: InventoryRepository
     private let inventoryTrackingService: InventoryTrackingService
+    private let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
 
     init(item: CompleteInventoryItemModel, inventoryType: String, deps: AppDependencies = AppDependencies()) {
         self.item = item
         self.inventoryType = inventoryType
         self.inventoryRepository = deps.inventoryRepository
         self.inventoryTrackingService = deps.inventoryTrackingService
+        self.storageLocationDefinitionRepository = deps.storageLocationDefinitionRepository
     }
 
     var body: some View {
@@ -111,7 +113,8 @@ struct InventoryStorageDetailView: View {
             .sheet(item: $editingRecord) { record in
                 InventoryEditView(
                     record: record,
-                    inventoryRepository: inventoryRepository
+                    inventoryRepository: inventoryRepository,
+                    storageLocationDefinitionRepository: storageLocationDefinitionRepository
                 )
             }
             .sheet(isPresented: $showingAddInventory) {
@@ -119,7 +122,8 @@ struct InventoryStorageDetailView: View {
                 QuickAddInventoryView(
                     itemStableId: item.glassItem.stable_id,
                     itemName: item.glassItem.name,
-                    inventoryRepository: inventoryRepository
+                    inventoryRepository: inventoryRepository,
+                    storageLocationDefinitionRepository: storageLocationDefinitionRepository
                 )
             }
             .sheet(isPresented: $showingUpgradePrompt) {

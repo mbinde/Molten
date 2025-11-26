@@ -12,6 +12,7 @@ struct QuickAddInventoryView: View {
     let itemStableId: String
     let itemName: String
     let inventoryRepository: InventoryRepository
+    let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
 
     @Environment(\.dismiss) private var dismiss
     @State private var type = "rod"
@@ -43,7 +44,7 @@ struct QuickAddInventoryView: View {
 
                     LocationAutoCompleteField(
                         location: $location,
-                        inventoryRepository: inventoryRepository
+                        storageLocationDefinitionRepository: storageLocationDefinitionRepository
                     )
                 }
             }

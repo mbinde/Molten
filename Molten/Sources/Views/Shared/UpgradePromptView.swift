@@ -47,10 +47,7 @@ struct UpgradePromptView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     BenefitRow(icon: "infinity", text: "Unlimited \(feature) items")
                     BenefitRow(icon: "square.stack.3d.up.fill", text: "Unlimited projects & logbook entries")
-                    BenefitRow(icon: "printer.fill", text: "Batch label printing")
-                    BenefitRow(icon: "qrcode.viewfinder", text: "QR code scanning for inventory")
-                    BenefitRow(icon: "tag.fill", text: "Custom tags & notes for inventory")
-                    BenefitRow(icon: "photo.fill", text: "Add images to inventory items")
+                    BenefitRow(icon: "clock.arrow.circlepath", text: "Versioned cloud backups")
                 }
                 .padding(.horizontal, 32)
                 .padding(.top, 20)

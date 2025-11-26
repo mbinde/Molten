@@ -26,11 +26,13 @@ struct DebugConfig {
 
     /// Enable subscription tier override for testing
     /// When true, uses debugSubscriptionTier instead of actual subscription status
+    /// Default: false (use real subscription status)
     @AppStorage("debugOverrideSubscriptionTier") static var debugOverrideSubscriptionTier = false
 
     /// Debug subscription tier (only used when debugOverrideSubscriptionTier is true)
     /// 0 = free, 1 = premium
-    @AppStorage("debugSubscriptionTierValue") static var debugSubscriptionTierValue = 0
+    /// Default: 1 (premium) for development testing
+    @AppStorage("debugSubscriptionTierValue") static var debugSubscriptionTierValue = 1
 
     /// Get the debug subscription tier
     static var debugSubscriptionTier: SubscriptionTier {

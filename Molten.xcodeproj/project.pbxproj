@@ -133,6 +133,7 @@
 				Sources/Views/Shared/Helpers/UIStateManagers.swift,
 				Tests/MoltenTests/App/DefaultTabTests.swift,
 				Tests/MoltenTests/App/SubscriptionConfigTests.swift,
+				Tests/MoltenTests/CoatingItemTypeSystemTests.swift,
 				Tests/MoltenTests/EntitlementServiceTests.swift,
 				Tests/MoltenTests/GlassItemTypeSystemTests.swift,
 				Tests/MoltenTests/GlassTerminologySettingsTests.swift,
@@ -347,6 +348,7 @@
 				Tests/InventoryImport/InventoryImportServiceTests.swift,
 				Tests/MoltenTests/App/DefaultTabTests.swift,
 				Tests/MoltenTests/App/SubscriptionConfigTests.swift,
+				Tests/MoltenTests/CoatingItemTypeSystemTests.swift,
 				Tests/MoltenTests/EntitlementServiceTests.swift,
 				Tests/MoltenTests/GlassItemTypeSystemTests.swift,
 				Tests/MoltenTests/GlassTerminologySettingsTests.swift,
@@ -1759,7 +1761,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;

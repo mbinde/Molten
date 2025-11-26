@@ -68,7 +68,7 @@ enum FeatureFlags {
 
     /// Maximum number of distinct glass items allowed in inventory for free tier
     /// Pro members have unlimited inventory items
-    nonisolated static let FREE_TIER_INVENTORY_LIMIT = 50
+    nonisolated static let FREE_TIER_INVENTORY_LIMIT = 25
 
     /// Maximum number of shopping list items for free tier
     /// Pro members have unlimited shopping list items

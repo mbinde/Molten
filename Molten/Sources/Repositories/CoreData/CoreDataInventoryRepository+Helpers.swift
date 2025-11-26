@@ -51,7 +51,7 @@ extension CoreDataInventoryRepository {
         let containerCount = (coreDataItem.value(forKey: "container_count") as? NSNumber)?.doubleValue
 
         // Future-proofing fields
-        let workspace_id = coreDataItem.value(forKey: "workspace_id") as? String ?? "default"
+        let workspace_id = coreDataItem.value(forKey: "workspace_id") as? UUID
 
         // Deserialize dimensions from JSON string stored in dimensions_x
         var dimensions: [String: Double]? = nil

@@ -69,12 +69,16 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
 
     nonisolated static func == (lhs: CompleteInventoryItemModel, rhs: CompleteInventoryItemModel) -> Bool {
         return lhs.catalogItem.stable_id == rhs.catalogItem.stable_id &&
+               lhs.inventory == rhs.inventory &&
+               lhs.tags == rhs.tags &&
+               lhs.userTags == rhs.userTags &&
                lhs.rating?.averageRating == rhs.rating?.averageRating &&
                lhs.rating?.totalRatings == rhs.rating?.totalRatings
     }
 
     nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(catalogItem.stable_id)
+        hasher.combine(inventory)
         hasher.combine(rating?.averageRating)
         hasher.combine(rating?.totalRatings)
     }

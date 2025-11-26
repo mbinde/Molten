@@ -14,19 +14,19 @@ extension CompleteInventoryItemModel {
 
     // MARK: - Business Logic Queries
 
-    /// Whether this item has any inventory (quantity > 0)
+    /// Whether this item has any inventory (quantity > 0 OR containerCount > 0)
     ///
-    /// Business rule: Item "has inventory" if ANY inventory record has positive quantity
-    /// This is distinct from totalQuantity > 0 because it handles edge cases where
-    /// multiple records might sum to zero (e.g., adjustments, corrections)
+    /// Business rule: Item "has inventory" if ANY inventory record has stock
+    /// (positive quantity OR positive container count for jar-based tracking)
     ///
-    /// Example: [Record(qty: 5), Record(qty: 0)] → true
-    /// Example: [Record(qty: 0), Record(qty: 0)] → false
+    /// Example: [Record(qty: 5, jars: 0)] → true
+    /// Example: [Record(qty: 0, jars: 2)] → true (jar-only tracking)
+    /// Example: [Record(qty: 0, jars: 0)] → false
     /// Example: [] → false
     ///
-    /// Performance: O(n) worst case, but short-circuits on first positive quantity
+    /// Performance: O(n) worst case, but short-circuits on first positive value
     nonisolated var hasInventory: Bool {
-        inventory.contains { $0.quantity > 0 }
+        inventory.contains { $0.hasStock }
     }
 
     // MARK: - UI Display Helpers

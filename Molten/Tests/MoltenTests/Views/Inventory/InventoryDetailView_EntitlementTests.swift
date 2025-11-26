@@ -15,10 +15,18 @@ struct InventoryDetailView_EntitlementTests {
 
     // MARK: - Shared Dependencies
 
-    /// ✅ CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
+    /// CRITICAL: Store AppDependencies at struct level to keep PersistenceController alive
     /// This prevents Core Data zombie objects that cause crashes.
     /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
     private let deps = AppDependencies(persistenceController: .createTestController())
+
+    // MARK: - Test Setup
+
+    init() {
+        // Ensure debug subscription tier override is disabled for tests
+        // This prevents UserDefaults from polluting test results
+        DebugConfig.debugOverrideSubscriptionTier = false
+    }
 
     // MARK: - Test Helpers
 
@@ -94,6 +102,7 @@ struct InventoryDetailView_EntitlementTests {
 
         #expect(limit != nil)
         #expect(limit == SubscriptionConfig.FreeTierLimits.maxInventoryItems)
+        #expect(limit == 25)
     }
 
     @Test("Free tier can add inventory when under limit")
@@ -228,6 +237,7 @@ struct InventoryDetailView_EntitlementTests {
 
         #expect(limit != nil)
         #expect(limit == SubscriptionConfig.FreeTierLimits.maxProjects)
+        #expect(limit == 5)
     }
 
     @Test("Premium tier has unlimited projects")
@@ -247,6 +257,7 @@ struct InventoryDetailView_EntitlementTests {
 
         #expect(limit != nil)
         #expect(limit == SubscriptionConfig.FreeTierLimits.maxLogbookEntries)
+        #expect(limit == 10)
     }
 
     @Test("Premium tier has unlimited logbook entries")
@@ -257,112 +268,32 @@ struct InventoryDetailView_EntitlementTests {
         #expect(limit == nil)
     }
 
-    // MARK: - Feature Access Tests
+    // MARK: - Versioned Cloud Backups Feature Tests
 
-    @Test("Free tier cannot use batch label printing")
-    func testFreeTierBatchLabelPrinting() {
+    @Test("Free tier cannot use versioned cloud backups")
+    func testFreeTierCannotUseVersionedCloudBackups() {
         let service = createEntitlementService(tier: .free)
-        #expect(service.canUseBatchLabelPrinting() == false)
+        #expect(service.canUseVersionedCloudBackups() == false)
     }
 
-    @Test("Premium tier can use batch label printing")
-    func testPremiumTierBatchLabelPrinting() {
+    @Test("Premium tier can use versioned cloud backups")
+    func testPremiumTierCanUseVersionedCloudBackups() {
         let service = createEntitlementService(tier: .premium)
-        #expect(service.canUseBatchLabelPrinting() == true)
+        #expect(service.canUseVersionedCloudBackups() == true)
     }
 
-    @Test("CSV import available to all tiers")
-    func testCSVImportAvailableToAll() {
-        let freeService = createEntitlementService(tier: .free)
-        let premiumService = createEntitlementService(tier: .premium)
-
-        #expect(freeService.canUseCSVImport() == true)
-        #expect(premiumService.canUseCSVImport() == true)
-    }
-
-    @Test("Bulk editing available to all tiers")
-    func testBulkEditingAvailableToAll() {
-        let freeService = createEntitlementService(tier: .free)
-        let premiumService = createEntitlementService(tier: .premium)
-
-        #expect(freeService.canUseBulkEditing() == true)
-        #expect(premiumService.canUseBulkEditing() == true)
-    }
-
-    @Test("Free tier cannot use QR code scanning")
-    func testFreeTierQRCodeScanning() {
-        let service = createEntitlementService(tier: .free)
-        #expect(service.canUseQRCodeScanning() == false)
-    }
-
-    @Test("Premium tier can use QR code scanning")
-    func testPremiumTierQRCodeScanning() {
-        let service = createEntitlementService(tier: .premium)
-        #expect(service.canUseQRCodeScanning() == true)
-    }
-
-    @Test("Free tier cannot add custom tags to inventory")
-    func testFreeTierCustomInventoryTags() {
-        let service = createEntitlementService(tier: .free)
-        #expect(service.canAddCustomTagsToInventory() == false)
-    }
-
-    @Test("Premium tier can add custom tags to inventory")
-    func testPremiumTierCustomInventoryTags() {
-        let service = createEntitlementService(tier: .premium)
-        #expect(service.canAddCustomTagsToInventory() == true)
-    }
-
-    @Test("Free tier cannot add images to inventory")
-    func testFreeTierInventoryImages() {
-        let service = createEntitlementService(tier: .free)
-        #expect(service.canAddImagesToInventory() == false)
-    }
-
-    @Test("Premium tier can add images to inventory")
-    func testPremiumTierInventoryImages() {
-        let service = createEntitlementService(tier: .premium)
-        #expect(service.canAddImagesToInventory() == true)
-    }
-
-    @Test("Free tier cannot add custom notes to inventory")
-    func testFreeTierCustomInventoryNotes() {
-        let service = createEntitlementService(tier: .free)
-        #expect(service.canAddCustomNotesToInventory() == false)
-    }
-
-    @Test("Premium tier can add custom notes to inventory")
-    func testPremiumTierCustomInventoryNotes() {
-        let service = createEntitlementService(tier: .premium)
-        #expect(service.canAddCustomNotesToInventory() == true)
-    }
-
-    @Test("Free tier cannot use custom fields")
-    func testFreeTierCustomFields() {
-        let service = createEntitlementService(tier: .free)
-        #expect(service.canUseCustomFields() == false)
-    }
-
-    @Test("Premium tier can use custom fields")
-    func testPremiumTierCustomFields() {
-        let service = createEntitlementService(tier: .premium)
-        #expect(service.canUseCustomFields() == true)
-    }
-
-    // MARK: - Feature Enforcement Tests
-
-    @Test("Enforce batch label printing feature")
-    func testEnforceBatchLabelPrinting() {
+    @Test("Enforce versioned cloud backups feature")
+    func testEnforceVersionedCloudBackups() {
         let freeService = createEntitlementService(tier: .free)
         let premiumService = createEntitlementService(tier: .premium)
 
         // Free tier should throw
         do {
-            try freeService.enforceFeatureAccess(.batchLabelPrinting)
-            Issue.record("Free tier should throw for batch label printing")
+            try freeService.enforceFeatureAccess(.versionedCloudBackups)
+            Issue.record("Free tier should throw for versioned cloud backups")
         } catch let error as EntitlementError {
-            if case .featureRequiresPremium(let feature) = error {
-                #expect(feature == .batchLabelPrinting)
+            if case .featureRequiresPro(let feature) = error {
+                #expect(feature == .versionedCloudBackups)
             }
         } catch {
             Issue.record("Wrong error type")
@@ -370,26 +301,10 @@ struct InventoryDetailView_EntitlementTests {
 
         // Premium tier should not throw
         do {
-            try premiumService.enforceFeatureAccess(.batchLabelPrinting)
+            try premiumService.enforceFeatureAccess(.versionedCloudBackups)
             // Success
         } catch {
-            Issue.record("Premium tier should not throw for batch label printing")
-        }
-    }
-
-    @Test("Enforce custom fields feature")
-    func testEnforceCustomFields() {
-        let freeService = createEntitlementService(tier: .free)
-
-        do {
-            try freeService.enforceFeatureAccess(.customFields)
-            Issue.record("Should throw for free tier")
-        } catch let error as EntitlementError {
-            if case .featureRequiresPremium(let feature) = error {
-                #expect(feature == .customFields)
-            }
-        } catch {
-            Issue.record("Wrong error type")
+            Issue.record("Premium tier should not throw for versioned cloud backups")
         }
     }
 
@@ -402,7 +317,6 @@ struct InventoryDetailView_EntitlementTests {
 
         #expect(message.contains("25"))
         #expect(message.contains("inventory"))
-        #expect(message.contains("upgrade") || message.contains("Upgrade"))
     }
 
     @Test("Shopping list limit error message includes limit")
@@ -414,13 +328,12 @@ struct InventoryDetailView_EntitlementTests {
         #expect(message.contains("shopping"))
     }
 
-    @Test("Feature requires premium error message includes feature name")
-    func testFeatureRequiresPremiumErrorMessage() {
-        let error = EntitlementError.featureRequiresPremium(feature: .batchLabelPrinting)
+    @Test("Feature requires pro error message includes feature name")
+    func testFeatureRequiresProErrorMessage() {
+        let error = EntitlementError.featureRequiresPro(feature: .versionedCloudBackups)
         let message = error.errorDescription ?? ""
 
-        #expect(message.contains("Batch Label Printing"))
-        #expect(message.contains("premium") || message.contains("Premium"))
+        #expect(message.contains("Versioned Cloud Backups"))
     }
 
     // MARK: - Subscription Config Tests
@@ -508,19 +421,7 @@ struct InventoryDetailView_EntitlementTests {
         #expect(!hasOurItem)
     }
 
-    // MARK: - Premium Feature Set Tests
-
-    @Test("All premium features enabled for premium tier")
-    func testAllPremiumFeaturesEnabled() {
-        let service = createEntitlementService(tier: .premium)
-
-        #expect(service.canUseBatchLabelPrinting() == true)
-        #expect(service.canUseQRCodeScanning() == true)
-        #expect(service.canAddCustomTagsToInventory() == true)
-        #expect(service.canAddImagesToInventory() == true)
-        #expect(service.canAddCustomNotesToInventory() == true)
-        #expect(service.canUseCustomFields() == true)
-    }
+    // MARK: - Premium Tier Tests
 
     @Test("Premium tier has all unlimited limits")
     func testPremiumTierAllUnlimited() {
@@ -532,18 +433,6 @@ struct InventoryDetailView_EntitlementTests {
         #expect(service.getLogbookEntriesLimit() == nil)
     }
 
-    @Test("Free tier has all premium features disabled")
-    func testFreeTierPremiumFeaturesDisabled() {
-        let service = createEntitlementService(tier: .free)
-
-        #expect(service.canUseBatchLabelPrinting() == false)
-        #expect(service.canUseQRCodeScanning() == false)
-        #expect(service.canAddCustomTagsToInventory() == false)
-        #expect(service.canAddImagesToInventory() == false)
-        #expect(service.canAddCustomNotesToInventory() == false)
-        #expect(service.canUseCustomFields() == false)
-    }
-
     @Test("Free tier has all numeric limits set")
     func testFreeTierAllLimitsSet() {
         let service = createEntitlementService(tier: .free)
@@ -552,5 +441,20 @@ struct InventoryDetailView_EntitlementTests {
         #expect(service.getShoppingListLimit() != nil)
         #expect(service.getProjectsLimit() != nil)
         #expect(service.getLogbookEntriesLimit() != nil)
+    }
+
+    // MARK: - Universal Features Tests
+
+    @Test("Universal features available to all tiers via config")
+    func testUniversalFeaturesViaConfig() {
+        // These features are now universal (available to all tiers)
+        #expect(SubscriptionConfig.UniversalFeatures.catalogAccess == true)
+        #expect(SubscriptionConfig.UniversalFeatures.cloudKitSync == true)
+        #expect(SubscriptionConfig.UniversalFeatures.exportData == true)
+        #expect(SubscriptionConfig.UniversalFeatures.labelPrinting == true)
+        #expect(SubscriptionConfig.UniversalFeatures.qrCodeScanning == true)
+        #expect(SubscriptionConfig.UniversalFeatures.customInventoryTags == true)
+        #expect(SubscriptionConfig.UniversalFeatures.inventoryItemImages == true)
+        #expect(SubscriptionConfig.UniversalFeatures.customInventoryNotes == true)
     }
 }

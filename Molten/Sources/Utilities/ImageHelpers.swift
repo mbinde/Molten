@@ -21,6 +21,21 @@ extension Notification.Name {
 #if canImport(UIKit)
 // MARK: - UIKit-specific Image Helpers
 
+/// Centralized image loading utilities for the app.
+///
+/// ## Public API (use these in Views):
+/// - `loadProductImageForDisplay()` - **THE** entry point for loading product images. Always returns a usable image.
+/// - `wouldReturnGradientImage()` - Check if the image would be a gradient (for info buttons)
+/// - `generateGradientImage()` - Generate a gradient UIImage from hex colors (used internally, but public for testing)
+/// - `clearCache()` / `clearAllCaches()` - Cache management
+///
+/// ## Internal Helpers (DO NOT call from Views - use loadProductImageForDisplay instead):
+/// - `loadProductImage()` - Low-level bundle/cache loading (used internally for manufacturer logos)
+/// - `productImageExists()` - Low-level existence check
+/// - `getProductImageName()` - Low-level filename retrieval
+/// - `sanitizeItemCodeForFilename()` - Filename sanitization
+///
+/// These internal helpers are accessible for unit testing but should never be called directly from Views.
 struct ImageHelpers {
     nonisolated static let productImagePathPrefix = ""
 
@@ -46,10 +61,120 @@ struct ImageHelpers {
         return cache
     }()
 
+    // MARK: - Gradient Image Generation
+
+    /// Generates a UIImage with a linear gradient from hex color strings
+    /// This allows gradient images to be returned from loadProductImageForDisplay instead of nil
+    /// - Parameters:
+    ///   - colors: Array of hex color strings (e.g., ["#2E5E41", "#1D4030"])
+    ///   - size: Size of the image to generate (default 120x120 for good quality scaling)
+    /// - Returns: UIImage with gradient, or nil if colors are invalid
+    nonisolated static func generateGradientImage(from colors: [String], size: CGSize = CGSize(width: 120, height: 120)) -> UIImage? {
+        // Convert hex strings to UIColors
+        let uiColors = colors.compactMap { hexToUIColor($0) }
+        guard !uiColors.isEmpty else { return nil }
+
+        // Create a horizontal linear gradient
+        UIGraphicsBeginImageContextWithOptions(size, true, 0)
+        defer { UIGraphicsEndImageContext() }
+
+        guard let context = UIGraphicsGetCurrentContext() else { return nil }
+
+        // Create gradient
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let cgColors = uiColors.map { $0.cgColor } as CFArray
+
+        // If only one color, duplicate it for a solid fill
+        let gradientColors: CFArray
+        if uiColors.count == 1 {
+            gradientColors = [uiColors[0].cgColor, uiColors[0].cgColor] as CFArray
+        } else {
+            gradientColors = cgColors
+        }
+
+        guard let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: nil) else {
+            return nil
+        }
+
+        // Draw horizontal gradient (left to right, like ColorSwatchView)
+        let startPoint = CGPoint(x: 0, y: size.height / 2)
+        let endPoint = CGPoint(x: size.width, y: size.height / 2)
+        context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: [])
+
+        return UIGraphicsGetImageFromCurrentImageContext()
+    }
+
+    /// Converts a hex color string to UIColor
+    /// - Parameter hex: Hex string in format "#RRGGBB" or "RRGGBB"
+    /// - Returns: UIColor, or nil if parsing fails
+    private nonisolated static func hexToUIColor(_ hex: String) -> UIColor? {
+        var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
+
+        guard hexSanitized.count == 6 else {
+            return nil
+        }
+
+        var rgb: UInt64 = 0
+        Scanner(string: hexSanitized).scanHexInt64(&rgb)
+
+        let red = CGFloat((rgb & 0xFF0000) >> 16) / 255.0
+        let green = CGFloat((rgb & 0x00FF00) >> 8) / 255.0
+        let blue = CGFloat(rgb & 0x0000FF) / 255.0
+
+        return UIColor(red: red, green: green, blue: blue, alpha: 1.0)
+    }
+
+    /// Checks if the image returned by loadProductImageForDisplay would be a color gradient
+    /// Used by views like HeroHeader that need to show an info button for color approximations
+    @MainActor
+    static func wouldReturnGradientImage(
+        manufacturer: String?,
+        imagePath: String?,
+        imageThumbPath: String?,
+        dominantColors: [String]?
+    ) async -> Bool {
+        // Must have dominant colors to show gradient
+        guard let colors = dominantColors, !colors.isEmpty else {
+            return false
+        }
+
+        let colorChipMode = UserSettings.shared.colorChipDisplayMode
+
+        // ALWAYS mode: always show gradient if we have colors
+        if colorChipMode == .always {
+            return true
+        }
+
+        // NEVER mode: never show gradient
+        if colorChipMode == .never {
+            return false
+        }
+
+        // NO_PHOTO mode (default): show gradient only if no product image is available
+        if let manufacturer = manufacturer,
+           !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
+            // No permission - would show gradient (unless PDX)
+            let isPDX = manufacturer.caseInsensitiveCompare("PDX") == .orderedSame
+            return !isPDX
+        }
+
+        // Has permission - check if product image exists
+        let useThumbnail = !UserSettings.shared.downloadFullSizeImages
+        let hasProductImage = await ImageDownloadService.loadImage(
+            manufacturer: manufacturer,
+            exactFilename: imagePath,
+            exactThumbnailFilename: imageThumbPath,
+            useThumbnail: useThumbnail
+        ) != nil
+
+        return !hasProductImage
+    }
+
     // MARK: - Centralized Image Loading Logic
 
     /// Single source of truth for product image loading decision tree
-    /// Returns nil if should show gradient (based on user settings and availability)
+    /// ALWAYS returns a usable image - never nil. Falls back to gradient or manufacturer logo.
     @MainActor
     static func loadProductImageForDisplay(
         itemCode: String,
@@ -74,10 +199,12 @@ struct ImageHelpers {
         if colorChipMode == .always {
             // Check if we have dominant_colors
             if let colors = dominantColors, !colors.isEmpty {
-                // Return nil to signal that gradient should be shown
-                return nil
+                // Generate and return gradient image
+                if let gradientImage = generateGradientImage(from: colors) {
+                    return gradientImage
+                }
             }
-            // No colors - fall through to try product image or manufacturer logo
+            // No colors or gradient generation failed - fall through to try product image or manufacturer logo
         } else if colorChipMode == .never {
             // NEVER MODE: Never show gradient - always photo or logo
             // Check if we have permission for product images
@@ -119,8 +246,14 @@ struct ImageHelpers {
                         ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
                     }.value
                 } else {
-                    // Return nil to signal that gradient should be shown
-                    return nil
+                    // Generate and return gradient image
+                    if let colors = dominantColors, let gradientImage = generateGradientImage(from: colors) {
+                        return gradientImage
+                    }
+                    // Gradient generation failed - fall through to manufacturer logo
+                    return await Task.detached(priority: .background) {
+                        ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
+                    }.value
                 }
             }
 
@@ -135,10 +268,11 @@ struct ImageHelpers {
                 return cdnImage
             }
 
-            // Step 3: No product image found - check if we should show gradient
+            // Step 3: No product image found - try gradient if we have colors
             if let colors = dominantColors, !colors.isEmpty {
-                // Return nil to signal that gradient should be shown
-                return nil
+                if let gradientImage = generateGradientImage(from: colors) {
+                    return gradientImage
+                }
             }
 
             // Final fallback: Try manufacturer logo
@@ -452,38 +586,15 @@ struct ProductImageView: View {
     var body: some View {
         Group {
             if let loadedImage = loadedImage {
+                // loadProductImageForDisplay always returns a usable image (product photo, gradient, or manufacturer logo)
                 Image(uiImage: loadedImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: size, height: size)
                     .clipped()
                     .cornerRadius(8)
-            } else if !isLoading,
-                      let manufacturer = manufacturer,
-                      !GlassManufacturers.hasProductImagePermission(for: manufacturer) {
-                // No permission to show product images - show gradient if we have colors, else show manufacturer logo
-                if let colors = dominantColors, !colors.isEmpty {
-                    ColorSwatchView(colors: colors, size: size, cornerRadius: 8)
-                } else if let loadedImage = loadedImage {
-                    // Show manufacturer logo (loaded in loadImageAsync)
-                    Image(uiImage: loadedImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: size, height: size)
-                        .clipped()
-                        .cornerRadius(8)
-                } else {
-                    // No manufacturer logo available
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(.systemGray5))
-                        .frame(width: size, height: size)
-                        .overlay {
-                            Image(systemName: "photo")
-                                .foregroundColor(Color(.systemGray3))
-                                .font(.system(size: size * 0.4))
-                        }
-                }
             } else {
+                // Loading state or truly no image available
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color(.systemGray5))
                     .frame(width: size, height: size)
@@ -601,6 +712,7 @@ struct ProductImageDetail: View {
         VStack(spacing: DesignSystem.Spacing.sm) {
             Group {
                 if let loadedImage = loadedImage {
+                    // loadProductImageForDisplay always returns a usable image (product photo, gradient, or manufacturer logo)
                     let imageView = Image(uiImage: loadedImage)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -616,16 +728,8 @@ struct ProductImageDetail: View {
                     } else {
                         imageView
                     }
-                } else if !isLoading,
-                          let manufacturer = manufacturer,
-                          !GlassManufacturers.hasProductImagePermission(for: manufacturer),
-                          let colors = dominantColors,
-                          !colors.isEmpty {
-                    // Show gradient when no permission and have colors
-                    ColorSwatchView(colors: colors, size: maxSize, cornerRadius: 12)
-                        .frame(maxWidth: maxSize, maxHeight: maxSize)
-                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                 } else {
+                    // Loading state or truly no image available
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color(.systemGray6))
                         .frame(width: maxSize * 0.8, height: maxSize * 0.6)

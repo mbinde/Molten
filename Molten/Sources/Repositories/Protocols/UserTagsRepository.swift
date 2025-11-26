@@ -188,21 +188,26 @@ struct UserTagModel: Identifiable, Equatable, Sendable {
     let ownerId: String  // Natural key for glass items, UUID.uuidString for projects/logbooks
     let tag: String
 
-    init(id: UUID = UUID(), ownerType: TagOwnerType, ownerId: String, tag: String) {
+    // Future-proofing fields (added pre-release for easier migrations)
+    let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
+
+    init(id: UUID = UUID(), ownerType: TagOwnerType, ownerId: String, tag: String, workspace_id: UUID? = nil) {
         self.id = id
         self.ownerType = ownerType
         self.ownerId = ownerId
         // Use shared cleaning logic from TagsRepository protocol
         self.tag = CoreDataUserTagsRepository.cleanTag(tag)
+        self.workspace_id = workspace_id
     }
 
     /// Legacy initializer for backward compatibility with glass items
-    init(id: UUID = UUID(), item_stable_id: String, tag: String) {
+    init(id: UUID = UUID(), item_stable_id: String, tag: String, workspace_id: UUID? = nil) {
         self.id = id
         self.ownerType = .glassItem
         self.ownerId = item_stable_id
         // Use shared cleaning logic from TagsRepository protocol
         self.tag = CoreDataUserTagsRepository.cleanTag(tag)
+        self.workspace_id = workspace_id
     }
 
     /// Legacy support - maps to ownerId for glass items

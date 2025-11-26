@@ -61,28 +61,28 @@ struct CoreDataStorageLocationRepositoryTests {
     @Test("Create location without id field")
     func testCreateLocationWithoutId() async throws {
         let location = StorageLocationModel(
-            inventory_id: inventoryId,
-            location: "Studio",
+            inventoryId: inventoryId,
+            locationName: "Studio",
             quantity: 10.0
         )
 
         let created = try await repository.createLocation(location)
 
         // Verify the location was created
-        #expect(created.inventory_id == inventoryId)
-        #expect(created.location == "Studio")
+        #expect(created.inventoryId == inventoryId)
+        #expect(created.locationName == "Studio")
         #expect(created.quantity == 10.0)
 
         // Verify we can fetch it back
         let fetched = try await repository.fetchLocations(forInventory: inventoryId)
         #expect(fetched.count == 1)
-        #expect(fetched.first?.location == "Studio")
+        #expect(fetched.first?.locationName == "Studio")
     }
 
     @Test("Create multiple locations for same inventory")
     func testCreateMultipleLocationsForSameInventory() async throws {
-        let location1 = StorageLocationModel(inventory_id: inventoryId, location: "Studio", quantity: 5.0)
-        let location2 = StorageLocationModel(inventory_id: inventoryId, location: "Storage", quantity: 15.0)
+        let location1 = StorageLocationModel(inventoryId: inventoryId, locationName: "Studio", quantity: 5.0)
+        let location2 = StorageLocationModel(inventoryId: inventoryId, locationName: "Storage", quantity: 15.0)
 
         _ = try await repository.createLocation(location1)
         _ = try await repository.createLocation(location2)
@@ -90,7 +90,7 @@ struct CoreDataStorageLocationRepositoryTests {
         let fetched = try await repository.fetchLocations(forInventory: inventoryId)
         #expect(fetched.count == 2)
 
-        let locations = Set(fetched.map { $0.location })
+        let locations = Set(fetched.map { $0.locationName })
         #expect(locations.contains("Studio"))
         #expect(locations.contains("Storage"))
     }
@@ -98,11 +98,11 @@ struct CoreDataStorageLocationRepositoryTests {
     @Test("Update location using composite key")
     func testUpdateLocationUsingCompositeKey() async throws {
         // Create initial location
-        let original = StorageLocationModel(inventory_id: inventoryId, location: "Studio", quantity: 10.0)
+        let original = StorageLocationModel(inventoryId: inventoryId, locationName: "Studio", quantity: 10.0)
         _ = try await repository.createLocation(original)
 
         // Update using inventory_id + location name (composite key)
-        let updated = StorageLocationModel(inventory_id: inventoryId, location: "Studio", quantity: 25.0)
+        let updated = StorageLocationModel(inventoryId: inventoryId, locationName: "Studio", quantity: 25.0)
         let result = try await repository.updateLocation(updated)
 
         #expect(result.quantity == 25.0)
@@ -116,7 +116,7 @@ struct CoreDataStorageLocationRepositoryTests {
     @Test("Delete location using composite key")
     func testDeleteLocationUsingCompositeKey() async throws {
         // Create location
-        let location = StorageLocationModel(inventory_id: inventoryId, location: "Studio", quantity: 10.0)
+        let location = StorageLocationModel(inventoryId: inventoryId, locationName: "Studio", quantity: 10.0)
         _ = try await repository.createLocation(location)
 
         // Verify it exists
@@ -175,8 +175,8 @@ struct CoreDataStorageLocationRepositoryTests {
         let fetched = try await repository.fetchLocations(forInventory: inventoryId)
         #expect(fetched.count == 2)
 
-        let studio = fetched.first { $0.location == "Studio" }
-        let storage = fetched.first { $0.location == "Storage" }
+        let studio = fetched.first { $0.locationName == "Studio" }
+        let storage = fetched.first { $0.locationName == "Storage" }
 
         #expect(studio?.quantity == 12.0)
         #expect(storage?.quantity == 8.0)
@@ -198,7 +198,7 @@ struct CoreDataStorageLocationRepositoryTests {
         let fetched = try await repository.fetchLocations(forInventory: inventoryId)
         #expect(fetched.count == 2)
 
-        let locationNames = Set(fetched.map { $0.location })
+        let locationNames = Set(fetched.map { $0.locationName })
         #expect(locationNames.contains("Shelf A"))
         #expect(locationNames.contains("Shelf B"))
         #expect(!locationNames.contains("Studio"))
@@ -262,12 +262,12 @@ struct CoreDataStorageLocationRepositoryTests {
 
     // MARK: - Data Validation
 
-    @Test("Quantity stored as string in Core Data")
-    func testQuantityStoredAsString() async throws {
-        let location = StorageLocationModel(inventory_id: inventoryId, location: "Studio", quantity: 15.5)
+    @Test("Quantity stored as Double in Core Data")
+    func testQuantityStoredAsDouble() async throws {
+        let location = StorageLocationModel(inventoryId: inventoryId, locationName: "Studio", quantity: 15.5)
         _ = try await repository.createLocation(location)
 
-        // Fetch the Core Data object directly to verify quantity is stored as string
+        // Fetch the Core Data object directly to verify quantity is stored as Double
         let context = testController.container.viewContext
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
         fetchRequest.predicate = NSPredicate(
@@ -281,22 +281,22 @@ struct CoreDataStorageLocationRepositoryTests {
 
         if let coreDataObject = results.first {
             let quantityValue = coreDataObject.value(forKey: "quantity")
-            #expect(quantityValue is String, "Quantity should be stored as String in Core Data")
-            #expect(quantityValue as? String == "15.5")
+            #expect(quantityValue is Double, "Quantity should be stored as Double in Core Data")
+            #expect(quantityValue as? Double == 15.5)
         }
     }
 
     @Test("Location name is trimmed and cleaned")
     func testLocationNameCleaned() async throws {
-        let location = StorageLocationModel(inventory_id: inventoryId, location: "  Studio  ", quantity: 10.0)
+        let location = StorageLocationModel(inventoryId: inventoryId, locationName: "  Studio  ", quantity: 10.0)
         let created = try await repository.createLocation(location)
 
         // LocationModel should clean the location name
-        #expect(created.location == "Studio")
+        #expect(created.locationName == "Studio")
 
         // Verify in database
         let fetched = try await repository.fetchLocations(forInventory: inventoryId)
-        #expect(fetched.first?.location == "Studio")
+        #expect(fetched.first?.locationName == "Studio")
     }
 }
 

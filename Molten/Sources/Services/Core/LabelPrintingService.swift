@@ -1559,13 +1559,17 @@ struct LabelBuilderPreset: Identifiable, Codable {
     var createdAt: Date
     var modifiedAt: Date
 
-    init(id: UUID = UUID(), name: String, description: String, config: LabelBuilderConfig, createdAt: Date = Date(), modifiedAt: Date = Date()) {
+    // Future-proofing fields (added pre-release for easier migrations)
+    var workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
+
+    init(id: UUID = UUID(), name: String, description: String, config: LabelBuilderConfig, createdAt: Date = Date(), modifiedAt: Date = Date(), workspace_id: UUID? = nil) {
         self.id = id
         self.name = name
         self.description = description
         self.config = config
         self.createdAt = createdAt
         self.modifiedAt = modifiedAt
+        self.workspace_id = workspace_id
     }
 
     /// Export preset as JSON for sharing

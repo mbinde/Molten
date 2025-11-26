@@ -40,6 +40,9 @@ struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
     let dateModified: Date
     let ocrText: String?  // Extracted text from OCR (nil if not processed or no text found)
 
+    // Future-proofing fields (added pre-release for easier migrations)
+    let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
+
     /// File name on disk (UUID + extension) - for backward compatibility with FileSystem storage
     nonisolated var fileName: String {
         "\(id.uuidString).\(fileExtension)"
@@ -58,7 +61,8 @@ struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
         fileExtension: String = "jpg",
         dateCreated: Date = Date(),
         dateModified: Date = Date(),
-        ocrText: String? = nil
+        ocrText: String? = nil,
+        workspace_id: UUID? = nil
     ) {
         self.id = id
         self.ownerType = ownerType
@@ -68,6 +72,7 @@ struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
         self.dateCreated = dateCreated
         self.dateModified = dateModified
         self.ocrText = ocrText
+        self.workspace_id = workspace_id
     }
 
     /// Legacy initializer for backward compatibility
@@ -78,7 +83,8 @@ struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
         fileExtension: String = "jpg",
         dateAdded: Date = Date(),
         dateModified: Date = Date(),
-        ocrText: String? = nil
+        ocrText: String? = nil,
+        workspace_id: UUID? = nil
     ) {
         self.id = id
         self.ownerType = .glassItem
@@ -88,6 +94,7 @@ struct UserImageModel: Identifiable, Equatable, Hashable, Sendable {
         self.dateCreated = dateAdded
         self.dateModified = dateModified
         self.ocrText = ocrText
+        self.workspace_id = workspace_id
     }
 }
 

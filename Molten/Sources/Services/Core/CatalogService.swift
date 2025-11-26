@@ -189,7 +189,11 @@ actor CatalogService {
         var attachedCount = 0
         for catalogItem in filteredItems {
             let inventory = inventoryByItem[catalogItem.stable_id] ?? []
-            let tags = tagsByItem[catalogItem.stable_id] ?? []
+            // Combine tags from ItemTags repository (for glass) with inline tags (for coatings/tools)
+            var tags = tagsByItem[catalogItem.stable_id] ?? []
+            if let inlineTags = catalogItem.inlineTags {
+                tags = Array(Set(tags + inlineTags)).sorted()
+            }
             let userTags = userTagsByItem[catalogItem.stable_id] ?? []
             let rating = ratingsByItem[catalogItem.stable_id]
 

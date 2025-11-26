@@ -2,8 +2,9 @@
 //  ColorSwatchView.swift
 //  Molten
 //
-//  Created by Assistant on 11/18/25.
 //  Color gradient swatch view for visualizing glass colors
+//
+//  DESIGN SYSTEM: Uses DesignSystem.* for corner radius and spacing.
 //
 
 import SwiftUI
@@ -16,11 +17,40 @@ struct ColorSwatchView: View {
     let cornerRadius: CGFloat
     let showGradientFrame: Bool  // Whether to show the radial gradient frame indicator
 
-    init(colors: [String], size: CGFloat = 60, cornerRadius: CGFloat = 8, showGradientFrame: Bool = true) {
+    /// Semantic size presets for consistent usage across the app
+    enum Size {
+        /// Small thumbnail for compact lists (40pt)
+        case small
+        /// Standard list row thumbnail (60pt)
+        case medium
+        /// Large display for detail views (80pt)
+        case large
+        /// Hero display (120pt)
+        case hero
+        /// Custom size
+        case custom(CGFloat)
+
+        var value: CGFloat {
+            switch self {
+            case .small: return 40
+            case .medium: return 60
+            case .large: return 80
+            case .hero: return 120
+            case .custom(let size): return size
+            }
+        }
+    }
+
+    init(colors: [String], size: CGFloat = 60, cornerRadius: CGFloat = DesignSystem.CornerRadius.medium, showGradientFrame: Bool = true) {
         self.colors = colors
         self.size = size
         self.cornerRadius = cornerRadius
         self.showGradientFrame = showGradientFrame
+    }
+
+    /// Convenience initializer using semantic size presets
+    init(colors: [String], size: Size, cornerRadius: CGFloat = DesignSystem.CornerRadius.medium, showGradientFrame: Bool = true) {
+        self.init(colors: colors, size: size.value, cornerRadius: cornerRadius, showGradientFrame: showGradientFrame)
     }
 
     var body: some View {
@@ -116,7 +146,7 @@ struct ColorSwatchView: View {
 // MARK: - Preview
 
 #Preview("Single Color") {
-    VStack(spacing: 20) {
+    VStack(spacing: DesignSystem.Spacing.xxl) {
         ColorSwatchView(colors: ["#2E5E41"])
         ColorSwatchView(colors: ["#FF5733"])
         ColorSwatchView(colors: ["#1E2E6C"])
@@ -125,7 +155,7 @@ struct ColorSwatchView: View {
 }
 
 #Preview("Multiple Colors") {
-    VStack(spacing: 20) {
+    VStack(spacing: DesignSystem.Spacing.xxl) {
         // Green gradient (Agate Green)
         ColorSwatchView(colors: ["#2E5E41", "#1D4030", "#0C2219"])
 
@@ -141,18 +171,32 @@ struct ColorSwatchView: View {
     .padding()
 }
 
-#Preview("Different Sizes") {
-    VStack(spacing: 20) {
-        ColorSwatchView(colors: ["#2E5E41", "#1D4030", "#0C2219"], size: 40)
-        ColorSwatchView(colors: ["#2E5E41", "#1D4030", "#0C2219"], size: 60)
-        ColorSwatchView(colors: ["#2E5E41", "#1D4030", "#0C2219"], size: 100)
-        ColorSwatchView(colors: ["#2E5E41", "#1D4030", "#0C2219"], size: 200)
+#Preview("Semantic Sizes") {
+    VStack(spacing: DesignSystem.Spacing.xxl) {
+        HStack(spacing: DesignSystem.Spacing.lg) {
+            VStack {
+                ColorSwatchView(colors: ["#2E5E41", "#1D4030"], size: .small)
+                Text("Small").font(DesignSystem.Typography.listItemCaptionSmall)
+            }
+            VStack {
+                ColorSwatchView(colors: ["#2E5E41", "#1D4030"], size: .medium)
+                Text("Medium").font(DesignSystem.Typography.listItemCaptionSmall)
+            }
+            VStack {
+                ColorSwatchView(colors: ["#2E5E41", "#1D4030"], size: .large)
+                Text("Large").font(DesignSystem.Typography.listItemCaptionSmall)
+            }
+        }
+        VStack {
+            ColorSwatchView(colors: ["#2E5E41", "#1D4030"], size: .hero)
+            Text("Hero").font(DesignSystem.Typography.listItemCaptionSmall)
+        }
     }
     .padding()
 }
 
 #Preview("Invalid Colors Fallback") {
-    VStack(spacing: 20) {
+    VStack(spacing: DesignSystem.Spacing.xxl) {
         ColorSwatchView(colors: [])
         ColorSwatchView(colors: ["invalid", "colors"])
         ColorSwatchView(colors: ["#ZZZ"])
@@ -161,40 +205,40 @@ struct ColorSwatchView: View {
 }
 
 #Preview("Gradient Frame Comparison") {
-    VStack(spacing: 30) {
-        VStack(spacing: 10) {
+    VStack(spacing: DesignSystem.Spacing.max) {
+        VStack(spacing: DesignSystem.Spacing.md) {
             Text("With Gradient Frame (Default)")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            HStack(spacing: 20) {
+                .font(DesignSystem.Typography.listItemCaption)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+            HStack(spacing: DesignSystem.Spacing.xxl) {
                 // Very dark colors
-                ColorSwatchView(colors: ["#0C2219"], size: 80, showGradientFrame: true)
+                ColorSwatchView(colors: ["#0C2219"], size: .large, showGradientFrame: true)
                 // Mid-tone colors
-                ColorSwatchView(colors: ["#2E5E41", "#1D4030", "#0C2219"], size: 80, showGradientFrame: true)
+                ColorSwatchView(colors: ["#2E5E41", "#1D4030", "#0C2219"], size: .large, showGradientFrame: true)
                 // Light colors
-                ColorSwatchView(colors: ["#E8D5C4"], size: 80, showGradientFrame: true)
+                ColorSwatchView(colors: ["#E8D5C4"], size: .large, showGradientFrame: true)
             }
         }
 
-        VStack(spacing: 10) {
+        VStack(spacing: DesignSystem.Spacing.md) {
             Text("Without Gradient Frame")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            HStack(spacing: 20) {
+                .font(DesignSystem.Typography.listItemCaption)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+            HStack(spacing: DesignSystem.Spacing.xxl) {
                 // Very dark colors
-                ColorSwatchView(colors: ["#0C2219"], size: 80, showGradientFrame: false)
+                ColorSwatchView(colors: ["#0C2219"], size: .large, showGradientFrame: false)
                 // Mid-tone colors
-                ColorSwatchView(colors: ["#2E5E41", "#1D4030", "#0C2219"], size: 80, showGradientFrame: false)
+                ColorSwatchView(colors: ["#2E5E41", "#1D4030", "#0C2219"], size: .large, showGradientFrame: false)
                 // Light colors
-                ColorSwatchView(colors: ["#E8D5C4"], size: 80, showGradientFrame: false)
+                ColorSwatchView(colors: ["#E8D5C4"], size: .large, showGradientFrame: false)
             }
         }
 
-        VStack(spacing: 10) {
-            Text("Large Size with Frame")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            ColorSwatchView(colors: ["#FF7F24", "#FF5733", "#D35400"], size: 120, showGradientFrame: true)
+        VStack(spacing: DesignSystem.Spacing.md) {
+            Text("Hero Size with Frame")
+                .font(DesignSystem.Typography.listItemCaption)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+            ColorSwatchView(colors: ["#FF7F24", "#FF5733", "#D35400"], size: .hero, showGradientFrame: true)
         }
     }
     .padding()

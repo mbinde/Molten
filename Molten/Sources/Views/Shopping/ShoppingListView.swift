@@ -242,14 +242,18 @@ struct ShoppingListView: View {
             }.filter { !$0.value.items.isEmpty }
         }
 
-        // Apply COE filter (only applies to glass items)
+        // Apply COE filter (only affects glass items - coatings/tools don't have COE)
         if !viewModel.selectedCOEs.isEmpty {
             filtered = filtered.mapValues { list in
                 let filteredItems = list.items.filter { item in
+                    // Non-glass items (coatings, tools) don't have COE - don't filter them out
+                    if item.catalogItem.itemType != .glass {
+                        return true
+                    }
                     if let coe = item.catalogItem.coe {
                         return viewModel.selectedCOEs.contains(coe)
                     }
-                    return false  // Coatings/tools without COE are excluded
+                    return false
                 }
                 return DetailedShoppingListModel(
                     store: list.store,
@@ -685,7 +689,8 @@ struct ShoppingListView: View {
                     productTypeFilter: .init(
                         selectedProductTypes: $viewModel.selectedProductTypes,
                         availableTypes: FeatureFlags.availableProductTypes,
-                        displayName: displayNameForProductType
+                        displayName: displayNameForProductType,
+                        typeCounts: viewModel.productTypeCounts
                     ),
                     storeFilter: .init(
                         selectedStore: $viewModel.selectedStore,
@@ -707,7 +712,7 @@ struct ShoppingListView: View {
                 )
 
                 // Usage banner (only show for free tier when not in shopping mode)
-                if entitlementService.tier == .free && !shoppingModeState.isShoppingModeEnabled {
+                if entitlementService.currentTier == .free && !shoppingModeState.isShoppingModeEnabled {
                     UsageBanner(
                         featureName: "shopping list items",
                         currentCount: shoppingListItemCount,

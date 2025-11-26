@@ -47,6 +47,53 @@ enum TemperatureUnit: String, Codable, Sendable, CaseIterable {
             return (temperature * 9 / 5) + 32
         }
     }
+
+    /// Convert a temperature from Fahrenheit to this unit
+    nonisolated func fromFahrenheit(_ temperature: Int) -> Int {
+        switch self {
+        case .fahrenheit:
+            return temperature
+        case .celsius:
+            // F to C: (F - 32) * 5 / 9
+            return Int(round(Double(temperature - 32) * 5.0 / 9.0))
+        }
+    }
+
+    /// Short symbol for compact display (F or C)
+    nonisolated var shortSymbol: String {
+        switch self {
+        case .fahrenheit: return "F"
+        case .celsius: return "C"
+        }
+    }
+
+    /// Format a temperature range for display (e.g., "1175-1425°F" or "635-774°C")
+    /// - Parameters:
+    ///   - low: Low temperature in Fahrenheit (nil if unknown)
+    ///   - high: High temperature in Fahrenheit (nil if unknown)
+    /// - Returns: Formatted string like "1175-1425°F", "1175+°F", "1425°F", or "?-?°F"
+    nonisolated func formatTemperatureRange(lowF: Int?, highF: Int?) -> String {
+        let unit = shortSymbol
+
+        switch (lowF, highF) {
+        case (.some(let low), .some(let high)):
+            // Both values present
+            let convertedLow = fromFahrenheit(low)
+            let convertedHigh = fromFahrenheit(high)
+            return "\(convertedLow)-\(convertedHigh)°\(unit)"
+        case (.some(let low), .none):
+            // Only low value - show with "+" suffix
+            let convertedLow = fromFahrenheit(low)
+            return "\(convertedLow)+°\(unit)"
+        case (.none, .some(let high)):
+            // Only high value
+            let convertedHigh = fromFahrenheit(high)
+            return "\(convertedHigh)°\(unit)"
+        case (.none, .none):
+            // No values
+            return "?-?°\(unit)"
+        }
+    }
 }
 
 // KilnTechnique has been deprecated - use TechniqueType from ProjectModels instead

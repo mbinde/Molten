@@ -1,0 +1,181 @@
+This is a great next step. Since I cannot generate graphical image files directly, I will provide structured, low-fidelity wireframes using text and descriptions that map precisely to SwiftUI components and the "Luminous Precision" design language defined previously.
+
+These mockups visualize how the color palette, typography, and "glass sheet" card structure apply to your key screens.
+
+-----
+
+### The "Luminous Precision" Theme Reference
+
+  * **Primary Accent:** 🟠 Molten Orange (`#FF5722`)
+  * **Secondary/Warning:** 🟡 Warm Amber (`#FFC107`)
+  * **Tertiary/Link:** 🔵 Slate Teal (`#00796B`)
+  * **Background:** ⚪️ Off-White Ash (`#F8F9FA`)
+  * **Text:** ⚫️ Charcoal (`#212121`)
+  * **Key Font modifier:** `.font(.system(.title, design: .rounded).weight(.bold))` (for big numbers)
+  * **Card modifier:** `.background(Color.white).cornerRadius(16).shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)`
+
+-----
+
+### Mockup 1: The Inventory List (Main Tab)
+
+**Concept:** Moving away from flat list rows to tactile "glass tiles." The color swatch becomes the hero to help users identify glass quickly in a busy studio.
+
+```
+[Status Bar]
+
+[Navigation Bar: Large Title "My Inventory" ⚫️ Charcoal]
+[Search Bar: "Search rods, frit, tubes..." 🔍]
+
+[ScrollView with gray background ⚪️]
+  |
+  +-- [LazyVStack with padding]
+      |
+      +-- [Glass Item Card View] -> (Tappable Link to Detail)
+      |   +-------------------------------------------------------+
+      |   | [HStack]                                              |
+      |   | +-------+  +-------------------------+  +-----------+ |
+      |   | |       |  | [VStack align: leading] |  | [VStack]  | |
+      |   | | Large |  | **BE-0124-30** ⚫️       |  | **8** 🔵  | | (SF Rounded Bold)
+      |   | | Color |  | Bullseye Red Transparent|  | sheets    | |
+      |   | | Swatch|  | Sheet, 3mm              |  | in stock  | |
+      |   | | (Rnd  |  +-------------------------+  +-----------+ |
+      |   | | Rect) |                                             |
+      |   | +-------+                                             |
+      |   +-------------------------------------------------------+
+      |   (Apply Card Modifier: White BG, Rounded cnrs, Soft Shadow)
+      |
+      +-- [Glass Item Card View (Low Stock Example)]
+      |   +-------------------------------------------------------+
+      |   | [HStack]                                              |
+      |   | +-------+  +-------------------------+  +-----------+ |
+      |   | | Yellow|  | [VStack align: leading] |  | [VStack]  | |
+      |   | | Color |  | **OC-200-YEL** ⚫️       |  | **1** 🟡  | | (Amber color indicates low)
+      |   | | Swatch|  | Oceanside Yellow Opaque |  | lb        | |
+      |   | +-------+  +-------------------------+  | low stock | |
+      |   +-------------------------------------------------------+
+      |   (Apply Card Modifier)
+      |
+      v (Repeat...)
+
+[Tab Bar: Translucent Material background]
+[Icon: 🔥 (Orange filled)] [Icon: 📦 (Teal outline)] [Icon: 🛒 (Teal outline)] [Icon: ⚙️]
+   Projects                 Inventory                Shopping
+```
+
+**SwiftUI Implementation Notes:**
+
+  * Use `ScrollView` and `LazyVStack` instead of `List` to get rid of default separators and allow for card spacing.
+  * The Swatch should be significantly larger than standard list icons, perhaps `frame(width: 60, height: 80)`.
+
+-----
+
+### Mockup 2: Item Detail View
+
+**Concept:** Immersive header. Data visualization using "tiles" instead of lists for specs.
+
+```
+[Navigation Bar: Inline Title "BE-0124-30", Back Button 🔵]
+
+[ScrollView ⚪️]
+  |
+  +-- [VStack spacing: 20]
+      |
+      +-- [Hero Header ZStack]
+      |   | (Background: The actual glass color, edge to edge height: 200)
+      |   | [VStack align: bottom leading, padding]
+      |   | **Bullseye Red Transparent** (White text, heavy weight)
+      |   | Sheet, 3mm (White text)
+      |
+      +-- [Inventory Status Section] (Padding horizontal)
+      |   +-------------------------------------------------------+
+      |   | [HStack]                                              |
+      |   | [VStack leading]        [Spacer]  [VStack trailing]   |
+      |   | Inventory Status                  **8 sheets** 🔵     |
+      |   | In Stock                          (SF Rounded Bold)   |
+      |   +-------------------------------------------------------+
+      |   (Apply Card Modifier. Maybe add thin 🟠 border if selected for project)
+      |
+      +-- [Specs Section Title: "Specifications" ⚫️] (Padding horiz)
+      |
+      +-- [LazyVGrid columns: 2, spacing: 16] (Padding horiz)
+      |   |
+      |   +-- [Data Tile]
+      |   |   +---------------------------+
+      |   |   | 🌡️ (Teal Icon)            |
+      |   |   | COE Rating                |
+      |   |   | **90** ⚫️ (SF Rounded)    |
+      |   |   +---------------------------+
+      |   |   (Apply Card Modifier)
+      |   |
+      |   +-- [Data Tile]
+      |   |   +---------------------------+
+      |   |   | 🏭 (Teal Icon)            |
+      |   |   | Manufacturer              |
+      |   |   | **Bullseye** ⚫️            |
+      |   |   +---------------------------+
+      |   |   (Apply Card Modifier)
+      |
+      v (More tiles...)
+```
+
+-----
+
+### Mockup 3: Kiln Schedule View
+
+**Concept:** Visualizing heat. The chart is the primary focus, using color to show intensity.
+
+```
+[Navigation Bar: Large Title "Fuse & Slump" ⚫️]
+[Toolbar Button: "Edit" 🟠]
+
+[ScrollView ⚪️]
+  |
+  +-- [VStack spacing: 24]
+      |
+      +-- [Chart Container Card] (Padding all sides)
+      |   +-------------------------------------------------------+
+      |   | **Schedule Visualization** ⚫️                          |
+      |   |                                                       |
+      |   | [Swift Chart View]                                    |
+      |   | (Y-Axis: Temp F°, X-Axis: Time hours)                 |
+      |   |                                                       |
+      |   |       /-----\ (Hold at peak)                          |
+      |   |      /       \                                        |
+      |   |     /         \______ (Anneal hold)                   |
+      |   |    /                 \                                |
+      |   | __/                   \ (Cool to room temp)           |
+      |   |                                                       |
+      |   | (CRITICAL VISUAL STYLE:)                              |
+      |   | The line is 🟠 Molten Orange.                         |
+      |   | The area BENEATH the line is a vertical Gradient:     |
+      |   | Top (Peak Temp): 🔴 Deep Red/Orange                   |
+      |   | Middle (ramp): 🟡 Warm Amber                          |
+      |   | Bottom (Room Temp): 🔵 Cool Teal/Fade to transparent  |
+      |   +-------------------------------------------------------+
+      |   (Apply Card Modifier)
+      |
+      +-- [Segments Title: "Segments" ⚫️] (Padding horiz)
+      |
+      +-- [VStack spacing: 12] (The list of steps)
+          |
+          +-- [Segment Card 1]
+          |   +---------------------------------------------------+
+          |   | [HStack]                                          |
+          |   | 🔥 (Orange Icon)                                  |
+          |   | [VStack leading]      [VStack trailing]           |
+          |   | **Ramp 1** Target: **1250°F** 🟠       |
+          |   | Rate: 300°F/hr        Hold: 30 min                |
+          |   +---------------------------------------------------+
+          |   (Apply Card Modifier)
+          |
+          +-- [Segment Card 2]
+          |   +---------------------------------------------------+
+          |   | [HStack]                                          |
+          |   | 🔥 (Orange Icon)                                  |
+          |   | [VStack leading]      [VStack trailing]           |
+          |   | **Ramp 2 (Peak)** Target: **1480°F** 🔴       |
+          |   | Rate: 600°F/hr        Hold: 10 min                |
+          |   +---------------------------------------------------+
+          |   (Apply Card Modifier)
+          v
+```

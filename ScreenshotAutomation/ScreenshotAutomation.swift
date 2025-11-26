@@ -57,7 +57,7 @@ final class ScreenshotAutomation: XCTestCase {
     // MARK: - Main Screenshot Test Suites
 
     /// Complete screenshot suite for website marketing
-    /// Generates 16 screenshots covering all enabled features
+    /// Generates 18 screenshots covering all enabled features
     /// BEST FOR: Website, blog posts, social media
     func testGenerateWebsiteScreenshots() throws {
         print("\n📸 WEBSITE SCREENSHOTS - Starting...")
@@ -121,6 +121,30 @@ final class ScreenshotAutomation: XCTestCase {
             dismissSheet()
         }
 
+        // 4b. Color/Tag Filter Results
+        print("4️⃣b Feature: Color/Tag Filtering")
+        ensureOnCatalog()
+        // Look for a tag filter (like "Transparent", "Opaque", "Striker")
+        // Try common glass tags
+        let tagButtons = ["Transparent", "Opaque", "Striker", "Red", "Blue"]
+        var foundTag = false
+        for tag in tagButtons {
+            if app.buttons[tag].exists {
+                app.buttons[tag].tap()
+                sleep(1)
+                waitForContentToLoad()
+                takeScreenshot(named: "feature-tag-filter-\(tag.lowercased())", subdirectory: "website", delay: 0.5)
+                // Tap again to deselect
+                app.buttons[tag].tap()
+                sleep(0.5)
+                foundTag = true
+                break
+            }
+        }
+        if !foundTag {
+            print("   ⚠️  No tag filter buttons found - skipping tag filter screenshot")
+        }
+
         // 5. Inventory Management - Track Your Stock
         print("5️⃣ Feature: Inventory List")
         navigateToTab("Inventory")
@@ -138,6 +162,30 @@ final class ScreenshotAutomation: XCTestCase {
             sleep(1)
             takeScreenshot(named: "feature-inventory-detail", subdirectory: "website", delay: 0.5)
             navigateBack()
+        }
+
+        // 6b. Inventory Types - Frit, Rods, Sheets
+        print("6️⃣b Feature: Inventory Types (Frit, Rods, Sheets)")
+        ensureOnInventory()
+        waitForContentToLoad()
+        // Look for a type filter or segment control to switch between types
+        if app.buttons["Frit"].exists {
+            app.buttons["Frit"].tap()
+            sleep(1)
+            takeScreenshot(named: "feature-inventory-types-frit", subdirectory: "website", delay: 0.5)
+            // Switch to show rods
+            if app.buttons["Rods"].exists {
+                app.buttons["Rods"].tap()
+                sleep(1)
+            }
+        } else if app.buttons["Type"].exists {
+            // If there's a Type filter button, tap it to show options
+            app.buttons["Type"].tap()
+            sleep(1)
+            takeScreenshot(named: "feature-inventory-types", subdirectory: "website", delay: 0.5)
+        } else {
+            // Just take a screenshot showing the current inventory with mixed types
+            takeScreenshot(named: "feature-inventory-types", subdirectory: "website", delay: 0.5)
         }
 
         // 7. Add Inventory - Simple Data Entry
@@ -291,7 +339,7 @@ final class ScreenshotAutomation: XCTestCase {
         }
         takeScreenshot(named: "feature-catalog-grid", subdirectory: "website", delay: 0.5)
 
-        print("\n✅ Website screenshots complete! (16 total)")
+        print("\n✅ Website screenshots complete! (18 total)")
         print("═══════════════════════════════════════════════\n")
     }
 

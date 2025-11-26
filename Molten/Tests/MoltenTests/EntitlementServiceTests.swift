@@ -8,13 +8,13 @@ struct EntitlementServiceTests {
 
     // MARK: - Shopping List Limit Tests
 
-    @Test("Free tier should have 10 item shopping list limit")
+    @Test("Free tier should have shopping list limit matching FeatureFlags")
     func testFreeTierShoppingListLimit() {
         let service = EntitlementService(tier: .free)
 
         let limit = service.getShoppingListLimit()
 
-        #expect(limit == 10)
+        #expect(limit == FeatureFlags.FREE_TIER_SHOPPING_LIST_LIMIT)
     }
 
     @Test("Premium tier should have unlimited shopping list items")
@@ -29,8 +29,9 @@ struct EntitlementServiceTests {
     @Test("Free tier can add shopping list item when under limit")
     func testCanAddShoppingListItemUnderLimit() {
         let service = EntitlementService(tier: .free)
+        let limit = FeatureFlags.FREE_TIER_SHOPPING_LIST_LIMIT
 
-        let canAdd = service.canAddShoppingListItem(currentCount: 5)
+        let canAdd = service.canAddShoppingListItem(currentCount: limit / 2)
 
         #expect(canAdd == true)
     }
@@ -38,8 +39,9 @@ struct EntitlementServiceTests {
     @Test("Free tier can add shopping list item when at limit minus one")
     func testCanAddShoppingListItemAtLimitMinusOne() {
         let service = EntitlementService(tier: .free)
+        let limit = FeatureFlags.FREE_TIER_SHOPPING_LIST_LIMIT
 
-        let canAdd = service.canAddShoppingListItem(currentCount: 9)
+        let canAdd = service.canAddShoppingListItem(currentCount: limit - 1)
 
         #expect(canAdd == true)
     }
@@ -47,8 +49,9 @@ struct EntitlementServiceTests {
     @Test("Free tier cannot add shopping list item when at limit")
     func testCannotAddShoppingListItemAtLimit() {
         let service = EntitlementService(tier: .free)
+        let limit = FeatureFlags.FREE_TIER_SHOPPING_LIST_LIMIT
 
-        let canAdd = service.canAddShoppingListItem(currentCount: 10)
+        let canAdd = service.canAddShoppingListItem(currentCount: limit)
 
         #expect(canAdd == false)
     }
@@ -56,8 +59,9 @@ struct EntitlementServiceTests {
     @Test("Free tier cannot add shopping list item when over limit")
     func testCannotAddShoppingListItemOverLimit() {
         let service = EntitlementService(tier: .free)
+        let limit = FeatureFlags.FREE_TIER_SHOPPING_LIST_LIMIT
 
-        let canAdd = service.canAddShoppingListItem(currentCount: 15)
+        let canAdd = service.canAddShoppingListItem(currentCount: limit + 5)
 
         #expect(canAdd == false)
     }
@@ -78,9 +82,10 @@ struct EntitlementServiceTests {
     @Test("Free tier enforceShoppingListLimit throws when at limit")
     func testEnforceShoppingListLimitThrowsAtLimit() {
         let service = EntitlementService(tier: .free)
+        let limit = FeatureFlags.FREE_TIER_SHOPPING_LIST_LIMIT
 
         #expect(throws: EntitlementError.self) {
-            try service.enforceShoppingListLimit(currentCount: 10)
+            try service.enforceShoppingListLimit(currentCount: limit)
         }
     }
 
@@ -104,15 +109,15 @@ struct EntitlementServiceTests {
     @Test("Shopping list limit error message is descriptive")
     func testShoppingListLimitErrorMessage() {
         let service = EntitlementService(tier: .free)
+        let limit = FeatureFlags.FREE_TIER_SHOPPING_LIST_LIMIT
 
         do {
-            try service.enforceShoppingListLimit(currentCount: 10)
+            try service.enforceShoppingListLimit(currentCount: limit)
             Issue.record("Expected error to be thrown")
         } catch let error as EntitlementError {
             let message = error.errorDescription ?? ""
-            #expect(message.contains("10"))
+            #expect(message.contains("\(limit)"))
             #expect(message.contains("shopping list"))
-            #expect(message.contains("premium"))
         } catch {
             Issue.record("Unexpected error type: \(error)")
         }
@@ -120,13 +125,13 @@ struct EntitlementServiceTests {
 
     // MARK: - Inventory Limit Tests
 
-    @Test("Free tier should have 50 item inventory limit")
+    @Test("Free tier should have 25 item inventory limit")
     func testFreeTierInventoryLimit() {
         let service = EntitlementService(tier: .free)
 
         let limit = service.getInventoryLimit()
 
-        #expect(limit == 50)
+        #expect(limit == 25)
     }
 
     @Test("Pro tier should have unlimited inventory items")
@@ -142,7 +147,7 @@ struct EntitlementServiceTests {
     func testCanAddInventoryItemUnderLimit() {
         let service = EntitlementService(tier: .free)
 
-        let canAdd = service.canAddInventoryItem(currentCount: 25)
+        let canAdd = service.canAddInventoryItem(currentCount: 12)
 
         #expect(canAdd == true)
     }
@@ -151,7 +156,7 @@ struct EntitlementServiceTests {
     func testCannotAddInventoryItemAtLimit() {
         let service = EntitlementService(tier: .free)
 
-        let canAdd = service.canAddInventoryItem(currentCount: 50)
+        let canAdd = service.canAddInventoryItem(currentCount: 25)
 
         #expect(canAdd == false)
     }
@@ -163,6 +168,46 @@ struct EntitlementServiceTests {
         let canAdd = service.canAddInventoryItem(currentCount: 1000)
 
         #expect(canAdd == true)
+    }
+
+    // MARK: - Projects Limit Tests
+
+    @Test("Free tier should have 5 projects limit")
+    func testFreeTierProjectsLimit() {
+        let service = EntitlementService(tier: .free)
+
+        let limit = service.getProjectsLimit()
+
+        #expect(limit == 5)
+    }
+
+    @Test("Pro tier should have unlimited projects")
+    func testProTierProjectsLimit() {
+        let service = EntitlementService(tier: .premium)
+
+        let limit = service.getProjectsLimit()
+
+        #expect(limit == nil)
+    }
+
+    // MARK: - Logbook Entries Limit Tests
+
+    @Test("Free tier should have 10 logbook entries limit")
+    func testFreeTierLogbookEntriesLimit() {
+        let service = EntitlementService(tier: .free)
+
+        let limit = service.getLogbookEntriesLimit()
+
+        #expect(limit == 10)
+    }
+
+    @Test("Pro tier should have unlimited logbook entries")
+    func testProTierLogbookEntriesLimit() {
+        let service = EntitlementService(tier: .premium)
+
+        let limit = service.getLogbookEntriesLimit()
+
+        #expect(limit == nil)
     }
 
     // MARK: - Tier Management Tests
@@ -197,13 +242,14 @@ struct EntitlementServiceTests {
     @Test("Updating tier affects shopping list limits")
     func testUpdatingTierAffectsShoppingListLimits() {
         let service = EntitlementService(tier: .free)
+        let freeLimit = FeatureFlags.FREE_TIER_SHOPPING_LIST_LIMIT
 
         // Initially free tier - has limit
         var limit = service.getShoppingListLimit()
-        #expect(limit == 10)
+        #expect(limit == freeLimit)
 
         // Cannot add when at limit
-        var canAdd = service.canAddShoppingListItem(currentCount: 10)
+        var canAdd = service.canAddShoppingListItem(currentCount: freeLimit)
         #expect(canAdd == false)
 
         // Upgrade to Pro
@@ -224,10 +270,10 @@ struct EntitlementServiceTests {
 
         // Initially free tier - has limit
         var limit = service.getInventoryLimit()
-        #expect(limit == 50)
+        #expect(limit == 25)
 
         // Cannot add when at limit
-        var canAdd = service.canAddInventoryItem(currentCount: 50)
+        var canAdd = service.canAddInventoryItem(currentCount: 25)
         #expect(canAdd == false)
 
         // Upgrade to Pro
@@ -242,48 +288,35 @@ struct EntitlementServiceTests {
         #expect(canAdd == true)
     }
 
-    // MARK: - Feature Access Tests
+    // MARK: - Versioned Cloud Backups Tests
 
-    @Test("Free tier has limited features")
-    func testFreeTierFeatureAccess() {
+    @Test("Free tier cannot use versioned cloud backups")
+    func testFreeTierCannotUseVersionedCloudBackups() {
         let service = EntitlementService(tier: .free)
 
-        #expect(service.canUseBatchLabelPrinting() == false)
-        #expect(service.canUseCSVImport() == true)  // CSV Import is universal
-        #expect(service.canUseBulkEditing() == true)  // Bulk Editing is universal
-        #expect(service.canUseCustomFields() == false)
+        #expect(service.canUseVersionedCloudBackups() == false)
     }
 
-    @Test("Pro tier has all features")
-    func testProTierFeatureAccess() {
+    @Test("Pro tier can use versioned cloud backups")
+    func testProTierCanUseVersionedCloudBackups() {
         let service = EntitlementService(tier: .premium)
 
-        #expect(service.canUseBatchLabelPrinting() == true)
-        #expect(service.canUseCSVImport() == true)
-        #expect(service.canUseBulkEditing() == true)
-        #expect(service.canUseCustomFields() == true)
+        #expect(service.canUseVersionedCloudBackups() == true)
     }
 
-    @Test("Feature enforcement throws for free tier")
+    @Test("Feature enforcement throws for free tier on versioned cloud backups")
     func testFeatureEnforcementThrowsForFreeTier() {
         let service = EntitlementService(tier: .free)
 
-        // Batch Label Printing is premium-only
         #expect(throws: EntitlementError.self) {
-            try service.enforceFeatureAccess(.batchLabelPrinting)
+            try service.enforceFeatureAccess(.versionedCloudBackups)
         }
-
-        // CSV Import and Bulk Editing are universal features, so they don't throw
-        // Only test premium-only features here
     }
 
-    @Test("Feature enforcement succeeds for pro tier")
+    @Test("Feature enforcement succeeds for pro tier on versioned cloud backups")
     func testFeatureEnforcementSucceedsForProTier() throws {
         let service = EntitlementService(tier: .premium)
 
-        try service.enforceFeatureAccess(.batchLabelPrinting)
-        try service.enforceFeatureAccess(.csvImport)
-        try service.enforceFeatureAccess(.bulkEditing)
-        try service.enforceFeatureAccess(.customFields)
+        try service.enforceFeatureAccess(.versionedCloudBackups)
     }
 }

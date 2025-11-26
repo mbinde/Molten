@@ -374,22 +374,77 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     }
 }
 
+/// Storage location definition model - the canonical definition of a storage location
+/// This is the source of truth for location names. Renaming here updates everywhere.
+struct StorageLocationDefinitionModel: Identifiable, Sendable {
+    let id: UUID
+    var name: String
+    var notes: String?
+    let createdAt: Date
+    var modifiedAt: Date
+    var deletedAt: Date?  // Soft delete support
+    let workspaceId: UUID?
+
+    nonisolated init(
+        id: UUID = UUID(),
+        name: String,
+        notes: String? = nil,
+        createdAt: Date = Date(),
+        modifiedAt: Date = Date(),
+        deletedAt: Date? = nil,
+        workspaceId: UUID? = nil
+    ) {
+        self.id = id
+        self.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.notes = notes
+        self.createdAt = createdAt
+        self.modifiedAt = modifiedAt
+        self.deletedAt = deletedAt
+        self.workspaceId = workspaceId
+    }
+
+    /// Check if this location is soft-deleted
+    var isDeleted: Bool {
+        deletedAt != nil
+    }
+}
+
+extension StorageLocationDefinitionModel: Equatable {
+    nonisolated static func == (lhs: StorageLocationDefinitionModel, rhs: StorageLocationDefinitionModel) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+extension StorageLocationDefinitionModel: Hashable {
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
 /// Storage location model for tracking where inventory is stored (warehouse locations, shelves, bins, etc.)
+/// References a StorageLocationDefinition by ID for the canonical location name.
 struct StorageLocationModel: Identifiable, Sendable {
     let id: UUID
-    let inventory_id: UUID
-    let location: String
+    let inventoryId: UUID
+    let storageLocationId: UUID?  // References StorageLocationDefinition
+    let locationName: String       // Cached/denormalized name for display (from definition or legacy string)
     let quantity: Double
+    let workspaceId: UUID?
 
-    // Future-proofing fields (added pre-release for easier migrations)
-    let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
-
-    nonisolated init(id: UUID = UUID(), inventory_id: UUID, location: String, quantity: Double, workspace_id: UUID? = nil) {
+    nonisolated init(
+        id: UUID = UUID(),
+        inventoryId: UUID,
+        storageLocationId: UUID? = nil,
+        locationName: String,
+        quantity: Double,
+        workspaceId: UUID? = nil
+    ) {
         self.id = id
-        self.inventory_id = inventory_id
-        self.location = location.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.inventoryId = inventoryId
+        self.storageLocationId = storageLocationId
+        self.locationName = locationName.trimmingCharacters(in: .whitespacesAndNewlines)
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
-        self.workspace_id = workspace_id
+        self.workspaceId = workspaceId
     }
 
     /// Validates that a location name string is valid

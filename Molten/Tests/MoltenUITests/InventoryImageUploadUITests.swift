@@ -17,39 +17,15 @@ import XCTest
 /// - Images persist across navigation (back and forth)
 /// - Multiple images can be uploaded
 /// - Custom Images section expands/collapses correctly
+@MainActor
 final class InventoryImageUploadUITests: BaseUITest {
 
     // MARK: - Test Setup
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
-
-        // Add test images to the simulator's photo library
-        // The sample images (sample-glass-image-1.jpg through sample-glass-image-4.jpg)
-        // are in the test bundle
-        addTestImagesToSimulator()
-    }
-
-    /// Add test images to simulator photo library using simctl
-    private func addTestImagesToSimulator() {
-        // Get the test bundle path
-        let testBundle = Bundle(for: type(of: self))
-
-        for i in 1...4 {
-            let imageName = "sample-glass-image-\(i)"
-            if let imagePath = testBundle.path(forResource: imageName, ofType: "jpg") {
-                // Use simctl to add image to simulator's photo library
-                let process = Process()
-                process.launchPath = "/usr/bin/xcrun"
-                process.arguments = ["simctl", "addmedia", "booted", imagePath]
-                try? process.run()
-                process.waitUntilExit()
-            }
-        }
-
-        // Wait briefly for images to be added
-        Thread.sleep(forTimeInterval: 1)
-    }
+    /// Note: Test images (sample-glass-image-1.jpg through sample-glass-image-4.jpg)
+    /// should be pre-loaded into the simulator's photo library before running these tests.
+    /// Run: xcrun simctl addmedia booted <path-to-images>/*.jpg
+    /// Or drag-drop images into the simulator's Photos app.
 
     // MARK: - Photo Picker UI Tests
 

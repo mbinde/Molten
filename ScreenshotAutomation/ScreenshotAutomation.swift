@@ -133,14 +133,21 @@ final class ScreenshotAutomation: XCTestCase {
         // 4. Catalog Filters - Comprehensive Options
         print("4️⃣ Feature: Catalog Filters")
         ensureOnCatalog()
-        // Make sure we're on "All Products" or "Glass" to show variety, not just Coatings
-        if app.buttons["Glass"].exists {
-            app.buttons["Glass"].tap()
-            sleep(1)
-        } else if app.buttons["All Products"].exists {
-            app.buttons["All Products"].tap()
+        // Clear any product type filters to show all products (not just Coatings)
+        // Look for and clear any active filter chips
+        if app.buttons.matching(identifier: "Coatings").firstMatch.exists {
+            app.buttons.matching(identifier: "Coatings").firstMatch.tap()
             sleep(1)
         }
+        // Also try tapping "All" or clearing filters
+        if app.buttons["All"].exists {
+            app.buttons["All"].tap()
+            sleep(1)
+        }
+        // Scroll to top of catalog to ensure we see all content
+        app.swipeDown()
+        app.swipeDown()
+        sleep(1)
         // Tap the Filters header to expand filter section
         if app.buttons["Filters"].exists {
             app.buttons["Filters"].tap()

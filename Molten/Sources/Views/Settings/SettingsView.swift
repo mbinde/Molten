@@ -406,63 +406,68 @@ struct SettingsView: View {
                 // MARK: - Advanced
                 Section("Advanced") {
                     #if DEBUG
-                    NavigationLink {
-                        DebugSettingsView()
-                    } label: {
-                        Text("Debug Settings")
-                    }
-                    .accessibilityIdentifier("settings_debug")
+                    // Hide debug settings during UI tests/screenshots
+                    let isUITesting = ProcessInfo.processInfo.arguments.contains("UI-Testing")
 
-                    NavigationLink {
-                        SentryTestView()
-                    } label: {
-                        Text("Test Sentry Logging")
-                    }
-                    .accessibilityIdentifier("settings_sentry_test")
-
-                    // Subscription tier override for testing
-                    Toggle(isOn: Binding(
-                        get: { DebugConfig.debugOverrideSubscriptionTier },
-                        set: { newValue in
-                            DebugConfig.debugOverrideSubscriptionTier = newValue
-                            // When enabling override, default to Premium (the typical test case)
-                            if newValue {
-                                DebugConfig.debugSubscriptionTierValue = 1  // 1 = premium
-                            }
-                            // Trigger refresh so views pick up the change immediately
-                            entitlementService.refreshTier()
+                    if !isUITesting {
+                        NavigationLink {
+                            DebugSettingsView()
+                        } label: {
+                            Text("Debug Settings")
                         }
-                    )) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Override Subscription Tier")
-                                .font(.body)
-                            Text("Test premium features without purchase")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
+                        .accessibilityIdentifier("settings_debug")
 
-                    if DebugConfig.debugOverrideSubscriptionTier {
-                        Picker("Debug Tier", selection: Binding(
-                            get: { DebugConfig.debugSubscriptionTierValue },
+                        NavigationLink {
+                            SentryTestView()
+                        } label: {
+                            Text("Test Sentry Logging")
+                        }
+                        .accessibilityIdentifier("settings_sentry_test")
+
+                        // Subscription tier override for testing
+                        Toggle(isOn: Binding(
+                            get: { DebugConfig.debugOverrideSubscriptionTier },
                             set: { newValue in
-                                DebugConfig.debugSubscriptionTierValue = newValue
+                                DebugConfig.debugOverrideSubscriptionTier = newValue
+                                // When enabling override, default to Premium (the typical test case)
+                                if newValue {
+                                    DebugConfig.debugSubscriptionTierValue = 1  // 1 = premium
+                                }
                                 // Trigger refresh so views pick up the change immediately
                                 entitlementService.refreshTier()
                             }
                         )) {
-                            Text("Free").tag(0)
-                            Text("Premium").tag(1)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Override Subscription Tier")
+                                    .font(.body)
+                                Text("Test premium features without purchase")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
-                        .pickerStyle(.segmented)
 
-                        // Show current tier status
-                        HStack {
-                            Image(systemName: entitlementService.currentTier == .premium ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(entitlementService.currentTier == .premium ? .green : .secondary)
-                            Text("Current Tier: \(entitlementService.currentTier == .premium ? "Premium" : "Free")")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                        if DebugConfig.debugOverrideSubscriptionTier {
+                            Picker("Debug Tier", selection: Binding(
+                                get: { DebugConfig.debugSubscriptionTierValue },
+                                set: { newValue in
+                                    DebugConfig.debugSubscriptionTierValue = newValue
+                                    // Trigger refresh so views pick up the change immediately
+                                    entitlementService.refreshTier()
+                                }
+                            )) {
+                                Text("Free").tag(0)
+                                Text("Premium").tag(1)
+                            }
+                            .pickerStyle(.segmented)
+
+                            // Show current tier status
+                            HStack {
+                                Image(systemName: entitlementService.currentTier == .premium ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor(entitlementService.currentTier == .premium ? .green : .secondary)
+                                Text("Current Tier: \(entitlementService.currentTier == .premium ? "Premium" : "Free")")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
                     #endif

@@ -18,15 +18,11 @@ struct HeroHeader: View {
     @State private var isLoading = true
     @State private var showingFullScreen = false
     @State private var showingColorApproximationInfo = false
+    @State private var isShowingColorApproximation = false
 
     init(item: GlassItemModel, extendsToTop: Bool = false) {
         self.item = item
         self.extendsToTop = extendsToTop
-    }
-
-    /// Whether we're showing a color gradient instead of a real image
-    private var isShowingColorApproximation: Bool {
-        !isLoading && loadedImage == nil && item.dominant_colors != nil && !item.dominant_colors!.isEmpty
     }
 
     private var imageHeight: CGFloat {
@@ -36,6 +32,7 @@ struct HeroHeader: View {
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             // Large product image - fills width and crops vertically
+            // loadProductImageForDisplay always returns a usable image (product photo, gradient, or manufacturer logo)
             GeometryReader { geometry in
                 if let image = loadedImage {
                     Image(uiImage: image)
@@ -47,10 +44,6 @@ struct HeroHeader: View {
                         .onTapGesture {
                             showingFullScreen = true
                         }
-                } else if !isLoading, let colors = item.dominant_colors, !colors.isEmpty {
-                    // Show color swatch gradient
-                    ColorSwatchView(colors: colors, size: geometry.size.width, cornerRadius: 0)
-                        .frame(width: geometry.size.width, height: imageHeight)
                 } else {
                     // Loading or placeholder
                     Rectangle()
@@ -167,6 +160,14 @@ struct HeroHeader: View {
     private func loadImage() async {
         isLoading = true
         defer { isLoading = false }
+
+        // Check if we'll be showing a gradient (for info button)
+        isShowingColorApproximation = await ImageHelpers.wouldReturnGradientImage(
+            manufacturer: item.manufacturer,
+            imagePath: item.image_path,
+            imageThumbPath: item.image_thumb_path,
+            dominantColors: item.dominant_colors
+        )
 
         // Use the centralized image loading logic
         loadedImage = await ImageHelpers.loadProductImageForDisplay(

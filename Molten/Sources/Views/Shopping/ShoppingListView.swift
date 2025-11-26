@@ -712,7 +712,7 @@ struct ShoppingListView: View {
                 )
 
                 // Usage banner (only show for free tier when not in shopping mode)
-                if entitlementService.tier == .free && !shoppingModeState.isShoppingModeEnabled {
+                if entitlementService.currentTier == .free && !shoppingModeState.isShoppingModeEnabled {
                     UsageBanner(
                         featureName: "shopping list items",
                         currentCount: shoppingListItemCount,

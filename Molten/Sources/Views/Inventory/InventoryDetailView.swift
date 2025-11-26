@@ -27,6 +27,7 @@ struct InventoryDetailView: View {
     let userImageRepository: UserImageRepository
     let kilnScheduleService: KilnScheduleService
     let glassItemRepository: GlassItemRepository
+    let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
 
     @Environment(\.dismiss) private var dismiss
     @Environment(EntitlementService.self) private var entitlementService
@@ -101,7 +102,8 @@ struct InventoryDetailView: View {
         locationService: UnifiedLocationService,
         userImageRepository: UserImageRepository,
         kilnScheduleService: KilnScheduleService,
-        glassItemRepository: GlassItemRepository
+        glassItemRepository: GlassItemRepository,
+        storageLocationDefinitionRepository: StorageLocationDefinitionRepository
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
@@ -113,6 +115,7 @@ struct InventoryDetailView: View {
         self.userImageRepository = userImageRepository
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
+        self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
@@ -132,6 +135,7 @@ struct InventoryDetailView: View {
         self.userImageRepository = deps.userImageRepository
         self.kilnScheduleService = deps.kilnScheduleService
         self.glassItemRepository = deps.glassItemRepository
+        self.storageLocationDefinitionRepository = deps.storageLocationDefinitionRepository
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
@@ -337,7 +341,8 @@ struct InventoryDetailView: View {
             if let service = inventoryTrackingService {
                 InventoryEditView(
                     record: record,
-                    inventoryRepository: service.inventoryRepository
+                    inventoryRepository: service.inventoryRepository,
+                    storageLocationDefinitionRepository: storageLocationDefinitionRepository
                 )
                 .onDisappear {
                     // Refresh item data after editing
@@ -509,10 +514,14 @@ struct InventoryDetailView: View {
 
     @MainActor
     private func loadManufacturerImage() async {
-        manufacturerImage = ImageHelpers.loadProductImage(
-            for: currentItem.glassItem.sku ?? "",
+        // Use the centralized image loading entry point
+        manufacturerImage = await ImageHelpers.loadProductImageForDisplay(
+            itemCode: currentItem.glassItem.stable_id,
             manufacturer: currentItem.glassItem.manufacturer,
-            stableId: currentItem.glassItem.stable_id
+            stableId: currentItem.glassItem.stable_id,
+            imagePath: currentItem.glassItem.image_path,
+            imageThumbPath: currentItem.glassItem.image_thumb_path,
+            dominantColors: currentItem.glassItem.dominant_colors
         )
     }
 

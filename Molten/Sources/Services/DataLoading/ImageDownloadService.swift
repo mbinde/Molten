@@ -111,18 +111,37 @@ final class ImageDownloadService: Sendable {
             return nil
         }
 
-        // Step 2→3→4: Try thumbnail first (if requested)
-        if useThumbnail, let thumbnailFilename = exactThumbnailFilename, !thumbnailFilename.isEmpty {
-            if let image = await loadSingleImage(filename: thumbnailFilename) {
-                return image
-            }
-            // Fall through to try full-size image
-        }
+        // When useThumbnail is true: try thumbnail first, then full-size
+        // When useThumbnail is false: try full-size first, then thumbnail as fallback
+        // This ensures we always have a chance to load SOMETHING if either exists
 
-        // Step 2→3→4: Try full-size image
-        if let filename = exactFilename, !filename.isEmpty {
-            if let image = await loadSingleImage(filename: filename) {
-                return image
+        if useThumbnail {
+            // Try thumbnail first
+            if let thumbnailFilename = exactThumbnailFilename, !thumbnailFilename.isEmpty {
+                if let image = await loadSingleImage(filename: thumbnailFilename) {
+                    return image
+                }
+            }
+
+            // Fallback to full-size
+            if let filename = exactFilename, !filename.isEmpty {
+                if let image = await loadSingleImage(filename: filename) {
+                    return image
+                }
+            }
+        } else {
+            // Try full-size first
+            if let filename = exactFilename, !filename.isEmpty {
+                if let image = await loadSingleImage(filename: filename) {
+                    return image
+                }
+            }
+
+            // Fallback to thumbnail (ALWAYS try this as last resort)
+            if let thumbnailFilename = exactThumbnailFilename, !thumbnailFilename.isEmpty {
+                if let image = await loadSingleImage(filename: thumbnailFilename) {
+                    return image
+                }
             }
         }
 
@@ -133,17 +152,17 @@ final class ImageDownloadService: Sendable {
     /// - Parameter filename: The exact filename to load
     /// - Returns: PlatformImage if found, nil otherwise
     private nonisolated static func loadSingleImage(filename: String) async -> PlatformImage? {
-        // Step 2: Check downloaded cache first
+        // Step 1: Check downloaded cache first
         if let cachedImage = await loadFromCache(filename: filename) {
             return cachedImage
         }
 
-        // Step 3: Check app bundle (saves bandwidth if bundled)
+        // Step 2: Check app bundle (saves bandwidth if bundled)
         if let bundledImage = loadFromBundle(filename: filename) {
             return bundledImage
         }
 
-        // Step 4: Try to download from CDN
+        // Step 3: Try to download from CDN
         if let result = await downloadImage(filename: filename) {
             await saveToCache(image: result.image, filename: filename, etag: result.etag)
             return result.image

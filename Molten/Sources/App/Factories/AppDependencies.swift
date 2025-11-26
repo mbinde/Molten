@@ -94,6 +94,7 @@ class AppDependencies {
     let ratingRepository: RatingRepository
     let userPreferencesRepository: UserPreferencesRepository
     let workspaceRepository: WorkspaceRepository
+    let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
     #if os(iOS)
     let userImageRepository: UserImageRepository
     #endif
@@ -212,6 +213,19 @@ class AppDependencies {
         }
         let service = KilnScheduleService(repository: kilnScheduleRepository)
         _kilnScheduleService = service
+        return service
+    }
+
+    private var _storageLocationService: StorageLocationService?
+    var storageLocationService: StorageLocationService {
+        if let service = _storageLocationService {
+            return service
+        }
+        let service = StorageLocationService(
+            definitionRepository: storageLocationDefinitionRepository,
+            storageLocationRepository: storageLocationRepository
+        )
+        _storageLocationService = service
         return service
     }
 
@@ -352,6 +366,7 @@ class AppDependencies {
         self.ratingRepository = CoreDataRatingRepository(localContext: self.localContext, cloudContext: self.cloudContext)
         self.userPreferencesRepository = UserDefaultsPreferencesRepository()
         self.workspaceRepository = CoreDataWorkspaceRepository(context: self.cloudContext)
+        self.storageLocationDefinitionRepository = CoreDataStorageLocationDefinitionRepository(context: self.cloudContext)
         #if os(iOS)
         self.userImageRepository = CoreDataUserImageRepository(context: self.cloudContext)
         #endif

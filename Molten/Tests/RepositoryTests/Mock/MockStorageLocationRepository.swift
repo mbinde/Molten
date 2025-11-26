@@ -23,73 +23,49 @@ final class MockStorageLocationRepository: StorageLocationRepository {
         return Array(locations.values)
     }
 
-    func fetchLocations(forInventory inventory_id: UUID) async throws -> [StorageLocationModel] {
-        let locationsArray = Array(locations.values)
-        var result: [StorageLocationModel] = []
-        for loc in locationsArray {
-            let locInventoryId = await loc.inventory_id
-            if locInventoryId == inventory_id {
-                result.append(loc)
-            }
-        }
-        return result
+    func fetchLocations(forInventory inventoryId: UUID) async throws -> [StorageLocationModel] {
+        return locations.values.filter { $0.inventoryId == inventoryId }
     }
 
     func fetchLocations(withName locationName: String) async throws -> [StorageLocationModel] {
-        let locationsArray = Array(locations.values)
-        var result: [StorageLocationModel] = []
-        for loc in locationsArray {
-            let locName = await loc.location
-            if locName == locationName {
-                result.append(loc)
-            }
-        }
-        return result
+        return locations.values.filter { $0.locationName == locationName }
     }
 
     func createLocation(_ location: StorageLocationModel) async throws -> StorageLocationModel {
-        let id = await location.id
-        locations[id] = location
+        locations[location.id] = location
         return location
     }
 
     func createLocations(_ locations: [StorageLocationModel]) async throws -> [StorageLocationModel] {
         for location in locations {
-            let id = await location.id
-            self.locations[id] = location
+            self.locations[location.id] = location
         }
         return locations
     }
 
     func updateLocation(_ location: StorageLocationModel) async throws -> StorageLocationModel {
-        let id = await location.id
-        guard locations[id] != nil else {
+        guard self.locations[location.id] != nil else {
             throw NSError(domain: "MockLocationRepository", code: 404)
         }
-        locations[id] = location
+        self.locations[location.id] = location
         return location
     }
 
     func deleteLocation(_ location: StorageLocationModel) async throws {
-        let id = await location.id
-        locations.removeValue(forKey: id)
+        locations.removeValue(forKey: location.id)
     }
 
-    func deleteLocations(forInventory inventory_id: UUID) async throws {
-        let locationsArray = Array(locations)
-        for (id, loc) in locationsArray {
-            let locInventoryId = await loc.inventory_id
-            if locInventoryId == inventory_id {
+    func deleteLocations(forInventory inventoryId: UUID) async throws {
+        for (id, loc) in locations {
+            if loc.inventoryId == inventoryId {
                 locations.removeValue(forKey: id)
             }
         }
     }
 
     func deleteLocations(withName locationName: String) async throws {
-        let locationsArray = Array(locations)
-        for (id, loc) in locationsArray {
-            let locName = await loc.location
-            if locName == locationName {
+        for (id, loc) in locations {
+            if loc.locationName == locationName {
                 locations.removeValue(forKey: id)
             }
         }
@@ -97,101 +73,81 @@ final class MockStorageLocationRepository: StorageLocationRepository {
 
     // MARK: - Location Management Operations
 
-    func setLocations(_ locations: [(location: String, quantity: Double)], forInventory inventory_id: UUID) async throws {
+    func setLocations(_ locations: [(location: String, quantity: Double)], forInventory inventoryId: UUID) async throws {
         // Delete existing
-        try await deleteLocations(forInventory: inventory_id)
+        try await deleteLocations(forInventory: inventoryId)
 
         // Create new
         for (locationName, quantity) in locations {
             let loc = StorageLocationModel(
                 id: UUID(),
-                inventory_id: inventory_id,
-                location: locationName,
+                inventoryId: inventoryId,
+                locationName: locationName,
                 quantity: quantity
             )
             _ = try await createLocation(loc)
         }
     }
 
-    func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventory_id: UUID) async throws -> StorageLocationModel {
-        let locs = try await fetchLocations(forInventory: inventory_id)
-        var existing: StorageLocationModel? = nil
-        for loc in locs {
-            let locName = await loc.location
-            if locName == locationName {
-                existing = loc
-                break
-            }
-        }
+    func addQuantity(_ quantity: Double, toLocation locationName: String, forInventory inventoryId: UUID) async throws -> StorageLocationModel {
+        let locs = try await fetchLocations(forInventory: inventoryId)
+        let existing = locs.first { $0.locationName == locationName }
 
         if let existing = existing {
-            let existingQty = await existing.quantity
-            let existingId = await existing.id
             let updated = StorageLocationModel(
-                id: existingId,
-                inventory_id: inventory_id,
-                location: locationName,
-                quantity: existingQty + quantity
+                id: existing.id,
+                inventoryId: inventoryId,
+                storageLocationId: existing.storageLocationId,
+                locationName: locationName,
+                quantity: existing.quantity + quantity,
+                workspaceId: existing.workspaceId
             )
             return try await updateLocation(updated)
         } else {
             let new = StorageLocationModel(
                 id: UUID(),
-                inventory_id: inventory_id,
-                location: locationName,
+                inventoryId: inventoryId,
+                locationName: locationName,
                 quantity: quantity
             )
             return try await createLocation(new)
         }
     }
 
-    func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventory_id: UUID) async throws -> StorageLocationModel? {
-        let locs = try await fetchLocations(forInventory: inventory_id)
-        var existing: StorageLocationModel? = nil
-        for loc in locs {
-            let locName = await loc.location
-            if locName == locationName {
-                existing = loc
-                break
-            }
-        }
-        guard let existing = existing else {
+    func subtractQuantity(_ quantity: Double, fromLocation locationName: String, forInventory inventoryId: UUID) async throws -> StorageLocationModel? {
+        let locs = try await fetchLocations(forInventory: inventoryId)
+        guard let existing = locs.first(where: { $0.locationName == locationName }) else {
             throw NSError(domain: "MockLocationRepository", code: 404)
         }
 
-        let existingQty = await existing.quantity
-        let newQty = existingQty - quantity
+        let newQty = existing.quantity - quantity
 
         if newQty <= 0 {
             try await deleteLocation(existing)
             return nil
         } else {
-            let existingId = await existing.id
             let updated = StorageLocationModel(
-                id: existingId,
-                inventory_id: inventory_id,
-                location: locationName,
-                quantity: newQty
+                id: existing.id,
+                inventoryId: inventoryId,
+                storageLocationId: existing.storageLocationId,
+                locationName: locationName,
+                quantity: newQty,
+                workspaceId: existing.workspaceId
             )
             return try await updateLocation(updated)
         }
     }
 
-    func moveQuantity(_ quantity: Double, fromLocation: String, toLocation: String, forInventory inventory_id: UUID) async throws {
-        _ = try await subtractQuantity(quantity, fromLocation: fromLocation, forInventory: inventory_id)
-        _ = try await addQuantity(quantity, toLocation: toLocation, forInventory: inventory_id)
+    func moveQuantity(_ quantity: Double, fromLocation: String, toLocation: String, forInventory inventoryId: UUID) async throws {
+        _ = try await subtractQuantity(quantity, fromLocation: fromLocation, forInventory: inventoryId)
+        _ = try await addQuantity(quantity, toLocation: toLocation, forInventory: inventoryId)
     }
 
     // MARK: - Discovery Operations
 
     func getDistinctLocationNames() async throws -> [String] {
-        let locationsArray = Array(locations.values)
-        var namesSet: Set<String> = []
-        for loc in locationsArray {
-            let location = await loc.location
-            namesSet.insert(location)
-        }
-        return namesSet.sorted()
+        let names = Set(locations.values.map { $0.locationName })
+        return names.sorted()
     }
 
     func getLocationNames(withPrefix prefix: String) async throws -> [String] {
@@ -201,63 +157,40 @@ final class MockStorageLocationRepository: StorageLocationRepository {
     }
 
     func getInventoriesInLocation(_ locationName: String) async throws -> [UUID] {
-        let locationsArray = Array(locations.values)
-        var inventoriesSet: Set<UUID> = []
-        for loc in locationsArray {
-            let locName = await loc.location
-            if locName == locationName {
-                let inventoryId = await loc.inventory_id
-                inventoriesSet.insert(inventoryId)
-            }
-        }
-        return Array(inventoriesSet).sorted()
+        let inventoryIds = locations.values
+            .filter { $0.locationName == locationName }
+            .map { $0.inventoryId }
+        return Array(Set(inventoryIds)).sorted { $0.uuidString < $1.uuidString }
     }
 
     func getLocationUtilization() async throws -> [String: Double] {
         var utilization: [String: Double] = [:]
-
-        let locationsArray = Array(locations.values)
-        for loc in locationsArray {
-            let name = await loc.location
-            let qty = await loc.quantity
-            utilization[name] = (utilization[name] ?? 0) + qty
+        for loc in locations.values {
+            utilization[loc.locationName] = (utilization[loc.locationName] ?? 0) + loc.quantity
         }
-
         return utilization
     }
 
     func getLocationUsageCounts() async throws -> [(location: String, usageCount: Int)] {
         var counts: [String: Int] = [:]
-
-        let locationsArray = Array(locations.values)
-        for loc in locationsArray {
-            let name = await loc.location
-            counts[name] = (counts[name] ?? 0) + 1
+        for loc in locations.values {
+            counts[loc.locationName] = (counts[loc.locationName] ?? 0) + 1
         }
-
         return counts.map { (location: $0.key, usageCount: $0.value) }
             .sorted { $0.location < $1.location }
     }
 
     // MARK: - Validation Operations
 
-    func validateLocationQuantities(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Bool {
-        let locs = try await fetchLocations(forInventory: inventory_id)
-        var total: Double = 0.0
-        for loc in locs {
-            let qty = await loc.quantity
-            total += qty
-        }
+    func validateLocationQuantities(forInventory inventoryId: UUID, expectedTotal: Double) async throws -> Bool {
+        let locs = try await fetchLocations(forInventory: inventoryId)
+        let total = locs.reduce(0.0) { $0 + $1.quantity }
         return abs(total - expectedTotal) < 0.001 // Tolerance for floating point
     }
 
-    func getLocationQuantityDiscrepancy(forInventory inventory_id: UUID, expectedTotal: Double) async throws -> Double {
-        let locs = try await fetchLocations(forInventory: inventory_id)
-        var total: Double = 0.0
-        for loc in locs {
-            let qty = await loc.quantity
-            total += qty
-        }
+    func getLocationQuantityDiscrepancy(forInventory inventoryId: UUID, expectedTotal: Double) async throws -> Double {
+        let locs = try await fetchLocations(forInventory: inventoryId)
+        let total = locs.reduce(0.0) { $0 + $1.quantity }
         return total - expectedTotal
     }
 
@@ -273,11 +206,11 @@ final class MockStorageLocationRepository: StorageLocationRepository {
     func populateWithTestData() async throws {
         let testInventoryId = UUID()
         let testLocations = [
-            StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Workshop Shelf A", quantity: 10.0),
-            StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Workshop Shelf B", quantity: 20.0),
-            StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Bin 1", quantity: 5.0),
-            StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Bin 2", quantity: 15.0),
-            StorageLocationModel(id: UUID(), inventory_id: testInventoryId, location: "Storage Room", quantity: 30.0)
+            StorageLocationModel(id: UUID(), inventoryId: testInventoryId, locationName: "Workshop Shelf A", quantity: 10.0),
+            StorageLocationModel(id: UUID(), inventoryId: testInventoryId, locationName: "Workshop Shelf B", quantity: 20.0),
+            StorageLocationModel(id: UUID(), inventoryId: testInventoryId, locationName: "Bin 1", quantity: 5.0),
+            StorageLocationModel(id: UUID(), inventoryId: testInventoryId, locationName: "Bin 2", quantity: 15.0),
+            StorageLocationModel(id: UUID(), inventoryId: testInventoryId, locationName: "Storage Room", quantity: 30.0)
         ]
         _ = try await createLocations(testLocations)
     }

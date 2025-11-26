@@ -146,14 +146,51 @@ final class ScreenshotAutomation: XCTestCase {
         if let addButton = findAddButton() {
             addButton.tap()
             waitForContentToLoad(seconds: 2)
-            // Fill some fields to show real UI (but don't save)
+
+            // Select a specific glass item: Acid Yellow Crayon (Gaffer)
+            // Look for a picker or search field to select the item
+            if app.buttons["Select Glass Item"].exists || app.textFields["Glass Item"].exists {
+                let itemField = app.buttons["Select Glass Item"].exists ? app.buttons["Select Glass Item"] : app.textFields["Glass Item"]
+                itemField.tap()
+                sleep(1)
+                // Search or select Acid Yellow
+                if app.searchFields.firstMatch.exists {
+                    app.searchFields.firstMatch.tap()
+                    app.searchFields.firstMatch.typeText("acid yellow")
+                    sleep(1)
+                    // Tap first result
+                    if app.tables.cells.count > 0 {
+                        app.tables.cells.firstMatch.tap()
+                        sleep(1)
+                    }
+                }
+            }
+
+            // Fill quantity as 15
             if app.textFields["Quantity"].exists {
                 app.textFields["Quantity"].tap()
-                app.textFields["Quantity"].typeText("5")
-                // Tap somewhere else to dismiss keyboard
-                app.swipeDown()
-                sleep(1)
+                app.textFields["Quantity"].typeText("15")
+                sleep(0.5)
             }
+
+            // Select "rods" type if there's a type picker
+            if app.buttons["Type"].exists || app.buttons["Rods"].exists {
+                let typeButton = app.buttons["Rods"].exists ? app.buttons["Rods"] : app.buttons["Type"]
+                typeButton.tap()
+                sleep(0.5)
+            }
+
+            // Enter location "Garage, Bin 5"
+            if app.textFields["Location"].exists {
+                app.textFields["Location"].tap()
+                app.textFields["Location"].typeText("Garage, Bin 5")
+                sleep(0.5)
+            }
+
+            // Dismiss keyboard and wait for form to settle
+            app.swipeDown()
+            sleep(1)
+
             takeScreenshot(named: "feature-add-inventory", subdirectory: "website", delay: 0.5)
             dismissModal()
         }

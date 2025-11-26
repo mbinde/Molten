@@ -17,7 +17,7 @@ open /Users/binde/projects/uitests/Molten.xcodeproj
 Screenshots will be saved to:
 ```
 /Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Screenshots/
-  ├── website/     (15 screenshots for marketing)
+  ├── website/     (16 screenshots for marketing)
   ├── appstore/    (5 screenshots for App Store submission)
   └── dark/        (2 screenshots showing dark mode)
 ```
@@ -26,7 +26,7 @@ Screenshots will be saved to:
 
 ### 1. `testGenerateWebsiteScreenshots()`
 **Purpose:** Complete screenshot suite for website marketing
-**Output:** 15 screenshots
+**Output:** 16 screenshots
 **Best For:** Website, blog posts, social media
 
 **Screenshots generated (in `website/` directory):**
@@ -41,10 +41,11 @@ Screenshots will be saved to:
 9. `feature-label-designer.png` - Label printing interface
 10. `feature-locations-map.png` - Locations/stores map
 11. `feature-location-detail.png` - Store detail view
-12. `feature-settings.png` - Settings/preferences
-13. `feature-coatings-catalog.png` - Coatings products
-14. `feature-search-results.png` - Search results
-15. `feature-catalog-grid.png` - Catalog grid overview
+12. `feature-settings-top.png` - Settings/preferences (top)
+13. `feature-settings-bottom.png` - Settings/preferences (bottom)
+14. `feature-coatings-catalog.png` - Coatings products
+15. `feature-search-results.png` - Search results
+16. `feature-catalog-grid.png` - Catalog grid overview
 
 ### 2. `testGenerateAppStoreScreenshots()`
 **Purpose:** Screenshots optimized for App Store submission

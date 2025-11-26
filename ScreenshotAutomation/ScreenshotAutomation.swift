@@ -57,7 +57,7 @@ final class ScreenshotAutomation: XCTestCase {
     // MARK: - Main Screenshot Test Suites
 
     /// Complete screenshot suite for website marketing
-    /// Generates 15 screenshots covering all enabled features
+    /// Generates 16 screenshots covering all enabled features
     /// BEST FOR: Website, blog posts, social media
     func testGenerateWebsiteScreenshots() throws {
         print("\n📸 WEBSITE SCREENSHOTS - Starting...")
@@ -231,11 +231,20 @@ final class ScreenshotAutomation: XCTestCase {
             navigateBack()
         }
 
-        // 12. Settings - Customization
-        print("1️⃣2️⃣ Feature: Settings")
+        // 12. Settings - Customization (Top)
+        print("1️⃣2️⃣ Feature: Settings (Top)")
         navigateToSettings()
         waitForContentToLoad()
-        takeScreenshot(named: "feature-settings", subdirectory: "website", delay: 0.5)
+        takeScreenshot(named: "feature-settings-top", subdirectory: "website", delay: 0.5)
+
+        // 12b. Settings - Customization (Bottom)
+        print("1️⃣2️⃣b Feature: Settings (Bottom)")
+        // Scroll down to show bottom settings
+        app.swipeUp()
+        sleep(0.5)
+        app.swipeUp()
+        sleep(0.5)
+        takeScreenshot(named: "feature-settings-bottom", subdirectory: "website", delay: 0.5)
 
         // 13. Coatings Catalog - Beyond Glass
         print("1️⃣3️⃣ Feature: Coatings Catalog")
@@ -282,7 +291,7 @@ final class ScreenshotAutomation: XCTestCase {
         }
         takeScreenshot(named: "feature-catalog-grid", subdirectory: "website", delay: 0.5)
 
-        print("\n✅ Website screenshots complete! (15 total)")
+        print("\n✅ Website screenshots complete! (16 total)")
         print("═══════════════════════════════════════════════\n")
     }
 

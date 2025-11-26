@@ -166,7 +166,7 @@ final class ScreenshotAutomation: XCTestCase {
                 takeScreenshot(named: "feature-tag-filter-\(tag.lowercased())", subdirectory: "website", delay: 0.5)
                 // Tap again to deselect
                 app.buttons[tag].tap()
-                sleep(0.5)
+                usleep(500000)
                 foundTag = true
                 break
             }
@@ -248,21 +248,21 @@ final class ScreenshotAutomation: XCTestCase {
             if app.textFields["Quantity"].exists {
                 app.textFields["Quantity"].tap()
                 app.textFields["Quantity"].typeText("15")
-                sleep(0.5)
+                usleep(500000)
             }
 
             // Select "rods" type if there's a type picker
             if app.buttons["Type"].exists || app.buttons["Rods"].exists {
                 let typeButton = app.buttons["Rods"].exists ? app.buttons["Rods"] : app.buttons["Type"]
                 typeButton.tap()
-                sleep(0.5)
+                usleep(500000)
             }
 
             // Enter location "Garage, Bin 5"
             if app.textFields["Location"].exists {
                 app.textFields["Location"].tap()
                 app.textFields["Location"].typeText("Garage, Bin 5")
-                sleep(0.5)
+                usleep(500000)
             }
 
             // Dismiss keyboard and wait for form to settle
@@ -319,9 +319,9 @@ final class ScreenshotAutomation: XCTestCase {
         print("1️⃣2️⃣b Feature: Settings (Bottom)")
         // Scroll down to show bottom settings
         app.swipeUp()
-        sleep(0.5)
+        usleep(500000)
         app.swipeUp()
-        sleep(0.5)
+        usleep(500000)
         takeScreenshot(named: "feature-settings-bottom", subdirectory: "website", delay: 0.5)
 
         // 13. Coatings Catalog - Beyond Glass
@@ -363,9 +363,9 @@ final class ScreenshotAutomation: XCTestCase {
         // Scroll to top to show variety (scroll within the list, not the whole app)
         if app.tables.firstMatch.exists {
             app.tables.firstMatch.swipeDown()
-            sleep(0.5)
+            usleep(500000)
             app.tables.firstMatch.swipeDown()
-            sleep(0.5)
+            usleep(500000)
         }
         takeScreenshot(named: "feature-catalog-grid", subdirectory: "website", delay: 0.5)
 

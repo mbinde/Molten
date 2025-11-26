@@ -62,3 +62,6 @@ DO NOT rebase. Instead:
 1. Ask you what to do
 2. OR: `git pull origin main` (regular merge, not rebase)
 3. Then push again
+
+## IMPORTANT: Do NOT Delete Branches
+After completing the workflow, **DO NOT delete the working branch**. The user keeps their working branches for ongoing development. Step 5 switches back to the working branch - that's the final step. Never run `git branch -d` unless explicitly asked.

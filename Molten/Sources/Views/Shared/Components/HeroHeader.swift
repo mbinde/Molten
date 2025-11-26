@@ -66,14 +66,36 @@ struct HeroHeader: View {
             // Text overlay with background stripe that grows with text
             VStack {
                 Spacer()
-                Text(item.name)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, DesignSystem.Padding.standard)
-                    .padding(.vertical, DesignSystem.Spacing.lg)
-                    .background(Color.black.opacity(0.5))
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                    Text(item.name)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+
+                    // Manufacturer name - clickable if URL available
+                    let manufacturerName = GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer.capitalized
+                    if let urlString = item.url, let url = URL(string: urlString) {
+                        Button {
+                            UIApplication.shared.open(url)
+                        } label: {
+                            HStack(spacing: DesignSystem.Spacing.xs) {
+                                Text(manufacturerName)
+                                Image(systemName: "arrow.up.forward")
+                                    .font(.caption)
+                            }
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.8))
+                        }
+                    } else {
+                        Text(manufacturerName)
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, DesignSystem.Padding.standard)
+                .padding(.vertical, DesignSystem.Spacing.lg)
+                .background(Color.black.opacity(0.5))
             }
         }
         .clipShape(

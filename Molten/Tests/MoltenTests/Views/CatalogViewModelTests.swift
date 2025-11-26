@@ -249,4 +249,118 @@ struct CatalogViewModelTests {
         #expect(allManufacturers.contains("bullseye"), "Bullseye should appear")
         #expect(allManufacturers.contains("ennion"), "Ennion should appear when unfiltered")
     }
+
+    // MARK: - COE Filter with Non-Glass Items Tests
+
+    @Test("COE filter should not filter out coatings")
+    func testCOEFilterDoesNotFilterOutCoatings() async throws {
+        // Given: Glass items with COE and coating items (no COE)
+        let items = [
+            createGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear Rod COE 90", coe: 90),
+            createGlassItem(manufacturer: "bullseye", sku: "002", name: "Red Rod COE 96", coe: 96),
+            createCoatingItem(manufacturer: "glassalchemist", sku: "C01", name: "Gold Luster"),
+            createCoatingItem(manufacturer: "glassalchemist", sku: "C02", name: "Silver Luster")
+        ]
+
+        let viewModel = CatalogViewModel(
+            catalogService: AppDependencies.shared.catalogService
+        )
+
+        viewModel.items = items
+
+        // When: Applying COE filter for COE 90
+        viewModel.selectedCOEs = [90]
+        viewModel.applyFilters()
+
+        // Then: Should include COE 90 glass AND all coatings (coatings pass through COE filter)
+        let filteredNames = viewModel.filteredItems.map { $0.catalogItem.name }
+
+        #expect(filteredNames.contains("Clear Rod COE 90"), "COE 90 glass should be included")
+        #expect(!filteredNames.contains("Red Rod COE 96"), "COE 96 glass should be excluded")
+        #expect(filteredNames.contains("Gold Luster"), "Coatings should pass through COE filter")
+        #expect(filteredNames.contains("Silver Luster"), "Coatings should pass through COE filter")
+    }
+
+    @Test("COE filter should not filter out tools")
+    func testCOEFilterDoesNotFilterOutTools() async throws {
+        // Given: Glass items with COE and tool items (no COE)
+        let items = [
+            createGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear Rod COE 90", coe: 90),
+            createToolItem(manufacturer: "ennion", sku: "T01", name: "Glass Cutter"),
+            createToolItem(manufacturer: "ennion", sku: "T02", name: "Reamer")
+        ]
+
+        let viewModel = CatalogViewModel(
+            catalogService: AppDependencies.shared.catalogService
+        )
+
+        viewModel.items = items
+
+        // When: Applying COE filter for COE 90
+        viewModel.selectedCOEs = [90]
+        viewModel.applyFilters()
+
+        // Then: Should include COE 90 glass AND all tools (tools pass through COE filter)
+        let filteredNames = viewModel.filteredItems.map { $0.catalogItem.name }
+
+        #expect(filteredNames.contains("Clear Rod COE 90"), "COE 90 glass should be included")
+        #expect(filteredNames.contains("Glass Cutter"), "Tools should pass through COE filter")
+        #expect(filteredNames.contains("Reamer"), "Tools should pass through COE filter")
+    }
+
+    @Test("Combined product type and COE filter works correctly")
+    func testCombinedProductTypeAndCOEFilter() async throws {
+        // Given: Mixed items
+        let items = [
+            createGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear Rod COE 90", coe: 90),
+            createGlassItem(manufacturer: "bullseye", sku: "002", name: "Red Rod COE 96", coe: 96),
+            createCoatingItem(manufacturer: "glassalchemist", sku: "C01", name: "Gold Luster")
+        ]
+
+        let viewModel = CatalogViewModel(
+            catalogService: AppDependencies.shared.catalogService
+        )
+
+        viewModel.items = items
+
+        // When: Filtering by product type "coating" AND COE 90
+        viewModel.selectedProductTypes = ["coating"]
+        viewModel.selectedCOEs = [90]
+        viewModel.applyFilters()
+
+        // Then: Should only show coatings (product type filter applied first)
+        let filteredNames = viewModel.filteredItems.map { $0.catalogItem.name }
+
+        #expect(filteredNames.count == 1, "Should only have 1 item")
+        #expect(filteredNames.contains("Gold Luster"), "Only coating should remain")
+        #expect(!filteredNames.contains("Clear Rod COE 90"), "Glass should be filtered out by product type")
+    }
+
+    @Test("Filtering coatings only should show all coatings regardless of COE setting")
+    func testCoatingsOnlyFilterIgnoresCOE() async throws {
+        // Given: Coatings and glass with different COEs
+        let items = [
+            createGlassItem(manufacturer: "bullseye", sku: "001", name: "Clear Rod COE 90", coe: 90),
+            createCoatingItem(manufacturer: "glassalchemist", sku: "C01", name: "Gold Luster"),
+            createCoatingItem(manufacturer: "glassalchemist", sku: "C02", name: "Silver Luster"),
+            createCoatingItem(manufacturer: "glassalchemist", sku: "C03", name: "Copper Luster")
+        ]
+
+        let viewModel = CatalogViewModel(
+            catalogService: AppDependencies.shared.catalogService
+        )
+
+        viewModel.items = items
+
+        // When: Filtering by product type "coating" with a COE filter active
+        viewModel.selectedProductTypes = ["coating"]
+        viewModel.selectedCOEs = [90]  // This shouldn't affect coatings
+        viewModel.applyFilters()
+
+        // Then: All 3 coatings should appear
+        let filteredItems = viewModel.filteredItems
+
+        #expect(filteredItems.count == 3, "All 3 coatings should appear")
+        #expect(filteredItems.allSatisfy { $0.catalogItem.itemType == .coating }, "All items should be coatings")
+    }
 }

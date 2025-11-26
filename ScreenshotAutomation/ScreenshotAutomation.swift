@@ -63,6 +63,10 @@ final class ScreenshotAutomation: XCTestCase {
         print("\n📸 WEBSITE SCREENSHOTS - Starting...")
         print("═══════════════════════════════════════════════\n")
 
+        // IMPORTANT: Clear product type filter at the start to show ALL products (not just Coatings)
+        ensureOnCatalog()
+        clearProductTypeFilter()
+
         // HERO SHOTS
 
         // 1. Catalog Browse - Colorful Overview
@@ -650,6 +654,32 @@ final class ScreenshotAutomation: XCTestCase {
             app.swipeDown()
         }
         sleep(1)
+    }
+
+    /// Clear product type filter to show all products (not just Coatings)
+    private func clearProductTypeFilter() {
+        print("   🔧 Clearing product type filter to show all products...")
+
+        // Look for active "Coatings" filter chip and tap it to clear
+        if app.buttons.matching(identifier: "Coatings").firstMatch.exists {
+            print("   → Found Coatings filter, tapping to clear...")
+            app.buttons.matching(identifier: "Coatings").firstMatch.tap()
+            sleep(1)
+        }
+
+        // Also check for other product type buttons
+        if app.buttons["All"].exists {
+            print("   → Tapping 'All' button...")
+            app.buttons["All"].tap()
+            sleep(1)
+        }
+
+        // Scroll to top to refresh view
+        app.swipeDown()
+        app.swipeDown()
+        sleep(1)
+
+        print("   ✓ Product type filter cleared")
     }
 
     /// Find the Add button (+ or "Add" text)

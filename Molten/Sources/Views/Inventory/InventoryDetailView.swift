@@ -149,6 +149,13 @@ struct InventoryDetailView: View {
         )
     }
 
+    /// Check if there's any content to show in the Glass Item Details section
+    private var hasGlassItemDetails: Bool {
+        let hasManufacturerNotes = currentItem.glassItem.mfr_notes != nil && !currentItem.glassItem.mfr_notes!.isEmpty
+        let hasUserNotes = userNotes != nil
+        return hasManufacturerNotes || hasUserNotes
+    }
+
     // MARK: - View Body
 
     private var scrollableContent: some View {
@@ -197,8 +204,11 @@ struct InventoryDetailView: View {
                     RatingWordsSection(itemStableId: currentItem.glassItem.stable_id)
 
                     // Glass Item Details Section (manufacturer notes, user notes)
-                    glassItemDetailsSection
-                        .id("glass-item-section")
+                    // Only show if there's content to display
+                    if hasGlassItemDetails {
+                        glassItemDetailsSection
+                            .id("glass-item-section")
+                    }
 
                     // Recommended Kiln Schedules Section - only show if schedules exist
                     if !recommendedScheduleIds.isEmpty {
@@ -711,39 +721,37 @@ struct InventoryDetailView: View {
     private var specificationTiles: [SpecificationTileGrid.TileData] {
         var tiles: [SpecificationTileGrid.TileData] = []
 
-        // COE Rating - expansion/contraction compatibility (e.g., "90 COE")
-        tiles.append(.init(
-            icon: "arrow.left.and.right",
-            value: "\(currentItem.glassItem.coe) COE"
-        ))
-
-        // Manufacturer (just the name)
-        let manufacturerName = GlassManufacturers.fullName(for: currentItem.glassItem.manufacturer)
-            ?? currentItem.glassItem.manufacturer.capitalized
-        tiles.append(.init(
-            icon: "building.2",
-            value: manufacturerName
-        ))
+        // COE Rating for glass items, Temperature Range for coatings
+        switch currentItem.catalogItem.itemType {
+        case .glass:
+            // COE Rating - expansion/contraction compatibility (e.g., "90 COE")
+            if let coe = currentItem.catalogItem.coe {
+                tiles.append(.init(
+                    icon: "arrow.left.and.right",
+                    value: "\(coe) COE"
+                ))
+            }
+        case .coating:
+            // Temperature range for coatings
+            let tempUnit = UserSettings.shared.preferredTemperatureUnit
+            let tempDisplay = tempUnit.formatTemperatureRange(
+                lowF: currentItem.catalogItem.temperatureRangeLow,
+                highF: currentItem.catalogItem.temperatureRangeHigh
+            )
+            tiles.append(.init(
+                icon: "thermometer.medium",
+                value: tempDisplay
+            ))
+        case .tool:
+            // Tools don't have COE or temperature range
+            break
+        }
 
         // SKU (if available and not synthetic)
-        if let sku = currentItem.glassItem.sku, !sku.isEmpty, !isSyntheticSKU(sku) {
+        if let sku = currentItem.catalogItem.sku, !sku.isEmpty, !isSyntheticSKU(sku) {
             tiles.append(.init(
                 icon: "tag",
                 value: sku
-            ))
-        }
-
-        // Status (mfr_status is non-optional)
-        let status = currentItem.glassItem.mfr_status
-        if !status.isEmpty {
-            let statusDisplay = status.capitalized
-            let statusColor = status.lowercased() == "available"
-                ? DesignSystem.Colors.moltenTeal
-                : DesignSystem.Colors.textSecondary
-            tiles.append(.init(
-                icon: "checkmark.circle",
-                value: statusDisplay,
-                tintColor: statusColor
             ))
         }
 
@@ -822,18 +830,6 @@ struct InventoryDetailView: View {
             accessibilityId: "section_glass_item"
         ) {
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
-                // Show color approximation notice only when gradient is displayed
-                // (no image permission AND have dominant colors to show)
-                if !GlassManufacturers.hasProductImagePermission(for: currentItem.glassItem.manufacturer),
-                   let colors = currentItem.glassItem.dominant_colors,
-                   !colors.isEmpty {
-                    Text("We do not have permission to show glass images from this manufacturer, so have done our best to approximate the color of the glass. If you would like to suggest an image to our catalog, please upload an image to the app and long-press on it to submit it.")
-                        .font(DesignSystem.Typography.listItemCaption)
-                        .italic()
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                        .padding(.vertical, DesignSystem.Spacing.md)
-                }
-
                 if let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
                     expandableNotesCard(title: "Manufacturer Notes", content: notes, accessibilityId: "expand_manufacturer_notes")
                 }
@@ -842,42 +838,6 @@ struct InventoryDetailView: View {
                 if userNotes != nil {
                     userNotesSection
                 }
-
-                // Empty state - show when no manufacturer notes and no user notes
-                let hasManufacturerNotes = currentItem.glassItem.mfr_notes != nil && !currentItem.glassItem.mfr_notes!.isEmpty
-                if !hasManufacturerNotes && userNotes == nil {
-                    emptyDetailsMessage
-                }
-            }
-        }
-    }
-
-    // MARK: - Empty Details Message
-
-    private var emptyDetailsMessage: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-            if let manufacturerURL = currentItem.glassItem.url, let _ = URL(string: manufacturerURL) {
-                // Use Text concatenation for proper inline flow
-                Text("Please check ")
-                    + Text("the manufacturer's site")
-                        .foregroundColor(DesignSystem.Colors.accentSecondary)
-                    + Text(" ")
-                    + Text(Image(systemName: "arrow.up.forward.square"))
-                        .font(DesignSystem.Typography.listItemCaption)
-                        .foregroundColor(DesignSystem.Colors.accentSecondary)
-                    + Text(" to see if they have more information available or add notes of your own.")
-            } else {
-                Text("No more details available here. Add notes of your own using the note button.")
-            }
-        }
-        .font(DesignSystem.Typography.formValue)
-        .foregroundColor(DesignSystem.Colors.textSecondary)
-        .padding()
-        .background(DesignSystem.Colors.backgroundTertiary)
-        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
-        .onTapGesture {
-            if let manufacturerURL = currentItem.glassItem.url, let url = URL(string: manufacturerURL) {
-                UIApplication.shared.open(url)
             }
         }
         .accessibilityIdentifier("manufacturer_website_link")

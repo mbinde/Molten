@@ -98,6 +98,8 @@ struct CoatingItemModel: CatalogItem {
     let image_thumb_path: String?
     let tags: String?  // Comma-separated quoted tags like '"blue", "metallic"'
     let dominant_colors: String?  // Comma-separated hex codes like '"#FF0000", "#00FF00"'
+    let temperatureRangeLow: Int?   // Working temperature range low (°F), coating-specific
+    let temperatureRangeHigh: Int?  // Working temperature range high (°F), coating-specific
 
     nonisolated var id: String { stable_id }
 
@@ -105,7 +107,8 @@ struct CoatingItemModel: CatalogItem {
     nonisolated init(stable_id: String, name: String, sku: String?, manufacturer: String,
          mfr_notes: String? = nil, url: String? = nil, mfr_status: String,
          image_url: String? = nil, image_path: String? = nil, image_thumb_path: String? = nil,
-         tags: String? = nil, dominant_colors: String? = nil) {
+         tags: String? = nil, dominant_colors: String? = nil,
+         temperatureRangeLow: Int? = nil, temperatureRangeHigh: Int? = nil) {
         self.stable_id = stable_id
         self.name = name
         self.sku = sku
@@ -119,6 +122,8 @@ struct CoatingItemModel: CatalogItem {
         self.image_thumb_path = image_thumb_path
         self.tags = tags
         self.dominant_colors = dominant_colors
+        self.temperatureRangeLow = temperatureRangeLow
+        self.temperatureRangeHigh = temperatureRangeHigh
     }
 
     // Equatable conformance - based on business key (manufacturer + SKU when available, else stable_id)
@@ -508,6 +513,9 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
     let dominant_colors: [String]?
     let itemType: CatalogItemType
     let coe: Int32?  // Only for glass items
+    let temperatureRangeLow: Int?   // Only for coatings (°F)
+    let temperatureRangeHigh: Int?  // Only for coatings (°F)
+    let inlineTags: [String]?  // Tags stored inline in catalog (coatings/tools)
 
     nonisolated var id: String { stable_id }
 
@@ -527,6 +535,9 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.dominant_colors = glassItem.dominant_colors
         self.itemType = .glass
         self.coe = glassItem.coe
+        self.temperatureRangeLow = nil  // Glass items don't have temperature range
+        self.temperatureRangeHigh = nil
+        self.inlineTags = nil  // Glass items get tags from ItemTags repository
     }
 
     /// Initialize from CoatingItemModel
@@ -547,6 +558,10 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.dominant_colors = Self.parseCommaSeparatedQuotedString(coatingItem.dominant_colors)
         self.itemType = .coating
         self.coe = nil  // Coatings don't have COE
+        self.temperatureRangeLow = coatingItem.temperatureRangeLow
+        self.temperatureRangeHigh = coatingItem.temperatureRangeHigh
+        // Parse inline tags from coating catalog
+        self.inlineTags = Self.parseCommaSeparatedQuotedString(coatingItem.tags)
     }
 
     /// Initialize from ToolItemModel
@@ -565,6 +580,9 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.dominant_colors = nil  // Tools don't have dominant colors
         self.itemType = .tool
         self.coe = nil  // Tools don't have COE
+        self.temperatureRangeLow = nil  // Tools don't have temperature range
+        self.temperatureRangeHigh = nil
+        self.inlineTags = nil  // Tools don't have tags yet
     }
 
     // MARK: - Helper Methods

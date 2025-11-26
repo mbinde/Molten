@@ -64,7 +64,7 @@ struct TestDataGeneratorView: View {
                 Button {
                     generateInventoryItems(count: inventoryItemCount)
                 } label: {
-                    Label("Add \(inventoryItemCount) Random Inventory Items", systemImage: "cube.box")
+                    Label("Add \(inventoryItemCount) Random Inventory Items", systemImage: "c/ube.box")
                 }
                 .disabled(isGenerating)
                 .accessibilityIdentifier("test_data_generate_inventory")

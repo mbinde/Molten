@@ -462,13 +462,17 @@ class CatalogViewModel: CatalogViewModelProtocol {
             activeCOEFilter = Set(COEGlassPreference.selectedCOETypes.map { Int32($0.rawValue) })
         }
 
-        // Apply the active COE filter (only for glass items)
+        // Apply the active COE filter (only for glass items - coatings/tools pass through)
         if !activeCOEFilter.isEmpty {
             filtered = filtered.filter { item in
+                // Non-glass items (coatings, tools) don't have COE - let them pass through
+                if item.catalogItem.itemType != .glass {
+                    return true
+                }
                 if let coe = item.catalogItem.coe {
                     return activeCOEFilter.contains(coe)
                 }
-                return false  // Non-glass items don't match COE filter
+                return false  // Glass item without COE - shouldn't happen, but filter out
             }
         }
 

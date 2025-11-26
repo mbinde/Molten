@@ -142,12 +142,16 @@ struct ItemMinimumModel: Identifiable, Equatable, Sendable {
     let type: String
     let store: String
 
-    nonisolated init(id: UUID = UUID(), item_stable_id: String, quantity: Double, type: String, store: String) {
+    // Future-proofing fields (added pre-release for easier migrations)
+    let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
+
+    nonisolated init(id: UUID = UUID(), item_stable_id: String, quantity: Double, type: String, store: String, workspace_id: UUID? = nil) {
         self.id = id
         self.item_stable_id = item_stable_id
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
         self.type = InventoryModel.cleanType(type) // Use inventory type cleaning
         self.store = ItemMinimumModel.cleanStoreName(store)
+        self.workspace_id = workspace_id
     }
 }
 

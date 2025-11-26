@@ -51,6 +51,9 @@ struct RecipeModel: Identifiable, Equatable, Sendable {
     let dateCreated: Date
     let dateModified: Date
 
+    // Future-proofing fields (added pre-release for easier migrations)
+    let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
+
     nonisolated init(
         id: UUID = UUID(),
         title: String,
@@ -58,7 +61,8 @@ struct RecipeModel: Identifiable, Equatable, Sendable {
         measurementType: MeasurementType,
         ingredients: [RecipeIngredientModel],
         dateCreated: Date = Date(),
-        dateModified: Date = Date()
+        dateModified: Date = Date(),
+        workspace_id: UUID? = nil
     ) {
         self.id = id
         self.title = title
@@ -67,6 +71,7 @@ struct RecipeModel: Identifiable, Equatable, Sendable {
         self.ingredients = ingredients
         self.dateCreated = dateCreated
         self.dateModified = dateModified
+        self.workspace_id = workspace_id
     }
 
     // MARK: - Business Rules / Validation
@@ -88,7 +93,8 @@ struct RecipeModel: Identifiable, Equatable, Sendable {
             measurementType: measurementType,
             ingredients: ingredients,
             dateCreated: dateCreated,
-            dateModified: Date()
+            dateModified: Date(),
+            workspace_id: workspace_id
         )
     }
 }

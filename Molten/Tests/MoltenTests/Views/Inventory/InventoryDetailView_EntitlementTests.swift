@@ -20,6 +20,14 @@ struct InventoryDetailView_EntitlementTests {
     /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
     private let deps = AppDependencies(persistenceController: .createTestController())
 
+    // MARK: - Test Setup
+
+    init() {
+        // Ensure debug subscription tier override is disabled for tests
+        // This prevents UserDefaults from polluting test results
+        DebugConfig.debugOverrideSubscriptionTier = false
+    }
+
     // MARK: - Test Helpers
 
     func createTestItem() -> CompleteInventoryItemModel {

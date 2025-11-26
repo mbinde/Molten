@@ -290,7 +290,7 @@ class FileSystemUserImageRepository: @unchecked Sendable, UserImageRepository {
 
 extension UserImageModel: Codable {
     enum CodingKeys: String, CodingKey {
-        case id, ownerType, ownerId, imageType, fileExtension, dateCreated, dateModified, ocrText
+        case id, ownerType, ownerId, imageType, fileExtension, dateCreated, dateModified, ocrText, workspace_id
     }
 
     init(from decoder: Decoder) throws {
@@ -303,6 +303,7 @@ extension UserImageModel: Codable {
         self.dateCreated = try container.decode(Date.self, forKey: .dateCreated)
         self.dateModified = try container.decode(Date.self, forKey: .dateModified)
         self.ocrText = try container.decodeIfPresent(String.self, forKey: .ocrText)
+        self.workspace_id = try container.decodeIfPresent(UUID.self, forKey: .workspace_id)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -315,6 +316,7 @@ extension UserImageModel: Codable {
         try container.encode(dateCreated, forKey: .dateCreated)
         try container.encode(dateModified, forKey: .dateModified)
         try container.encodeIfPresent(ocrText, forKey: .ocrText)
+        try container.encodeIfPresent(workspace_id, forKey: .workspace_id)
     }
 }
 #endif

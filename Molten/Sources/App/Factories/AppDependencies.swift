@@ -93,9 +93,23 @@ class AppDependencies {
     let unifiedLocationRepository: UnifiedLocationRepository
     let ratingRepository: RatingRepository
     let userPreferencesRepository: UserPreferencesRepository
+    let workspaceRepository: WorkspaceRepository
     #if os(iOS)
     let userImageRepository: UserImageRepository
     #endif
+
+    // MARK: - Workspace Provider
+
+    /// Provides the default workspace ID, creating the workspace if needed
+    private var _defaultWorkspaceProvider: DefaultWorkspaceProvider?
+    var defaultWorkspaceProvider: DefaultWorkspaceProvider {
+        if let provider = _defaultWorkspaceProvider {
+            return provider
+        }
+        let provider = DefaultWorkspaceProvider(workspaceRepository: workspaceRepository)
+        _defaultWorkspaceProvider = provider
+        return provider
+    }
 
     // MARK: - Services
 
@@ -337,6 +351,7 @@ class AppDependencies {
         self.unifiedLocationRepository = CoreDataUnifiedLocationRepository(persistenceController: persistenceController)
         self.ratingRepository = CoreDataRatingRepository(localContext: self.localContext, cloudContext: self.cloudContext)
         self.userPreferencesRepository = UserDefaultsPreferencesRepository()
+        self.workspaceRepository = CoreDataWorkspaceRepository(context: self.cloudContext)
         #if os(iOS)
         self.userImageRepository = CoreDataUserImageRepository(context: self.cloudContext)
         #endif

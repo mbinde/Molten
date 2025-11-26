@@ -17,10 +17,16 @@ struct HeroHeader: View {
     @State private var loadedImage: UIImage?
     @State private var isLoading = true
     @State private var showingFullScreen = false
+    @State private var showingColorApproximationInfo = false
 
     init(item: GlassItemModel, extendsToTop: Bool = false) {
         self.item = item
         self.extendsToTop = extendsToTop
+    }
+
+    /// Whether we're showing a color gradient instead of a real image
+    private var isShowingColorApproximation: Bool {
+        !isLoading && loadedImage == nil && item.dominant_colors != nil && !item.dominant_colors!.isEmpty
     }
 
     private var imageHeight: CGFloat {
@@ -66,14 +72,54 @@ struct HeroHeader: View {
             // Text overlay with background stripe that grows with text
             VStack {
                 Spacer()
-                Text(item.name)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, DesignSystem.Padding.standard)
-                    .padding(.vertical, DesignSystem.Spacing.lg)
-                    .background(Color.black.opacity(0.5))
+                HStack(alignment: .bottom) {
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        Text(item.name)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+
+                        // Manufacturer name - clickable if URL available
+                        let manufacturerName = GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer.capitalized
+                        if let urlString = item.url, let url = URL(string: urlString) {
+                            Button {
+                                UIApplication.shared.open(url)
+                            } label: {
+                                HStack(spacing: DesignSystem.Spacing.xs) {
+                                    Text(manufacturerName)
+                                    Image(systemName: "arrow.up.forward")
+                                        .font(.caption)
+                                }
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.8))
+                            }
+                        } else {
+                            Text(manufacturerName)
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                    }
+
+                    Spacer()
+
+                    // Info button when showing color approximation
+                    if isShowingColorApproximation {
+                        Button {
+                            showingColorApproximationInfo = true
+                        } label: {
+                            Image(systemName: "info.circle.fill")
+                                .font(.system(size: 28))
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                        .popover(isPresented: $showingColorApproximationInfo) {
+                            colorApproximationPopover
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, DesignSystem.Padding.standard)
+                .padding(.vertical, DesignSystem.Spacing.lg)
+                .background(Color.black.opacity(0.5))
             }
         }
         .clipShape(
@@ -91,6 +137,29 @@ struct HeroHeader: View {
         .fullScreenCover(isPresented: $showingFullScreen) {
             FullScreenImageView(image: loadedImage, itemName: item.name)
         }
+    }
+
+    // MARK: - Color Approximation Popover
+
+    private var colorApproximationPopover: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            Text("Color Approximation")
+                .font(DesignSystem.Typography.formLabel)
+                .fontWeight(DesignSystem.FontWeight.semibold)
+
+            Text("We don't have permission to show product images from this manufacturer, so we've approximated the color.")
+                .font(DesignSystem.Typography.listItemCaption)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("Have a photo? Add it here and long-press to suggest it for the catalog.")
+                .font(DesignSystem.Typography.listItemCaption)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding()
+        .frame(width: 280)
+        .presentationCompactAdaptation(.popover)
     }
 
     // MARK: - Image Loading

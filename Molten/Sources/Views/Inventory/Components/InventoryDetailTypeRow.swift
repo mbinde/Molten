@@ -49,9 +49,11 @@ struct InventoryDetailTypeRow: View {
                         .font(DesignSystem.Typography.prominentNumberSmall)
                         .fontWeight(DesignSystem.FontWeight.semibold)
                         .foregroundColor(DesignSystem.Colors.moltenTeal)
-                    Text(quantityUnitLabel)
-                        .font(DesignSystem.Typography.listItemCaptionSmall)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                    if !quantityUnitLabel.isEmpty {
+                        Text(quantityUnitLabel)
+                            .font(DesignSystem.Typography.listItemCaptionSmall)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
                 }
 
                 Image(systemName: "chevron.right")

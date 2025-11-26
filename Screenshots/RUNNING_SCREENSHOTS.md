@@ -6,10 +6,12 @@
 # 1. Open Xcode
 open /Users/binde/projects/uitests/Molten.xcodeproj
 
-# 2. Select iPhone 15 Pro Max simulator (6.7" display for App Store)
+# 2. Select iPhone 17 Pro Max simulator (6.7" display for App Store)
 # 3. Select the Screenshots test plan
+#    Note: The Screenshots test plan is configured to use Release mode automatically
+#    This hides debug settings and milliseconds from screenshots
 # 4. Run the test you want:
-#    - testGenerateWebsiteScreenshots (15 screenshots)
+#    - testGenerateWebsiteScreenshots (19 screenshots)
 #    - testGenerateAppStoreScreenshots (5 screenshots)
 #    - testGenerateDarkModeScreenshots (2 screenshots - run separately in dark mode)
 ```

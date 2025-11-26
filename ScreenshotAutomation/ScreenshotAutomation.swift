@@ -94,7 +94,7 @@ final class ScreenshotAutomation: XCTestCase {
         print("3️⃣ Feature: Search & Filter")
         ensureOnCatalog()
         if activateSearch() {
-            app.searchFields.firstMatch.typeText("transparent blue")
+            app.searchFields.firstMatch.typeText("black")
             waitForContentToLoad()
             takeScreenshot(named: "feature-search-active", subdirectory: "website", delay: 0.5)
             clearSearch()

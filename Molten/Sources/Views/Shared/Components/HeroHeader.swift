@@ -152,7 +152,7 @@ struct HeroHeader: View {
                 .foregroundColor(DesignSystem.Colors.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text("Have a photo? Add it to your inventory and long-press to suggest it for the catalog.")
+            Text("Have a photo? Add it here and long-press to suggest it for the catalog.")
                 .font(DesignSystem.Typography.listItemCaption)
                 .foregroundColor(DesignSystem.Colors.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)

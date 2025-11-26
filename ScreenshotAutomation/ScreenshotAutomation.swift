@@ -345,6 +345,10 @@ final class ScreenshotAutomation: XCTestCase {
         usleep(500000)
         takeScreenshot(named: "feature-settings-bottom", subdirectory: "website", delay: 0.5)
 
+        // IMPORTANT: Navigate back from Settings before going to other tabs
+        navigateBack()
+        sleep(1)
+
         // 13. Coatings Catalog - Beyond Glass
         print("1️⃣3️⃣ Feature: Coatings Catalog")
         ensureOnCatalog()

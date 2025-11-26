@@ -209,23 +209,19 @@ final class ScreenshotAutomation: XCTestCase {
         print("6️⃣b Feature: Inventory Types (Frit, Rods, Sheets)")
         ensureOnInventory()
         waitForContentToLoad()
-        // Look for a type filter or segment control to switch between types
-        if app.buttons["Frit"].exists {
-            app.buttons["Frit"].tap()
-            sleep(1)
-            takeScreenshot(named: "feature-inventory-types-frit", subdirectory: "website", delay: 0.5)
-            // Switch to show rods
-            if app.buttons["Rods"].exists {
-                app.buttons["Rods"].tap()
-                sleep(1)
-            }
-        } else if app.buttons["Type"].exists {
-            // If there's a Type filter button, tap it to show options
-            app.buttons["Type"].tap()
+        // Tap into an inventory item detail to show different types (rods, tubes, frit, etc.)
+        let inventoryCells = app.tables.cells
+        if inventoryCells.count > 0 {
+            // Tap first item to see its detail with multiple types
+            inventoryCells.firstMatch.tap()
+            waitForContentToLoad(seconds: 2)
+            // Scroll down to show more types if needed
+            app.swipeUp()
             sleep(1)
             takeScreenshot(named: "feature-inventory-types", subdirectory: "website", delay: 0.5)
+            navigateBack()
         } else {
-            // Just take a screenshot showing the current inventory with mixed types
+            // Fallback: just show inventory list
             takeScreenshot(named: "feature-inventory-types", subdirectory: "website", delay: 0.5)
         }
 
@@ -237,50 +233,64 @@ final class ScreenshotAutomation: XCTestCase {
             waitForContentToLoad(seconds: 2)
 
             // Select a specific glass item: Acid Yellow Crayon (Gaffer)
-            // Look for a picker or search field to select the item
-            if app.buttons["Select Glass Item"].exists || app.textFields["Glass Item"].exists {
-                let itemField = app.buttons["Select Glass Item"].exists ? app.buttons["Select Glass Item"] : app.textFields["Glass Item"]
-                itemField.tap()
+            // Try different possible field identifiers
+            let glassItemFields = [
+                app.buttons["Select Glass Item"],
+                app.textFields["Glass Item"],
+                app.buttons["Glass"],
+                app.textFields["Select an item"],
+                app.staticTexts["Select an item"]
+            ]
+
+            for field in glassItemFields where field.exists {
+                field.tap()
                 sleep(1)
-                // Search or select Acid Yellow
-                if app.searchFields.firstMatch.exists {
-                    app.searchFields.firstMatch.tap()
-                    app.searchFields.firstMatch.typeText("acid yellow")
+                break
+            }
+
+            // Search for Acid Yellow if search field appears
+            if app.searchFields.firstMatch.exists {
+                app.searchFields.firstMatch.tap()
+                app.searchFields.firstMatch.typeText("acid yellow")
+                sleep(1)
+                // Tap first result
+                if app.tables.cells.count > 0 {
+                    app.tables.cells.firstMatch.tap()
                     sleep(1)
-                    // Tap first result
-                    if app.tables.cells.count > 0 {
-                        app.tables.cells.firstMatch.tap()
-                        sleep(1)
-                    }
                 }
             }
 
-            // Fill quantity as 15
-            if app.textFields["Quantity"].exists {
-                app.textFields["Quantity"].tap()
-                app.textFields["Quantity"].typeText("15")
+            // Fill quantity as 15 - try to find quantity field
+            let quantityFields = app.textFields.matching(NSPredicate(format: "label CONTAINS[c] 'quantity' OR placeholder CONTAINS[c] 'quantity'"))
+            if quantityFields.count > 0 {
+                quantityFields.firstMatch.tap()
+                quantityFields.firstMatch.typeText("15")
                 usleep(500000)
             }
 
-            // Select "rods" type if there's a type picker
-            if app.buttons["Type"].exists || app.buttons["Rods"].exists {
-                let typeButton = app.buttons["Rods"].exists ? app.buttons["Rods"] : app.buttons["Type"]
-                typeButton.tap()
+            // Select "Rods" type - look for type picker
+            if app.buttons["Rods"].exists {
+                app.buttons["Rods"].tap()
+                usleep(500000)
+            } else if app.pickers.firstMatch.exists {
+                app.pickers.firstMatch.swipeUp() // Scroll to Rods
                 usleep(500000)
             }
 
-            // Enter location "Garage, Bin 5"
-            if app.textFields["Location"].exists {
-                app.textFields["Location"].tap()
-                app.textFields["Location"].typeText("Garage, Bin 5")
-                usleep(500000)
+            // IMPORTANT: Enter location "Garage, Bin 3" and keep focus on it for screenshot
+            let locationFields = app.textFields.matching(NSPredicate(format: "label CONTAINS[c] 'location' OR placeholder CONTAINS[c] 'location'"))
+            if locationFields.count > 0 {
+                locationFields.firstMatch.tap()
+                sleep(1) // Wait for keyboard
+                locationFields.firstMatch.typeText("Garage, Bin 3")
+                sleep(1) // Keep keyboard visible for screenshot
+                // Don't dismiss keyboard - we want to see the user typing
+                takeScreenshot(named: "feature-add-inventory", subdirectory: "website", delay: 0.5)
+            } else {
+                // Fallback: just take screenshot of form as-is
+                takeScreenshot(named: "feature-add-inventory", subdirectory: "website", delay: 0.5)
             }
 
-            // Dismiss keyboard and wait for form to settle
-            app.swipeDown()
-            sleep(1)
-
-            takeScreenshot(named: "feature-add-inventory", subdirectory: "website", delay: 0.5)
             dismissModal()
         }
 

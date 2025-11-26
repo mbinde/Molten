@@ -70,6 +70,7 @@ struct AddFormScaffold<Content: View>: View {
                     dismiss()
                 }
             }
+            .accessibilityIdentifier("add_form_cancel")
         }
 
         ToolbarItem(placement: .confirmationAction) {
@@ -77,6 +78,7 @@ struct AddFormScaffold<Content: View>: View {
                 onSave()
             }
             .disabled(!isValid)
+            .accessibilityIdentifier("add_form_add")
         }
     }
 

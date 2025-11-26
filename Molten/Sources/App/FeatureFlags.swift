@@ -70,6 +70,10 @@ enum FeatureFlags {
     /// Pro members have unlimited inventory items
     nonisolated static let FREE_TIER_INVENTORY_LIMIT = 25
 
+    /// Maximum number of shopping list items for free tier
+    /// Pro members have unlimited shopping list items
+    nonisolated static let FREE_TIER_SHOPPING_LIST_LIMIT = 10
+
     // MARK: - Debug Feature Flags (from DebugConfig)
 
     /// Master switch for all advanced features

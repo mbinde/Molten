@@ -37,6 +37,7 @@ struct CompactWordChipsView: View {
                                 .clipShape(Capsule())
                                 .fixedSize()
                         }
+                        .accessibilityIdentifier("compact_word_chips_show_all")
                     }
 
                     Spacer()

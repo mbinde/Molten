@@ -269,34 +269,40 @@ struct InventoryDetailView: View {
                             } label: {
                                 Label("Add to Inventory", systemImage: "archivebox.fill")
                             }
+                            .accessibilityIdentifier("fab_add_inventory")
 
                             Button {
                                 showingShoppingListOptions = true
                             } label: {
                                 Label("Add to Shopping List", systemImage: "cart.fill")
                             }
+                            .accessibilityIdentifier("fab_add_shopping_list")
 
                             Button {
                                 showingImagePicker = true
                             } label: {
                                 Label("Add an Image", systemImage: "photo.fill")
                             }
+                            .accessibilityIdentifier("fab_add_image")
 
                             Button {
                                 showingUserNotesEditor = true
                             } label: {
                                 Label("Add a Note", systemImage: "note.text")
                             }
+                            .accessibilityIdentifier("fab_add_note")
 
                             Button {
                                 showingUserTagsEditor = true
                             } label: {
                                 Label("Manage Tags", systemImage: "tag.fill")
                             }
+                            .accessibilityIdentifier("fab_manage_tags")
                         } label: {
                             Image(systemName: "ellipsis.circle")
                                 .accessibilityLabel("Actions")
                         }
+                        .accessibilityIdentifier("detail_actions_menu")
                     }
                 }
             }
@@ -305,11 +311,7 @@ struct InventoryDetailView: View {
             // Reload shopping list after adding
             loadShoppingList()
         }) {
-            ShoppingListOptionsView(
-                item: item,
-                shoppingListRepository: shoppingListRepository,
-                locationService: locationService
-            )
+            ShoppingListOptionsView(item: item)
         }
         .sheet(isPresented: $showingInventoryDetails) {
             InventoryStorageDetailView(
@@ -816,11 +818,15 @@ struct InventoryDetailView: View {
             title: "Glass Item Details",
             systemImage: "info.circle",
             isExpanded: expandedSections.contains("glass-item"),
-            onToggle: { toggleSection("glass-item") }
+            onToggle: { toggleSection("glass-item") },
+            accessibilityId: "section_glass_item"
         ) {
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
-                // Show color approximation notice if no image permission
-                if !GlassManufacturers.hasProductImagePermission(for: currentItem.glassItem.manufacturer) {
+                // Show color approximation notice only when gradient is displayed
+                // (no image permission AND have dominant colors to show)
+                if !GlassManufacturers.hasProductImagePermission(for: currentItem.glassItem.manufacturer),
+                   let colors = currentItem.glassItem.dominant_colors,
+                   !colors.isEmpty {
                     Text("We do not have permission to show glass images from this manufacturer, so have done our best to approximate the color of the glass. If you would like to suggest an image to our catalog, please upload an image to the app and long-press on it to submit it.")
                         .font(DesignSystem.Typography.listItemCaption)
                         .italic()
@@ -829,7 +835,7 @@ struct InventoryDetailView: View {
                 }
 
                 if let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
-                    expandableNotesCard(title: "Manufacturer Notes", content: notes)
+                    expandableNotesCard(title: "Manufacturer Notes", content: notes, accessibilityId: "expand_manufacturer_notes")
                 }
 
                 // User notes section - only show if notes exist
@@ -874,6 +880,7 @@ struct InventoryDetailView: View {
                 UIApplication.shared.open(url)
             }
         }
+        .accessibilityIdentifier("manufacturer_website_link")
     }
 
     // MARK: - User Notes Section
@@ -917,6 +924,7 @@ struct InventoryDetailView: View {
                                 .foregroundColor(DesignSystem.Colors.accentPrimary)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityIdentifier("expand_user_notes")
                     }
                 }
                 .padding()
@@ -938,7 +946,8 @@ struct InventoryDetailView: View {
             title: "Shopping List",
             systemImage: "cart",
             isExpanded: expandedSections.contains("shopping-list"),
-            onToggle: { toggleSection("shopping-list") }
+            onToggle: { toggleSection("shopping-list") },
+            accessibilityId: "section_shopping_list"
         ) {
             if let shoppingItem = shoppingListItem {
                 // Show shopping list item details
@@ -1022,7 +1031,8 @@ struct InventoryDetailView: View {
             title: "Custom Images",
             systemImage: "photo.on.rectangle",
             isExpanded: expandedSections.contains("custom-images"),
-            onToggle: { toggleSection("custom-images") }
+            onToggle: { toggleSection("custom-images") },
+            accessibilityId: "section_images"
         ) {
             if isLoadingImages {
                 ProgressView()
@@ -1117,13 +1127,13 @@ struct InventoryDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
     }
 
-    private func expandableNotesCard(title: String, content: String) -> some View {
+    private func expandableNotesCard(title: String, content: String, accessibilityId: String? = nil) -> some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             Text(title)
                 .font(DesignSystem.Typography.formLabel)
                 .fontWeight(DesignSystem.FontWeight.semibold)
 
-            ExpandableText(content: content, lineLimit: 4, isExpanded: $isManufacturerNotesExpanded)
+            ExpandableText(content: content, lineLimit: 4, isExpanded: $isManufacturerNotesExpanded, accessibilityId: accessibilityId)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()

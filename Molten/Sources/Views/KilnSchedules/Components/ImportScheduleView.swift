@@ -95,6 +95,7 @@ struct ImportScheduleView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("import_schedule_cancel")
                 }
             }
             .fileImporter(

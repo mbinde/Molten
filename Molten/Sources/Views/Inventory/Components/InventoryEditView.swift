@@ -55,6 +55,7 @@ struct InventoryEditView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("inventory_edit_cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -62,6 +63,7 @@ struct InventoryEditView: View {
                         saveChanges()
                     }
                     .disabled(isSaving)
+                    .accessibilityIdentifier("inventory_edit_save")
                 }
             }
             .alert("Error", isPresented: $showingError) {

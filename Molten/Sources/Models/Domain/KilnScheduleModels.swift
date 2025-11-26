@@ -132,6 +132,9 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
     let segments: [KilnSegment]  // Segment temperatures always in Celsius
     let description: String?  // Optional description of the schedule
 
+    // Future-proofing fields (added pre-release for easier migrations)
+    let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
+
     /// Calculate total duration for the entire schedule
     /// Assumes starting from room temperature (20°C) for first ramp segment
     var totalDuration: TimeInterval {
@@ -186,7 +189,8 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
             dateModified: dateModified,
             segments: convertedSegments,
             description: description,
-            temperatureUnit: displayUnit
+            temperatureUnit: displayUnit,
+            workspace_id: workspace_id
         )
     }
 
@@ -200,6 +204,7 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
     ///   - segments: Segments with temperatures in inputUnit
     ///   - description: Optional description
     ///   - inputUnit: Unit that temperatures are provided in
+    ///   - workspace_id: Optional workspace reference
     /// - Returns: Schedule with all temperatures normalized to Celsius
     nonisolated static func fromInput(
         id: UUID = UUID(),
@@ -209,7 +214,8 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
         dateModified: Date = Date(),
         segments: [KilnSegment],
         description: String? = nil,
-        inputUnit: TemperatureUnit
+        inputUnit: TemperatureUnit,
+        workspace_id: UUID? = nil
     ) -> KilnSchedule {
         let normalizedSegments = segments.map { segment in
             KilnSegment(
@@ -228,7 +234,8 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
             dateModified: dateModified,
             segments: normalizedSegments,
             description: description,
-            temperatureUnit: .celsius  // Always store as Celsius
+            temperatureUnit: .celsius,  // Always store as Celsius
+            workspace_id: workspace_id
         )
     }
 
@@ -240,7 +247,8 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
         dateModified: Date = Date(),
         segments: [KilnSegment] = [],
         description: String? = nil,
-        temperatureUnit: TemperatureUnit = .celsius
+        temperatureUnit: TemperatureUnit = .celsius,
+        workspace_id: UUID? = nil
     ) {
         self.id = id
         self.name = name
@@ -250,5 +258,6 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
         self.segments = segments
         self.description = description
         self.temperatureUnit = temperatureUnit
+        self.workspace_id = workspace_id
     }
 }

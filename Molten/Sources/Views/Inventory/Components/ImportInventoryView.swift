@@ -74,6 +74,7 @@ struct ImportInventoryView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("import_inventory_cancel")
                 }
 
                 if preview != nil && error == nil && importResult == nil {
@@ -84,6 +85,7 @@ struct ImportInventoryView: View {
                             }
                         }
                         .disabled(isImporting)
+                        .accessibilityIdentifier("import_inventory_import")
                     }
                 }
             }
@@ -189,6 +191,7 @@ struct ImportInventoryView: View {
                             .foregroundColor(.secondary)
                     }
                 }
+                .accessibilityIdentifier("import_inventory_mode_button")
             }
 
             Section("Breakdown by Manufacturer") {
@@ -334,6 +337,7 @@ struct ImportInventoryView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("import_inventory_done")
                 .padding(.top)
             }
             .padding()
@@ -451,6 +455,7 @@ struct ImportInventoryView: View {
                     Button("Done") {
                         showModeSelection = false
                     }
+                    .accessibilityIdentifier("import_mode_done")
                 }
             }
         }
@@ -529,6 +534,7 @@ struct ImportInventoryView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.orange)
+                    .accessibilityIdentifier("import_conflict_replace")
 
                     Button {
                         let total = Int(existing.quantity) + item.quantity
@@ -542,6 +548,7 @@ struct ImportInventoryView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.green)
+                    .accessibilityIdentifier("import_conflict_increase")
 
                     Button {
                         decisionContinuation?.resume(returning: .skip)
@@ -552,6 +559,7 @@ struct ImportInventoryView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
+                    .accessibilityIdentifier("import_conflict_skip")
                 }
                 .padding(.top)
 

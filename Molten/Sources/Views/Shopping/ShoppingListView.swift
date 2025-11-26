@@ -20,6 +20,7 @@ struct ShoppingListView: View {
     private let inventoryTrackingService: InventoryTrackingService
     private let purchaseService: PurchaseRecordService
     private let subscriptionService: SubscriptionServiceProtocol
+    private let entitlementService: EntitlementService
     private let userNotesRepository: UserNotesRepository
     private let userTagsRepository: UserTagsRepository
     private let shoppingListRepository: ShoppingListRepository
@@ -41,6 +42,7 @@ struct ShoppingListView: View {
     @State private var showingAddItem = false
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
     @State private var navigationPath = NavigationPath()
+    @State private var showingUpgradePrompt = false
 
     // Shopping mode state
     @StateObject private var shoppingModeState = ShoppingModeState.shared
@@ -67,6 +69,7 @@ struct ShoppingListView: View {
          inventoryTrackingService: InventoryTrackingService,
          purchaseService: PurchaseRecordService,
          subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService,
+         entitlementService: EntitlementService = AppDependencies.shared.entitlementService,
          userNotesRepository: UserNotesRepository,
          userTagsRepository: UserTagsRepository,
          shoppingListRepository: ShoppingListRepository,
@@ -79,6 +82,7 @@ struct ShoppingListView: View {
         self.inventoryTrackingService = inventoryTrackingService
         self.purchaseService = purchaseService
         self.subscriptionService = subscriptionService
+        self.entitlementService = entitlementService
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
@@ -93,6 +97,7 @@ struct ShoppingListView: View {
          inventoryTrackingService: InventoryTrackingService,
          purchaseService: PurchaseRecordService,
          subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService,
+         entitlementService: EntitlementService = AppDependencies.shared.entitlementService,
          userNotesRepository: UserNotesRepository,
          userTagsRepository: UserTagsRepository,
          shoppingListRepository: ShoppingListRepository,
@@ -104,6 +109,7 @@ struct ShoppingListView: View {
         self.inventoryTrackingService = inventoryTrackingService
         self.purchaseService = purchaseService
         self.subscriptionService = subscriptionService
+        self.entitlementService = entitlementService
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
@@ -327,6 +333,30 @@ struct ShoppingListView: View {
 
     private var totalItemsInViewCount: Int {
         allFlattenedItems.count
+    }
+
+    /// Total number of unique shopping list items (for usage banner)
+    private var shoppingListItemCount: Int {
+        viewModel.totalItemsCount
+    }
+
+    // Check if Settings filters (COE/Manufacturer) are active and filtering items
+    private var hasSettingsFiltersActive: Bool {
+        guard UserSettings.shared.applyFiltersToInventory else { return false }
+
+        // Check if COE filter is active (not all COEs selected)
+        let globalCOEs = COEGlassPreference.selectedCOETypes
+        let hasCOEFilter = !globalCOEs.isEmpty && globalCOEs.count < COEGlassType.allCases.count
+
+        // Check if manufacturer filter is active
+        var hasManufacturerFilter = false
+        if let data = UserDefaults.standard.data(forKey: "selectedManufacturerFilter"),
+           let selectedManufacturers = try? JSONDecoder().decode(Set<String>.self, from: data),
+           !selectedManufacturers.isEmpty {
+            hasManufacturerFilter = true
+        }
+
+        return hasCOEFilter || hasManufacturerFilter
     }
 
     private var sortedStores: [String] {
@@ -681,6 +711,22 @@ struct ShoppingListView: View {
                     )
                 )
 
+                // Usage banner (only show for free tier when not in shopping mode)
+                if entitlementService.tier == .free && !shoppingModeState.isShoppingModeEnabled {
+                    UsageBanner(
+                        featureName: "shopping list items",
+                        currentCount: shoppingListItemCount,
+                        limit: entitlementService.getShoppingListLimit(),
+                        filteredCount: viewModel.filteredItems.count,
+                        hasSettingsFilters: hasSettingsFiltersActive,
+                        onUpgradeTap: {
+                            showingUpgradePrompt = true
+                        }
+                    )
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                }
+
                 // Shopping mode instructions
                 if shoppingModeState.isShoppingModeEnabled {
                     ShoppingModeInstructionsBanner(
@@ -760,6 +806,7 @@ struct ShoppingListView: View {
                         } label: {
                             Text("Cancel")
                         }
+                        .accessibilityIdentifier("shopping_cancel_button")
                     }
                 }
 
@@ -771,6 +818,7 @@ struct ShoppingListView: View {
                         } label: {
                             Image(systemName: "cart")
                         }
+                        .accessibilityIdentifier("shopping_start_mode_button")
                     }
                 }
 
@@ -780,6 +828,7 @@ struct ShoppingListView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
+                    .accessibilityIdentifier("shopping_add_item_button")
                 }
             }
             .sheet(isPresented: $showingAllTags) {
@@ -812,6 +861,13 @@ struct ShoppingListView: View {
                         get: { viewModel.selectedStore.map { Set([$0]) } ?? [] },
                         set: { viewModel.selectedStore = $0.first }
                     )
+                )
+            }
+            .sheet(isPresented: $showingUpgradePrompt) {
+                UpgradePromptView(
+                    feature: "shopping list items",
+                    currentCount: shoppingListItemCount,
+                    limit: entitlementService.getShoppingListLimit() ?? 10
                 )
             }
             .sheet(isPresented: $showingAddItem, onDismiss: {
@@ -1303,14 +1359,17 @@ struct CheckoutSheet: View {
                             Toggle("Add to inventory", isOn: $addToInventory)
                                 .tint(.accentColor)
                                 .padding(.horizontal, DesignSystem.Spacing.xs)
+                                .accessibilityIdentifier("checkout_add_to_inventory_toggle")
                             Toggle("Remove from shopping list", isOn: $removeFromList)
                                 .tint(.accentColor)
                                 .padding(.horizontal, DesignSystem.Spacing.xs)
+                                .accessibilityIdentifier("checkout_remove_from_list_toggle")
 
                             if FeatureFlags.ENABLE_PURCHASES && purchaseService != nil {
                                 Toggle("Create purchase record", isOn: $createPurchaseRecord)
                                     .tint(.accentColor)
                                     .padding(.horizontal, DesignSystem.Spacing.xs)
+                                    .accessibilityIdentifier("checkout_create_purchase_toggle")
                             }
                         }
 
@@ -1392,6 +1451,7 @@ struct CheckoutSheet: View {
                             .background(Color.gray.opacity(0.2))
                             .foregroundColor(.primary)
                             .cornerRadius(DesignSystem.CornerRadius.medium)
+                            .accessibilityIdentifier("checkout_cancel_button")
 
                             Button(action: {
                                 Task {
@@ -1413,6 +1473,7 @@ struct CheckoutSheet: View {
                             .foregroundColor(.white)
                             .cornerRadius(DesignSystem.CornerRadius.medium)
                             .disabled(isProcessing)
+                            .accessibilityIdentifier("checkout_confirm_button")
                         }
                     }
                 }

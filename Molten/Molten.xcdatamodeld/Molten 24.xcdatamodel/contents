@@ -8,6 +8,7 @@
         <attribute name="main_share_code" optional="YES" attributeType="String"/>
         <attribute name="share_code" optional="YES" attributeType="String"/>
         <attribute name="share_notes" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
     <entity name="Inventory" representedClassName="Inventory" syncable="YES" codeGenerationType="category">
         <attribute name="container_count" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
@@ -28,7 +29,7 @@
         <attribute name="subsubtype" optional="YES" attributeType="String"/>
         <attribute name="subtype" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="String"/>
-        <attribute name="workspace_id" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
     <entity name="InventoryItem" representedClassName="InventoryItem" syncable="YES" codeGenerationType="category">
         <attribute name="catalog_code" optional="YES" attributeType="String"/>
@@ -55,7 +56,7 @@
         <attribute name="subsubtype" optional="YES" attributeType="String"/>
         <attribute name="subtype" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="String"/>
-        <attribute name="workspace_id" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
     <entity name="ItemRating" representedClassName="ItemRating" syncable="YES" codeGenerationType="class">
         <attribute name="average_rating" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
@@ -83,7 +84,7 @@
         <attribute name="subsubtype" optional="YES" attributeType="String"/>
         <attribute name="subtype" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="String"/>
-        <attribute name="workspace_id" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
     <entity name="KilnScheduleEntity" representedClassName="KilnScheduleEntity" syncable="YES" codeGenerationType="class">
         <attribute name="date_created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -97,6 +98,7 @@
         <attribute name="schedule_description" optional="YES" attributeType="String"/>
         <attribute name="technique" optional="YES" attributeType="String"/>
         <attribute name="temperature_unit" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <relationship name="projects" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Project" inverseName="kilnSchedule" inverseEntity="Project"/>
         <relationship name="segments" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="KilnSegmentEntity" inverseName="schedule" inverseEntity="KilnSegmentEntity"/>
     </entity>
@@ -124,6 +126,7 @@
         <attribute name="qr_size" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="text_alignment" optional="YES" attributeType="String"/>
         <attribute name="text_fields_order" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
     <entity name="Location" representedClassName="Location" syncable="YES" codeGenerationType="class">
         <attribute name="address_line1" optional="YES" attributeType="String"/>
@@ -185,6 +188,7 @@
         <attribute name="status" optional="YES" attributeType="String"/>
         <attribute name="title" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <relationship name="glassItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="LogbookGlassItem" inverseName="log" inverseEntity="LogbookGlassItem"/>
         <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectImage" inverseName="log" inverseEntity="ProjectImage"/>
         <relationship name="techniques" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectTechnique" inverseName="log" inverseEntity="ProjectTechnique"/>
@@ -211,6 +215,7 @@
         <attribute name="word3" optional="YES" attributeType="String"/>
         <attribute name="word4" optional="YES" attributeType="String"/>
         <attribute name="word5" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
     <entity name="Project" representedClassName="Project" syncable="YES" codeGenerationType="class">
         <attribute name="coe" optional="YES" attributeType="String"/>
@@ -233,6 +238,7 @@
         <attribute name="times_used" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="title" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <relationship name="glassItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectGlassItem" inverseName="plan" inverseEntity="ProjectGlassItem"/>
         <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProjectImage" inverseName="plan" inverseEntity="ProjectImage"/>
         <relationship name="kilnSchedule" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="KilnScheduleEntity" inverseName="projects" inverseEntity="KilnScheduleEntity"/>
@@ -313,7 +319,7 @@
         <attribute name="subtotal" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="supplier" optional="YES" attributeType="String"/>
         <attribute name="tax" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
-        <attribute name="workspace_id" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <relationship name="purchaserecorditem" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PurchaseRecordItem" inverseName="purchaserecord" inverseEntity="PurchaseRecordItem"/>
     </entity>
     <entity name="PurchaseRecordItem" representedClassName="PurchaseRecordItem" syncable="YES" codeGenerationType="category">
@@ -326,7 +332,6 @@
         <attribute name="subtype" optional="YES" attributeType="String"/>
         <attribute name="total_price" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="type" optional="YES" attributeType="String"/>
-        <attribute name="workspace_id" optional="YES" attributeType="String"/>
         <relationship name="purchaserecord" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PurchaseRecord" inverseName="purchaserecorditem" inverseEntity="PurchaseRecord"/>
     </entity>
     <entity name="Recipe" representedClassName="Recipe" syncable="YES" codeGenerationType="class">
@@ -339,6 +344,7 @@
         <attribute name="metadata_json" optional="YES" attributeType="String"/>
         <attribute name="owner_user_id" optional="YES" attributeType="String"/>
         <attribute name="title" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <relationship name="ingredients" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="RecipeIngredient" inverseName="recipe" inverseEntity="RecipeIngredient"/>
     </entity>
     <entity name="RecipeIngredient" representedClassName="RecipeIngredient" syncable="YES" codeGenerationType="class">
@@ -375,12 +381,13 @@
         <attribute name="share_code" optional="YES" attributeType="String"/>
         <attribute name="status" optional="YES" attributeType="String"/>
         <attribute name="user_share_notes" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
     <entity name="StorageLocation" representedClassName="StorageLocation" syncable="YES" codeGenerationType="class">
         <attribute name="inventory_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="location" optional="YES" attributeType="String"/>
         <attribute name="quantity" optional="YES" attributeType="String"/>
-        <attribute name="workspace_id" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
     <entity name="UserImage" representedClassName="UserImage" syncable="YES" codeGenerationType="category">
         <attribute name="dateCreated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -393,6 +400,7 @@
         <attribute name="ocrText" optional="YES" attributeType="String"/>
         <attribute name="ownerId" optional="YES" attributeType="String"/>
         <attribute name="ownerType" attributeType="String" defaultValueString="standalone"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
     <entity name="UserItem" representedClassName="UserItem" syncable="YES" codeGenerationType="category"/>
     <entity name="UserNotes" representedClassName="UserNotes" syncable="YES" codeGenerationType="category">
@@ -401,6 +409,7 @@
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
         <attribute name="owner_user_id" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
     <entity name="UserTags" representedClassName="UserTags" syncable="YES" codeGenerationType="category">
         <attribute name="deleted_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -408,6 +417,14 @@
         <attribute name="owner_type" optional="YES" attributeType="String"/>
         <attribute name="owner_user_id" optional="YES" attributeType="String"/>
         <attribute name="tag" optional="YES" attributeType="String"/>
+        <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="Workspace" representedClassName="Workspace" syncable="YES" codeGenerationType="class">
+        <attribute name="date_created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="deleted_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
     </entity>
     <configuration name="Cloud">
         <memberEntity name="Inventory"/>

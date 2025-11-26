@@ -65,6 +65,7 @@ struct AddStepView: View {
                     }) {
                         Label("Add Glass", systemImage: "plus.circle")
                     }
+                    .accessibilityIdentifier("add_step_add_glass")
                 } else {
                     ForEach(glassItems) { glass in
                         HStack {
@@ -94,6 +95,7 @@ struct AddStepView: View {
                     }) {
                         Label("Add More Glass", systemImage: "plus.circle")
                     }
+                    .accessibilityIdentifier("add_step_add_more_glass")
                 }
             }
 
@@ -106,6 +108,7 @@ struct AddStepView: View {
                     } label: {
                         Label("Add Photos", systemImage: "photo")
                     }
+                    .accessibilityIdentifier("add_step_add_photos")
 
                     #if !targetEnvironment(macCatalyst)
                     Button {
@@ -113,6 +116,7 @@ struct AddStepView: View {
                     } label: {
                         Label("Take Photo", systemImage: "camera")
                     }
+                    .accessibilityIdentifier("add_step_take_photo")
                     #endif
                 } else {
                     // Show thumbnails of selected images
@@ -158,12 +162,14 @@ struct AddStepView: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") { dismiss() }
+                    .accessibilityIdentifier("add_step_cancel")
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button("Add") {
                     Task { await saveStep() }
                 }
                 .disabled(!hasAnyContent)
+                .accessibilityIdentifier("add_step_add")
             }
         }
         #if canImport(UIKit)

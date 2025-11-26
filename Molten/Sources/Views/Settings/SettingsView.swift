@@ -142,6 +142,7 @@ struct SettingsView: View {
                     } label: {
                         Text("Customize Tabs")
                     }
+                    .accessibilityIdentifier("settings_customize_tabs")
 
                 }
 
@@ -180,6 +181,7 @@ struct SettingsView: View {
                             }
                         }
                     }
+                    .accessibilityIdentifier("settings_catalog_updates")
 
                     VStack(alignment: .leading, spacing: 4) {
                         Picker("Show Color Chips", selection: colorChipDisplayModeBinding) {
@@ -208,6 +210,7 @@ struct SettingsView: View {
 
                     Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
                         .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
+                        .accessibilityIdentifier("settings_show_ratings")
                 }
 
                 // MARK: - Sorting and Filtering
@@ -231,18 +234,6 @@ struct SettingsView: View {
                         .pickerStyle(.menu)
                     }
 
-                    NavigationLink {
-                        COEFilterView()
-                    } label: {
-                        Text("COE Filter")
-                    }
-
-                    NavigationLink {
-                        ManufacturerFilterView()
-                    } label: {
-                        Text("Manufacturer Filter")
-                    }
-
                     Toggle("Show User Tags in Filters", isOn: Binding(
                         get: { UserSettings.shared.showUserTagsInFilter },
                         set: { UserSettings.shared.showUserTagsInFilter = $0 }
@@ -255,6 +246,28 @@ struct SettingsView: View {
                     ))
                     .help("When enabled, technical property tags (reducing, seeded, reactive, striker, uv, cfl, luster, etc.) will appear in the tag filter menu")
                 }
+                
+                // MARK: - Reduce Catalog Size
+                Section("Reduce Catalog Size") {
+                    NavigationLink {
+                        COEFilterView()
+                    } label: {
+                        Text("COE Filter")
+                    }
+                    .accessibilityIdentifier("settings_coe_filter")
+
+                    NavigationLink {
+                        ManufacturerFilterView()
+                    } label: {
+                        Text("Manufacturer Filter")
+                    }
+                    .accessibilityIdentifier("settings_manufacturer_filter")
+                    Toggle("Apply these filters to Inventory and Shopping List", isOn: Binding(
+                        get: { UserSettings.shared.applyFiltersToInventory },
+                        set: { UserSettings.shared.applyFiltersToInventory = $0 }
+                    ))
+                    .help("When enabled, the COE filter and Manufacturer filter show here will also limit what is shown in your inventory and your shopping list. This may make some of your items in those two lists invisible unless you re-enable their COEs or Manufacturers here.")
+                }
 
                 // MARK: - Content & Customization
                 Section {
@@ -263,18 +276,21 @@ struct SettingsView: View {
                     } label: {
                         Text("Author Information")
                     }
+                    .accessibilityIdentifier("settings_author_information")
 
                     NavigationLink {
                         TerminologySettingsView()
                     } label: {
                         Text("Glass Working Terminology")
                     }
+                    .accessibilityIdentifier("settings_terminology")
 
                     NavigationLink {
                         RatingSettingsView()
                     } label: {
                         Text("Manage Ratings")
                     }
+                    .accessibilityIdentifier("settings_manage_ratings")
 
                     HStack {
                         Text("Inventory Owner")
@@ -329,6 +345,7 @@ struct SettingsView: View {
                         } label: {
                             Text("Kiln Max Rates")
                         }
+                        .accessibilityIdentifier("settings_kiln_rates")
                     }
                 }
 
@@ -339,12 +356,14 @@ struct SettingsView: View {
                     } label: {
                         Text("Image Quality & Cache")
                     }
+                    .accessibilityIdentifier("settings_image_quality")
 
                     NavigationLink {
                         DataExportView()
                     } label: {
                         Text("Export Data")
                     }
+                    .accessibilityIdentifier("settings_export_data")
 
                     NavigationLink {
                         BackupSettingsView()
@@ -377,6 +396,7 @@ struct SettingsView: View {
                                 .cornerRadius(6)
                         }
                     }
+                    .accessibilityIdentifier("settings_manage_subscription")
                 }
                 .task {
                     // Load subscription status when settings view appears
@@ -390,12 +410,14 @@ struct SettingsView: View {
                     } label: {
                         Text("Debug Settings")
                     }
+                    .accessibilityIdentifier("settings_debug")
 
                     NavigationLink {
                         SentryTestView()
                     } label: {
                         Text("Test Sentry Logging")
                     }
+                    .accessibilityIdentifier("settings_sentry_test")
 
                     // Subscription tier override for testing
                     Toggle(isOn: Binding(
@@ -448,6 +470,7 @@ struct SettingsView: View {
                     } label: {
                         Text("About")
                     }
+                    .accessibilityIdentifier("settings_about")
                 }
             }
             .navigationTitle("Settings")

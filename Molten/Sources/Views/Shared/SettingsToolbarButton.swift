@@ -24,6 +24,7 @@ struct SettingsToolbarButton: ToolbarContent {
             } label: {
                 Image(systemName: "gear")
             }
+            .accessibilityIdentifier("settings_toolbar_button")
         }
         #else
         ToolbarItem(placement: .navigation) {
@@ -32,6 +33,7 @@ struct SettingsToolbarButton: ToolbarContent {
             } label: {
                 Image(systemName: "gear")
             }
+            .accessibilityIdentifier("settings_toolbar_button")
         }
         #endif
     }

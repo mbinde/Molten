@@ -103,6 +103,7 @@ struct RatingSubmissionView: View {
                     }
                     .disabled(!isFormValid || isSubmitting)
                     .frame(maxWidth: .infinity)
+                    .accessibilityIdentifier("rating_submit_button")
                 }
             }
             .navigationTitle("Rate Item")
@@ -112,6 +113,7 @@ struct RatingSubmissionView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("rating_cancel_button")
                 }
             }
             .alert("Error", isPresented: $showingError) {

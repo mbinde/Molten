@@ -89,6 +89,7 @@ struct AddSuggestedGlassView: View {
                 Button("Cancel") {
                     dismiss()
                 }
+                .accessibilityIdentifier("add_suggested_glass_cancel")
             }
 
             ToolbarItem(placement: .confirmationAction) {
@@ -98,6 +99,7 @@ struct AddSuggestedGlassView: View {
                     }
                 }
                 .disabled(selectedGlassItem == nil || quantity.isEmpty)
+                .accessibilityIdentifier("add_suggested_glass_add")
             }
         }
         .task {

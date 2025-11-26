@@ -76,6 +76,7 @@ struct CatalogBundleDebugView: View {
                     Button("Done") {
                         // This will be handled by the parent view
                     }
+                    .accessibilityIdentifier("catalog_bundle_debug_done")
                 }
             }
         }

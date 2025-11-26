@@ -46,12 +46,15 @@ struct DataExportView: View {
             Section("Export Options") {
                 Toggle("Include Images", isOn: $includeImages)
                     .help("Include user-uploaded images in the export. Images are Base64-encoded and can significantly increase file size.")
+                    .accessibilityIdentifier("data_export_include_images")
 
                 Toggle("Include User Notes", isOn: $includeUserNotes)
                     .help("Include your personal notes about glass items")
+                    .accessibilityIdentifier("data_export_include_notes")
 
                 Toggle("Include Archived Projects", isOn: $includeArchivedProjects)
                     .help("Include projects that have been archived")
+                    .accessibilityIdentifier("data_export_include_archived")
             }
 
             if let result = lastExportResult {
@@ -141,6 +144,7 @@ struct DataExportView: View {
                 }
                 .disabled(isExporting)
                 .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("data_export_button")
             } footer: {
                 if isExporting {
                     Text("Please wait while your data is being exported...")

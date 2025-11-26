@@ -27,6 +27,7 @@ struct CatalogFilterHeader: View {
                 HStack(spacing: DesignSystem.Spacing.sm) {
                     Toggle("", isOn: $searchTitlesOnly)
                         .labelsHidden()
+                        .accessibilityIdentifier("catalog_search_titles_only")
                     Text("Search titles only")
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)

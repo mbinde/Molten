@@ -82,7 +82,7 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
             // Save context
             try context.save()
 
-            self.log.info("Created location record: \(location.location) for inventory: \(location.inventory_id)")
+            self.log.info("Created location record: \(location.locationName) for inventory: \(location.inventoryId)")
             return location
         }
     }
@@ -114,9 +114,9 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
     func updateLocation(_ location: StorageLocationModel) async throws -> StorageLocationModel {
         return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
             // Find existing item
-            guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: location.inventory_id, locationName: location.location) else {
-                self.log.warning("Attempted to update non-existent location record: \(location.location) for inventory \(location.inventory_id)")
-                throw CoreDataLocationRepositoryError.itemNotFound("\(location.inventory_id)/\(location.location)")
+            guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: location.inventoryId, locationName: location.locationName) else {
+                self.log.warning("Attempted to update non-existent location record: \(location.locationName) for inventory \(location.inventoryId)")
+                throw CoreDataLocationRepositoryError.itemNotFound("\(location.inventoryId)/\(location.locationName)")
             }
 
             // Update properties
@@ -125,7 +125,7 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
             // Save context
             try context.save()
 
-            self.log.info("Updated location record: \(location.location) for inventory \(location.inventory_id)")
+            self.log.info("Updated location record: \(location.locationName) for inventory \(location.inventoryId)")
             return location
         }
     }
@@ -133,9 +133,9 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
     func deleteLocation(_ location: StorageLocationModel) async throws {
         try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
             // Find existing item
-            guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: location.inventory_id, locationName: location.location) else {
-                self.log.warning("Attempted to delete non-existent location record: \(location.location) for inventory \(location.inventory_id)")
-                throw CoreDataLocationRepositoryError.itemNotFound("\(location.inventory_id)/\(location.location)")
+            guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: location.inventoryId, locationName: location.locationName) else {
+                self.log.warning("Attempted to delete non-existent location record: \(location.locationName) for inventory \(location.inventoryId)")
+                throw CoreDataLocationRepositoryError.itemNotFound("\(location.inventoryId)/\(location.locationName)")
             }
 
             // Delete item
@@ -144,7 +144,7 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
             // Save context
             try context.save()
 
-            self.log.info("Deleted location record: \(location.location) for inventory \(location.inventory_id)")
+            self.log.info("Deleted location record: \(location.locationName) for inventory \(location.inventoryId)")
         }
     }
     
@@ -209,8 +209,8 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
                 let coreDataItem = NSManagedObject(entity: entity, insertInto: context)
 
                 let locationModel = StorageLocationModel(
-                    inventory_id: inventory_id,
-                    location: locationName,
+                    inventoryId: inventory_id,
+                    locationName: locationName,
                     quantity: quantity
                 )
 
@@ -235,13 +235,15 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
                 // Update existing record
                 let updatedLocation = StorageLocationModel(
                     id: existingLocation.id,
-                    inventory_id: existingLocation.inventory_id,
-                    location: existingLocation.location,
-                    quantity: existingLocation.quantity + quantity
+                    inventoryId: existingLocation.inventoryId,
+                    storageLocationId: existingLocation.storageLocationId,
+                    locationName: existingLocation.locationName,
+                    quantity: existingLocation.quantity + quantity,
+                    workspaceId: existingLocation.workspaceId
                 )
 
-                guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: existingLocation.inventory_id, locationName: existingLocation.location) else {
-                    throw CoreDataLocationRepositoryError.itemNotFound("\(existingLocation.inventory_id)/\(existingLocation.location)")
+                guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: existingLocation.inventoryId, locationName: existingLocation.locationName) else {
+                    throw CoreDataLocationRepositoryError.itemNotFound("\(existingLocation.inventoryId)/\(existingLocation.locationName)")
                 }
 
                 self.updateCoreDataEntity(coreDataItem, with: updatedLocation)
@@ -251,8 +253,8 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
             } else {
                 // Create new record
                 let newLocation = StorageLocationModel(
-                    inventory_id: inventory_id,
-                    location: cleanLocationName,
+                    inventoryId: inventory_id,
+                    locationName: cleanLocationName,
                     quantity: quantity
                 )
 
@@ -280,8 +282,8 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
                 throw CoreDataLocationRepositoryError.itemNotFound("Location not found: \(cleanLocationName) for inventory: \(inventory_id)")
             }
 
-            guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: existingLocation.inventory_id, locationName: existingLocation.location) else {
-                throw CoreDataLocationRepositoryError.itemNotFound("\(existingLocation.inventory_id)/\(existingLocation.location)")
+            guard let coreDataItem = try self.fetchCoreDataItemSync(byInventoryId: existingLocation.inventoryId, locationName: existingLocation.locationName) else {
+                throw CoreDataLocationRepositoryError.itemNotFound("\(existingLocation.inventoryId)/\(existingLocation.locationName)")
             }
 
             let newQuantity = existingLocation.quantity - quantity
@@ -295,9 +297,11 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
                 // Update the record with new quantity
                 let updatedLocation = StorageLocationModel(
                     id: existingLocation.id,
-                    inventory_id: existingLocation.inventory_id,
-                    location: existingLocation.location,
-                    quantity: newQuantity
+                    inventoryId: existingLocation.inventoryId,
+                    storageLocationId: existingLocation.storageLocationId,
+                    locationName: existingLocation.locationName,
+                    quantity: newQuantity,
+                    workspaceId: existingLocation.workspaceId
                 )
 
                 self.updateCoreDataEntity(coreDataItem, with: updatedLocation)
@@ -341,18 +345,18 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
     func getInventoriesInLocation(_ locationName: String) async throws -> [UUID] {
         let cleanLocationName = StorageLocationModel.cleanLocationName(locationName)
         let locations = try await fetchLocations(withName: cleanLocationName)
-        var inventory_ids = Set<UUID>()
+        var inventoryIds = Set<UUID>()
         for location in locations {
-            inventory_ids.insert(location.inventory_id)
+            inventoryIds.insert(location.inventoryId)
         }
-        return Array(inventory_ids).sorted { $0.uuidString < $1.uuidString }
+        return Array(inventoryIds).sorted { $0.uuidString < $1.uuidString }
     }
-    
+
     func getLocationUtilization() async throws -> [String: Double] {
         let allLocations = try await fetchLocations(matching: nil)
         var grouped: [String: [StorageLocationModel]] = [:]
         for location in allLocations {
-            let key = location.location
+            let key = location.locationName
             grouped[key, default: []].append(location)
         }
 
@@ -366,18 +370,18 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
         }
         return result
     }
-    
+
     func getLocationUsageCounts() async throws -> [(location: String, usageCount: Int)] {
         let allLocations = try await fetchLocations(matching: nil)
         var grouped: [String: [StorageLocationModel]] = [:]
         for location in allLocations {
-            let key = location.location
+            let key = location.locationName
             grouped[key, default: []].append(location)
         }
 
         var results: [(location: String, usageCount: Int)] = []
-        for (location, items) in grouped {
-            results.append((location: location, usageCount: items.count))
+        for (locationName, items) in grouped {
+            results.append((location: locationName, usageCount: items.count))
         }
         return results.sorted { $0.usageCount > $1.usageCount }
     }
@@ -430,25 +434,31 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
     }
     
     private nonisolated func convertToStorageLocationModel(_ coreDataItem: NSManagedObject) -> StorageLocationModel? {
-        guard let inventory_id = coreDataItem.value(forKey: "inventory_id") as? UUID,
-              let location = coreDataItem.value(forKey: "location") as? String,
-              let quantityString = coreDataItem.value(forKey: "quantity") as? String,
-              let quantity = Double(quantityString) else {
+        guard let inventoryId = coreDataItem.value(forKey: "inventory_id") as? UUID,
+              let locationName = coreDataItem.value(forKey: "location") as? String else {
             log.error("Failed to convert Core Data item to LocationModel - missing required properties")
             return nil
         }
 
+        let quantity = coreDataItem.value(forKey: "quantity") as? Double ?? 0.0
+        let storageLocationId = coreDataItem.value(forKey: "storage_location_id") as? UUID
+        let workspaceId = coreDataItem.value(forKey: "workspace_id") as? UUID
+
         return StorageLocationModel(
-            inventory_id: inventory_id,
-            location: location,
-            quantity: quantity
+            inventoryId: inventoryId,
+            storageLocationId: storageLocationId,
+            locationName: locationName,
+            quantity: quantity,
+            workspaceId: workspaceId
         )
     }
-    
+
     private nonisolated func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with location: StorageLocationModel) {
-        coreDataItem.setValue(location.inventory_id, forKey: "inventory_id")
-        coreDataItem.setValue(location.location, forKey: "location")
-        coreDataItem.setValue(String(location.quantity), forKey: "quantity")
+        coreDataItem.setValue(location.inventoryId, forKey: "inventory_id")
+        coreDataItem.setValue(location.locationName, forKey: "location")
+        coreDataItem.setValue(location.quantity, forKey: "quantity")  // Now stored as Double
+        coreDataItem.setValue(location.storageLocationId, forKey: "storage_location_id")
+        coreDataItem.setValue(location.workspaceId, forKey: "workspace_id")
     }
 }
 

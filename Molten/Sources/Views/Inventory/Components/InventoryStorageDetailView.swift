@@ -81,6 +81,7 @@ struct InventoryStorageDetailView: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("inventory_storage_done")
                 }
 
                 ToolbarItem(placement: .primaryAction) {
@@ -90,6 +91,7 @@ struct InventoryStorageDetailView: View {
                         }) {
                             Label("Add Inventory", systemImage: "plus.circle")
                         }
+                        .accessibilityIdentifier("inventory_storage_add")
 
                         Button(action: {
                             withAnimation {
@@ -99,9 +101,11 @@ struct InventoryStorageDetailView: View {
                             Label(groupByLocation ? "Group by Type" : "Group by Location",
                                   systemImage: groupByLocation ? "list.bullet" : "location")
                         }
+                        .accessibilityIdentifier("inventory_storage_toggle_grouping")
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }
+                    .accessibilityIdentifier("inventory_storage_menu")
                 }
             }
             .sheet(item: $editingRecord) { record in

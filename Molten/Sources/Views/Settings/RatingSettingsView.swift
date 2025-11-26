@@ -60,6 +60,7 @@ struct RatingSettingsView: View {
                         Label("Upload Now", systemImage: "arrow.up.circle")
                     }
                     .disabled(isLoadingPending)
+                    .accessibilityIdentifier("rating_settings_upload_now")
                 }
             } header: {
                 Text("Offline Queue")
@@ -82,6 +83,7 @@ struct RatingSettingsView: View {
                     }
                 }
                 .disabled(isDeleting)
+                .accessibilityIdentifier("rating_settings_delete_all")
 
                 if let count = deletedCount {
                     Text("Successfully deleted \(count) rating\(count == 1 ? "" : "s") and words. It may take the server a few hours to rebuild its cache, but your individual ratings and words have been deleted completely.")

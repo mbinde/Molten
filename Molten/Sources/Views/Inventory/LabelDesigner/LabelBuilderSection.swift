@@ -162,6 +162,7 @@ struct LabelBuilderSection: View {
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                     }
                                     .buttonStyle(.plain)
+                                    .accessibilityIdentifier("label_builder_field_\(field.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
                                 }
                                 .padding(.vertical, 6)
                                 .padding(.horizontal, 8)
@@ -205,6 +206,7 @@ struct LabelBuilderSection: View {
                                 .buttonStyle(.plain)
                                 .padding(.vertical, 6)
                                 .padding(.horizontal, 8)
+                                .accessibilityIdentifier("label_builder_field_\(field.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
                             }
                         }
                     }

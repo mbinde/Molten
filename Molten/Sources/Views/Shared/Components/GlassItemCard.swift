@@ -251,6 +251,7 @@ struct GlassItemCard: View {
                             }
                             .foregroundColor(DesignSystem.Colors.accentUser)
                         }
+                        .accessibilityIdentifier("glass_item_card_manage_tags")
                     }
                 }
             }

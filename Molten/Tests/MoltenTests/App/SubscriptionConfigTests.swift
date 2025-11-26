@@ -33,12 +33,12 @@ struct SubscriptionConfigTests {
 
     @Test("FreeTierLimits.maxInventoryItems has correct value")
     func testMaxInventoryItems() {
-        #expect(SubscriptionConfig.FreeTierLimits.maxInventoryItems == 50)
+        #expect(SubscriptionConfig.FreeTierLimits.maxInventoryItems == 25)
     }
 
-    @Test("FreeTierLimits.maxShoppingListItems has correct value")
+    @Test("FreeTierLimits.maxShoppingListItems matches FeatureFlags")
     func testMaxShoppingListItems() {
-        #expect(SubscriptionConfig.FreeTierLimits.maxShoppingListItems == 15)
+        #expect(SubscriptionConfig.FreeTierLimits.maxShoppingListItems == FeatureFlags.FREE_TIER_SHOPPING_LIST_LIMIT)
     }
 
     @Test("FreeTierLimits.maxProjects has correct value")
@@ -48,15 +48,10 @@ struct SubscriptionConfigTests {
 
     @Test("FreeTierLimits.maxLogbookEntries has correct value")
     func testMaxLogbookEntries() {
-        #expect(SubscriptionConfig.FreeTierLimits.maxLogbookEntries == 30)
+        #expect(SubscriptionConfig.FreeTierLimits.maxLogbookEntries == 10)
     }
 
-    @Test("FreeTierLimits.allowBatchLabelPrinting is false")
-    func testAllowBatchLabelPrinting() {
-        #expect(SubscriptionConfig.FreeTierLimits.allowBatchLabelPrinting == false)
-    }
-
-    @Test("FreeTierLimits are all positive or reasonable values")
+    @Test("FreeTierLimits are all positive values")
     func testFreeTierLimitsPositive() {
         #expect(SubscriptionConfig.FreeTierLimits.maxInventoryItems > 0)
         #expect(SubscriptionConfig.FreeTierLimits.maxShoppingListItems > 0)
@@ -64,36 +59,31 @@ struct SubscriptionConfigTests {
         #expect(SubscriptionConfig.FreeTierLimits.maxLogbookEntries > 0)
     }
 
-    // MARK: - PremiumFeatures Tests
+    // MARK: - ProFeatures Tests
 
-    @Test("PremiumFeatures.batchLabelPrinting is true")
-    func testBatchLabelPrinting() {
-        #expect(SubscriptionConfig.PremiumFeatures.batchLabelPrinting == true)
+    @Test("ProFeatures.unlimitedInventory is true")
+    func testUnlimitedInventory() {
+        #expect(SubscriptionConfig.ProFeatures.unlimitedInventory == true)
     }
 
-    @Test("PremiumFeatures.qrCodeScanning is true")
-    func testQRCodeScanning() {
-        #expect(SubscriptionConfig.PremiumFeatures.qrCodeScanning == true)
+    @Test("ProFeatures.unlimitedShoppingList is true")
+    func testUnlimitedShoppingList() {
+        #expect(SubscriptionConfig.ProFeatures.unlimitedShoppingList == true)
     }
 
-    @Test("PremiumFeatures.customInventoryTags is true")
-    func testCustomInventoryTags() {
-        #expect(SubscriptionConfig.PremiumFeatures.customInventoryTags == true)
+    @Test("ProFeatures.unlimitedProjects is true")
+    func testUnlimitedProjects() {
+        #expect(SubscriptionConfig.ProFeatures.unlimitedProjects == true)
     }
 
-    @Test("PremiumFeatures.inventoryItemImages is true")
-    func testInventoryItemImages() {
-        #expect(SubscriptionConfig.PremiumFeatures.inventoryItemImages == true)
+    @Test("ProFeatures.unlimitedLogbookEntries is true")
+    func testUnlimitedLogbookEntries() {
+        #expect(SubscriptionConfig.ProFeatures.unlimitedLogbookEntries == true)
     }
 
-    @Test("PremiumFeatures.customInventoryNotes is true")
-    func testCustomInventoryNotes() {
-        #expect(SubscriptionConfig.PremiumFeatures.customInventoryNotes == true)
-    }
-
-    @Test("PremiumFeatures.unlimitedImages is true")
-    func testUnlimitedImages() {
-        #expect(SubscriptionConfig.PremiumFeatures.unlimitedImages == true)
+    @Test("ProFeatures.versionedCloudBackups is true")
+    func testVersionedCloudBackups() {
+        #expect(SubscriptionConfig.ProFeatures.versionedCloudBackups == true)
     }
 
     // MARK: - UniversalFeatures Tests
@@ -113,19 +103,29 @@ struct SubscriptionConfigTests {
         #expect(SubscriptionConfig.UniversalFeatures.exportData == true)
     }
 
-    @Test("UniversalFeatures.basicLabelPrinting is true")
-    func testBasicLabelPrinting() {
-        #expect(SubscriptionConfig.UniversalFeatures.basicLabelPrinting == true)
+    @Test("UniversalFeatures.labelPrinting is true")
+    func testLabelPrinting() {
+        #expect(SubscriptionConfig.UniversalFeatures.labelPrinting == true)
     }
 
-    @Test("UniversalFeatures.csvImport is true")
-    func testCSVImport() {
-        #expect(SubscriptionConfig.UniversalFeatures.csvImport == true)
+    @Test("UniversalFeatures.qrCodeScanning is true")
+    func testQRCodeScanning() {
+        #expect(SubscriptionConfig.UniversalFeatures.qrCodeScanning == true)
     }
 
-    @Test("UniversalFeatures.bulkEditing is true")
-    func testBulkEditing() {
-        #expect(SubscriptionConfig.UniversalFeatures.bulkEditing == true)
+    @Test("UniversalFeatures.customInventoryTags is true")
+    func testCustomInventoryTags() {
+        #expect(SubscriptionConfig.UniversalFeatures.customInventoryTags == true)
+    }
+
+    @Test("UniversalFeatures.inventoryItemImages is true")
+    func testInventoryItemImages() {
+        #expect(SubscriptionConfig.UniversalFeatures.inventoryItemImages == true)
+    }
+
+    @Test("UniversalFeatures.customInventoryNotes is true")
+    func testCustomInventoryNotes() {
+        #expect(SubscriptionConfig.UniversalFeatures.customInventoryNotes == true)
     }
 
     // MARK: - Inventory Limit Tests
@@ -134,7 +134,7 @@ struct SubscriptionConfigTests {
     func testInventoryLimitForFree() {
         let limit = SubscriptionConfig.inventoryLimit(for: .free)
         #expect(limit == SubscriptionConfig.FreeTierLimits.maxInventoryItems)
-        #expect(limit == 50)
+        #expect(limit == 25)
     }
 
     @Test("inventoryLimit for premium tier returns nil (unlimited)")
@@ -149,7 +149,6 @@ struct SubscriptionConfigTests {
     func testShoppingListLimitForFree() {
         let limit = SubscriptionConfig.shoppingListLimit(for: .free)
         #expect(limit == SubscriptionConfig.FreeTierLimits.maxShoppingListItems)
-        #expect(limit == 15)
     }
 
     @Test("shoppingListLimit for premium tier returns nil (unlimited)")
@@ -179,7 +178,7 @@ struct SubscriptionConfigTests {
     func testLogbookEntriesLimitForFree() {
         let limit = SubscriptionConfig.logbookEntriesLimit(for: .free)
         #expect(limit == SubscriptionConfig.FreeTierLimits.maxLogbookEntries)
-        #expect(limit == 30)
+        #expect(limit == 10)
     }
 
     @Test("logbookEntriesLimit for premium tier returns nil (unlimited)")
@@ -188,90 +187,18 @@ struct SubscriptionConfigTests {
         #expect(limit == nil)
     }
 
-    // MARK: - Batch Label Printing Tests
+    // MARK: - Versioned Cloud Backups Tests
 
-    @Test("allowsBatchLabelPrinting for free tier returns false")
-    func testAllowsBatchLabelPrintingForFree() {
-        let allowed = SubscriptionConfig.allowsBatchLabelPrinting(for: .free)
+    @Test("allowsVersionedCloudBackups for free tier returns false")
+    func testAllowsVersionedCloudBackupsForFree() {
+        let allowed = SubscriptionConfig.allowsVersionedCloudBackups(for: .free)
         #expect(allowed == false)
     }
 
-    @Test("allowsBatchLabelPrinting for premium tier returns true")
-    func testAllowsBatchLabelPrintingForPremium() {
-        let allowed = SubscriptionConfig.allowsBatchLabelPrinting(for: .premium)
+    @Test("allowsVersionedCloudBackups for premium tier returns true")
+    func testAllowsVersionedCloudBackupsForPremium() {
+        let allowed = SubscriptionConfig.allowsVersionedCloudBackups(for: .premium)
         #expect(allowed == true)
-    }
-
-    // MARK: - QR Code Scanning Tests
-
-    @Test("allowsQRCodeScanning for free tier returns false")
-    func testAllowsQRCodeScanningForFree() {
-        let allowed = SubscriptionConfig.allowsQRCodeScanning(for: .free)
-        #expect(allowed == false)
-    }
-
-    @Test("allowsQRCodeScanning for premium tier returns true")
-    func testAllowsQRCodeScanningForPremium() {
-        let allowed = SubscriptionConfig.allowsQRCodeScanning(for: .premium)
-        #expect(allowed == true)
-    }
-
-    // MARK: - Custom Inventory Tags Tests
-
-    @Test("allowsCustomInventoryTags for free tier returns false")
-    func testAllowsCustomInventoryTagsForFree() {
-        let allowed = SubscriptionConfig.allowsCustomInventoryTags(for: .free)
-        #expect(allowed == false)
-    }
-
-    @Test("allowsCustomInventoryTags for premium tier returns true")
-    func testAllowsCustomInventoryTagsForPremium() {
-        let allowed = SubscriptionConfig.allowsCustomInventoryTags(for: .premium)
-        #expect(allowed == true)
-    }
-
-    // MARK: - Inventory Item Images Tests
-
-    @Test("allowsInventoryItemImages for free tier returns false")
-    func testAllowsInventoryItemImagesForFree() {
-        let allowed = SubscriptionConfig.allowsInventoryItemImages(for: .free)
-        #expect(allowed == false)
-    }
-
-    @Test("allowsInventoryItemImages for premium tier returns true")
-    func testAllowsInventoryItemImagesForPremium() {
-        let allowed = SubscriptionConfig.allowsInventoryItemImages(for: .premium)
-        #expect(allowed == true)
-    }
-
-    // MARK: - Custom Inventory Notes Tests
-
-    @Test("allowsCustomInventoryNotes for free tier returns false")
-    func testAllowsCustomInventoryNotesForFree() {
-        let allowed = SubscriptionConfig.allowsCustomInventoryNotes(for: .free)
-        #expect(allowed == false)
-    }
-
-    @Test("allowsCustomInventoryNotes for premium tier returns true")
-    func testAllowsCustomInventoryNotesForPremium() {
-        let allowed = SubscriptionConfig.allowsCustomInventoryNotes(for: .premium)
-        #expect(allowed == true)
-    }
-
-    // MARK: - CSV Import Tests
-
-    @Test("allowsCSVImport returns true for all tiers")
-    func testAllowsCSVImport() {
-        #expect(SubscriptionConfig.allowsCSVImport(for: .free) == true)
-        #expect(SubscriptionConfig.allowsCSVImport(for: .premium) == true)
-    }
-
-    // MARK: - Bulk Editing Tests
-
-    @Test("allowsBulkEditing returns true for all tiers")
-    func testAllowsBulkEditing() {
-        #expect(SubscriptionConfig.allowsBulkEditing(for: .free) == true)
-        #expect(SubscriptionConfig.allowsBulkEditing(for: .premium) == true)
     }
 
     // MARK: - Comprehensive Tier Comparison Tests
@@ -292,17 +219,25 @@ struct SubscriptionConfigTests {
         #expect(SubscriptionConfig.logbookEntriesLimit(for: .premium) == nil)
     }
 
-    @Test("Free tier has limited premium features")
-    func testFreeTierLimitedFeatures() {
-        #expect(SubscriptionConfig.allowsBatchLabelPrinting(for: .free) == false)
-        #expect(SubscriptionConfig.allowsQRCodeScanning(for: .free) == false)
-        #expect(SubscriptionConfig.allowsCustomInventoryTags(for: .free) == false)
+    @Test("Free tier does not have versioned cloud backups")
+    func testFreeTierNoVersionedBackups() {
+        #expect(SubscriptionConfig.allowsVersionedCloudBackups(for: .free) == false)
     }
 
-    @Test("Premium tier has all premium features")
-    func testPremiumTierAllFeatures() {
-        #expect(SubscriptionConfig.allowsBatchLabelPrinting(for: .premium) == true)
-        #expect(SubscriptionConfig.allowsQRCodeScanning(for: .premium) == true)
-        #expect(SubscriptionConfig.allowsCustomInventoryTags(for: .premium) == true)
+    @Test("Premium tier has versioned cloud backups")
+    func testPremiumTierHasVersionedBackups() {
+        #expect(SubscriptionConfig.allowsVersionedCloudBackups(for: .premium) == true)
+    }
+
+    @Test("All universal features are available")
+    func testAllUniversalFeaturesAvailable() {
+        #expect(SubscriptionConfig.UniversalFeatures.catalogAccess == true)
+        #expect(SubscriptionConfig.UniversalFeatures.cloudKitSync == true)
+        #expect(SubscriptionConfig.UniversalFeatures.exportData == true)
+        #expect(SubscriptionConfig.UniversalFeatures.labelPrinting == true)
+        #expect(SubscriptionConfig.UniversalFeatures.qrCodeScanning == true)
+        #expect(SubscriptionConfig.UniversalFeatures.customInventoryTags == true)
+        #expect(SubscriptionConfig.UniversalFeatures.inventoryItemImages == true)
+        #expect(SubscriptionConfig.UniversalFeatures.customInventoryNotes == true)
     }
 }

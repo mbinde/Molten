@@ -133,6 +133,7 @@ struct StoreListView: View {
                 .fontWeight(.medium)
                 .foregroundStyle(.orange)
             }
+            .accessibilityIdentifier("stores_clear_filters")
         }
         .padding(.horizontal, DesignSystem.Spacing.md)
         .padding(.vertical, DesignSystem.Spacing.sm)
@@ -276,6 +277,7 @@ struct StoreListView: View {
                 .cornerRadius(DesignSystem.CornerRadius.medium)
             }
             .foregroundStyle(.primary)
+            .accessibilityIdentifier("stores_search_button")
 
             // Set Location button
             Button(action: { showZipCodeEntry = true }) {
@@ -289,6 +291,7 @@ struct StoreListView: View {
                 .cornerRadius(DesignSystem.CornerRadius.medium)
             }
             .foregroundStyle(.primary)
+            .accessibilityIdentifier("stores_set_location_button")
         }
         .padding(.horizontal, DesignSystem.Spacing.md)
         .padding(.vertical, DesignSystem.Spacing.sm)

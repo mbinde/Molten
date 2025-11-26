@@ -68,6 +68,7 @@ struct ImportPlanView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("import_plan_cancel")
                 }
 
                 if preview != nil && error == nil && importedPlan == nil {
@@ -78,6 +79,7 @@ struct ImportPlanView: View {
                             }
                         }
                         .disabled(isImporting)
+                        .accessibilityIdentifier("import_plan_import")
                     }
                 }
             }

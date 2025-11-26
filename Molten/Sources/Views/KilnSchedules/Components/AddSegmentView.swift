@@ -139,6 +139,7 @@ struct AddSegmentView: View {
             Button("Cancel") {
                 dismiss()
             }
+            .accessibilityIdentifier("add_segment_cancel")
         }
 
         ToolbarItem(placement: .confirmationAction) {
@@ -146,6 +147,7 @@ struct AddSegmentView: View {
                 saveSegment()
             }
             .disabled(!isFormValid)
+            .accessibilityIdentifier("add_segment_save")
         }
     }
 

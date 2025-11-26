@@ -25,6 +25,7 @@ struct DebugSettingsView: View {
             Section {
                 Toggle("Show Debug Information", isOn: $showDebugInfo)
                     .help("Show additional debug information throughout the app")
+                    .accessibilityIdentifier("debug_settings_show_debug_info")
             } header: {
                 Text("Display")
             }
@@ -73,6 +74,7 @@ struct DebugSettingsView: View {
                     Label("Reset Alpha Disclaimer", systemImage: "exclamationmark.triangle")
                         .foregroundColor(.orange)
                 }
+                .accessibilityIdentifier("debug_settings_reset_disclaimer")
             } header: {
                 Text("Onboarding & Disclaimers")
             } footer: {

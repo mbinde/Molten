@@ -24,6 +24,7 @@ struct TagEditorSheet: View {
                             #if os(iOS)
                             .textInputAutocapitalization(.never)
                             #endif
+                            .accessibilityIdentifier("tag_editor_input")
 
                         Button("Add") {
                             let trimmed = newTag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -33,6 +34,7 @@ struct TagEditorSheet: View {
                             }
                         }
                         .disabled(newTag.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .accessibilityIdentifier("tag_editor_add_button")
                     }
                 }
 
@@ -48,6 +50,7 @@ struct TagEditorSheet: View {
                                     Image(systemName: "minus.circle.fill")
                                         .foregroundColor(.red)
                                 }
+                                .accessibilityIdentifier("tag_editor_remove_\(tag)")
                             }
                         }
                     }
@@ -62,6 +65,7 @@ struct TagEditorSheet: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("tag_editor_done")
                 }
             }
         }

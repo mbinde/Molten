@@ -102,6 +102,7 @@ struct StoreAutoCompleteField: View {
                         }
                         .buttonStyle(.plain)
                         .background(Color(white: 1.0))
+                        .accessibilityIdentifier("store_autocomplete_\(suggestion.name.replacingOccurrences(of: " ", with: "_").lowercased())")
 
                         if suggestion != storeSuggestions.prefix(5).last {
                             Divider()

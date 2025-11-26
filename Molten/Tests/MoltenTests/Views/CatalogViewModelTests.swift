@@ -16,6 +16,17 @@ struct CatalogViewModelTests {
 
     // Note: AppDependencies.shared automatically detects test environment and uses mocks
 
+    // MARK: - Setup/Teardown
+
+    init() {
+        // Clean UserDefaults before each test suite to prevent pollution
+        // These filters are loaded from UserDefaults by CatalogViewModel init()
+        UserDefaults.standard.removeObject(forKey: "catalog.selectedProductTypes")
+        UserDefaults.standard.removeObject(forKey: "selectedManufacturerFilter")
+        UserDefaults.standard.removeObject(forKey: "selectedCOETypes")
+        UserDefaults.standard.synchronize()
+    }
+
     // MARK: - Helper Methods
 
     /// Create test glass item

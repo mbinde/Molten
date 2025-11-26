@@ -116,12 +116,14 @@ struct FilterSelectionSheet<Item: Hashable>: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("filter_selection_cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("filter_selection_done")
                 }
             }
         }

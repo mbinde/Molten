@@ -12,6 +12,7 @@ struct ShoppingListOptionsView: View {
     let item: CompleteInventoryItemModel
     let shoppingListRepository: ShoppingListRepository
     let locationService: UnifiedLocationService
+    let entitlementService: EntitlementService
     @Environment(\.dismiss) private var dismiss
 
     @State private var quantity: String = ""
@@ -20,15 +21,18 @@ struct ShoppingListOptionsView: View {
     @State private var errorMessage = ""
     @State private var showingSuccessToast = false
     @State private var isSaving = false
+    @State private var showingUpgradePrompt = false
 
     init(
         item: CompleteInventoryItemModel,
         shoppingListRepository: ShoppingListRepository,
-        locationService: UnifiedLocationService
+        locationService: UnifiedLocationService,
+        entitlementService: EntitlementService
     ) {
         self.item = item
         self.shoppingListRepository = shoppingListRepository
         self.locationService = locationService
+        self.entitlementService = entitlementService
     }
 
     /// Convenience init using AppDependencies
@@ -36,6 +40,7 @@ struct ShoppingListOptionsView: View {
         self.item = item
         self.shoppingListRepository = deps.shoppingListRepository
         self.locationService = deps.unifiedLocationService
+        self.entitlementService = deps.entitlementService
     }
 
     var body: some View {
@@ -89,6 +94,7 @@ struct ShoppingListOptionsView: View {
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
                     .disabled(isSaving || quantity.isEmpty)
+                    .accessibilityIdentifier("shopping_list_options_add")
 
                     Spacer()
                 }
@@ -104,6 +110,7 @@ struct ShoppingListOptionsView: View {
                         dismiss()
                     }
                     .disabled(isSaving)
+                    .accessibilityIdentifier("shopping_list_options_cancel")
                 }
             }
             .alert("Error", isPresented: $showingError) {
@@ -112,6 +119,13 @@ struct ShoppingListOptionsView: View {
                 Text(errorMessage)
             }
             .successToast(message: "Item added to shopping list", isShowing: $showingSuccessToast)
+            .sheet(isPresented: $showingUpgradePrompt) {
+                UpgradePromptView(
+                    feature: "shopping list items",
+                    currentCount: 0, // Don't have access to current count here, will be passed from list view
+                    limit: entitlementService.getShoppingListLimit() ?? 10
+                )
+            }
         }
     }
 
@@ -129,6 +143,23 @@ struct ShoppingListOptionsView: View {
 
         Task {
             do {
+                // PRE-EMPTIVE LIMIT CHECK (before attempting to save)
+                // Get current shopping list item count
+                let currentCount = try await shoppingListRepository.getItemCount()
+
+                // Check if this item already exists in shopping list
+                let existingItem = try? await shoppingListRepository.fetchItem(forItem: item.glassItem.stable_id)
+                let isNewItem = (existingItem == nil)
+
+                // If adding a NEW item (not updating existing), check limit
+                if isNewItem && !entitlementService.canAddShoppingListItem(currentCount: currentCount) {
+                    await MainActor.run {
+                        isSaving = false
+                        showingUpgradePrompt = true
+                    }
+                    return
+                }
+
                 // Use addQuantity which handles creating or updating
                 let storeValue = store.trimmingCharacters(in: .whitespacesAndNewlines)
                 let finalStore = storeValue.isEmpty ? nil : storeValue

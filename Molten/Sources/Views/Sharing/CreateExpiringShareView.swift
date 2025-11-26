@@ -102,6 +102,7 @@ struct CreateExpiringShareView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("create_expiring_share_cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -114,6 +115,7 @@ struct CreateExpiringShareView: View {
                         }
                     }
                     .disabled(viewModel.expiringShareDisplayName.isEmpty || viewModel.isCreatingExpiringShare || !isValidDuration)
+                    .accessibilityIdentifier("create_expiring_share_create")
                 }
             }
         }

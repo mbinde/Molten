@@ -72,7 +72,7 @@ final class ScreenshotAutomation: XCTestCase {
         // Scroll down a bit to show variety of items
         app.swipeUp()
         sleep(1)
-        takeScreenshot(named: "hero-catalog-browse", delay: 0.5)
+        takeScreenshot(named: "hero-catalog-browse", subdirectory: "website", delay: 0.5)
 
         // 2. Glass Detail - Rich Information
         print("2️⃣ Hero: Glass Detail View")
@@ -84,7 +84,7 @@ final class ScreenshotAutomation: XCTestCase {
             // Scroll to show more specifications
             app.swipeUp()
             sleep(1)
-            takeScreenshot(named: "hero-glass-detail", delay: 0.5)
+            takeScreenshot(named: "hero-glass-detail", subdirectory: "website", delay: 0.5)
             navigateBack()
         }
 
@@ -94,9 +94,9 @@ final class ScreenshotAutomation: XCTestCase {
         print("3️⃣ Feature: Search & Filter")
         ensureOnCatalog()
         if activateSearch() {
-            app.textFields.firstMatch.typeText("transparent blue")
+            app.searchFields.firstMatch.typeText("transparent blue")
             waitForContentToLoad()
-            takeScreenshot(named: "feature-search-active", delay: 0.5)
+            takeScreenshot(named: "feature-search-active", subdirectory: "website", delay: 0.5)
             clearSearch()
         }
 
@@ -107,9 +107,9 @@ final class ScreenshotAutomation: XCTestCase {
         if app.buttons["Filters"].exists {
             app.buttons["Filters"].tap()
             sleep(1)
-            takeScreenshot(named: "feature-catalog-filters", delay: 0.5)
+            takeScreenshot(named: "feature-catalog-filters", subdirectory: "website", delay: 0.5)
         } else if showManufacturerFilter() {
-            takeScreenshot(named: "feature-catalog-filters", delay: 0.5)
+            takeScreenshot(named: "feature-catalog-filters", subdirectory: "website", delay: 0.5)
             dismissSheet()
         }
 
@@ -117,7 +117,7 @@ final class ScreenshotAutomation: XCTestCase {
         print("5️⃣ Feature: Inventory List")
         navigateToTab("Inventory")
         waitForContentToLoad()
-        takeScreenshot(named: "feature-inventory-list", delay: 0.5)
+        takeScreenshot(named: "feature-inventory-list", subdirectory: "website", delay: 0.5)
 
         // 6. Inventory Detail - Complete Tracking
         print("6️⃣ Feature: Inventory Detail")
@@ -128,7 +128,7 @@ final class ScreenshotAutomation: XCTestCase {
             // Scroll to show locations and types
             app.swipeUp()
             sleep(1)
-            takeScreenshot(named: "feature-inventory-detail", delay: 0.5)
+            takeScreenshot(named: "feature-inventory-detail", subdirectory: "website", delay: 0.5)
             navigateBack()
         }
 
@@ -146,7 +146,7 @@ final class ScreenshotAutomation: XCTestCase {
                 app.swipeDown()
                 sleep(1)
             }
-            takeScreenshot(named: "feature-add-inventory", delay: 0.5)
+            takeScreenshot(named: "feature-add-inventory", subdirectory: "website", delay: 0.5)
             dismissModal()
         }
 
@@ -154,7 +154,7 @@ final class ScreenshotAutomation: XCTestCase {
         print("8️⃣ Feature: Shopping List")
         navigateToTab("Shopping")
         waitForContentToLoad()
-        takeScreenshot(named: "feature-shopping-list", delay: 0.5)
+        takeScreenshot(named: "feature-shopping-list", subdirectory: "website", delay: 0.5)
 
         // 9. Label Printing - Professional Organization
         print("9️⃣ Feature: Label Designer")
@@ -164,7 +164,7 @@ final class ScreenshotAutomation: XCTestCase {
         if app.buttons["Print Labels"].exists {
             app.buttons["Print Labels"].tap()
             waitForContentToLoad(seconds: 2)
-            takeScreenshot(named: "feature-label-designer", delay: 0.5)
+            takeScreenshot(named: "feature-label-designer", subdirectory: "website", delay: 0.5)
             dismissModal()
         } else {
             print("   ⚠️  Print Labels button not found - skipping screenshot")
@@ -174,7 +174,7 @@ final class ScreenshotAutomation: XCTestCase {
         print("🔟 Feature: Locations Map")
         navigateToTab("Locations")
         waitForContentToLoad()
-        takeScreenshot(named: "feature-locations-map", delay: 0.5)
+        takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
 
         // 11. Location Detail
         print("1️⃣1️⃣ Feature: Location Detail")
@@ -182,7 +182,7 @@ final class ScreenshotAutomation: XCTestCase {
         if app.tables.cells.count > 0 {
             app.tables.cells.firstMatch.tap()
             waitForContentToLoad(seconds: 2)
-            takeScreenshot(named: "feature-location-detail", delay: 0.5)
+            takeScreenshot(named: "feature-location-detail", subdirectory: "website", delay: 0.5)
             navigateBack()
         }
 
@@ -190,7 +190,7 @@ final class ScreenshotAutomation: XCTestCase {
         print("1️⃣2️⃣ Feature: Settings")
         navigateToSettings()
         waitForContentToLoad()
-        takeScreenshot(named: "feature-settings", delay: 0.5)
+        takeScreenshot(named: "feature-settings", subdirectory: "website", delay: 0.5)
 
         // 13. Coatings Catalog - Beyond Glass
         print("1️⃣3️⃣ Feature: Coatings Catalog")
@@ -199,7 +199,7 @@ final class ScreenshotAutomation: XCTestCase {
         if app.buttons["Coatings"].exists {
             app.buttons["Coatings"].tap()
             waitForContentToLoad()
-            takeScreenshot(named: "feature-coatings-catalog", delay: 0.5)
+            takeScreenshot(named: "feature-coatings-catalog", subdirectory: "website", delay: 0.5)
         } else {
             print("   ⚠️  Coatings tab/filter not found - skipping screenshot")
         }
@@ -208,9 +208,9 @@ final class ScreenshotAutomation: XCTestCase {
         print("1️⃣4️⃣ Feature: Search Results")
         ensureOnCatalog()
         if activateSearch() {
-            app.textFields.firstMatch.typeText("striker")
+            app.searchFields.firstMatch.typeText("striker")
             waitForContentToLoad(seconds: 1.5)
-            takeScreenshot(named: "feature-search-results", delay: 0.5)
+            takeScreenshot(named: "feature-search-results", subdirectory: "website", delay: 0.5)
             clearSearch()
         }
 
@@ -220,7 +220,7 @@ final class ScreenshotAutomation: XCTestCase {
         // Scroll to top to show variety
         scrollToTop()
         waitForContentToLoad()
-        takeScreenshot(named: "feature-catalog-grid", delay: 0.5)
+        takeScreenshot(named: "feature-catalog-grid", subdirectory: "website", delay: 0.5)
 
         print("\n✅ Website screenshots complete! (15 total)")
         print("═══════════════════════════════════════════════\n")
@@ -239,15 +239,15 @@ final class ScreenshotAutomation: XCTestCase {
         ensureOnCatalog()
         waitForContentToLoad()
         scrollToTop()
-        takeScreenshot(named: "AppStore-01-Discover", delay: 0.5)
+        takeScreenshot(named: "AppStore-01-Discover", subdirectory: "appstore", delay: 0.5)
 
         // SCREENSHOT 2: DISCOVERY - How do I find what I need?
         // "Find exactly what you need with powerful search & filters"
         print("2️⃣ App Store: Search & Filter")
         if activateSearch() {
-            app.textFields.firstMatch.typeText("blue")
+            app.searchFields.firstMatch.typeText("blue")
             waitForContentToLoad()
-            takeScreenshot(named: "AppStore-02-Find", delay: 0.5)
+            takeScreenshot(named: "AppStore-02-Find", subdirectory: "appstore", delay: 0.5)
             clearSearch()
         }
 
@@ -256,14 +256,14 @@ final class ScreenshotAutomation: XCTestCase {
         print("3️⃣ App Store: Inventory Tracking")
         navigateToTab("Inventory")
         waitForContentToLoad()
-        takeScreenshot(named: "AppStore-03-Track", delay: 0.5)
+        takeScreenshot(named: "AppStore-03-Track", subdirectory: "appstore", delay: 0.5)
 
         // SCREENSHOT 4: PLANNING - What's the practical value?
         // "Never run out with smart shopping lists & low stock alerts"
         print("4️⃣ App Store: Shopping List")
         navigateToTab("Shopping")
         waitForContentToLoad()
-        takeScreenshot(named: "AppStore-04-Plan", delay: 0.5)
+        takeScreenshot(named: "AppStore-04-Plan", subdirectory: "appstore", delay: 0.5)
 
         // SCREENSHOT 5: POLISH - What makes this professional?
         // "Print professional QR code labels for studio organization"
@@ -274,7 +274,7 @@ final class ScreenshotAutomation: XCTestCase {
         if app.buttons["Print Labels"].exists {
             app.buttons["Print Labels"].tap()
             waitForContentToLoad(seconds: 2)
-            takeScreenshot(named: "AppStore-05-Professional", delay: 0.5)
+            takeScreenshot(named: "AppStore-05-Professional", subdirectory: "appstore", delay: 0.5)
             dismissModal()
         } else if app.tables.cells.count > 0 {
             // Fall back to inventory detail view
@@ -282,7 +282,7 @@ final class ScreenshotAutomation: XCTestCase {
             waitForContentToLoad(seconds: 2)
             app.swipeUp()
             sleep(1)
-            takeScreenshot(named: "AppStore-05-Professional", delay: 0.5)
+            takeScreenshot(named: "AppStore-05-Professional", subdirectory: "appstore", delay: 0.5)
             navigateBack()
         }
 
@@ -305,13 +305,13 @@ final class ScreenshotAutomation: XCTestCase {
         print("1️⃣ Dark Mode: Catalog")
         ensureOnCatalog()
         waitForContentToLoad()
-        takeScreenshot(named: "Dark-01-Catalog", delay: 0.5)
+        takeScreenshot(named: "Dark-01-Catalog", subdirectory: "dark", delay: 0.5)
 
         // 2. Inventory in dark mode
         print("2️⃣ Dark Mode: Inventory")
         navigateToTab("Inventory")
         waitForContentToLoad()
-        takeScreenshot(named: "Dark-02-Inventory", delay: 0.5)
+        takeScreenshot(named: "Dark-02-Inventory", subdirectory: "dark", delay: 0.5)
 
         print("\n✅ Dark mode screenshots complete! (2 total)")
         print("═══════════════════════════════════════════════\n")
@@ -385,17 +385,24 @@ final class ScreenshotAutomation: XCTestCase {
     /// Activate search field
     @discardableResult
     private func activateSearch() -> Bool {
-        // Try text fields (app uses TextField, not SearchField)
-        let textFields = app.textFields
-        if textFields.count > 0 {
-            textFields.firstMatch.tap()
+        // Try searchFields FIRST (this is what the working UI tests use)
+        let searchField = app.searchFields.firstMatch
+        if searchField.waitForExistence(timeout: 5) {
+            // Wait a bit more for it to be hittable
             sleep(1)
-            return true
+            if searchField.isHittable {
+                searchField.tap()
+                sleep(1)
+                return true
+            } else {
+                print("   ⚠️  Search field exists but not hittable")
+            }
         }
 
-        // Try searchFields as fallback
-        if app.searchFields.count > 0 {
-            app.searchFields.firstMatch.tap()
+        // Try text fields as fallback
+        let textField = app.textFields.firstMatch
+        if textField.waitForExistence(timeout: 3) && textField.isHittable {
+            textField.tap()
             sleep(1)
             return true
         }
@@ -409,13 +416,13 @@ final class ScreenshotAutomation: XCTestCase {
         // Dismiss keyboard first
         if app.keyboards.buttons["Return"].exists {
             app.keyboards.buttons["Return"].tap()
-            sleep(0.5)
+            usleep(500_000) // 0.5 seconds
         } else if app.keyboards.buttons["return"].exists {
             app.keyboards.buttons["return"].tap()
-            sleep(0.5)
+            usleep(500_000) // 0.5 seconds
         } else {
             app.swipeDown()
-            sleep(0.5)
+            usleep(500_000) // 0.5 seconds
         }
 
         // Try standard clear button
@@ -514,8 +521,12 @@ final class ScreenshotAutomation: XCTestCase {
 
     /// Scroll to top of list
     private func scrollToTop() {
-        // Tap status bar to scroll to top (iOS standard behavior)
-        app.statusBars.firstMatch.tap()
+        // Swipe down multiple times to get to top
+        // Status bar tap doesn't work reliably in UI tests
+        for _ in 0..<3 {
+            app.swipeDown()
+            usleep(300_000) // 0.3 seconds between swipes
+        }
         sleep(1)
     }
 
@@ -541,7 +552,11 @@ final class ScreenshotAutomation: XCTestCase {
     // MARK: - Screenshot Helpers
 
     /// Takes a screenshot with a descriptive name and optional delay
-    private func takeScreenshot(named name: String, delay: TimeInterval = 0) {
+    /// - Parameters:
+    ///   - name: Filename (without .png extension)
+    ///   - subdirectory: Subdirectory within Screenshots/ (e.g., "website", "appstore", "dark")
+    ///   - delay: Optional delay before taking screenshot to let animations settle
+    private func takeScreenshot(named name: String, subdirectory: String = "", delay: TimeInterval = 0) {
         // Optional delay for polish (let animations settle)
         if delay > 0 {
             usleep(useconds_t(delay * 1_000_000))
@@ -552,13 +567,25 @@ final class ScreenshotAutomation: XCTestCase {
 
         // WORKAROUND: Save directly to Screenshots directory
         // XCTest attachments aren't being saved to .xcresult in iOS 26/Xcode 17
-        let screenshotsPath = "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Screenshots"
+        let baseScreenshotsPath = "/Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Screenshots"
+
+        // Build full path with optional subdirectory
+        var screenshotsPath = baseScreenshotsPath
+        if !subdirectory.isEmpty {
+            screenshotsPath = "\(baseScreenshotsPath)/\(subdirectory)"
+
+            // Create subdirectory if it doesn't exist
+            let subdirURL = URL(fileURLWithPath: screenshotsPath)
+            try? FileManager.default.createDirectory(at: subdirURL, withIntermediateDirectories: true, attributes: nil)
+        }
+
         let fileName = "\(name).png"
         let fileURL = URL(fileURLWithPath: screenshotsPath).appendingPathComponent(fileName)
 
         do {
             try screenshot.pngRepresentation.write(to: fileURL)
-            print("   📸 Screenshot saved: \(fileName)")
+            let displayPath = subdirectory.isEmpty ? fileName : "\(subdirectory)/\(fileName)"
+            print("   📸 Screenshot saved: \(displayPath)")
         } catch {
             print("   ❌ Failed to save \(fileName): \(error)")
         }

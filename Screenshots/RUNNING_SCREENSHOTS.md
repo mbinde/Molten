@@ -17,6 +17,9 @@ open /Users/binde/projects/uitests/Molten.xcodeproj
 Screenshots will be saved to:
 ```
 /Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Screenshots/
+  ├── website/     (15 screenshots for marketing)
+  ├── appstore/    (5 screenshots for App Store submission)
+  └── dark/        (2 screenshots showing dark mode)
 ```
 
 ## Test Methods
@@ -26,7 +29,7 @@ Screenshots will be saved to:
 **Output:** 15 screenshots
 **Best For:** Website, blog posts, social media
 
-**Screenshots generated:**
+**Screenshots generated (in `website/` directory):**
 1. `hero-catalog-browse.png` - Colorful catalog overview
 2. `hero-glass-detail.png` - Rich product detail view
 3. `feature-search-active.png` - Active search with query
@@ -48,7 +51,7 @@ Screenshots will be saved to:
 **Output:** 5 screenshots
 **Best For:** App Store listing (tells a story)
 
-**Screenshots generated:**
+**Screenshots generated (in `appstore/` directory):**
 1. `AppStore-01-Discover.png` - "Browse 2,500+ glass products from top manufacturers"
 2. `AppStore-02-Find.png` - "Find exactly what you need with powerful search & filters"
 3. `AppStore-03-Track.png` - "Track your inventory across multiple locations & types"
@@ -66,7 +69,7 @@ Screenshots will be saved to:
 3. Select Dark
 4. Then run this test
 
-**Screenshots generated:**
+**Screenshots generated (in `dark/` directory):**
 1. `Dark-01-Catalog.png` - Catalog in dark mode
 2. `Dark-02-Inventory.png` - Inventory in dark mode
 

@@ -515,6 +515,7 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
     let coe: Int32?  // Only for glass items
     let temperatureRangeLow: Int?   // Only for coatings (°F)
     let temperatureRangeHigh: Int?  // Only for coatings (°F)
+    let inlineTags: [String]?  // Tags stored inline in catalog (coatings/tools)
 
     nonisolated var id: String { stable_id }
 
@@ -536,6 +537,7 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.coe = glassItem.coe
         self.temperatureRangeLow = nil  // Glass items don't have temperature range
         self.temperatureRangeHigh = nil
+        self.inlineTags = nil  // Glass items get tags from ItemTags repository
     }
 
     /// Initialize from CoatingItemModel
@@ -558,6 +560,8 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.coe = nil  // Coatings don't have COE
         self.temperatureRangeLow = coatingItem.temperatureRangeLow
         self.temperatureRangeHigh = coatingItem.temperatureRangeHigh
+        // Parse inline tags from coating catalog
+        self.inlineTags = Self.parseCommaSeparatedQuotedString(coatingItem.tags)
     }
 
     /// Initialize from ToolItemModel
@@ -578,6 +582,7 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.coe = nil  // Tools don't have COE
         self.temperatureRangeLow = nil  // Tools don't have temperature range
         self.temperatureRangeHigh = nil
+        self.inlineTags = nil  // Tools don't have tags yet
     }
 
     // MARK: - Helper Methods

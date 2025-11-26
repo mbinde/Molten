@@ -748,33 +748,11 @@ struct InventoryDetailView: View {
             break
         }
 
-        // Manufacturer (just the name)
-        let manufacturerName = GlassManufacturers.fullName(for: currentItem.catalogItem.manufacturer)
-            ?? currentItem.catalogItem.manufacturer.capitalized
-        tiles.append(.init(
-            icon: "building.2",
-            value: manufacturerName
-        ))
-
         // SKU (if available and not synthetic)
         if let sku = currentItem.catalogItem.sku, !sku.isEmpty, !isSyntheticSKU(sku) {
             tiles.append(.init(
                 icon: "tag",
                 value: sku
-            ))
-        }
-
-        // Status (mfr_status is non-optional)
-        let status = currentItem.catalogItem.mfr_status
-        if !status.isEmpty {
-            let statusDisplay = status.capitalized
-            let statusColor = status.lowercased() == "available"
-                ? DesignSystem.Colors.moltenTeal
-                : DesignSystem.Colors.textSecondary
-            tiles.append(.init(
-                icon: "checkmark.circle",
-                value: statusDisplay,
-                tintColor: statusColor
             ))
         }
 

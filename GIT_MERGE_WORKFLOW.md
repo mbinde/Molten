@@ -1,5 +1,7 @@
 # Git Merge Workflow: Combining Branch Changes with Main
 
+> **⚠️ IMPORTANT: NEVER follow this workflow automatically. Only execute these steps when the user explicitly tells you to merge or "follow GIT_MERGE_WORKFLOW". Always run full tests and get user approval before merging.**
+
 ## Scenario
 - `origin/main` has important changes
 - Local branch (e.g., `arch`) has important changes

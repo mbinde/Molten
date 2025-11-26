@@ -36,17 +36,17 @@ struct LocationServiceTests {
         let inventory_id = UUID()
         
         let locationModel = StorageLocationModel(
-            inventory_id: inventory_id,
-            location: "Workshop Storage",
+            inventoryId: inventory_id,
+            locationName: "Workshop Storage",
             quantity: 10.0
         )
-        
+
         // Act: Create a location record
         let createdLocation = try await storageLocationRepository.createLocation(locationModel)
-        
+
         // Assert: Location should be created successfully
-        #expect(createdLocation.inventory_id == locationModel.inventory_id, "Location should be created with correct inventory ID")
-        #expect(createdLocation.location == "Workshop Storage", "Location should have correct name")
+        #expect(createdLocation.inventoryId == locationModel.inventoryId, "Location should be created with correct inventory ID")
+        #expect(createdLocation.locationName == "Workshop Storage", "Location should have correct name")
         #expect(createdLocation.quantity == 10.0, "Location should have correct quantity")
     }
     
@@ -68,13 +68,13 @@ struct LocationServiceTests {
         
         // Add some test location records
         let location1 = StorageLocationModel(
-            inventory_id: inventory_id1,
-            location: "Workshop",
+            inventoryId: inventory_id1,
+            locationName: "Workshop",
             quantity: 5.0
         )
         let location2 = StorageLocationModel(
-            inventory_id: inventory_id2,
-            location: "Storage Room",
+            inventoryId: inventory_id2,
+            locationName: "Storage Room",
             quantity: 15.0
         )
         
@@ -96,8 +96,8 @@ struct LocationServiceTests {
         let inventory_id = UUID()
         
         let workshopLocation = StorageLocationModel(
-            inventory_id: inventory_id,
-            location: "Workshop Area",
+            inventoryId: inventory_id,
+            locationName: "Workshop Area",
             quantity: 20.0
         )
         
@@ -125,8 +125,8 @@ struct LocationServiceTests {
         
         // Assert: Should create location with correct quantity
         #expect(updatedLocation.quantity == 25.0, "Should add quantity correctly")
-        #expect(updatedLocation.location == "Storage Bin A", "Should have correct location name")
-        #expect(updatedLocation.inventory_id == inventory_id, "Should have correct inventory ID")
+        #expect(updatedLocation.locationName == "Storage Bin A", "Should have correct location name")
+        #expect(updatedLocation.inventoryId == inventory_id, "Should have correct inventory ID")
     }
     
     @Test("LocationRepository should support batch location operations")
@@ -136,17 +136,17 @@ struct LocationServiceTests {
         let inventory_id = UUID()
         
         let locations = [
-            StorageLocationModel(inventory_id: inventory_id, location: "Bin 1", quantity: 10.0),
-            StorageLocationModel(inventory_id: inventory_id, location: "Bin 2", quantity: 15.0),
-            StorageLocationModel(inventory_id: inventory_id, location: "Bin 3", quantity: 5.0)
+            StorageLocationModel(inventoryId: inventory_id, locationName: "Bin 1", quantity: 10.0),
+            StorageLocationModel(inventoryId: inventory_id, locationName: "Bin 2", quantity: 15.0),
+            StorageLocationModel(inventoryId: inventory_id, locationName: "Bin 3", quantity: 5.0)
         ]
-        
+
         // Act: Create multiple locations in batch
         let createdLocations = try await storageLocationRepository.createLocations(locations)
-        
+
         // Assert: Should create all locations successfully
         #expect(createdLocations.count == 3, "Should create all three locations")
-        #expect(createdLocations.allSatisfy { $0.inventory_id == inventory_id }, "All locations should have correct inventory ID")
+        #expect(createdLocations.allSatisfy { $0.inventoryId == inventory_id }, "All locations should have correct inventory ID")
     }
     
     @Test("LocationRepository should support moving quantities between locations")
@@ -171,8 +171,8 @@ struct LocationServiceTests {
         let destinationLocations = try await storageLocationRepository.fetchLocations(withName: "Destination Bin")
         
         // Find locations for our inventory
-        let sourceLocation = sourceLocations.first { $0.inventory_id == inventory_id }
-        let destinationLocation = destinationLocations.first { $0.inventory_id == inventory_id }
+        let sourceLocation = sourceLocations.first { $0.inventoryId == inventory_id }
+        let destinationLocation = destinationLocations.first { $0.inventoryId == inventory_id }
         
         #expect(sourceLocation?.quantity == 15.0, "Source location should have remaining quantity")
         #expect(destinationLocation?.quantity == 15.0, "Destination location should have moved quantity")

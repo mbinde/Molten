@@ -321,6 +321,12 @@ open class BackupService {
             throw BackupAPIError.invalidData
         }
 
+        // Verify checksum before restoring (integrity check)
+        let computedChecksum = computeChecksum(jsonData)
+        guard computedChecksum == result.checksum else {
+            throw BackupAPIError.checksumMismatch(expected: result.checksum, actual: computedChecksum)
+        }
+
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let payload = try decoder.decode(InventoryBackupPayload.self, from: jsonData)

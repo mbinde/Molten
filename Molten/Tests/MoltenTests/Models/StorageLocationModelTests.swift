@@ -139,8 +139,8 @@ struct StorageLocationModelTests {
     @Test("Should ensure non-negative quantity in initializer")
     func testInitEnsuresNonNegativeQuantity() {
         let location = StorageLocationModel(
-            inventory_id: UUID(),
-            location: "Shelf A",
+            inventoryId: UUID(),
+            locationName: "Shelf A",
             quantity: -5.0
         )
 
@@ -151,8 +151,8 @@ struct StorageLocationModelTests {
     @Test("Should preserve positive quantity")
     func testInitPreservesPositiveQuantity() {
         let location = StorageLocationModel(
-            inventory_id: UUID(),
-            location: "Shelf A",
+            inventoryId: UUID(),
+            locationName: "Shelf A",
             quantity: 10.5
         )
 
@@ -162,8 +162,8 @@ struct StorageLocationModelTests {
     @Test("Should preserve zero quantity")
     func testInitPreservesZeroQuantity() {
         let location = StorageLocationModel(
-            inventory_id: UUID(),
-            location: "Shelf A",
+            inventoryId: UUID(),
+            locationName: "Shelf A",
             quantity: 0.0
         )
 
@@ -173,19 +173,19 @@ struct StorageLocationModelTests {
     @Test("Should trim location name in initializer")
     func testInitTrimsLocationName() {
         let location = StorageLocationModel(
-            inventory_id: UUID(),
-            location: "  Shelf A  ",
+            inventoryId: UUID(),
+            locationName: "  Shelf A  ",
             quantity: 5.0
         )
 
-        #expect(location.location == "Shelf A")
+        #expect(location.locationName == "Shelf A")
     }
 
     @Test("Should handle edge case: very negative quantity")
     func testInitVeryNegativeQuantity() {
         let location = StorageLocationModel(
-            inventory_id: UUID(),
-            location: "Shelf A",
+            inventoryId: UUID(),
+            locationName: "Shelf A",
             quantity: -999999.99
         )
 
@@ -195,8 +195,8 @@ struct StorageLocationModelTests {
     @Test("Should preserve large positive quantity")
     func testInitLargePositiveQuantity() {
         let location = StorageLocationModel(
-            inventory_id: UUID(),
-            location: "Shelf A",
+            inventoryId: UUID(),
+            locationName: "Shelf A",
             quantity: 999999.99
         )
 

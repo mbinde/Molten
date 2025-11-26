@@ -262,9 +262,24 @@ final class ScreenshotAutomation: XCTestCase {
         // 15. Catalog Grid - Touch-Friendly
         print("1️⃣5️⃣ Feature: Catalog Grid Overview")
         ensureOnCatalog()
-        // Scroll to top to show variety
-        scrollToTop()
-        waitForContentToLoad()
+        sleep(1) // Give catalog time to load
+        // Make sure we're on Glass catalog, not Coatings or other filter
+        if app.buttons["Glass"].exists {
+            app.buttons["Glass"].tap()
+            sleep(1)
+        } else if app.buttons["All Products"].exists {
+            app.buttons["All Products"].tap()
+            sleep(1)
+        }
+        // Wait for content to load before scrolling
+        waitForContentToLoad(seconds: 2)
+        // Scroll to top to show variety (scroll within the list, not the whole app)
+        if app.tables.firstMatch.exists {
+            app.tables.firstMatch.swipeDown()
+            sleep(0.5)
+            app.tables.firstMatch.swipeDown()
+            sleep(0.5)
+        }
         takeScreenshot(named: "feature-catalog-grid", subdirectory: "website", delay: 0.5)
 
         print("\n✅ Website screenshots complete! (15 total)")

@@ -77,7 +77,7 @@ struct CatalogViewModelTests {
     }
 
     /// Create test coating item
-    func createCoatingItem(manufacturer: String, sku: String, name: String) -> CompleteInventoryItemModel {
+    func createCoatingItem(manufacturer: String, sku: String, name: String, tags: String? = nil) -> CompleteInventoryItemModel {
         let stableId = "\(manufacturer)-\(sku)-coating"
         let coatingItem = CoatingItemModel(
             stable_id: stableId,
@@ -88,13 +88,16 @@ struct CatalogViewModelTests {
             url: nil,
             mfr_status: "available",
             image_url: nil,
-            image_path: nil
+            image_path: nil,
+            tags: tags
         )
         let catalogItem = UnifiedCatalogItem(coatingItem: coatingItem)
+        // Include inline tags from catalog item
+        let parsedTags = catalogItem.inlineTags ?? []
         return CompleteInventoryItemModel(
             catalogItem: catalogItem,
             inventory: [],
-            tags: [],
+            tags: parsedTags,
             userTags: []
         )
     }
@@ -362,5 +365,92 @@ struct CatalogViewModelTests {
 
         #expect(filteredItems.count == 3, "All 3 coatings should appear")
         #expect(filteredItems.allSatisfy { $0.catalogItem.itemType == .coating }, "All items should be coatings")
+    }
+
+    // MARK: - Coating Inline Tags Tests
+
+    @Test("Coating inline tags should be parsed from quoted string")
+    func testCoatingInlineTagsParsing() async throws {
+        // Given: A coating with inline tags in SQLite format
+        let coating = createCoatingItem(
+            manufacturer: "glassalchemist",
+            sku: "C01",
+            name: "Gold Luster",
+            tags: "\"metallic\", \"opaque\", \"gold\""
+        )
+
+        // Then: Tags should be parsed correctly
+        #expect(coating.tags.contains("metallic"), "Should contain 'metallic' tag")
+        #expect(coating.tags.contains("opaque"), "Should contain 'opaque' tag")
+        #expect(coating.tags.contains("gold"), "Should contain 'gold' tag")
+        #expect(coating.tags.count == 3, "Should have exactly 3 tags")
+    }
+
+    @Test("Coating with no tags should have empty tags array")
+    func testCoatingWithNoTags() async throws {
+        // Given: A coating without tags
+        let coating = createCoatingItem(
+            manufacturer: "glassalchemist",
+            sku: "C02",
+            name: "Clear Reducer"
+        )
+
+        // Then: Tags should be empty
+        #expect(coating.tags.isEmpty, "Tags should be empty when none provided")
+    }
+
+    @Test("Coating tags should be available for tag filtering")
+    func testCoatingTagsAvailableForFiltering() async throws {
+        // Given: Coatings with different tags
+        let items = [
+            createCoatingItem(manufacturer: "ga", sku: "C01", name: "Gold Luster", tags: "\"metallic\", \"gold\""),
+            createCoatingItem(manufacturer: "ga", sku: "C02", name: "Silver Luster", tags: "\"metallic\", \"silver\""),
+            createCoatingItem(manufacturer: "ga", sku: "C03", name: "Matte Black", tags: "\"matte\", \"black\"")
+        ]
+
+        let viewModel = CatalogViewModel(
+            catalogService: AppDependencies.shared.catalogService
+        )
+
+        viewModel.items = items
+
+        // When: Filtering by product type "coating"
+        viewModel.selectedProductTypes = ["coating"]
+        viewModel.applyFilters()
+
+        // Then: Tag counts should reflect coating tags
+        let tagCounts = viewModel.tagCounts
+
+        #expect(tagCounts["metallic"] == 2, "Should have 2 items with 'metallic' tag")
+        #expect(tagCounts["gold"] == 1, "Should have 1 item with 'gold' tag")
+        #expect(tagCounts["matte"] == 1, "Should have 1 item with 'matte' tag")
+    }
+
+    @Test("Coating tag filter should work correctly")
+    func testCoatingTagFilterWorks() async throws {
+        // Given: Coatings with different tags
+        let items = [
+            createCoatingItem(manufacturer: "ga", sku: "C01", name: "Gold Luster", tags: "\"metallic\", \"gold\""),
+            createCoatingItem(manufacturer: "ga", sku: "C02", name: "Silver Luster", tags: "\"metallic\", \"silver\""),
+            createCoatingItem(manufacturer: "ga", sku: "C03", name: "Matte Black", tags: "\"matte\", \"black\"")
+        ]
+
+        let viewModel = CatalogViewModel(
+            catalogService: AppDependencies.shared.catalogService
+        )
+
+        viewModel.items = items
+
+        // When: Filtering by "metallic" tag
+        viewModel.selectedTags = ["metallic"]
+        viewModel.applyFilters()
+
+        // Then: Should show only metallic coatings
+        let filteredNames = viewModel.filteredItems.map { $0.catalogItem.name }
+
+        #expect(filteredNames.count == 2, "Should have 2 metallic coatings")
+        #expect(filteredNames.contains("Gold Luster"), "Gold Luster should be included")
+        #expect(filteredNames.contains("Silver Luster"), "Silver Luster should be included")
+        #expect(!filteredNames.contains("Matte Black"), "Matte Black should not be included")
     }
 }

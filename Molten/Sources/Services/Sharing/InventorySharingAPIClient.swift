@@ -90,6 +90,8 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.conflict
         case 401, 403:
             throw SharingAPIError.unauthorized
+        case 429:
+            throw SharingAPIError.rateLimitExceeded
         default:
             throw SharingAPIError.serverError(httpResponse.statusCode)
         }
@@ -122,6 +124,8 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.notFound
         case 401, 403:
             throw SharingAPIError.unauthorized
+        case 429:
+            throw SharingAPIError.rateLimitExceeded
         default:
             throw SharingAPIError.serverError(httpResponse.statusCode)
         }
@@ -190,6 +194,8 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.notFound
         case 401, 403:
             throw SharingAPIError.unauthorized
+        case 429:
+            throw SharingAPIError.rateLimitExceeded
         default:
             throw SharingAPIError.serverError(httpResponse.statusCode)
         }
@@ -241,6 +247,8 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.notFound
         case 401, 403:
             throw SharingAPIError.unauthorized
+        case 429:
+            throw SharingAPIError.rateLimitExceeded
         default:
             throw SharingAPIError.serverError(httpResponse.statusCode)
         }
@@ -303,6 +311,8 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.notFound
         case 401, 403:
             throw SharingAPIError.unauthorized
+        case 429:
+            throw SharingAPIError.rateLimitExceeded
         default:
             throw SharingAPIError.serverError(httpResponse.statusCode)
         }
@@ -352,6 +362,8 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.notFound
         case 401, 403:
             throw SharingAPIError.unauthorized
+        case 429:
+            throw SharingAPIError.rateLimitExceeded
         default:
             throw SharingAPIError.serverError(httpResponse.statusCode)
         }
@@ -418,6 +430,8 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.notFound
         case 401, 403:
             throw SharingAPIError.unauthorized
+        case 429:
+            throw SharingAPIError.rateLimitExceeded
         default:
             throw SharingAPIError.serverError(httpResponse.statusCode)
         }

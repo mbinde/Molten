@@ -17,6 +17,7 @@ enum BackupAPIError: Error, LocalizedError {
     case unauthorized
     case conflict  // Key already registered
     case rateLimitExceeded(resetAt: Date)
+    case checksumMismatch(expected: String, actual: String)
 
     var errorDescription: String? {
         switch self {
@@ -36,6 +37,8 @@ enum BackupAPIError: Error, LocalizedError {
             return "Backup key already registered"
         case .rateLimitExceeded(let resetAt):
             return "Rate limit exceeded. Try again after \(resetAt)"
+        case .checksumMismatch:
+            return "Backup data integrity check failed. The backup may be corrupted."
         }
     }
 }

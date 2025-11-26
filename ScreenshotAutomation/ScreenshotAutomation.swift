@@ -57,7 +57,7 @@ final class ScreenshotAutomation: XCTestCase {
     // MARK: - Main Screenshot Test Suites
 
     /// Complete screenshot suite for website marketing
-    /// Generates 18 screenshots covering all enabled features
+    /// Generates 19 screenshots covering all enabled features
     /// BEST FOR: Website, blog posts, social media
     func testGenerateWebsiteScreenshots() throws {
         print("\n📸 WEBSITE SCREENSHOTS - Starting...")
@@ -86,6 +86,36 @@ final class ScreenshotAutomation: XCTestCase {
             sleep(1)
             takeScreenshot(named: "hero-glass-detail", subdirectory: "website", delay: 0.5)
             navigateBack()
+        }
+
+        // 2b. Glass Detail with Manufacturer Info (Double Helix)
+        print("2️⃣b Glass Detail: Manufacturer Info (Double Helix)")
+        ensureOnCatalog()
+        // Search for a Double Helix item to ensure we get their beautiful glass
+        if activateSearch() {
+            app.searchFields.firstMatch.typeText("double helix")
+            waitForContentToLoad(seconds: 2)
+            // Tap on first Double Helix result
+            if app.tables.cells.count > 0 {
+                app.tables.cells.firstMatch.tap()
+                waitForContentToLoad(seconds: 2)
+                // Look for and tap Manufacturer tab if it exists
+                if app.buttons["Manufacturer"].exists {
+                    app.buttons["Manufacturer"].tap()
+                    sleep(1)
+                } else if app.buttons["About"].exists {
+                    app.buttons["About"].tap()
+                    sleep(1)
+                } else if app.buttons["Info"].exists {
+                    app.buttons["Info"].tap()
+                    sleep(1)
+                }
+                // Take screenshot showing manufacturer info
+                takeScreenshot(named: "feature-glass-detail-manufacturer", subdirectory: "website", delay: 0.5)
+                navigateBack()
+                waitForContentToLoad()
+            }
+            clearSearch()
         }
 
         // CORE FEATURES
@@ -339,7 +369,7 @@ final class ScreenshotAutomation: XCTestCase {
         }
         takeScreenshot(named: "feature-catalog-grid", subdirectory: "website", delay: 0.5)
 
-        print("\n✅ Website screenshots complete! (18 total)")
+        print("\n✅ Website screenshots complete! (19 total)")
         print("═══════════════════════════════════════════════\n")
     }
 

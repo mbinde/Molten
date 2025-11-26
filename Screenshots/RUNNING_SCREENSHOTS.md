@@ -17,7 +17,7 @@ open /Users/binde/projects/uitests/Molten.xcodeproj
 Screenshots will be saved to:
 ```
 /Users/binde/Library/Mobile Documents/com~apple~CloudDocs/Molten/Screenshots/
-  ├── website/     (18 screenshots for marketing)
+  ├── website/     (19 screenshots for marketing)
   ├── appstore/    (5 screenshots for App Store submission)
   └── dark/        (2 screenshots showing dark mode)
 ```
@@ -26,28 +26,29 @@ Screenshots will be saved to:
 
 ### 1. `testGenerateWebsiteScreenshots()`
 **Purpose:** Complete screenshot suite for website marketing
-**Output:** 18 screenshots
+**Output:** 19 screenshots
 **Best For:** Website, blog posts, social media
 
 **Screenshots generated (in `website/` directory):**
 1. `hero-catalog-browse.png` - Colorful catalog overview
 2. `hero-glass-detail.png` - Rich product detail view
-3. `feature-search-active.png` - Active search with query
-4. `feature-catalog-filters.png` - Filter interface
-5. `feature-tag-filter-[tag].png` - Tag/color filtering (transparent, opaque, striker, etc.)
-6. `feature-inventory-list.png` - Inventory tracking list
-7. `feature-inventory-detail.png` - Complete inventory detail
-8. `feature-inventory-types.png` - Different inventory types (frit, rods, sheets)
-9. `feature-add-inventory.png` - Add inventory form
-10. `feature-shopping-list.png` - Shopping list view
-11. `feature-label-designer.png` - Label printing interface
-12. `feature-locations-map.png` - Locations/stores map
-13. `feature-location-detail.png` - Store detail view
-14. `feature-settings-top.png` - Settings/preferences (top)
-15. `feature-settings-bottom.png` - Settings/preferences (bottom)
-16. `feature-coatings-catalog.png` - Coatings products
-17. `feature-search-results.png` - Search results
-18. `feature-catalog-grid.png` - Catalog grid overview
+3. `feature-glass-detail-manufacturer.png` - Glass detail with Double Helix manufacturer info
+4. `feature-search-active.png` - Active search with query
+5. `feature-catalog-filters.png` - Filter interface
+6. `feature-tag-filter-[tag].png` - Tag/color filtering (transparent, opaque, striker, etc.)
+7. `feature-inventory-list.png` - Inventory tracking list
+8. `feature-inventory-detail.png` - Complete inventory detail
+9. `feature-inventory-types.png` - Different inventory types (frit, rods, sheets)
+10. `feature-add-inventory.png` - Add inventory form
+11. `feature-shopping-list.png` - Shopping list view
+12. `feature-label-designer.png` - Label printing interface
+13. `feature-locations-map.png` - Locations/stores map
+14. `feature-location-detail.png` - Store detail view
+15. `feature-settings-top.png` - Settings/preferences (top)
+16. `feature-settings-bottom.png` - Settings/preferences (bottom)
+17. `feature-coatings-catalog.png` - Coatings products
+18. `feature-search-results.png` - Search results
+19. `feature-catalog-grid.png` - Catalog grid overview
 
 ### 2. `testGenerateAppStoreScreenshots()`
 **Purpose:** Screenshots optimized for App Store submission

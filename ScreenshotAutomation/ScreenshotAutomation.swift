@@ -2,14 +2,15 @@
 //  ScreenshotAutomation.swift
 //  ScreenshotAutomation
 //
-//  Automated screenshot generation for marketing and documentation.
-//  Captures all key screens with realistic data for website and App Store.
+//  Automated screenshot generation for marketing and App Store.
+//  Captures key screens with realistic data for website and App Store submission.
 //
-//  ENHANCED VERSION:
-//  - Better composition and timing
-//  - More strategic screenshots
-//  - Improved error handling
-//  - Waits for content to load
+//  UPDATED VERSION (November 2025):
+//  - Based on actual working UI tests
+//  - Covers only ENABLED features (per FeatureFlags.swift)
+//  - 15 core screenshots + 5 App Store optimized
+//  - Better composition and realistic data
+//  - Leverages BaseUITest patterns
 //
 
 import XCTest
@@ -26,9 +27,8 @@ final class ScreenshotAutomation: XCTestCase {
 
         // Launch arguments to configure app for screenshots
         app.launchArguments = [
-            "-UITestMode", "true",
-            "-DemoDataMode", "true",          // Load demo data (EF + DH + GA)
-            "-ResetForScreenshots", "true",   // Clear Core Data and generate fresh demo data
+            "UI-Testing",               // Enable UI test mode
+            "USE-TEST-DATA",            // Populate known test data (from BaseUITest)
             "-AppleLanguages", "(en)",
             "-AppleLocale", "en_US"
         ]
@@ -41,225 +41,257 @@ final class ScreenshotAutomation: XCTestCase {
 
         app.launch()
 
-        // Wait for initial app load and skip onboarding if present
-        sleep(3)
+        // Wait for app to be ready (tab bar appears)
+        let catalogButton = app.buttons["Catalog"]
+        XCTAssertTrue(catalogButton.waitForExistence(timeout: 30),
+                      "App should launch and show tab bar within 30 seconds")
 
-        // Try to dismiss any onboarding/welcome screens
-        skipOnboardingIfPresent()
+        // Additional wait for content to load
+        sleep(3)
     }
 
     override func tearDownWithError() throws {
         app = nil
     }
 
-    // MARK: - Screenshot Generation Tests
+    // MARK: - Main Screenshot Test Suites
 
-    /// Complete screenshot suite for marketing materials
-    /// BEST FOR: Website, social media, blog posts
-    func testGenerateMarketingScreenshots() throws {
-        print("\n📸 MARKETING SCREENSHOTS - Starting...")
+    /// Complete screenshot suite for website marketing
+    /// Generates 15 screenshots covering all enabled features
+    /// BEST FOR: Website, blog posts, social media
+    func testGenerateWebsiteScreenshots() throws {
+        print("\n📸 WEBSITE SCREENSHOTS - Starting...")
         print("═══════════════════════════════════════════════\n")
 
-        // 1. HERO SHOT: Catalog with colorful glass items
-        print("1️⃣ Capturing: Catalog Browse (Hero Shot)")
+        // HERO SHOTS
+
+        // 1. Catalog Browse - Colorful Overview
+        print("1️⃣ Hero: Catalog Browse")
+        ensureOnCatalog()
         waitForContentToLoad()
-        takeScreenshot(named: "01-catalog-browse", delay: 0.5)
+        // Scroll down a bit to show variety of items
+        app.swipeUp()
+        sleep(1)
+        takeScreenshot(named: "hero-catalog-browse", delay: 0.5)
 
-        // 2. DETAIL VIEW: Show product information richness
-        print("2️⃣ Capturing: Glass Item Detail")
-        if let detailCell = findVisibleCellWithImage() {
-            detailCell.tap()
-            waitForContentToLoad(seconds: 1.5)
-
-            // Scroll down a bit to show more info
+        // 2. Glass Detail - Rich Information
+        print("2️⃣ Hero: Glass Detail View")
+        // Tap on a visually appealing item (3rd item often has good data)
+        let cells = app.tables.cells
+        if cells.count > 2 {
+            cells.element(boundBy: 2).tap()
+            waitForContentToLoad(seconds: 2)
+            // Scroll to show more specifications
             app.swipeUp()
             sleep(1)
-
-            takeScreenshot(named: "02-glass-detail", delay: 0.5)
-
-            // Go back to catalog
+            takeScreenshot(named: "hero-glass-detail", delay: 0.5)
             navigateBack()
         }
 
-        // 3. SEARCH IN ACTION: Show search functionality
-        print("3️⃣ Capturing: Search Functionality")
-        if activateSearch() {
-            app.textFields.firstMatch.typeText("blue")
-            waitForContentToLoad(seconds: 1)
-            takeScreenshot(named: "03-catalog-search", delay: 0.5)
+        // CORE FEATURES
 
-            // Clear search
+        // 3. Search & Filter - Powerful Discovery
+        print("3️⃣ Feature: Search & Filter")
+        ensureOnCatalog()
+        if activateSearch() {
+            app.textFields.firstMatch.typeText("transparent blue")
+            waitForContentToLoad()
+            takeScreenshot(named: "feature-search-active", delay: 0.5)
             clearSearch()
         }
 
-        // 3b. SEARCH RESULTS: Show actual search results
-        print("3️⃣b Capturing: Search Results")
+        // 4. Catalog Filters - Comprehensive Options
+        print("4️⃣ Feature: Catalog Filters")
+        ensureOnCatalog()
+        // Tap the Filters header to expand filter section
+        if app.buttons["Filters"].exists {
+            app.buttons["Filters"].tap()
+            sleep(1)
+            takeScreenshot(named: "feature-catalog-filters", delay: 0.5)
+        } else if showManufacturerFilter() {
+            takeScreenshot(named: "feature-catalog-filters", delay: 0.5)
+            dismissSheet()
+        }
+
+        // 5. Inventory Management - Track Your Stock
+        print("5️⃣ Feature: Inventory List")
+        navigateToTab("Inventory")
+        waitForContentToLoad()
+        takeScreenshot(named: "feature-inventory-list", delay: 0.5)
+
+        // 6. Inventory Detail - Complete Tracking
+        print("6️⃣ Feature: Inventory Detail")
+        // Tap on first inventory item with data
+        if cells.count > 0 {
+            cells.firstMatch.tap()
+            waitForContentToLoad(seconds: 2)
+            // Scroll to show locations and types
+            app.swipeUp()
+            sleep(1)
+            takeScreenshot(named: "feature-inventory-detail", delay: 0.5)
+            navigateBack()
+        }
+
+        // 7. Add Inventory - Simple Data Entry
+        print("7️⃣ Feature: Add Inventory Form")
+        ensureOnInventory()
+        if let addButton = findAddButton() {
+            addButton.tap()
+            waitForContentToLoad(seconds: 2)
+            // Fill some fields to show real UI (but don't save)
+            if app.textFields["Quantity"].exists {
+                app.textFields["Quantity"].tap()
+                app.textFields["Quantity"].typeText("5")
+                // Tap somewhere else to dismiss keyboard
+                app.swipeDown()
+                sleep(1)
+            }
+            takeScreenshot(named: "feature-add-inventory", delay: 0.5)
+            dismissModal()
+        }
+
+        // 8. Shopping List - Smart Planning
+        print("8️⃣ Feature: Shopping List")
+        navigateToTab("Shopping")
+        waitForContentToLoad()
+        takeScreenshot(named: "feature-shopping-list", delay: 0.5)
+
+        // 9. Label Printing - Professional Organization
+        print("9️⃣ Feature: Label Designer")
+        navigateToTab("Inventory")
+        waitForContentToLoad()
+        // Look for "Print Labels" button (might be in toolbar or menu)
+        if app.buttons["Print Labels"].exists {
+            app.buttons["Print Labels"].tap()
+            waitForContentToLoad(seconds: 2)
+            takeScreenshot(named: "feature-label-designer", delay: 0.5)
+            dismissModal()
+        } else {
+            print("   ⚠️  Print Labels button not found - skipping screenshot")
+        }
+
+        // 10. Locations - Studio Organization
+        print("🔟 Feature: Locations Map")
+        navigateToTab("Locations")
+        waitForContentToLoad()
+        takeScreenshot(named: "feature-locations-map", delay: 0.5)
+
+        // 11. Location Detail
+        print("1️⃣1️⃣ Feature: Location Detail")
+        // Tap on first location
+        if app.tables.cells.count > 0 {
+            app.tables.cells.firstMatch.tap()
+            waitForContentToLoad(seconds: 2)
+            takeScreenshot(named: "feature-location-detail", delay: 0.5)
+            navigateBack()
+        }
+
+        // 12. Settings - Customization
+        print("1️⃣2️⃣ Feature: Settings")
+        navigateToSettings()
+        waitForContentToLoad()
+        takeScreenshot(named: "feature-settings", delay: 0.5)
+
+        // 13. Coatings Catalog - Beyond Glass
+        print("1️⃣3️⃣ Feature: Coatings Catalog")
+        ensureOnCatalog()
+        // Look for product type filter or tab
+        if app.buttons["Coatings"].exists {
+            app.buttons["Coatings"].tap()
+            waitForContentToLoad()
+            takeScreenshot(named: "feature-coatings-catalog", delay: 0.5)
+        } else {
+            print("   ⚠️  Coatings tab/filter not found - skipping screenshot")
+        }
+
+        // 14. Search Results - Accurate & Fast
+        print("1️⃣4️⃣ Feature: Search Results")
+        ensureOnCatalog()
         if activateSearch() {
-            app.textFields.firstMatch.typeText("trans")
+            app.textFields.firstMatch.typeText("striker")
             waitForContentToLoad(seconds: 1.5)
-            takeScreenshot(named: "03b-search-results", delay: 0.5)
+            takeScreenshot(named: "feature-search-results", delay: 0.5)
             clearSearch()
         }
 
-        // 4. FILTERS: Show powerful filtering
-        print("4️⃣ Capturing: Filter Interface")
-        if showFilters() {
-            takeScreenshot(named: "04-catalog-filters", delay: 0.5)
-            dismissFilters()
-        }
+        // 15. Catalog Grid - Touch-Friendly
+        print("1️⃣5️⃣ Feature: Catalog Grid Overview")
+        ensureOnCatalog()
+        // Scroll to top to show variety
+        scrollToTop()
+        waitForContentToLoad()
+        takeScreenshot(named: "feature-catalog-grid", delay: 0.5)
 
-        // 5. INVENTORY: Show inventory tracking
-        print("5️⃣ Capturing: Inventory Management")
-        if navigateToTab("Inventory") {
-            waitForContentToLoad()
-            takeScreenshot(named: "05-inventory-view", delay: 0.5)
-
-            // 5b. INVENTORY DETAIL: Show detail view with locations and types
-            print("5️⃣b Capturing: Inventory Detail View")
-            if let inventoryCell = findVisibleCellWithImage() {
-                inventoryCell.tap()
-                waitForContentToLoad(seconds: 1.5)
-                takeScreenshot(named: "05b-inventory-detail", delay: 0.5)
-                navigateBack()
-            }
-        }
-
-        // 6. SHOPPING LIST: Show planning capability
-        print("6️⃣ Capturing: Shopping List")
-        if navigateToTab("Shopping") {
-            waitForContentToLoad()
-            takeScreenshot(named: "06-shopping-list", delay: 0.5)
-        }
-
-        // 7. PURCHASES: Show purchase tracking
-        print("7️⃣ Capturing: Purchase History")
-        if navigateToTab("Purchases") {
-            waitForContentToLoad()
-            takeScreenshot(named: "07-purchases", delay: 0.5)
-
-            // 7b. PURCHASE DETAIL: Show detailed purchase record
-            print("7️⃣b Capturing: Purchase Record Detail")
-            if let purchaseCell = findVisibleCellWithImage() {
-                purchaseCell.tap()
-                waitForContentToLoad(seconds: 1.5)
-                takeScreenshot(named: "07b-purchase-detail", delay: 0.5)
-                navigateBack()
-            }
-        }
-
-        // 8. PROJECTS: Show project logging
-        print("8️⃣ Capturing: Project Log")
-        if navigateToProjects(selectingType: "Logs") {
-            waitForContentToLoad()
-            takeScreenshot(named: "08-project-log", delay: 0.5)
-        }
-
-        // 9. Go back to Catalog for additional shots
-        print("9️⃣ Capturing: Additional Catalog Views")
-        if navigateToTab("Catalog") {
-            waitForContentToLoad()
-
-            // 9a. ITEM WITH RICH DATA: Find an item with lots of info
-            print("9️⃣a Capturing: Rich Item Detail")
-            // Tap on first item (likely has the most data)
-            let firstCell = app.tables.cells.element(boundBy: 0)
-            if firstCell.exists {
-                firstCell.tap()
-                waitForContentToLoad(seconds: 1.5)
-                takeScreenshot(named: "09a-rich-item-detail", delay: 0.5)
-                navigateBack()
-            }
-
-            // 9b. CATALOG GRID ZOOMED OUT: Scroll to show variety
-            print("9️⃣b Capturing: Catalog Overview")
-            waitForContentToLoad()
-            takeScreenshot(named: "09b-catalog-overview", delay: 0.5)
-        }
-
-        // 10. ADD INVENTORY FLOW: Navigate to add inventory
-        print("🔟 Capturing: Add Inventory Flow")
-        if navigateToTab("Inventory") {
-            waitForContentToLoad()
-            // Look for "+" or "Add" button
-            if let addButton = findAddButton() {
-                addButton.tap()
-                waitForContentToLoad(seconds: 1.5)
-                takeScreenshot(named: "10-add-inventory-form", delay: 0.5)
-                // Dismiss by tapping Cancel or back
-                dismissModal()
-            }
-        }
-
-        // 11. SETTINGS/PREFERENCES
-        print("1️⃣1️⃣ Capturing: Settings")
-        if navigateToTab("Settings") {
-            waitForContentToLoad()
-            takeScreenshot(named: "11-settings", delay: 0.5)
-        }
-
-        print("\n✅ Marketing screenshots complete!")
+        print("\n✅ Website screenshots complete! (15 total)")
         print("═══════════════════════════════════════════════\n")
     }
 
-    /// Screenshots specifically for App Store submission
-    /// BEST FOR: App Store listing (follows Apple's guidelines)
-    /// Optimized for 6.5" display (iPhone 15 Pro Max) requirements
+    /// Screenshots optimized for App Store submission
+    /// Tells a story: Discover → Find → Track → Plan → Polish
+    /// BEST FOR: App Store listing (6.7" display requirements)
     func testGenerateAppStoreScreenshots() throws {
         print("\n🍎 APP STORE SCREENSHOTS - Starting...")
         print("═══════════════════════════════════════════════\n")
 
-        // SCREEN 1: Hero/Feature Graphic
-        // Show the main value prop - comprehensive glass catalog
-        print("1️⃣ App Store: Hero - Glass Catalog")
+        // SCREENSHOT 1: HERO - What is this app?
+        // "Browse 2,500+ glass products from top manufacturers"
+        print("1️⃣ App Store: Hero - Catalog Browse")
+        ensureOnCatalog()
         waitForContentToLoad()
-        takeScreenshot(named: "AppStore-01-Hero-Catalog", delay: 0.5)
+        scrollToTop()
+        takeScreenshot(named: "AppStore-01-Discover", delay: 0.5)
 
-        // SCREEN 2: Product Detail
-        // Highlight rich product information
-        print("2️⃣ App Store: Product Information")
-        if let detailCell = findVisibleCellWithImage() {
-            detailCell.tap()
-            waitForContentToLoad(seconds: 1.5)
-            takeScreenshot(named: "AppStore-02-Product-Detail", delay: 0.5)
-            navigateBack()
-        }
-
-        // SCREEN 3: Search & Discover
-        // Show powerful search and filtering
-        print("3️⃣ App Store: Search & Filter")
+        // SCREENSHOT 2: DISCOVERY - How do I find what I need?
+        // "Find exactly what you need with powerful search & filters"
+        print("2️⃣ App Store: Search & Filter")
         if activateSearch() {
             app.textFields.firstMatch.typeText("blue")
             waitForContentToLoad()
-
-            // Show some results, then clear and show filters
+            takeScreenshot(named: "AppStore-02-Find", delay: 0.5)
             clearSearch()
-            if showFilters() {
-                takeScreenshot(named: "AppStore-03-Search-Filter", delay: 0.5)
-                dismissFilters()
-            }
         }
 
-        // SCREEN 4: Inventory Tracking
-        // Emphasize practical inventory management
-        print("4️⃣ App Store: Inventory Tracking")
-        if navigateToTab("Inventory") {
-            waitForContentToLoad()
-            takeScreenshot(named: "AppStore-04-Inventory", delay: 0.5)
+        // SCREENSHOT 3: MANAGEMENT - How do I organize?
+        // "Track your inventory across multiple locations & types"
+        print("3️⃣ App Store: Inventory Tracking")
+        navigateToTab("Inventory")
+        waitForContentToLoad()
+        takeScreenshot(named: "AppStore-03-Track", delay: 0.5)
+
+        // SCREENSHOT 4: PLANNING - What's the practical value?
+        // "Never run out with smart shopping lists & low stock alerts"
+        print("4️⃣ App Store: Shopping List")
+        navigateToTab("Shopping")
+        waitForContentToLoad()
+        takeScreenshot(named: "AppStore-04-Plan", delay: 0.5)
+
+        // SCREENSHOT 5: POLISH - What makes this professional?
+        // "Print professional QR code labels for studio organization"
+        print("5️⃣ App Store: Professional Features")
+        // Try to show label printing OR detailed inventory view
+        navigateToTab("Inventory")
+        waitForContentToLoad()
+        if app.buttons["Print Labels"].exists {
+            app.buttons["Print Labels"].tap()
+            waitForContentToLoad(seconds: 2)
+            takeScreenshot(named: "AppStore-05-Professional", delay: 0.5)
+            dismissModal()
+        } else if app.tables.cells.count > 0 {
+            // Fall back to inventory detail view
+            app.tables.cells.firstMatch.tap()
+            waitForContentToLoad(seconds: 2)
+            app.swipeUp()
+            sleep(1)
+            takeScreenshot(named: "AppStore-05-Professional", delay: 0.5)
+            navigateBack()
         }
 
-        // SCREEN 5: Shopping & Planning
-        // Show planning and purchase features
-        print("5️⃣ App Store: Planning & Shopping")
-        if navigateToTab("Shopping") {
-            waitForContentToLoad()
-            takeScreenshot(named: "AppStore-05-Shopping", delay: 0.5)
-        }
-
-        print("\n✅ App Store screenshots complete!")
+        print("\n✅ App Store screenshots complete! (5 total)")
         print("═══════════════════════════════════════════════\n")
     }
 
-    /// Dark mode screenshots for showcasing appearance support
+    /// Dark mode screenshots (run separately with simulator in dark mode)
+    /// Limited set - just to show design quality
     /// RUN SEPARATELY: Configure simulator for dark mode first
     func testGenerateDarkModeScreenshots() throws {
         print("\n🌙 DARK MODE SCREENSHOTS - Starting...")
@@ -267,101 +299,82 @@ final class ScreenshotAutomation: XCTestCase {
         print("⚠️  Make sure simulator is in Dark Mode!")
         print("   Settings > Display & Brightness > Dark\n")
 
-        // Catalog in dark mode
+        // Just 2 dark mode screenshots to show support
+
+        // 1. Catalog in dark mode
         print("1️⃣ Dark Mode: Catalog")
+        ensureOnCatalog()
         waitForContentToLoad()
         takeScreenshot(named: "Dark-01-Catalog", delay: 0.5)
 
-        // Detail view in dark mode
-        print("2️⃣ Dark Mode: Detail View")
-        if let detailCell = findVisibleCellWithImage() {
-            detailCell.tap()
-            waitForContentToLoad(seconds: 1.5)
-            takeScreenshot(named: "Dark-02-Detail", delay: 0.5)
-            navigateBack()
-        }
+        // 2. Inventory in dark mode
+        print("2️⃣ Dark Mode: Inventory")
+        navigateToTab("Inventory")
+        waitForContentToLoad()
+        takeScreenshot(named: "Dark-02-Inventory", delay: 0.5)
 
-        // Inventory in dark mode
-        print("3️⃣ Dark Mode: Inventory")
-        if navigateToTab("Inventory") {
-            waitForContentToLoad()
-            takeScreenshot(named: "Dark-03-Inventory", delay: 0.5)
-        }
-
-        // Shopping list in dark mode
-        print("4️⃣ Dark Mode: Shopping")
-        if navigateToTab("Shopping") {
-            waitForContentToLoad()
-            takeScreenshot(named: "Dark-04-Shopping", delay: 0.5)
-        }
-
-        print("\n✅ Dark mode screenshots complete!")
+        print("\n✅ Dark mode screenshots complete! (2 total)")
         print("═══════════════════════════════════════════════\n")
     }
 
-    // MARK: - Navigation Helpers
+    // MARK: - Navigation Helpers (Based on BaseUITest patterns)
+
+    /// Ensure we're on the Catalog tab
+    private func ensureOnCatalog() {
+        let catalogButton = app.buttons["Catalog"]
+        if catalogButton.exists && catalogButton.isHittable {
+            catalogButton.tap()
+            sleep(1)
+        }
+    }
+
+    /// Ensure we're on the Inventory tab
+    private func ensureOnInventory() {
+        let inventoryButton = app.buttons["Inventory"]
+        if inventoryButton.exists && inventoryButton.isHittable {
+            inventoryButton.tap()
+            sleep(1)
+        }
+    }
 
     /// Navigate to a specific tab
     @discardableResult
     private func navigateToTab(_ tabName: String) -> Bool {
-        // Custom tab bar uses regular buttons, not TabView
-        // Try both tabBars.buttons and regular buttons
-        let tabButton = app.tabBars.buttons[tabName]
-        let regularButton = app.buttons[tabName]
-
-        if tabButton.exists {
+        let tabButton = app.buttons[tabName]
+        if tabButton.waitForExistence(timeout: 3) && tabButton.isHittable {
             tabButton.tap()
             sleep(1)
             return true
-        } else if waitForElement(regularButton, timeout: 3) {
-            regularButton.tap()
-            sleep(1)
-            return true
         }
-
         print("   ⚠️  Tab '\(tabName)' not found")
         return false
     }
 
-    /// Navigate to Projects tab and select a project type (Plans or Logs)
-    /// The Projects tab in compact mode shows a menu instead of direct navigation
-    @discardableResult
-    private func navigateToProjects(selectingType projectType: String) -> Bool {
-        // First, tap the Projects tab button
-        let projectsButton = app.buttons["Projects"]
-        if !projectsButton.exists {
-            print("   ⚠️  Projects tab button not found")
-            return false
-        }
-
-        projectsButton.tap()
-        sleep(1)
-
-        // Wait for the menu to appear (it's shown as a sheet)
-        // Look for the project type button in the menu
-        let projectTypeButton = app.buttons[projectType]
-        if waitForElement(projectTypeButton, timeout: 3) {
-            projectTypeButton.tap()
+    /// Navigate to Settings (accessed via More menu or direct button)
+    private func navigateToSettings() {
+        // Try direct Settings button first
+        if app.buttons["Settings"].exists && app.buttons["Settings"].isHittable {
+            app.buttons["Settings"].tap()
             sleep(1)
-            return true
+            return
         }
 
-        // If the menu didn't appear, maybe we're already on Projects
-        // Try to find the project type directly
-        if app.navigationBars[projectType].exists {
-            // Already on the correct project type
-            return true
+        // Settings is in the More menu
+        if app.buttons["More"].exists {
+            app.buttons["More"].tap()
+            sleep(1)
+            if app.buttons["Settings"].waitForExistence(timeout: 2) {
+                app.buttons["Settings"].tap()
+                sleep(1)
+            }
         }
-
-        print("   ⚠️  Projects menu or project type '\(projectType)' not found")
-        return false
     }
 
     /// Navigate back using navigation bar
     @discardableResult
     private func navigateBack() -> Bool {
         let backButton = app.navigationBars.buttons.firstMatch
-        if backButton.exists {
+        if backButton.exists && backButton.isHittable {
             backButton.tap()
             sleep(1)
             return true
@@ -372,17 +385,7 @@ final class ScreenshotAutomation: XCTestCase {
     /// Activate search field
     @discardableResult
     private func activateSearch() -> Bool {
-        // Try multiple approaches to find the search field
-
-        // Approach 1: Standard search fields
-        let searchField = app.searchFields.firstMatch
-        if searchField.exists {
-            searchField.tap()
-            sleep(1)
-            return true
-        }
-
-        // Approach 2: Text fields (the search bar uses TextField, not SearchField)
+        // Try text fields (app uses TextField, not SearchField)
         let textFields = app.textFields
         if textFields.count > 0 {
             textFields.firstMatch.tap()
@@ -390,48 +393,39 @@ final class ScreenshotAutomation: XCTestCase {
             return true
         }
 
-        // Approach 3: Text field by placeholder
-        let searchByPlaceholder = app.textFields["Search colors, codes, manufacturers..."]
-        if searchByPlaceholder.exists {
-            searchByPlaceholder.tap()
+        // Try searchFields as fallback
+        if app.searchFields.count > 0 {
+            app.searchFields.firstMatch.tap()
             sleep(1)
             return true
         }
 
-        print("   ⚠️  Search field not found (tried searchFields, textFields, and placeholder)")
+        print("   ⚠️  Search field not found")
         return false
     }
 
     /// Clear search field
     private func clearSearch() {
-        // IMPORTANT: Dismiss keyboard first so clear button is visible
-        // Tap anywhere outside the search field to dismiss keyboard
-        let textFields = app.textFields
-        if textFields.count > 0 {
-            // Tap the return key if available
-            if app.keyboards.buttons["Return"].exists {
-                app.keyboards.buttons["Return"].tap()
-                usleep(500_000) // 0.5 seconds
-            } else if app.keyboards.buttons["return"].exists {
-                app.keyboards.buttons["return"].tap()
-                usleep(500_000) // 0.5 seconds
-            } else {
-                // Swipe down to dismiss keyboard
-                app.swipeDown()
-                usleep(500_000) // 0.5 seconds
-            }
+        // Dismiss keyboard first
+        if app.keyboards.buttons["Return"].exists {
+            app.keyboards.buttons["Return"].tap()
+            sleep(0.5)
+        } else if app.keyboards.buttons["return"].exists {
+            app.keyboards.buttons["return"].tap()
+            sleep(0.5)
+        } else {
+            app.swipeDown()
+            sleep(0.5)
         }
 
-        // Now try to clear the search text
-
-        // Approach 1: Standard "Clear text" button
+        // Try standard clear button
         if app.buttons["Clear text"].exists {
             app.buttons["Clear text"].tap()
             sleep(1)
             return
         }
 
-        // Approach 2: Find X button by icon
+        // Try X button
         let clearButtons = app.buttons.matching(identifier: "xmark.circle.fill")
         if clearButtons.count > 0 {
             clearButtons.firstMatch.tap()
@@ -439,40 +433,17 @@ final class ScreenshotAutomation: XCTestCase {
             return
         }
 
-        // Approach 3: Cancel button
-        let cancelButton = app.buttons["Cancel"]
-        if cancelButton.exists {
-            cancelButton.tap()
+        // Try Cancel
+        if app.buttons["Cancel"].exists {
+            app.buttons["Cancel"].tap()
             sleep(1)
-            return
-        }
-
-        // Approach 4: Tap the text field and delete all text
-        if textFields.count > 0 {
-            let textField = textFields.firstMatch
-            textField.tap()
-            usleep(500_000) // 0.5 seconds
-            textField.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 50))
-            sleep(1)
-            return
         }
     }
 
-    /// Show filter interface
+    /// Show manufacturer filter
     @discardableResult
-    private func showFilters() -> Bool {
-        // The app uses a collapsible filter header instead of a single filter button
-        // Try to find and tap the "Filters" button to expand the filter section
-
-        // Try to find "Filters" text (the header button)
-        let filtersButton = app.buttons["Filters"]
-        if filtersButton.exists {
-            filtersButton.tap()
-            sleep(1)
-            return true
-        }
-
-        // Try to find manufacturer filter button (shows as "Mfr")
+    private func showManufacturerFilter() -> Bool {
+        // Look for "Mfr" or "Manufacturer" filter button
         let mfrButton = app.buttons.containing(NSPredicate(format: "label CONTAINS[c] 'Mfr'")).firstMatch
         if mfrButton.exists {
             mfrButton.tap()
@@ -480,75 +451,44 @@ final class ScreenshotAutomation: XCTestCase {
             return true
         }
 
-        // Try to find COE filter button
-        let coeButton = app.buttons.containing(NSPredicate(format: "label CONTAINS[c] 'COE'")).firstMatch
-        if coeButton.exists {
-            coeButton.tap()
+        let manufacturerButton = app.buttons["Manufacturer"]
+        if manufacturerButton.exists {
+            manufacturerButton.tap()
             sleep(1)
             return true
         }
 
-        // Try to find Tags filter button
-        let tagsButton = app.buttons.containing(NSPredicate(format: "label CONTAINS[c] 'Tags'")).firstMatch
-        if tagsButton.exists {
-            tagsButton.tap()
-            sleep(1)
-            return true
-        }
-
-        print("   ⚠️  Filter buttons not found (tried Filters, Mfr, COE, Tags)")
         return false
     }
 
-    /// Dismiss filter interface
-    private func dismissFilters() {
-        // Try multiple ways to dismiss
+    /// Dismiss modal/sheet
+    private func dismissModal() {
+        if app.buttons["Cancel"].exists {
+            app.buttons["Cancel"].tap()
+            sleep(1)
+        } else if app.buttons["Close"].exists {
+            app.buttons["Close"].tap()
+            sleep(1)
+        } else if app.buttons["Done"].exists {
+            app.buttons["Done"].tap()
+            sleep(1)
+        } else {
+            // Swipe down to dismiss
+            app.swipeDown()
+            sleep(1)
+        }
+    }
+
+    /// Dismiss sheet
+    private func dismissSheet() {
         if app.buttons["Done"].exists {
             app.buttons["Done"].tap()
         } else if app.buttons["Close"].exists {
             app.buttons["Close"].tap()
-        } else if app.buttons["Cancel"].exists {
-            app.buttons["Cancel"].tap()
         } else {
-            // Swipe down to dismiss sheet
             app.swipeDown()
         }
         sleep(1)
-    }
-
-    /// Skip onboarding/welcome screens if present
-    private func skipOnboardingIfPresent() {
-        // Look for common onboarding elements
-        if app.buttons["Continue"].exists {
-            app.buttons["Continue"].tap()
-            sleep(1)
-        }
-
-        if app.buttons["Skip"].exists {
-            app.buttons["Skip"].tap()
-            sleep(1)
-        }
-
-        if app.buttons["Get Started"].exists {
-            app.buttons["Get Started"].tap()
-            sleep(1)
-        }
-    }
-
-    /// Find a visible table cell that likely has an image
-    /// Returns the first cell that appears to have content
-    private func findVisibleCellWithImage() -> XCUIElement? {
-        let cells = app.tables.cells
-
-        // Try to find a cell that's not the first one (often more interesting)
-        if cells.count > 3 {
-            // Return 2nd or 3rd cell for variety
-            return cells.element(boundBy: 2)
-        } else if cells.count > 0 {
-            return cells.firstMatch
-        }
-
-        return nil
     }
 
     /// Find the Add button (+ or "Add" text)
@@ -572,25 +512,17 @@ final class ScreenshotAutomation: XCTestCase {
         return nil
     }
 
-    /// Dismiss modal by tapping Cancel, Close, or swiping down
-    private func dismissModal() {
-        if app.buttons["Cancel"].exists {
-            app.buttons["Cancel"].tap()
-            sleep(1)
-        } else if app.buttons["Close"].exists {
-            app.buttons["Close"].tap()
-            sleep(1)
-        } else {
-            // Try swiping down to dismiss
-            app.swipeDown()
-            sleep(1)
-        }
+    /// Scroll to top of list
+    private func scrollToTop() {
+        // Tap status bar to scroll to top (iOS standard behavior)
+        app.statusBars.firstMatch.tap()
+        sleep(1)
     }
 
     // MARK: - Timing & Wait Helpers
 
-    /// Wait for content to load (scroll indicators to disappear, etc.)
-    private func waitForContentToLoad(seconds: TimeInterval = 1.5) {
+    /// Wait for content to load
+    private func waitForContentToLoad(seconds: TimeInterval = 2.0) {
         sleep(UInt32(seconds))
 
         // Additional wait if there's a loading indicator
@@ -639,16 +571,18 @@ final class ScreenshotAutomation: XCTestCase {
     }
 }
 
-// MARK: - Screenshot Configuration Extension
+// MARK: - XCUIElement Extension for Safer Tapping
 
-extension XCUIApplication {
-    /// Configure app launch for screenshot generation
-    func configureForScreenshots() {
-        launchArguments += [
-            "-UITestMode", "true",
-            "-MockData", "true",
-            "-AnimationsDisabled", "false", // Keep animations for natural look
-            "-ResetOnboarding", "true"
-        ]
+extension XCUIElement {
+    /// Tap only if element is hittable
+    func tapWhenHittable() {
+        if self.exists && self.isHittable {
+            self.tap()
+        }
+    }
+
+    /// Wait for element to exist
+    func waitToExist(timeout: TimeInterval = 5) -> Bool {
+        return self.waitForExistence(timeout: timeout)
     }
 }

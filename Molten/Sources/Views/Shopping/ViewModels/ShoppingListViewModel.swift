@@ -121,8 +121,33 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
 
     // MARK: - Initialization
 
+    // Observer for UserDefaults changes
+    nonisolated(unsafe) private var userDefaultsObserver: NSObjectProtocol?
+
     init(shoppingListService: ShoppingListService) {
         self.shoppingListService = shoppingListService
+
+        // Set up observer for UserDefaults changes (COE filter, manufacturer filter, applyFiltersToInventory)
+        setupUserDefaultsObserver()
+    }
+
+    nonisolated deinit {
+        if let observer = userDefaultsObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+
+    /// Set up observer for UserDefaults changes to apply global filters immediately
+    private func setupUserDefaultsObserver() {
+        userDefaultsObserver = NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            // When UserDefaults changes (e.g., COE filter, manufacturer filter, applyFiltersToInventory in Settings),
+            // reapply filters to update the view immediately
+            self?.applyFilters()
+        }
     }
 
     // MARK: - Computed Properties
@@ -291,6 +316,7 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
         }
 
         // Apply COE filter (only affects glass items - coatings/tools don't have COE)
+        // First apply manual filter (from UI)
         if !selectedCOEs.isEmpty {
             allItems = allItems.filter { item in
                 // Non-glass items (coatings, tools) don't have COE - don't filter them out
@@ -303,11 +329,36 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
                 return false
             }
         }
+        // Then apply global COE filter from Settings (if enabled)
+        if UserSettings.shared.applyFiltersToInventory {
+            let globalCOEs = COEGlassPreference.selectedCOETypes
+            // Only apply if it's a subset (not all COEs selected)
+            if !globalCOEs.isEmpty && globalCOEs.count < COEGlassType.allCases.count {
+                let globalCOEValues = Set(globalCOEs.map { Int32($0.rawValue) })
+                allItems = allItems.filter { item in
+                    if let coe = item.catalogItem.coe {
+                        return globalCOEValues.contains(coe)
+                    }
+                    return false
+                }
+            }
+        }
 
         // Apply manufacturer filter
+        // First apply manual filter (from UI)
         if !selectedManufacturers.isEmpty {
             allItems = allItems.filter { item in
                 selectedManufacturers.contains(item.catalogItem.manufacturer)
+            }
+        }
+        // Then apply global manufacturer filter from Settings (if enabled)
+        if UserSettings.shared.applyFiltersToInventory {
+            if let data = UserDefaults.standard.data(forKey: "selectedManufacturerFilter"),
+               let selectedManufacturers = try? JSONDecoder().decode(Set<String>.self, from: data),
+               !selectedManufacturers.isEmpty {
+                allItems = allItems.filter { item in
+                    selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                }
             }
         }
 

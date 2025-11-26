@@ -244,18 +244,21 @@ struct KilnScheduleDetailView: View {
                 } label: {
                     Label("Edit Schedule", systemImage: "pencil")
                 }
+                .accessibilityIdentifier("kiln_schedule_detail_edit")
 
                 Button {
                     showingDuplicateSheet = true
                 } label: {
                     Label("Duplicate", systemImage: "doc.on.doc")
                 }
+                .accessibilityIdentifier("kiln_schedule_detail_duplicate")
 
                 Button {
                     showingExportSheet = true
                 } label: {
                     Label("Export & Share", systemImage: "square.and.arrow.up")
                 }
+                .accessibilityIdentifier("kiln_schedule_detail_export")
 
                 Divider()
 
@@ -264,9 +267,11 @@ struct KilnScheduleDetailView: View {
                 } label: {
                     Label("Delete", systemImage: "trash")
                 }
+                .accessibilityIdentifier("kiln_schedule_detail_delete")
             } label: {
                 Image(systemName: "ellipsis.circle")
             }
+            .accessibilityIdentifier("kiln_schedule_detail_menu")
         }
     }
 
@@ -570,6 +575,7 @@ struct EditKilnScheduleView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("edit_kiln_schedule_cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -577,6 +583,7 @@ struct EditKilnScheduleView: View {
                         saveSchedule()
                     }
                     .disabled(!isFormValid || isSaving)
+                    .accessibilityIdentifier("edit_kiln_schedule_save")
                 }
             }
             .alert("Error", isPresented: $showingError) {

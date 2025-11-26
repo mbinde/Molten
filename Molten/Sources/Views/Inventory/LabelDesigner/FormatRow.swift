@@ -25,5 +25,6 @@ struct FormatRow: View {
             .padding(.vertical, 8)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("format_row_\(format.name.lowercased().replacingOccurrences(of: " ", with: "_"))")
     }
 }

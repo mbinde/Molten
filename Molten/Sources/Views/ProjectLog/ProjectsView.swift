@@ -190,6 +190,7 @@ struct ProjectsView: View, CachedDataDeletion {
             } label: {
                 Label("Add Plan", systemImage: "plus")
             }
+            .accessibilityIdentifier("projects_add_button")
         }
     }
 

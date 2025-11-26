@@ -81,15 +81,10 @@ struct CatalogViewIntegration {
     
     // MARK: - Private Filtering Methods
     
-    /// Apply COE filter to items
+    /// Apply COE filter to items - delegates to CatalogViewHelpers
     private static func applyCOEFilter(_ items: [CompleteInventoryItemModel]) -> [CompleteInventoryItemModel] {
-        // For now, return all items. This can be enhanced to filter by specific COE values
-        // when COE filtering requirements are defined
-        return items.filter { item in
-            // Example: Filter by common COE values (90, 96, 104)
-            let commonCOEs: Set<Int32> = [90, 96, 104]
-            return commonCOEs.contains(item.glassItem.coe)
-        }
+        // Delegate to CatalogViewHelpers which reads user preferences
+        return CatalogViewHelpers.applyCOEFilter(items)
     }
     
     /// Filter items by manufacturers

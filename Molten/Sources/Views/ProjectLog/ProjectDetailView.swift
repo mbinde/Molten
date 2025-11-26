@@ -104,6 +104,7 @@ struct ProjectDetailView: View {
                     Button("Cancel") {
                         cancelEditing()
                     }
+                    .accessibilityIdentifier("project_detail_cancel_edit")
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
@@ -112,6 +113,7 @@ struct ProjectDetailView: View {
                         }
                     }
                     .disabled(editTitle.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .accessibilityIdentifier("project_detail_save_edit")
                 }
             } else {
                 ToolbarItem(placement: .primaryAction) {
@@ -121,15 +123,18 @@ struct ProjectDetailView: View {
                         } label: {
                             Label("Share Plan (.moltenplan)", systemImage: "square.and.arrow.up")
                         }
+                        .accessibilityIdentifier("project_detail_share_plan")
 
                         Button {
                             showingPDFExportOptions = true
                         } label: {
                             Label("Export as PDF", systemImage: "doc.text")
                         }
+                        .accessibilityIdentifier("project_detail_export_pdf")
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }
+                    .accessibilityIdentifier("project_detail_menu")
                 }
             }
         }

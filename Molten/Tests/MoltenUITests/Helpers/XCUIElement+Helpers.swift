@@ -82,3 +82,32 @@ extension XCUIElement {
         typeText(text)
     }
 }
+
+// MARK: - XCUIApplication Keyboard Helpers
+
+extension XCUIApplication {
+    /// Dismiss the keyboard if it's visible
+    /// This is more reliable than swipeDown because it targets the navigation bar
+    /// - Parameter timeout: How long to wait for keyboard to dismiss (default: 3 seconds)
+    /// - Returns: true if keyboard was dismissed or wasn't visible
+    @discardableResult
+    func dismissKeyboardIfVisible(timeout: TimeInterval = 3) -> Bool {
+        let keyboard = keyboards.firstMatch
+
+        // If no keyboard, we're done
+        guard keyboard.exists else { return true }
+
+        // Try tapping on navigation bar first (most reliable)
+        let navBar = navigationBars.firstMatch
+        if navBar.exists {
+            navBar.tap()
+        } else {
+            // Fallback: tap at the top of the screen
+            let topCoordinate = coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
+            topCoordinate.tap()
+        }
+
+        // Wait for keyboard to disappear
+        return keyboard.waitToDisappear(timeout: timeout)
+    }
+}

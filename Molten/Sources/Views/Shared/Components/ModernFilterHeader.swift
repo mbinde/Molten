@@ -212,7 +212,8 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
                             icon: nil,
                             selectedItems: Array(selectedCOEs).map(String.init).sorted(),
                             action: { showingCOESheet = true },
-                            onClear: { selectedCOEs.removeAll() }
+                            onClear: { selectedCOEs.removeAll() },
+                            accessibilityId: "filter_chip_coe"
                         )
                     }
 
@@ -222,7 +223,8 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
                         icon: "tag",
                         selectedItems: Array(selectedTags).sorted(),
                         action: { showingTagsSheet = true },
-                        onClear: { selectedTags.removeAll() }
+                        onClear: { selectedTags.removeAll() },
+                        accessibilityId: "filter_chip_tags"
                     )
 
                     // Manufacturer filter chip
@@ -231,7 +233,8 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
                         icon: "building.2",
                         selectedItems: Array(selectedManufacturers).sorted().map { $0.uppercased() },
                         action: { showingManufacturerSheet = true },
-                        onClear: { selectedManufacturers.removeAll() }
+                        onClear: { selectedManufacturers.removeAll() },
+                        accessibilityId: "filter_chip_manufacturer"
                     )
                 }
             }
@@ -250,6 +253,7 @@ private struct FilterChipButton: View {
     let selectedItems: [String]
     let action: () -> Void
     let onClear: () -> Void
+    var accessibilityId: String? = nil
 
     var body: some View {
         Button(action: action) {
@@ -293,6 +297,7 @@ private struct FilterChipButton: View {
             .background(selectedItems.isEmpty ? Color(.systemGray6) : DesignSystem.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
+        .accessibilityIdentifier(accessibilityId ?? "")
     }
 }
 

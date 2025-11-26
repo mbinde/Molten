@@ -21,6 +21,7 @@ struct ImportInventoryTriggerView: View {
         } label: {
             Label("Import from File", systemImage: "square.and.arrow.down")
         }
+        .accessibilityIdentifier("import_inventory_trigger")
         .fileImporter(
             isPresented: $showFilePicker,
             allowedContentTypes: [UTType.json],

@@ -66,6 +66,7 @@ struct TerminologySettingsView: View {
                         Text("Reset to Defaults")
                     }
                 }
+                .accessibilityIdentifier("terminology_reset_defaults")
             } footer: {
                 Text("Reset display names to \"Bar\" and \"Rod\"")
             }

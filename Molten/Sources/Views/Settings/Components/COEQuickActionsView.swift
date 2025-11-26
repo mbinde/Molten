@@ -19,6 +19,7 @@ struct COEQuickActionsView: View {
             }
             .buttonStyle(.bordered)
             .disabled(selectedCount == COEGlassType.allCases.count)
+            .accessibilityIdentifier("coe_quick_actions_select_all")
 
             Spacer()
 
@@ -28,6 +29,7 @@ struct COEQuickActionsView: View {
             }
             .buttonStyle(.bordered)
             .disabled(selectedCount == 0)
+            .accessibilityIdentifier("coe_quick_actions_select_none")
         }
         .padding(.top, 8)
         .onAppear {

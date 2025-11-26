@@ -85,6 +85,7 @@ struct GlassItemImageSelector: View {
                 }
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier("glass_item_image_add")
         }
         .frame(maxWidth: .infinity)
         .padding(DesignSystem.Padding.standard)
@@ -120,6 +121,7 @@ struct GlassItemImageSelector: View {
                         .font(.caption)
                 }
                 .buttonStyle(.bordered)
+                .accessibilityIdentifier("glass_item_image_add_more")
             }
         }
     }
@@ -210,6 +212,7 @@ struct GlassItemImageSelector: View {
                 } label: {
                     Label("Delete Image", systemImage: "trash")
                 }
+                .accessibilityIdentifier("glass_item_image_delete")
             }
 
             // Show "Primary" or "Alternate" label

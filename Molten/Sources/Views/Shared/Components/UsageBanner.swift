@@ -12,7 +12,25 @@ struct UsageBanner: View {
     let featureName: String
     let currentCount: Int
     let limit: Int?  // nil means unlimited (premium)
+    let filteredCount: Int?  // Optional: number of items shown after filtering
+    let hasSettingsFilters: Bool  // Whether Settings filters (COE/Manufacturer) are active
     let onUpgradeTap: () -> Void
+
+    init(
+        featureName: String,
+        currentCount: Int,
+        limit: Int?,
+        filteredCount: Int? = nil,
+        hasSettingsFilters: Bool = false,
+        onUpgradeTap: @escaping () -> Void
+    ) {
+        self.featureName = featureName
+        self.currentCount = currentCount
+        self.limit = limit
+        self.filteredCount = filteredCount
+        self.hasSettingsFilters = hasSettingsFilters
+        self.onUpgradeTap = onUpgradeTap
+    }
 
     var body: some View {
         if let limit = limit {
@@ -33,21 +51,12 @@ struct UsageBanner: View {
                             .foregroundColor(.secondary)
                     }
 
-                    // Progress bar
-                    GeometryReader { geometry in
-                        ZStack(alignment: .leading) {
-                            // Background
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color.gray.opacity(0.2))
-                                .frame(height: 6)
-
-                            // Progress
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(usageColor)
-                                .frame(width: geometry.size.width * usagePercentage, height: 6)
-                        }
+                    // Contextual message about Settings filters
+                    if let filteredCount = filteredCount, hasSettingsFilters, filteredCount < currentCount {
+                        Text("\(filteredCount) shown with Settings filters")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
-                    .frame(height: 6)
                 }
 
                 Spacer()
@@ -62,6 +71,7 @@ struct UsageBanner: View {
                             .background(Color.accentColor)
                             .cornerRadius(8)
                     }
+                    .accessibilityIdentifier("usage_banner_upgrade")
                 }
             }
             .padding(12)

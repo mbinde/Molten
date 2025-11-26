@@ -80,6 +80,7 @@ struct AlphaDisclaimerView: View {
                             .cornerRadius(DesignSystem.CornerRadius.medium)
                     }
                     .padding(.top, DesignSystem.Spacing.sm)
+                    .accessibilityIdentifier("alpha_disclaimer_acknowledge")
                 }
                 .padding(DesignSystem.Padding.standard)
             }

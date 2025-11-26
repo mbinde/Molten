@@ -191,6 +191,7 @@ struct AddGlassToStepView: View {
                 Button("Cancel") {
                     dismiss()
                 }
+                .accessibilityIdentifier("add_glass_to_step_cancel")
             }
 
             ToolbarItem(placement: .confirmationAction) {
@@ -198,6 +199,7 @@ struct AddGlassToStepView: View {
                     saveGlassItem()
                 }
                 .disabled(!canSave)
+                .accessibilityIdentifier("add_glass_to_step_add")
             }
         }
         .task {

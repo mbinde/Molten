@@ -54,6 +54,7 @@ struct QuickAddInventoryView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("quick_add_inventory_cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -61,6 +62,7 @@ struct QuickAddInventoryView: View {
                         addInventory()
                     }
                     .disabled(isSaving)
+                    .accessibilityIdentifier("quick_add_inventory_add")
                 }
             }
             .alert("Error", isPresented: $showingError) {

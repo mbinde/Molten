@@ -109,6 +109,7 @@ struct KilnSchedulePickerView: View {
                     Text("View Details")
                         .font(.caption)
                 }
+                .accessibilityIdentifier("kiln_schedule_picker_view_details")
             }
         }
         .padding(12)
@@ -125,6 +126,7 @@ struct KilnSchedulePickerView: View {
                         Button("Done") {
                             showingScheduleDetail = false
                         }
+                        .accessibilityIdentifier("kiln_schedule_picker_detail_done")
                     }
                 }
             }

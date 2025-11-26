@@ -52,6 +52,7 @@ struct DataManagementView: View {
                         .foregroundColor(.orange)
                 }
                 .disabled(inventoryItemsCount == 0)
+                .accessibilityIdentifier("data_management_clear_inventory")
 
                 Button {
                     showingDeleteAlert = true
@@ -60,6 +61,7 @@ struct DataManagementView: View {
                         .foregroundColor(.red)
                 }
                 .disabled(catalogItemsCount == 0)
+                .accessibilityIdentifier("data_management_delete_catalog")
             } header: {
                 Text("Danger Zone")
             } footer: {

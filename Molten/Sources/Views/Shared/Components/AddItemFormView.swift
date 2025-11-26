@@ -294,6 +294,7 @@ struct AddItemFormView: View {
                 KeyboardDismissal.hideKeyboard()
                 dismiss()
             }
+            .accessibilityIdentifier("add_item_form_cancel")
         }
 
         ToolbarItem(placement: .confirmationAction) {
@@ -301,6 +302,7 @@ struct AddItemFormView: View {
                 saveItem()
             }
             .disabled(!isFormValid)
+            .accessibilityIdentifier("add_item_form_add")
         }
     }
 

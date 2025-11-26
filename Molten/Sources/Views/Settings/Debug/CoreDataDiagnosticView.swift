@@ -36,14 +36,16 @@ struct CoreDataDiagnosticView: View {
             }
             .buttonStyle(.borderedProminent)
             .disabled(isRunning)
-            
+            .accessibilityIdentifier("core_data_diagnostic_run")
+
             Button("🚑 Emergency Reset (Deletes All Data)") {
                 emergencyReset()
             }
             .buttonStyle(.bordered)
             .foregroundStyle(.red)
             .disabled(isRunning)
-            
+            .accessibilityIdentifier("core_data_diagnostic_reset")
+
             Button("📋 Copy Diagnostics") {
                 #if canImport(UIKit)
                 UIPasteboard.general.string = diagnosticResults
@@ -54,6 +56,7 @@ struct CoreDataDiagnosticView: View {
             }
             .buttonStyle(.bordered)
             .disabled(diagnosticResults == "Tap 'Run Diagnostics' to check Core Data status")
+            .accessibilityIdentifier("core_data_diagnostic_copy")
             
             ScrollView {
                 Text(diagnosticResults)

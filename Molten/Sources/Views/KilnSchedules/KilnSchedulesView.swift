@@ -225,6 +225,7 @@ struct KilnSchedulesView: View, CachedDataDeletion {
             } label: {
                 Image(systemName: "plus")
             }
+            .accessibilityIdentifier("kiln_schedules_add")
         }
 
         ToolbarItem(placement: .secondaryAction) {
@@ -234,6 +235,7 @@ struct KilnSchedulesView: View, CachedDataDeletion {
                 } label: {
                     Label("Import Schedule", systemImage: "square.and.arrow.down")
                 }
+                .accessibilityIdentifier("kiln_schedules_import")
 
                 Divider()
 
@@ -245,6 +247,7 @@ struct KilnSchedulesView: View, CachedDataDeletion {
             } label: {
                 Label("More", systemImage: "ellipsis.circle")
             }
+            .accessibilityIdentifier("kiln_schedules_menu")
         }
     }
 

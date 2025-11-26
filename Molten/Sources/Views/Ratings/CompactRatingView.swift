@@ -67,6 +67,7 @@ struct CompactRatingView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.mini)
+                .accessibilityIdentifier("compact_rating_rate")
             } else {
                 // No ratings - very compact
                 HStack(spacing: 4) {
@@ -90,6 +91,7 @@ struct CompactRatingView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.mini)
+                .accessibilityIdentifier("compact_rating_rate_first")
             }
         }
         .task {

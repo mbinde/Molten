@@ -256,12 +256,14 @@ struct CustomizeFriendView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("customize_friend_cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         saveChanges()
                     }
+                    .accessibilityIdentifier("customize_friend_save")
                 }
             }
         }

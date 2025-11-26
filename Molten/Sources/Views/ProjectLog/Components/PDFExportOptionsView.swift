@@ -46,6 +46,7 @@ struct PDFExportOptionsView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("pdf_export_options_cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -54,6 +55,7 @@ struct PDFExportOptionsView: View {
                         onExport(shouldIncludeAuthor)
                         dismiss()
                     }
+                    .accessibilityIdentifier("pdf_export_options_export")
                 }
             }
             .sheet(isPresented: $showingAuthorSettings) {

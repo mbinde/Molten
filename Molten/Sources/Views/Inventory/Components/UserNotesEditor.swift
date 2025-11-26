@@ -67,6 +67,7 @@ struct UserNotesEditor: View {
                         dismiss()
                     }
                     .disabled(isSaving || isDeleting)
+                    .accessibilityIdentifier("user_notes_cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -74,6 +75,7 @@ struct UserNotesEditor: View {
                         saveNotes()
                     }
                     .disabled(notesText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving || isDeleting)
+                    .accessibilityIdentifier("user_notes_save")
                 }
             }
             .onAppear {

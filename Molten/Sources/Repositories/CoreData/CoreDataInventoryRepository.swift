@@ -107,7 +107,8 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                 containerCount: inventory.containerCount,
                 location: inventory.location,
                 date_added: inventory.date_added,
-                date_modified: inventory.date_modified
+                date_modified: inventory.date_modified,
+                workspace_id: inventory.workspace_id
             )
 
             // Set properties
@@ -144,7 +145,8 @@ class CoreDataInventoryRepository: @unchecked Sendable, InventoryRepository {
                     containerCount: inventory.containerCount,
                     location: inventory.location,
                     date_added: inventory.date_added,
-                    date_modified: inventory.date_modified
+                    date_modified: inventory.date_modified,
+                    workspace_id: inventory.workspace_id
                 )
 
                 // Set properties

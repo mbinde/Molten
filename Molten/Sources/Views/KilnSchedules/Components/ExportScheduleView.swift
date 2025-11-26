@@ -64,6 +64,7 @@ struct ExportScheduleView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("export_schedule_cancel")
                 }
             }
             .alert("Error", isPresented: $showingError) {

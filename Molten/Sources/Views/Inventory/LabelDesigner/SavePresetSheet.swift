@@ -41,6 +41,7 @@ struct SavePresetSheet: View {
                     Button("Cancel") {
                         onCancel()
                     }
+                    .accessibilityIdentifier("save_preset_cancel")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -48,6 +49,7 @@ struct SavePresetSheet: View {
                         onSave()
                     }
                     .disabled(presetName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .accessibilityIdentifier("save_preset_save")
                 }
             }
         }

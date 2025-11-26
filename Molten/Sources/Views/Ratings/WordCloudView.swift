@@ -103,6 +103,7 @@ struct AllWordsSheet: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("all_words_done")
                 }
             }
         }

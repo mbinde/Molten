@@ -41,6 +41,7 @@ struct ManufacturerToggleRow: View {
                 set: { onToggle($0) }
             ))
             .labelsHidden()
+            .accessibilityIdentifier("manufacturer_toggle_\(manufacturer.lowercased())")
         }
     }
 }

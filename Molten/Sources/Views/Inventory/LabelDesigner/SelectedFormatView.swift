@@ -40,5 +40,6 @@ struct SelectedFormatView: View {
             .padding(.vertical, 4)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("label_designer_change_format")
     }
 }

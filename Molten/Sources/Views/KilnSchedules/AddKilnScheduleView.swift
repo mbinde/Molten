@@ -194,6 +194,7 @@ struct AddKilnScheduleView: View {
             Button("Cancel") {
                 dismiss()
             }
+            .accessibilityIdentifier("add_kiln_schedule_cancel")
         }
 
         ToolbarItem(placement: .confirmationAction) {
@@ -201,6 +202,7 @@ struct AddKilnScheduleView: View {
                 saveSchedule()
             }
             .disabled(!isFormValid || isSaving)
+            .accessibilityIdentifier("add_kiln_schedule_save")
         }
     }
 

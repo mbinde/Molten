@@ -87,6 +87,7 @@ struct PurchaseRecordDetailView: View {
                         }
                         .font(.caption)
                         .buttonStyle(.bordered)
+                        .accessibilityIdentifier("purchase_detail_add_item")
                     }
 
                     CustomEmptyStateView(
@@ -116,12 +117,15 @@ struct PurchaseRecordDetailView: View {
                     Button("Edit") {
                         showingEditSheet = true
                     }
+                    .accessibilityIdentifier("purchase_detail_edit")
                     Button("Delete", role: .destructive) {
                         showingDeleteAlert = true
                     }
+                    .accessibilityIdentifier("purchase_detail_delete")
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
+                .accessibilityIdentifier("purchase_detail_menu")
             }
         }
         .disabled(isDeleting)

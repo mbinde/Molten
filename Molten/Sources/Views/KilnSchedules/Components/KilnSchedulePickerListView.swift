@@ -56,6 +56,7 @@ struct KilnSchedulePickerListView: View {
                             Spacer()
                         }
                     }
+                    .accessibilityIdentifier("kiln_schedule_picker_\(schedule.name.lowercased().replacingOccurrences(of: " ", with: "_"))")
                 }
             }
         }

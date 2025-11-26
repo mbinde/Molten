@@ -119,6 +119,7 @@ struct InventorySharingView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("inventory_sharing_my_inventory_toggle")
 
                 if myShareExpanded {
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
@@ -134,6 +135,7 @@ struct InventorySharingView: View {
                                 Image(systemName: "doc.on.doc")
                             }
                             .buttonStyle(.borderless)
+                            .accessibilityIdentifier("inventory_sharing_copy_code")
 
                             Spacer()
 
@@ -143,6 +145,7 @@ struct InventorySharingView: View {
                                 Image(systemName: "square.and.arrow.up")
                             }
                             .buttonStyle(.borderless)
+                            .accessibilityIdentifier("inventory_sharing_share_code")
                         }
 
                         // QR Code for easy scanning (deep link to add friend)
@@ -184,6 +187,7 @@ struct InventorySharingView: View {
                                     Image(systemName: "pencil")
                                 }
                                 .buttonStyle(.borderless)
+                                .accessibilityIdentifier("inventory_sharing_edit_metadata")
                             }
                         }
                         .padding(.vertical, DesignSystem.Spacing.xs)
@@ -201,6 +205,7 @@ struct InventorySharingView: View {
                             }
                         }
                         .disabled(viewModel.isLoading)
+                        .accessibilityIdentifier("inventory_sharing_refresh")
 
                         Text("Re-uploads your current inventory to update what friends see. If you don't do this, it will refresh every 24 hours as long as you open the app during that time. All refreshes, whether automatic or manual, also reset the 90-day auto-deletion timer.")
                             .font(.caption)
@@ -219,6 +224,7 @@ struct InventorySharingView: View {
                         }
                     }
                     .disabled(viewModel.isLoading)
+                    .accessibilityIdentifier("inventory_sharing_delete")
                 }
 
             } else {
@@ -308,6 +314,7 @@ struct InventorySharingView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("inventory_sharing_temporary_toggle")
 
                 if expiringSharesExpanded {
                     ForEach(viewModel.expiringShares) { share in
@@ -322,6 +329,7 @@ struct InventorySharingView: View {
                             Text("Create Temporary Share")
                         }
                     }
+                    .accessibilityIdentifier("inventory_sharing_create_temporary")
                 }
             }
         }
@@ -348,6 +356,7 @@ struct InventorySharingView: View {
                             Text("Add Friend")
                         }
                     }
+                    .accessibilityIdentifier("inventory_sharing_add_friend")
                 }
                 .padding(.vertical, DesignSystem.Spacing.xs)
 
@@ -365,6 +374,7 @@ struct InventorySharingView: View {
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
+                        .accessibilityIdentifier("inventory_sharing_friend_delete_swipe")
                     }
                     .contextMenu {
                         Button {
@@ -373,6 +383,7 @@ struct InventorySharingView: View {
                         } label: {
                             Label("Customize", systemImage: "slider.horizontal.3")
                         }
+                        .accessibilityIdentifier("inventory_sharing_friend_customize")
 
                         Button(role: .destructive) {
                             friendToDelete = friend
@@ -380,6 +391,7 @@ struct InventorySharingView: View {
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
+                        .accessibilityIdentifier("inventory_sharing_friend_delete_context")
                     }
                 }
 
@@ -391,6 +403,7 @@ struct InventorySharingView: View {
                         Text("Add Friend")
                     }
                 }
+                .accessibilityIdentifier("inventory_sharing_add_friend")
             }
         } header: {
             Text("Friends")

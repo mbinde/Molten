@@ -65,6 +65,7 @@ struct InventoryDetailTypeRow: View {
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("inventory_detail_type_row_\(type.lowercased())")
     }
 
     /// Get a summary of subtypes present in inventory records

@@ -545,7 +545,7 @@ struct AddInventoryItemViewTests {
         #expect(allTypes.contains("sheet"))
 
         // And: No types are hidden
-        #expect(allTypes.count == 11)  // All 11 types should be visible
+        #expect(allTypes.count == 10)  // All 10 types should be visible (enamel was removed)
     }
 
     @Test("Rod type displays as Rod by default")

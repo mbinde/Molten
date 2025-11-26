@@ -89,6 +89,7 @@ struct AuthorSettingsView: View {
                         showingClearConfirmation = true
                     }
                     .foregroundColor(.red)
+                    .accessibilityIdentifier("author_settings_clear")
                 }
             }
         }
@@ -101,11 +102,13 @@ struct AuthorSettingsView: View {
                 Button("Revert all changes") {
                     cancelChanges()
                 }
+                .accessibilityIdentifier("author_settings_cancel")
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done") {
                     dismiss()
                 }
+                .accessibilityIdentifier("author_settings_done")
             }
         }
         .onAppear {

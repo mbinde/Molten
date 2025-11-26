@@ -178,6 +178,7 @@ struct LogbookView: View, CachedDataDeletion {
             } label: {
                 Label("Add Entry", systemImage: "plus")
             }
+            .accessibilityIdentifier("logbook_add_button")
         }
     }
 

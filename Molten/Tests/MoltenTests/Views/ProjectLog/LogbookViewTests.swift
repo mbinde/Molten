@@ -30,7 +30,7 @@ struct LogbookViewTests {
 
     // Helper to create LogbookView with test dependencies
     private func createLogbookView() -> LogbookView {
-        return LogbookView(logbookRepository: deps.logbookRepository)
+        return LogbookView(logbookRepository: deps.logbookRepository, deps: deps)
     }
 
     // MARK: - View Creation Tests

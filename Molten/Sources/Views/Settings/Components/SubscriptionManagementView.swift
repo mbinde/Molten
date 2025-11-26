@@ -17,7 +17,7 @@ struct SubscriptionManagementView: View {
             // Current tier section
             Section {
                 HStack {
-                    if entitlementService.tier == .premium {
+                    if entitlementService.currentTier == .premium {
                         Image(systemName: "crown.fill")
                             .font(.largeTitle)
                             .foregroundColor(.yellow)
@@ -28,10 +28,10 @@ struct SubscriptionManagementView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(entitlementService.tier == .premium ? "Premium Member" : "Free Tier")
+                        Text(entitlementService.currentTier == .premium ? "Premium Member" : "Free Tier")
                             .font(.title2.bold())
 
-                        if entitlementService.tier == .premium {
+                        if entitlementService.currentTier == .premium {
                             Text("Unlimited access to all features")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
@@ -78,7 +78,7 @@ struct SubscriptionManagementView: View {
             }
 
             // Actions section
-            if entitlementService.tier == .free {
+            if entitlementService.currentTier == .free {
                 Section {
                     Button(action: {
                         showingUpgradePrompt = true
@@ -130,15 +130,12 @@ struct SubscriptionManagementView: View {
             }
 
             // Premium features section
-            Section("Premium Features") {
+            Section("Pro Features") {
                 FeatureRow(icon: "infinity", title: "Unlimited Inventory Items")
                 FeatureRow(icon: "cart.fill", title: "Unlimited Shopping Lists")
                 FeatureRow(icon: "folder.fill", title: "Unlimited Projects")
                 FeatureRow(icon: "book.fill", title: "Unlimited Logbook Entries")
-                FeatureRow(icon: "printer.fill", title: "Batch Label Printing")
-                FeatureRow(icon: "qrcode.viewfinder", title: "QR Code Scanning for Inventory")
-                FeatureRow(icon: "tag.fill", title: "Custom Tags & Notes for Inventory")
-                FeatureRow(icon: "photo.fill", title: "Add Images to Inventory Items")
+                FeatureRow(icon: "clock.arrow.circlepath", title: "Versioned Cloud Backups")
             }
         }
         .navigationTitle("Subscription")

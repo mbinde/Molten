@@ -13,11 +13,6 @@ import PhotosUI
 import AppKit
 #endif
 
-/// Wrapper to make String identifiable for sheet presentation
-private struct InventoryTypeSelection: Identifiable {
-    let id = UUID()
-    let type: String
-}
 
 /// Comprehensive inventory detail view showing complete item information
 /// including inventory breakdown by type, location distribution, and shopping list integration
@@ -32,13 +27,16 @@ struct InventoryDetailView: View {
     let userImageRepository: UserImageRepository
     let kilnScheduleService: KilnScheduleService
     let glassItemRepository: GlassItemRepository
+    let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
 
     @Environment(\.dismiss) private var dismiss
     @Environment(EntitlementService.self) private var entitlementService
     @State private var isEditing = false
 
     // State for managing UI interactions
-    @State private var selectedInventoryType: InventoryTypeSelection?
+    @State private var editingInventoryRecord: InventoryModel?
+    @State private var showingInventoryDetails = false
+    @State private var selectedTypeRecords: (records: [InventoryModel], type: String)?
     @State private var showingShoppingListOptions = false
     @State private var showingUserNotesEditor = false
     @State private var showingUserTagsEditor = false
@@ -48,6 +46,7 @@ struct InventoryDetailView: View {
     @State private var inventoryItemLimit = 0
     @State private var expandedSections: Set<String> = ["glass-item", "inventory"]
     @State private var isManufacturerNotesExpanded: Bool
+    @State private var showNavTitle = false
 
     // User notes state
     @State private var userNotes: UserNotesModel?
@@ -103,7 +102,8 @@ struct InventoryDetailView: View {
         locationService: UnifiedLocationService,
         userImageRepository: UserImageRepository,
         kilnScheduleService: KilnScheduleService,
-        glassItemRepository: GlassItemRepository
+        glassItemRepository: GlassItemRepository,
+        storageLocationDefinitionRepository: StorageLocationDefinitionRepository
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
@@ -115,6 +115,7 @@ struct InventoryDetailView: View {
         self.userImageRepository = userImageRepository
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
+        self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
@@ -134,6 +135,7 @@ struct InventoryDetailView: View {
         self.userImageRepository = deps.userImageRepository
         self.kilnScheduleService = deps.kilnScheduleService
         self.glassItemRepository = deps.glassItemRepository
+        self.storageLocationDefinitionRepository = deps.storageLocationDefinitionRepository
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
@@ -141,22 +143,76 @@ struct InventoryDetailView: View {
         self._currentItem = State(initialValue: item)
     }
 
+    // MARK: - Computed Properties
+
+    /// Binding for showing type records sheet (converts optional tuple to Bool)
+    private var showingTypeRecordsBinding: Binding<Bool> {
+        Binding(
+            get: { selectedTypeRecords != nil },
+            set: { if !$0 { selectedTypeRecords = nil } }
+        )
+    }
+
+    /// Check if there's any content to show in the Glass Item Details section
+    private var hasGlassItemDetails: Bool {
+        let hasManufacturerNotes = currentItem.glassItem.mfr_notes != nil && !currentItem.glassItem.mfr_notes!.isEmpty
+        let hasUserNotes = userNotes != nil
+        return hasManufacturerNotes || hasUserNotes
+    }
+
     // MARK: - View Body
 
     private var scrollableContent: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 20) {
-                    // Header with glass item image and basic info (includes tags)
-                    headerSection
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+                    // Hero header with large product image, with scroll tracking
+                    heroHeaderSection
                         .id("header")
+                        .background(
+                            GeometryReader { geo -> Color in
+                                // This runs during layout, updating the scroll position
+                                DispatchQueue.main.async {
+                                    let minY = geo.frame(in: .named("scroll")).minY
+                                    let shouldShow = minY < -270  // Hero is ~280pt tall, show title when title bar scrolls off
+                                    if showNavTitle != shouldShow {
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            showNavTitle = shouldShow
+                                        }
+                                    }
+                                }
+                                return Color.clear
+                            }
+                        )
+
+                    // Inventory Status Card (only show if there's inventory)
+                    if !currentItem.inventory.isEmpty {
+                        InventoryStatusCard(
+                            inventory: currentItem.inventory,
+                            onTapRecord: { record in
+                                editingInventoryRecord = record
+                            },
+                            onTapRecordsForType: { records, type in
+                                selectedTypeRecords = (records, type)
+                            },
+                            onTapDetails: {
+                                showingInventoryDetails = true
+                            }
+                        )
+                    }
+
+                    // Specifications tile grid
+                    specificationsSection
 
                     // Rating Words Section
                     RatingWordsSection(itemStableId: currentItem.glassItem.stable_id)
 
-                    // Glass Item Details Section
-                    glassItemDetailsSection
-                        .id("glass-item-section")
+                    // Glass Item Details Section (manufacturer notes, user notes)
+                    // Only show if there's content to display
+                    if hasGlassItemDetails {
+                        glassItemDetailsSection
+                            .id("glass-item-section")
+                    }
 
                     // Recommended Kiln Schedules Section - only show if schedules exist
                     if !recommendedScheduleIds.isEmpty {
@@ -170,19 +226,14 @@ struct InventoryDetailView: View {
                         )
                     }
 
-                    // Inventory Breakdown Section - only show if inventory exists
-                    if !currentItem.inventory.isEmpty {
-                        inventoryBreakdownSection
-                    }
-
                     // Shopping List Section - only show if on shopping list
                     if shoppingListItem != nil {
                         shoppingListSection
                     }
 
-                    // Location Distribution Section
-                    if !currentItem.locations.isEmpty {
-                        locationDistributionSection
+                    // Tags Section
+                    if !currentItem.tags.isEmpty || !userTags.isEmpty {
+                        tagsSection
                     }
 
                     // Custom Images Section - only show if images exist
@@ -192,8 +243,10 @@ struct InventoryDetailView: View {
 
                     Spacer(minLength: 100)
                 }
-                .padding()
+                .padding(.horizontal)
+                .padding(.bottom)
             }
+            .coordinateSpace(name: "scroll")
             .onChange(of: isManufacturerNotesExpanded) { _, newValue in
                 // When collapsing, scroll to the top of the view
                 if !newValue {
@@ -216,9 +269,10 @@ struct InventoryDetailView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             scrollableContent
-                .navigationTitle(currentItem.glassItem.name)
+                .navigationTitle(showNavTitle ? currentItem.glassItem.name : "")
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
             #endif
             .toolbar {
                 if !isEditing {
@@ -273,14 +327,41 @@ struct InventoryDetailView: View {
         }) {
             ShoppingListOptionsView(item: item)
         }
-        .sheet(item: $selectedInventoryType) { selection in
+        .sheet(isPresented: $showingInventoryDetails) {
             InventoryStorageDetailView(
                 item: currentItem,
-                inventoryType: selection.type
+                inventoryType: ""  // Show all types
             )
             .onDisappear {
-                // Refresh item data after location details might have changed
+                // Refresh item data after details might have changed
                 refreshItemData()
+            }
+        }
+        .sheet(item: $editingInventoryRecord) { record in
+            if let service = inventoryTrackingService {
+                InventoryEditView(
+                    record: record,
+                    inventoryRepository: service.inventoryRepository,
+                    storageLocationDefinitionRepository: storageLocationDefinitionRepository
+                )
+                .onDisappear {
+                    // Refresh item data after editing
+                    refreshItemData()
+                }
+            }
+        }
+        .sheet(isPresented: showingTypeRecordsBinding, onDismiss: {
+            // Refresh item data after potentially editing records
+            refreshItemData()
+        }) {
+            if let typeRecords = selectedTypeRecords,
+               let service = inventoryTrackingService {
+                InventoryTypeRecordsView(
+                    records: typeRecords.records,
+                    type: typeRecords.type,
+                    itemName: currentItem.glassItem.name,
+                    inventoryRepository: service.inventoryRepository
+                )
             }
         }
         .sheet(isPresented: $showingUserNotesEditor, onDismiss: {
@@ -343,6 +424,10 @@ struct InventoryDetailView: View {
             loadShoppingList()
             loadUserImages()
             loadRecommendedSchedules()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
+            // Refresh when inventory is added (e.g., from three-dots menu)
+            refreshItemData()
         }
     }
 
@@ -429,10 +514,14 @@ struct InventoryDetailView: View {
 
     @MainActor
     private func loadManufacturerImage() async {
-        manufacturerImage = ImageHelpers.loadProductImage(
-            for: currentItem.glassItem.sku ?? "",
+        // Use the centralized image loading entry point
+        manufacturerImage = await ImageHelpers.loadProductImageForDisplay(
+            itemCode: currentItem.glassItem.stable_id,
             manufacturer: currentItem.glassItem.manufacturer,
-            stableId: currentItem.glassItem.stable_id
+            stableId: currentItem.glassItem.stable_id,
+            imagePath: currentItem.glassItem.image_path,
+            imageThumbPath: currentItem.glassItem.image_thumb_path,
+            dominantColors: currentItem.glassItem.dominant_colors
         )
     }
 
@@ -452,34 +541,24 @@ struct InventoryDetailView: View {
 
     /// Check inventory limit and show either the add form or upgrade prompt
     private func checkLimitAndShowAddInventory() {
-        guard let inventoryTrackingService = inventoryTrackingService else { return }
+        guard let catalogService = catalogService else { return }
 
         Task {
-            do {
-                // Count unique items with inventory (not individual inventory records)
-                let allItemsWithInventory = try await inventoryTrackingService.searchItems(
-                    text: "",
-                    hasInventory: true
-                )
-                let currentInventoryCount = allItemsWithInventory.count
-                let canAdd = entitlementService.canAddInventoryItem(currentCount: currentInventoryCount)
+            // Use the same counting method as InventoryView for consistency:
+            // CatalogDataCache + hasInventory (which checks hasStock)
+            let items = await CatalogDataCache.loadItems(using: catalogService)
+            let currentInventoryCount = items.filter { $0.hasInventory }.count
+            let canAdd = entitlementService.canAddInventoryItem(currentCount: currentInventoryCount)
 
-                await MainActor.run {
-                    if !canAdd {
-                        // Hit the limit - show upgrade prompt immediately
-                        let limit = entitlementService.getInventoryLimit() ?? 0
-                        inventoryItemCount = currentInventoryCount
-                        inventoryItemLimit = limit
-                        showingUpgradePrompt = true
-                    } else {
-                        // Under limit - show add inventory form
-                        showingAddInventory = true
-                    }
-                }
-            } catch {
-                // If we can't check the limit, allow the add to proceed
-                print("⚠️ Failed to check inventory limit: \(error)")
-                await MainActor.run {
+            await MainActor.run {
+                if !canAdd {
+                    // Hit the limit - show upgrade prompt immediately
+                    let limit = entitlementService.getInventoryLimit() ?? 0
+                    inventoryItemCount = currentInventoryCount
+                    inventoryItemLimit = limit
+                    showingUpgradePrompt = true
+                } else {
+                    // Under limit - show add inventory form
                     showingAddInventory = true
                 }
             }
@@ -599,9 +678,11 @@ struct InventoryDetailView: View {
 
     private func refreshItemData() {
         guard let service = inventoryTrackingService else {
-            print("No inventory tracking service available for refresh")
+            print("⚠️ No inventory tracking service available for refresh")
             return
         }
+
+        print("🔄 refreshItemData() called for \(item.glassItem.stable_id)")
 
         Task {
             isRefreshing = true
@@ -610,28 +691,141 @@ struct InventoryDetailView: View {
             do {
                 // Fetch the updated complete item
                 if let updatedItem = try await service.getCompleteItem(stableId: item.glassItem.stable_id) {
+                    print("✅ Got updated item with \(updatedItem.inventory.count) inventory records")
+                    for inv in updatedItem.inventory {
+                        print("   - \(inv.type): qty=\(inv.quantity), containers=\(inv.containerCount ?? 0)")
+                    }
                     await MainActor.run {
                         currentItem = updatedItem
+                        print("✅ Updated currentItem state")
                     }
+                } else {
+                    print("⚠️ getCompleteItem returned nil")
                 }
             } catch {
-                print("Error refreshing item data: \(error)")
+                print("❌ Error refreshing item data: \(error)")
             }
         }
     }
 
-    // MARK: - Header Section
+    // MARK: - Hero Header Section
 
-    private var headerSection: some View {
-        GlassItemCard(
-            item: currentItem.glassItem,
-            variant: .large,
-            tags: currentItem.tags,
-            userTags: userTags,
-            onManageTags: {
-                showingUserTagsEditor = true
+    private var heroHeaderSection: some View {
+        HeroHeader(item: currentItem.glassItem, extendsToTop: true)
+    }
+
+    // MARK: - Specifications Section
+
+    private var specificationsSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            Text("Specifications")
+                .font(DesignSystem.Typography.subsectionTitle)
+                .fontWeight(DesignSystem.FontWeight.semibold)
+                .foregroundColor(DesignSystem.Colors.textPrimary)
+
+            SpecificationTileGrid(tiles: specificationTiles)
+        }
+    }
+
+    private var specificationTiles: [SpecificationTileGrid.TileData] {
+        var tiles: [SpecificationTileGrid.TileData] = []
+
+        // COE Rating for glass items, Temperature Range for coatings
+        switch currentItem.catalogItem.itemType {
+        case .glass:
+            // COE Rating - expansion/contraction compatibility (e.g., "90 COE")
+            if let coe = currentItem.catalogItem.coe {
+                tiles.append(.init(
+                    icon: "arrow.left.and.right",
+                    value: "\(coe) COE"
+                ))
             }
-        )
+        case .coating:
+            // Temperature range for coatings
+            let tempUnit = UserSettings.shared.preferredTemperatureUnit
+            let tempDisplay = tempUnit.formatTemperatureRange(
+                lowF: currentItem.catalogItem.temperatureRangeLow,
+                highF: currentItem.catalogItem.temperatureRangeHigh
+            )
+            tiles.append(.init(
+                icon: "thermometer.medium",
+                value: tempDisplay
+            ))
+        case .tool:
+            // Tools don't have COE or temperature range
+            break
+        }
+
+        // SKU (if available and not synthetic)
+        if let sku = currentItem.catalogItem.sku, !sku.isEmpty, !isSyntheticSKU(sku) {
+            tiles.append(.init(
+                icon: "tag",
+                value: sku
+            ))
+        }
+
+        return tiles
+    }
+
+    private func isSyntheticSKU(_ sku: String) -> Bool {
+        // Pattern: XXX-[8 hex chars] like "GRE-8bf530c2"
+        let syntheticPattern = /^[A-Z]{2,4}-[a-f0-9]{8}$/
+        return sku.wholeMatch(of: syntheticPattern) != nil
+    }
+
+    // MARK: - Tags Section
+
+    private var tagsSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            HStack {
+                Text("Tags")
+                    .font(DesignSystem.Typography.subsectionTitle)
+                    .fontWeight(DesignSystem.FontWeight.semibold)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                Spacer()
+
+                Button(action: { showingUserTagsEditor = true }) {
+                    HStack(spacing: DesignSystem.Spacing.xs) {
+                        Image(systemName: "pencil")
+                        Text("Manage")
+                    }
+                    .font(DesignSystem.Typography.listItemCaption)
+                    .foregroundColor(DesignSystem.Colors.accentUser)
+                }
+            }
+
+            // Tags flow layout
+            FlowLayout(spacing: DesignSystem.Spacing.sm) {
+                ForEach(allTags, id: \.self) { tag in
+                    tagChip(tag: tag, isUserTag: userTags.contains(tag))
+                }
+            }
+        }
+        .padding(DesignSystem.Padding.standard)
+        .background(DesignSystem.Colors.backgroundSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.extraLarge))
+    }
+
+    private var allTags: [String] {
+        Array(Set(currentItem.tags + userTags)).sorted()
+    }
+
+    private func tagChip(tag: String, isUserTag: Bool) -> some View {
+        HStack(spacing: DesignSystem.Spacing.xs) {
+            if isUserTag {
+                Image(systemName: "person.fill")
+                    .font(.caption2)
+            }
+            Text(tag)
+                .font(DesignSystem.Typography.listItemCaptionSmall)
+                .fontWeight(DesignSystem.FontWeight.medium)
+        }
+        .padding(.horizontal, DesignSystem.Spacing.sm)
+        .padding(.vertical, DesignSystem.Spacing.xs)
+        .background(isUserTag ? DesignSystem.Colors.tintUser : DesignSystem.Colors.tintPrimary)
+        .foregroundColor(isUserTag ? DesignSystem.Colors.accentUser : DesignSystem.Colors.accentPrimary)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
     }
 
     // MARK: - Glass Item Details Section
@@ -644,19 +838,7 @@ struct InventoryDetailView: View {
             onToggle: { toggleSection("glass-item") },
             accessibilityId: "section_glass_item"
         ) {
-            VStack(alignment: .leading, spacing: 12) {
-                // Show color approximation notice only when gradient is displayed
-                // (no image permission AND have dominant colors to show)
-                if !GlassManufacturers.hasProductImagePermission(for: currentItem.glassItem.manufacturer),
-                   let colors = currentItem.glassItem.dominant_colors,
-                   !colors.isEmpty {
-                    Text("We do not have permission to show glass images from this manufacturer, so have done our best to approximate the color of the glass. If you would like to suggest an image to our catalog, please upload an image to the app and long-press on it to submit it.")
-                        .font(.caption)
-                        .italic()
-                        .foregroundColor(.secondary)
-                        .padding(.vertical, 8)
-                }
-
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
                 if let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
                     expandableNotesCard(title: "Manufacturer Notes", content: notes, accessibilityId: "expand_manufacturer_notes")
                 }
@@ -665,42 +847,6 @@ struct InventoryDetailView: View {
                 if userNotes != nil {
                     userNotesSection
                 }
-
-                // Empty state - show when no manufacturer notes and no user notes
-                let hasManufacturerNotes = currentItem.glassItem.mfr_notes != nil && !currentItem.glassItem.mfr_notes!.isEmpty
-                if !hasManufacturerNotes && userNotes == nil {
-                    emptyDetailsMessage
-                }
-            }
-        }
-    }
-
-    // MARK: - Empty Details Message
-
-    private var emptyDetailsMessage: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let manufacturerURL = currentItem.glassItem.url, let _ = URL(string: manufacturerURL) {
-                // Use Text concatenation for proper inline flow
-                Text("Please check ")
-                    + Text("the manufacturer's site")
-                        .foregroundColor(.blue)
-                    + Text(" ")
-                    + Text(Image(systemName: "arrow.up.forward.square"))
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                    + Text(" to see if they have more information available or add notes of your own.")
-            } else {
-                Text("No more details available here. Add notes of your own using the note button.")
-            }
-        }
-        .font(.body)
-        .foregroundColor(.secondary)
-        .padding()
-        .background(Color.gray.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .onTapGesture {
-            if let manufacturerURL = currentItem.glassItem.url, let url = URL(string: manufacturerURL) {
-                UIApplication.shared.open(url)
             }
         }
         .accessibilityIdentifier("manufacturer_website_link")
@@ -709,29 +855,29 @@ struct InventoryDetailView: View {
     // MARK: - User Notes Section
 
     private var userNotesSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             // User Notes
             if let notes = userNotes {
                 // Show existing notes
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
                     HStack {
                         Text("Your Notes")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                            .font(DesignSystem.Typography.formLabel)
+                            .fontWeight(DesignSystem.FontWeight.semibold)
                         Spacer()
                         Button(action: {
                             showingUserNotesEditor = true
                         }) {
                             Text("Edit")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.accentColor)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .fontWeight(DesignSystem.FontWeight.medium)
+                                .foregroundColor(DesignSystem.Colors.accentPrimary)
                         }
                     }
 
                     Text(notes.notes)
-                        .font(.body)
-                        .foregroundColor(.primary)
+                        .font(DesignSystem.Typography.formValue)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                         .lineLimit(isUserNotesExpanded ? nil : 4)
 
                     // Show More/Less button if notes are long
@@ -742,84 +888,22 @@ struct InventoryDetailView: View {
                             }
                         }) {
                             Text(isUserNotesExpanded ? "Show Less" : "Show More")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.accentColor)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .fontWeight(DesignSystem.FontWeight.medium)
+                                .foregroundColor(DesignSystem.Colors.accentPrimary)
                         }
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("expand_user_notes")
                     }
                 }
                 .padding()
-                .background(Color.accentColor.opacity(0.05))
+                .background(DesignSystem.Colors.tintUser)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.accentColor.opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                        .stroke(DesignSystem.Colors.accentUser.opacity(0.2), lineWidth: 1)
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
                 .id("user-notes") // Anchor for scrolling
-            }
-        }
-    }
-
-    // MARK: - Inventory Breakdown Section
-
-    private var inventoryBreakdownSection: some View {
-        ExpandableSection(
-            title: "Inventory Details",
-            systemImage: "cube.box",
-            isExpanded: expandedSections.contains("inventory"),
-            onToggle: { toggleSection("inventory") },
-            accessibilityId: "section_inventory"
-        ) {
-            if currentItem.inventory.isEmpty {
-                // Empty state
-                VStack(spacing: 12) {
-                    Image(systemName: "cube.box")
-                        .font(.system(size: 30))
-                        .foregroundColor(.secondary)
-                    Text("No inventory recorded")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    Button("Add Inventory") {
-                        checkLimitAndShowAddInventory()
-                    }
-                    .buttonStyle(.bordered)
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.gray.opacity(0.05))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-            } else {
-                LazyVStack(spacing: 8) {
-                    // Group by type using inventoryByType computed property
-                    ForEach(Array(currentItem.inventoryByType.keys.sorted()), id: \.self) { type in
-                        let quantity = currentItem.inventoryByType[type] ?? 0
-                        let typeInventory = currentItem.inventory.filter { $0.type == type }
-
-                        InventoryDetailTypeRow(
-                            type: type,
-                            quantity: quantity,
-                            inventoryRecords: typeInventory,
-                            onTap: {
-                                selectedInventoryType = InventoryTypeSelection(type: type)
-                            }
-                        )
-                    }
-
-                    // Add More button when inventory exists
-                    Button {
-                        checkLimitAndShowAddInventory()
-                    } label: {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                            Text("Add More Inventory")
-                        }
-                        .font(.subheadline)
-                        .foregroundColor(.accentColor)
-                    }
-                    .padding(.top, 8)
-                }
             }
         }
     }
@@ -836,40 +920,40 @@ struct InventoryDetailView: View {
         ) {
             if let shoppingItem = shoppingListItem {
                 // Show shopping list item details
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
                     HStack {
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                             Text("Quantity")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                             Text(shoppingItem.formattedQuantity)
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
+                                .font(DesignSystem.Typography.formLabel)
+                                .fontWeight(DesignSystem.FontWeight.semibold)
                         }
 
                         Spacer()
 
                         if let store = shoppingItem.store {
-                            VStack(alignment: .trailing, spacing: 4) {
+                            VStack(alignment: .trailing, spacing: DesignSystem.Spacing.xs) {
                                 Text("Store")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .font(DesignSystem.Typography.listItemCaption)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                 Text(store)
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
+                                    .font(DesignSystem.Typography.formLabel)
+                                    .fontWeight(DesignSystem.FontWeight.medium)
                             }
                         }
                     }
                     .padding()
-                    .background(Color.orange.opacity(0.05))
+                    .background(DesignSystem.Colors.tintWarning.opacity(0.5))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.orange.opacity(0.2), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                            .stroke(DesignSystem.Colors.moltenAmber.opacity(0.3), lineWidth: 1)
                     )
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
 
                     // Edit/Remove buttons
-                    HStack(spacing: 12) {
+                    HStack(spacing: DesignSystem.Spacing.lg) {
                         Button(action: {
                             showingShoppingListOptions = true
                         }) {
@@ -889,13 +973,13 @@ struct InventoryDetailView: View {
                 }
             } else {
                 // Empty state - no shopping list item
-                VStack(spacing: 12) {
+                VStack(spacing: DesignSystem.Spacing.lg) {
                     Image(systemName: "cart")
                         .font(.system(size: 30))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textTertiary)
                     Text("Not on shopping list")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(DesignSystem.Typography.formLabel)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     Button("Add to Shopping List") {
                         showingShoppingListOptions = true
                     }
@@ -903,8 +987,8 @@ struct InventoryDetailView: View {
                 }
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(Color.gray.opacity(0.05))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .background(DesignSystem.Colors.backgroundTertiary)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
             }
         }
     }
@@ -939,51 +1023,6 @@ struct InventoryDetailView: View {
                         handleDeleteImage(imageId)
                     }
                 )
-            }
-        }
-    }
-
-    // MARK: - Location Distribution Section
-
-    private var locationDistributionSection: some View {
-        ExpandableSection(
-            title: "Location Distribution",
-            systemImage: "location",
-            isExpanded: expandedSections.contains("locations"),
-            onToggle: { toggleSection("locations") }
-        ) {
-            LazyVStack(spacing: 8) {
-                ForEach(Array(currentItem.inventoryByLocation.keys.sorted()), id: \.self) { locationName in
-                    let quantity = currentItem.inventoryByLocation[locationName] ?? 0
-
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(locationName)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                            Text("Qty: \(formatQuantity(quantity))")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Spacer()
-
-                        // Progress bar showing relative quantity
-                        let maxQuantity = currentItem.inventoryByLocation.values.max() ?? 1
-                        let percentage = quantity / maxQuantity
-
-                        HStack(spacing: 8) {
-                            ProgressView(value: percentage)
-                                .frame(width: 60)
-                            Text("\(Int(percentage * 100))%")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .padding()
-                    .background(Color.gray.opacity(0.05))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
             }
         }
     }
@@ -1045,40 +1084,40 @@ struct InventoryDetailView: View {
     }
 
     private func detailCard(title: String, content: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             Text(title)
-                .font(.subheadline)
-                .fontWeight(.semibold)
+                .font(DesignSystem.Typography.formLabel)
+                .fontWeight(DesignSystem.FontWeight.semibold)
             Text(content)
-                .font(.body)
+                .font(DesignSystem.Typography.formValue)
         }
         .padding()
-        .background(Color.gray.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(DesignSystem.Colors.backgroundTertiary)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
     }
 
     private func expandableNotesCard(title: String, content: String, accessibilityId: String? = nil) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             Text(title)
-                .font(.subheadline)
-                .fontWeight(.semibold)
+                .font(DesignSystem.Typography.formLabel)
+                .fontWeight(DesignSystem.FontWeight.semibold)
 
             ExpandableText(content: content, lineLimit: 4, isExpanded: $isManufacturerNotesExpanded, accessibilityId: accessibilityId)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(Color.gray.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(DesignSystem.Colors.backgroundTertiary)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
     }
 
     private func specificationItem(title: String, value: String) -> some View {
-        VStack(alignment: .center, spacing: 4) {
+        VStack(alignment: .center, spacing: DesignSystem.Spacing.xs) {
             Text(title)
-                .font(.caption2)
-                .foregroundColor(.secondary)
+                .font(DesignSystem.Typography.listItemCaptionSmall)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             Text(value)
-                .font(.caption)
-                .fontWeight(.medium)
+                .font(DesignSystem.Typography.listItemCaption)
+                .fontWeight(DesignSystem.FontWeight.medium)
         }
         .frame(maxWidth: .infinity)
     }

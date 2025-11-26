@@ -18,11 +18,20 @@ class BackupAPIClient: NSObject {
     private let baseURL: URL
     private let attestationManager: AttestationManagerProtocol
 
+    /// Default base URL for production API
+    /// Using static let ensures URL parsing happens once at startup, not at runtime
+    private static let defaultBaseURL: URL = {
+        guard let url = URL(string: "https://www.moltenglass.app") else {
+            fatalError("Invalid BackupAPIClient base URL configuration")
+        }
+        return url
+    }()
+
     // MARK: - Initialization
 
     init(
         session: URLSessionProtocol = URLSession.shared,
-        baseURL: URL = URL(string: "https://www.moltenglass.app")!,
+        baseURL: URL = BackupAPIClient.defaultBaseURL,
         attestationManager: AttestationManagerProtocol = AttestationManager()
     ) {
         self.session = session
@@ -221,9 +230,17 @@ class BackupAPIClient: NSObject {
 
     // MARK: - Private Helpers
 
+    /// Default timeout for API requests (30 seconds)
+    private static let defaultTimeout: TimeInterval = 30
+
     private func executeRequest(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        var requestWithTimeout = request
+        // Set timeout if not already configured
+        if requestWithTimeout.timeoutInterval == 60 { // 60 is the default
+            requestWithTimeout.timeoutInterval = Self.defaultTimeout
+        }
         do {
-            return try await session.data(for: request)
+            return try await session.data(for: requestWithTimeout)
         } catch {
             throw BackupAPIError.networkError(error)
         }

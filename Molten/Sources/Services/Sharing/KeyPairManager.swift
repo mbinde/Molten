@@ -40,8 +40,6 @@ final class KeyPairManager {
     /// Store a private key in the Keychain
     /// - Note: Tries to use iCloud Keychain sync if available, falls back to local-only storage
     func storePrivateKey(_ privateKey: Data, identifier: String) throws {
-        print("🔐 [KEYCHAIN] Storing private key with identifier: \(identifier)")
-
         // Delete existing key if present
         try? deletePrivateKey(identifier: identifier)
 
@@ -59,25 +57,25 @@ final class KeyPairManager {
         var status = SecItemAdd(syncQuery as CFDictionary, nil)
 
         // If sync storage fails (e.g., iCloud Keychain disabled), try local-only storage
+        // Use ThisDeviceOnly for stricter security when not syncing
         if status != errSecSuccess {
+            #if DEBUG
             print("🔐 [KEYCHAIN] Failed to store with sync (\(status)), trying local-only...")
+            #endif
             let localQuery: [String: Any] = [
                 kSecClass as String: kSecClassGenericPassword,
                 kSecAttrService as String: Self.keychainService,
                 kSecAttrAccount as String: identifier,
                 kSecValueData as String: privateKey,
-                kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked
-                // NO kSecAttrSynchronizable - local device only
+                kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+                // NO kSecAttrSynchronizable - local device only, stricter protection
             ]
             status = SecItemAdd(localQuery as CFDictionary, nil)
         }
 
         guard status == errSecSuccess else {
-            print("🔐 [KEYCHAIN] Failed to store key '\(identifier)': \(status)")
             throw KeyPairError.keychainError("Failed to store key: \(status)")
         }
-
-        print("🔐 [KEYCHAIN] Successfully stored key '\(identifier)'")
     }
 
     /// Retrieve a private key from the Keychain
@@ -97,7 +95,9 @@ final class KeyPairManager {
 
         // If not found with synchronizable, try without (fallback for simulator issues)
         if status == errSecItemNotFound {
+            #if DEBUG
             print("🔐 Key not found with kSecAttrSynchronizable=true, trying without...")
+            #endif
             let nonSyncQuery: [String: Any] = [
                 kSecClass as String: kSecClassGenericPassword,
                 kSecAttrService as String: Self.keychainService,
@@ -110,10 +110,8 @@ final class KeyPairManager {
 
         guard status == errSecSuccess else {
             if status == errSecItemNotFound {
-                print("🔐 Key '\(identifier)' not found in keychain")
                 throw KeyPairError.keyNotFound
             }
-            print("🔐 Keychain error retrieving key '\(identifier)': \(status)")
             throw KeyPairError.keychainError("Failed to retrieve key: \(status)")
         }
 
@@ -121,7 +119,6 @@ final class KeyPairManager {
             throw KeyPairError.keychainError("Invalid data format")
         }
 
-        print("🔐 Successfully retrieved key '\(identifier)' from keychain")
         return data
     }
 

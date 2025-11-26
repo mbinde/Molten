@@ -19,6 +19,9 @@ struct ItemShoppingModel: ItemQuantityModel, Equatable, Hashable, Codable, @unch
     let subsubtype: String?
     let dateAdded: Date
 
+    // Future-proofing fields (added pre-release for easier migrations)
+    let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
+
     /// Initialize with business logic validation
     nonisolated init(
         id: UUID = UUID(),
@@ -28,7 +31,8 @@ struct ItemShoppingModel: ItemQuantityModel, Equatable, Hashable, Codable, @unch
         type: String? = nil,
         subtype: String? = nil,
         subsubtype: String? = nil,
-        dateAdded: Date = Date()
+        dateAdded: Date = Date(),
+        workspace_id: UUID? = nil
     ) {
         self.id = id
         self.item_stable_id = item_stable_id.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -38,6 +42,7 @@ struct ItemShoppingModel: ItemQuantityModel, Equatable, Hashable, Codable, @unch
         self.subtype = subtype?.trimmingCharacters(in: .whitespacesAndNewlines)
         self.subsubtype = subsubtype?.trimmingCharacters(in: .whitespacesAndNewlines)
         self.dateAdded = dateAdded
+        self.workspace_id = workspace_id
     }
 
     // MARK: - Shopping-Specific Business Logic
@@ -58,7 +63,8 @@ struct ItemShoppingModel: ItemQuantityModel, Equatable, Hashable, Codable, @unch
             type: type,
             subtype: subtype,
             subsubtype: subsubtype,
-            dateAdded: dateAdded
+            dateAdded: dateAdded,
+            workspace_id: workspace_id
         )
     }
 
@@ -88,7 +94,8 @@ struct ItemShoppingModel: ItemQuantityModel, Equatable, Hashable, Codable, @unch
             type: type,
             subtype: subtype,
             subsubtype: subsubtype,
-            dateAdded: dateAdded
+            dateAdded: dateAdded,
+            workspace_id: workspace_id
         )
     }
 

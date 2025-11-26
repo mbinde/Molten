@@ -116,6 +116,23 @@ struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
                         .padding()
                 }
 
+                // Pro Features List
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                    Text("Pro Features")
+                        .font(.headline)
+                        .padding(.horizontal)
+                        .padding(.top, DesignSystem.Spacing.lg)
+
+                    VStack(spacing: DesignSystem.Spacing.sm) {
+                        ProFeatureRow(icon: "infinity", title: "Unlimited Inventory Items")
+                        ProFeatureRow(icon: "cart.fill", title: "Unlimited Shopping Lists")
+                        ProFeatureRow(icon: "folder.fill", title: "Unlimited Projects")
+                        ProFeatureRow(icon: "book.fill", title: "Unlimited Logbook Entries")
+                        ProFeatureRow(icon: "clock.arrow.circlepath", title: "Versioned Cloud Backups")
+                    }
+                    .padding(.horizontal)
+                }
+
                 Spacer()
             }
         }
@@ -199,5 +216,30 @@ struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
                 errorMessage: "Network connection failed. Please try again."
             )
         )
+    }
+}
+
+// MARK: - Pro Feature Row
+
+private struct ProFeatureRow: View {
+    let icon: String
+    let title: String
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.md) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(DesignSystem.Colors.moltenTeal)
+                .frame(width: 28)
+
+            Text(title)
+                .font(.subheadline)
+
+            Spacer()
+
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+        }
+        .padding(.vertical, DesignSystem.Spacing.xs)
     }
 }

@@ -1,23 +1,24 @@
 //
 //  InventoryItemRowView.swift
-//  Flameworker
+//  Molten
 //
 //  Created by Melissa Binde on 9/28/25.
 //
 
-// ✅ MIGRATED TO GLASSITEM ARCHITECTURE (October 2025)
+// ⚠️ DEPRECATED - Use GlassItemRowView.inventory() instead
 //
-// This view has been migrated from legacy InventoryItemModel to new GlassItem architecture.
+// This view is no longer used in the app. The unified GlassItemRowView
+// provides consistent styling across Catalog, Inventory, and Shopping views.
 //
-// CHANGES MADE:
-// - Updated to use CompleteInventoryItemModel instead of InventoryItemModel
-// - Uses GlassItem data directly instead of catalog lookups
-// - Simplified architecture with embedded glass item information
-// - Removed unnecessary async catalog lookups
-// - Updated to work with new inventory types
+// Migration:
+//   OLD: InventoryItemRowView(completeItem: item)
+//   NEW: GlassItemRowView.inventory(item: item)
+//
+// This file is kept for reference only and may be removed in a future cleanup.
 
 import SwiftUI
 
+@available(*, deprecated, message: "Use GlassItemRowView.inventory(item:) instead")
 struct InventoryItemRowView: View {
     let completeItem: CompleteInventoryItemModel
     

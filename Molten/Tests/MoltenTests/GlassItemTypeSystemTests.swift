@@ -83,10 +83,10 @@ struct GlassItemTypeSystemTests {
         #expect(allTypes.contains("scrap"))
         #expect(allTypes.contains("murrini-cane"))
         #expect(allTypes.contains("murrini-slice"))
-        #expect(allTypes.contains("enamel"))
+        // Note: "enamel" type was removed from the system
 
         // And: Count matches expected
-        #expect(allTypes.count == 11)
+        #expect(allTypes.count == 10)
     }
 
     @Test("Backend type name resolves from display name")

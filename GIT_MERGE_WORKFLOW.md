@@ -1,5 +1,7 @@
 # Git Merge Workflow: Combining Branch Changes with Main
 
+> **⚠️ IMPORTANT: NEVER follow this workflow automatically. Only execute these steps when the user explicitly tells you to merge or "follow GIT_MERGE_WORKFLOW". Always run full tests and get user approval before merging.**
+
 ## Scenario
 - `origin/main` has important changes
 - Local branch (e.g., `arch`) has important changes
@@ -60,3 +62,6 @@ DO NOT rebase. Instead:
 1. Ask you what to do
 2. OR: `git pull origin main` (regular merge, not rebase)
 3. Then push again
+
+## IMPORTANT: Do NOT Delete Branches
+After completing the workflow, **DO NOT delete the working branch**. The user keeps their working branches for ongoing development. Step 5 switches back to the working branch - that's the final step. Never run `git branch -d` unless explicitly asked.

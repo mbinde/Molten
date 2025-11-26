@@ -245,4 +245,16 @@ nonisolated class BaseSQLiteCatalogItemRepository<ItemType: CatalogItem>: Catalo
         }
         return String(cString: cString)
     }
+
+    /// Helper to extract an optional Int from a SQLite column
+    /// - Parameters:
+    ///   - statement: SQLite statement
+    ///   - column: Column index
+    /// - Returns: Int value or nil if NULL
+    nonisolated func getOptionalInt(from statement: OpaquePointer, column: Int32) -> Int? {
+        if sqlite3_column_type(statement, column) == SQLITE_NULL {
+            return nil
+        }
+        return Int(sqlite3_column_int(statement, column))
+    }
 }

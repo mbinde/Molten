@@ -475,7 +475,11 @@ class DataExportService {
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("MoltenExport_\(UUID().uuidString)")
 
-        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: tempDir,
+            withIntermediateDirectories: true,
+            attributes: [.protectionKey: FileProtectionType.complete]
+        )
 
         return tempDir
     }

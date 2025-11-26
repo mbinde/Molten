@@ -43,15 +43,21 @@ open class InventorySharingService {
     /// - Returns: Generated share code
     open func createShare(items: [InventoryItemSnapshot], metadata: MyShareMetadata) async throws -> String {
         // Get or generate key pair
+        #if DEBUG
         print("🔐 [CREATE] Retrieving/generating key pair...")
+        #endif
         let keyPair = try keyPairManager.getCurrentKeyPair()
-        print("🔐 [CREATE] Got key pair - public key: \(keyPair.publicKey.base64EncodedString().prefix(20))...")
+        #if DEBUG
+        print("🔐 [CREATE] Got key pair")
+        #endif
 
         // Try to upload with retries on conflict
         for attempt in 0..<maxConflictRetries {
             // Generate share code
             let shareCode = shareCodeGenerator.generate()
+            #if DEBUG
             print("🔐 [CREATE] Generated share code: \(shareCode)")
+            #endif
 
             // Create snapshot with metadata
             let snapshotData = try snapshot.serialize(
@@ -60,17 +66,23 @@ open class InventorySharingService {
                 privateKey: keyPair.privateKey,
                 metadata: metadata
             )
+            #if DEBUG
             print("🔐 [CREATE] Serialized snapshot (\(items.count) items)")
+            #endif
 
             // Try to upload
             do {
+                #if DEBUG
                 print("🔐 [CREATE] Uploading to server...")
+                #endif
                 try await apiClient.uploadSnapshot(
                     shareCode: shareCode,
                     snapshotData: snapshotData,
                     publicKey: keyPair.publicKey
                 )
-                print("🔐 [CREATE] Share created successfully with code: \(shareCode)")
+                #if DEBUG
+                print("🔐 [CREATE] Share created successfully")
+                #endif
                 return shareCode
             } catch SharingAPIError.conflict {
                 // Code already exists, retry with new code
@@ -133,8 +145,11 @@ open class InventorySharingService {
         )
 
         // Create ownership signature (sign the share code with private key)
+        guard let shareCodeData = shareCode.data(using: .utf8) else {
+            throw SharingAPIError.invalidData
+        }
         let ownershipSignature = try keyPairManager.sign(
-            data: shareCode.data(using: .utf8)!,
+            data: shareCodeData,
             privateKey: keyPair.privateKey
         )
 
@@ -152,32 +167,32 @@ open class InventorySharingService {
     /// Delete a share by code
     /// - Parameter shareCode: Share code to delete
     open func deleteShare(shareCode: String) async throws {
+        #if DEBUG
         print("🔐 [DELETE] Starting deletion for share code: \(shareCode)")
+        #endif
 
         // Get current key pair
-        print("🔐 [DELETE] Retrieving current key pair...")
         let keyPair = try keyPairManager.getCurrentKeyPair()
-        print("🔐 [DELETE] Got key pair - public key: \(keyPair.publicKey.base64EncodedString().prefix(20))...")
 
         // Create ownership signature (sign the share code with private key)
-        print("🔐 [DELETE] Signing share code with private key...")
+        guard let shareCodeData = shareCode.data(using: .utf8) else {
+            throw SharingAPIError.invalidData
+        }
         let ownershipSignature = try keyPairManager.sign(
-            data: shareCode.data(using: .utf8)!,
+            data: shareCodeData,
             privateKey: keyPair.privateKey
         )
-        print("🔐 [DELETE] Created signature: \(ownershipSignature.base64EncodedString().prefix(20))...")
 
         // Delete from server
-        print("🔐 [DELETE] Sending DELETE request to server...")
         do {
             try await apiClient.deleteShare(shareCode: shareCode, ownershipSignature: ownershipSignature)
+            #if DEBUG
             print("🔐 [DELETE] Server deletion successful")
+            #endif
         } catch {
+            #if DEBUG
             print("🔐 [DELETE] Server deletion failed: \(error)")
-            print("🔐 [DELETE] Error type: \(type(of: error))")
-            if let apiError = error as? SharingAPIError {
-                print("🔐 [DELETE] SharingAPIError: \(apiError)")
-            }
+            #endif
             throw error
         }
     }

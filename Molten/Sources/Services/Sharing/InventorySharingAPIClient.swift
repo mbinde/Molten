@@ -19,11 +19,20 @@ class InventorySharingAPIClient: NSObject {
     private let attestationManager: AttestationManager
     private let pinnedCertificates: [Data]
 
+    /// Default base URL for production API
+    /// Using static let ensures URL parsing happens once at startup, not at runtime
+    private static let defaultBaseURL: URL = {
+        guard let url = URL(string: "https://www.moltenglass.app") else {
+            fatalError("Invalid InventorySharingAPIClient base URL configuration")
+        }
+        return url
+    }()
+
     // MARK: - Initialization
 
     init(
         session: URLSessionProtocol = URLSession.shared,
-        baseURL: URL = URL(string: "https://www.moltenglass.app")!,
+        baseURL: URL = InventorySharingAPIClient.defaultBaseURL,
         attestationManager: AttestationManager = AttestationManager(),
         pinnedCertificates: [Data] = []
     ) {
@@ -81,6 +90,8 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.conflict
         case 401, 403:
             throw SharingAPIError.unauthorized
+        case 429:
+            throw SharingAPIError.rateLimitExceeded
         default:
             throw SharingAPIError.serverError(httpResponse.statusCode)
         }
@@ -113,6 +124,8 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.notFound
         case 401, 403:
             throw SharingAPIError.unauthorized
+        case 429:
+            throw SharingAPIError.rateLimitExceeded
         default:
             throw SharingAPIError.serverError(httpResponse.statusCode)
         }
@@ -131,13 +144,10 @@ class InventorySharingAPIClient: NSObject {
         let shareNotes = json["shareNotes"] as? String
         let expiresAt: Date?
         if let expiresAtString = json["expiresAt"] as? String {
-            print("🔍 [DOWNLOAD] Server returned expiresAt: \(expiresAtString)")
             let formatter = ISO8601DateFormatter()
             formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
             expiresAt = formatter.date(from: expiresAtString)
-            print("🔍 [DOWNLOAD] Parsed expiresAt: \(expiresAt?.description ?? "nil")")
         } else {
-            print("⚠️ [DOWNLOAD] Server did NOT return expiresAt field")
             expiresAt = nil
         }
 
@@ -159,9 +169,6 @@ class InventorySharingAPIClient: NSObject {
     open func deleteShare(shareCode: String, ownershipSignature: Data) async throws {
         let url = baseURL.appendingPathComponent("api/v1/share").appendingPathComponent(shareCode)
 
-        print("🔐 [API] DELETE URL: \(url)")
-        print("🔐 [API] Ownership signature (base64): \(ownershipSignature.base64EncodedString())")
-
         // Create request
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
@@ -172,21 +179,12 @@ class InventorySharingAPIClient: NSObject {
         // Add App Attest assertion
         try await addAttestation(to: &request)
 
-        print("🔐 [API] Request headers: \(request.allHTTPHeaderFields ?? [:])")
-
         // Execute request
-        let (data, response) = try await executeRequest(request)
+        let (_, response) = try await executeRequest(request)
 
         // Check status code
         guard let httpResponse = response as? HTTPURLResponse else {
             throw SharingAPIError.invalidResponse
-        }
-
-        print("🔐 [API] Response status: \(httpResponse.statusCode)")
-
-        // Log response body for debugging
-        if let responseBody = String(data: data, encoding: .utf8) {
-            print("🔐 [API] Response body: \(responseBody)")
         }
 
         switch httpResponse.statusCode {
@@ -196,6 +194,8 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.notFound
         case 401, 403:
             throw SharingAPIError.unauthorized
+        case 429:
+            throw SharingAPIError.rateLimitExceeded
         default:
             throw SharingAPIError.serverError(httpResponse.statusCode)
         }
@@ -247,6 +247,8 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.notFound
         case 401, 403:
             throw SharingAPIError.unauthorized
+        case 429:
+            throw SharingAPIError.rateLimitExceeded
         default:
             throw SharingAPIError.serverError(httpResponse.statusCode)
         }
@@ -299,9 +301,6 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.invalidResponse
         }
 
-        print("🔍 [CREATE EXPIRING] Status: \(httpResponse.statusCode)")
-        print("🔍 [CREATE EXPIRING] Response data: \(String(data: data, encoding: .utf8) ?? "nil")")
-
         switch httpResponse.statusCode {
         case 201:
             break // Success - 201 Created is the ONLY valid response for POST
@@ -312,6 +311,8 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.notFound
         case 401, 403:
             throw SharingAPIError.unauthorized
+        case 429:
+            throw SharingAPIError.rateLimitExceeded
         default:
             throw SharingAPIError.serverError(httpResponse.statusCode)
         }
@@ -320,7 +321,6 @@ class InventorySharingAPIClient: NSObject {
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               let shareCode = json["shareCode"] as? String,
               let expiresAtString = json["expiresAt"] as? String else {
-            print("🔍 [CREATE EXPIRING] Failed to parse JSON")
             throw SharingAPIError.invalidData
         }
 
@@ -328,7 +328,6 @@ class InventorySharingAPIClient: NSObject {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         guard let expiresAt = formatter.date(from: expiresAtString) else {
-            print("🔍 [CREATE EXPIRING] Failed to parse date: \(expiresAtString)")
             throw SharingAPIError.invalidData
         }
 
@@ -363,6 +362,8 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.notFound
         case 401, 403:
             throw SharingAPIError.unauthorized
+        case 429:
+            throw SharingAPIError.rateLimitExceeded
         default:
             throw SharingAPIError.serverError(httpResponse.statusCode)
         }
@@ -429,6 +430,8 @@ class InventorySharingAPIClient: NSObject {
             throw SharingAPIError.notFound
         case 401, 403:
             throw SharingAPIError.unauthorized
+        case 429:
+            throw SharingAPIError.rateLimitExceeded
         default:
             throw SharingAPIError.serverError(httpResponse.statusCode)
         }
@@ -436,9 +439,17 @@ class InventorySharingAPIClient: NSObject {
 
     // MARK: - Private Helpers
 
+    /// Default timeout for API requests (30 seconds)
+    private static let defaultTimeout: TimeInterval = 30
+
     private func executeRequest(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        var requestWithTimeout = request
+        // Set timeout if not already configured
+        if requestWithTimeout.timeoutInterval == 60 { // 60 is the default
+            requestWithTimeout.timeoutInterval = Self.defaultTimeout
+        }
         do {
-            return try await session.data(for: request)
+            return try await session.data(for: requestWithTimeout)
         } catch {
             throw SharingAPIError.networkError(error)
         }

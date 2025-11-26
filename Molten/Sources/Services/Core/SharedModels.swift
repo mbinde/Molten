@@ -98,6 +98,8 @@ struct CoatingItemModel: CatalogItem {
     let image_thumb_path: String?
     let tags: String?  // Comma-separated quoted tags like '"blue", "metallic"'
     let dominant_colors: String?  // Comma-separated hex codes like '"#FF0000", "#00FF00"'
+    let temperatureRangeLow: Int?   // Working temperature range low (°F), coating-specific
+    let temperatureRangeHigh: Int?  // Working temperature range high (°F), coating-specific
 
     nonisolated var id: String { stable_id }
 
@@ -105,7 +107,8 @@ struct CoatingItemModel: CatalogItem {
     nonisolated init(stable_id: String, name: String, sku: String?, manufacturer: String,
          mfr_notes: String? = nil, url: String? = nil, mfr_status: String,
          image_url: String? = nil, image_path: String? = nil, image_thumb_path: String? = nil,
-         tags: String? = nil, dominant_colors: String? = nil) {
+         tags: String? = nil, dominant_colors: String? = nil,
+         temperatureRangeLow: Int? = nil, temperatureRangeHigh: Int? = nil) {
         self.stable_id = stable_id
         self.name = name
         self.sku = sku
@@ -119,6 +122,8 @@ struct CoatingItemModel: CatalogItem {
         self.image_thumb_path = image_thumb_path
         self.tags = tags
         self.dominant_colors = dominant_colors
+        self.temperatureRangeLow = temperatureRangeLow
+        self.temperatureRangeHigh = temperatureRangeHigh
     }
 
     // Equatable conformance - based on business key (manufacturer + SKU when available, else stable_id)
@@ -225,7 +230,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     let date_modified: Date
 
     // Future-proofing fields (added pre-release for easier migrations)
-    let workspace_id: String  // For multi-inventory sets: "default", or future workspace identifier
+    let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
 
     nonisolated init(
         id: UUID = UUID(),
@@ -239,7 +244,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
         location: String? = nil,
         date_added: Date = Date(),
         date_modified: Date = Date(),
-        workspace_id: String = "default"
+        workspace_id: UUID? = nil
     ) {
         self.id = id
         self.item_stable_id = item_stable_id
@@ -280,11 +285,19 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     /// Check if this inventory type uses weight units (frit, powder, enamel)
     nonisolated var isWeightBasedType: Bool {
         switch type.lowercased() {
-        case "frit", "powder", "enamel":
+        case "frit", "powder", "enamel", "flakes":
             return true
         default:
             return false
         }
+    }
+
+    /// Check if this inventory record has any stock (quantity OR containers)
+    ///
+    /// Use this instead of `quantity > 0` to properly handle jar-only tracking
+    /// for weight-based items like frit, powder, and coatings.
+    nonisolated var hasStock: Bool {
+        quantity > 0 || (containerCount ?? 0) > 0
     }
 
     /// Format the quantity for display, considering both weight and container count
@@ -366,18 +379,77 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     }
 }
 
+/// Storage location definition model - the canonical definition of a storage location
+/// This is the source of truth for location names. Renaming here updates everywhere.
+struct StorageLocationDefinitionModel: Identifiable, Sendable {
+    let id: UUID
+    var name: String
+    var notes: String?
+    let createdAt: Date
+    var modifiedAt: Date
+    var deletedAt: Date?  // Soft delete support
+    let workspaceId: UUID?
+
+    nonisolated init(
+        id: UUID = UUID(),
+        name: String,
+        notes: String? = nil,
+        createdAt: Date = Date(),
+        modifiedAt: Date = Date(),
+        deletedAt: Date? = nil,
+        workspaceId: UUID? = nil
+    ) {
+        self.id = id
+        self.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.notes = notes
+        self.createdAt = createdAt
+        self.modifiedAt = modifiedAt
+        self.deletedAt = deletedAt
+        self.workspaceId = workspaceId
+    }
+
+    /// Check if this location is soft-deleted
+    var isDeleted: Bool {
+        deletedAt != nil
+    }
+}
+
+extension StorageLocationDefinitionModel: Equatable {
+    nonisolated static func == (lhs: StorageLocationDefinitionModel, rhs: StorageLocationDefinitionModel) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+extension StorageLocationDefinitionModel: Hashable {
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
 /// Storage location model for tracking where inventory is stored (warehouse locations, shelves, bins, etc.)
+/// References a StorageLocationDefinition by ID for the canonical location name.
 struct StorageLocationModel: Identifiable, Sendable {
     let id: UUID
-    let inventory_id: UUID
-    let location: String
+    let inventoryId: UUID
+    let storageLocationId: UUID?  // References StorageLocationDefinition
+    let locationName: String       // Cached/denormalized name for display (from definition or legacy string)
     let quantity: Double
+    let workspaceId: UUID?
 
-    nonisolated init(id: UUID = UUID(), inventory_id: UUID, location: String, quantity: Double) {
+    nonisolated init(
+        id: UUID = UUID(),
+        inventoryId: UUID,
+        storageLocationId: UUID? = nil,
+        locationName: String,
+        quantity: Double,
+        workspaceId: UUID? = nil
+    ) {
         self.id = id
-        self.inventory_id = inventory_id
-        self.location = location.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.inventoryId = inventoryId
+        self.storageLocationId = storageLocationId
+        self.locationName = locationName.trimmingCharacters(in: .whitespacesAndNewlines)
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
+        self.workspaceId = workspaceId
     }
 
     /// Validates that a location name string is valid
@@ -441,6 +513,9 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
     let dominant_colors: [String]?
     let itemType: CatalogItemType
     let coe: Int32?  // Only for glass items
+    let temperatureRangeLow: Int?   // Only for coatings (°F)
+    let temperatureRangeHigh: Int?  // Only for coatings (°F)
+    let inlineTags: [String]?  // Tags stored inline in catalog (coatings/tools)
 
     nonisolated var id: String { stable_id }
 
@@ -460,6 +535,9 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.dominant_colors = glassItem.dominant_colors
         self.itemType = .glass
         self.coe = glassItem.coe
+        self.temperatureRangeLow = nil  // Glass items don't have temperature range
+        self.temperatureRangeHigh = nil
+        self.inlineTags = nil  // Glass items get tags from ItemTags repository
     }
 
     /// Initialize from CoatingItemModel
@@ -480,6 +558,10 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.dominant_colors = Self.parseCommaSeparatedQuotedString(coatingItem.dominant_colors)
         self.itemType = .coating
         self.coe = nil  // Coatings don't have COE
+        self.temperatureRangeLow = coatingItem.temperatureRangeLow
+        self.temperatureRangeHigh = coatingItem.temperatureRangeHigh
+        // Parse inline tags from coating catalog
+        self.inlineTags = Self.parseCommaSeparatedQuotedString(coatingItem.tags)
     }
 
     /// Initialize from ToolItemModel
@@ -498,6 +580,9 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.dominant_colors = nil  // Tools don't have dominant colors
         self.itemType = .tool
         self.coe = nil  // Tools don't have COE
+        self.temperatureRangeLow = nil  // Tools don't have temperature range
+        self.temperatureRangeHigh = nil
+        self.inlineTags = nil  // Tools don't have tags yet
     }
 
     // MARK: - Helper Methods
@@ -993,5 +1078,36 @@ enum CatalogServiceError: Error, LocalizedError {
         case .validationFailed(let errors):
             return "Validation failed: \(errors.joined(separator: "; "))"
         }
+    }
+}
+
+// MARK: - Workspace Model
+
+/// Represents a workspace (inventory set) for organizing inventory, purchases, etc.
+/// Currently only "default" workspace is used, but the model supports future multi-workspace scenarios.
+struct WorkspaceModel: Identifiable, Equatable, Hashable, Sendable {
+    let id: UUID
+    let name: String
+    let date_created: Date
+    let date_modified: Date
+
+    /// Well-known name for the default workspace
+    static var defaultWorkspaceName: String { "default" }
+
+    nonisolated init(
+        id: UUID = UUID(),
+        name: String,
+        date_created: Date = Date(),
+        date_modified: Date = Date()
+    ) {
+        self.id = id
+        self.name = name
+        self.date_created = date_created
+        self.date_modified = date_modified
+    }
+
+    /// Create the default workspace
+    nonisolated static func createDefault() -> WorkspaceModel {
+        WorkspaceModel(name: "default")
     }
 }

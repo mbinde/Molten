@@ -1,25 +1,27 @@
 //
 //  LocationAutoCompleteField.swift
-//  Flameworker
+//  Molten
 //
 //  Created by Assistant on 10/4/25.
 //  Updated for GlassItem architecture - 10/14/25
+//  Updated to use StorageLocationDefinitionRepository - 11/25/25
 //
 
 import SwiftUI
 
-/// Auto-complete input field for inventory item locations using repository pattern
+/// Auto-complete input field for inventory item locations using StorageLocationDefinition entities
 struct LocationAutoCompleteField: View {
     @Binding var location: String
-    let inventoryRepository: InventoryRepository
+    let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
 
     @State private var showingSuggestions = false
     @State private var locationSuggestions: [String] = []
+    @State private var allLocationNames: [String] = []
     @FocusState private var isTextFieldFocused: Bool
 
-    init(location: Binding<String>, inventoryRepository: InventoryRepository) {
+    init(location: Binding<String>, storageLocationDefinitionRepository: StorageLocationDefinitionRepository) {
         self._location = location
-        self.inventoryRepository = inventoryRepository
+        self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
     }
     
     var body: some View {
@@ -90,48 +92,34 @@ struct LocationAutoCompleteField: View {
     }
     
     private func updateSuggestions(for searchText: String) {
-        Task {
-            locationSuggestions = await getLocationSuggestions(matching: searchText)
-            await MainActor.run {
-                showingSuggestions = !locationSuggestions.isEmpty && isTextFieldFocused
-            }
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
+        if trimmed.isEmpty {
+            locationSuggestions = allLocationNames
+        } else {
+            // Filter locations that contain the search text (case-insensitive)
+            locationSuggestions = allLocationNames.filter { $0.lowercased().contains(trimmed) }
         }
+
+        showingSuggestions = !locationSuggestions.isEmpty && isTextFieldFocused
     }
-    
+
     private func loadInitialSuggestions() {
         Task {
-            locationSuggestions = await getUniqueLocations()
-        }
-    }
-    
-    // MARK: - Location Service Methods (Repository Pattern)
-
-    private func getUniqueLocations() async -> [String] {
-        do {
-            // Get all distinct location names from the inventory repository
-            let locationNames = try await inventoryRepository.getDistinctLocations()
-            return locationNames
-
-        } catch {
-            print("❌ Failed to fetch location suggestions: \(error)")
-            return []
+            allLocationNames = await fetchAllLocationNames()
+            locationSuggestions = allLocationNames
         }
     }
 
-    private func getLocationSuggestions(matching searchText: String) async -> [String] {
+    // MARK: - Location Service Methods (StorageLocationDefinition)
+
+    private func fetchAllLocationNames() async -> [String] {
         do {
-            let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-
-            guard !trimmedSearchText.isEmpty else {
-                return try await inventoryRepository.getDistinctLocations()
-            }
-
-            // Use repository method to get location names with prefix
-            let suggestions = try await inventoryRepository.getLocationNames(withPrefix: trimmedSearchText)
-            return suggestions
-
+            // Get all location definitions from the repository
+            let definitions = try await storageLocationDefinitionRepository.fetchAll()
+            return definitions.map { $0.name }.sorted()
         } catch {
-            print("❌ Failed to get location suggestions: \(error)")
+            print("❌ Failed to fetch location definitions: \(error)")
             return []
         }
     }
@@ -144,7 +132,7 @@ struct LocationAutoCompleteField: View {
     VStack {
         LocationAutoCompleteField(
             location: $location,
-            inventoryRepository: deps.inventoryRepository
+            storageLocationDefinitionRepository: deps.storageLocationDefinitionRepository
         )
         Spacer()
     }

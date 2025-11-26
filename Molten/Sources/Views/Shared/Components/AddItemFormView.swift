@@ -10,7 +10,7 @@ import SwiftUI
 
 /// Configuration for the location/store field behavior
 enum LocationFieldType {
-    case inventory(inventoryRepository: InventoryRepository)
+    case inventory(storageLocationDefinitionRepository: StorageLocationDefinitionRepository)
     case shopping(shoppingListRepository: ShoppingListRepository, locationService: UnifiedLocationService)
 }
 
@@ -261,11 +261,11 @@ struct AddItemFormView: View {
     @ViewBuilder
     private var locationOrStoreField: some View {
         switch locationFieldType {
-        case .inventory(let inventoryRepository):
+        case .inventory(let storageLocationDefinitionRepository):
             LabeledField("Location (optional)") {
                 LocationAutoCompleteField(
                     location: $locationOrStore,
-                    inventoryRepository: inventoryRepository
+                    storageLocationDefinitionRepository: storageLocationDefinitionRepository
                 )
             }
         case .shopping(let shoppingListRepository, let locationService):
@@ -326,7 +326,7 @@ struct AddItemFormView: View {
 
     private var isWeightBasedType: Bool {
         switch selectedType.lowercased() {
-        case "frit", "powder", "enamel":
+        case "frit", "powder", "enamel", "flakes":
             return true
         default:
             return false

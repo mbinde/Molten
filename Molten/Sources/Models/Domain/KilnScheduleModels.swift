@@ -47,6 +47,53 @@ enum TemperatureUnit: String, Codable, Sendable, CaseIterable {
             return (temperature * 9 / 5) + 32
         }
     }
+
+    /// Convert a temperature from Fahrenheit to this unit
+    nonisolated func fromFahrenheit(_ temperature: Int) -> Int {
+        switch self {
+        case .fahrenheit:
+            return temperature
+        case .celsius:
+            // F to C: (F - 32) * 5 / 9
+            return Int(round(Double(temperature - 32) * 5.0 / 9.0))
+        }
+    }
+
+    /// Short symbol for compact display (F or C)
+    nonisolated var shortSymbol: String {
+        switch self {
+        case .fahrenheit: return "F"
+        case .celsius: return "C"
+        }
+    }
+
+    /// Format a temperature range for display (e.g., "1175-1425°F" or "635-774°C")
+    /// - Parameters:
+    ///   - low: Low temperature in Fahrenheit (nil if unknown)
+    ///   - high: High temperature in Fahrenheit (nil if unknown)
+    /// - Returns: Formatted string like "1175-1425°F", "1175+°F", "1425°F", or "?-?°F"
+    nonisolated func formatTemperatureRange(lowF: Int?, highF: Int?) -> String {
+        let unit = shortSymbol
+
+        switch (lowF, highF) {
+        case (.some(let low), .some(let high)):
+            // Both values present
+            let convertedLow = fromFahrenheit(low)
+            let convertedHigh = fromFahrenheit(high)
+            return "\(convertedLow)-\(convertedHigh)°\(unit)"
+        case (.some(let low), .none):
+            // Only low value - show with "+" suffix
+            let convertedLow = fromFahrenheit(low)
+            return "\(convertedLow)+°\(unit)"
+        case (.none, .some(let high)):
+            // Only high value
+            let convertedHigh = fromFahrenheit(high)
+            return "\(convertedHigh)°\(unit)"
+        case (.none, .none):
+            // No values
+            return "?-?°\(unit)"
+        }
+    }
 }
 
 // KilnTechnique has been deprecated - use TechniqueType from ProjectModels instead
@@ -132,6 +179,9 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
     let segments: [KilnSegment]  // Segment temperatures always in Celsius
     let description: String?  // Optional description of the schedule
 
+    // Future-proofing fields (added pre-release for easier migrations)
+    let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
+
     /// Calculate total duration for the entire schedule
     /// Assumes starting from room temperature (20°C) for first ramp segment
     var totalDuration: TimeInterval {
@@ -186,7 +236,8 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
             dateModified: dateModified,
             segments: convertedSegments,
             description: description,
-            temperatureUnit: displayUnit
+            temperatureUnit: displayUnit,
+            workspace_id: workspace_id
         )
     }
 
@@ -200,6 +251,7 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
     ///   - segments: Segments with temperatures in inputUnit
     ///   - description: Optional description
     ///   - inputUnit: Unit that temperatures are provided in
+    ///   - workspace_id: Optional workspace reference
     /// - Returns: Schedule with all temperatures normalized to Celsius
     nonisolated static func fromInput(
         id: UUID = UUID(),
@@ -209,7 +261,8 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
         dateModified: Date = Date(),
         segments: [KilnSegment],
         description: String? = nil,
-        inputUnit: TemperatureUnit
+        inputUnit: TemperatureUnit,
+        workspace_id: UUID? = nil
     ) -> KilnSchedule {
         let normalizedSegments = segments.map { segment in
             KilnSegment(
@@ -228,7 +281,8 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
             dateModified: dateModified,
             segments: normalizedSegments,
             description: description,
-            temperatureUnit: .celsius  // Always store as Celsius
+            temperatureUnit: .celsius,  // Always store as Celsius
+            workspace_id: workspace_id
         )
     }
 
@@ -240,7 +294,8 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
         dateModified: Date = Date(),
         segments: [KilnSegment] = [],
         description: String? = nil,
-        temperatureUnit: TemperatureUnit = .celsius
+        temperatureUnit: TemperatureUnit = .celsius,
+        workspace_id: UUID? = nil
     ) {
         self.id = id
         self.name = name
@@ -250,5 +305,6 @@ nonisolated struct KilnSchedule: Identifiable, Codable, Hashable, Sendable {
         self.segments = segments
         self.description = description
         self.temperatureUnit = temperatureUnit
+        self.workspace_id = workspace_id
     }
 }

@@ -198,6 +198,21 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
         return Array(typesSet).sorted()
     }
 
+    /// Count of items per product type (glass, coating, tool)
+    var productTypeCounts: [String: Int] {
+        computeProductTypeCounts()
+    }
+
+    private func computeProductTypeCounts() -> [String: Int] {
+        let allItems = shoppingLists.values.flatMap { $0.items }
+        var counts: [String: Int] = [:]
+        for item in allItems {
+            let productType = item.catalogItem.itemType.rawValue
+            counts[productType, default: 0] += 1
+        }
+        return counts
+    }
+
     // MARK: - Data Loading
 
     func loadShoppingLists() async {
@@ -300,10 +315,14 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
             }
         }
 
-        // Apply COE filter (only for glass items)
+        // Apply COE filter (only affects glass items - coatings/tools don't have COE)
         // First apply manual filter (from UI)
         if !selectedCOEs.isEmpty {
             allItems = allItems.filter { item in
+                // Non-glass items (coatings, tools) don't have COE - don't filter them out
+                if item.catalogItem.itemType != .glass {
+                    return true
+                }
                 if let coe = item.catalogItem.coe {
                     return selectedCOEs.contains(coe)
                 }

@@ -6,6 +6,14 @@ import Foundation
 @MainActor
 struct SubscriptionManagerTests {
 
+    // MARK: - Test Setup
+
+    init() {
+        // Ensure debug subscription tier override is disabled for tests
+        // This prevents UserDefaults from polluting test results
+        DebugConfig.debugOverrideSubscriptionTier = false
+    }
+
     // MARK: - Initial Status Check Tests
 
     @Test("SubscriptionManager updates EntitlementService to premium when Pro access exists")

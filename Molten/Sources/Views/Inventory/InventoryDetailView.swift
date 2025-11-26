@@ -153,8 +153,7 @@ struct InventoryDetailView: View {
     private var hasGlassItemDetails: Bool {
         let hasManufacturerNotes = currentItem.glassItem.mfr_notes != nil && !currentItem.glassItem.mfr_notes!.isEmpty
         let hasUserNotes = userNotes != nil
-        let needsImagePermissionNotice = !GlassManufacturers.hasProductImagePermission(for: currentItem.glassItem.manufacturer)
-        return hasManufacturerNotes || hasUserNotes || needsImagePermissionNotice
+        return hasManufacturerNotes || hasUserNotes
     }
 
     // MARK: - View Body
@@ -831,18 +830,6 @@ struct InventoryDetailView: View {
             accessibilityId: "section_glass_item"
         ) {
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
-                // Show color approximation notice only when gradient is displayed
-                // (no image permission AND have dominant colors to show)
-                if !GlassManufacturers.hasProductImagePermission(for: currentItem.glassItem.manufacturer),
-                   let colors = currentItem.glassItem.dominant_colors,
-                   !colors.isEmpty {
-                    Text("We do not have permission to show glass images from this manufacturer, so have done our best to approximate the color of the glass. If you would like to suggest an image to our catalog, please upload an image to the app and long-press on it to submit it.")
-                        .font(DesignSystem.Typography.listItemCaption)
-                        .italic()
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                        .padding(.vertical, DesignSystem.Spacing.md)
-                }
-
                 if let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
                     expandableNotesCard(title: "Manufacturer Notes", content: notes, accessibilityId: "expand_manufacturer_notes")
                 }

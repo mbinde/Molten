@@ -76,6 +76,9 @@ class InventoryImportService {
     private let inventoryTrackingService: InventoryTrackingService
     private let storageLocationRepository: StorageLocationRepository
 
+    /// Maximum import file size (10 MB) - prevents DoS from extremely large files
+    static let maxImportFileSize: Int64 = 10 * 1024 * 1024
+
     var delegate: InventoryImportDelegate?
 
     init(catalogService: CatalogService, inventoryTrackingService: InventoryTrackingService, storageLocationRepository: StorageLocationRepository) {
@@ -96,6 +99,12 @@ class InventoryImportService {
             if didStartAccessing {
                 fileURL.stopAccessingSecurityScopedResource()
             }
+        }
+
+        // Check file size before reading (prevents DoS from large files)
+        let fileSize = try FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int64 ?? 0
+        if fileSize > Self.maxImportFileSize {
+            throw InventoryImportError.fileTooLarge(fileSize, Self.maxImportFileSize)
         }
 
         // Read JSON data
@@ -361,6 +370,7 @@ enum InventoryImportError: LocalizedError {
     case unsupportedVersion(String)
     case itemNotFound(String)
     case importFailed(String)
+    case fileTooLarge(Int64, Int64)
 
     var errorDescription: String? {
         switch self {
@@ -372,6 +382,10 @@ enum InventoryImportError: LocalizedError {
             return "Glass item not found: \(code)"
         case .importFailed(let reason):
             return "Import failed: \(reason)"
+        case .fileTooLarge(let size, let maxSize):
+            let sizeStr = ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+            let maxStr = ByteCountFormatter.string(fromByteCount: maxSize, countStyle: .file)
+            return "Import file too large (\(sizeStr)). Maximum size is \(maxStr)."
         }
     }
 }

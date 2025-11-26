@@ -201,6 +201,9 @@ nonisolated struct ProjectModel: Identifiable, Hashable, Sendable, Codable {
     let timesUsed: Int
     let lastUsedDate: Date?
 
+    // Future-proofing fields (added pre-release for easier migrations)
+    let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
+
     nonisolated init(
         id: UUID = UUID(),
         title: String,
@@ -222,7 +225,8 @@ nonisolated struct ProjectModel: Identifiable, Hashable, Sendable, Codable {
         kilnScheduleId: UUID? = nil,
         author: AuthorModel? = nil,
         timesUsed: Int = 0,
-        lastUsedDate: Date? = nil
+        lastUsedDate: Date? = nil,
+        workspace_id: UUID? = nil
     ) {
         self.id = id
         self.title = title
@@ -245,6 +249,7 @@ nonisolated struct ProjectModel: Identifiable, Hashable, Sendable, Codable {
         self.author = author
         self.timesUsed = timesUsed
         self.lastUsedDate = lastUsedDate
+        self.workspace_id = workspace_id
     }
 }
 
@@ -362,6 +367,9 @@ nonisolated struct LogbookModel: Identifiable, Sendable, Codable, Hashable {
     // Inventory Impact
     let inventoryDeductionRecorded: Bool
 
+    // Future-proofing fields (added pre-release for easier migrations)
+    let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
+
     nonisolated init(
         id: UUID = UUID(),
         title: String,
@@ -384,7 +392,8 @@ nonisolated struct LogbookModel: Identifiable, Sendable, Codable, Hashable {
         saleDate: Date? = nil,
         buyerInfo: String? = nil,
         status: ProjectStatus = .inProgress,
-        inventoryDeductionRecorded: Bool = false
+        inventoryDeductionRecorded: Bool = false,
+        workspace_id: UUID? = nil
     ) {
         self.id = id
         self.title = title
@@ -408,6 +417,7 @@ nonisolated struct LogbookModel: Identifiable, Sendable, Codable, Hashable {
         self.buyerInfo = buyerInfo
         self.status = status
         self.inventoryDeductionRecorded = inventoryDeductionRecorded
+        self.workspace_id = workspace_id
     }
 }
 

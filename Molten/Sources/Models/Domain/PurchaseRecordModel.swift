@@ -21,6 +21,9 @@ struct PurchaseRecordModel: Identifiable, Equatable, Codable, Sendable {
     let notes: String?
     let items: [PurchaseRecordItemModel]
 
+    // Future-proofing fields (added pre-release for easier migrations)
+    let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
+
     /// Initialize with business logic validation
     nonisolated init(
         id: UUID = UUID(),
@@ -32,7 +35,8 @@ struct PurchaseRecordModel: Identifiable, Equatable, Codable, Sendable {
         shipping: Decimal? = nil,
         currency: String = "USD",
         notes: String? = nil,
-        items: [PurchaseRecordItemModel] = []
+        items: [PurchaseRecordItemModel] = [],
+        workspace_id: UUID? = nil
     ) {
         self.id = id
         self.supplier = supplier.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -44,6 +48,7 @@ struct PurchaseRecordModel: Identifiable, Equatable, Codable, Sendable {
         self.currency = currency
         self.notes = notes?.isEmpty == true ? nil : notes
         self.items = items
+        self.workspace_id = workspace_id
     }
 
     // MARK: - Business Logic

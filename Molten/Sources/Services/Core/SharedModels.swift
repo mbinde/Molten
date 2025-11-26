@@ -225,7 +225,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
     let date_modified: Date
 
     // Future-proofing fields (added pre-release for easier migrations)
-    let workspace_id: String  // For multi-inventory sets: "default", or future workspace identifier
+    let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
 
     nonisolated init(
         id: UUID = UUID(),
@@ -239,7 +239,7 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
         location: String? = nil,
         date_added: Date = Date(),
         date_modified: Date = Date(),
-        workspace_id: String = "default"
+        workspace_id: UUID? = nil
     ) {
         self.id = id
         self.item_stable_id = item_stable_id
@@ -373,11 +373,15 @@ struct StorageLocationModel: Identifiable, Sendable {
     let location: String
     let quantity: Double
 
-    nonisolated init(id: UUID = UUID(), inventory_id: UUID, location: String, quantity: Double) {
+    // Future-proofing fields (added pre-release for easier migrations)
+    let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
+
+    nonisolated init(id: UUID = UUID(), inventory_id: UUID, location: String, quantity: Double, workspace_id: UUID? = nil) {
         self.id = id
         self.inventory_id = inventory_id
         self.location = location.trimmingCharacters(in: .whitespacesAndNewlines)
         self.quantity = max(0.0, quantity) // Ensure non-negative quantity
+        self.workspace_id = workspace_id
     }
 
     /// Validates that a location name string is valid
@@ -993,5 +997,36 @@ enum CatalogServiceError: Error, LocalizedError {
         case .validationFailed(let errors):
             return "Validation failed: \(errors.joined(separator: "; "))"
         }
+    }
+}
+
+// MARK: - Workspace Model
+
+/// Represents a workspace (inventory set) for organizing inventory, purchases, etc.
+/// Currently only "default" workspace is used, but the model supports future multi-workspace scenarios.
+struct WorkspaceModel: Identifiable, Equatable, Hashable, Sendable {
+    let id: UUID
+    let name: String
+    let date_created: Date
+    let date_modified: Date
+
+    /// Well-known name for the default workspace
+    static var defaultWorkspaceName: String { "default" }
+
+    nonisolated init(
+        id: UUID = UUID(),
+        name: String,
+        date_created: Date = Date(),
+        date_modified: Date = Date()
+    ) {
+        self.id = id
+        self.name = name
+        self.date_created = date_created
+        self.date_modified = date_modified
+    }
+
+    /// Create the default workspace
+    nonisolated static func createDefault() -> WorkspaceModel {
+        WorkspaceModel(name: "default")
     }
 }

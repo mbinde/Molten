@@ -405,6 +405,7 @@ struct SettingsView: View {
 
                 // MARK: - Advanced
                 Section("Advanced") {
+                    #if DEBUG
                     NavigationLink {
                         DebugSettingsView()
                     } label: {
@@ -464,6 +465,7 @@ struct SettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+                    #endif
 
                     NavigationLink {
                         AboutView()

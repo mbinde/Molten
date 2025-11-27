@@ -12,9 +12,16 @@ struct LabelDesignerView: View {
     let items: [CompleteInventoryItemModel]
     @Environment(\.dismiss) private var dismiss
 
-    @State private var selectedFormat: AveryFormat = .avery5160
+    @State private var selectedFormat: LabelGeometry = .defaultFormat
     @State private var searchText: String = ""
     @State private var isSearching: Bool = false
+    @State private var selectedShapeFilter: LabelShape?
+    @State private var selectedBrandSlug: String?
+
+    // Database-backed label formats
+    @State private var databaseFormats: [LabelGeometry] = []
+    @State private var availableBrands: [LabelBrand] = []
+    private let labelDatabase = LabelDatabaseService.shared
 
     // Label builder configuration (replaces template)
     @State private var builderConfig: LabelBuilderConfig = .default
@@ -124,6 +131,17 @@ struct LabelDesignerView: View {
                 if labelService == nil {
                     labelService = LabelPrintingService()
                 }
+
+                // Load database formats (major brands first for default list)
+                availableBrands = labelDatabase.getBrands()
+                let majorBrands = availableBrands.filter { $0.isMajor }
+                var formats: [LabelGeometry] = []
+                for brand in majorBrands {
+                    let brandFormats = labelDatabase.getProducts(brandSlug: brand.slug)
+                    formats.append(contentsOf: brandFormats.map { $0.toLabelGeometry() })
+                }
+                databaseFormats = formats.sorted { $0.name < $1.name }
+
                 loadLastUsedFormat()
                 await loadSettings()
             }
@@ -185,6 +203,9 @@ struct LabelDesignerView: View {
         labelCountSection
 
         Section {
+                    // Shape filter buttons
+                    ShapeFilterButtons(selectedShape: $selectedShapeFilter)
+
                     if isSearching {
                         FormatSearchView(
                             searchText: $searchText,
@@ -202,7 +223,8 @@ struct LabelDesignerView: View {
                     Text("Label Format")
                 } footer: {
                     if !isSearching {
-                        Text("Tap to search from \(AveryFormat.flatList.count) available formats")
+                        let stats = labelDatabase.getStatistics()
+                        Text("Tap to search from \(stats.products) formats across \(stats.brands) brands")
                             .font(.caption)
                     }
                 }
@@ -466,40 +488,38 @@ struct LabelDesignerView: View {
         }
     }
 
-    /// Filtered formats based on search text
-    private var filteredFormats: [AveryFormat] {
-        if searchText.isEmpty {
-            // Show all formats when no search
-            return AveryFormat.flatList
+    /// Filtered formats based on shape filter and search text
+    /// Uses database for searching 2,600+ label formats
+    private var filteredFormats: [LabelGeometry] {
+        // Use database search if we have search text
+        if !searchText.isEmpty {
+            let results = labelDatabase.searchProducts(query: searchText, limit: 100)
+            var formats = results.map { $0.toLabelGeometry() }
+
+            // Apply shape filter to search results
+            if let shape = selectedShapeFilter {
+                formats = formats.filter { $0.shape == shape }
+            }
+            return formats
         }
 
-        let searchLower = searchText.lowercased()
-        return AveryFormat.flatList.filter { format in
-            // Search by name (e.g., "5160", "Avery 5160")
-            if format.name.lowercased().contains(searchLower) {
-                return true
-            }
+        // If filtering by brand
+        if let brandSlug = selectedBrandSlug {
+            let results = labelDatabase.getProducts(brandSlug: brandSlug)
+            var formats = results.map { $0.toLabelGeometry() }
 
-            // Search by dimensions (e.g., "2.625", "1 x 2")
-            let dimensions = formatDimensions(format).lowercased()
-            if dimensions.contains(searchLower) {
-                return true
+            if let shape = selectedShapeFilter {
+                formats = formats.filter { $0.shape == shape }
             }
-
-            // Search by label count (e.g., "30 labels")
-            if "\(format.labelsPerSheet)".contains(searchLower) {
-                return true
-            }
-
-            // Search by category
-            for (category, formats) in AveryFormat.allFormats {
-                if category.lowercased().contains(searchLower) && formats.contains(where: { $0.name == format.name }) {
-                    return true
-                }
-            }
-
-            return false
+            return formats
         }
+
+        // Use cached database formats with shape filter
+        if let shape = selectedShapeFilter {
+            return databaseFormats.filter { $0.shape == shape }
+        }
+
+        return databaseFormats
     }
 
     /// Total number of labels to print (uses LabelCountCalculator for proper handling of weight-based types)
@@ -671,13 +691,13 @@ struct LabelDesignerView: View {
     // MARK: - Format Display Helpers
 
     /// Format display name for picker (shows count and dimensions)
-    private func formatDisplayName(_ format: AveryFormat) -> String {
+    private func formatDisplayName(_ format: LabelGeometry) -> String {
         let dimensions = formatDimensions(format)
         return "\(format.name) (\(format.labelsPerSheet) labels, \(dimensions))"
     }
 
     /// Format dimensions as human-readable string
-    private func formatDimensions(_ format: AveryFormat) -> String {
+    private func formatDimensions(_ format: LabelGeometry) -> String {
         let widthInches = format.labelWidth / 72.0
         let heightInches = format.labelHeight / 72.0
 
@@ -722,16 +742,17 @@ struct LabelDesignerView: View {
     private func loadLastUsedFormat() {
         let defaults = UserDefaults.standard
         if let formatName = defaults.string(forKey: "labelPrinting.lastUsedFormat") {
-            // Search through all available formats to find matching name
-            if let matchedFormat = AveryFormat.flatList.first(where: { $0.name == formatName }) {
+            // Search database for the saved format name
+            let results = labelDatabase.searchProducts(query: formatName, limit: 1)
+            if let matchedFormat = results.first?.toLabelGeometry(), matchedFormat.name == formatName {
                 selectedFormat = matchedFormat
             }
-            // If no match, keep default .avery5160
+            // If no exact match, keep default
         }
     }
 
     /// Save the currently selected format to UserDefaults
-    private func saveLastUsedFormat(_ format: AveryFormat) {
+    private func saveLastUsedFormat(_ format: LabelGeometry) {
         let defaults = UserDefaults.standard
         defaults.set(format.name, forKey: "labelPrinting.lastUsedFormat")
     }

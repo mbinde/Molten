@@ -16,7 +16,7 @@ import UIKit
 #if os(iOS)
 /// Preview component showing what a label will look like
 struct LabelPreviewView: View {
-    let format: AveryFormat
+    let format: LabelGeometry
     let config: LabelBuilderConfig
     let sampleData: LabelData
     var fontScale: Double = 1.0
@@ -100,22 +100,32 @@ struct LabelPreviewView: View {
                 Spacer()
             }
 
-            // Label preview with border
+            // Label preview with border (circular or rectangular)
             ZStack {
-                RoundedRectangle(cornerRadius: 4)
-                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                    .background(
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.white)
-                    )
+                if format.isCircular {
+                    Circle()
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        .background(
+                            Circle()
+                                .fill(Color.white)
+                        )
+                } else {
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.white)
+                        )
+                }
 
                 // Label content based on QR position
                 buildLabelContent()
-                    .frame(height: previewHeight - 8)
+                    .frame(width: format.isCircular ? previewWidth * 0.7 : nil, height: previewHeight - 8)
                     .padding(.vertical, 4)
                     .offset(x: offsetX * scaleFactor, y: offsetY * scaleFactor)
             }
             .frame(width: previewWidth, height: previewHeight)
+            .clipShape(format.isCircular ? AnyShape(Circle()) : AnyShape(RoundedRectangle(cornerRadius: 4)))
         }
         .padding()
         .background(Color(.systemGray6))
@@ -450,6 +460,9 @@ struct LabelPreviewView: View {
         let widthFraction = formatAsInches(widthInches)
         let heightFraction = formatAsInches(heightInches)
 
+        if format.isCircular {
+            return "\(widthFraction)\" diameter"
+        }
         return "\(heightFraction)\" × \(widthFraction)\""
     }
 
@@ -509,7 +522,7 @@ private struct QRCodeView: View {
 
 #Preview("Avery 5160 - Information Dense") {
     LabelPreviewView(
-        format: .avery5160,
+        format: .defaultFormat,
         config: LabelBuilderConfig.presets[0].config,  // Information Dense
         sampleData: LabelData(
             stableId: "bullseye-clear-001",
@@ -523,9 +536,9 @@ private struct QRCodeView: View {
     )
 }
 
-#Preview("Avery 5163 - QR Focused") {
+#Preview("QR Focused") {
     LabelPreviewView(
-        format: .avery5163,
+        format: .defaultFormat,
         config: LabelBuilderConfig.presets[1].config,  // QR Focused
         sampleData: LabelData(
             stableId: "bullseye-clear-001",
@@ -539,9 +552,9 @@ private struct QRCodeView: View {
     )
 }
 
-#Preview("Avery 5167 - Dual QR") {
+#Preview("Dual QR") {
     LabelPreviewView(
-        format: .avery5167,
+        format: .defaultFormat,
         config: LabelBuilderConfig.presets[2].config,  // Dual QR
         sampleData: LabelData(
             stableId: "bullseye-clear-001",
@@ -555,9 +568,9 @@ private struct QRCodeView: View {
     )
 }
 
-#Preview("Avery 5163 - Location Based") {
+#Preview("Location Based") {
     LabelPreviewView(
-        format: .avery5163,
+        format: .defaultFormat,
         config: LabelBuilderConfig.presets[3].config,  // Location Labels
         sampleData: LabelData(
             stableId: "bullseye-clear-001",

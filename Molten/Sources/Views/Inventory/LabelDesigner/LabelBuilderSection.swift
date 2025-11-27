@@ -10,7 +10,7 @@ import SwiftUI
 struct LabelBuilderSection: View {
     @Binding var builderConfig: LabelBuilderConfig
     @Binding var fontScale: Double
-    let selectedFormat: AveryFormat
+    let selectedFormat: LabelGeometry
     let onToggleField: (LabelTextField) -> Void
 
     var body: some View {

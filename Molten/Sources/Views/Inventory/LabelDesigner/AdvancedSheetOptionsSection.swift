@@ -13,7 +13,7 @@ struct AdvancedSheetOptionsSection: View {
     @Binding var startColumn: Int
     @Binding var offsetX: Double
     @Binding var offsetY: Double
-    let selectedFormat: AveryFormat
+    let selectedFormat: LabelGeometry
 
     var body: some View {
         Section {

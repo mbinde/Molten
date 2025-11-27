@@ -38,7 +38,7 @@ struct LabelPrintingOwnerTests {
             fieldFormats: LabelFieldFormat.defaults
         )
 
-        let validation = config.validateLayout(for: AveryFormat.avery5160)
+        let validation = config.validateLayout(for: LabelGeometry.defaultFormat)
 
         // Should provide validation result (may or may not fit depending on format)
         #expect(validation.estimatedTextHeight > 0)
@@ -65,8 +65,8 @@ struct LabelPrintingOwnerTests {
             fieldFormats: LabelFieldFormat.defaults
         )
 
-        let validationWithout = configWithoutOwner.validateLayout(for: AveryFormat.avery5160)
-        let validationWith = configWithOwner.validateLayout(for: AveryFormat.avery5160)
+        let validationWithout = configWithoutOwner.validateLayout(for: LabelGeometry.defaultFormat)
+        let validationWith = configWithOwner.validateLayout(for: LabelGeometry.defaultFormat)
 
         // Adding owner should increase estimated height by 8pt (owner's estimated height)
         #expect(validationWith.estimatedTextHeight > validationWithout.estimatedTextHeight)
@@ -85,7 +85,7 @@ struct LabelPrintingOwnerTests {
         )
 
         // Test with small label format (Avery 5167 - 0.5" × 1.75")
-        let validation = config.validateLayout(for: AveryFormat.avery5167)
+        let validation = config.validateLayout(for: LabelGeometry(name: "Test Small", labelsPerSheet: 80, columns: 4, rows: 20, labelWidth: 126, labelHeight: 36, leftMargin: 18, topMargin: 36, horizontalGap: 9, verticalGap: 0, defaultFontScale: 0.75, defaultQRSize: 0.7))
 
         // Should have warnings about fitting issues
         #expect(!validation.warnings.isEmpty)
@@ -103,7 +103,7 @@ struct LabelPrintingOwnerTests {
         )
 
         // Test with large label format (Avery 5163 - 2" × 4")
-        let validation = config.validateLayout(for: AveryFormat.avery5163)
+        let validation = config.validateLayout(for: LabelGeometry(name: "Test Large", labelsPerSheet: 10, columns: 2, rows: 5, labelWidth: 288, labelHeight: 144, leftMargin: 18, topMargin: 36, horizontalGap: 9, verticalGap: 0, defaultFontScale: 1.0, defaultQRSize: 0.6))
 
         // Should fit without issues
         #expect(validation.fits)
@@ -124,10 +124,10 @@ struct LabelPrintingOwnerTests {
         let scales: [CGFloat] = [0.7, 1.0, 1.3]
 
         for scale in scales {
-            let validation = config.validateLayout(for: AveryFormat.avery5160, fontScale: scale)
+            let validation = config.validateLayout(for: LabelGeometry.defaultFormat, fontScale: scale)
 
             // Should scale proportionally
-            let baseValidation = config.validateLayout(for: AveryFormat.avery5160, fontScale: 1.0)
+            let baseValidation = config.validateLayout(for: LabelGeometry.defaultFormat, fontScale: 1.0)
             let expectedHeight = baseValidation.estimatedTextHeight * scale
 
             // Allow small floating-point differences
@@ -230,7 +230,7 @@ struct LabelPrintingOwnerTests {
             fieldFormats: LabelFieldFormat.defaults
         )
 
-        let validation = config.validateLayout(for: AveryFormat.avery5160)
+        let validation = config.validateLayout(for: LabelGeometry.defaultFormat)
 
         // Should have more available width without QR code
         #expect(validation.availableWidth > 100)
@@ -257,8 +257,8 @@ struct LabelPrintingOwnerTests {
             fieldFormats: LabelFieldFormat.defaults
         )
 
-        let validationDual = configDual.validateLayout(for: AveryFormat.avery5160)
-        let validationSingle = configSingle.validateLayout(for: AveryFormat.avery5160)
+        let validationDual = configDual.validateLayout(for: LabelGeometry.defaultFormat)
+        let validationSingle = configSingle.validateLayout(for: LabelGeometry.defaultFormat)
 
         // Should have reduced available width due to dual QR codes compared to single QR
         #expect(validationDual.availableWidth < validationSingle.availableWidth)

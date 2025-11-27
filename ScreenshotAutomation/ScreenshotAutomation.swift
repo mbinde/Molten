@@ -413,7 +413,36 @@ final class ScreenshotAutomation: XCTestCase {
 
             takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
 
-            // Clear search field after screenshot
+            // 11. Location Detail - Tap on first location in the list below the map
+            print("1️⃣1️⃣ Feature: Location Detail")
+            let locationCells = app.cells
+            print("   📊 DEBUG: locationCells.count = \(locationCells.count)")
+            if locationCells.count > 0 {
+                // Find the first hittable cell
+                var tappedCell = false
+                for i in 0..<min(10, locationCells.count) {
+                    let cell = locationCells.element(boundBy: i)
+                    if cell.exists && cell.isHittable {
+                        print("   📊 DEBUG: Found hittable cell at index \(i), tapping...")
+                        cell.tap()
+                        waitForContentToLoad(seconds: 2)
+                        takeScreenshot(named: "feature-location-detail", subdirectory: "website", delay: 0.5)
+                        tappedCell = true
+
+                        // Navigate back to locations list
+                        navigateBack()
+                        waitForContentToLoad(seconds: 1)
+                        break
+                    }
+                }
+                if !tappedCell {
+                    print("   ⚠️ SKIPPED: No hittable location cells found (checked first 10)")
+                }
+            } else {
+                print("   ⚠️ SKIPPED: No location cells found")
+            }
+
+            // Clear search field after screenshots
             let clearButton = app.buttons["locations_clear_search"]
             if clearButton.exists && clearButton.isHittable {
                 clearButton.tap()
@@ -422,32 +451,6 @@ final class ScreenshotAutomation: XCTestCase {
         } else {
             print("   ⚠️ Locations search field not found, taking screenshot without search")
             takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
-        }
-
-        // 11. Location Detail
-        print("1️⃣1️⃣ Feature: Location Detail")
-        // Tap on first location in the list
-        let locationCells = app.cells
-        print("   📊 DEBUG: locationCells.count = \(locationCells.count)")
-        if locationCells.count > 0 {
-            // Find the first hittable cell
-            var tappedCell = false
-            for i in 0..<min(10, locationCells.count) {
-                let cell = locationCells.element(boundBy: i)
-                if cell.exists && cell.isHittable {
-                    print("   📊 DEBUG: Found hittable cell at index \(i)")
-                    cell.tap()
-                    waitForContentToLoad(seconds: 2)
-                    takeScreenshot(named: "feature-location-detail", subdirectory: "website", delay: 0.5)
-                    tappedCell = true
-                    break
-                }
-            }
-            if !tappedCell {
-                print("   ⚠️ SKIPPED: No hittable location cells found (checked first 10)")
-            }
-        } else {
-            print("   ⚠️ SKIPPED: No location cells found")
         }
 
         // 12. Settings - Customization (Top)

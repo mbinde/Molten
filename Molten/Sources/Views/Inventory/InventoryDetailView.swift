@@ -236,10 +236,8 @@ struct InventoryDetailView: View {
                         tagsSection
                     }
 
-                    // Custom Images Section - only show if images exist
-                    if !userImages.isEmpty {
-                        customImagesSection
-                    }
+                    // Custom Images Section - always show to allow adding images
+                    customImagesSection
 
                     Spacer(minLength: 100)
                 }

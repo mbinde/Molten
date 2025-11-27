@@ -72,9 +72,9 @@ final class GlassDetailScreenshots: XCTestCase {
         for (index, item) in glassItems.enumerated() {
             print("\(index + 1)/\(glassItems.count) Capturing: \(item.searchTerm)")
 
-            // Start fresh on catalog
-            ensureOnCatalog()
-            sleep(1)
+            // IMPORTANT: Fully reset to catalog by double-tapping tab
+            // This clears any stuck search state from previous iteration
+            resetToCatalog()
 
             // Search for the item
             if activateSearch() {
@@ -84,6 +84,7 @@ final class GlassDetailScreenshots: XCTestCase {
 
                 // Check if we got results
                 let cells = app.cells
+                print("   📊 Found \(cells.count) cells")
                 if cells.count > 0 && cells.firstMatch.isHittable {
                     // Tap the first result
                     cells.firstMatch.tap()
@@ -98,16 +99,13 @@ final class GlassDetailScreenshots: XCTestCase {
                     print("   ✅ Captured: \(item.filename).png")
                     successCount += 1
 
-                    // Navigate back
+                    // Navigate back to search results
                     navigateBack()
                     sleep(1)
                 } else {
                     print("   ⚠️ No results found for '\(item.searchTerm)'")
                     failedItems.append(item.searchTerm)
                 }
-
-                // Clear the search
-                clearSearch()
             } else {
                 print("   ⚠️ Could not activate search")
                 failedItems.append(item.searchTerm)
@@ -124,6 +122,24 @@ final class GlassDetailScreenshots: XCTestCase {
     }
 
     // MARK: - Helpers
+
+    /// Fully reset to catalog by double-tapping the tab
+    /// This clears any stuck search/keyboard state
+    private func resetToCatalog() {
+        let catalogButton = app.buttons["Catalog"]
+        if catalogButton.exists && catalogButton.isHittable {
+            catalogButton.tap()
+            sleep(1)
+            catalogButton.tap()
+            sleep(1)
+        }
+
+        // Dismiss any keyboard that might be showing
+        if app.keyboards.element.exists {
+            app.swipeDown()
+            sleep(1)
+        }
+    }
 
     private func ensureOnCatalog() {
         let catalogButton = app.buttons["Catalog"]
@@ -150,29 +166,6 @@ final class GlassDetailScreenshots: XCTestCase {
         }
 
         return false
-    }
-
-    private func clearSearch() {
-        // Try Cancel button first (best way to fully dismiss .searchable)
-        if app.buttons["Cancel"].exists && app.buttons["Cancel"].isHittable {
-            app.buttons["Cancel"].tap()
-            sleep(1)
-            return
-        }
-
-        // Try pressing Search key to dismiss keyboard
-        if app.keyboards.element.exists {
-            if app.keyboards.buttons["Search"].exists {
-                app.keyboards.buttons["Search"].tap()
-                sleep(1)
-            }
-        }
-
-        // Double-tap catalog tab to reset state
-        app.buttons["Catalog"].tap()
-        sleep(1)
-        app.buttons["Catalog"].tap()
-        sleep(1)
     }
 
     private func navigateBack() {

@@ -367,14 +367,10 @@ final class ScreenshotAutomation: XCTestCase {
 
         // 8b. Shopping Mode Active - Cart icon activated
         print("8️⃣b Feature: Shopping Mode Active")
-        // Tap the shopping cart button to enter shopping mode
-        // Try both the identifier and looking for cart icon button
-        let cartButtonById = app.buttons["shopping_start_mode_button"]
-        let cartButtonByIcon = app.buttons.matching(NSPredicate(format: "identifier CONTAINS 'cart'")).firstMatch
+        // The shopping cart button is in the toolbar
+        let cartButton = app.buttons["shopping_start_mode_button"]
 
-        let cartButton = cartButtonById.exists ? cartButtonById : cartButtonByIcon
-
-        if cartButton.waitForExistence(timeout: 5) {
+        if cartButton.waitForExistence(timeout: 5) && cartButton.isHittable {
             print("   Found shopping cart button, tapping...")
             cartButton.tap()
             sleep(2)  // Wait for shopping mode UI to appear

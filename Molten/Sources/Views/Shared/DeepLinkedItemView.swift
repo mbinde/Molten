@@ -35,11 +35,7 @@ struct DeepLinkedItemView: View {
 
     // Quick action state
     @State private var actionInProgress = false
-    @State private var toastMessage = ""
-    @State private var toastStyle: ToastStyle = .success
-    @State private var showToast = false
-    @State private var removedCount = 0
-    @State private var addedCount = 0
+    @State private var netChange = 0  // Positive = added, negative = removed
 
     // Services from AppDependencies (NOT @State - services are stable)
     private let deps: AppDependencies
@@ -92,12 +88,6 @@ struct DeepLinkedItemView: View {
                 print("🔗 DeepLinkedItemView: .task started for stable_id: \(stableId)")
                 await loadItem()
             }
-            .toast(
-                message: toastMessage,
-                style: toastStyle,
-                placement: .bottom,
-                isShowing: $showToast
-            )
         }
     }
 
@@ -111,7 +101,7 @@ struct DeepLinkedItemView: View {
 
     private var quickActionToolbar: some View {
         HStack(spacing: DesignSystem.Spacing.lg) {
-            // Remove button with counter
+            // Remove button with net removed count
             VStack(spacing: DesignSystem.Spacing.xs) {
                 Button {
                     Task { await performAction(.removeFromInventory) }
@@ -124,9 +114,12 @@ struct DeepLinkedItemView: View {
                 .tint(DesignSystem.Colors.accentDanger)
                 .disabled(actionInProgress || currentQuantity == 0)
 
-                Text("\(removedCount) removed")
-                    .font(DesignSystem.Typography.listItemCaption)
-                    .foregroundColor(removedCount > 0 ? DesignSystem.Colors.accentDanger : DesignSystem.Colors.textTertiary)
+                // Show net removed count (when negative)
+                if netChange < 0 {
+                    Text("\(abs(netChange)) removed")
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .foregroundColor(DesignSystem.Colors.accentDanger)
+                }
             }
 
             // Quantity display
@@ -140,7 +133,7 @@ struct DeepLinkedItemView: View {
             }
             .frame(minWidth: 60)
 
-            // Add button with counter
+            // Add button with net added count
             VStack(spacing: DesignSystem.Spacing.xs) {
                 Button {
                     Task { await performAction(.addToInventory) }
@@ -153,9 +146,12 @@ struct DeepLinkedItemView: View {
                 .tint(DesignSystem.Colors.accentSuccess)
                 .disabled(actionInProgress)
 
-                Text("\(addedCount) added")
-                    .font(DesignSystem.Typography.listItemCaption)
-                    .foregroundColor(addedCount > 0 ? DesignSystem.Colors.accentSuccess : DesignSystem.Colors.textTertiary)
+                // Show net added count (when positive)
+                if netChange > 0 {
+                    Text("\(netChange) added")
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .foregroundColor(DesignSystem.Colors.accentSuccess)
+                }
             }
         }
         .padding()
@@ -210,6 +206,18 @@ struct DeepLinkedItemView: View {
         isLoading = false
     }
 
+    /// Reload item data without showing loading indicator (for after quick actions)
+    @MainActor
+    private func reloadItemSilently() async {
+        do {
+            if let foundItem = try await catalogService.getGlassItemByNaturalKey(stableId) {
+                item = foundItem
+            }
+        } catch {
+            print("❌ DeepLinkedItemView: Silent reload failed: \(error)")
+        }
+    }
+
     // MARK: - Quick Actions
 
     @MainActor
@@ -223,20 +231,17 @@ struct DeepLinkedItemView: View {
             switch action {
             case .removeFromInventory:
                 try await removeOneFromInventory(item: item)
-                removedCount += 1
-                showToast(message: "Removed 1 from inventory", style: .success)
+                netChange -= 1
 
             case .addToInventory:
                 try await addOneToInventory(item: item)
-                addedCount += 1
-                showToast(message: "Added 1 to inventory", style: .success)
+                netChange += 1
             }
 
-            // Reload item to reflect changes
-            await loadItem()
+            // Silently reload item without showing loading state
+            await reloadItemSilently()
         } catch {
             print("❌ DeepLinkedItemView: Action failed: \(error)")
-            showToast(message: error.localizedDescription, style: .error)
         }
     }
 
@@ -303,14 +308,6 @@ struct DeepLinkedItemView: View {
                 date_modified: Date()
             )
             _ = try await inventoryService.createInventory(newInventory)
-        }
-    }
-
-    private func showToast(message: String, style: ToastStyle) {
-        toastMessage = message
-        toastStyle = style
-        withAnimation {
-            showToast = true
         }
     }
 }

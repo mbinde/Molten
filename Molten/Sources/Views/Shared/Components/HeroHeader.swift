@@ -68,24 +68,22 @@ struct HeroHeader: View {
 
             // Info button in top-right corner (when showing color approximation)
             if isShowingColorApproximation {
-                VStack {
-                    HStack {
-                        Spacer()
-                        Button {
-                            showingColorApproximationInfo = true
-                        } label: {
-                            Image(systemName: "info.circle.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(.white)
-                                .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                        }
-                        .padding(.top, extendsToTop ? 60 : DesignSystem.Spacing.lg)
-                        .padding(.trailing, DesignSystem.Spacing.lg)
-                        .popover(isPresented: $showingColorApproximationInfo) {
-                            colorApproximationPopover
-                        }
+                GeometryReader { geometry in
+                    Button {
+                        showingColorApproximationInfo = true
+                    } label: {
+                        Image(systemName: "info.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.white)
+                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
                     }
-                    Spacer()
+                    .popover(isPresented: $showingColorApproximationInfo) {
+                        colorApproximationPopover
+                    }
+                    .position(
+                        x: geometry.size.width - DesignSystem.Padding.standard - 12,
+                        y: (extendsToTop ? geometry.safeAreaInsets.top : 0) + DesignSystem.Spacing.lg + 12
+                    )
                 }
             }
 
@@ -195,7 +193,8 @@ struct HeroHeader: View {
             manufacturer: item.manufacturer,
             imagePath: item.image_path,
             imageThumbPath: item.image_thumb_path,
-            dominantColors: item.dominant_colors
+            dominantColors: item.dominant_colors,
+            stableId: item.stable_id
         )
 
         // Use the centralized image loading logic

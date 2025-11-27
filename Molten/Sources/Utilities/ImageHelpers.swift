@@ -132,8 +132,16 @@ struct ImageHelpers {
         manufacturer: String?,
         imagePath: String?,
         imageThumbPath: String?,
-        dominantColors: [String]?
+        dominantColors: [String]?,
+        stableId: String? = nil
     ) async -> Bool {
+        // If user has uploaded a primary image, we won't show the gradient
+        if let stableId = stableId {
+            if let _ = try? await sharedUserImageRepository.getPrimaryImage(ownerType: .glassItem, ownerId: stableId) {
+                return false
+            }
+        }
+
         // Must have dominant colors to show gradient
         guard let colors = dominantColors, !colors.isEmpty else {
             return false

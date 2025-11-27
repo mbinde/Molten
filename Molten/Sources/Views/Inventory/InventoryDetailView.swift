@@ -74,7 +74,7 @@ struct InventoryDetailView: View {
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var isLoadingImages = false
     @State private var heroImageRefreshTrigger = UUID()  // Change to refresh hero image
-    @State private var scrollToPhotos = false  // Trigger scroll to Your Photos section
+    @State private var scrollToPhotos = false  // Trigger scroll to Photos section
 
     // Kiln schedules state
     @State private var recommendedScheduleIds: [UUID] = []
@@ -289,52 +289,6 @@ struct InventoryDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
             #endif
-            .toolbar {
-                if !isEditing {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Menu {
-                            Button {
-                                checkLimitAndShowAddInventory()
-                            } label: {
-                                Label("Add to Inventory", systemImage: "archivebox.fill")
-                            }
-                            .accessibilityIdentifier("fab_add_inventory")
-
-                            Button {
-                                showingShoppingListOptions = true
-                            } label: {
-                                Label("Add to Shopping List", systemImage: "cart.fill")
-                            }
-                            .accessibilityIdentifier("fab_add_shopping_list")
-
-                            Button {
-                                showingImagePicker = true
-                            } label: {
-                                Label("Add an Image", systemImage: "photo.fill")
-                            }
-                            .accessibilityIdentifier("fab_add_image")
-
-                            Button {
-                                showingUserNotesEditor = true
-                            } label: {
-                                Label("Add a Note", systemImage: "note.text")
-                            }
-                            .accessibilityIdentifier("fab_add_note")
-
-                            Button {
-                                showingUserTagsEditor = true
-                            } label: {
-                                Label("Manage Tags", systemImage: "tag.fill")
-                            }
-                            .accessibilityIdentifier("fab_manage_tags")
-                        } label: {
-                            Image(systemName: "ellipsis.circle")
-                                .accessibilityLabel("Actions")
-                        }
-                        .accessibilityIdentifier("detail_actions_menu")
-                    }
-                }
-            }
         }
         .sheet(isPresented: $showingShoppingListOptions, onDismiss: {
             // Reload shopping list after adding
@@ -869,19 +823,19 @@ struct InventoryDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
     }
 
-    // MARK: - Glass Item Details Section
+    // MARK: - Manufacturer Notes Section
 
     private var glassItemDetailsSection: some View {
         ExpandableSection(
-            title: "Glass Item Details",
+            title: "Manufacturer Notes",
             systemImage: "info.circle",
             isExpanded: expandedSections.contains("glass-item"),
             onToggle: { toggleSection("glass-item") },
-            accessibilityId: "section_glass_item"
+            accessibilityId: "section_manufacturer_notes"
         ) {
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
                 if let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
-                    expandableNotesCard(title: "Manufacturer Notes", content: notes, accessibilityId: "expand_manufacturer_notes")
+                    expandableNotesCard(title: nil, content: notes, accessibilityId: "expand_manufacturer_notes")
                 }
 
                 // User notes section - only show if notes exist
@@ -1038,10 +992,23 @@ struct InventoryDetailView: View {
 
     private var customImagesSection: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-            Text("Your Photos")
-                .font(DesignSystem.Typography.subsectionTitle)
-                .fontWeight(DesignSystem.FontWeight.semibold)
-                .foregroundColor(DesignSystem.Colors.textPrimary)
+            HStack {
+                Text("Photos")
+                    .font(DesignSystem.Typography.subsectionTitle)
+                    .fontWeight(DesignSystem.FontWeight.semibold)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                Spacer()
+
+                Button {
+                    showingImagePicker = true
+                } label: {
+                    Label("Add Photo", systemImage: "plus")
+                        .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .accessibilityIdentifier("photos_add_button")
+            }
 
             GlassItemImageSelector(
                 glassItem: currentItem.glassItem,
@@ -1134,11 +1101,13 @@ struct InventoryDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
     }
 
-    private func expandableNotesCard(title: String, content: String, accessibilityId: String? = nil) -> some View {
+    private func expandableNotesCard(title: String?, content: String, accessibilityId: String? = nil) -> some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-            Text(title)
-                .font(DesignSystem.Typography.formLabel)
-                .fontWeight(DesignSystem.FontWeight.semibold)
+            if let title = title {
+                Text(title)
+                    .font(DesignSystem.Typography.formLabel)
+                    .fontWeight(DesignSystem.FontWeight.semibold)
+            }
 
             ExpandableText(content: content, lineLimit: 4, isExpanded: $isManufacturerNotesExpanded, accessibilityId: accessibilityId)
         }

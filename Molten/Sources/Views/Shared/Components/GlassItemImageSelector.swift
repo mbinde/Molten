@@ -100,32 +100,17 @@ struct GlassItemImageSelector: View {
     // MARK: - Image Grid
 
     private var imageGrid: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-            LazyVGrid(columns: columns, spacing: DesignSystem.Spacing.md) {
-                // Show manufacturer default image first (non-selectable reference)
-                if let mfrImage = manufacturerImage {
-                    manufacturerImageCell(image: mfrImage)
-                }
-
-                // Show user-uploaded images
-                ForEach(images) { imageModel in
-                    if let image = loadedImages[imageModel.id] {
-                        userImageCell(for: imageModel, image: image)
-                    }
-                }
+        LazyVGrid(columns: columns, spacing: DesignSystem.Spacing.md) {
+            // Show manufacturer default image first (non-selectable reference)
+            if let mfrImage = manufacturerImage {
+                manufacturerImageCell(image: mfrImage)
             }
 
-            HStack {
-                Spacer()
-
-                Button {
-                    onAddImage()
-                } label: {
-                    Label("Add More Images", systemImage: "plus")
-                        .font(.caption)
+            // Show user-uploaded images
+            ForEach(images) { imageModel in
+                if let image = loadedImages[imageModel.id] {
+                    userImageCell(for: imageModel, image: image)
                 }
-                .buttonStyle(.bordered)
-                .accessibilityIdentifier("glass_item_image_add_more")
             }
         }
     }

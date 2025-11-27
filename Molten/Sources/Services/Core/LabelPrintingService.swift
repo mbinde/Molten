@@ -1278,7 +1278,7 @@ struct AveryFormat: Equatable, Hashable {
 }
 
 /// QR code position on label
-enum QRCodePosition: String, CaseIterable, Codable {
+enum QRCodePosition: String, CaseIterable, Codable, Sendable {
     case none = "None"
     case left = "Left side"
     case right = "Right side"
@@ -1286,7 +1286,7 @@ enum QRCodePosition: String, CaseIterable, Codable {
 }
 
 /// Manufacturer image position on label
-enum ManufacturerImagePosition: String, CaseIterable, Codable {
+enum ManufacturerImagePosition: String, CaseIterable, Codable, Sendable {
     case none = "None"
     case left = "Left side"
     case right = "Right side"
@@ -1294,14 +1294,14 @@ enum ManufacturerImagePosition: String, CaseIterable, Codable {
 }
 
 /// Text alignment on label
-enum LabelTextAlignment: String, CaseIterable, Codable {
+enum LabelTextAlignment: String, CaseIterable, Codable, Sendable {
     case left = "Left"
     case center = "Center"
     case right = "Right"
 }
 
 /// Text field that can be included on a label
-enum LabelTextField: String, CaseIterable, Codable {
+enum LabelTextField: String, CaseIterable, Codable, Sendable {
     case manufacturer = "Manufacturer"
     case sku = "SKU"
     case colorName = "Color Name"
@@ -1319,7 +1319,7 @@ enum LabelTextField: String, CaseIterable, Codable {
 }
 
 /// Formatting configuration for individual label fields
-struct LabelFieldFormat: Equatable, Codable {
+struct LabelFieldFormat: Equatable, Codable, Sendable {
     var fontSize: CGFloat
     var bold: Bool
     var italic: Bool
@@ -1341,7 +1341,7 @@ struct LabelFieldFormat: Equatable, Codable {
 }
 
 /// Label builder configuration - user-customizable label layout
-struct LabelBuilderConfig: Equatable, Codable {
+struct LabelBuilderConfig: Equatable, Codable, Sendable {
     var qrPosition: QRCodePosition
     var qrSize: CGFloat?  // as percentage of label height (0.5 to 0.8) - nil = use format default
     var fontScale: CGFloat?  // text size multiplier - nil = use format default
@@ -1551,7 +1551,7 @@ struct LabelLayoutValidation {
 }
 
 /// Label builder preset - named configuration that can be saved and shared
-struct LabelBuilderPreset: Identifiable, Codable {
+struct LabelBuilderPreset: Identifiable, Codable, Sendable {
     let id: UUID
     var name: String
     var description: String
@@ -1562,7 +1562,7 @@ struct LabelBuilderPreset: Identifiable, Codable {
     // Future-proofing fields (added pre-release for easier migrations)
     var workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
 
-    init(id: UUID = UUID(), name: String, description: String, config: LabelBuilderConfig, createdAt: Date = Date(), modifiedAt: Date = Date(), workspace_id: UUID? = nil) {
+    nonisolated init(id: UUID = UUID(), name: String, description: String, config: LabelBuilderConfig, createdAt: Date = Date(), modifiedAt: Date = Date(), workspace_id: UUID? = nil) {
         self.id = id
         self.name = name
         self.description = description

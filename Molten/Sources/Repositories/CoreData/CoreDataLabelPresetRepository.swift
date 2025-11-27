@@ -182,18 +182,14 @@ class CoreDataLabelPresetRepository: @unchecked Sendable, LabelPresetRepository 
             fieldFormats: fieldFormats
         )
 
-        // LabelBuilderPreset is not Sendable but is safe to construct off MainActor
-        // Using assumeIsolated to bypass false positive
-        return MainActor.assumeIsolated {
-            LabelBuilderPreset(
-                id: id,
-                name: name,
-                description: description ?? "",
-                config: config,
-                createdAt: createdAt,
-                modifiedAt: modifiedAt
-            )
-        }
+        return LabelBuilderPreset(
+            id: id,
+            name: name,
+            description: description ?? "",
+            config: config,
+            createdAt: createdAt,
+            modifiedAt: modifiedAt
+        )
     }
 
     /// Update Core Data entity from model

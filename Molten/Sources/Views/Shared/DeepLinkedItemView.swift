@@ -38,6 +38,8 @@ struct DeepLinkedItemView: View {
     @State private var toastMessage = ""
     @State private var toastStyle: ToastStyle = .success
     @State private var showToast = false
+    @State private var removedCount = 0
+    @State private var addedCount = 0
 
     // Services from AppDependencies (NOT @State - services are stable)
     private let deps: AppDependencies
@@ -109,17 +111,23 @@ struct DeepLinkedItemView: View {
 
     private var quickActionToolbar: some View {
         HStack(spacing: DesignSystem.Spacing.lg) {
-            // Remove button
-            Button {
-                Task { await performAction(.removeFromInventory) }
-            } label: {
-                Label("Remove", systemImage: "minus")
-                    .font(.headline)
-                    .frame(minWidth: 80)
+            // Remove button with counter
+            VStack(spacing: DesignSystem.Spacing.xs) {
+                Button {
+                    Task { await performAction(.removeFromInventory) }
+                } label: {
+                    Label("Remove", systemImage: "minus")
+                        .font(.headline)
+                        .frame(minWidth: 80)
+                }
+                .buttonStyle(.bordered)
+                .tint(DesignSystem.Colors.accentDanger)
+                .disabled(actionInProgress || currentQuantity == 0)
+
+                Text("\(removedCount) removed")
+                    .font(DesignSystem.Typography.listItemCaption)
+                    .foregroundColor(removedCount > 0 ? DesignSystem.Colors.accentDanger : DesignSystem.Colors.textTertiary)
             }
-            .buttonStyle(.bordered)
-            .tint(DesignSystem.Colors.accentDanger)
-            .disabled(actionInProgress || currentQuantity == 0)
 
             // Quantity display
             VStack(spacing: 2) {
@@ -132,17 +140,23 @@ struct DeepLinkedItemView: View {
             }
             .frame(minWidth: 60)
 
-            // Add button
-            Button {
-                Task { await performAction(.addToInventory) }
-            } label: {
-                Label("Add", systemImage: "plus")
-                    .font(.headline)
-                    .frame(minWidth: 80)
+            // Add button with counter
+            VStack(spacing: DesignSystem.Spacing.xs) {
+                Button {
+                    Task { await performAction(.addToInventory) }
+                } label: {
+                    Label("Add", systemImage: "plus")
+                        .font(.headline)
+                        .frame(minWidth: 80)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(DesignSystem.Colors.accentSuccess)
+                .disabled(actionInProgress)
+
+                Text("\(addedCount) added")
+                    .font(DesignSystem.Typography.listItemCaption)
+                    .foregroundColor(addedCount > 0 ? DesignSystem.Colors.accentSuccess : DesignSystem.Colors.textTertiary)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(DesignSystem.Colors.accentSuccess)
-            .disabled(actionInProgress)
         }
         .padding()
         .background(DesignSystem.Colors.backgroundSecondary)
@@ -209,10 +223,12 @@ struct DeepLinkedItemView: View {
             switch action {
             case .removeFromInventory:
                 try await removeOneFromInventory(item: item)
+                removedCount += 1
                 showToast(message: "Removed 1 from inventory", style: .success)
 
             case .addToInventory:
                 try await addOneToInventory(item: item)
+                addedCount += 1
                 showToast(message: "Added 1 to inventory", style: .success)
             }
 

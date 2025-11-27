@@ -165,6 +165,13 @@ final class ScreenshotAutomation: XCTestCase {
         print("5️⃣ Feature: Inventory List")
         navigateToTab("Inventory")
         waitForContentToLoad()
+
+        // Dismiss any keyboard that might be visible
+        if app.keyboards.element.exists {
+            app.swipeDown()
+            sleep(1)
+        }
+
         takeScreenshot(named: "feature-inventory-list", subdirectory: "website", delay: 0.5)
 
         // 6. Inventory Detail - Complete Tracking
@@ -411,10 +418,20 @@ final class ScreenshotAutomation: XCTestCase {
             // Wait for map to update with search results
             waitForContentToLoad(seconds: 2)
 
+            // Dismiss keyboard before taking screenshot
+            if app.keyboards.element.exists {
+                app.swipeDown()
+                sleep(1)
+            }
+
             takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
 
             // 11. Location Detail - Tap on first location in the list below the map
             print("1️⃣1️⃣ Feature: Location Detail")
+
+            // Wait longer for location cells to become hittable (map animation needs to complete)
+            sleep(3)
+
             let locationCells = app.cells
             print("   📊 DEBUG: locationCells.count = \(locationCells.count)")
             if locationCells.count > 0 {

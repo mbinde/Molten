@@ -98,6 +98,8 @@ struct MoltenApp: App {
     @State private var deepLinkGlassItemStableId: String?
     @State private var showingDeepLinkedItem = false
     @State private var pendingDeepLinkStableId: String?  // Hold the new ID during refresh
+    @State private var deepLinkViewOnlyStableId: String?
+    @State private var showingViewOnlyItem = false
     @State private var mainTabView: MainTabView?
 
     // Shake-to-report bug
@@ -268,7 +270,16 @@ extension MoltenApp {
                 }
             }) {
                 if let stableId = deepLinkGlassItemStableId {
-                    DeepLinkedItemView(stableId: stableId)
+                    DeepLinkedItemView(stableId: stableId, showQuickActions: true)
+                } else {
+                    Text("No item ID available").foregroundColor(.red)
+                }
+            }
+            .sheet(isPresented: $showingViewOnlyItem, onDismiss: {
+                deepLinkViewOnlyStableId = nil
+            }) {
+                if let stableId = deepLinkViewOnlyStableId {
+                    DeepLinkedItemView(stableId: stableId, showQuickActions: false)
                 } else {
                     Text("No item ID available").foregroundColor(.red)
                 }
@@ -714,15 +725,16 @@ extension MoltenApp {
     }
 
     /// Handle deep links from QR codes
-    /// - molten://g/{naturalKey} - Glass item detail
-    /// - molten://share/{shareCode} - Add friend share
+    /// - molten://g/{naturalKey} - Glass item detail with quick actions (QR code scan)
+    /// - molten://v/{naturalKey} - Glass item detail view-only (shared links)
+    /// - molten://inventory/{shareCode} - Add friend share
     @MainActor
     private func handleDeepLink(_ url: URL) {
         guard let host = url.host else { return }
 
         switch host {
         case "g":
-            // Glass item detail: molten://g/bullseye-clear-001
+            // Glass item detail with quick actions: molten://g/bullseye-clear-001
             let path = url.path
             let naturalKey = path.hasPrefix("/") ? String(path.dropFirst()) : path
 
@@ -733,6 +745,18 @@ extension MoltenApp {
             deepLinkGlassItemStableId = naturalKey
             // Note: showingDeepLinkedItem is now managed by .onChange(of: deepLinkGlassItemStableId)
             // This ensures proper handling when scanning multiple QR codes in succession
+
+        case "v":
+            // View-only item detail (for shared links): molten://v/bullseye-clear-001
+            let path = url.path
+            let naturalKey = path.hasPrefix("/") ? String(path.dropFirst()) : path
+
+            guard !naturalKey.isEmpty else {
+                return
+            }
+
+            deepLinkViewOnlyStableId = naturalKey
+            showingViewOnlyItem = true
 
         case "inventory":
             // Friend share: molten://inventory/ABC123

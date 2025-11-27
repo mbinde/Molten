@@ -39,6 +39,7 @@ enum QRQuickAction: String, CaseIterable, Codable {
 /// View that loads and displays a glass item from a deep link stable_id
 struct DeepLinkedItemView: View {
     let stableId: String
+    let showQuickActions: Bool
     @Environment(\.dismiss) private var dismiss
 
     @State private var item: CompleteInventoryItemModel?
@@ -61,8 +62,9 @@ struct DeepLinkedItemView: View {
     // UserDefaults key for persisting selected action
     private let selectedActionKey = "qrScanQuickAction"
 
-    init(stableId: String, deps: AppDependencies = AppDependencies()) {
+    init(stableId: String, showQuickActions: Bool = true, deps: AppDependencies = AppDependencies()) {
         self.stableId = stableId
+        self.showQuickActions = showQuickActions
         self.deps = deps
         self.catalogService = deps.catalogService
         self.inventoryService = deps.inventoryTrackingService
@@ -71,8 +73,8 @@ struct DeepLinkedItemView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Quick action toolbar (only show when item is loaded)
-                if !isLoading && item != nil {
+                // Quick action toolbar (only show when item is loaded and quick actions enabled)
+                if showQuickActions && !isLoading && item != nil {
                     quickActionToolbar
                         .padding()
                         #if os(macOS)
@@ -98,7 +100,7 @@ struct DeepLinkedItemView: View {
                     }
                 }
             }
-            .navigationTitle("Scanned Item")
+            .navigationTitle(showQuickActions ? "Scanned Item" : "Item Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

@@ -163,28 +163,9 @@ final class ScreenshotAutomation: XCTestCase {
         }
 
         // 4b. Color/Tag Filter Results
-        print("4️⃣b Feature: Color/Tag Filtering")
-        ensureOnCatalog()
-        // Look for a tag filter (like "Transparent", "Opaque", "Striker")
-        // Try common glass tags
-        let tagButtons = ["Transparent", "Opaque", "Striker", "Red", "Blue"]
-        var foundTag = false
-        for tag in tagButtons {
-            if app.buttons[tag].exists {
-                app.buttons[tag].tap()
-                sleep(1)
-                waitForContentToLoad()
-                takeScreenshot(named: "feature-tag-filter-\(tag.lowercased())", subdirectory: "website", delay: 0.5)
-                // Tap again to deselect
-                app.buttons[tag].tap()
-                usleep(500000)
-                foundTag = true
-                break
-            }
-        }
-        if !foundTag {
-            print("   ⚠️  No tag filter buttons found - skipping tag filter screenshot")
-        }
+        // SKIP: Tag filtering requires opening a sheet and selecting tags,
+        // which is too complex for screenshot automation. The catalog filters
+        // screenshot above already shows the filtering UI adequately.
 
         // 5. Inventory Management - Track Your Stock
         print("5️⃣ Feature: Inventory List")
@@ -361,33 +342,33 @@ final class ScreenshotAutomation: XCTestCase {
         sleep(1)
 
         // 13. Coatings Catalog - Beyond Glass
-        print("1️⃣3️⃣ Feature: Coatings Catalog")
-        ensureOnCatalog()
-        // Look for product type filter or tab
-        if app.buttons["Coatings"].exists {
-            app.buttons["Coatings"].tap()
-            waitForContentToLoad()
-            takeScreenshot(named: "feature-coatings-catalog", subdirectory: "website", delay: 0.5)
-        } else {
-            print("   ⚠️  Coatings tab/filter not found - skipping screenshot")
-        }
+        // SKIP: Coatings product type filtering is complex - the "Coatings" button
+        // exists as a chip when selected but needs to be selected via a different
+        // interaction flow. The catalog grid screenshot adequately shows product variety.
 
         // 14. Search Results - Accurate & Fast
         print("1️⃣4️⃣ Feature: Search Results")
         ensureOnCatalog()
         clearProductTypeFilter()  // Clear any filters from previous screenshots
         waitForContentToLoad()
-        // Pull down to reveal search bar (it's in navigation drawer)
-        app.swipeDown()
+        // Scroll to top to ensure search bar is visible
+        app.tables.firstMatch.swipeDown()
+        app.tables.firstMatch.swipeDown()
         sleep(1)
+        // Try to activate search
         let searchField = app.searchFields.firstMatch
         if searchField.waitForExistence(timeout: 5) {
-            searchField.tap()
-            sleep(1)
-            searchField.typeText("striker")
-            waitForContentToLoad(seconds: 1.5)
-            takeScreenshot(named: "feature-search-results", subdirectory: "website", delay: 0.5)
-            clearSearch()
+            // Tap to activate
+            if searchField.isHittable {
+                searchField.tap()
+                sleep(1)
+                searchField.typeText("striker")
+                waitForContentToLoad(seconds: 1.5)
+                takeScreenshot(named: "feature-search-results", subdirectory: "website", delay: 0.5)
+                clearSearch()
+            } else {
+                print("   ⚠️  Search field exists but not hittable")
+            }
         } else {
             print("   ⚠️  Search field not found")
         }

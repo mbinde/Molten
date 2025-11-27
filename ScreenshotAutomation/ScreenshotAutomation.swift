@@ -355,22 +355,29 @@ final class ScreenshotAutomation: XCTestCase {
         // 8b. Shopping Mode Active - Cart icon activated
         print("8️⃣b Feature: Shopping Mode Active")
         // Tap the shopping cart button to enter shopping mode
-        let cartButton = app.buttons["shopping_start_mode_button"]
-        if cartButton.waitForExistence(timeout: 3) {
+        // Try both the identifier and looking for cart icon button
+        let cartButtonById = app.buttons["shopping_start_mode_button"]
+        let cartButtonByIcon = app.buttons.matching(NSPredicate(format: "identifier CONTAINS 'cart'")).firstMatch
+
+        let cartButton = cartButtonById.exists ? cartButtonById : cartButtonByIcon
+
+        if cartButton.waitForExistence(timeout: 5) {
+            print("   Found shopping cart button, tapping...")
             cartButton.tap()
             sleep(2)  // Wait for shopping mode UI to appear
 
             // Take screenshot showing shopping mode active
             takeScreenshot(named: "feature-shopping-mode-active", subdirectory: "website", delay: 0.5)
 
-            // Exit shopping mode - look for cancel/done button
-            let cancelButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'cancel' OR label CONTAINS[c] 'done' OR label CONTAINS[c] 'exit'")).firstMatch
-            if cancelButton.exists {
+            // Exit shopping mode - look for cancel button
+            let cancelButton = app.buttons["shopping_cancel_button"]
+            if cancelButton.waitForExistence(timeout: 2) {
                 cancelButton.tap()
                 sleep(1)
             }
         } else {
-            print("   ⚠️ Shopping cart button not found - no items need shopping")
+            print("   ⚠️ Shopping cart button not found")
+            print("   Available buttons:", app.buttons.allElementsBoundByIndex.map { $0.identifier })
         }
 
         // 9. Label Printing - Professional Organization
@@ -399,28 +406,26 @@ final class ScreenshotAutomation: XCTestCase {
         print("🔟 Feature: Locations Map")
         navigateToTab("Locations")
         waitForContentToLoad()
-        takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
+
+        // Search for 98144 to get a nicely centered view
+        if activateSearch() {
+            app.searchFields.firstMatch.typeText("98144")
+            waitForContentToLoad(seconds: 2)
+            // Take screenshot with search results centered on map
+            takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
+            clearSearch()
+        } else {
+            // Fallback: just take screenshot without search
+            takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
+        }
 
         // 11. Location Detail
         print("1️⃣1️⃣ Feature: Location Detail")
-        // Reset to locations list by tapping tab multiple times
-        let locationsTab = app.buttons["Locations"]
-        for _ in 1...5 {
-            locationsTab.tap()
-            usleep(100000)
-        }
-        waitForContentToLoad()
-
-        // Scroll down more aggressively to reveal location cells below the map
-        app.swipeUp()
-        usleep(500000)  // 0.5 seconds
-        app.swipeUp()
-        sleep(1)
-        // Tap on first location
+        // Tap on first location in the list
         let locationCells = app.cells
         print("   📊 DEBUG: locationCells.count = \(locationCells.count)")
         if locationCells.count > 0 {
-            // Find the first hittable cell (cells below the map should be visible after double scroll)
+            // Find the first hittable cell
             var tappedCell = false
             for i in 0..<min(10, locationCells.count) {
                 let cell = locationCells.element(boundBy: i)

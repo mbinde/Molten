@@ -34,7 +34,7 @@ struct UsageBanner: View {
 
     var body: some View {
         if let limit = limit {
-            // Free tier with limit
+            // Free tier with limit - show usage indicator
             HStack(spacing: 12) {
                 Image(systemName: usageIcon)
                     .font(.title3)
@@ -81,33 +81,9 @@ struct UsageBanner: View {
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(usageColor.opacity(0.3), lineWidth: 1)
             )
-        } else {
-            // Premium tier - show badge
-            HStack(spacing: 12) {
-                Image(systemName: "crown.fill")
-                    .font(.title3)
-                    .foregroundColor(.yellow)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Premium")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-
-                    Text("Unlimited \(featureName)")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-
-                Spacer()
-            }
-            .padding(12)
-            .background(Color.yellow.opacity(0.1))
-            .cornerRadius(10)
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.yellow.opacity(0.3), lineWidth: 1)
-            )
         }
+        // Premium tier (limit == nil): Show nothing - no need to waste space
+        // announcing unlimited access on every screen
     }
 
     // MARK: - Computed Properties
@@ -142,11 +118,11 @@ struct UsageBanner: View {
     private var backgroundColor: Color {
         let percentage = usagePercentage
         if percentage >= 1.0 {
-            return Color.red.opacity(0.1)
+            return DesignSystem.Colors.accentDanger.opacity(0.1)
         } else if percentage >= 0.8 {
-            return Color.orange.opacity(0.1)
+            return DesignSystem.Colors.accentWarning.opacity(0.1)
         } else {
-            return Color.green.opacity(0.05)
+            return DesignSystem.Colors.accentSuccess.opacity(0.05)
         }
     }
 

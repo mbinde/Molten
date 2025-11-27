@@ -109,7 +109,7 @@ class AddInventoryItemViewModel {
     /// Check if the selected type uses weight units (grams/ounces)
     var isWeightBasedType: Bool {
         switch selectedType.lowercased() {
-        case "frit", "powder", "enamel":
+        case "frit", "powder", "enamel", "flakes":
             return true
         default:
             return false
@@ -123,7 +123,7 @@ class AddInventoryItemViewModel {
             return selectedType.lowercased()
         case "tube":
             return "tubes"
-        case "frit", "powder", "enamel":
+        case "frit", "powder", "enamel", "flakes":
             return selectedWeightUnit == .grams ? "g" : "oz"
         case "stringer":
             return "stringers"

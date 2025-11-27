@@ -1,9 +1,11 @@
 //
 //  GlassItemRowView.swift
-//  Flameworker
+//  Molten
 //
-//  Created by Assistant on 10/19/25.
 //  Unified glass item row view for consistent list display across the app
+//
+//  DESIGN SYSTEM: This view uses DesignSystem.* for all colors, fonts, and spacing.
+//  Run `grep -r "Color\.\(red\|blue\|green\|orange\)"` to check for violations.
 //
 
 import SwiftUI
@@ -12,7 +14,8 @@ import SwiftUI
 struct GlassItemRowView: View {
     let item: GlassItemRowData
     let leadingAccessory: AnyView?
-    let badgeContent: AnyView?
+    let trailingAccessory: AnyView?  // e.g., InventoryCountBadge on the right
+    let badgeContent: AnyView?  // Content shown below the subtitle (e.g., type breakdown)
     let showFullCode: Bool
 
     @AppStorage("showRatingsInCatalog") private var showRatingsInCatalog = true
@@ -82,17 +85,19 @@ struct GlassItemRowView: View {
     init(
         item: GlassItemRowData,
         leadingAccessory: AnyView? = nil,
+        trailingAccessory: AnyView? = nil,
         badgeContent: AnyView? = nil,
         showFullCode: Bool = false
     ) {
         self.item = item
         self.leadingAccessory = leadingAccessory
+        self.trailingAccessory = trailingAccessory
         self.badgeContent = badgeContent
         self.showFullCode = showFullCode
     }
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DesignSystem.Spacing.lg) {
             // Optional leading accessory (e.g., checkbox for shopping mode)
             if let accessory = leadingAccessory {
                 accessory
@@ -100,18 +105,23 @@ struct GlassItemRowView: View {
 
             mainContent
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, DesignSystem.Spacing.xs)
     }
 
     /// The main content (image + text) without the leading accessory
     /// Use this when you want to wrap only the content in a NavigationLink
     var mainContent: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DesignSystem.Spacing.lg) {
             thumbnail
 
             textContent
 
             Spacer()
+
+            // Optional trailing accessory (e.g., inventory count badge)
+            if let trailing = trailingAccessory {
+                trailing
+            }
         }
     }
 
@@ -130,51 +140,51 @@ struct GlassItemRowView: View {
 
     /// Just the text content (name, manufacturer, SKU, badges, tags)
     var textContent: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
             // Item name with rating
-            HStack(spacing: 4) {
+            HStack(spacing: DesignSystem.Spacing.xs) {
                 Text(item.name)
-                    .font(.headline)
+                    .font(DesignSystem.Typography.listItemTitle)
                     .lineLimit(1)
 
                 // Show rating inline after name if available, has enough ratings, and setting is enabled
                 if showRatingsInCatalog, let rating = item.rating, rating.hasEnoughRatings {
                     Text("•")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
 
                     Image(systemName: "star.fill")
-                        .font(.caption)
-                        .foregroundStyle(.yellow)
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .foregroundStyle(DesignSystem.Colors.moltenAmber)
 
                     Text(rating.formattedAverageRating)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                        .font(DesignSystem.Typography.listItemSubtitle)
+                        .fontWeight(DesignSystem.FontWeight.medium)
 
                     Text("(\(rating.totalRatings))")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(DesignSystem.Typography.listItemCaptionSmall)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
                 }
             }
             .lineLimit(1)
 
             // SKU and Manufacturer on same line (compact layout)
-            HStack(spacing: 4) {
+            HStack(spacing: DesignSystem.Spacing.xs) {
                 // SKU first (only if it exists and doesn't look synthetic)
                 if shouldDisplaySKU {
                     Text(showFullCode ? item.stableId : (item.sku ?? ""))
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(DesignSystem.Typography.listItemSubtitle)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
 
                     Text("•")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(DesignSystem.Typography.listItemSubtitle)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
 
                 // Manufacturer after SKU
                 Text(GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(DesignSystem.Typography.listItemSubtitle)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             .lineLimit(1)
 
@@ -186,7 +196,7 @@ struct GlassItemRowView: View {
             // Tags if available
             if !item.tags.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: DesignSystem.Spacing.xs) {
                         ForEach(item.tags, id: \.self) { tag in
                             BadgeLabel.tag(tag)
                         }
@@ -245,46 +255,92 @@ extension GlassItemRowView {
             inventoryToShow = item.inventory
         }
 
-        // Group inventory by type and sum quantities
-        var quantityByType: [String: Double] = [:]
+        // Group inventory by type, summing quantities and container counts
+        struct TypeAggregate {
+            var quantity: Double = 0
+            var containerCount: Double = 0
+        }
+        var aggregateByType: [String: TypeAggregate] = [:]
         for inv in inventoryToShow {
-            quantityByType[inv.type, default: 0.0] += inv.quantity
+            var aggregate = aggregateByType[inv.type, default: TypeAggregate()]
+            aggregate.quantity += inv.quantity
+            if let containers = inv.containerCount {
+                aggregate.containerCount += containers
+            }
+            aggregateByType[inv.type] = aggregate
         }
 
-        // Format as comma-separated list: "5 Rods, 3 Tubes, 4.3 oz Frit"
-        let typesList = quantityByType
-            .sorted { $0.key < $1.key }  // Sort alphabetically
-            .map { type, quantity -> String in
-                return Self.formatQuantityForDisplay(quantity: quantity, type: type)
+        // Trailing accessory: vertical stack of up to 3 inventory types
+        let sortedTypes = aggregateByType
+            .sorted { a, b in
+                // Sort by quantity (or container count if no quantity), descending
+                let aValue = a.value.quantity > 0 ? a.value.quantity : a.value.containerCount
+                let bValue = b.value.quantity > 0 ? b.value.quantity : b.value.containerCount
+                return aValue > bValue
             }
-            .joined(separator: ", ")
+            .prefix(3)  // Show at most 3 types
 
-        let badge = AnyView(
-            Text(typesList)
-                .font(.caption)
-                .foregroundColor(.secondary)
+        let trailingBadge = AnyView(
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                ForEach(Array(sortedTypes), id: \.key) { type, aggregate in
+                    InventoryCountBadge.forInventory(
+                        type: type,
+                        quantity: aggregate.quantity,
+                        containerCount: aggregate.containerCount > 0 ? aggregate.containerCount : nil,
+                        style: .compact
+                    )
+                }
+            }
         )
 
         return GlassItemRowView(
             item: .init(from: item),
-            badgeContent: badge,
+            trailingAccessory: trailingBadge,
+            badgeContent: nil,  // No longer need the inline breakdown text
             showFullCode: false
         )
+    }
+
+    /// Format quantity and unit for display, handling weight conversion for frit/powder/enamel
+    /// - Returns: Tuple of (displayQuantity, unitString) e.g. (4.5, "oz") or (10, "rods")
+    private static func formatQuantityAndUnit(quantity: Double, type: String) -> (Double, String) {
+        let isWeightBased = ["frit", "powder", "enamel", "flakes"].contains(type.lowercased())
+
+        if isWeightBased {
+            // Weight-based: convert from grams (storage) to user's preferred unit
+            let preferredUnit = WeightUnitPreference.current
+            let convertedQuantity = WeightUnit.grams.convert(quantity, to: preferredUnit)
+            return (convertedQuantity, preferredUnit.symbol)
+        } else {
+            // Count-based: use the type name as the unit
+            let typeName = GlassTerminologySettings.shared.displayName(for: type)
+            return (quantity, typeName)
+        }
     }
 
     /// Format a quantity for display based on its type
     /// - Parameters:
     ///   - quantity: The raw quantity value (always stored in grams for weight-based types)
+    ///   - containerCount: Optional number of containers/jars for weight-based types
     ///   - type: The inventory type (e.g., "frit", "rod", "tube")
-    /// - Returns: Formatted string like "5 Rods", "4.3 oz Frit", "10 g Powder"
-    private static func formatQuantityForDisplay(quantity: Double, type: String) -> String {
+    /// - Returns: Formatted string like "5 Rods", "4.3 oz Frit", "3 jars Frit"
+    private static func formatQuantityForDisplay(quantity: Double, containerCount: Double = 0, type: String) -> String {
         let typeName = GlassTerminologySettings.shared.displayName(for: type)
 
         // Check if this is a weight-based type
-        let isWeightBased = ["frit", "powder", "enamel"].contains(type.lowercased())
+        let isWeightBased = ["frit", "powder", "enamel", "flakes"].contains(type.lowercased())
 
         if isWeightBased {
-            // Weight-based: convert from grams (storage) to user's preferred unit
+            // For weight-based types with jars but no weight, show jars
+            if containerCount > 0 && quantity <= 0 {
+                let jarLabel = containerCount == 1 ? "jar" : "jars"
+                let jarText = containerCount.truncatingRemainder(dividingBy: 1) == 0
+                    ? String(format: "%.0f", containerCount)
+                    : String(format: "%.1f", containerCount)
+                return "\(jarText) \(jarLabel) \(typeName)"
+            }
+
+            // Weight-based with weight: convert from grams (storage) to user's preferred unit
             let preferredUnit = WeightUnitPreference.current
             let convertedQuantity = WeightUnit.grams.convert(quantity, to: preferredUnit)
             let quantityText = String(format: "%.1f", convertedQuantity).replacingOccurrences(of: ".0", with: "")
@@ -299,26 +355,26 @@ extension GlassItemRowView {
     /// Friend inventory-style row with quantity and location
     static func friendInventory(item: EnrichedFriendInventoryItem) -> GlassItemRowView {
         let badge = AnyView(
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                HStack(spacing: DesignSystem.Spacing.sm) {
                     Text("\(item.snapshot.quantity, specifier: "%.1f")")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(Color.accentColor)
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .fontWeight(DesignSystem.FontWeight.semibold)
+                        .foregroundColor(DesignSystem.Colors.moltenTeal)
 
                     Text(item.snapshot.unit)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
 
                 if let location = item.snapshot.location {
-                    HStack(spacing: 4) {
+                    HStack(spacing: DesignSystem.Spacing.xs) {
                         Image(systemName: "location.fill")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .font(DesignSystem.Typography.listItemCaptionSmall)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         Text(location)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }
@@ -342,15 +398,15 @@ extension GlassItemRowView {
     ) -> GlassItemRowView {
         // Leading accessory: checkbox + compact quantity editor for shopping mode
         let leadingAccessory: AnyView? = isShoppingMode ? AnyView(
-            HStack(spacing: 8) {
+            HStack(spacing: DesignSystem.Spacing.md) {
                 // Checkbox (on the left) with quantity difference indicator below
-                VStack(spacing: 2) {
+                VStack(spacing: DesignSystem.Spacing.xxs) {
                     Button(action: {
                         onBasketToggle?()
                     }) {
                         Image(systemName: isInBasket ? "checkmark.circle.fill" : "circle")
                             .font(.title2)
-                            .foregroundColor(isInBasket ? .accentColor : .secondary)
+                            .foregroundColor(isInBasket ? DesignSystem.Colors.moltenOrange : DesignSystem.Colors.textSecondary)
                     }
                     .buttonStyle(.plain)
 
@@ -359,9 +415,9 @@ extension GlassItemRowView {
                         let difference = quantityBinding.wrappedValue - item.shoppingListItem.neededQuantity
                         if abs(difference) > 0.01 {  // Only show if there's a meaningful difference
                             Text(difference > 0 ? "+\(Int(difference))" : "\(Int(difference))")
-                                .font(.caption2)
-                                .fontWeight(.semibold)
-                                .foregroundColor(difference > 0 ? .green : .red)
+                                .font(DesignSystem.Typography.listItemCaptionSmall)
+                                .fontWeight(DesignSystem.FontWeight.semibold)
+                                .foregroundColor(difference > 0 ? DesignSystem.Colors.accentSuccess : DesignSystem.Colors.accentDanger)
                         }
                     }
                 }
@@ -375,7 +431,7 @@ extension GlassItemRowView {
                         }) {
                             Image(systemName: "plus")
                                 .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                         .buttonStyle(.plain)
                         .frame(height: 12)
@@ -383,8 +439,8 @@ extension GlassItemRowView {
                         // Editable number field in middle
                         TextField("Qty", value: quantityBinding, format: .number)
                             .multilineTextAlignment(.center)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
+                            .font(DesignSystem.Typography.listItemSubtitle)
+                            .fontWeight(DesignSystem.FontWeight.medium)
                             .monospacedDigit()
                             .frame(width: 40)
                             #if os(iOS)
@@ -399,7 +455,7 @@ extension GlassItemRowView {
                         }) {
                             Image(systemName: "minus")
                                 .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                         .buttonStyle(.plain)
                         .frame(height: 12)
@@ -421,39 +477,39 @@ extension GlassItemRowView {
             var badgeComponents: [AnyView] = []
             badgeComponents.append(AnyView(
                 Text("Need: \(item.shoppingListItem.neededQuantity, specifier: "%.1f")")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.orange)
+                    .font(DesignSystem.Typography.listItemCaption)
+                    .fontWeight(DesignSystem.FontWeight.semibold)
+                    .foregroundColor(DesignSystem.Colors.moltenAmber)
             ))
 
             badgeComponents.append(AnyView(
                 Text("•")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .font(DesignSystem.Typography.listItemCaptionSmall)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             ))
 
             badgeComponents.append(AnyView(
                 Text("Current: \(item.shoppingListItem.currentQuantity, specifier: "%.1f")")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(DesignSystem.Typography.listItemCaption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             ))
 
             if showStore {
                 badgeComponents.append(AnyView(
                     Text("•")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .font(DesignSystem.Typography.listItemCaptionSmall)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 ))
 
                 badgeComponents.append(AnyView(
                     Text(item.shoppingListItem.store)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 ))
             }
 
             badgeContent = AnyView(
-                HStack(spacing: 6) {
+                HStack(spacing: DesignSystem.Spacing.sm) {
                     ForEach(0..<badgeComponents.count, id: \.self) { index in
                         badgeComponents[index]
                     }

@@ -301,4 +301,67 @@ struct KilnScheduleModelTests {
         #expect(decoded.segments.count == original.segments.count)
         #expect(decoded.description == original.description)
     }
+
+    // MARK: - Temperature Range Formatting Tests (for Coatings)
+
+    @Test("Should format temperature range with both values in Fahrenheit")
+    func testFormatTemperatureRangeBothValuesFahrenheit() async throws {
+        let result = TemperatureUnit.fahrenheit.formatTemperatureRange(lowF: 1175, highF: 1425)
+        #expect(result == "1175-1425°F")
+    }
+
+    @Test("Should format temperature range with both values in Celsius")
+    func testFormatTemperatureRangeBothValuesCelsius() async throws {
+        // 1175°F = 635°C, 1425°F = 774°C (rounded)
+        let result = TemperatureUnit.celsius.formatTemperatureRange(lowF: 1175, highF: 1425)
+        #expect(result == "635-774°C")
+    }
+
+    @Test("Should format temperature range with only low value")
+    func testFormatTemperatureRangeOnlyLow() async throws {
+        let resultF = TemperatureUnit.fahrenheit.formatTemperatureRange(lowF: 1175, highF: nil)
+        #expect(resultF == "1175+°F")
+
+        let resultC = TemperatureUnit.celsius.formatTemperatureRange(lowF: 1175, highF: nil)
+        #expect(resultC == "635+°C")
+    }
+
+    @Test("Should format temperature range with only high value")
+    func testFormatTemperatureRangeOnlyHigh() async throws {
+        let resultF = TemperatureUnit.fahrenheit.formatTemperatureRange(lowF: nil, highF: 1425)
+        #expect(resultF == "1425°F")
+
+        let resultC = TemperatureUnit.celsius.formatTemperatureRange(lowF: nil, highF: 1425)
+        #expect(resultC == "774°C")
+    }
+
+    @Test("Should format temperature range with no values")
+    func testFormatTemperatureRangeNoValues() async throws {
+        let resultF = TemperatureUnit.fahrenheit.formatTemperatureRange(lowF: nil, highF: nil)
+        #expect(resultF == "?-?°F")
+
+        let resultC = TemperatureUnit.celsius.formatTemperatureRange(lowF: nil, highF: nil)
+        #expect(resultC == "?-?°C")
+    }
+
+    @Test("Should convert Fahrenheit to Celsius correctly")
+    func testFromFahrenheitConversion() async throws {
+        // 32°F = 0°C
+        #expect(TemperatureUnit.celsius.fromFahrenheit(32) == 0)
+
+        // 212°F = 100°C
+        #expect(TemperatureUnit.celsius.fromFahrenheit(212) == 100)
+
+        // 1175°F ≈ 635°C
+        #expect(TemperatureUnit.celsius.fromFahrenheit(1175) == 635)
+
+        // Fahrenheit should return same value
+        #expect(TemperatureUnit.fahrenheit.fromFahrenheit(1175) == 1175)
+    }
+
+    @Test("Should have correct short symbols")
+    func testShortSymbols() async throws {
+        #expect(TemperatureUnit.fahrenheit.shortSymbol == "F")
+        #expect(TemperatureUnit.celsius.shortSymbol == "C")
+    }
 }

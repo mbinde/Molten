@@ -97,8 +97,8 @@ struct AddProjectView: View {
                                     .font(.caption)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
-                                    .background(Color.blue.opacity(0.1))
-                                    .foregroundColor(.blue)
+                                    .background(DesignSystem.Colors.accentSecondary.opacity(0.1))
+                                    .foregroundColor(DesignSystem.Colors.accentSecondary)
                                     .cornerRadius(6)
                             }
                         }

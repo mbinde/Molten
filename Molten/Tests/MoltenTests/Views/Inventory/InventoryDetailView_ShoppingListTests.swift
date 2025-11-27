@@ -55,16 +55,15 @@ struct InventoryDetailView_ShoppingListTests {
 
     // MARK: - Add to Shopping List Tests
 
-    @Test("ShoppingListOptionsView initializes with item and dependencies")
-    func testShoppingListOptionsViewInitialization() {
+    @Test("AddShoppingListItemView initializes with prefilled natural key")
+    func testAddShoppingListItemViewInitialization() {
         let item = createTestItem()
-        let view = ShoppingListOptionsView(
-            item: item,
+        let view = AddShoppingListItemView(
+            prefilledNaturalKey: item.glassItem.stable_id,
             deps: deps
         )
 
         #expect(view != nil)
-        #expect(view.item.glassItem.stable_id == item.glassItem.stable_id)
     }
 
     @Test("Shopping list form validates positive quantity")

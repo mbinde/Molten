@@ -862,8 +862,8 @@ struct WeightBasedLabelCountSheet: View {
                                         .font(.caption)
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
-                                        .background(Color.orange.opacity(0.2))
-                                        .foregroundColor(.orange)
+                                        .background(DesignSystem.Colors.accentWarning.opacity(0.2))
+                                        .foregroundColor(DesignSystem.Colors.accentWarning)
                                         .cornerRadius(4)
 
                                     if let containerCount = item.inventory.containerCount, containerCount > 0 {

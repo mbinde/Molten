@@ -326,7 +326,7 @@ struct AddItemFormView: View {
 
     private var isWeightBasedType: Bool {
         switch selectedType.lowercased() {
-        case "frit", "powder", "enamel":
+        case "frit", "powder", "enamel", "flakes":
             return true
         default:
             return false

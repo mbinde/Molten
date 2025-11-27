@@ -16,6 +16,7 @@ enum SharingAPIError: Error, LocalizedError {
     case conflict
     case unauthorized
     case invalidData
+    case rateLimitExceeded
 
     var errorDescription: String? {
         switch self {
@@ -33,6 +34,8 @@ enum SharingAPIError: Error, LocalizedError {
             return "Unauthorized access"
         case .invalidData:
             return "Invalid data format"
+        case .rateLimitExceeded:
+            return "Rate limit exceeded. Please try again later."
         }
     }
 }

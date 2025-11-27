@@ -22,6 +22,8 @@ struct GlassItemImageSelector: View {
     let onAddImage: () -> Void
     let onDeleteImage: (UUID) -> Void
 
+    @State private var showingImageSubmissionSheet = false
+
     private let columns = [
         GridItem(.adaptive(minimum: 100, maximum: 120))
     ]
@@ -37,26 +39,23 @@ struct GlassItemImageSelector: View {
                 imageGrid
             }
         }
+        .sheet(isPresented: $showingImageSubmissionSheet) {
+            if let mfrImage = manufacturerImage {
+                ImageSubmissionSheet(
+                    image: mfrImage,
+                    glassItem: glassItem
+                )
+            }
+        }
     }
 
     // MARK: - Header Section
 
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-            if currentPrimaryImageId == nil {
-                HStack(spacing: DesignSystem.Spacing.xs) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                        .font(.caption)
-                    Text("Using manufacturer default image")
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                }
-            } else {
-                Text("Tap to select primary • Tap selected to use default")
-                    .font(DesignSystem.Typography.caption)
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-            }
+            Text("Tap an image to use it as the display image")
+                .font(DesignSystem.Typography.listItemCaption)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
     }
 
@@ -75,6 +74,11 @@ struct GlassItemImageSelector: View {
             Text("Using manufacturer default")
                 .font(DesignSystem.Typography.caption)
                 .foregroundColor(DesignSystem.Colors.textSecondary)
+
+            Text("Custom images are private and visible only to you")
+                .font(DesignSystem.Typography.caption)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+                .multilineTextAlignment(.center)
 
             Button {
                 onAddImage()
@@ -96,32 +100,17 @@ struct GlassItemImageSelector: View {
     // MARK: - Image Grid
 
     private var imageGrid: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-            LazyVGrid(columns: columns, spacing: DesignSystem.Spacing.md) {
-                // Show manufacturer default image first (non-selectable reference)
-                if let mfrImage = manufacturerImage {
-                    manufacturerImageCell(image: mfrImage)
-                }
-
-                // Show user-uploaded images
-                ForEach(images) { imageModel in
-                    if let image = loadedImages[imageModel.id] {
-                        userImageCell(for: imageModel, image: image)
-                    }
-                }
+        LazyVGrid(columns: columns, spacing: DesignSystem.Spacing.md) {
+            // Show manufacturer default image first (non-selectable reference)
+            if let mfrImage = manufacturerImage {
+                manufacturerImageCell(image: mfrImage)
             }
 
-            HStack {
-                Spacer()
-
-                Button {
-                    onAddImage()
-                } label: {
-                    Label("Add More Images", systemImage: "plus")
-                        .font(.caption)
+            // Show user-uploaded images
+            ForEach(images) { imageModel in
+                if let image = loadedImages[imageModel.id] {
+                    userImageCell(for: imageModel, image: image)
                 }
-                .buttonStyle(.bordered)
-                .accessibilityIdentifier("glass_item_image_add_more")
             }
         }
     }
@@ -130,38 +119,56 @@ struct GlassItemImageSelector: View {
 
     private func manufacturerImageCell(image: UIImage) -> some View {
         VStack(spacing: DesignSystem.Spacing.xs) {
-            ZStack(alignment: .topTrailing) {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 100, height: 100)
-                    .clipped()
-                    .cornerRadius(DesignSystem.CornerRadius.medium)
-                    .opacity(currentPrimaryImageId == nil ? 1.0 : 0.6)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
-                            .stroke(
-                                currentPrimaryImageId == nil ? Color.green : Color.gray.opacity(0.3),
-                                lineWidth: currentPrimaryImageId == nil ? 3 : 1
-                            )
-                    )
-
-                if currentPrimaryImageId == nil {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title3)
-                        .foregroundColor(.green)
-                        .background(
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 20, height: 20)
+            Button {
+                // Tap to select manufacturer default (deselect any user image)
+                if currentPrimaryImageId != nil {
+                    onSelectPrimary(nil)
+                }
+            } label: {
+                ZStack(alignment: .topTrailing) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 100, height: 100)
+                        .clipped()
+                        .cornerRadius(DesignSystem.CornerRadius.medium)
+                        .opacity(currentPrimaryImageId == nil ? 1.0 : 0.6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                                .stroke(
+                                    currentPrimaryImageId == nil ? DesignSystem.Colors.accentSuccess : Color.gray.opacity(0.3),
+                                    lineWidth: currentPrimaryImageId == nil ? 3 : 1
+                                )
                         )
-                        .padding(4)
+
+                    if currentPrimaryImageId == nil {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(DesignSystem.Colors.accentSuccess)
+                            .background(
+                                Circle()
+                                    .fill(Color.white)
+                                    .frame(width: 20, height: 20)
+                            )
+                            .padding(4)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .contextMenu {
+                // Only show "Submit to Molten" option if there are NO user images
+                if images.isEmpty {
+                    Button {
+                        showingImageSubmissionSheet = true
+                    } label: {
+                        Label("Submit Image to Molten", systemImage: "paperplane")
+                    }
                 }
             }
 
-            Text("Default")
+            Text(currentPrimaryImageId == nil ? "Default (Selected)" : "Default")
                 .font(.caption2)
-                .foregroundColor(.secondary)
+                .foregroundColor(currentPrimaryImageId == nil ? DesignSystem.Colors.accentSuccess : .secondary)
         }
     }
 
@@ -215,10 +222,12 @@ struct GlassItemImageSelector: View {
                 .accessibilityIdentifier("glass_item_image_delete")
             }
 
-            // Show "Primary" or "Alternate" label
-            Text(imageModel.imageType == .primary ? "Primary" : "Alternate")
-                .font(.caption2)
-                .foregroundColor(imageModel.imageType == .primary ? .blue : .secondary)
+            // Show "Selected" if this is the current display image
+            if currentPrimaryImageId == imageModel.id {
+                Text("Selected")
+                    .font(.caption2)
+                    .foregroundColor(DesignSystem.Colors.accentPrimary)
+            }
         }
     }
 }

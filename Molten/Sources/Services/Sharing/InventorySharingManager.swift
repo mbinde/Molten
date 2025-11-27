@@ -56,9 +56,15 @@ class InventorySharingManager {
         )
 
         // Use local context for cached inventory, with catalog repository from deps
+        // Note: CoreDataSharedInventoryRepository requires SQLiteGlassItemRepository specifically
+        // for efficient shared inventory lookups. This cast is safe because AppDependencies
+        // always creates SQLiteGlassItemRepository for glassItemRepository.
+        guard let sqliteRepo = deps.glassItemRepository as? SQLiteGlassItemRepository else {
+            fatalError("InventorySharingManager requires SQLiteGlassItemRepository, but got \(type(of: deps.glassItemRepository))")
+        }
         let sharedInventoryRepository = CoreDataSharedInventoryRepository(
             context: deps.persistenceController.localContext ?? deps.persistenceController.container.viewContext,
-            catalogRepository: deps.glassItemRepository as! SQLiteGlassItemRepository
+            catalogRepository: sqliteRepo
         )
 
         self.init(
@@ -237,7 +243,6 @@ class InventorySharingManager {
 
         do {
             // Download updated inventory
-            print("🔐 [REFRESH] Downloading friend inventory for share code: \(shareCode)")
             let result = try await coordinator.downloadFriendInventory(shareCode: shareCode)
 
             // Update share record with latest metadata (displayName, shareNotes, expiresAt, last_fetched)
@@ -253,20 +258,16 @@ class InventorySharingManager {
             // Update inventory snapshot in Core Data (Local)
             try sharedInventoryRepository.saveSnapshot(shareCode: shareCode, items: result.items)
 
-            print("🔐 [REFRESH] Successfully refreshed friend share")
             return result
 
         } catch SharingAPIError.notFound {
             // Share was deleted by owner - clean up cached data
-            print("🔐 [REFRESH] Share not found (404) - owner deleted it. Cleaning up cached data...")
-
             // Mark share record as inactive
             try shareRecordRepository.deactivateShareRecord(shareCode: shareCode)
 
             // Delete cached inventory snapshot
             try sharedInventoryRepository.deleteSnapshot(shareCode: shareCode)
 
-            print("🔐 [REFRESH] Cached data cleaned up")
             throw SharingManagerError.shareDeletedByOwner
         }
     }
@@ -327,21 +328,11 @@ class InventorySharingManager {
         let now = Date()
         let staleThreshold: TimeInterval = 24 * 60 * 60 // 24 hours
 
-        let isStale: Bool
         if let lastUpdated = metadataRepository.getMyShareLastUpdated() {
             let timeSinceUpdate = now.timeIntervalSince(lastUpdated)
-            isStale = timeSinceUpdate > staleThreshold
-
-            if !isStale {
-                print("🔄 [AUTO-REFRESH] My share is up to date (last updated \(Int(timeSinceUpdate / 3600)) hours ago)")
-                return
+            if timeSinceUpdate <= staleThreshold {
+                return // Not stale yet
             }
-
-            print("🔄 [AUTO-REFRESH] My share is stale (last updated \(Int(timeSinceUpdate / 3600)) hours ago), refreshing...")
-        } else {
-            // No timestamp - treat as stale and refresh
-            print("🔄 [AUTO-REFRESH] My share has no last updated timestamp, refreshing...")
-            isStale = true
         }
 
         do {
@@ -353,11 +344,8 @@ class InventorySharingManager {
 
             // Update last updated timestamp
             metadataRepository.setMyShareLastUpdated(Date())
-
-            print("✅ [AUTO-REFRESH] Successfully refreshed my share")
         } catch {
             // Silently skip errors - user can manually refresh if needed
-            print("⚠️ [AUTO-REFRESH] Failed to refresh my share: \(error)")
         }
     }
 

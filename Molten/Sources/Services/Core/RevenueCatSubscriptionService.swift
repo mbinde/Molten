@@ -9,11 +9,17 @@ import RevenueCat
 @MainActor
 public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, Sendable {
 
-    private let proEntitlementIdentifier = "Molten Glass Pro"
+    private let proEntitlementIdentifier = "pro"
 
     public init() {}
 
     public func hasProAccess() async -> Bool {
+        // Check debug override first (for testing)
+        if UserDefaults.standard.bool(forKey: "debugOverrideSubscriptionTier") {
+            let tierValue = UserDefaults.standard.integer(forKey: "debugSubscriptionTierValue")
+            return tierValue == 1  // 1 = premium
+        }
+
         do {
             let customerInfo = try await Purchases.shared.customerInfo()
             if let proEntitlement = customerInfo.entitlements[proEntitlementIdentifier] {
@@ -28,6 +34,19 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
     }
 
     public func getSubscriptionStatus() async -> SubscriptionInfo {
+        // Check debug override first (for testing)
+        if UserDefaults.standard.bool(forKey: "debugOverrideSubscriptionTier") {
+            let tierValue = UserDefaults.standard.integer(forKey: "debugSubscriptionTierValue")
+            if tierValue == 1 {
+                return SubscriptionInfo(
+                    isActive: true,
+                    productIdentifier: "debug.premium",
+                    expirationDate: Date().addingTimeInterval(86400 * 365),  // 1 year from now
+                    willRenew: true
+                )
+            }
+        }
+
         do {
             let customerInfo = try await Purchases.shared.customerInfo()
 

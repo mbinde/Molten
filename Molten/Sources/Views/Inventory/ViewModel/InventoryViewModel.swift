@@ -131,9 +131,13 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        // Apply COE filter
+        // Apply COE filter (only affects glass items - coatings/tools don't have COE)
         if !selectedCOEs.isEmpty {
             filtered = filtered.filter { item in
+                // Non-glass items (coatings, tools) don't have COE - don't filter them out
+                if item.catalogItem.itemType != .glass {
+                    return true
+                }
                 if let coe = item.catalogItem.coe {
                     return selectedCOEs.contains(coe)
                 }
@@ -345,11 +349,15 @@ class InventoryViewModel: InventoryViewModelProtocol {
         computeInventoryTypeCounts()
     }
 
+    var productTypeCounts: [String: Int] {
+        computeProductTypeCounts()
+    }
+
     // MARK: - Filter Count Computation
 
     /// Count items per manufacturer based on current filters (excluding manufacturer filter itself)
     private func computeManufacturerCounts() -> [String: Int] {
-        var items = completeItems.filter { $0.totalQuantity > 0 }
+        var items = completeItems.filter { $0.hasInventory }
 
         // Apply all filters EXCEPT manufacturer
         if !selectedProductTypes.isEmpty {
@@ -408,8 +416,12 @@ class InventoryViewModel: InventoryViewModelProtocol {
     }
 
     /// Count items per COE based on current filters (excluding COE filter itself)
+    /// Only counts glass items since coatings/tools don't have COE
     private func computeCOECounts() -> [Int32: Int] {
-        var items = completeItems.filter { $0.totalQuantity > 0 }
+        var items = completeItems.filter { $0.hasInventory }
+
+        // Only count glass items (coatings/tools don't have COE)
+        items = items.filter { $0.catalogItem.itemType == .glass }
 
         // Apply all filters EXCEPT COE
         if !selectedProductTypes.isEmpty {
@@ -469,7 +481,7 @@ class InventoryViewModel: InventoryViewModelProtocol {
 
     /// Count items per tag based on current filters (excluding tag filter itself)
     private func computeTagCounts() -> [String: Int] {
-        var items = completeItems.filter { $0.totalQuantity > 0 }
+        var items = completeItems.filter { $0.hasInventory }
 
         // Apply all filters EXCEPT tags
         if !selectedProductTypes.isEmpty {
@@ -530,7 +542,7 @@ class InventoryViewModel: InventoryViewModelProtocol {
     }
 
     private func computeLocationCounts() -> [String: Int] {
-        var items = completeItems.filter { $0.totalQuantity > 0 }
+        var items = completeItems.filter { $0.hasInventory }
 
         // Apply all filters EXCEPT location
         if !selectedProductTypes.isEmpty {
@@ -592,7 +604,7 @@ class InventoryViewModel: InventoryViewModelProtocol {
 
     /// Count items per inventory type based on current filters (excluding inventory type filter itself)
     private func computeInventoryTypeCounts() -> [String: Int] {
-        var items = completeItems.filter { $0.totalQuantity > 0 }
+        var items = completeItems.filter { $0.hasInventory }
 
         // Apply all filters EXCEPT inventory type
         if !selectedProductTypes.isEmpty {
@@ -648,6 +660,20 @@ class InventoryViewModel: InventoryViewModelProtocol {
             for type in itemTypes {
                 counts[type, default: 0] += 1
             }
+        }
+        return counts
+    }
+
+    /// Count items per product type (glass, coating, tool) - excludes product type filter itself
+    private func computeProductTypeCounts() -> [String: Int] {
+        // For product type counts, we count ALL items with inventory, not filtered by product type
+        // This shows how many of each type exist regardless of current filter
+        let items = completeItems.filter { $0.hasInventory }
+
+        var counts: [String: Int] = [:]
+        for item in items {
+            let productType = item.catalogItem.itemType.rawValue
+            counts[productType, default: 0] += 1
         }
         return counts
     }

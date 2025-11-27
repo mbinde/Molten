@@ -227,9 +227,9 @@ extension View {
             .badge(BadgeLabel.quantity(5))
 
         RoundedRectangle(cornerRadius: 12)
-            .fill(Color.green.opacity(0.2))
+            .fill(DesignSystem.Colors.accentSuccess.opacity(0.2))
             .frame(width: 200, height: 100)
-            .badge(BadgeLabel.status("New", color: .green))
+            .badge(BadgeLabel.status("New", color: DesignSystem.Colors.accentSuccess))
     }
     .padding()
 }

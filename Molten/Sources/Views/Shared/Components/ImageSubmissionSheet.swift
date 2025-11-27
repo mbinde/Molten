@@ -37,26 +37,27 @@ struct ImageSubmissionSheet: View {
                     // Header
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
                         Text("Submit Image to Molten")
-                            .font(DesignSystem.Typography.title2)
+                            .font(DesignSystem.Typography.sectionHeader)
                             .fontWeight(.bold)
 
                         Text("Help improve the catalog by sharing this manufacturer image with other users")
-                            .font(DesignSystem.Typography.body)
+                            .font(DesignSystem.Typography.formValue)
                             .foregroundColor(DesignSystem.Colors.textSecondary)
 
                         Text("Note: Custom images you upload are private and visible only to you. This submission shares the manufacturer's default image.")
-                            .font(DesignSystem.Typography.caption)
+                            .font(DesignSystem.Typography.listItemCaption)
                             .foregroundColor(DesignSystem.Colors.textSecondary)
                             .padding(.vertical, DesignSystem.Spacing.xs)
                             .padding(.horizontal, DesignSystem.Spacing.sm)
-                            .background(Color.blue.opacity(0.1))
+                            .background(DesignSystem.Colors.accentSecondary.opacity(0.1))
                             .cornerRadius(DesignSystem.CornerRadius.small)
                     }
 
                     // Image preview
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
                         Text("Image Preview")
-                            .font(DesignSystem.Typography.headline)
+                            .font(DesignSystem.Typography.formLabel)
+                            .fontWeight(DesignSystem.FontWeight.semibold)
 
                         HStack {
                             Spacer()
@@ -69,7 +70,7 @@ struct ImageSubmissionSheet: View {
                         }
 
                         Text(glassItem.name)
-                            .font(DesignSystem.Typography.body)
+                            .font(DesignSystem.Typography.formValue)
                             .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
 
@@ -78,17 +79,18 @@ struct ImageSubmissionSheet: View {
                     // Terms and conditions
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
                         Text("Terms")
-                            .font(DesignSystem.Typography.headline)
+                            .font(DesignSystem.Typography.formLabel)
+                            .fontWeight(DesignSystem.FontWeight.semibold)
 
                         Toggle(isOn: $hasPermission) {
                             Text("I have permission to share this image and allow Molten to use it")
-                                .font(DesignSystem.Typography.body)
+                                .font(DesignSystem.Typography.formValue)
                         }
                         .toggleStyle(SwitchToggleStyle(tint: DesignSystem.Colors.accentPrimary))
 
                         Toggle(isOn: $offersFreeOfCharge) {
                             Text("I offer this image to Molten free of charge")
-                                .font(DesignSystem.Typography.body)
+                                .font(DesignSystem.Typography.formValue)
                         }
                         .toggleStyle(SwitchToggleStyle(tint: DesignSystem.Colors.accentPrimary))
                     }
@@ -98,10 +100,11 @@ struct ImageSubmissionSheet: View {
                     // Email field
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
                         Text("Contact Email")
-                            .font(DesignSystem.Typography.headline)
+                            .font(DesignSystem.Typography.formLabel)
+                            .fontWeight(DesignSystem.FontWeight.semibold)
 
                         Text("Required for us to contact you about this submission")
-                            .font(DesignSystem.Typography.caption)
+                            .font(DesignSystem.Typography.listItemCaption)
                             .foregroundColor(DesignSystem.Colors.textSecondary)
 
                         TextField("your@email.com", text: $email)
@@ -112,18 +115,18 @@ struct ImageSubmissionSheet: View {
 
                         if !email.isEmpty && !isValidEmail {
                             Text("Please enter a valid email address")
-                                .font(DesignSystem.Typography.caption)
-                                .foregroundColor(.red)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.accentDanger)
                         }
                     }
 
                     // Error message
                     if let error = errorMessage {
                         Text(error)
-                            .font(DesignSystem.Typography.body)
-                            .foregroundColor(.red)
+                            .font(DesignSystem.Typography.formValue)
+                            .foregroundColor(DesignSystem.Colors.accentDanger)
                             .padding()
-                            .background(Color.red.opacity(0.1))
+                            .background(DesignSystem.Colors.accentDanger.opacity(0.1))
                             .cornerRadius(DesignSystem.CornerRadius.medium)
                     }
                 }
@@ -171,11 +174,10 @@ struct ImageSubmissionSheet: View {
     let sampleGlassItem = GlassItemModel(
         stable_id: "bullseye-0001-0",
         name: "Bullseye Red Opal",
-        manufacturer: "be",
-        code: "0001",
-        variant: "",
+        sku: "0001",
+        manufacturer: "bullseye",
         coe: 90,
-        type: "rod"
+        mfr_status: "available"
     )
 
     let sampleImage = UIImage(systemName: "photo")!

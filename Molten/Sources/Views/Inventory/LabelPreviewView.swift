@@ -62,7 +62,7 @@ struct LabelPreviewView: View {
                     let _ = print("❌ Failed to load manufacturer image: \(imageName)")
                     // Debug: Show a placeholder to verify the space is there
                     Rectangle()
-                        .fill(Color.red.opacity(0.3))
+                        .fill(DesignSystem.Colors.accentDanger.opacity(0.3))
                         .frame(height: size * effectiveManufacturerImageSize)
                         .overlay(
                             Text("IMG?")
@@ -310,7 +310,7 @@ struct LabelPreviewView: View {
                         .italic(fieldFormat.italic)
                         .lineLimit(1)
                         .truncationMode(.tail)
-                        .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
+                        .background(willTruncate ? DesignSystem.Colors.accentDanger.opacity(0.2) : Color.clear)
                 }
             }
 
@@ -327,7 +327,7 @@ struct LabelPreviewView: View {
                     .italic(fieldFormat.italic)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
+                    .background(willTruncate ? DesignSystem.Colors.accentDanger.opacity(0.2) : Color.clear)
             }
 
         case .colorName:
@@ -343,7 +343,7 @@ struct LabelPreviewView: View {
                     .italic(fieldFormat.italic)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
+                    .background(willTruncate ? DesignSystem.Colors.accentDanger.opacity(0.2) : Color.clear)
             }
 
         case .coe:
@@ -361,7 +361,7 @@ struct LabelPreviewView: View {
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
+                    .background(willTruncate ? DesignSystem.Colors.accentDanger.opacity(0.2) : Color.clear)
             }
 
         case .location:
@@ -379,7 +379,7 @@ struct LabelPreviewView: View {
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
+                    .background(willTruncate ? DesignSystem.Colors.accentDanger.opacity(0.2) : Color.clear)
             }
 
         case .owner:
@@ -396,7 +396,7 @@ struct LabelPreviewView: View {
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .background(willTruncate ? Color.red.opacity(0.2) : Color.clear)
+                    .background(willTruncate ? DesignSystem.Colors.accentDanger.opacity(0.2) : Color.clear)
             }
         }
     }

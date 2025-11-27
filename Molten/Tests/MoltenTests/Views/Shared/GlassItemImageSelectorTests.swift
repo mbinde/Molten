@@ -5,24 +5,11 @@
 //  Tests for GlassItemImageSelector component
 //
 
-import Foundation
-
-// Standard test framework imports pattern
-#if canImport(Testing)
 import Testing
-#else
-#if canImport(XCTest)
-import XCTest
-#endif
-#endif
-
 @testable import Molten
 
 #if canImport(UIKit)
 import UIKit
-
-// Use Swift Testing if available
-#if canImport(Testing)
 
 @Suite("GlassItemImageSelector Tests")
 @MainActor
@@ -143,104 +130,4 @@ struct GlassItemImageSelectorTests {
         #expect(currentPrimaryId != firstImageId)
     }
 }
-
-#else
-// XCTest fallback
-import XCTest
-
-final class GlassItemImageSelectorTests: XCTestCase {
-
-    // MARK: - Helper Text Tests
-
-    func testHelperTextWithUserImages() {
-        let expectedText = "Tap to select primary • Tap selected to use default • Tap and hold for more options"
-
-        XCTAssertTrue(expectedText.contains("Tap to select primary"))
-        XCTAssertTrue(expectedText.contains("Tap selected to use default"))
-        XCTAssertTrue(expectedText.contains("Tap and hold for more options"))
-        XCTAssertTrue(expectedText.contains("•"))
-    }
-
-    func testHelperTextWithoutUserImages() {
-        let expectedText = "Using manufacturer default image"
-
-        XCTAssertEqual(expectedText, "Using manufacturer default image")
-    }
-
-    // MARK: - Context Menu Visibility Tests
-
-    func testSubmitOptionVisibleWithNoUserImages() {
-        let hasUserImages = false
-        let shouldShowSubmitOption = !hasUserImages
-
-        XCTAssertTrue(shouldShowSubmitOption)
-    }
-
-    func testSubmitOptionHiddenWithUserImages() {
-        let hasUserImages = true
-        let shouldShowSubmitOption = !hasUserImages
-
-        XCTAssertFalse(shouldShowSubmitOption)
-    }
-
-    func testSubmitOptionWithEmptyArray() {
-        let images: [UserImageModel] = []
-        let shouldShowSubmitOption = images.isEmpty
-
-        XCTAssertTrue(shouldShowSubmitOption)
-    }
-
-    func testSubmitOptionWithSingleImage() {
-        let sampleImage = UserImageModel(
-            id: UUID(),
-            stableId: "test-001-0",
-            imageType: .primary,
-            fileName: "test.jpg",
-            createdDate: Date()
-        )
-        let images = [sampleImage]
-        let shouldShowSubmitOption = images.isEmpty
-
-        XCTAssertFalse(shouldShowSubmitOption)
-    }
-
-    func testSubmitOptionWithMultipleImages() {
-        let sampleImages = [
-            UserImageModel(id: UUID(), stableId: "test-001-0", imageType: .primary, fileName: "test1.jpg", createdDate: Date()),
-            UserImageModel(id: UUID(), stableId: "test-001-0", imageType: .alternate, fileName: "test2.jpg", createdDate: Date())
-        ]
-        let shouldShowSubmitOption = sampleImages.isEmpty
-
-        XCTAssertFalse(shouldShowSubmitOption)
-    }
-
-    // MARK: - Delete Context Menu Tests
-
-    func testDeleteOptionAlwaysAvailable() {
-        let hasDeleteOption = true
-        XCTAssertTrue(hasDeleteOption)
-    }
-
-    // MARK: - Primary Selection Tests
-
-    func testDeselectPrimaryUsesDefault() {
-        var currentPrimaryId: UUID? = UUID()
-        currentPrimaryId = nil
-
-        XCTAssertNil(currentPrimaryId)
-    }
-
-    func testSelectDifferentPrimary() {
-        let firstImageId = UUID()
-        let secondImageId = UUID()
-        var currentPrimaryId: UUID? = firstImageId
-
-        currentPrimaryId = secondImageId
-
-        XCTAssertEqual(currentPrimaryId, secondImageId)
-        XCTAssertNotEqual(currentPrimaryId, firstImageId)
-    }
-}
-
-#endif
 #endif

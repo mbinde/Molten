@@ -60,8 +60,8 @@ struct CatalogTagFilterView: View {
                             }
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(allUserTags.contains(tag) ? Color.purple.opacity(0.1) : Color.accentColor.opacity(0.2))
-                            .foregroundColor(allUserTags.contains(tag) ? .purple : .accentColor)
+                            .background(allUserTags.contains(tag) ? DesignSystem.Colors.accentUser.opacity(0.1) : Color.accentColor.opacity(0.2))
+                            .foregroundColor(allUserTags.contains(tag) ? DesignSystem.Colors.accentUser : .accentColor)
                             .clipShape(Capsule())
                         }
                     }
@@ -86,7 +86,7 @@ struct CatalogTagFilterView: View {
                                 if allUserTags.contains(tag) {
                                     Image(systemName: "person.fill")
                                         .font(.caption2)
-                                        .foregroundColor(.purple)
+                                        .foregroundColor(DesignSystem.Colors.accentUser)
                                 }
 
                                 Text(tag)
@@ -95,8 +95,8 @@ struct CatalogTagFilterView: View {
                         .font(.caption)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(selectedTags.contains(tag) ? (allUserTags.contains(tag) ? Color.purple.opacity(0.1) : .accentColor.opacity(0.2)) : Color.gray.opacity(0.1))
-                        .foregroundColor(selectedTags.contains(tag) ? (allUserTags.contains(tag) ? .purple : .blue) : .secondary)
+                        .background(selectedTags.contains(tag) ? (allUserTags.contains(tag) ? DesignSystem.Colors.accentUser.opacity(0.1) : .accentColor.opacity(0.2)) : Color.gray.opacity(0.1))
+                        .foregroundColor(selectedTags.contains(tag) ? (allUserTags.contains(tag) ? DesignSystem.Colors.accentUser : DesignSystem.Colors.accentSecondary) : .secondary)
                         .clipShape(Capsule())
                     }
                     

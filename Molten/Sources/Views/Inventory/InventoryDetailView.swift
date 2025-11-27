@@ -73,6 +73,8 @@ struct InventoryDetailView: View {
     @State private var showingImagePicker = false
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var isLoadingImages = false
+    @State private var heroImageRefreshTrigger = UUID()  // Change to refresh hero image
+    @State private var scrollToPhotos = false  // Trigger scroll to Your Photos section
 
     // Kiln schedules state
     @State private var recommendedScheduleIds: [UUID] = []
@@ -236,8 +238,11 @@ struct InventoryDetailView: View {
                         tagsSection
                     }
 
-                    // Custom Images Section - always show to allow adding images
-                    customImagesSection
+                    // Custom Images Section - only show when user has uploaded images
+                    if !userImages.isEmpty {
+                        customImagesSection
+                            .id("your-photos")
+                    }
 
                     Spacer(minLength: 100)
                 }
@@ -258,6 +263,18 @@ struct InventoryDetailView: View {
                 if !newValue {
                     withAnimation {
                         proxy.scrollTo("user-notes", anchor: .top)
+                    }
+                }
+            }
+            .onChange(of: scrollToPhotos) { _, shouldScroll in
+                // Scroll to Your Photos section after adding an image
+                if shouldScroll {
+                    // Small delay to let the section appear first
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        withAnimation {
+                            proxy.scrollTo("your-photos", anchor: .top)
+                        }
+                        scrollToPhotos = false
                     }
                 }
             }
@@ -323,7 +340,7 @@ struct InventoryDetailView: View {
             // Reload shopping list after adding
             loadShoppingList()
         }) {
-            ShoppingListOptionsView(item: item)
+            AddShoppingListItemView(prefilledNaturalKey: item.glassItem.stable_id)
         }
         .sheet(isPresented: $showingInventoryDetails) {
             InventoryStorageDetailView(
@@ -512,14 +529,16 @@ struct InventoryDetailView: View {
 
     @MainActor
     private func loadManufacturerImage() async {
-        // Use the centralized image loading entry point
+        // Load manufacturer-only image (exclude user images)
+        // This is used for the "Your Photos" section to show the default alongside user photos
         manufacturerImage = await ImageHelpers.loadProductImageForDisplay(
             itemCode: currentItem.glassItem.stable_id,
             manufacturer: currentItem.glassItem.manufacturer,
             stableId: currentItem.glassItem.stable_id,
             imagePath: currentItem.glassItem.image_path,
             imageThumbPath: currentItem.glassItem.image_thumb_path,
-            dominantColors: currentItem.glassItem.dominant_colors
+            dominantColors: currentItem.glassItem.dominant_colors,
+            excludeUserImages: true
         )
     }
 
@@ -582,15 +601,13 @@ struct InventoryDetailView: View {
                 let imageToSave = image
 
                 do {
-                    // Determine if this should be primary (first image or no primary exists)
-                    let shouldBePrimary = userImages.isEmpty || !userImages.contains(where: { $0.imageType == .primary })
-
+                    // New images are always saved as alternate - user must explicitly select as primary
                     // Save image (repository handles resizing)
                     let imageModel = try await userImageRepository.saveImage(
                         imageToSave,
                         ownerType: .glassItem,
                         ownerId: currentItem.glassItem.stable_id,
-                        type: shouldBePrimary ? .primary : .alternate
+                        type: .alternate
                     )
 
                     await MainActor.run {
@@ -606,12 +623,14 @@ struct InventoryDetailView: View {
                 selectedPhotoItems = []
             }
 
-            // Clear image cache and reload
+            // Clear image cache and reload, then scroll to photos section
             await MainActor.run {
                 ImageHelpers.clearCache(
                     for: currentItem.glassItem.sku ?? "",
                     manufacturer: currentItem.glassItem.manufacturer
                 )
+                // Scroll to photos section so user sees their new image
+                scrollToPhotos = true
             }
         }
     }
@@ -644,6 +663,8 @@ struct InventoryDetailView: View {
                         for: currentItem.glassItem.sku ?? "",
                         manufacturer: currentItem.glassItem.manufacturer
                     )
+                    // Trigger hero image refresh
+                    heroImageRefreshTrigger = UUID()
                 }
             } catch {
                 print("Error updating primary image: \(error)")
@@ -709,7 +730,29 @@ struct InventoryDetailView: View {
     // MARK: - Hero Header Section
 
     private var heroHeaderSection: some View {
-        HeroHeader(item: currentItem.glassItem, extendsToTop: true)
+        VStack(spacing: DesignSystem.Spacing.lg) {
+            HeroHeader(
+                item: currentItem.glassItem,
+                extendsToTop: true,
+                onAddPhoto: {
+                    showingImagePicker = true
+                },
+                imageRefreshTrigger: heroImageRefreshTrigger
+            )
+
+            // Quick actions bar for common operations
+            QuickActionsBar(actions: [
+                QuickAction(title: "Inventory", icon: "archivebox.fill") {
+                    checkLimitAndShowAddInventory()
+                },
+                QuickAction(title: "Shopping", icon: "cart.fill") {
+                    showingShoppingListOptions = true
+                },
+                QuickAction(title: "Note", icon: "note.text") {
+                    showingUserNotesEditor = true
+                }
+            ])
+        }
     }
 
     // MARK: - Specifications Section
@@ -994,35 +1037,32 @@ struct InventoryDetailView: View {
     // MARK: - Custom Images Section
 
     private var customImagesSection: some View {
-        ExpandableSection(
-            title: "Custom Images",
-            systemImage: "photo.on.rectangle",
-            isExpanded: expandedSections.contains("custom-images"),
-            onToggle: { toggleSection("custom-images") },
-            accessibilityId: "section_images"
-        ) {
-            if isLoadingImages {
-                ProgressView()
-                    .padding()
-            } else {
-                GlassItemImageSelector(
-                    glassItem: currentItem.glassItem,
-                    images: userImages,
-                    loadedImages: loadedImages,
-                    manufacturerImage: manufacturerImage,
-                    currentPrimaryImageId: userImages.first(where: { $0.imageType == .primary })?.id,
-                    onSelectPrimary: { imageId in
-                        handlePrimarySelection(imageId)
-                    },
-                    onAddImage: {
-                        showingImagePicker = true
-                    },
-                    onDeleteImage: { imageId in
-                        handleDeleteImage(imageId)
-                    }
-                )
-            }
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            Text("Your Photos")
+                .font(DesignSystem.Typography.subsectionTitle)
+                .fontWeight(DesignSystem.FontWeight.semibold)
+                .foregroundColor(DesignSystem.Colors.textPrimary)
+
+            GlassItemImageSelector(
+                glassItem: currentItem.glassItem,
+                images: userImages,
+                loadedImages: loadedImages,
+                manufacturerImage: manufacturerImage,
+                currentPrimaryImageId: userImages.first(where: { $0.imageType == .primary })?.id,
+                onSelectPrimary: { imageId in
+                    handlePrimarySelection(imageId)
+                },
+                onAddImage: {
+                    showingImagePicker = true
+                },
+                onDeleteImage: { imageId in
+                    handleDeleteImage(imageId)
+                }
+            )
         }
+        .padding(DesignSystem.Padding.standard)
+        .background(DesignSystem.Colors.backgroundSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.extraLarge))
     }
 
     // MARK: - Actions Section

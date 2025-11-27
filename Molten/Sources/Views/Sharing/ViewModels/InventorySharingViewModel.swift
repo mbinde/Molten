@@ -113,6 +113,11 @@ class InventorySharingViewModel {
         }
     }
 
+    /// Refresh friend list to pick up updated cached stats (item count, quantity, weight)
+    func refreshFriendList() {
+        friendShares = sharingManager.getFriendShares()
+    }
+
     // MARK: - My Share
 
     func createMyShare() async {

@@ -77,14 +77,20 @@ struct FriendInventoryView: View {
     private var mainContent: some View {
         Group {
             if viewModel.isLoading {
+                // Show spinner while loading (before any load attempt completes or times out)
                 loadingView
-            } else if viewModel.enrichedInventory.isEmpty && !viewModel.rawInventory.isEmpty {
-                // Data loaded but couldn't enrich (catalog not available)
+            } else if viewModel.loadTimedOut {
+                // Show timeout state if we couldn't load within 10 seconds
+                timeoutView
+            } else if viewModel.enrichedInventory.isEmpty && viewModel.hasAttemptedLoad {
+                // Only show empty state after we've actually tried to load
                 emptyState
-            } else if viewModel.enrichedInventory.isEmpty {
-                loadButton
-            } else {
+            } else if !viewModel.enrichedInventory.isEmpty {
+                // Show inventory list when we have data
                 inventoryListWithFilters
+            } else {
+                // Fallback to loading view (shouldn't normally reach here)
+                loadingView
             }
         }
     }
@@ -94,33 +100,40 @@ struct FriendInventoryView: View {
     private var loadingView: some View {
         VStack(spacing: DesignSystem.Spacing.lg) {
             ProgressView()
-            Text("Loading inventory...")
+                .scaleEffect(1.2)
+            Text("Loading \(viewModel.friend.friendName)'s inventory...")
                 .font(.headline)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private var loadButton: some View {
+    private var timeoutView: some View {
         VStack(spacing: DesignSystem.Spacing.lg) {
-            Image(systemName: "arrow.down.circle")
+            Image(systemName: "wifi.exclamationmark")
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
 
-            Text("Load \(viewModel.friend.friendName)'s Inventory")
+            Text("Couldn't Load Inventory")
                 .font(.headline)
+
+            Text("The request timed out. Check your connection and try again.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
 
             Button {
                 Task {
-                    await viewModel.loadInventory()
+                    await viewModel.loadInventory(forceRefresh: true)
                 }
             } label: {
-                Text("Load Inventory")
+                Label("Try Again", systemImage: "arrow.clockwise")
             }
             .buttonStyle(.borderedProminent)
-            .accessibilityIdentifier("friend_inventory_load")
+            .accessibilityIdentifier("friend_inventory_retry")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
     }
 
     private var emptyState: some View {

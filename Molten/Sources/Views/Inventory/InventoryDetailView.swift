@@ -156,9 +156,16 @@ struct InventoryDetailView: View {
         )
     }
 
+    /// Check if we have permission to show manufacturer descriptions for this item
+    private var canShowManufacturerDescription: Bool {
+        GlassManufacturers.productDescriptionPermissions[currentItem.glassItem.manufacturer] ?? false
+    }
+
     /// Check if there's any content to show in the Glass Item Details section
     private var hasGlassItemDetails: Bool {
-        let hasManufacturerNotes = currentItem.glassItem.mfr_notes != nil && !currentItem.glassItem.mfr_notes!.isEmpty
+        let hasManufacturerNotes = canShowManufacturerDescription
+            && currentItem.glassItem.mfr_notes != nil
+            && !currentItem.glassItem.mfr_notes!.isEmpty
         let hasUserNotes = userNotes != nil
         return hasManufacturerNotes || hasUserNotes
     }
@@ -177,7 +184,8 @@ struct InventoryDetailView: View {
 
         text += " • COE \(glassItem.coe)"
 
-        if let description = glassItem.mfr_notes, !description.isEmpty {
+        if canShowManufacturerDescription,
+           let description = glassItem.mfr_notes, !description.isEmpty {
             text += "\n\n\(description)"
         }
 
@@ -872,7 +880,8 @@ struct InventoryDetailView: View {
             accessibilityId: "section_manufacturer_notes"
         ) {
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
-                if let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
+                if canShowManufacturerDescription,
+                   let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
                     expandableNotesCard(title: nil, content: notes, accessibilityId: "expand_manufacturer_notes")
                 }
 

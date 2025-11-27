@@ -469,8 +469,8 @@ struct LabelDesignerView: View {
     /// Filtered formats based on search text
     private var filteredFormats: [AveryFormat] {
         if searchText.isEmpty {
-            // Show popular formats when no search
-            return AveryFormat.allFormats["Popular"] ?? []
+            // Show all formats when no search
+            return AveryFormat.flatList
         }
 
         let searchLower = searchText.lowercased()

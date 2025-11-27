@@ -751,30 +751,8 @@ struct ProductImageDetail: View {
                 }
             }
 
-            // Upload button (only show if enabled and we have a natural key)
-            if allowImageUpload, let stableId = stableId {
-                Button(action: {
-                    showingImagePicker = true
-                }) {
-                    HStack(spacing: DesignSystem.Spacing.xs) {
-                        Image(systemName: loadedImage == nil ? "photo.badge.plus" : "photo.badge.arrow.down")
-                        Text(loadedImage == nil ? "Add Image" : "Replace Image")
-                    }
-                    .font(DesignSystem.Typography.caption)
-                    .foregroundColor(DesignSystem.Colors.accentPrimary)
-                }
-                .sheet(isPresented: $showingImagePicker) {
-                    ImageSourcePickerSheet(
-                        selectedImage: .constant(nil),
-                        isPresented: $showingImagePicker,
-                        onImageSelected: { image in
-                            Task {
-                                await uploadImage(image, for: stableId)
-                            }
-                        }
-                    )
-                }
-            }
+            // Note: Image upload is now handled via the three-dot menu in inventory detail
+            // The "Replace Image" button has been removed to save space
         }
         .task {
             // Skip image loading if disabled via debug flag

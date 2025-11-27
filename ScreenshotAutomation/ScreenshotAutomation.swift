@@ -242,6 +242,22 @@ final class ScreenshotAutomation: XCTestCase {
                     usleep(500000)
                 }
 
+                // Select Jars as unit (for weight-based products)
+                // Look for unit picker button - could be "grams", "ounces", or current unit
+                let unitButtons = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'gram' OR label CONTAINS[c] 'ounce' OR label CONTAINS[c] 'jar'"))
+                if unitButtons.count > 0 {
+                    unitButtons.firstMatch.tap()
+                    sleep(1)
+                    // Select "jars" from the menu
+                    if app.buttons["jars"].exists {
+                        app.buttons["jars"].tap()
+                        usleep(500000)
+                    } else if app.buttons["Jars"].exists {
+                        app.buttons["Jars"].tap()
+                        usleep(500000)
+                    }
+                }
+
                 // Enter location and dismiss keyboard
                 let locationField = app.textFields["inventory.add.locationField"]
                 if locationField.waitForExistence(timeout: 2) {

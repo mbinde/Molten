@@ -115,6 +115,15 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F505A90A2ED7C24E00B47986 /* Exceptions for "ScreenshotAutomation" folder in "MoltenUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"sample-glass-image-1.jpg",
+				"sample-glass-image-2.jpg",
+				"sample-glass-image-3.jpg",
+			);
+			target = F551A4262E9DAA1A00C9C2F1 /* MoltenUITests */;
+		};
 		F51BCA4D2ED4F476003799A4 /* Exceptions for "Molten" folder in "PerformanceTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -708,6 +717,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F505A90A2ED7C24E00B47986 /* Exceptions for "ScreenshotAutomation" folder in "MoltenUITests" target */,
+			);
 			path = ScreenshotAutomation;
 			sourceTree = "<group>";
 		};

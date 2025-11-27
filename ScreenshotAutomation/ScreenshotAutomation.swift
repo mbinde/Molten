@@ -307,14 +307,22 @@ final class ScreenshotAutomation: XCTestCase {
         print("9️⃣ Feature: Label Designer")
         navigateToTab("Inventory")
         waitForContentToLoad()
-        // Look for "Print Labels" button (might be in toolbar or menu)
-        if app.buttons["Print Labels"].exists {
-            app.buttons["Print Labels"].tap()
-            waitForContentToLoad(seconds: 2)
-            takeScreenshot(named: "feature-label-designer", subdirectory: "website", delay: 0.5)
-            dismissModal()
+        // Print Labels is in the ellipsis menu
+        let menuButton = app.buttons["inventory_menu"]
+        if menuButton.waitForExistence(timeout: 5) && menuButton.isHittable {
+            menuButton.tap()
+            sleep(1)
+            let printLabelsButton = app.buttons["inventory_menu_print_labels"]
+            if printLabelsButton.waitForExistence(timeout: 3) && printLabelsButton.isHittable {
+                printLabelsButton.tap()
+                waitForContentToLoad(seconds: 2)
+                takeScreenshot(named: "feature-label-designer", subdirectory: "website", delay: 0.5)
+                dismissModal()
+            } else {
+                print("   ⚠️  Print Labels menu item not found or not enabled")
+            }
         } else {
-            print("   ⚠️  Print Labels button not found - skipping screenshot")
+            print("   ⚠️  Inventory menu button not found - skipping screenshot")
         }
 
         // 10. Locations - Studio Organization
@@ -367,11 +375,21 @@ final class ScreenshotAutomation: XCTestCase {
         // 14. Search Results - Accurate & Fast
         print("1️⃣4️⃣ Feature: Search Results")
         ensureOnCatalog()
-        if activateSearch() {
-            app.searchFields.firstMatch.typeText("striker")
+        clearProductTypeFilter()  // Clear any filters from previous screenshots
+        waitForContentToLoad()
+        // Pull down to reveal search bar (it's in navigation drawer)
+        app.swipeDown()
+        sleep(1)
+        let searchField = app.searchFields.firstMatch
+        if searchField.waitForExistence(timeout: 5) {
+            searchField.tap()
+            sleep(1)
+            searchField.typeText("striker")
             waitForContentToLoad(seconds: 1.5)
             takeScreenshot(named: "feature-search-results", subdirectory: "website", delay: 0.5)
             clearSearch()
+        } else {
+            print("   ⚠️  Search field not found")
         }
 
         // 15. Catalog Grid - Touch-Friendly

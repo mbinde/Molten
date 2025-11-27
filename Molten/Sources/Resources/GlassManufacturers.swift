@@ -30,6 +30,7 @@ struct GlassManufacturers {
         "GAF": "Gaffer",
         "GRE": "Greasy Glass",
         "KUG": "Kugler",
+        "LUN": "Lunar Glass",
         "MA": "Molten Aura Labs",
         "MOM": "Momka Glass",
         "NS": "Northstar Glassworks",
@@ -217,6 +218,7 @@ struct GlassManufacturers {
         "CiM": [33],          // Creation is Messy makes 33
         "GA": [33],           // Glass Alchemy makes 33
         "GRE": [33],          // Greasy Glass makes 33
+        "LUN": [33],          // Lunar Glass makes 33
         "MA": [33],           // Molten Aura Labs makes 33
         "MOM": [33],          // Momka Glass makes 33
         "NS": [33],           // Northstar Glassworks makes 33
@@ -373,6 +375,8 @@ struct GlassManufacturers {
             return .brown
         case "greasy glass", "gre":
             return .teal
+        case "lunar glass", "lun":
+            return Color(red: 0.7, green: 0.7, blue: 0.9)  // Pale lavender/moon color
         case "molten aura labs", "molten aura", "ma":
             return Color(red: 0.5, green: 0.9, blue: 0.8)  // Aqua/light teal
         case "momka glass", "mom":

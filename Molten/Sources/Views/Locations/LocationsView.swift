@@ -195,6 +195,7 @@ struct LocationsView: View {
             )
             .cornerRadius(DesignSystem.CornerRadius.large)
         }
+        .accessibilityIdentifier("locations_filter_\(type.rawValue)")
     }
 
     private var techniqueFilterMenu: some View {
@@ -249,6 +250,7 @@ struct LocationsView: View {
             )
             .cornerRadius(DesignSystem.CornerRadius.large)
         }
+        .accessibilityIdentifier("locations_filter_technique")
     }
 
     // MARK: - Search Bar
@@ -264,6 +266,7 @@ struct LocationsView: View {
             ))
             .textFieldStyle(.plain)
             .autocorrectionDisabled()
+            .accessibilityIdentifier("locations_search_field")
             .onSubmit {
                 Task {
                     await viewModel.performSearch()

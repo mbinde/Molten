@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Selected format display button
 struct SelectedFormatView: View {
-    let selectedFormat: AveryFormat
+    let selectedFormat: LabelGeometry
     @Binding var isSearching: Bool
 
     var body: some View {

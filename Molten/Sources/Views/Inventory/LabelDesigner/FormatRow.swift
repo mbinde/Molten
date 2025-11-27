@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Format row in search results
 struct FormatRow: View {
-    let format: AveryFormat
+    let format: LabelGeometry
     let onTap: () -> Void
 
     var body: some View {

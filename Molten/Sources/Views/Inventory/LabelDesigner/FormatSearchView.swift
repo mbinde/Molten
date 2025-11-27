@@ -11,8 +11,8 @@ import SwiftUI
 struct FormatSearchView: View {
     @Binding var searchText: String
     @Binding var isSearching: Bool
-    @Binding var selectedFormat: AveryFormat
-    let filteredFormats: [AveryFormat]
+    @Binding var selectedFormat: LabelGeometry
+    let filteredFormats: [LabelGeometry]
 
     var body: some View {
         VStack(spacing: 0) {

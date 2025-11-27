@@ -52,22 +52,28 @@ struct FormatSearchView: View {
             .cornerRadius(10)
         }
 
-        // Search results
-        ForEach(filteredFormats, id: \.name) { format in
-            FormatRow(format: format) {
-                withAnimation {
-                    selectedFormat = format
-                    isSearching = false
-                    searchText = ""
-                }
-            }
-        }
-
+        // Search results in a scrollable container
         if filteredFormats.isEmpty && !searchText.isEmpty {
             Text("No formats match \"\(searchText)\"")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .padding(.vertical, 8)
+        } else {
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(filteredFormats, id: \.name) { format in
+                        FormatRow(format: format) {
+                            withAnimation {
+                                selectedFormat = format
+                                isSearching = false
+                                searchText = ""
+                            }
+                        }
+                        Divider()
+                    }
+                }
+            }
+            .frame(maxHeight: 300)
         }
     }
 }

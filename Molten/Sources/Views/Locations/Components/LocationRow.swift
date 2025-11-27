@@ -22,7 +22,7 @@ struct LocationRow: View {
             },
             header: {
                 Text(location.displayName)
-                    .font(DesignSystem.Typography.rowTitle)
+                    .font(DesignSystem.Typography.listItemTitle)
                     .foregroundStyle(DesignSystem.Colors.textPrimary)
             },
             details: {
@@ -30,29 +30,28 @@ struct LocationRow: View {
                     // Address (compact)
                     if let address = location.compactAddress {
                         Text(address)
-                            .font(DesignSystem.Typography.caption)
-                            .foregroundStyle(DesignSystem.Colors.textSecondary)
-                    }
-
-                    // Distance (if user location available)
-                    if let userLoc = userLocation,
-                       let distance = location.formattedDistance(from: userLoc) {
-                        Text(distance)
-                            .font(DesignSystem.Typography.caption)
+                            .font(DesignSystem.Typography.listItemCaption)
                             .foregroundStyle(DesignSystem.Colors.textSecondary)
                     }
 
                     // Techniques
                     if !location.techniques.isEmpty {
                         Text(location.techniquesDisplay)
-                            .font(DesignSystem.Typography.caption)
+                            .font(DesignSystem.Typography.listItemCaption)
                             .foregroundStyle(DesignSystem.Colors.textSecondary)
                             .lineLimit(1)
                     }
                 }
             },
             trailing: {
-                EmptyView()
+                // Distance badge (if user location available)
+                if let userLoc = userLocation,
+                   let distance = location.formattedDistance(from: userLoc) {
+                    Text(distance)
+                        .font(DesignSystem.Typography.prominentNumberSmall)
+                        .fontWeight(.medium)
+                        .foregroundStyle(DesignSystem.Colors.moltenTeal)
+                }
             },
             spacing: DesignSystem.Spacing.xs,
             verticalPadding: DesignSystem.Padding.rowVertical
@@ -66,12 +65,12 @@ struct LocationRow: View {
         ZStack {
             // Outer colored ring
             Circle()
-                .stroke(ringColor, lineWidth: 2.5)
+                .stroke(Color.black, lineWidth: 2.5)
                 .frame(width: 32, height: 32)
 
-            // Blue background circle
+            // Orange background circle
             Circle()
-                .fill(DesignSystem.Colors.accentPrimary)
+                .fill(DesignSystem.Colors.moltenOrange)
                 .frame(width: 26, height: 26)
 
             // White icon(s)
@@ -79,11 +78,6 @@ struct LocationRow: View {
                 .font(.caption)
                 .foregroundStyle(.white)
         }
-    }
-
-    /// Ring color - black outline for all locations
-    private var ringColor: Color {
-        return .black
     }
 
     /// Icon image based on capabilities

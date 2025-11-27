@@ -21,55 +21,68 @@ struct LocationDetailView: View {
                 }
 
                 // Main info section
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
                     // Type badge
                     typeBadge
 
                     // Name
                     Text(location.displayName)
-                        .font(.title)
+                        .font(DesignSystem.Typography.sectionTitle)
                         .fontWeight(.bold)
+                        .foregroundStyle(DesignSystem.Colors.textPrimary)
 
-                    // Address
-                    if let fullAddress = location.fullAddress {
-                        Label {
-                            Text(fullAddress)
-                                .font(DesignSystem.Typography.body)
-                        } icon: {
-                            Image(systemName: "mappin.circle.fill")
-                                .foregroundStyle(DesignSystem.Colors.accentPrimary)
-                        }
-                    }
-
-                    // Phone
-                    if let phone = location.formattedPhone {
-                        Link(destination: URL(string: "tel:\(phone.replacingOccurrences(of: " ", with: ""))")!) {
-                            Label {
-                                Text(phone)
-                                    .font(DesignSystem.Typography.body)
-                            } icon: {
-                                Image(systemName: "phone.fill")
-                                    .foregroundStyle(DesignSystem.Colors.accentPrimary)
+                    // Contact info card
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                        // Address
+                        if let fullAddress = location.fullAddress {
+                            HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {
+                                Image(systemName: "mappin.circle.fill")
+                                    .font(.body)
+                                    .foregroundStyle(DesignSystem.Colors.moltenOrange)
+                                    .frame(width: 24)
+                                Text(fullAddress)
+                                    .font(DesignSystem.Typography.listItemSubtitle)
+                                    .foregroundStyle(DesignSystem.Colors.textPrimary)
                             }
                         }
-                        .accessibilityIdentifier("location_detail_phone")
-                    }
 
-                    // Website
-                    if let websiteUrl = location.websiteUrl,
-                       let url = URL(string: websiteUrl) {
-                        Link(destination: url) {
-                            Label {
-                                Text(websiteUrl)
-                                    .font(DesignSystem.Typography.body)
-                                    .lineLimit(1)
-                            } icon: {
-                                Image(systemName: "link")
-                                    .foregroundStyle(DesignSystem.Colors.accentPrimary)
+                        // Phone
+                        if let phone = location.formattedPhone {
+                            Link(destination: URL(string: "tel:\(phone.replacingOccurrences(of: " ", with: ""))")!) {
+                                HStack(spacing: DesignSystem.Spacing.md) {
+                                    Image(systemName: "phone.fill")
+                                        .font(.body)
+                                        .foregroundStyle(DesignSystem.Colors.moltenTeal)
+                                        .frame(width: 24)
+                                    Text(phone)
+                                        .font(DesignSystem.Typography.listItemSubtitle)
+                                        .foregroundStyle(DesignSystem.Colors.moltenTeal)
+                                }
                             }
+                            .accessibilityIdentifier("location_detail_phone")
                         }
-                        .accessibilityIdentifier("location_detail_website")
+
+                        // Website
+                        if let websiteUrl = location.websiteUrl,
+                           let url = URL(string: websiteUrl) {
+                            Link(destination: url) {
+                                HStack(spacing: DesignSystem.Spacing.md) {
+                                    Image(systemName: "globe")
+                                        .font(.body)
+                                        .foregroundStyle(DesignSystem.Colors.moltenTeal)
+                                        .frame(width: 24)
+                                    Text(extractDomain(from: websiteUrl))
+                                        .font(DesignSystem.Typography.listItemSubtitle)
+                                        .foregroundStyle(DesignSystem.Colors.moltenTeal)
+                                        .lineLimit(1)
+                                }
+                            }
+                            .accessibilityIdentifier("location_detail_website")
+                        }
                     }
+                    .padding(DesignSystem.Padding.standard)
+                    .background(DesignSystem.Colors.backgroundSecondary)
+                    .cornerRadius(DesignSystem.CornerRadius.medium)
                 }
                 .padding(.horizontal, DesignSystem.Padding.standard)
 
@@ -77,17 +90,24 @@ struct LocationDetailView: View {
                 if !location.techniques.isEmpty {
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
                         Text("Techniques Offered")
-                            .font(DesignSystem.Typography.sectionHeader)
+                            .font(DesignSystem.Typography.subsectionTitle)
                             .fontWeight(.semibold)
+                            .foregroundStyle(DesignSystem.Colors.textPrimary)
 
                         FlowLayout(spacing: DesignSystem.Spacing.sm) {
                             ForEach(location.techniques, id: \.self) { technique in
-                                Text(technique.displayName)
-                                    .font(DesignSystem.Typography.caption)
-                                    .padding(.horizontal, DesignSystem.Padding.standard)
-                                    .padding(.vertical, DesignSystem.Padding.compact)
-                                    .background(DesignSystem.Colors.backgroundSecondary)
-                                    .cornerRadius(DesignSystem.CornerRadius.medium)
+                                HStack(spacing: DesignSystem.Spacing.xs) {
+                                    Image(systemName: "flame.fill")
+                                        .font(.caption2)
+                                        .foregroundStyle(DesignSystem.Colors.moltenOrange)
+                                    Text(technique.displayName)
+                                        .font(DesignSystem.Typography.listItemCaption)
+                                        .foregroundStyle(DesignSystem.Colors.textPrimary)
+                                }
+                                .padding(.horizontal, DesignSystem.Padding.standard)
+                                .padding(.vertical, DesignSystem.Padding.compact)
+                                .background(DesignSystem.Colors.tintPrimary)
+                                .cornerRadius(DesignSystem.CornerRadius.medium)
                             }
                         }
                     }
@@ -98,8 +118,9 @@ struct LocationDetailView: View {
                 if location.hasValidLocation {
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
                         Text("Location")
-                            .font(DesignSystem.Typography.sectionHeader)
+                            .font(DesignSystem.Typography.subsectionTitle)
                             .fontWeight(.semibold)
+                            .foregroundStyle(DesignSystem.Colors.textPrimary)
                             .padding(.horizontal, DesignSystem.Padding.standard)
 
                         Map(position: .constant(.region(MKCoordinateRegion(
@@ -108,11 +129,18 @@ struct LocationDetailView: View {
                         )))) {
                             Annotation(location.name, coordinate: location.coordinate) {
                                 ZStack {
+                                    // Outer ring
                                     Circle()
-                                        .fill(DesignSystem.Colors.accentPrimary)
-                                        .frame(width: 40, height: 40)
+                                        .stroke(Color.black, lineWidth: 3)
+                                        .frame(width: 44, height: 44)
+
+                                    // Orange fill
+                                    Circle()
+                                        .fill(DesignSystem.Colors.moltenOrange)
+                                        .frame(width: 38, height: 38)
 
                                     location.type.icon
+                                        .font(.body)
                                         .foregroundStyle(.white)
                                 }
                             }
@@ -123,13 +151,17 @@ struct LocationDetailView: View {
 
                         // Get Directions button
                         Button(action: openDirections) {
-                            Label("Get Directions", systemImage: "arrow.triangle.turn.up.right.circle.fill")
-                                .font(.headline)
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(DesignSystem.Colors.accentSecondary)
-                                .cornerRadius(DesignSystem.CornerRadius.large)
+                            HStack(spacing: DesignSystem.Spacing.md) {
+                                Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
+                                    .font(.title3)
+                                Text("Get Directions")
+                                    .font(DesignSystem.Typography.listItemTitle)
+                            }
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, DesignSystem.Padding.standard)
+                            .background(DesignSystem.Colors.moltenOrange)
+                            .cornerRadius(DesignSystem.CornerRadius.large)
                         }
                         .padding(.horizontal, DesignSystem.Padding.standard)
                         .accessibilityIdentifier("location_detail_directions")
@@ -143,13 +175,13 @@ struct LocationDetailView: View {
                                 }
                             } label: {
                                 Text("Suggest a Change or Deletion")
-                                    .font(.caption)
-                                    .foregroundStyle(Color.accentColor)
+                                    .font(DesignSystem.Typography.listItemCaptionSmall)
+                                    .foregroundStyle(DesignSystem.Colors.moltenTeal)
                             }
                             .padding(.trailing, DesignSystem.Padding.standard)
                             .accessibilityIdentifier("location_detail_suggest_change")
                         }
-                        .padding(.top, 4)
+                        .padding(.top, DesignSystem.Spacing.xs)
                     }
                 }
 
@@ -157,11 +189,12 @@ struct LocationDetailView: View {
                 if let notes = location.notes, !notes.isEmpty {
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
                         Text("Notes")
-                            .font(DesignSystem.Typography.sectionHeader)
+                            .font(DesignSystem.Typography.subsectionTitle)
                             .fontWeight(.semibold)
+                            .foregroundStyle(DesignSystem.Colors.textPrimary)
 
                         Text(notes)
-                            .font(DesignSystem.Typography.body)
+                            .font(DesignSystem.Typography.listItemSubtitle)
                             .foregroundStyle(DesignSystem.Colors.textSecondary)
                     }
                     .padding(.horizontal, DesignSystem.Padding.standard)
@@ -171,6 +204,18 @@ struct LocationDetailView: View {
         }
         .navigationTitle(location.type.displayName)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: - Helpers
+
+    /// Extract domain from URL for cleaner display
+    private func extractDomain(from urlString: String) -> String {
+        guard let url = URL(string: urlString),
+              let host = url.host else {
+            return urlString
+        }
+        // Remove www. prefix if present
+        return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
     }
 
     // MARK: - Actions
@@ -195,16 +240,17 @@ struct LocationDetailView: View {
     private var typeBadge: some View {
         HStack(spacing: DesignSystem.Spacing.xs) {
             location.type.icon
-                .font(.caption2)
+                .font(.caption)
             Text(location.type.displayName.uppercased())
-                .font(.caption2)
-                .fontWeight(.semibold)
+                .font(DesignSystem.Typography.listItemCaptionSmall)
+                .fontWeight(.bold)
+                .tracking(0.5)
         }
-        .padding(.horizontal, DesignSystem.Padding.compact)
-        .padding(.vertical, DesignSystem.Padding.chipVertical)
-        .background(DesignSystem.Colors.accentPrimary.opacity(0.1))
-        .foregroundStyle(DesignSystem.Colors.accentPrimary)
-        .cornerRadius(DesignSystem.CornerRadius.small)
+        .padding(.horizontal, DesignSystem.Padding.standard)
+        .padding(.vertical, DesignSystem.Padding.compact)
+        .background(DesignSystem.Colors.moltenOrange)
+        .foregroundStyle(.white)
+        .cornerRadius(DesignSystem.CornerRadius.medium)
     }
 
     private func heroImageView(imagePath: String) -> some View {

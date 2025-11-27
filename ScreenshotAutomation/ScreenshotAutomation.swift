@@ -326,6 +326,16 @@ final class ScreenshotAutomation: XCTestCase {
         print("8️⃣ Feature: Shopping List")
         navigateToTab("Shopping")
         waitForContentToLoad()
+
+        // Make absolutely sure shopping mode is NOT active for this screenshot
+        // If shopping mode is active, cancel it first
+        let cancelButton = app.buttons["shopping_cancel_button"]
+        if cancelButton.exists && cancelButton.isHittable {
+            print("   Shopping mode was active, canceling it first...")
+            cancelButton.tap()
+            sleep(1)
+        }
+
         takeScreenshot(named: "feature-shopping-list", subdirectory: "website", delay: 0.5)
 
         // 8b. Shopping Mode Active - Cart icon activated

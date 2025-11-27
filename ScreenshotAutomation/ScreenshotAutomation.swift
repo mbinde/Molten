@@ -347,31 +347,8 @@ final class ScreenshotAutomation: XCTestCase {
         // interaction flow. The catalog grid screenshot adequately shows product variety.
 
         // 14. Search Results - Accurate & Fast
-        print("1️⃣4️⃣ Feature: Search Results")
-        ensureOnCatalog()
-        clearProductTypeFilter()  // Clear any filters from previous screenshots
-        waitForContentToLoad()
-        // Scroll to top to ensure search bar is visible
-        app.tables.firstMatch.swipeDown()
-        app.tables.firstMatch.swipeDown()
-        sleep(1)
-        // Try to activate search
-        let searchField = app.searchFields.firstMatch
-        if searchField.waitForExistence(timeout: 5) {
-            // Tap to activate
-            if searchField.isHittable {
-                searchField.tap()
-                sleep(1)
-                searchField.typeText("striker")
-                waitForContentToLoad(seconds: 1.5)
-                takeScreenshot(named: "feature-search-results", subdirectory: "website", delay: 0.5)
-                clearSearch()
-            } else {
-                print("   ⚠️  Search field exists but not hittable")
-            }
-        } else {
-            print("   ⚠️  Search field not found")
-        }
+        // SKIP: Search field activation is unreliable after complex navigation.
+        // The "feature-search-active" screenshot already demonstrates search capability.
 
         // 15. Catalog Grid - Touch-Friendly
         print("1️⃣5️⃣ Feature: Catalog Grid Overview")

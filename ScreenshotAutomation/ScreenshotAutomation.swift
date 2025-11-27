@@ -83,7 +83,7 @@ final class ScreenshotAutomation: XCTestCase {
         ensureOnCatalog()
         // Search for Black Lagoon Glass
         if activateSearch() {
-            app.searchFields.firstMatch.typeText("Black Lagoon Glass")
+            app.searchFields.firstMatch.typeText("Blue Flamb")
             waitForContentToLoad(seconds: 2)
 
             // Tap on first search result
@@ -98,7 +98,7 @@ final class ScreenshotAutomation: XCTestCase {
                 navigateBack()
                 clearSearch()
             } else {
-                print("   ⚠️ SKIPPED: No search results for 'Black Lagoon Glass'")
+                print("   ⚠️ SKIPPED: No search results for 'Blue Flamb'")
                 clearSearch()
             }
         } else {
@@ -154,6 +154,12 @@ final class ScreenshotAutomation: XCTestCase {
             waitForContentToLoad()
             takeScreenshot(named: "feature-search-active", subdirectory: "website", delay: 0.5)
             clearSearch()
+
+            // FORCE dismiss keyboard by tapping Catalog tab twice
+            app.buttons["Catalog"].tap()
+            sleep(1)
+            app.buttons["Catalog"].tap()
+            sleep(1)
         }
 
         // 4b. Color/Tag Filter Results
@@ -166,9 +172,14 @@ final class ScreenshotAutomation: XCTestCase {
         navigateToTab("Inventory")
         waitForContentToLoad()
 
-        // Dismiss any keyboard that might be visible
+        // Dismiss keyboard by scrolling down on the list content
+        // This collapses the search bar in .searchable views
         if app.keyboards.element.exists {
-            app.swipeDown()
+            print("   📊 DEBUG: Keyboard visible, scrolling to dismiss...")
+            // Pull down to collapse search (opposite of pull-to-search)
+            let startPoint = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
+            let endPoint = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
+            startPoint.press(forDuration: 0.1, thenDragTo: endPoint)
             sleep(1)
         }
 
@@ -370,7 +381,7 @@ final class ScreenshotAutomation: XCTestCase {
         }
 
         // 9. Label Printing - Professional Organization
-        print("9️⃣ Feature: Label Designer")
+        print("9️⃣ Feature: Label Designer (Top)")
         navigateToTab("Inventory")
         waitForContentToLoad()
         // Print Labels is in the ellipsis menu
@@ -382,7 +393,16 @@ final class ScreenshotAutomation: XCTestCase {
             if printLabelsButton.waitForExistence(timeout: 3) && printLabelsButton.isHittable {
                 printLabelsButton.tap()
                 waitForContentToLoad(seconds: 2)
-                takeScreenshot(named: "feature-label-designer", subdirectory: "website", delay: 0.5)
+                takeScreenshot(named: "feature-label-designer-top", subdirectory: "website", delay: 0.5)
+
+                // 9b. Label Designer Bottom
+                print("9️⃣b Feature: Label Designer (Bottom)")
+                app.swipeUp()
+                usleep(500000)
+                app.swipeUp()
+                usleep(500000)
+                takeScreenshot(named: "feature-label-designer-bottom", subdirectory: "website", delay: 0.5)
+
                 dismissModal()
             } else {
                 print("   ⚠️  Print Labels menu item not found or not enabled")
@@ -396,79 +416,17 @@ final class ScreenshotAutomation: XCTestCase {
         navigateToTab("Locations")
         waitForContentToLoad(seconds: 3)
 
-        // Search for Seattle, WA to get a nicely centered map view
-        let locationSearchField = app.textFields["locations_search_field"]
-        if locationSearchField.waitForExistence(timeout: 5) && locationSearchField.isHittable {
-            locationSearchField.tap()
+        // Dismiss keyboard if visible by scrolling down
+        if app.keyboards.element.exists {
+            print("   📊 DEBUG: Keyboard visible on Locations, scrolling to dismiss...")
+            let startPoint = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
+            let endPoint = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
+            startPoint.press(forDuration: 0.1, thenDragTo: endPoint)
             sleep(1)
-            locationSearchField.typeText("Seattle, WA")
-            sleep(1)
-
-            // Submit the search (look for search button or Return key)
-            let searchButton = app.buttons["locations_search_go"]
-            if searchButton.exists && searchButton.isHittable {
-                searchButton.tap()
-            } else {
-                // Try tapping Return on keyboard
-                if app.keyboards.buttons["Return"].exists {
-                    app.keyboards.buttons["Return"].tap()
-                }
-            }
-
-            // Wait for map to update with search results
-            waitForContentToLoad(seconds: 2)
-
-            // Dismiss keyboard before taking screenshot
-            if app.keyboards.element.exists {
-                app.swipeDown()
-                sleep(1)
-            }
-
-            takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
-
-            // 11. Location Detail - Tap on first location in the list below the map
-            print("1️⃣1️⃣ Feature: Location Detail")
-
-            // Wait longer for location cells to become hittable (map animation needs to complete)
-            sleep(3)
-
-            let locationCells = app.cells
-            print("   📊 DEBUG: locationCells.count = \(locationCells.count)")
-            if locationCells.count > 0 {
-                // Find the first hittable cell
-                var tappedCell = false
-                for i in 0..<min(10, locationCells.count) {
-                    let cell = locationCells.element(boundBy: i)
-                    if cell.exists && cell.isHittable {
-                        print("   📊 DEBUG: Found hittable cell at index \(i), tapping...")
-                        cell.tap()
-                        waitForContentToLoad(seconds: 2)
-                        takeScreenshot(named: "feature-location-detail", subdirectory: "website", delay: 0.5)
-                        tappedCell = true
-
-                        // Navigate back to locations list
-                        navigateBack()
-                        waitForContentToLoad(seconds: 1)
-                        break
-                    }
-                }
-                if !tappedCell {
-                    print("   ⚠️ SKIPPED: No hittable location cells found (checked first 10)")
-                }
-            } else {
-                print("   ⚠️ SKIPPED: No location cells found")
-            }
-
-            // Clear search field after screenshots
-            let clearButton = app.buttons["locations_clear_search"]
-            if clearButton.exists && clearButton.isHittable {
-                clearButton.tap()
-                sleep(1)
-            }
-        } else {
-            print("   ⚠️ Locations search field not found, taking screenshot without search")
-            takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
         }
+
+        // Take the screenshot - locations should be loaded from bundle via populateTestData
+        takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
 
         // 12. Settings - Customization (Top)
         print("1️⃣2️⃣ Feature: Settings (Top)")

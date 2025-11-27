@@ -929,6 +929,12 @@ extension MoltenApp {
 
             log.warning("✅ [populateTestData] Test data population complete!")
 
+            // Load locations from bundle for UI tests
+            log.warning("🧪 [populateTestData] Loading locations from bundle...")
+            let locationService = dependencies.unifiedLocationService
+            let locationsLoaded = try await locationService.loadLocationsFromBundleResource()
+            log.warning("🧪 [populateTestData] Loaded \(locationsLoaded) locations from bundle")
+
         } catch {
             log.error("❌ [populateTestData] Failed to populate test data: \(error.localizedDescription)")
         }

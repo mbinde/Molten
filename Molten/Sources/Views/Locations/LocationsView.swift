@@ -133,6 +133,23 @@ struct LocationsView: View {
                     locationManager.requestPermission()
                 }
             }
+            .onChange(of: viewModel.geocodedLocationTrigger) { oldValue, newValue in
+                // Center map on geocoded zip code location
+                if let coordinate = viewModel.geocodedLocation {
+                    let span = MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
+                    let region = MKCoordinateRegion(center: coordinate, span: span)
+                    mapCameraPosition = .region(region)
+
+                    // Update map bounds for the new location
+                    let minLat = coordinate.latitude - (span.latitudeDelta / 2)
+                    let maxLat = coordinate.latitude + (span.latitudeDelta / 2)
+                    let minLon = coordinate.longitude - (span.longitudeDelta / 2)
+                    let maxLon = coordinate.longitude + (span.longitudeDelta / 2)
+
+                    viewModel.updateMapCenter(coordinate)
+                    viewModel.updateMapBounds(minLat: minLat, maxLat: maxLat, minLon: minLon, maxLon: maxLon)
+                }
+            }
         }
     }
 
@@ -241,15 +258,31 @@ struct LocationsView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(DesignSystem.Colors.textTertiary)
 
-            TextField("Search locations", text: Binding(
+            TextField("City, state, or zip code", text: Binding(
                 get: { viewModel.searchText },
                 set: { viewModel.updateSearchText($0) }
             ))
             .textFieldStyle(.plain)
             .autocorrectionDisabled()
+            .onSubmit {
+                Task {
+                    await viewModel.performSearch()
+                }
+            }
 
-            // Clear button moved to toolbar for reliable accessibility
-            // (in-field button can be obscured by keyboard on some devices)
+            // Search button
+            if !viewModel.searchText.isEmpty {
+                Button {
+                    Task {
+                        await viewModel.performSearch()
+                    }
+                } label: {
+                    Image(systemName: "arrow.right.circle.fill")
+                        .foregroundStyle(DesignSystem.Colors.accentPrimary)
+                }
+                .accessibilityIdentifier("locations_search_go")
+                .accessibilityLabel("Search")
+            }
         }
         .padding(DesignSystem.Padding.compact)
         .background(DesignSystem.Colors.backgroundSecondary)
@@ -445,7 +478,8 @@ struct LocationsView: View {
     }
 
     private var shouldShowSearchEmptyState: Bool {
-        !viewModel.allLocations.isEmpty && (!viewModel.searchText.isEmpty || !viewModel.selectedTypes.isEmpty || viewModel.selectedTechnique != nil)
+        // Show search empty state if we have locations but filters are active (technique or map bounds)
+        !viewModel.allLocations.isEmpty && (viewModel.selectedTechnique != nil || viewModel.mapBounds != nil)
     }
 
     private var emptyStateView: some View {
@@ -458,21 +492,16 @@ struct LocationsView: View {
 
     private var searchEmptyStateView: some View {
         var activeFilters: [String] = []
-        if !viewModel.selectedTypes.isEmpty {
-            activeFilters.append(viewModel.selectedTypes.map { $0.displayName }.joined(separator: ", "))
-        }
         if let technique = viewModel.selectedTechnique {
-            activeFilters.append("technique '\(technique.displayName)'")
+            activeFilters.append(technique.displayName)
         }
 
-        return CustomEmptyStateView.searchResults(
-            searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
-            filters: activeFilters,
-            onClearFilters: {
-                viewModel.updateSearchText("")
-                viewModel.selectedTypes.removeAll()
-                viewModel.updateSelectedTechnique(nil)
-            }
+        return CustomEmptyStateView(
+            icon: "map",
+            title: "No locations in this area",
+            description: activeFilters.isEmpty
+                ? "Try zooming out or panning the map to explore more locations."
+                : "No \(activeFilters.joined(separator: ", ")) locations in this area. Try zooming out or changing the technique filter."
         )
     }
 }

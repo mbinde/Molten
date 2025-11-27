@@ -39,8 +39,8 @@ struct AddFriendView: View {
                 if let error = viewModel.errorMessage {
                     Section {
                         Text(error)
-                            .foregroundColor(.red)
-                            .font(.caption)
+                            .foregroundColor(DesignSystem.Colors.accentDanger)
+                            .font(DesignSystem.Typography.listItemCaption)
                     }
                 }
             }
@@ -108,8 +108,8 @@ struct ShareCodeInputView: View {
             // Dash separator
             Text("-")
                 .font(.system(.title, design: .monospaced))
-                .fontWeight(.bold)
-                .foregroundColor(.secondary)
+                .fontWeight(DesignSystem.FontWeight.bold)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
 
             // Last 3 characters
             ForEach(3..<6, id: \.self) { index in
@@ -160,17 +160,17 @@ struct CharacterBox: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(isFocused ? Color.accentColor : Color.gray.opacity(0.3), lineWidth: 2)
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                .stroke(isFocused ? DesignSystem.Colors.moltenOrange : DesignSystem.Colors.textTertiary.opacity(0.3), lineWidth: 2)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(.systemGray6))
+                    RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                        .fill(DesignSystem.Colors.backgroundSecondary)
                 )
 
             Text(character)
                 .font(.system(.title, design: .monospaced))
-                .fontWeight(.bold)
-                .foregroundColor(character.isEmpty ? .clear : .primary)
+                .fontWeight(DesignSystem.FontWeight.bold)
+                .foregroundColor(character.isEmpty ? .clear : DesignSystem.Colors.textPrimary)
         }
         .frame(width: 40, height: 50)
     }

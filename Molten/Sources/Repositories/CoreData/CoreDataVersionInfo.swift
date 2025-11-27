@@ -16,22 +16,17 @@ class CoreDataVersionInfo {
     
     /// Gets the current Core Data model version using multiple detection strategies
     var currentModelVersion: String {
-        // Strategy 1: Try to get explicit version identifiers
-        if let explicitVersion = getExplicitVersionIdentifier(), !explicitVersion.isEmpty {
-            return explicitVersion
-        }
-        
-        // Strategy 2: Try to get version from store metadata
-        if let storeVersion = modelVersionFromMetadata, !storeVersion.isEmpty {
-            return storeVersion
-        }
-        
-        // Strategy 3: Try to get version from bundle/model file structure
+        // Strategy 1: Try to get version from VersionInfo.plist (most reliable)
         if let bundleVersion = modelVersionFromBundle, !bundleVersion.isEmpty {
             return bundleVersion
         }
-        
-        // Strategy 4: Fallback to app version as model indicator
+
+        // Strategy 2: Try to get explicit version identifiers from model
+        if let explicitVersion = getExplicitVersionIdentifier(), !explicitVersion.isEmpty {
+            return explicitVersion
+        }
+
+        // Strategy 3: Fallback to app version as model indicator
         return fallbackModelVersion
     }
     
@@ -57,70 +52,51 @@ class CoreDataVersionInfo {
         return nil
     }
     
-    /// Gets model version from store metadata
-    var modelVersionFromMetadata: String? {
-        do {
-            let storeURL = PersistenceController.shared.container.persistentStoreDescriptions.first?.url
-            if let url = storeURL {
-                let metadata = try NSPersistentStoreCoordinator.metadataForPersistentStore(ofType: NSSQLiteStoreType, at: url)
-                
-                // Look for version-related metadata keys
-                if let versionHash = metadata[NSStoreModelVersionHashesKey] as? [String: Any] {
-                    // Create a simple version indicator based on hash count/complexity
-                    return "v\(versionHash.keys.count)"
-                }
-                
-                if let version = metadata[NSStoreModelVersionIdentifiersKey] as? Set<String> {
-                    return version.sorted().joined(separator: ", ")
-                }
-            }
-        } catch {
-            print("Could not read store metadata: \(error)")
-        }
-        return nil
-    }
-    
     /// Gets version information from bundle structure
     var modelVersionFromBundle: String? {
         guard let modelURL = Bundle.main.url(forResource: "Molten", withExtension: "momd") else {
             return nil
         }
-        
+
         do {
             let contents = try FileManager.default.contentsOfDirectory(at: modelURL, includingPropertiesForKeys: nil)
-            
-            // Look for versioned model files (.mom files)
-            let momFiles = contents.filter { $0.pathExtension == "mom" }
-            
-            if momFiles.count > 1 {
-                // Multiple versions exist, try to determine current
-                return "Multi-version (\(momFiles.count) versions)"
-            } else if momFiles.count == 1 {
-                // Single version, try to extract version from filename
-                let filename = momFiles.first?.deletingPathExtension().lastPathComponent ?? ""
-                if !filename.isEmpty && filename != "Flameworker" {
-                    return filename
+
+            // Check for VersionInfo.plist first (most reliable)
+            if let versionInfoURL = contents.first(where: { $0.lastPathComponent == "VersionInfo.plist" }) {
+                let data = try Data(contentsOf: versionInfoURL)
+                if let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any],
+                   let versionName = plist["NSManagedObjectModel_CurrentVersionName"] as? String {
+                    // Extract just the version number from "Molten 27" -> "27"
+                    return extractVersionNumber(from: versionName)
                 }
             }
-            
-            // Check for VersionInfo.plist
-            if let versionInfoURL = contents.first(where: { $0.lastPathComponent == "VersionInfo.plist" }) {
-                do {
-                    let data = try Data(contentsOf: versionInfoURL)
-                    if let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] {
-                        if let version = plist["NSManagedObjectModel_CurrentVersionName"] as? String {
-                            return version
-                        }
-                    }
-                } catch {
-                    print("Could not read VersionInfo.plist: \(error)")
+
+            // Fallback: Look for versioned model files (.mom files)
+            let momFiles = contents.filter { $0.pathExtension == "mom" }
+
+            if momFiles.count == 1 {
+                let filename = momFiles.first?.deletingPathExtension().lastPathComponent ?? ""
+                if !filename.isEmpty {
+                    return extractVersionNumber(from: filename)
                 }
             }
         } catch {
             print("Could not read model bundle contents: \(error)")
         }
-        
+
         return nil
+    }
+
+    /// Extracts the version number from a model name like "Molten 27" -> "27"
+    private func extractVersionNumber(from modelName: String) -> String {
+        // Try to extract numeric version from the end (e.g., "Molten 27" -> "27")
+        let components = modelName.split(separator: " ")
+        if let lastComponent = components.last,
+           let _ = Int(lastComponent) {
+            return String(lastComponent)
+        }
+        // If no numeric suffix, return the full name
+        return modelName
     }
     
     /// Fallback version based on app version and model complexity

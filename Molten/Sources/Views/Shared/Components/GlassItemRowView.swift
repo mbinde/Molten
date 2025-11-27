@@ -541,7 +541,7 @@ struct NeededQuantityBadge: View {
             Text(formattedQuantity)
                 .font(DesignSystem.Typography.prominentNumber)
                 .fontWeight(DesignSystem.FontWeight.bold)
-                .foregroundColor(DesignSystem.Colors.moltenAmber)
+                .foregroundColor(DesignSystem.Colors.moltenOrange)
 
             Text(displayUnit)
                 .font(DesignSystem.Typography.listItemCaption)

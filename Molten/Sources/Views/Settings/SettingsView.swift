@@ -107,11 +107,11 @@ struct SettingsView: View {
     }
 
     private var subscriptionBadgeColor: Color {
-        subscriptionViewModel.hasProAccess ? .white : .blue
+        subscriptionViewModel.hasProAccess ? .white : DesignSystem.Colors.moltenTeal
     }
 
     private var subscriptionBadgeBackground: Color {
-        subscriptionViewModel.hasProAccess ? .yellow : .blue.opacity(0.2)
+        subscriptionViewModel.hasProAccess ? DesignSystem.Colors.moltenOrange : DesignSystem.Colors.tintTeal
     }
 
     private var colorScheme: ColorScheme? {
@@ -172,18 +172,18 @@ struct SettingsView: View {
 
                             if let updateMessage = catalogUpdateViewModel.updateAvailableMessage {
                                 Text(updateMessage)
-                                    .font(.caption)
-                                    .foregroundColor(Color.accentColor)
+                                    .font(DesignSystem.Typography.listItemCaption)
+                                    .foregroundColor(DesignSystem.Colors.moltenOrange)
                             } else {
                                 Text("v\(catalogUpdateViewModel.currentVersion)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .font(DesignSystem.Typography.listItemCaption)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                     }
                     .accessibilityIdentifier("settings_catalog_updates")
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                         Picker("Show Color Chips", selection: colorChipDisplayModeBinding) {
                             ForEach(UserSettings.ColorChipDisplayMode.allCases, id: \.self) { mode in
                                 Text(mode.displayName).tag(mode)
@@ -192,8 +192,8 @@ struct SettingsView: View {
                         .pickerStyle(.menu)
 
                         Text(colorChipDisplayMode.description)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
 
                     Toggle("Expand Manufacturer Descriptions by Default", isOn: Binding(
@@ -311,7 +311,7 @@ struct SettingsView: View {
                 // MARK: - Projects and Logs
                 if FeatureFlags.ENABLE_PROJECTS {
                     Section("Projects and Logs") {
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                             Picker("Project Thumbnail Style", selection: thumbnailDisplayModeBinding) {
                                 ForEach(UserSettings.ThumbnailDisplayMode.allCases, id: \.self) { mode in
                                     Text(mode.displayName).tag(mode)
@@ -320,8 +320,8 @@ struct SettingsView: View {
                             .pickerStyle(.menu)
 
                             Text(thumbnailDisplayMode.description)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                 }
@@ -373,7 +373,7 @@ struct SettingsView: View {
                             Spacer()
                             if BackupPreferences().isEnabled {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.green)
+                                    .foregroundColor(DesignSystem.Colors.moltenTeal)
                             }
                         }
                     }
@@ -432,12 +432,11 @@ struct SettingsView: View {
                             entitlementService.refreshTier()
                         }
                     )) {
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                             Text("Override Subscription Tier")
-                                .font(.body)
                             Text("Test premium features without purchase")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
 
@@ -458,10 +457,10 @@ struct SettingsView: View {
                         // Show current tier status
                         HStack {
                             Image(systemName: entitlementService.currentTier == .premium ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(entitlementService.currentTier == .premium ? .green : .secondary)
+                                .foregroundColor(entitlementService.currentTier == .premium ? DesignSystem.Colors.moltenTeal : DesignSystem.Colors.textSecondary)
                             Text("Current Tier: \(entitlementService.currentTier == .premium ? "Premium" : "Free")")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
 

@@ -251,28 +251,44 @@ final class ScreenshotAutomation: XCTestCase {
             // Search for Acid Yellow if search field appears
             if app.searchFields.firstMatch.exists {
                 let searchField = app.searchFields.firstMatch
-                // Try multiple times to activate search field
-                for attempt in 1...3 {
+                // Try multiple times to activate search field and wait for keyboard
+                var keyboardAppeared = false
+                for attempt in 1...5 {
                     searchField.tap()
-                    usleep(500000) // Wait for keyboard
-                    if searchField.value(forKey: "hasKeyboardFocus") as? Bool == true {
+                    sleep(1) // Wait for keyboard animation
+
+                    // Check if keyboard appeared
+                    if app.keyboards.element.exists {
+                        keyboardAppeared = true
                         break
                     }
-                    if attempt == 3 {
-                        // Force activation with coordinate tap
+
+                    // Try different tap approaches
+                    if attempt == 2 {
+                        // Try coordinate tap
                         searchField.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-                        usleep(500000)
+                    } else if attempt == 3 {
+                        // Try double tap
+                        searchField.doubleTap()
+                    } else if attempt == 4 {
+                        // Try tapping and waiting longer
+                        searchField.tap()
+                        sleep(2)
                     }
                 }
 
-                // Type search query
-                if searchField.waitForExistence(timeout: 2) {
-                    searchField.typeText("acid yellow")
-                    sleep(1)
-                    // Tap first result
-                    if app.tables.cells.count > 0 {
-                        app.tables.cells.firstMatch.tap()
+                // Only try to type if keyboard appeared or we exhausted retries
+                if keyboardAppeared || true { // Always try typing as fallback
+                    do {
+                        searchField.typeText("acid yellow")
                         sleep(1)
+                        // Tap first result
+                        if app.tables.cells.count > 0 {
+                            app.tables.cells.firstMatch.tap()
+                            sleep(1)
+                        }
+                    } catch {
+                        print("   ⚠️  Failed to type in search field: \(error)")
                     }
                 }
             }

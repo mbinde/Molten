@@ -491,18 +491,23 @@ private struct QRCodeView: View {
     @State private var qrImage: UIImage?
 
     var body: some View {
-        if let qrImage = qrImage {
-            Image(uiImage: qrImage)
-                .resizable()
-                .interpolation(.none)
-                .aspectRatio(contentMode: .fit)
-        } else {
-            Rectangle()
-                .fill(Color.gray.opacity(0.2))
-                .onAppear {
-                    // Generate QR code once on appear
-                    qrImage = service.generateQRCode(for: stableId)
-                }
+        Group {
+            if let qrImage = qrImage {
+                Image(uiImage: qrImage)
+                    .resizable()
+                    .interpolation(.none)
+                    .aspectRatio(contentMode: .fit)
+            } else {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.2))
+            }
+        }
+        .onAppear {
+            qrImage = service.generateQRCode(for: stableId)
+        }
+        .onChange(of: stableId) { _, newStableId in
+            // Regenerate QR code when preview item changes
+            qrImage = service.generateQRCode(for: newStableId)
         }
     }
 }

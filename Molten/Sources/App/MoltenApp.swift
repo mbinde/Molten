@@ -84,11 +84,8 @@ struct MoltenApp: App {
         // and provides appropriate dependencies (mocks for tests, Core Data for production)
     }
 
-    // DO NOT initialize PersistenceController here!
-    // It will be initialized lazily during the loading screen
+    // Launch state - single launch screen handles all initialization
     @State private var isLaunching = true
-    @State private var showFirstRunDataLoading = false
-    @State private var firstRunDataLoadingComplete = false
     @State private var showAlphaDisclaimer = false
     @State private var syncMonitor: CloudKitSyncMonitor?
     @State private var importPlanURL: URL?
@@ -327,20 +324,18 @@ extension MoltenApp {
     @ViewBuilder
     private var mainContentView: some View {
         ZStack {
-            // Set black background only during launch to prevent white flash
-            if isLaunching || (showFirstRunDataLoading && !firstRunDataLoadingComplete) {
+            // Set black background during launch to prevent white flash
+            if isLaunching {
                 Color.black
                     .ignoresSafeArea()
             }
 
             if isLaunching {
-                LaunchScreenView()
-                    .task {
-                        await performQuickStartupChecks()
-                    }
-            } else if showFirstRunDataLoading && !firstRunDataLoadingComplete {
-                // Show detailed progress for first-run data loading
-                FirstRunDataLoadingView(isComplete: $firstRunDataLoadingComplete)
+                // Single launch screen handles all initialization
+                LaunchScreenView(isComplete: Binding(
+                    get: { !isLaunching },
+                    set: { if $0 { isLaunching = false } }
+                ))
             } else {
                 #if os(iOS)
                 mainTabViewWithModifiers
@@ -427,31 +422,6 @@ extension MoltenApp {
         return tabView
     }
     
-    /// Performs quick startup checks - transitions to first-run loading immediately
-    /// CRITICAL: This function shows the loading screen FIRST, then initializes Core Data
-    /// - Core Data initialization happens DURING the loading screen (user sees progress!)
-    /// - NO blocking operations before showing UI
-    @MainActor
-    private func performQuickStartupChecks() async {
-        // Check CloudKit account status for diagnostics
-        await checkCloudKitStatus()
-
-        // Show launch screen VERY briefly - just enough for smooth transition
-        // Core Data initialization will happen DURING the loading screen!
-        do {
-            try await Task.sleep(for: .seconds(0.3))
-        } catch {
-            // Handle cancellation gracefully
-        }
-
-        // Transition to first-run loading view IMMEDIATELY
-        // Core Data will be initialized while the loading screen is visible!
-        withAnimation(.easeInOut(duration: 0.3)) {
-            isLaunching = false
-            showFirstRunDataLoading = true
-        }
-    }
-
     /// Check CloudKit account status and log diagnostics
     @MainActor
     private func checkCloudKitStatus() async {
@@ -675,7 +645,7 @@ extension MoltenApp {
         }
 
         // CRITICAL: Initialize the catalog database before creating test data
-        // The normal launch flow does this in FirstRunDataLoadingView, but UI tests skip that
+        // The normal launch flow does this in LaunchScreenView, but UI tests skip that
         log.warning("🧪 [configureUITest] Initializing Core Data...")
         await PersistenceController.shared.initialize()
         log.warning("🧪 [configureUITest] Core Data initialized")

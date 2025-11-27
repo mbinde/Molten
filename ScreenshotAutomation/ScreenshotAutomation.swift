@@ -389,12 +389,12 @@ final class ScreenshotAutomation: XCTestCase {
         navigateToTab("Locations")
         waitForContentToLoad(seconds: 3)
 
-        // Search for 98144 to get a nicely centered map view
+        // Search for Seattle, WA to get a nicely centered map view
         let locationSearchField = app.textFields["locations_search_field"]
         if locationSearchField.waitForExistence(timeout: 5) && locationSearchField.isHittable {
             locationSearchField.tap()
             sleep(1)
-            locationSearchField.typeText("98144")
+            locationSearchField.typeText("Seattle, WA")
             sleep(1)
 
             // Submit the search (look for search button or Return key)

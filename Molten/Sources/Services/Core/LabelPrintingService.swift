@@ -1841,7 +1841,7 @@ class LabelPrintingService {
         let filter = CIFilter.qrCodeGenerator()
 
         // Create deep link URL with stable_id
-        let deepLink = "molten://g/\(stableId)"
+        let deepLink = "molten://i/\(stableId)"
         let data = Data(deepLink.utf8)
         filter.setValue(data, forKey: "inputMessage")
         filter.setValue("H", forKey: "inputCorrectionLevel") // High error correction

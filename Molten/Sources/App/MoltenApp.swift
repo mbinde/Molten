@@ -725,16 +725,16 @@ extension MoltenApp {
     }
 
     /// Handle deep links from QR codes
-    /// - molten://g/{naturalKey} - Glass item detail with quick actions (QR code scan)
-    /// - molten://v/{naturalKey} - Glass item detail view-only (shared links)
+    /// - molten://i/{naturalKey} - Item detail with quick actions (QR code scan)
+    /// - molten://v/{naturalKey} - Item detail view-only (shared links)
     /// - molten://inventory/{shareCode} - Add friend share
     @MainActor
     private func handleDeepLink(_ url: URL) {
         guard let host = url.host else { return }
 
         switch host {
-        case "g":
-            // Glass item detail with quick actions: molten://g/bullseye-clear-001
+        case "i":
+            // Item detail with quick actions: molten://i/bullseye-clear-001
             let path = url.path
             let naturalKey = path.hasPrefix("/") ? String(path.dropFirst()) : path
 

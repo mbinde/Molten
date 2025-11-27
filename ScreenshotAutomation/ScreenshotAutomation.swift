@@ -169,19 +169,16 @@ final class ScreenshotAutomation: XCTestCase {
 
         // 5. Inventory Management - Track Your Stock
         print("5️⃣ Feature: Inventory List")
+
+        // Go to Shopping first to "reset" keyboard state from catalog search
+        navigateToTab("Shopping")
+        sleep(1)
+
+        // Now navigate to Inventory - keyboard should not auto-appear
         navigateToTab("Inventory")
         waitForContentToLoad()
 
-        // Dismiss keyboard by scrolling down on the list content
-        // This collapses the search bar in .searchable views
-        if app.keyboards.element.exists {
-            print("   📊 DEBUG: Keyboard visible, scrolling to dismiss...")
-            // Pull down to collapse search (opposite of pull-to-search)
-            let startPoint = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
-            let endPoint = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
-            startPoint.press(forDuration: 0.1, thenDragTo: endPoint)
-            sleep(1)
-        }
+        print("   📊 DEBUG: Keyboard exists = \(app.keyboards.element.exists)")
 
         takeScreenshot(named: "feature-inventory-list", subdirectory: "website", delay: 0.5)
 
@@ -414,18 +411,28 @@ final class ScreenshotAutomation: XCTestCase {
         // 10. Locations - Studio Organization
         print("🔟 Feature: Locations Map")
         navigateToTab("Locations")
-        waitForContentToLoad(seconds: 3)
 
-        // Dismiss keyboard if visible by scrolling down
+        // Wait longer for locations to load from web (populateTestData fetches from moltenglass.app)
+        waitForContentToLoad(seconds: 5)
+
+        // Dismiss keyboard if visible by scrolling
         if app.keyboards.element.exists {
             print("   📊 DEBUG: Keyboard visible on Locations, scrolling to dismiss...")
-            let startPoint = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
-            let endPoint = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
-            startPoint.press(forDuration: 0.1, thenDragTo: endPoint)
+            app.swipeDown()
             sleep(1)
         }
 
-        // Take the screenshot - locations should be loaded from bundle via populateTestData
+        // Toggle from map view to list view by tapping the map button in nav bar
+        // This shows actual location data instead of empty map area
+        let mapToggleButton = app.buttons["locations_toggle_map"]
+        print("   📊 DEBUG: Map toggle button exists = \(mapToggleButton.exists)")
+        if mapToggleButton.exists && mapToggleButton.isHittable {
+            print("   → Tapping map toggle to switch to list view...")
+            mapToggleButton.tap()
+            sleep(1)
+        }
+
+        // Take the screenshot showing the location list
         takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
 
         // 12. Settings - Customization (Top)

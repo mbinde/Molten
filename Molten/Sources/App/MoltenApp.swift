@@ -929,11 +929,11 @@ extension MoltenApp {
 
             log.warning("✅ [populateTestData] Test data population complete!")
 
-            // Load locations from bundle for UI tests
-            log.warning("🧪 [populateTestData] Loading locations from bundle...")
+            // Load locations for UI tests (tries bundle first, then fetches from web)
+            log.warning("🧪 [populateTestData] Loading locations (hybrid: bundle + web)...")
             let locationService = dependencies.unifiedLocationService
-            let locationsLoaded = try await locationService.loadLocationsFromBundleResource()
-            log.warning("🧪 [populateTestData] Loaded \(locationsLoaded) locations from bundle")
+            let locationResult = try await locationService.loadLocationsHybrid()
+            log.warning("🧪 [populateTestData] Loaded locations - bundled: \(locationResult.bundled), web: \(locationResult.web), total: \(locationResult.total)")
 
         } catch {
             log.error("❌ [populateTestData] Failed to populate test data: \(error.localizedDescription)")

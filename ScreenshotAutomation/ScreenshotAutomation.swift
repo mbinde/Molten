@@ -389,8 +389,40 @@ final class ScreenshotAutomation: XCTestCase {
         navigateToTab("Locations")
         waitForContentToLoad(seconds: 3)
 
-        // Just take screenshot of the locations map (search is not reliable)
-        takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
+        // Search for 98144 to get a nicely centered map view
+        let locationSearchField = app.textFields["locations_search_field"]
+        if locationSearchField.waitForExistence(timeout: 5) && locationSearchField.isHittable {
+            locationSearchField.tap()
+            sleep(1)
+            locationSearchField.typeText("98144")
+            sleep(1)
+
+            // Submit the search (look for search button or Return key)
+            let searchButton = app.buttons["locations_search_go"]
+            if searchButton.exists && searchButton.isHittable {
+                searchButton.tap()
+            } else {
+                // Try tapping Return on keyboard
+                if app.keyboards.buttons["Return"].exists {
+                    app.keyboards.buttons["Return"].tap()
+                }
+            }
+
+            // Wait for map to update with search results
+            waitForContentToLoad(seconds: 2)
+
+            takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
+
+            // Clear search field after screenshot
+            let clearButton = app.buttons["locations_clear_search"]
+            if clearButton.exists && clearButton.isHittable {
+                clearButton.tap()
+                sleep(1)
+            }
+        } else {
+            print("   ⚠️ Locations search field not found, taking screenshot without search")
+            takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
+        }
 
         // 11. Location Detail
         print("1️⃣1️⃣ Feature: Location Detail")

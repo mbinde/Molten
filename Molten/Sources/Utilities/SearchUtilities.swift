@@ -631,10 +631,13 @@ nonisolated struct FilterUtilities {
                 }
             }
             
-            // Filter by COE values
+            // Filter by COE values (only affects glass items - coatings/tools don't have COE)
             if !coeValues.isEmpty {
-                if !coeValues.contains(item.glassItem.coe) {
-                    return false
+                // Non-glass items (coatings, tools) don't have COE - don't filter them out
+                if item.catalogItem.itemType == .glass {
+                    if !coeValues.contains(item.glassItem.coe) {
+                        return false
+                    }
                 }
             }
             

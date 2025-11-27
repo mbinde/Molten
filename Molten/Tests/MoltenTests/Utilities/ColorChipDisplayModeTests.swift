@@ -106,7 +106,7 @@ struct ColorChipDisplayModeTests: MockOnlyTestSuite {
 
     // MARK: - Image Loading Logic Tests - ALWAYS Mode
 
-    @Test("ALWAYS mode: Should return nil for gradient when colors exist")
+    @Test("ALWAYS mode: Should return gradient image when colors exist")
     func testAlwaysModeWithColors() async {
         let originalMode = UserSettings.shared.colorChipDisplayMode
         UserSettings.shared.colorChipDisplayMode = .always
@@ -120,7 +120,17 @@ struct ColorChipDisplayModeTests: MockOnlyTestSuite {
             dominantColors: ["#FF0000", "#00FF00"]
         )
 
-        #expect(result == nil, "ALWAYS mode with colors should return nil (show gradient)")
+        // Now returns a gradient UIImage instead of nil
+        #expect(result != nil, "ALWAYS mode with colors should return a gradient image")
+
+        // Also verify wouldReturnGradientImage returns true
+        let wouldShowGradient = await ImageHelpers.wouldReturnGradientImage(
+            manufacturer: "TestMfg",
+            imagePath: nil,
+            imageThumbPath: nil,
+            dominantColors: ["#FF0000", "#00FF00"]
+        )
+        #expect(wouldShowGradient == true, "wouldReturnGradientImage should return true in ALWAYS mode with colors")
 
         UserSettings.shared.colorChipDisplayMode = originalMode
     }
@@ -232,7 +242,7 @@ struct ColorChipDisplayModeTests: MockOnlyTestSuite {
 
     // MARK: - Image Loading Logic Tests - NO PHOTO Mode (Default)
 
-    @Test("NO PHOTO mode: Should show gradient when no permission and has colors")
+    @Test("NO PHOTO mode: Should return gradient image when no permission and has colors")
     func testNoPhotoModeNoPermissionWithColors() async {
         let originalMode = UserSettings.shared.colorChipDisplayMode
         UserSettings.shared.colorChipDisplayMode = .noPhoto
@@ -246,7 +256,17 @@ struct ColorChipDisplayModeTests: MockOnlyTestSuite {
             dominantColors: ["#FF0000"]
         )
 
-        #expect(result == nil, "NO PHOTO mode should show gradient when no permission and has colors")
+        // Now returns a gradient UIImage instead of nil
+        #expect(result != nil, "NO PHOTO mode should return gradient image when no permission and has colors")
+
+        // Verify wouldReturnGradientImage agrees
+        let wouldShowGradient = await ImageHelpers.wouldReturnGradientImage(
+            manufacturer: "CiM",
+            imagePath: nil,
+            imageThumbPath: nil,
+            dominantColors: ["#FF0000"]
+        )
+        #expect(wouldShowGradient == true, "wouldReturnGradientImage should return true for CiM with colors")
 
         UserSettings.shared.colorChipDisplayMode = originalMode
     }
@@ -291,7 +311,7 @@ struct ColorChipDisplayModeTests: MockOnlyTestSuite {
         UserSettings.shared.colorChipDisplayMode = originalMode
     }
 
-    @Test("NO PHOTO mode: Should show gradient when photo not found and has colors")
+    @Test("NO PHOTO mode: Should return gradient image when photo not found and has colors")
     func testNoPhotoModePhotoNotFoundWithColors() async {
         let originalMode = UserSettings.shared.colorChipDisplayMode
         UserSettings.shared.colorChipDisplayMode = .noPhoto
@@ -305,8 +325,17 @@ struct ColorChipDisplayModeTests: MockOnlyTestSuite {
             dominantColors: ["#FF0000", "#00FF00"]
         )
 
-        // Should return nil (show gradient) when photo not found but has colors
-        #expect(result == nil, "NO PHOTO mode should show gradient when photo not found and has colors")
+        // Now returns a gradient UIImage when photo not found but has colors
+        #expect(result != nil, "NO PHOTO mode should return gradient image when photo not found and has colors")
+
+        // Verify wouldReturnGradientImage agrees
+        let wouldShowGradient = await ImageHelpers.wouldReturnGradientImage(
+            manufacturer: "DH",
+            imagePath: nil,
+            imageThumbPath: nil,
+            dominantColors: ["#FF0000", "#00FF00"]
+        )
+        #expect(wouldShowGradient == true, "wouldReturnGradientImage should return true when no photo found")
 
         UserSettings.shared.colorChipDisplayMode = originalMode
     }
@@ -377,6 +406,12 @@ struct ColorChipDisplayModeTests: MockOnlyTestSuite {
             imageThumbPath: nil,
             dominantColors: testColors
         )
+        let alwaysWouldShowGradient = await ImageHelpers.wouldReturnGradientImage(
+            manufacturer: "CiM",
+            imagePath: nil,
+            imageThumbPath: nil,
+            dominantColors: testColors
+        )
 
         // Test NoPhoto mode
         UserSettings.shared.colorChipDisplayMode = .noPhoto
@@ -384,6 +419,12 @@ struct ColorChipDisplayModeTests: MockOnlyTestSuite {
             itemCode: testCode,
             manufacturer: "CiM",
             stableId: nil,
+            imagePath: nil,
+            imageThumbPath: nil,
+            dominantColors: testColors
+        )
+        let noPhotoWouldShowGradient = await ImageHelpers.wouldReturnGradientImage(
+            manufacturer: "CiM",
             imagePath: nil,
             imageThumbPath: nil,
             dominantColors: testColors
@@ -399,13 +440,21 @@ struct ColorChipDisplayModeTests: MockOnlyTestSuite {
             imageThumbPath: nil,
             dominantColors: testColors
         )
+        let neverWouldShowGradient = await ImageHelpers.wouldReturnGradientImage(
+            manufacturer: "CiM",
+            imagePath: nil,
+            imageThumbPath: nil,
+            dominantColors: testColors
+        )
 
-        // Always and NoPhoto should return nil (gradient) in this case
-        #expect(alwaysResult == nil, "Always mode should show gradient with colors")
-        #expect(noPhotoResult == nil, "NoPhoto mode should show gradient when no permission and has colors")
+        // Always and NoPhoto should return gradient image (not nil)
+        #expect(alwaysResult != nil, "Always mode should return gradient image with colors")
+        #expect(alwaysWouldShowGradient == true, "Always mode wouldReturnGradientImage should be true")
+        #expect(noPhotoResult != nil, "NoPhoto mode should return gradient image when no permission and has colors")
+        #expect(noPhotoWouldShowGradient == true, "NoPhoto mode wouldReturnGradientImage should be true")
 
-        // Never should not return nil (shouldn't show gradient)
-        #expect(true, "Never mode should not show gradient")
+        // Never mode should not show gradient
+        #expect(neverWouldShowGradient == false, "Never mode wouldReturnGradientImage should be false")
 
         UserSettings.shared.colorChipDisplayMode = originalMode
     }

@@ -412,8 +412,80 @@ struct ImageHelpersTests: MockOnlyTestSuite {
         #expect(true, "Concurrent access should complete without crashes")
     }
     
+    // MARK: - Gradient Image Generation Tests
+
+    @Test("Should generate gradient image from valid hex colors")
+    func testGenerateGradientImageValidColors() {
+        let colors = ["#FF0000", "#00FF00", "#0000FF"]
+        let image = ImageHelpers.generateGradientImage(from: colors)
+
+        #expect(image != nil, "Should generate image from valid hex colors")
+        #expect(image?.size.width == 120, "Default width should be 120")
+        #expect(image?.size.height == 120, "Default height should be 120")
+    }
+
+    @Test("Should generate gradient image with custom size")
+    func testGenerateGradientImageCustomSize() {
+        let colors = ["#FF0000", "#0000FF"]
+        let customSize = CGSize(width: 200, height: 100)
+        let image = ImageHelpers.generateGradientImage(from: colors, size: customSize)
+
+        #expect(image != nil, "Should generate image with custom size")
+        #expect(image?.size.width == 200, "Width should match custom size")
+        #expect(image?.size.height == 100, "Height should match custom size")
+    }
+
+    @Test("Should generate solid image from single color")
+    func testGenerateGradientImageSingleColor() {
+        let colors = ["#FF5722"]
+        let image = ImageHelpers.generateGradientImage(from: colors)
+
+        #expect(image != nil, "Should generate image from single color")
+    }
+
+    @Test("Should return nil for empty colors array")
+    func testGenerateGradientImageEmptyColors() {
+        let colors: [String] = []
+        let image = ImageHelpers.generateGradientImage(from: colors)
+
+        #expect(image == nil, "Should return nil for empty colors array")
+    }
+
+    @Test("Should return nil for invalid hex colors")
+    func testGenerateGradientImageInvalidColors() {
+        let colors = ["invalid", "notahex", "###"]
+        let image = ImageHelpers.generateGradientImage(from: colors)
+
+        #expect(image == nil, "Should return nil when all colors are invalid")
+    }
+
+    @Test("Should handle mixed valid and invalid colors")
+    func testGenerateGradientImageMixedColors() {
+        let colors = ["#FF0000", "invalid", "#0000FF"]
+        let image = ImageHelpers.generateGradientImage(from: colors)
+
+        // Should generate image using only the valid colors
+        #expect(image != nil, "Should generate image from valid colors, ignoring invalid ones")
+    }
+
+    @Test("Should handle hex colors without hash prefix")
+    func testGenerateGradientImageNoHashPrefix() {
+        let colors = ["FF0000", "00FF00"]
+        let image = ImageHelpers.generateGradientImage(from: colors)
+
+        #expect(image != nil, "Should handle hex colors without # prefix")
+    }
+
+    @Test("Should handle hex colors with whitespace")
+    func testGenerateGradientImageWithWhitespace() {
+        let colors = ["  #FF0000  ", "#00FF00\n"]
+        let image = ImageHelpers.generateGradientImage(from: colors)
+
+        #expect(image != nil, "Should handle hex colors with surrounding whitespace")
+    }
+
     // MARK: - Integration Tests
-    
+
     @Test("Should integrate filename sanitization with image loading")
     func testSanitizationIntegration() {
         let codesWithSpecialChars = [

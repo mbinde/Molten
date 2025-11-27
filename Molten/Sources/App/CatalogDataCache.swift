@@ -62,7 +62,13 @@ class CatalogDataCache: ObservableObject {
 
     /// Force reload of catalog data
     func reload(catalogService: CatalogService) async {
+        // Cancel any existing load task to ensure we get fresh data
+        loadTask?.cancel()
+        loadTask = nil
         isLoaded = false
+        isLoading = false
+
+        // Now start a fresh load
         await loadIfNeeded(catalogService: catalogService)
     }
 

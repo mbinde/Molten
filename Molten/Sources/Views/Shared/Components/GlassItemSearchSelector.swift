@@ -134,12 +134,12 @@ struct GlassItemSearchSelector: View {
     }
 
     private var selectedItemBackgroundColor: Color {
-        let baseColor = prefilledNaturalKey != nil ? Color.accentColor : Color.green
+        let baseColor = prefilledNaturalKey != nil ? Color.accentColor : DesignSystem.Colors.accentSuccess
         return baseColor.opacity(0.1)
     }
 
     private var selectedItemBorder: some View {
-        let borderColor = prefilledNaturalKey != nil ? Color.accentColor : Color.green
+        let borderColor = prefilledNaturalKey != nil ? Color.accentColor : DesignSystem.Colors.accentSuccess
         return RoundedRectangle(cornerRadius: 8)
             .stroke(borderColor, lineWidth: 1)
     }
@@ -227,10 +227,10 @@ struct NotFoundCard: View {
                 .foregroundColor(.secondary)
         }
         .padding()
-        .background(Color.orange.opacity(0.1))
+        .background(DesignSystem.Colors.accentWarning.opacity(0.1))
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.orange, lineWidth: 1)
+                .stroke(DesignSystem.Colors.accentWarning, lineWidth: 1)
         )
         .cornerRadius(8)
     }

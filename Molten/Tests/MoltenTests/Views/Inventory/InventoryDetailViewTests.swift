@@ -292,28 +292,18 @@ struct InventoryDetailViewTests {
         )
 
         #expect(view != nil)
-        // ShoppingListOptionsView is presented via sheet when showingShoppingListOptions is true
+        // AddShoppingListItemView is presented via sheet when showingShoppingListOptions is true
     }
 
-    @Test("ShoppingListOptionsView initializes with item")
-    func testShoppingListOptionsViewInit() {
+    @Test("AddShoppingListItemView initializes with prefilled natural key")
+    func testAddShoppingListItemViewInit() {
         let item = createTestItem()
-        let view = ShoppingListOptionsView(
-            item: item,
+        let view = AddShoppingListItemView(
+            prefilledNaturalKey: item.glassItem.stable_id,
             deps: deps
         )
 
         #expect(view != nil)
-        #expect(view.item.glassItem.stable_id == generateStableId(manufacturer: "test", sku: "001"))
-    }
-
-    @Test("Shopping list validates positive quantity")
-    func testShoppingListQuantityValidation() {
-        let item = createTestItem()
-        let view = ShoppingListOptionsView(item: item, deps: deps)
-
-        #expect(view != nil)
-        // Validation happens when saving
     }
 
     // MARK: - Edit Operations Tests

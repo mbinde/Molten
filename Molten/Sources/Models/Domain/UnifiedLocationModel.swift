@@ -291,6 +291,7 @@ struct UnifiedLocationModel: @preconcurrency LocationModel, Codable {
                (addressLine1?.lowercased().contains(lowercaseSearch) ?? false) ||
                (city?.lowercased().contains(lowercaseSearch) ?? false) ||
                (state?.lowercased().contains(lowercaseSearch) ?? false) ||
+               (zip?.lowercased().contains(lowercaseSearch) ?? false) ||
                (notes?.lowercased().contains(lowercaseSearch) ?? false) ||
                retailTechniques.contains(where: { $0.displayName.lowercased().contains(lowercaseSearch) }) ||
                educationTechniques.contains(where: { $0.displayName.lowercased().contains(lowercaseSearch) }) ||

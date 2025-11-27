@@ -218,7 +218,8 @@ class FriendInventoryViewModel {
                         imageThumbPath: catalogItem.glassItem.image_thumb_path,
                         dominantColors: catalogItem.glassItem.dominant_colors,
                         tags: catalogItem.allTags,
-                        coe: catalogItem.glassItem.coe
+                        coe: catalogItem.catalogItem.coe,
+                        itemType: catalogItem.catalogItem.itemType
                     )
                 ))
             } else {
@@ -270,9 +271,13 @@ class FriendInventoryViewModel {
             items = items.filter { selectedManufacturers.contains($0.snapshot.manufacturer) }
         }
 
-        // Apply COE filter
+        // Apply COE filter (only affects glass items - coatings/tools don't have COE)
         if !selectedCOEs.isEmpty {
             items = items.filter { item in
+                // Non-glass items (coatings, tools) don't have COE - don't filter them out
+                if let itemType = item.catalogData?.itemType, itemType != .glass {
+                    return true
+                }
                 if let coe = item.catalogData?.coe {
                     return selectedCOEs.contains(coe)
                 }
@@ -376,7 +381,8 @@ class FriendInventoryViewModel {
                         imageThumbPath: myItem.catalogItem.image_thumb_path,
                         dominantColors: myItem.catalogItem.dominant_colors,
                         tags: myItem.allTags,
-                        coe: myItem.catalogItem.coe ?? 0
+                        coe: myItem.catalogItem.coe,
+                        itemType: myItem.catalogItem.itemType
                     )
                 )
             }
@@ -627,5 +633,6 @@ struct CatalogData {
     let imageThumbPath: String?
     let dominantColors: [String]?
     let tags: [String]
-    let coe: Int32
+    let coe: Int32?  // Optional - coatings/tools don't have COE
+    let itemType: CatalogItemType  // glass, coating, or tool
 }

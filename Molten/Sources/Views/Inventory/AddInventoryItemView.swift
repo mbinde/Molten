@@ -30,6 +30,7 @@ struct AddInventoryItemView: View {
 
 struct AddInventoryFormView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(EntitlementService.self) private var entitlementService
 
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
@@ -37,6 +38,8 @@ struct AddInventoryFormView: View {
     private let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
     private let prefilledNaturalKey: String?
     @State private var viewModel: AddInventoryItemViewModel
+    @State private var showingUpgradePrompt = false
+    @State private var currentInventoryCount = 0
     @StateObject private var terminologySettings = GlassTerminologySettings.shared
 
     init(prefilledNaturalKey: String? = nil, deps: AppDependencies = AppDependencies()) {
@@ -56,6 +59,18 @@ struct AddInventoryFormView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // Limit warning banner (shows at 75%+ usage for free tier)
+                if let limit = entitlementService.getInventoryLimit() {
+                    LimitWarningBanner(
+                        currentCount: currentInventoryCount,
+                        limit: limit,
+                        featureName: "items",
+                        onUpgradeTap: { showingUpgradePrompt = true }
+                    )
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                    .listRowSeparator(.hidden)
+                }
+
                 // Search field back inside Form for better layout
                 GlassItemSearchSelector(
                     selectedGlassItem: $viewModel.selectedCatalogItem,
@@ -87,10 +102,36 @@ struct AddInventoryFormView: View {
             .onChange(of: viewModel.stableId) { _, newValue in
                 viewModel.lookupCatalogItem(stableId: newValue)
             }
+            .onChange(of: viewModel.selectedCatalogItem?.itemType) { _, newItemType in
+                // When item type changes (e.g., selecting a coating vs glass), reset to appropriate default type
+                if let itemType = newItemType {
+                    if itemType == .coating {
+                        viewModel.selectedType = CoatingItemTypeSystem.defaultType
+                    } else {
+                        viewModel.selectedType = GlassTerminologySettings.rodType
+                    }
+                    // Clear subtypes when switching item types
+                    viewModel.selectedSubtype = nil
+                    viewModel.selectedSubsubtype = nil
+                }
+            }
             .alert("Error", isPresented: $viewModel.showingError) {
                 Button("OK") { viewModel.showingError = false }
             } message: {
                 Text(viewModel.errorMessage ?? "")
+            }
+            .sheet(isPresented: $showingUpgradePrompt) {
+                UpgradePromptView(
+                    feature: "inventory",
+                    currentCount: currentInventoryCount,
+                    limit: entitlementService.getInventoryLimit() ?? 0
+                )
+            }
+            .task {
+                // Load current inventory count for limit banner
+                // Use the same cache and hasInventory check as InventoryView for consistency
+                let items = await CatalogDataCache.loadItems(using: catalogService)
+                currentInventoryCount = items.filter { $0.hasInventory }.count
             }
         }
     }
@@ -119,9 +160,41 @@ struct AddInventoryFormView: View {
 
     private var quantityTypeRow: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Row 1: Type picker and subtypes
+            // Main row: Quantity + Type + Subtypes all on one line
             HStack(alignment: .center, spacing: 12) {
-                // Type picker (rod/frit/etc)
+                // Quantity/Container field - use the appropriate binding based on mode
+                // Note: Using Group with if/else to ensure binding updates correctly
+                Group {
+                    if viewModel.isWeightBasedType && viewModel.selectedContainerInputMode == .jars {
+                        TextField("0", text: $viewModel.containerCount)
+                            .accessibilityIdentifier("inventory.add.containerCountField")
+                            .accessibilityLabel("Jar Count")
+                    } else {
+                        TextField("0", text: $viewModel.quantity)
+                            .accessibilityIdentifier("inventory.add.quantityField")
+                            .accessibilityLabel("Quantity")
+                    }
+                }
+                #if canImport(UIKit)
+                .keyboardType(.decimalPad)
+                #endif
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 80)
+
+                // Weight unit picker (g/oz) - right after quantity field for weight mode
+                if viewModel.isWeightBasedType && viewModel.selectedContainerInputMode == .weight {
+                    Picker("", selection: $viewModel.selectedWeightUnit) {
+                        ForEach(WeightUnit.allCases) { unit in
+                            Text(unit.symbol).tag(unit)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 80)
+                    .accessibilityIdentifier("inventory.add.weightUnitPicker")
+                    .accessibilityLabel("Weight Unit")
+                }
+
+                // Type picker (rod/frit/etc) - this IS the label, no separate unit text needed
                 Picker("", selection: $viewModel.selectedType) {
                     ForEach(visibleInventoryTypes, id: \.self) { type in
                         Text(terminologySettings.displayName(for: type)).tag(type)
@@ -169,91 +242,25 @@ struct AddInventoryFormView: View {
                 Spacer(minLength: 0)
             }
 
-            // Row 2: Quantity input (different UI for weight-based vs count-based types)
+            // Second row: Jars/Weight toggle (only for weight-based types)
             if viewModel.isWeightBasedType {
-                weightBasedQuantityRow
-            } else {
-                countBasedQuantityRow
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    /// Quantity row for non-weight types (rod, tube, etc.) - simple count input
-    private var countBasedQuantityRow: some View {
-        HStack(alignment: .center, spacing: 8) {
-            TextField("0", text: $viewModel.quantity)
-                #if canImport(UIKit)
-                .keyboardType(.decimalPad)
-                #endif
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 80)
-                .accessibilityIdentifier("inventory.add.quantityField")
-                .accessibilityLabel("Quantity")
-
-            Text(viewModel.quantityUnitLabel)
-                .foregroundColor(.secondary)
-                .font(.subheadline)
-        }
-    }
-
-    /// Quantity row for weight-based types (frit, powder, enamel) - jars/weight toggle
-    private var weightBasedQuantityRow: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Jars/Weight segmented control
-            Picker("", selection: $viewModel.selectedContainerInputMode) {
-                ForEach(ContainerInputMode.allCases) { mode in
-                    Text(mode.displayName).tag(mode)
-                }
-            }
-            .pickerStyle(.segmented)
-            .frame(width: 160)
-            .accessibilityIdentifier("inventory.add.containerInputModePicker")
-            .accessibilityLabel("Input Mode")
-
-            // Show the appropriate input based on selected mode
-            HStack(alignment: .center, spacing: 8) {
-                if viewModel.selectedContainerInputMode == .jars {
-                    // Jars input
-                    TextField("0", text: $viewModel.containerCount)
-                        #if canImport(UIKit)
-                        .keyboardType(.decimalPad)
-                        #endif
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 80)
-                        .accessibilityIdentifier("inventory.add.containerCountField")
-                        .accessibilityLabel("Jar Count")
-
-                    Text("jars")
-                        .foregroundColor(.secondary)
-                        .font(.subheadline)
-                } else {
-                    // Weight input
-                    TextField("0", text: $viewModel.quantity)
-                        #if canImport(UIKit)
-                        .keyboardType(.decimalPad)
-                        #endif
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 80)
-                        .accessibilityIdentifier("inventory.add.quantityField")
-                        .accessibilityLabel("Weight")
-
-                    // Weight unit picker (g/oz)
-                    Picker("", selection: $viewModel.selectedWeightUnit) {
-                        ForEach(WeightUnit.allCases) { unit in
-                            Text(unit.symbol).tag(unit)
+                HStack(spacing: 12) {
+                    Picker("", selection: $viewModel.selectedContainerInputMode) {
+                        ForEach(ContainerInputMode.allCases) { mode in
+                            Text(mode.displayName).tag(mode)
                         }
                     }
                     .pickerStyle(.segmented)
-                    .frame(width: 80)
-                    .accessibilityIdentifier("inventory.add.weightUnitPicker")
-                    .accessibilityLabel("Weight Unit")
+                    .frame(width: 140)
+                    .accessibilityIdentifier("inventory.add.containerInputModePicker")
+                    .accessibilityLabel("Input Mode")
+
+                    // Show the "other" value if entered (for context)
+                    otherValueIndicator
                 }
             }
-
-            // Show the "other" value if entered (for context)
-            otherValueIndicator
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// Shows the value entered in the other mode (e.g., if in Jars mode, shows weight if entered)
@@ -422,26 +429,46 @@ struct AddInventoryFormView: View {
     
     // MARK: - Computed Properties
 
-    /// Get all available inventory types
+    /// Check if the selected item is a coating (vs glass)
+    private var isCoatingItem: Bool {
+        return viewModel.selectedCatalogItem?.itemType == .coating
+    }
+
+    /// Get all available inventory types based on item type
     private var visibleInventoryTypes: [String] {
+        if isCoatingItem {
+            return CoatingItemTypeSystem.allTypeNames
+        }
         return GlassItemTypeSystem.allTypeNames
     }
 
-    /// Get the default inventory type (rod)
+    /// Get the default inventory type based on item type
     private var defaultInventoryType: String {
-        return GlassTerminologySettings.rodType  // "rod" as default
+        if isCoatingItem {
+            return CoatingItemTypeSystem.defaultType  // "powder" for coatings
+        }
+        return GlassTerminologySettings.rodType  // "rod" for glass
     }
 
     private var availableSubtypes: [String] {
+        if isCoatingItem {
+            return []  // Coatings don't have subtypes
+        }
         return GlassItemTypeSystem.getSubtypes(for: viewModel.selectedType)
     }
 
     private var availableSubsubtypes: [String] {
+        if isCoatingItem {
+            return []  // Coatings don't have subsubtypes
+        }
         guard let subtype = viewModel.selectedSubtype else { return [] }
         return GlassItemTypeSystem.getSubsubtypes(for: viewModel.selectedType, subtype: subtype)
     }
 
     private var availableDimensionFields: [DimensionField] {
+        if isCoatingItem {
+            return []  // Coatings don't have dimensions
+        }
         return GlassItemTypeSystem.getDimensionFields(for: viewModel.selectedType)
     }
 
@@ -462,18 +489,27 @@ struct AddInventoryFormView: View {
         Task {
             // Limit check now happens BEFORE showing this form, so just save directly
             let success = await viewModel.save()
-            if success, let catalogItem = viewModel.selectedCatalogItem, let quantityValue = viewModel.parsedQuantity {
+            if success, let catalogItem = viewModel.selectedCatalogItem {
                 // Post notification first (for views that aren't currently visible)
-                postSuccessNotification(catalogItem: catalogItem, quantityValue: quantityValue)
+                postSuccessNotification(catalogItem: catalogItem)
                 // Then dismiss (triggers onDismiss callback in parent view)
                 dismiss()
             }
         }
     }
 
-    private func postSuccessNotification(catalogItem: UnifiedCatalogItem, quantityValue: Double) {
-        let quantityText = String(format: "%.1f", quantityValue).replacingOccurrences(of: ".0", with: "")
-        let message = "\(catalogItem.name) (\(quantityText) \(viewModel.selectedType)) added to inventory."
+    private func postSuccessNotification(catalogItem: UnifiedCatalogItem) {
+        let message: String
+        if let jarCount = viewModel.parsedContainerCount {
+            let jarText = String(format: "%.1f", jarCount).replacingOccurrences(of: ".0", with: "")
+            let jarLabel = jarCount == 1 ? "jar" : "jars"
+            message = "\(catalogItem.name) (\(jarText) \(jarLabel) of \(viewModel.selectedType)) added to inventory."
+        } else if let quantityValue = viewModel.parsedQuantity {
+            let quantityText = String(format: "%.1f", quantityValue).replacingOccurrences(of: ".0", with: "")
+            message = "\(catalogItem.name) (\(quantityText) \(viewModel.selectedType)) added to inventory."
+        } else {
+            message = "\(catalogItem.name) added to inventory."
+        }
 
         NotificationCenter.default.post(
             name: .inventoryItemAdded,

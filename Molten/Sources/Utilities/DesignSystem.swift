@@ -97,38 +97,108 @@ enum DesignSystem {
     }
 
     // MARK: - Typography
+    //
+    // Use semantic names so it's clear what font to use where.
+    // All fonts use system fonts (SF Pro) to support Dynamic Type.
 
-    /// Semantic font definitions with weight modifiers
+    /// Semantic font definitions
     enum Typography {
-        // MARK: Headers
+        // MARK: - Screen-Level Headers
+        // These are for navigation titles and major screen sections
 
-        /// Large page titles (with .bold weight)
+        /// Large navigation titles - use with .bold weight
+        /// Example: "My Inventory", "Catalog", "Projects"
+        static let screenTitle = Font.largeTitle
+
+        /// Inline navigation titles and major section headers - use with .semibold weight
+        /// Example: Detail view titles, "Specifications", "Segments"
+        static let sectionTitle = Font.title2
+
+        /// Sub-section headers - use with .semibold weight
+        /// Example: "Inventory Status", card headers
+        static let subsectionTitle = Font.title3
+
+        // MARK: - List Row Typography
+        // Consistent fonts for all list rows across the app
+
+        /// Primary text in list rows (item name)
+        /// Example: "Bullseye Red Transparent"
+        static let listItemTitle = Font.headline
+
+        /// Secondary text in list rows (manufacturer, SKU)
+        /// Example: "Bullseye • 0124-30"
+        static let listItemSubtitle = Font.subheadline
+
+        /// Tertiary text in list rows (tags, metadata)
+        /// Example: Tag chips, "Sheet, 3mm"
+        static let listItemCaption = Font.caption
+
+        /// Smallest text for minimal info
+        /// Example: "+3" quantity diff, tiny badges
+        static let listItemCaptionSmall = Font.caption2
+
+        // MARK: - Prominent Numbers (SF Rounded)
+        // Use for inventory counts, temperatures, quantities - the "tactile" feel
+
+        /// Large prominent number - SF Rounded Bold
+        /// Example: "8" sheets in stock (detail view)
+        static let prominentNumberLarge = Font.system(.title, design: .rounded)
+
+        /// Medium prominent number - SF Rounded Bold
+        /// Example: "8" in list row trailing badge
+        static let prominentNumber = Font.system(.title3, design: .rounded)
+
+        /// Small prominent number - SF Rounded
+        /// Example: Compact quantity badges
+        static let prominentNumberSmall = Font.system(.subheadline, design: .rounded)
+
+        // MARK: - Form & Detail Typography
+
+        /// Form field labels
+        static let formLabel = Font.subheadline
+
+        /// Form field values and body text
+        static let formValue = Font.body
+
+        /// Helper text below form fields
+        static let formHelper = Font.caption
+
+        // MARK: - Data Tiles (Detail View Specs)
+        // For the grid of specification tiles
+
+        /// Tile label (e.g., "COE Rating", "Manufacturer")
+        static let tileLabel = Font.caption
+
+        /// Tile value (e.g., "90", "Bullseye")
+        static let tileValue = Font.system(.body, design: .rounded)
+
+        // MARK: - Legacy Aliases (for gradual migration)
+
+        @available(*, deprecated, renamed: "screenTitle")
         static let pageTitle = Font.title
 
-        /// Section headers and detail view names (with .semibold weight)
+        @available(*, deprecated, renamed: "sectionTitle")
         static let sectionHeader = Font.title2
 
-        /// Stat values and sub-section headers (with .semibold weight)
+        @available(*, deprecated, renamed: "subsectionTitle")
         static let subSectionHeader = Font.title3
 
-        // MARK: Body Text
-
-        /// Row titles and primary text
+        @available(*, deprecated, renamed: "listItemTitle")
         static let rowTitle = Font.headline
 
-        /// Default body text
+        @available(*, deprecated, renamed: "formValue")
         static let body = Font.body
 
-        /// Form field labels and secondary information (with .medium weight)
+        @available(*, deprecated, renamed: "formLabel")
         static let label = Font.subheadline
 
-        /// Tertiary information and helper text
+        @available(*, deprecated, renamed: "listItemCaption")
         static let caption = Font.caption
 
-        /// Smallest text for minimal information
+        @available(*, deprecated, renamed: "listItemCaptionSmall")
         static let captionSmall = Font.caption2
 
-        // MARK: Custom Sizes
+        // MARK: - Icon Sizes
 
         /// Large icon size for emphasis (60pt)
         static let iconLarge = Font.system(size: 60)
@@ -152,52 +222,72 @@ enum DesignSystem {
     }
 
     // MARK: - Colors
+    //
+    // "Luminous Precision" palette - warm colors inspired by molten glass
+    //
+    // IMPORTANT: Always use DesignSystem.Colors or Color.molten* extensions.
+    // NEVER use raw Color.orange, Color.red, etc. in Views.
+    // Run this to find violations:
+    //   grep -r "Color\.\(red\|blue\|green\|orange\|yellow\|purple\|pink\|cyan\)" Molten/Sources/Views/
 
     /// Color palette and semantic colors
     enum Colors {
         // MARK: Text Colors
 
-        /// Primary text color (system default)
-        static let textPrimary = Color.primary
+        /// Primary text color - Charcoal, softer than pure black
+        static let textPrimary = Color(hex: "212121")
 
         /// Secondary/helper text (most common for descriptions)
-        static let textSecondary = Color.secondary
+        static let textSecondary = Color(hex: "757575")
 
         /// Very muted text
-        static let textTertiary = Color.secondary.opacity(0.6)
+        static let textTertiary = Color(hex: "9E9E9E")
 
-        // MARK: Accent Colors
+        // MARK: Brand Colors (Luminous Precision Palette)
+
+        /// Molten Orange - Primary brand color, the color of hot glass
+        /// Use for: main buttons, active tab icons, key highlights, tint color
+        static let moltenOrange = Color(hex: "FF5722")
+
+        /// Warm Amber - Secondary warmth
+        /// Use for: warnings, low-stock indicators, "heating up" states
+        static let moltenAmber = Color(hex: "FFC107")
+
+        /// Slate Teal - Cool contrast
+        /// Use for: links, in-stock counts, secondary actions where orange is too aggressive
+        static let moltenTeal = Color(hex: "00796B")
+
+        /// Warm Off-White - Subtle warmth to avoid "clinical" feel
+        /// A very light cream that's warmer than pure white
+        static let moltenAsh = Color(hex: "FFFBF7")
+
+        // MARK: Semantic Colors (mapped to brand)
 
         /// Primary action color, selected states, numeric emphasis
-        // static let accentPrimary = Color(hex: "ff4500")
-        // d63900
-        static let accentPrimary = Color(hex: "d14d00")
+        static let accentPrimary = moltenOrange
 
         /// Secondary action color for buttons and interactive elements
-        /// 0004d6
-        static let accentSecondary = Color(hex: "007EC7")
+        static let accentSecondary = moltenTeal
 
-        /// Success states, positive indicators
-        // static let accentSuccess = Color.green
-        static let accentSuccess = Color(hex: "14ad00")
+        /// Success states, positive indicators, in-stock
+        static let accentSuccess = moltenTeal
 
-        /// Warnings, alternative emphasis
-        static let accentWarning = Color.orange
+        /// Warnings, low stock, alternative emphasis
+        static let accentWarning = moltenAmber
 
-        /// Destructive actions, errors, low inventory
-        static let accentDanger = Color.red
+        /// Destructive actions, errors, out of stock
+        static let accentDanger = Color(hex: "D32F2F")
 
-        /// Type indicators (e.g., stringer type)
-        static let accentPurple = Color.purple
+        /// User-created content indicator (tags, notes) - violet from logo
+        static let accentUser = Color(hex: "512DA8")
 
-        /// Additional type colors
-        static let accentPink = Color.pink
-        static let accentCyan = Color.cyan
-        static let accentYellow = Color.yellow
+        /// Additional accent colors for variety
+        static let accentPink = Color(hex: "E91E63")
+        static let accentCyan = Color(hex: "00BCD4")
 
         // MARK: Background Colors
 
-        /// App background
+        /// App background - clean white/off-white
         #if canImport(UIKit)
         static let background = Color(.systemBackground)
         #else
@@ -234,17 +324,44 @@ enum DesignSystem {
 
         // MARK: Tinted Backgrounds
 
-        /// Light blue tint for tags
-        static let tintBlue = Color.blue.opacity(0.1)
+        /// Light teal tint for tags, info states
+        static let tintTeal = moltenTeal.opacity(0.1)
 
-        /// Light green tint for success
-        static let tintGreen = Color.green.opacity(0.1)
+        /// Light green tint for success states
+        static let tintSuccess = accentSuccess.opacity(0.1)
 
         /// Light gray tint for neutral chips
-        static let tintGray = Color.gray.opacity(0.1)
+        static let tintGray = Color(hex: "9E9E9E").opacity(0.1)
 
-        /// Light orange tint for warnings
-        static let tintOrange = Color.orange.opacity(0.15)
+        /// Light amber tint for warnings
+        static let tintWarning = moltenAmber.opacity(0.15)
+
+        /// Light orange tint for primary highlights
+        static let tintPrimary = moltenOrange.opacity(0.1)
+
+        /// Light purple tint for user content
+        static let tintUser = accentUser.opacity(0.1)
+
+        /// Light red tint for errors/danger
+        static let tintDanger = accentDanger.opacity(0.1)
+
+        // MARK: Legacy Aliases (for gradual migration)
+        // TODO: Remove these after updating all usages
+
+        @available(*, deprecated, renamed: "tintTeal")
+        static let tintBlue = tintTeal
+
+        @available(*, deprecated, renamed: "tintSuccess")
+        static let tintGreen = tintSuccess
+
+        @available(*, deprecated, renamed: "tintWarning")
+        static let tintOrange = tintWarning
+
+        @available(*, deprecated, renamed: "accentUser")
+        static let accentPurple = accentUser
+
+        @available(*, deprecated, message: "Use accentWarning instead")
+        static let accentYellow = moltenAmber
 
         // MARK: Opacity Modifiers
 
@@ -386,4 +503,33 @@ extension Color {
         return nil
         #endif
     }
+
+    // MARK: - Molten Design System Colors
+    //
+    // Use these Color.molten* properties throughout the app.
+    // This makes violations easy to detect:
+    //   grep -r "Color\.\(red\|blue\|green\|orange\|yellow\|purple\|pink\|cyan\)" Molten/Sources/Views/
+    //
+    // If the grep finds matches, those are violations that should use Color.molten* instead.
+
+    /// Primary brand color - hot glass orange
+    static var moltenOrange: Color { DesignSystem.Colors.moltenOrange }
+
+    /// Secondary warmth - amber for warnings/low stock
+    static var moltenAmber: Color { DesignSystem.Colors.moltenAmber }
+
+    /// Cool contrast - teal for links/success/in-stock
+    static var moltenTeal: Color { DesignSystem.Colors.moltenTeal }
+
+    /// Clean background - off-white ash
+    static var moltenAsh: Color { DesignSystem.Colors.moltenAsh }
+
+    /// Charcoal text - softer than pure black
+    static var moltenCharcoal: Color { DesignSystem.Colors.textPrimary }
+
+    /// User-created content - purple for user tags/notes
+    static var moltenUser: Color { DesignSystem.Colors.accentUser }
+
+    /// Danger/error state - red
+    static var moltenDanger: Color { DesignSystem.Colors.accentDanger }
 }

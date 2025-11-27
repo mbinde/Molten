@@ -1,0 +1,110 @@
+This is an exciting challenge. You have a deeply technical, data-rich application that is currently functional but looks a bit "clinical"—like a standard database front-end.
+
+Given the subject matter—Glass Art—the current design is missing the soul of the craft: heat, vibrancy, light, transparency, and transformation.
+
+Here is a proposal for a redesigned design language for Molten. The goal is to move from a "database utility" feel to a "studio companion" feel, prioritizing clean lines while injecting the warmth and tactile nature of molten glass.
+
+---
+
+### The Design Concept: "Luminous Precision"
+
+The new look will balance the necessary precision of a data management tool (COEs, schedules, inventory counts) with the vibrant, organic nature of the material itself.
+
+We will shift away from the default iOS "blue tint" toward a warmer, more inviting palette that feels like it belongs in a studio with a running kiln.
+
+#### 1. The Color Palette: "Embers & Ash"
+
+Instead of standard technical blues, we will use warmth to highlight actions and data.
+
+| Role | Color | Hex Example | Usage |
+| :--- | :--- | :--- | :--- |
+| **Primary Brand** | **Molten Orange** | `#FF5722` (Deep orange/red) | Main buttons, active tab icons, key highlights. The color of hot glass. |
+| **Secondary** | **Warm Amber** | `#FFC107` (Golden yellow) | Warnings, secondary actions, "heating up" indicators. |
+| **Tertiary/Link** | **Slate Teal** | `#00796B` (Muted blue-green) | Tappable text links where orange is too aggressive. Provides cool contrast. |
+| **Backgrounds** | **Off-White / Ash** | `#F8F9FA` or pure white | Keep backgrounds very clean to let the data pop. |
+| **Text** | **Charcoal** | `#212121` (Not pure black) | Softer on the eyes than pure black. |
+
+#### 2. Typography & Iconography
+
+We need to maintain maximum legibility while adding character.
+
+* **Font:** stick with system standard **San Francisco (SF Pro)**. It's unbeatable for data density.
+* **The Change:** Use heavier weights for titles to create better hierarchy. Use **SF Pro Rounded** selectively for prominent numbers (like inventory counts or temperatures) to give them a softer, more tactile feel, like polished glass beads.
+* **Icons:** Continue using SF Symbols, but color them with the *Molten Orange* or *Slate Teal* instead of default blue. Use filled variants (e.g., `circle.fill`) for active states to add visual weight.
+
+#### 3. UI Elements & Structure: "Sheets of Glass"
+
+Currently, your app uses flat lists on flat backgrounds. We will introduce subtle depth to make content feel like distinct objects.
+
+* **The "Glass Sheet" Card:** Instead of edge-to-edge list items, use subtle cards with very rounded corners (e.g., `cornerRadius(16)`) and a super-soft shadow. This makes each inventory item or project feel like a physical tile.
+* **Translucency:** Use SwiftUI's ultra-thin materials in navigation bars and tab bars. This hints at transparency—looking through layers of glass.
+
+---
+
+### Application to Key Screens
+
+Here is how we apply "Luminous Precision" to your actual app screens based on the website screenshots and your technical architecture.
+
+*Note: These changes apply strictly to the `Views/` layer of your architecture defined in `CLAUDE.md`.*
+
+#### 1. The Catalog / Inventory List (The Data Core)
+
+**Current State:** Functional, edge-to-edge rows, small color swatches.
+
+**Redesign:**
+The glass itself should be the hero image. The UI should recede.
+
+* **Structure:** Switch from a plain `List` style to a `ScrollView` with `LazyVStack` containing custom card views.
+* **The Card:** A clean white card with soft shadow.
+* **The Swatch:** Make the glass color swatch SIGNIFICANTLY larger. Instead of a tiny square, make it a large rounded rectangle on the leading edge of the card.
+* **Data Hierarchy:**
+    * **Title:** Manufacturer + SKU (Bold, Charcoal).
+    * **Subtitle:** Variant Name (Regular, lighter gray).
+    * **Inventory Count:** Large, prominent number on the trailing edge using *SF Rounded bold* in the *Slate Teal* color if in stock, or *Warm Amber* if low.
+
+#### 2. Item Detail View (The Deep Dive)
+
+**Current State:** Standard grouped list view.
+
+**Redesign:**
+Make it feel like a dossier on a specific material.
+
+* **Header:** Create a large, immersive header showing the glass color swatch. If you have manufacturer photos, use a large banner here. Overlay the Manufacturer/SKU in large bold text.
+* **Specs Section:** Instead of standard list rows, use a grid of "Data Tiles" for specs like COE, Type, etc. Small square tiles with an icon above and the data value below.
+* **Inventory Section (Warmth):** Highlight the "In Stock" count in a prominent container colored with the *Warm Amber* or *Molten Orange* to draw the eye immediately to availability.
+
+#### 3. Projects & Logbook (The Creative Process)
+
+**Current State:** Flat list of text.
+
+**Redesign:**
+Focus on progress and visuals.
+
+* **Project Cards:** If a project has an associated photo, that photo should fill the background of the card with a dark overlay to make the text pop.
+* **Progress Bars:** Use the *Molten Orange* color for progress bars indicating project completion status.
+* **Logbook Entries:** Treat these like journal pages. Use a slightly off-white background for the entry card itself against the main background, perhaps with a subtle border color indicating the type of entry (e.g., an orange border for a kiln firing entry).
+
+#### 4. Kiln Schedules (The biggest opportunity)
+
+**Current State:** A spreadsheet-like list of segments (Rate, Temp, Hold).
+
+**Redesign:**
+This is inherently visual data (time vs. temperature).
+
+* **The Visualization:** Above the list of segments, you *must* render a line graph using Swift Charts.
+* **The "Fire" Gradient:** The area under the line graph should fill with a gradient that represents heat. It starts cool blue/teal at room temperature, transitions to yellow during ramp-up, and turns to intense *Molten Orange/Red* at peak process temperatures.
+* **The Segments:** Below the chart, the list of segments can remain, but use bolding on the Temperatures to make them stand out.
+
+---
+
+### Summary of SwiftUI Implementation Changes
+
+To achieve this without breaking your clean architecture:
+
+1.  **Define a Theme file:** Create a `Color+Theme.swift` and `Font+Theme.swift` extension file to centralize your new colors and font modifiers.
+2.  **Create Reusable View Components:**
+    * `GlassItemCard(item: GlassItemModel)`: Encapsulates the new card look so the main views remain clean.
+    * `DataTile(title: String, value: String, icon: String)`: For detail view specs.
+3.  **Apply Modifiers globally:** Use custom ViewModifiers to apply standardized shadows and rounded corners to maintain consistency across all features.
+
+This approach keeps your "clean lines" by adhering to strict grids and clear typography, but the color palette, soft shadows, and material textures will give Molten a unique, premium, and domain-appropriate feel.

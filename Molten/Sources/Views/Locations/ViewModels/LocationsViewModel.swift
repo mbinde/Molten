@@ -8,6 +8,7 @@
 import Foundation
 import CoreLocation
 import Observation
+import MapKit
 
 /// ViewModel for unified locations view (stores, classes, workshops)
 @Observable
@@ -23,7 +24,7 @@ class LocationsViewModel {
     var allLocations: [AnyLocationModel] = []
     var filteredLocations: [AnyLocationModel] = []
     var selectedTypes: Set<LocationType>
-    var searchText: String = ""
+    var searchText: String = ""  // What's shown in the search field (zip code for location search)
     var isLoading: Bool = false
     var errorMessage: String?
     var showMap: Bool = true
@@ -31,6 +32,9 @@ class LocationsViewModel {
     var mapCenter: CLLocationCoordinate2D?
     var mapBounds: (minLat: Double, maxLat: Double, minLon: Double, maxLon: Double)?
     var selectedTechnique: TechniqueType?
+    var geocodedLocation: CLLocationCoordinate2D?  // Location from zip code search
+    var geocodedLocationTrigger: Int = 0  // Increment to trigger map update
+    var isGeocoding: Bool = false
 
     // MARK: - Computed Properties
 
@@ -107,11 +111,6 @@ class LocationsViewModel {
             }
         }
 
-        // Filter by search text
-        if !searchText.isEmpty {
-            results = results.filter { $0.matchesSearchText(searchText) }
-        }
-
         // Filter by selected technique
         if let technique = selectedTechnique {
             results = results.filter { $0.supportsTechnique(technique) }
@@ -142,7 +141,32 @@ class LocationsViewModel {
 
     func updateSearchText(_ text: String) {
         searchText = text
-        applyFilters()
+    }
+
+    /// Geocode the current search text and center the map on the result
+    func performSearch() async {
+        let trimmed = searchText.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else {
+            geocodedLocation = nil
+            return
+        }
+
+        isGeocoding = true
+        defer { isGeocoding = false }
+
+        let geocoder = CLGeocoder()
+
+        do {
+            let placemarks = try await geocoder.geocodeAddressString(trimmed)
+
+            if let location = placemarks.first?.location {
+                geocodedLocation = location.coordinate
+                geocodedLocationTrigger += 1
+            }
+        } catch {
+            print("❌ LocationsViewModel: Geocoding failed for '\(trimmed)': \(error.localizedDescription)")
+            geocodedLocation = nil
+        }
     }
 
     func toggleType(_ type: LocationType) async {

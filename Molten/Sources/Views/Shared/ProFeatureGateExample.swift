@@ -205,7 +205,7 @@ struct ProBadge: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(Color.yellow)
+            .background(DesignSystem.Colors.accentWarning)
             .cornerRadius(4)
     }
 }

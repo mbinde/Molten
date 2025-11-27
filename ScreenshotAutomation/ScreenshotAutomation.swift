@@ -418,19 +418,10 @@ final class ScreenshotAutomation: XCTestCase {
         // 10. Locations - Studio Organization
         print("🔟 Feature: Locations Map")
         navigateToTab("Locations")
-        waitForContentToLoad()
+        waitForContentToLoad(seconds: 3)
 
-        // Search for 98144 to get a nicely centered view
-        if activateSearch() {
-            app.searchFields.firstMatch.typeText("98144")
-            waitForContentToLoad(seconds: 2)
-            // Take screenshot with search results centered on map
-            takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
-            clearSearch()
-        } else {
-            // Fallback: just take screenshot without search
-            takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
-        }
+        // Just take screenshot of the locations map (search is not reliable)
+        takeScreenshot(named: "feature-locations-map", subdirectory: "website", delay: 0.5)
 
         // 11. Location Detail
         print("1️⃣1️⃣ Feature: Location Detail")

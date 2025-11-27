@@ -232,9 +232,67 @@ final class ScreenshotAutomation: XCTestCase {
             addButton.tap()
             waitForContentToLoad(seconds: 2)
 
-            // Just show the clean form - search field in modal sheets has known focus issues in UI tests
-            // This shows the interface clearly without fighting with keyboard focus bugs
-            takeScreenshot(named: "feature-add-inventory", subdirectory: "website", delay: 0.5)
+            // Select a glass item using the CORRECT field identifier from AddInventoryUITests
+            let searchField = app.textFields["inventory.add.searchSelector"]
+            if searchField.waitForExistence(timeout: 3) {
+                searchField.tap()
+                sleep(1)
+                searchField.typeText("acid yellow")
+                sleep(1)
+
+                // Dismiss keyboard by swiping down (more reliable than tapping)
+                app.swipeDown()
+                usleep(500000)
+
+                // Select first result
+                let resultCell = app.cells.firstMatch
+                if resultCell.waitForExistence(timeout: 2) {
+                    if resultCell.isHittable {
+                        resultCell.tap()
+                    } else {
+                        // Force tap using coordinate
+                        resultCell.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                    }
+                    sleep(1)
+                }
+
+                // Enter quantity
+                let quantityField = app.textFields["inventory.add.quantityField"]
+                if quantityField.waitForExistence(timeout: 2) {
+                    quantityField.tap()
+                    quantityField.typeText("15")
+                    usleep(500000)
+                }
+
+                // Select Rods type
+                let typePicker = app.buttons["inventory.add.typePicker"]
+                if typePicker.waitForExistence(timeout: 2) {
+                    typePicker.tap()
+                    sleep(1)
+                    // Look for "Rods" in the menu
+                    if app.buttons["Rods"].exists {
+                        app.buttons["Rods"].tap()
+                    }
+                    usleep(500000)
+                }
+
+                // Enter location and keep keyboard visible for screenshot
+                let locationField = app.textFields["inventory.add.locationField"]
+                if locationField.waitForExistence(timeout: 2) {
+                    locationField.tap()
+                    sleep(1)
+                    locationField.typeText("Garage, Bin 3")
+                    sleep(1)
+                    // Keep keyboard visible to show active data entry
+                    takeScreenshot(named: "feature-add-inventory", subdirectory: "website", delay: 0.5)
+                } else {
+                    // Fallback: screenshot without location if field not found
+                    takeScreenshot(named: "feature-add-inventory", subdirectory: "website", delay: 0.5)
+                }
+            } else {
+                // Fallback: just show clean form
+                takeScreenshot(named: "feature-add-inventory", subdirectory: "website", delay: 0.5)
+            }
 
             dismissModal()
         }

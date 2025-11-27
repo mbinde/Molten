@@ -105,14 +105,14 @@ final class ScreenshotAutomation: XCTestCase {
             print("   ⚠️ SKIPPED: Could not activate search")
         }
 
-        // 2b. Glass Detail with Manufacturer Info (Double Helix)
-        print("2️⃣b Glass Detail: Manufacturer Info (Double Helix)")
+        // 2b. Glass Detail with Manufacturer Info (Maleficent Flake Holographic)
+        print("2️⃣b Glass Detail: Manufacturer Info (Maleficent Flake Holographic)")
         ensureOnCatalog()
-        // Search for a Double Helix item to ensure we get their beautiful glass
+        // Search for Maleficent Flake Holographic
         if activateSearch() {
-            app.searchFields.firstMatch.typeText("\"double helix\"")
+            app.searchFields.firstMatch.typeText("Maleficent Flake Holographic")
             waitForContentToLoad(seconds: 2)
-            // Tap on first Double Helix result
+            // Tap on the search result
             let searchResultCells = app.cells
             print("   📊 DEBUG: searchResultCells.count = \(searchResultCells.count)")
             if searchResultCells.count > 0 {
@@ -137,7 +137,7 @@ final class ScreenshotAutomation: XCTestCase {
                 navigateBack()
                 waitForContentToLoad()
             } else {
-                print("   ⚠️ SKIPPED: No search results for 'double helix'")
+                print("   ⚠️ SKIPPED: No search results for 'Maleficent Flake Holographic'")
             }
             clearSearch()
         } else {
@@ -154,43 +154,6 @@ final class ScreenshotAutomation: XCTestCase {
             waitForContentToLoad()
             takeScreenshot(named: "feature-search-active", subdirectory: "website", delay: 0.5)
             clearSearch()
-        }
-
-        // 4. Catalog Filters - Comprehensive Options
-        print("4️⃣ Feature: Catalog Filters")
-        // Navigate back to catalog list (in case we're on a detail page)
-        let catalogTab = app.buttons["Catalog"].firstMatch
-        for _ in 1...5 {
-            if catalogTab.exists {
-                catalogTab.tap()
-                usleep(100000) // 0.1 second
-            }
-        }
-        waitForContentToLoad()
-
-        // Clear any product type filters to show all products (not just Coatings)
-        // Look for and clear any active filter chips
-        if app.buttons.matching(identifier: "Coatings").firstMatch.exists {
-            app.buttons.matching(identifier: "Coatings").firstMatch.tap()
-            sleep(1)
-        }
-        // Also try tapping "All" or clearing filters
-        if app.buttons["All"].exists {
-            app.buttons["All"].tap()
-            sleep(1)
-        }
-        // Scroll to top of catalog to ensure we see all content
-        app.swipeDown()
-        app.swipeDown()
-        sleep(1)
-        // Tap the Filters header to expand filter section
-        if app.buttons["Filters"].exists {
-            app.buttons["Filters"].tap()
-            sleep(1)
-            takeScreenshot(named: "feature-catalog-filters", subdirectory: "website", delay: 0.5)
-        } else if showManufacturerFilter() {
-            takeScreenshot(named: "feature-catalog-filters", subdirectory: "website", delay: 0.5)
-            dismissSheet()
         }
 
         // 4b. Color/Tag Filter Results

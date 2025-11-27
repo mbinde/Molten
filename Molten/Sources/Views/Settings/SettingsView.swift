@@ -271,12 +271,14 @@ struct SettingsView: View {
 
                 // MARK: - Content & Customization
                 Section {
-                    NavigationLink {
-                        AuthorSettingsView()
-                    } label: {
-                        Text("Author Information")
+                    if FeatureFlags.ENABLE_PROJECTS {
+                        NavigationLink {
+                            AuthorSettingsView()
+                        } label: {
+                            Text("Author Information")
+                        }
+                        .accessibilityIdentifier("settings_author_information")
                     }
-                    .accessibilityIdentifier("settings_author_information")
 
                     NavigationLink {
                         TerminologySettingsView()
@@ -406,7 +408,7 @@ struct SettingsView: View {
                 }
 
                 // MARK: - Advanced
-                Section("Advanced") {
+                Section("") {
                     #if DEBUG
                     // Hide debug settings during UI tests/screenshots
                     let isUITesting = ProcessInfo.processInfo.arguments.contains("UI-Testing")

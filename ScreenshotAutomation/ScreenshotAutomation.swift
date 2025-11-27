@@ -81,24 +81,28 @@ final class ScreenshotAutomation: XCTestCase {
         // 2. Glass Detail - Rich Information
         print("2️⃣ Hero: Glass Detail View")
         ensureOnCatalog()
-        waitForContentToLoad()
-        // Scroll back to top to ensure cells are visible
-        app.swipeDown()
-        app.swipeDown()
-        sleep(1)
-        // Tap on a visually appealing item (3rd item often has good data)
-        let cells = app.cells
-        print("   📊 DEBUG: cells.count = \(cells.count)")
-        if cells.count > 2 {
-            cells.element(boundBy: 2).tap()
+        // Search for Black Lagoon Glass
+        if activateSearch() {
+            app.searchFields.firstMatch.typeText("Black Lagoon Glass")
             waitForContentToLoad(seconds: 2)
-            // Scroll to show more specifications
-            app.swipeUp()
-            sleep(1)
-            takeScreenshot(named: "hero-glass-detail", subdirectory: "website", delay: 0.5)
-            navigateBack()
+
+            // Tap on first search result
+            let searchResultCells = app.cells
+            if searchResultCells.count > 0 {
+                searchResultCells.firstMatch.tap()
+                waitForContentToLoad(seconds: 2)
+                // Scroll to show more specifications
+                app.swipeUp()
+                sleep(1)
+                takeScreenshot(named: "hero-glass-detail", subdirectory: "website", delay: 0.5)
+                navigateBack()
+                clearSearch()
+            } else {
+                print("   ⚠️ SKIPPED: No search results for 'Black Lagoon Glass'")
+                clearSearch()
+            }
         } else {
-            print("   ⚠️ SKIPPED: Not enough cells (need > 2, got \(cells.count))")
+            print("   ⚠️ SKIPPED: Could not activate search")
         }
 
         // 2b. Glass Detail with Manufacturer Info (Double Helix)
@@ -106,7 +110,7 @@ final class ScreenshotAutomation: XCTestCase {
         ensureOnCatalog()
         // Search for a Double Helix item to ensure we get their beautiful glass
         if activateSearch() {
-            app.searchFields.firstMatch.typeText("double helix")
+            app.searchFields.firstMatch.typeText("\"double helix\"")
             waitForContentToLoad(seconds: 2)
             // Tap on first Double Helix result
             let searchResultCells = app.cells
@@ -154,7 +158,16 @@ final class ScreenshotAutomation: XCTestCase {
 
         // 4. Catalog Filters - Comprehensive Options
         print("4️⃣ Feature: Catalog Filters")
-        ensureOnCatalog()
+        // Navigate back to catalog list (in case we're on a detail page)
+        let catalogTab = app.buttons["Catalog"].firstMatch
+        for _ in 1...5 {
+            if catalogTab.exists {
+                catalogTab.tap()
+                usleep(100000) // 0.1 second
+            }
+        }
+        waitForContentToLoad()
+
         // Clear any product type filters to show all products (not just Coatings)
         // Look for and clear any active filter chips
         if app.buttons.matching(identifier: "Coatings").firstMatch.exists {
@@ -189,21 +202,18 @@ final class ScreenshotAutomation: XCTestCase {
         print("5️⃣ Feature: Inventory List")
         navigateToTab("Inventory")
         waitForContentToLoad()
-        // Dismiss keyboard by tapping the navigation bar
-        let navBar = app.navigationBars.firstMatch
-        if navBar.exists {
-            navBar.tap()
-            sleep(1)
-        }
-        // Also try swiping down
-        app.swipeDown()
-        sleep(1)
         takeScreenshot(named: "feature-inventory-list", subdirectory: "website", delay: 0.5)
 
         // 6. Inventory Detail - Complete Tracking
         print("6️⃣ Feature: Inventory Detail")
-        ensureOnInventory()
+        // Reset to inventory list by tapping tab multiple times
+        let inventoryTab = app.buttons["Inventory"]
+        for _ in 1...5 {
+            inventoryTab.tap()
+            usleep(100000) // 0.1 second
+        }
         waitForContentToLoad()
+
         // Tap on first inventory item with data
         let inventoryCells = app.cells
         print("   📊 DEBUG: inventoryCells.count = \(inventoryCells.count)")
@@ -214,14 +224,19 @@ final class ScreenshotAutomation: XCTestCase {
             app.swipeUp()
             sleep(1)
             takeScreenshot(named: "feature-inventory-detail", subdirectory: "website", delay: 0.5)
-            navigateBack()
         } else {
             print("   ⚠️ SKIPPED: No inventory cells found")
         }
 
         // 7. Add Inventory - Simple Data Entry
         print("7️⃣ Feature: Add Inventory Form")
-        ensureOnInventory()
+        // Navigate back to inventory list
+        let backButton = app.navigationBars.buttons.matching(identifier: "BackButton").firstMatch
+        if backButton.exists {
+            backButton.tap()
+            waitForContentToLoad()
+        }
+        waitForContentToLoad()
         if let addButton = findAddButton() {
             addButton.tap()
             waitForContentToLoad(seconds: 2)
@@ -293,17 +308,31 @@ final class ScreenshotAutomation: XCTestCase {
                     sleep(1)
                     locationField.typeText("Garage, Bin 3")
                     sleep(1)
-                    // Dismiss keyboard by tapping elsewhere - try navigation bar first
-                    let addNavBar = app.navigationBars.firstMatch
-                    if addNavBar.exists {
-                        addNavBar.tap()
+                    // Dismiss keyboard - try multiple methods
+                    // Method 1: Tap Return/Done on keyboard
+                    if app.keyboards.buttons["Return"].exists {
+                        app.keyboards.buttons["Return"].tap()
                         sleep(1)
-                    }
-                    // Also try tapping Done button if keyboard is still visible
-                    if app.keyboards.buttons["Done"].exists {
+                    } else if app.keyboards.buttons["Done"].exists {
                         app.keyboards.buttons["Done"].tap()
                         sleep(1)
                     }
+
+                    // Method 2: Swipe down to dismiss if still visible
+                    if app.keyboards.element.exists {
+                        app.swipeDown()
+                        sleep(1)
+                    }
+
+                    // Method 3: Tap navigation bar if still visible
+                    if app.keyboards.element.exists {
+                        let addNavBar = app.navigationBars.firstMatch
+                        if addNavBar.exists {
+                            addNavBar.tap()
+                            sleep(1)
+                        }
+                    }
+
                     takeScreenshot(named: "feature-add-inventory", subdirectory: "website", delay: 0.5)
                 } else {
                     // Fallback: screenshot without location if field not found
@@ -323,35 +352,25 @@ final class ScreenshotAutomation: XCTestCase {
         waitForContentToLoad()
         takeScreenshot(named: "feature-shopping-list", subdirectory: "website", delay: 0.5)
 
-        // 8b. Shopping Mode Active - Ready to Shop
+        // 8b. Shopping Mode Active - Cart icon activated
         print("8️⃣b Feature: Shopping Mode Active")
-        // Enter shopping mode
-        let startModeButton = app.buttons["shopping_start_mode_button"]
-        if startModeButton.waitForExistence(timeout: 3) {
-            startModeButton.tap()
-            sleep(1)
+        // Tap the shopping cart button to enter shopping mode
+        let cartButton = app.buttons["shopping_start_mode_button"]
+        if cartButton.waitForExistence(timeout: 3) {
+            cartButton.tap()
+            sleep(2)  // Wait for shopping mode UI to appear
 
-            // Add first item to basket to show active shopping
-            let shoppingItems = app.cells.matching(NSPredicate(format: "identifier BEGINSWITH 'shopping.item.'"))
-            if shoppingItems.count > 0 {
-                shoppingItems.element(boundBy: 0).tap()
+            // Take screenshot showing shopping mode active
+            takeScreenshot(named: "feature-shopping-mode-active", subdirectory: "website", delay: 0.5)
+
+            // Exit shopping mode - look for cancel/done button
+            let cancelButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'cancel' OR label CONTAINS[c] 'done' OR label CONTAINS[c] 'exit'")).firstMatch
+            if cancelButton.exists {
+                cancelButton.tap()
                 sleep(1)
-
-                // Take screenshot showing shopping mode with item in basket
-                takeScreenshot(named: "feature-shopping-mode-active", subdirectory: "website", delay: 0.5)
-
-                // Exit shopping mode
-                let cancelButton = app.buttons["shopping_cancel_button"]
-                if cancelButton.exists {
-                    cancelButton.tap()
-                    sleep(1)
-                    // Handle confirmation if shown
-                    if app.buttons["Keep Items"].exists {
-                        app.buttons["Keep Items"].tap()
-                        sleep(1)
-                    }
-                }
             }
+        } else {
+            print("   ⚠️ Shopping cart button not found - no items need shopping")
         }
 
         // 9. Label Printing - Professional Organization
@@ -384,19 +403,38 @@ final class ScreenshotAutomation: XCTestCase {
 
         // 11. Location Detail
         print("1️⃣1️⃣ Feature: Location Detail")
+        // Reset to locations list by tapping tab multiple times
+        let locationsTab = app.buttons["Locations"]
+        for _ in 1...5 {
+            locationsTab.tap()
+            usleep(100000)
+        }
         waitForContentToLoad()
+
+        // Scroll down more aggressively to reveal location cells below the map
+        app.swipeUp()
+        usleep(500000)  // 0.5 seconds
+        app.swipeUp()
+        sleep(1)
         // Tap on first location
         let locationCells = app.cells
         print("   📊 DEBUG: locationCells.count = \(locationCells.count)")
         if locationCells.count > 0 {
-            // Try to tap the first hittable cell
-            if locationCells.firstMatch.isHittable {
-                locationCells.firstMatch.tap()
-                waitForContentToLoad(seconds: 2)
-                takeScreenshot(named: "feature-location-detail", subdirectory: "website", delay: 0.5)
-                navigateBack()
-            } else {
-                print("   ⚠️ SKIPPED: Location cell not hittable (may be behind map view)")
+            // Find the first hittable cell (cells below the map should be visible after double scroll)
+            var tappedCell = false
+            for i in 0..<min(10, locationCells.count) {
+                let cell = locationCells.element(boundBy: i)
+                if cell.exists && cell.isHittable {
+                    print("   📊 DEBUG: Found hittable cell at index \(i)")
+                    cell.tap()
+                    waitForContentToLoad(seconds: 2)
+                    takeScreenshot(named: "feature-location-detail", subdirectory: "website", delay: 0.5)
+                    tappedCell = true
+                    break
+                }
+            }
+            if !tappedCell {
+                print("   ⚠️ SKIPPED: No hittable location cells found (checked first 10)")
             }
         } else {
             print("   ⚠️ SKIPPED: No location cells found")

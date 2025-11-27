@@ -137,11 +137,11 @@ struct StoreListView: View {
         }
         .padding(.horizontal, DesignSystem.Spacing.md)
         .padding(.vertical, DesignSystem.Spacing.sm)
-        .background(Color.orange.opacity(0.1))
+        .background(DesignSystem.Colors.accentWarning.opacity(0.1))
         .overlay(
             Rectangle()
                 .frame(height: 1)
-                .foregroundStyle(Color.orange.opacity(0.3)),
+                .foregroundStyle(DesignSystem.Colors.accentWarning.opacity(0.3)),
             alignment: .bottom
         )
     }

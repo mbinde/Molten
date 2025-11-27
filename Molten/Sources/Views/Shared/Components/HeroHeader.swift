@@ -13,6 +13,8 @@ import SwiftUI
 struct HeroHeader: View {
     let item: GlassItemModel
     var extendsToTop: Bool = false
+    var onAddPhoto: (() -> Void)?
+    var imageRefreshTrigger: UUID?  // Change this to force image reload
 
     @State private var loadedImage: UIImage?
     @State private var isLoading = true
@@ -20,9 +22,11 @@ struct HeroHeader: View {
     @State private var showingColorApproximationInfo = false
     @State private var isShowingColorApproximation = false
 
-    init(item: GlassItemModel, extendsToTop: Bool = false) {
+    init(item: GlassItemModel, extendsToTop: Bool = false, onAddPhoto: (() -> Void)? = nil, imageRefreshTrigger: UUID? = nil) {
         self.item = item
         self.extendsToTop = extendsToTop
+        self.onAddPhoto = onAddPhoto
+        self.imageRefreshTrigger = imageRefreshTrigger
     }
 
     private var imageHeight: CGFloat {
@@ -62,6 +66,29 @@ struct HeroHeader: View {
             }
             .frame(height: imageHeight)
 
+            // Info button in top-right corner (when showing color approximation)
+            if isShowingColorApproximation {
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button {
+                            showingColorApproximationInfo = true
+                        } label: {
+                            Image(systemName: "info.circle.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.white)
+                                .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                        }
+                        .padding(.top, extendsToTop ? 60 : DesignSystem.Spacing.lg)
+                        .padding(.trailing, DesignSystem.Spacing.lg)
+                        .popover(isPresented: $showingColorApproximationInfo) {
+                            colorApproximationPopover
+                        }
+                    }
+                    Spacer()
+                }
+            }
+
             // Text overlay with background stripe that grows with text
             VStack {
                 Spacer()
@@ -95,18 +122,20 @@ struct HeroHeader: View {
 
                     Spacer()
 
-                    // Info button when showing color approximation
-                    if isShowingColorApproximation {
+                    // Camera button for adding custom photo
+                    if let onAddPhoto = onAddPhoto {
                         Button {
-                            showingColorApproximationInfo = true
+                            onAddPhoto()
                         } label: {
-                            Image(systemName: "info.circle.fill")
-                                .font(.system(size: 28))
-                                .foregroundColor(.white.opacity(0.8))
+                            Image(systemName: "camera.fill")
+                                .font(.system(size: 20))
+                                .foregroundColor(.white.opacity(0.9))
+                                .padding(DesignSystem.Spacing.md)
+                                .background(Color.white.opacity(0.2))
+                                .clipShape(Circle())
                         }
-                        .popover(isPresented: $showingColorApproximationInfo) {
-                            colorApproximationPopover
-                        }
+                        .accessibilityLabel("Add custom photo")
+                        .accessibilityIdentifier("hero_add_photo")
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -124,7 +153,7 @@ struct HeroHeader: View {
             )
         )
         .ignoresSafeArea(edges: extendsToTop ? .top : [])
-        .task {
+        .task(id: imageRefreshTrigger) {
             await loadImage()
         }
         .fullScreenCover(isPresented: $showingFullScreen) {

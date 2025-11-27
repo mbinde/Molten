@@ -28,10 +28,7 @@ Initial App Store release.
 ### Added
 - Glass catalog with 2,500+ items from major manufacturers
 - Inventory tracking with multi-location support
-- Shopping lists with low-stock alerts and minimums
-- Project planning with steps and logbook entries
-- Kiln schedule management with custom firing profiles
-- Purchase history tracking
+- Shopping lists
 - CloudKit sync across devices
 - Subscription tiers (Free/Premium)
 

@@ -5,24 +5,11 @@
 //  Tests for ImageSubmissionSheet component
 //
 
-import Foundation
-
-// Standard test framework imports pattern
-#if canImport(Testing)
 import Testing
-#else
-#if canImport(XCTest)
-import XCTest
-#endif
-#endif
-
 @testable import Molten
 
 #if canImport(UIKit)
 import UIKit
-
-// Use Swift Testing if available
-#if canImport(Testing)
 
 @Suite("ImageSubmissionSheet Tests")
 @MainActor
@@ -143,116 +130,4 @@ struct ImageSubmissionSheetTests {
         return emailPredicate.evaluate(with: email)
     }
 }
-
-#else
-// XCTest fallback
-import XCTest
-
-final class ImageSubmissionSheetTests: XCTestCase {
-
-    // MARK: - Email Validation Tests
-
-    func testValidEmails() {
-        let validEmails = [
-            "user@example.com",
-            "test.user@example.com",
-            "user+tag@example.co.uk",
-            "user_name@example.org",
-            "123@example.com",
-            "user@sub.example.com"
-        ]
-
-        for email in validEmails {
-            let isValid = isValidEmailFormat(email)
-            XCTAssertTrue(isValid, "Email '\(email)' should be valid")
-        }
-    }
-
-    func testInvalidEmails() {
-        let invalidEmails = [
-            "",
-            "invalid",
-            "@example.com",
-            "user@",
-            "user @example.com",
-            "user@example",
-            "user..name@example.com",
-            "user@.example.com"
-        ]
-
-        for email in invalidEmails {
-            let isValid = isValidEmailFormat(email)
-            XCTAssertFalse(isValid, "Email '\(email)' should be invalid")
-        }
-    }
-
-    func testEdgeCaseEmails() {
-        let longEmail = "a" + String(repeating: "b", count: 50) + "@example.com"
-        XCTAssertTrue(isValidEmailFormat(longEmail))
-
-        XCTAssertFalse(isValidEmailFormat("user name@example.com"))
-        XCTAssertTrue(isValidEmailFormat("user-name@example.com"))
-        XCTAssertTrue(isValidEmailFormat("user_name@example.com"))
-    }
-
-    // MARK: - Submit Button State Tests
-
-    func testSubmitDisabledWithoutCheckboxes() {
-        let hasPermission = false
-        let offersFreeOfCharge = false
-        let email = "user@example.com"
-
-        let canSubmit = hasPermission && offersFreeOfCharge && isValidEmailFormat(email) && !email.isEmpty
-
-        XCTAssertFalse(canSubmit)
-    }
-
-    func testSubmitDisabledWithOneCheckbox() {
-        var canSubmit = true && false && isValidEmailFormat("user@example.com") && true
-        XCTAssertFalse(canSubmit)
-
-        canSubmit = false && true && isValidEmailFormat("user@example.com") && true
-        XCTAssertFalse(canSubmit)
-    }
-
-    func testSubmitDisabledWithInvalidEmail() {
-        let hasPermission = true
-        let offersFreeOfCharge = true
-        let email = "invalid-email"
-
-        let canSubmit = hasPermission && offersFreeOfCharge && isValidEmailFormat(email) && !email.isEmpty
-
-        XCTAssertFalse(canSubmit)
-    }
-
-    func testSubmitDisabledWithEmptyEmail() {
-        let hasPermission = true
-        let offersFreeOfCharge = true
-        let email = ""
-
-        let canSubmit = hasPermission && offersFreeOfCharge && isValidEmailFormat(email) && !email.isEmpty
-
-        XCTAssertFalse(canSubmit)
-    }
-
-    func testSubmitEnabledWhenRequirementsMet() {
-        let hasPermission = true
-        let offersFreeOfCharge = true
-        let email = "user@example.com"
-
-        let canSubmit = hasPermission && offersFreeOfCharge && isValidEmailFormat(email) && !email.isEmpty
-
-        XCTAssertTrue(canSubmit)
-    }
-
-    // MARK: - Helper Function
-
-    private func isValidEmailFormat(_ email: String) -> Bool {
-        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
-        let emailPredicate = NSPredicate(format: "SELF MATCHES %@", emailRegex)
-        return emailPredicate.evaluate(with: email)
-    }
-}
-
-#endif
 #endif

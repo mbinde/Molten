@@ -118,11 +118,11 @@ struct UsageBanner: View {
     private var backgroundColor: Color {
         let percentage = usagePercentage
         if percentage >= 1.0 {
-            return Color.red.opacity(0.1)
+            return DesignSystem.Colors.accentDanger.opacity(0.1)
         } else if percentage >= 0.8 {
-            return Color.orange.opacity(0.1)
+            return DesignSystem.Colors.accentWarning.opacity(0.1)
         } else {
-            return Color.green.opacity(0.05)
+            return DesignSystem.Colors.accentSuccess.opacity(0.05)
         }
     }
 

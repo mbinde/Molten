@@ -65,11 +65,11 @@ struct LimitWarningBanner: View {
                 }
                 .padding(.horizontal, DesignSystem.Spacing.md)
                 .padding(.vertical, DesignSystem.Spacing.sm)
-                .background(isAtLimit ? Color.red.opacity(0.1) : Color.orange.opacity(0.1))
+                .background(isAtLimit ? DesignSystem.Colors.accentDanger.opacity(0.1) : DesignSystem.Colors.accentWarning.opacity(0.1))
                 .cornerRadius(DesignSystem.CornerRadius.small)
             }
             .buttonStyle(.plain)
-            .foregroundStyle(isAtLimit ? .red : .primary)
+            .foregroundStyle(isAtLimit ? DesignSystem.Colors.accentDanger : .primary)
         }
     }
 }

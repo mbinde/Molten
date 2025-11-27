@@ -49,7 +49,7 @@ struct ShoppingModeInstructionsBanner: View {
             }
         }
         .padding(DesignSystem.Padding.standard)
-        .background(Color.green.opacity(0.1))
+        .background(DesignSystem.Colors.accentSuccess.opacity(0.1))
         .cornerRadius(DesignSystem.CornerRadius.medium)
         .padding(.horizontal, DesignSystem.Padding.standard)
         .padding(.vertical, DesignSystem.Spacing.xs)

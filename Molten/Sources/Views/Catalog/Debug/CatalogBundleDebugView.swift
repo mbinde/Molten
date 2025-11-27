@@ -61,8 +61,8 @@ struct CatalogBundleDebugView: View {
                                         .fontWeight(.bold)
                                         .padding(.horizontal, 8)
                                         .padding(.vertical, 2)
-                                        .background(Color.green.opacity(0.2))
-                                        .foregroundColor(.green)
+                                        .background(DesignSystem.Colors.accentSuccess.opacity(0.2))
+                                        .foregroundColor(DesignSystem.Colors.accentSuccess)
                                         .clipShape(Capsule())
                                 }
                             }

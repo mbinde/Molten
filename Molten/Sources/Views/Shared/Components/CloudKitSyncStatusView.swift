@@ -91,9 +91,9 @@ struct CloudKitSyncStatusView: View {
         case .idle, .succeeded, .syncing:
             return DesignSystem.Colors.backgroundSecondary
         case .failed, .quotaExceeded:
-            return Color.red.opacity(0.1)
+            return DesignSystem.Colors.accentDanger.opacity(0.1)
         case .offline:
-            return Color.orange.opacity(0.1)
+            return DesignSystem.Colors.accentWarning.opacity(0.1)
         }
     }
 }

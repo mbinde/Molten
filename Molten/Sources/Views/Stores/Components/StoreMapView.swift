@@ -56,7 +56,7 @@ struct StoreMapView: View {
                             ZStack {
                                 // Background circle
                                 Circle()
-                                    .fill(Color.purple)
+                                    .fill(DesignSystem.Colors.accentUser)
                                     .frame(width: 36, height: 36)
 
                                 // Both icons side-by-side

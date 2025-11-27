@@ -102,10 +102,10 @@ struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
                 if let errorMessage = viewModel.errorMessage {
                     Text(errorMessage)
                         .font(.caption)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(DesignSystem.Colors.accentDanger)
                         .padding()
                         .frame(maxWidth: .infinity)
-                        .background(Color.red.opacity(0.1))
+                        .background(DesignSystem.Colors.accentDanger.opacity(0.1))
                         .cornerRadius(DesignSystem.CornerRadius.medium)
                         .padding(.horizontal)
                 }

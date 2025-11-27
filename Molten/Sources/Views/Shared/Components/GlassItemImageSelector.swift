@@ -53,20 +53,9 @@ struct GlassItemImageSelector: View {
 
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-            if currentPrimaryImageId == nil {
-                HStack(spacing: DesignSystem.Spacing.xs) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                        .font(.caption)
-                    Text("Using manufacturer default image")
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                }
-            } else {
-                Text("Tap to select primary • Tap selected to use default • Tap and hold for more options")
-                    .font(DesignSystem.Typography.caption)
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-            }
+            Text("Tap an image to use it as the display image")
+                .font(DesignSystem.Typography.listItemCaption)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
     }
 
@@ -145,34 +134,42 @@ struct GlassItemImageSelector: View {
 
     private func manufacturerImageCell(image: UIImage) -> some View {
         VStack(spacing: DesignSystem.Spacing.xs) {
-            ZStack(alignment: .topTrailing) {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 100, height: 100)
-                    .clipped()
-                    .cornerRadius(DesignSystem.CornerRadius.medium)
-                    .opacity(currentPrimaryImageId == nil ? 1.0 : 0.6)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
-                            .stroke(
-                                currentPrimaryImageId == nil ? Color.green : Color.gray.opacity(0.3),
-                                lineWidth: currentPrimaryImageId == nil ? 3 : 1
-                            )
-                    )
-
-                if currentPrimaryImageId == nil {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title3)
-                        .foregroundColor(.green)
-                        .background(
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 20, height: 20)
+            Button {
+                // Tap to select manufacturer default (deselect any user image)
+                if currentPrimaryImageId != nil {
+                    onSelectPrimary(nil)
+                }
+            } label: {
+                ZStack(alignment: .topTrailing) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 100, height: 100)
+                        .clipped()
+                        .cornerRadius(DesignSystem.CornerRadius.medium)
+                        .opacity(currentPrimaryImageId == nil ? 1.0 : 0.6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
+                                .stroke(
+                                    currentPrimaryImageId == nil ? DesignSystem.Colors.accentSuccess : Color.gray.opacity(0.3),
+                                    lineWidth: currentPrimaryImageId == nil ? 3 : 1
+                                )
                         )
-                        .padding(4)
+
+                    if currentPrimaryImageId == nil {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(DesignSystem.Colors.accentSuccess)
+                            .background(
+                                Circle()
+                                    .fill(Color.white)
+                                    .frame(width: 20, height: 20)
+                            )
+                            .padding(4)
+                    }
                 }
             }
+            .buttonStyle(.plain)
             .contextMenu {
                 // Only show "Submit to Molten" option if there are NO user images
                 if images.isEmpty {
@@ -184,9 +181,9 @@ struct GlassItemImageSelector: View {
                 }
             }
 
-            Text("Default")
+            Text(currentPrimaryImageId == nil ? "Default (Selected)" : "Default")
                 .font(.caption2)
-                .foregroundColor(.secondary)
+                .foregroundColor(currentPrimaryImageId == nil ? DesignSystem.Colors.accentSuccess : .secondary)
         }
     }
 
@@ -240,10 +237,12 @@ struct GlassItemImageSelector: View {
                 .accessibilityIdentifier("glass_item_image_delete")
             }
 
-            // Show "Primary" or "Alternate" label
-            Text(imageModel.imageType == .primary ? "Primary" : "Alternate")
-                .font(.caption2)
-                .foregroundColor(imageModel.imageType == .primary ? .blue : .secondary)
+            // Show "Selected" if this is the current display image
+            if currentPrimaryImageId == imageModel.id {
+                Text("Selected")
+                    .font(.caption2)
+                    .foregroundColor(DesignSystem.Colors.accentPrimary)
+            }
         }
     }
 }

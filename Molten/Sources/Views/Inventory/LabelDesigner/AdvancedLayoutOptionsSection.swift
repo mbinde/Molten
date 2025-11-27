@@ -112,7 +112,7 @@ struct AdvancedLayoutOptionsSection: View {
                                                 .font(.caption)
                                                 .padding(.horizontal, 8)
                                                 .padding(.vertical, 4)
-                                                .background(!currentFormat.bold && !currentFormat.italic ? Color.blue : Color.clear)
+                                                .background(!currentFormat.bold && !currentFormat.italic ? DesignSystem.Colors.accentSecondary : Color.clear)
                                                 .foregroundColor(!currentFormat.bold && !currentFormat.italic ? .white : .primary)
                                                 .cornerRadius(4)
                                         }
@@ -129,7 +129,7 @@ struct AdvancedLayoutOptionsSection: View {
                                                 .fontWeight(.bold)
                                                 .padding(.horizontal, 8)
                                                 .padding(.vertical, 4)
-                                                .background(currentFormat.bold && !currentFormat.italic ? Color.blue : Color.clear)
+                                                .background(currentFormat.bold && !currentFormat.italic ? DesignSystem.Colors.accentSecondary : Color.clear)
                                                 .foregroundColor(currentFormat.bold && !currentFormat.italic ? .white : .primary)
                                                 .cornerRadius(4)
                                         }
@@ -146,7 +146,7 @@ struct AdvancedLayoutOptionsSection: View {
                                                 .italic()
                                                 .padding(.horizontal, 8)
                                                 .padding(.vertical, 4)
-                                                .background(!currentFormat.bold && currentFormat.italic ? Color.blue : Color.clear)
+                                                .background(!currentFormat.bold && currentFormat.italic ? DesignSystem.Colors.accentSecondary : Color.clear)
                                                 .foregroundColor(!currentFormat.bold && currentFormat.italic ? .white : .primary)
                                                 .cornerRadius(4)
                                         }

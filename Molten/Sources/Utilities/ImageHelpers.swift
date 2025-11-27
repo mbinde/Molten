@@ -175,6 +175,7 @@ struct ImageHelpers {
 
     /// Single source of truth for product image loading decision tree
     /// ALWAYS returns a usable image - never nil. Falls back to gradient or manufacturer logo.
+    /// - Parameter excludeUserImages: If true, skips user-uploaded images and only returns manufacturer/catalog images
     @MainActor
     static func loadProductImageForDisplay(
         itemCode: String,
@@ -182,10 +183,12 @@ struct ImageHelpers {
         stableId: String?,
         imagePath: String?,
         imageThumbPath: String?,
-        dominantColors: [String]?
+        dominantColors: [String]?,
+        excludeUserImages: Bool = false
     ) async -> UIImage? {
         // Step 0: User-uploaded image (highest priority - always wins)
-        if let stableId = stableId {
+        // Skip this step if excludeUserImages is true (used for "Your Photos" section)
+        if !excludeUserImages, let stableId = stableId {
             if let primaryModel = try? await sharedUserImageRepository.getPrimaryImage(ownerType: .glassItem, ownerId: stableId),
                let userImage = try? await sharedUserImageRepository.loadImage(primaryModel) {
                 return userImage

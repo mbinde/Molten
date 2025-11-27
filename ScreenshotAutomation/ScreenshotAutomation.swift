@@ -8,7 +8,7 @@
 //  UPDATED VERSION (November 2025):
 //  - Based on actual working UI tests
 //  - Covers only ENABLED features (per FeatureFlags.swift)
-//  - 18 website screenshots + 5 App Store optimized
+//  - 15 website screenshots + 5 App Store optimized
 //  - Better composition and realistic data
 //  - Leverages BaseUITest patterns
 //
@@ -57,7 +57,7 @@ final class ScreenshotAutomation: XCTestCase {
     // MARK: - Main Screenshot Test Suites
 
     /// Complete screenshot suite for website marketing
-    /// Generates 18 screenshots covering all enabled features
+    /// Generates 15 screenshots covering all enabled features
     /// BEST FOR: Website, blog posts, social media
     func testGenerateWebsiteScreenshots() throws {
         print("\n📸 WEBSITE SCREENSHOTS - Starting...")
@@ -80,8 +80,15 @@ final class ScreenshotAutomation: XCTestCase {
 
         // 2. Glass Detail - Rich Information
         print("2️⃣ Hero: Glass Detail View")
+        ensureOnCatalog()
+        waitForContentToLoad()
+        // Scroll back to top to ensure cells are visible
+        app.swipeDown()
+        app.swipeDown()
+        sleep(1)
         // Tap on a visually appealing item (3rd item often has good data)
-        let cells = app.tables.cells
+        let cells = app.cells
+        print("   📊 DEBUG: cells.count = \(cells.count)")
         if cells.count > 2 {
             cells.element(boundBy: 2).tap()
             waitForContentToLoad(seconds: 2)
@@ -90,6 +97,8 @@ final class ScreenshotAutomation: XCTestCase {
             sleep(1)
             takeScreenshot(named: "hero-glass-detail", subdirectory: "website", delay: 0.5)
             navigateBack()
+        } else {
+            print("   ⚠️ SKIPPED: Not enough cells (need > 2, got \(cells.count))")
         }
 
         // 2b. Glass Detail with Manufacturer Info (Double Helix)
@@ -100,10 +109,15 @@ final class ScreenshotAutomation: XCTestCase {
             app.searchFields.firstMatch.typeText("double helix")
             waitForContentToLoad(seconds: 2)
             // Tap on first Double Helix result
-            if app.tables.cells.count > 0 {
-                app.tables.cells.firstMatch.tap()
+            let searchResultCells = app.cells
+            print("   📊 DEBUG: searchResultCells.count = \(searchResultCells.count)")
+            if searchResultCells.count > 0 {
+                searchResultCells.firstMatch.tap()
                 waitForContentToLoad(seconds: 2)
                 // Look for and tap Manufacturer tab if it exists
+                print("   📊 DEBUG: Manufacturer button exists = \(app.buttons["Manufacturer"].exists)")
+                print("   📊 DEBUG: About button exists = \(app.buttons["About"].exists)")
+                print("   📊 DEBUG: Info button exists = \(app.buttons["Info"].exists)")
                 if app.buttons["Manufacturer"].exists {
                     app.buttons["Manufacturer"].tap()
                     sleep(1)
@@ -118,8 +132,12 @@ final class ScreenshotAutomation: XCTestCase {
                 takeScreenshot(named: "feature-glass-detail-manufacturer", subdirectory: "website", delay: 0.5)
                 navigateBack()
                 waitForContentToLoad()
+            } else {
+                print("   ⚠️ SKIPPED: No search results for 'double helix'")
             }
             clearSearch()
+        } else {
+            print("   ⚠️ SKIPPED: Could not activate search")
         }
 
         // CORE FEATURES
@@ -171,24 +189,34 @@ final class ScreenshotAutomation: XCTestCase {
         print("5️⃣ Feature: Inventory List")
         navigateToTab("Inventory")
         waitForContentToLoad()
-        // Dismiss keyboard if it's visible
-        if app.keyboards.count > 0 {
-            app.swipeDown()
+        // Dismiss keyboard by tapping the navigation bar
+        let navBar = app.navigationBars.firstMatch
+        if navBar.exists {
+            navBar.tap()
             sleep(1)
         }
+        // Also try swiping down
+        app.swipeDown()
+        sleep(1)
         takeScreenshot(named: "feature-inventory-list", subdirectory: "website", delay: 0.5)
 
         // 6. Inventory Detail - Complete Tracking
         print("6️⃣ Feature: Inventory Detail")
+        ensureOnInventory()
+        waitForContentToLoad()
         // Tap on first inventory item with data
-        if cells.count > 0 {
-            cells.firstMatch.tap()
+        let inventoryCells = app.cells
+        print("   📊 DEBUG: inventoryCells.count = \(inventoryCells.count)")
+        if inventoryCells.count > 0 {
+            inventoryCells.firstMatch.tap()
             waitForContentToLoad(seconds: 2)
             // Scroll to show locations and types
             app.swipeUp()
             sleep(1)
             takeScreenshot(named: "feature-inventory-detail", subdirectory: "website", delay: 0.5)
             navigateBack()
+        } else {
+            print("   ⚠️ SKIPPED: No inventory cells found")
         }
 
         // 7. Add Inventory - Simple Data Entry
@@ -265,9 +293,17 @@ final class ScreenshotAutomation: XCTestCase {
                     sleep(1)
                     locationField.typeText("Garage, Bin 3")
                     sleep(1)
-                    // Dismiss keyboard to show full form
-                    app.swipeDown()
-                    sleep(1)
+                    // Dismiss keyboard by tapping elsewhere - try navigation bar first
+                    let addNavBar = app.navigationBars.firstMatch
+                    if addNavBar.exists {
+                        addNavBar.tap()
+                        sleep(1)
+                    }
+                    // Also try tapping Done button if keyboard is still visible
+                    if app.keyboards.buttons["Done"].exists {
+                        app.keyboards.buttons["Done"].tap()
+                        sleep(1)
+                    }
                     takeScreenshot(named: "feature-add-inventory", subdirectory: "website", delay: 0.5)
                 } else {
                     // Fallback: screenshot without location if field not found
@@ -286,6 +322,37 @@ final class ScreenshotAutomation: XCTestCase {
         navigateToTab("Shopping")
         waitForContentToLoad()
         takeScreenshot(named: "feature-shopping-list", subdirectory: "website", delay: 0.5)
+
+        // 8b. Shopping Mode Active - Ready to Shop
+        print("8️⃣b Feature: Shopping Mode Active")
+        // Enter shopping mode
+        let startModeButton = app.buttons["shopping_start_mode_button"]
+        if startModeButton.waitForExistence(timeout: 3) {
+            startModeButton.tap()
+            sleep(1)
+
+            // Add first item to basket to show active shopping
+            let shoppingItems = app.cells.matching(NSPredicate(format: "identifier BEGINSWITH 'shopping.item.'"))
+            if shoppingItems.count > 0 {
+                shoppingItems.element(boundBy: 0).tap()
+                sleep(1)
+
+                // Take screenshot showing shopping mode with item in basket
+                takeScreenshot(named: "feature-shopping-mode-active", subdirectory: "website", delay: 0.5)
+
+                // Exit shopping mode
+                let cancelButton = app.buttons["shopping_cancel_button"]
+                if cancelButton.exists {
+                    cancelButton.tap()
+                    sleep(1)
+                    // Handle confirmation if shown
+                    if app.buttons["Keep Items"].exists {
+                        app.buttons["Keep Items"].tap()
+                        sleep(1)
+                    }
+                }
+            }
+        }
 
         // 9. Label Printing - Professional Organization
         print("9️⃣ Feature: Label Designer")
@@ -317,12 +384,22 @@ final class ScreenshotAutomation: XCTestCase {
 
         // 11. Location Detail
         print("1️⃣1️⃣ Feature: Location Detail")
+        waitForContentToLoad()
         // Tap on first location
-        if app.tables.cells.count > 0 {
-            app.tables.cells.firstMatch.tap()
-            waitForContentToLoad(seconds: 2)
-            takeScreenshot(named: "feature-location-detail", subdirectory: "website", delay: 0.5)
-            navigateBack()
+        let locationCells = app.cells
+        print("   📊 DEBUG: locationCells.count = \(locationCells.count)")
+        if locationCells.count > 0 {
+            // Try to tap the first hittable cell
+            if locationCells.firstMatch.isHittable {
+                locationCells.firstMatch.tap()
+                waitForContentToLoad(seconds: 2)
+                takeScreenshot(named: "feature-location-detail", subdirectory: "website", delay: 0.5)
+                navigateBack()
+            } else {
+                print("   ⚠️ SKIPPED: Location cell not hittable (may be behind map view)")
+            }
+        } else {
+            print("   ⚠️ SKIPPED: No location cells found")
         }
 
         // 12. Settings - Customization (Top)
@@ -354,26 +431,10 @@ final class ScreenshotAutomation: XCTestCase {
         // The "feature-search-active" screenshot already demonstrates search capability.
 
         // 15. Catalog Grid - Touch-Friendly
-        print("1️⃣5️⃣ Feature: Catalog Grid Overview")
-        // Navigate directly to Catalog tab (more reliable than ensureOnCatalog after Settings)
-        let catalogTab = app.buttons["Catalog"]
-        if catalogTab.exists && catalogTab.isHittable {
-            catalogTab.tap()
-            sleep(2) // Give catalog time to fully load
-        }
-        // Clear any filters to show full catalog
-        clearProductTypeFilter()
-        waitForContentToLoad(seconds: 2)
-        // Scroll to top to show variety (scroll within the list, not the whole app)
-        if app.tables.firstMatch.exists {
-            app.tables.firstMatch.swipeDown()
-            usleep(500000)
-            app.tables.firstMatch.swipeDown()
-            usleep(500000)
-        }
-        takeScreenshot(named: "feature-catalog-grid", subdirectory: "website", delay: 0.5)
+        // REMOVED: This screenshot kept showing Settings instead of catalog despite multiple fixes.
+        // The hero-catalog-browse screenshot adequately shows the catalog view.
 
-        print("\n✅ Website screenshots complete! (18 total)")
+        print("\n✅ Website screenshots complete! (15 total)")
         print("═══════════════════════════════════════════════\n")
     }
 

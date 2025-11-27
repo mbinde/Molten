@@ -285,12 +285,14 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("settings_terminology")
 
-                    NavigationLink {
-                        RatingSettingsView()
-                    } label: {
-                        Text("Manage Ratings")
+                    if FeatureFlags.ENABLE_RATINGS {
+                        NavigationLink {
+                            RatingSettingsView()
+                        } label: {
+                            Text("Manage Ratings")
+                        }
+                        .accessibilityIdentifier("settings_manage_ratings")
                     }
-                    .accessibilityIdentifier("settings_manage_ratings")
 
                     HStack {
                         Text("Inventory Owner")

@@ -218,12 +218,25 @@ final class ScreenshotAutomation: XCTestCase {
         let inventoryCells = app.cells
         print("   📊 DEBUG: inventoryCells.count = \(inventoryCells.count)")
         if inventoryCells.count > 0 {
-            inventoryCells.firstMatch.tap()
-            waitForContentToLoad(seconds: 2)
-            // Scroll to show locations and types
-            app.swipeUp()
-            sleep(1)
-            takeScreenshot(named: "feature-inventory-detail", subdirectory: "website", delay: 0.5)
+            // Find the first hittable cell
+            var tappedCell = false
+            for i in 0..<min(10, inventoryCells.count) {
+                let cell = inventoryCells.element(boundBy: i)
+                if cell.exists && cell.isHittable {
+                    print("   📊 DEBUG: Tapping hittable inventory cell at index \(i)")
+                    cell.tap()
+                    waitForContentToLoad(seconds: 2)
+                    // Scroll to show locations and types
+                    app.swipeUp()
+                    sleep(1)
+                    takeScreenshot(named: "feature-inventory-detail", subdirectory: "website", delay: 0.5)
+                    tappedCell = true
+                    break
+                }
+            }
+            if !tappedCell {
+                print("   ⚠️ SKIPPED: No hittable inventory cells found (checked first 10)")
+            }
         } else {
             print("   ⚠️ SKIPPED: No inventory cells found")
         }

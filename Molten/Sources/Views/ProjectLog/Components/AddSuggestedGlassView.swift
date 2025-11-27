@@ -111,16 +111,16 @@ struct AddSuggestedGlassView: View {
         print("⏱️ [SEARCH] loadGlassItems() started, cache isLoaded=\(CatalogSearchCache.shared.isLoaded)")
         isLoading = true
 
-        // CRITICAL: Trust the cache is loaded during FirstRunDataLoadingView
-        // The cache is ALWAYS loaded during startup (see FirstRunDataLoadingView line 189)
+        // CRITICAL: Trust the cache is loaded during LaunchScreenView
+        // The cache is ALWAYS loaded during startup
         // If it's not loaded yet, we wait for it to finish loading (don't reload!)
         if CatalogSearchCache.shared.isLoaded {
             // Cache ready - instant access! Filter to glass items only
             glassItems = CatalogSearchCache.shared.items.filter { $0.itemType == .glass }
             print("✅ [SEARCH] Using pre-loaded cache with \(glassItems.count) glass items")
         } else {
-            // Cache still loading from FirstRunDataLoadingView, wait for it
-            print("⏳ [SEARCH] Cache not ready, waiting for FirstRunDataLoadingView to finish...")
+            // Cache still loading from LaunchScreenView, wait for it
+            print("⏳ [SEARCH] Cache not ready, waiting for LaunchScreenView to finish...")
             await CatalogSearchCache.shared.loadIfNeeded(catalogService: catalogService)
             glassItems = CatalogSearchCache.shared.items.filter { $0.itemType == .glass }
             print("✅ [SEARCH] Cache now ready with \(glassItems.count) glass items")

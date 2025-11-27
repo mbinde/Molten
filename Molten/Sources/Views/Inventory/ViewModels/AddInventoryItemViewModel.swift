@@ -148,15 +148,15 @@ class AddInventoryItemViewModel {
         isLoading = true
         defer { isLoading = false }
 
-        // CRITICAL: Trust the cache is loaded during FirstRunDataLoadingView
-        // The cache is ALWAYS loaded during startup (see FirstRunDataLoadingView line 189)
+        // CRITICAL: Trust the cache is loaded during LaunchScreenView
+        // The cache is ALWAYS loaded during startup
         // If it's not loaded yet, we wait for it to finish loading (don't reload!)
         if CatalogSearchCache.shared.isLoaded {
             // Cache ready - instant access!
             catalogItems = CatalogSearchCache.shared.items
             print("✅ [SEARCH] Using pre-loaded cache with \(catalogItems.count) items")
         } else {
-            // Cache still loading from FirstRunDataLoadingView, wait for it
+            // Cache still loading from LaunchScreenView, wait for it
             print("⏳ [SEARCH] Cache not ready, loading from catalog service...")
             do {
                 catalogItems = try await catalogService.getAllCatalogItemsLightweight()

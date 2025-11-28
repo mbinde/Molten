@@ -43,8 +43,7 @@ private struct ShapeFilterButton: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 4) {
-                Image(systemName: shape.systemImage)
-                    .font(.system(size: 20))
+                shapeIcon
                     .frame(width: 32, height: 24)
                 Text(shape.displayName)
                     .font(.caption2)
@@ -61,5 +60,30 @@ private struct ShapeFilterButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("shape_filter_\(shape.rawValue)")
+    }
+
+    @ViewBuilder
+    private var shapeIcon: some View {
+        if let systemImage = shape.systemImage {
+            Image(systemName: systemImage)
+                .font(.system(size: 20))
+        } else {
+            // Custom icon for flag/barbell labels
+            FlagLabelIcon()
+        }
+    }
+}
+
+/// Custom icon for flag/barbell cable labels (no SF Symbol equivalent)
+struct FlagLabelIcon: View {
+    var body: some View {
+        HStack(spacing: 1) {
+            RoundedRectangle(cornerRadius: 1)
+                .frame(width: 6, height: 14)
+            Rectangle()
+                .frame(width: 10, height: 3)
+            RoundedRectangle(cornerRadius: 1)
+                .frame(width: 6, height: 14)
+        }
     }
 }

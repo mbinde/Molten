@@ -17,6 +17,7 @@ enum LabelShape: String, CaseIterable, Identifiable {
     case portrait   // taller than wide
     case square     // equal width and height (not circular)
     case circular   // round labels
+    case flag       // cable/wire flag labels (barbell shape)
 
     var id: String { rawValue }
 
@@ -26,15 +27,18 @@ enum LabelShape: String, CaseIterable, Identifiable {
         case .portrait: return "Tall"
         case .square: return "Square"
         case .circular: return "Circle"
+        case .flag: return "Flag"
         }
     }
 
-    var systemImage: String {
+    /// SF Symbol name, or nil if custom icon needed
+    var systemImage: String? {
         switch self {
         case .landscape: return "rectangle.fill"
         case .portrait: return "rectangle.portrait.fill"
         case .square: return "square.fill"
         case .circular: return "circle.fill"
+        case .flag: return nil  // Uses custom FlagLabelIcon
         }
     }
 }

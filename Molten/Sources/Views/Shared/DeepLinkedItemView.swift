@@ -3,6 +3,7 @@
 //  Molten
 //
 //  View for displaying a glass item accessed via deep link (QR code scan)
+//  Supports two modes: inventory management and item details
 //
 
 import SwiftUI
@@ -10,71 +11,124 @@ import SwiftUI
 import AppKit
 #endif
 
-/// Quick actions available when scanning QR codes
-enum QRQuickAction: String, CaseIterable, Codable {
-    case removeFromInventory = "Remove"
-    case addToInventory = "Add"
-
-    var icon: String {
-        switch self {
-        case .removeFromInventory: return "minus"
-        case .addToInventory: return "plus"
-        }
-    }
-}
-
 /// View that loads and displays a glass item from a deep link stable_id
+/// Uses user settings to determine whether to show inventory management or item details first
 struct DeepLinkedItemView: View {
     let stableId: String
     let showQuickActions: Bool
+    let inventoryType: String?       // Type from QR code (e.g., "rod", "frit")
+    let inventorySubtype: String?    // Subtype from QR code (e.g., "coarse", "fine")
+    let inventorySubsubtype: String? // Subsubtype from QR code (rarely used)
     @Environment(\.dismiss) private var dismiss
 
     @State private var item: CompleteInventoryItemModel?
     @State private var isLoading = true
     @State private var errorMessage: String?
-
-    // Quick action state
-    @State private var actionInProgress = false
-    @State private var netChange = 0  // Positive = added, negative = removed
+    @State private var showingInventoryView: Bool
 
     // Services from AppDependencies (NOT @State - services are stable)
     private let deps: AppDependencies
     private let catalogService: CatalogService
-    private let inventoryService: InventoryTrackingService
 
-    init(stableId: String, showQuickActions: Bool = true, deps: AppDependencies = AppDependencies()) {
+    init(
+        stableId: String,
+        showQuickActions: Bool = true,
+        inventoryType: String? = nil,
+        inventorySubtype: String? = nil,
+        inventorySubsubtype: String? = nil,
+        deps: AppDependencies = AppDependencies()
+    ) {
         self.stableId = stableId
         self.showQuickActions = showQuickActions
+        self.inventoryType = inventoryType
+        self.inventorySubtype = inventorySubtype
+        self.inventorySubsubtype = inventorySubsubtype
         self.deps = deps
         self.catalogService = deps.catalogService
-        self.inventoryService = deps.inventoryTrackingService
+
+        // Determine initial view based on settings
+        let settings = UserSettings.shared
+        let shouldShowInventory: Bool
+        switch settings.qrScanBehavior {
+        case .inventoryFirst:
+            shouldShowInventory = true
+        case .detailsFirst:
+            shouldShowInventory = false
+        case .rememberLast:
+            shouldShowInventory = settings.qrScanLastShowedInventory
+        }
+        // Only use inventory view if quick actions are enabled
+        self._showingInventoryView = State(initialValue: showQuickActions && shouldShowInventory)
     }
 
     var body: some View {
+        let _ = print("🔗 DeepLinkedItemView: body evaluated, isLoading=\(isLoading), item=\(item != nil), showingInventory=\(showingInventoryView)")
+        Group {
+            if isLoading {
+                loadingView
+            } else if let error = errorMessage {
+                errorView(error)
+            } else if let item = item {
+                if showingInventoryView {
+                    QRScanInventoryView(
+                        item: item,
+                        inventoryType: inventoryType,
+                        inventorySubtype: inventorySubtype,
+                        inventorySubsubtype: inventorySubsubtype,
+                        onViewDetails: {
+                            showingInventoryView = false
+                            UserSettings.shared.qrScanLastShowedInventory = false
+                        },
+                        deps: deps
+                    )
+                } else {
+                    detailsView(item: item)
+                }
+            } else {
+                errorView("Item not found")
+            }
+        }
+        .task {
+            print("🔗 DeepLinkedItemView: .task started for stable_id: \(stableId)")
+            await loadItem()
+        }
+    }
+
+    // MARK: - Loading View
+
+    private var loadingView: some View {
+        NavigationStack {
+            LoadingStateView(message: "Loading item...")
+                .navigationTitle("Loading...")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Close") {
+                            dismiss()
+                        }
+                    }
+                }
+        }
+    }
+
+    // MARK: - Details View
+
+    private func detailsView(item: CompleteInventoryItemModel) -> some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Quick action toolbar (only show when item is loaded and quick actions enabled)
-                if showQuickActions && !isLoading && item != nil {
-                    quickActionToolbar
+                // Quick action button to switch to inventory management (if enabled)
+                if showQuickActions {
+                    manageInventoryButton(for: item)
+                    Divider()
                 }
 
                 // Main content
-                Group {
-                    if isLoading {
-                        LoadingStateView(message: "Loading item...")
-                    } else if let error = errorMessage {
-                        errorView(error)
-                    } else if let item = item {
-                        InventoryDetailView(
-                            item: item,
-                            deps: deps
-                        )
-                    } else {
-                        errorView("Item not found")
-                    }
-                }
+                InventoryDetailView(
+                    item: item,
+                    deps: deps
+                )
             }
-            .navigationTitle(showQuickActions ? "Scanned Item" : "Item Details")
+            .navigationTitle("Item Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -84,102 +138,78 @@ struct DeepLinkedItemView: View {
                     .accessibilityIdentifier("deep_linked_item_close")
                 }
             }
-            .task {
-                print("🔗 DeepLinkedItemView: .task started for stable_id: \(stableId)")
-                await loadItem()
-            }
         }
     }
 
-    // MARK: - Quick Action Toolbar
+    private func manageInventoryButton(for item: CompleteInventoryItemModel) -> some View {
+        Button {
+            showingInventoryView = true
+            UserSettings.shared.qrScanLastShowedInventory = true
+        } label: {
+            HStack(spacing: DesignSystem.Spacing.md) {
+                // Small thumbnail to catch the eye
+                ProductImageThumbnail(
+                    itemCode: item.glassItem.stable_id,
+                    manufacturer: item.glassItem.manufacturer,
+                    stableId: item.glassItem.stable_id,
+                    imagePath: item.glassItem.image_path,
+                    imageThumbPath: item.glassItem.image_thumb_path,
+                    dominantColors: item.glassItem.dominant_colors,
+                    size: 32
+                )
 
-    /// Current inventory quantity for display
-    private var currentQuantity: Int {
-        guard let item = item else { return 0 }
-        return Int(item.inventory.reduce(0) { $0 + $1.quantity })
-    }
+                Text("Manage Inventory")
+                    .font(DesignSystem.Typography.listItemTitle)
 
-    private var quickActionToolbar: some View {
-        HStack(spacing: DesignSystem.Spacing.lg) {
-            // Remove button with net removed count
-            VStack(spacing: DesignSystem.Spacing.xs) {
-                Button {
-                    Task { await performAction(.removeFromInventory) }
-                } label: {
-                    Label("Remove", systemImage: "minus")
-                        .font(.headline)
-                        .frame(minWidth: 80)
-                }
-                .buttonStyle(.bordered)
-                .tint(DesignSystem.Colors.accentDanger)
-                .disabled(actionInProgress || currentQuantity == 0)
+                Spacer()
 
-                // Show net removed count (when negative)
-                if netChange < 0 {
-                    Text("\(abs(netChange)) removed")
-                        .font(DesignSystem.Typography.listItemCaption)
-                        .foregroundColor(DesignSystem.Colors.accentDanger)
-                }
+                Image(systemName: "chevron.right")
+                    .font(.caption)
             }
-
-            // Quantity display
-            VStack(spacing: 2) {
-                Text("\(currentQuantity)")
-                    .font(DesignSystem.Typography.prominentNumber)
-                    .foregroundColor(DesignSystem.Colors.textPrimary)
-                Text("in stock")
-                    .font(DesignSystem.Typography.listItemCaption)
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-            }
-            .frame(minWidth: 60)
-
-            // Add button with net added count
-            VStack(spacing: DesignSystem.Spacing.xs) {
-                Button {
-                    Task { await performAction(.addToInventory) }
-                } label: {
-                    Label("Add", systemImage: "plus")
-                        .font(.headline)
-                        .frame(minWidth: 80)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(DesignSystem.Colors.accentSuccess)
-                .disabled(actionInProgress)
-
-                // Show net added count (when positive)
-                if netChange > 0 {
-                    Text("\(netChange) added")
-                        .font(DesignSystem.Typography.listItemCaption)
-                        .foregroundColor(DesignSystem.Colors.accentSuccess)
-                }
-            }
+            .padding(.horizontal)
+            .padding(.vertical, DesignSystem.Spacing.md)
+            .foregroundColor(DesignSystem.Colors.moltenTeal)
         }
-        .padding()
-        .background(DesignSystem.Colors.backgroundSecondary)
+        .background(DesignSystem.Colors.tintTeal)
     }
+
+    // MARK: - Error View
 
     private func errorView(_ message: String) -> some View {
-        VStack(spacing: DesignSystem.Spacing.xl) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.largeTitle)
-                .foregroundColor(DesignSystem.Colors.accentWarning)
+        NavigationStack {
+            VStack(spacing: DesignSystem.Spacing.xl) {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.largeTitle)
+                    .foregroundColor(DesignSystem.Colors.accentWarning)
 
-            Text(message)
-                .font(DesignSystem.Typography.sectionHeader)
-                .multilineTextAlignment(.center)
+                Text(message)
+                    .font(DesignSystem.Typography.sectionTitle)
+                    .multilineTextAlignment(.center)
 
-            Text("Stable ID: \(stableId)")
-                .font(DesignSystem.Typography.listItemCaption)
-                .foregroundColor(DesignSystem.Colors.textSecondary)
+                Text("Stable ID: \(stableId)")
+                    .font(DesignSystem.Typography.listItemCaption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
 
-            Button("Close") {
-                dismiss()
+                Button("Close") {
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(DesignSystem.Colors.tintPrimary)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(DesignSystem.Colors.tintPrimary)
+            .padding()
+            .navigationTitle("Error")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
+            }
         }
-        .padding()
     }
+
+    // MARK: - Data Loading
 
     @MainActor
     private func loadItem() async {
@@ -204,111 +234,6 @@ struct DeepLinkedItemView: View {
         }
 
         isLoading = false
-    }
-
-    /// Reload item data without showing loading indicator (for after quick actions)
-    @MainActor
-    private func reloadItemSilently() async {
-        do {
-            if let foundItem = try await catalogService.getGlassItemByNaturalKey(stableId) {
-                item = foundItem
-            }
-        } catch {
-            print("❌ DeepLinkedItemView: Silent reload failed: \(error)")
-        }
-    }
-
-    // MARK: - Quick Actions
-
-    @MainActor
-    private func performAction(_ action: QRQuickAction) async {
-        guard let item = item else { return }
-
-        actionInProgress = true
-        defer { actionInProgress = false }
-
-        do {
-            switch action {
-            case .removeFromInventory:
-                try await removeOneFromInventory(item: item)
-                netChange -= 1
-
-            case .addToInventory:
-                try await addOneToInventory(item: item)
-                netChange += 1
-            }
-
-            // Silently reload item without showing loading state
-            await reloadItemSilently()
-        } catch {
-            print("❌ DeepLinkedItemView: Action failed: \(error)")
-        }
-    }
-
-    private func removeOneFromInventory(item: CompleteInventoryItemModel) async throws {
-        // Find the first inventory record with stock
-        guard let inventory = item.inventory.first(where: { $0.hasStock }) else {
-            throw NSError(domain: "DeepLinkedItemView", code: 1, userInfo: [NSLocalizedDescriptionKey: "No inventory to remove"])
-        }
-
-        // Decrement by 1
-        let newQuantity: Double
-        let newContainerCount: Double?
-        if inventory.quantity > 0 {
-            newQuantity = max(0, inventory.quantity - 1)
-            newContainerCount = inventory.containerCount
-        } else {
-            // Jar-only tracking - decrement containers
-            newQuantity = 0
-            newContainerCount = max(0, (inventory.containerCount ?? 0) - 1)
-        }
-
-        let updatedInventory = InventoryModel(
-            id: inventory.id,
-            item_stable_id: inventory.item_stable_id,
-            type: inventory.type,
-            subtype: inventory.subtype,
-            subsubtype: inventory.subsubtype,
-            dimensions: inventory.dimensions,
-            quantity: newQuantity,
-            containerCount: newContainerCount,
-            date_added: inventory.date_added,
-            date_modified: Date()
-        )
-
-        _ = try await inventoryService.updateInventory(updatedInventory)
-    }
-
-    private func addOneToInventory(item: CompleteInventoryItemModel) async throws {
-        if let inventory = item.inventory.first {
-            // Increment existing
-            let updatedInventory = InventoryModel(
-                id: inventory.id,
-                item_stable_id: inventory.item_stable_id,
-                type: inventory.type,
-                subtype: inventory.subtype,
-                subsubtype: inventory.subsubtype,
-                dimensions: inventory.dimensions,
-                quantity: inventory.quantity + 1,
-                date_added: inventory.date_added,
-                date_modified: Date()
-            )
-            _ = try await inventoryService.updateInventory(updatedInventory)
-        } else {
-            // Create new inventory record with quantity 1
-            let newInventory = InventoryModel(
-                id: UUID(),
-                item_stable_id: item.glassItem.stable_id,
-                type: "rod",  // Default type
-                subtype: nil,
-                subsubtype: nil,
-                dimensions: nil,
-                quantity: 1,
-                date_added: Date(),
-                date_modified: Date()
-            )
-            _ = try await inventoryService.createInventory(newInventory)
-        }
     }
 }
 

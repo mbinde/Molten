@@ -1814,6 +1814,35 @@ struct LabelData: Sendable {
     let coe: String?
     let location: String?
     let owner: String?
+
+    // Inventory type info for QR code encoding
+    let inventoryType: String?      // e.g., "rod", "frit", "tube"
+    let inventorySubtype: String?   // e.g., "coarse", "fine"
+    let inventorySubsubtype: String?
+
+    init(
+        stableId: String,
+        manufacturer: String? = nil,
+        sku: String? = nil,
+        colorName: String? = nil,
+        coe: String? = nil,
+        location: String? = nil,
+        owner: String? = nil,
+        inventoryType: String? = nil,
+        inventorySubtype: String? = nil,
+        inventorySubsubtype: String? = nil
+    ) {
+        self.stableId = stableId
+        self.manufacturer = manufacturer
+        self.sku = sku
+        self.colorName = colorName
+        self.coe = coe
+        self.location = location
+        self.owner = owner
+        self.inventoryType = inventoryType
+        self.inventorySubtype = inventorySubtype
+        self.inventorySubsubtype = inventorySubsubtype
+    }
 }
 
 #if os(iOS)
@@ -1833,15 +1862,47 @@ class LabelPrintingService {
     /// - Parameter stableId: The stable_id of the glass item (e.g., "2wjEBu")
     /// - Returns: UIImage containing the QR code with logo in center
     func generateQRCode(for stableId: String) -> UIImage {
+        return generateQRCode(for: stableId, type: nil, subtype: nil, subsubtype: nil)
+    }
+
+    /// Generate QR code image for a glass item with inventory type info
+    /// - Parameters:
+    ///   - stableId: The stable_id of the glass item (e.g., "2wjEBu")
+    ///   - type: Inventory type (e.g., "rod", "frit")
+    ///   - subtype: Optional subtype (e.g., "coarse", "fine")
+    ///   - subsubtype: Optional subsubtype
+    /// - Returns: UIImage containing the QR code with logo in center
+    func generateQRCode(
+        for stableId: String,
+        type: String?,
+        subtype: String?,
+        subsubtype: String?
+    ) -> UIImage {
+        // Build cache key including type info
+        let cacheKey = [stableId, type, subtype, subsubtype]
+            .compactMap { $0 }
+            .joined(separator: ":")
+
         // Check cache first
-        if let cachedQR = qrCodeCache[stableId] {
+        if let cachedQR = qrCodeCache[cacheKey] {
             return cachedQR
         }
 
         let filter = CIFilter.qrCodeGenerator()
 
-        // Create deep link URL with stable_id
-        let deepLink = "molten://i/\(stableId)"
+        // Create deep link URL with stable_id and optional type code
+        let deepLink: String
+        if let type = type {
+            deepLink = InventoryTypeEncoder.buildQRCodeURL(
+                stableId: stableId,
+                type: type,
+                subtype: subtype,
+                subsubtype: subsubtype
+            )
+        } else {
+            deepLink = "molten://i/\(stableId)"
+        }
+
         let data = Data(deepLink.utf8)
         filter.setValue(data, forKey: "inputMessage")
         filter.setValue("H", forKey: "inputCorrectionLevel") // High error correction
@@ -1863,9 +1924,19 @@ class LabelPrintingService {
         let finalImage = overlayLogoOnQRCode(qrImage: qrImage, qrSize: qrSize)
 
         // Cache for reuse
-        qrCodeCache[stableId] = finalImage
+        qrCodeCache[cacheKey] = finalImage
 
         return finalImage
+    }
+
+    /// Generate QR code from LabelData (convenience method)
+    func generateQRCode(for labelData: LabelData) -> UIImage {
+        return generateQRCode(
+            for: labelData.stableId,
+            type: labelData.inventoryType,
+            subtype: labelData.inventorySubtype,
+            subsubtype: labelData.inventorySubsubtype
+        )
     }
 
     /// Overlay Molten logo in the center of QR code

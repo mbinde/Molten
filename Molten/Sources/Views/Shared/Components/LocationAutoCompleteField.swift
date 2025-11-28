@@ -13,20 +13,26 @@ import SwiftUI
 struct LocationAutoCompleteField: View {
     @Binding var location: String
     let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
+    let placeholder: String
 
     @State private var showingSuggestions = false
     @State private var locationSuggestions: [String] = []
     @State private var allLocationNames: [String] = []
     @FocusState private var isTextFieldFocused: Bool
 
-    init(location: Binding<String>, storageLocationDefinitionRepository: StorageLocationDefinitionRepository) {
+    init(
+        location: Binding<String>,
+        storageLocationDefinitionRepository: StorageLocationDefinitionRepository,
+        placeholder: String = "Enter location (e.g., Workshop Shelf A)"
+    ) {
         self._location = location
         self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
+        self.placeholder = placeholder
     }
-    
+
     var body: some View {
         VStack(spacing: 0) {
-            TextField("Enter location (e.g., Workshop Shelf A)", text: $location)
+            TextField(placeholder, text: $location)
                 .textFieldStyle(.roundedBorder)
                 .focused($isTextFieldFocused)
                 .onSubmit {

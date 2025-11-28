@@ -93,8 +93,10 @@ struct MoltenApp: App {
     @State private var importInventoryURL: URL?
     @State private var showingImportInventory = false
     @State private var deepLinkGlassItemStableId: String?
+    @State private var deepLinkInventoryType: InventoryTypeEncoder.DecodedType?  // Type info from QR code
     @State private var showingDeepLinkedItem = false
     @State private var pendingDeepLinkStableId: String?  // Hold the new ID during refresh
+    @State private var pendingDeepLinkType: InventoryTypeEncoder.DecodedType?  // Hold the type during refresh
     @State private var deepLinkViewOnlyStableId: String?
     @State private var showingViewOnlyItem = false
     @State private var mainTabView: MainTabView?
@@ -253,13 +255,16 @@ extension MoltenApp {
             .sheet(isPresented: $showingDeepLinkedItem, onDismiss: {
                 // Always clear on dismiss
                 deepLinkGlassItemStableId = nil
+                deepLinkInventoryType = nil
 
                 // If we have a pending ID, restore it after a short delay
                 if let pending = pendingDeepLinkStableId {
                     Task { @MainActor in
                         try? await Task.sleep(for: .milliseconds(100))
                         deepLinkGlassItemStableId = pending
+                        deepLinkInventoryType = pendingDeepLinkType
                         pendingDeepLinkStableId = nil
+                        pendingDeepLinkType = nil
                         // Present the sheet
                         try? await Task.sleep(for: .milliseconds(50))
                         showingDeepLinkedItem = true
@@ -267,7 +272,13 @@ extension MoltenApp {
                 }
             }) {
                 if let stableId = deepLinkGlassItemStableId {
-                    DeepLinkedItemView(stableId: stableId, showQuickActions: true)
+                    DeepLinkedItemView(
+                        stableId: stableId,
+                        showQuickActions: true,
+                        inventoryType: deepLinkInventoryType?.type,
+                        inventorySubtype: deepLinkInventoryType?.subtype,
+                        inventorySubsubtype: deepLinkInventoryType?.subsubtype
+                    )
                 } else {
                     Text("No item ID available").foregroundColor(.red)
                 }
@@ -288,15 +299,17 @@ extension MoltenApp {
                 if let newValue = newValue {
                     if let oldValue = oldValue, oldValue != newValue, showingDeepLinkedItem {
                         // Case 1: Scanning a different item while sheet is already open
-                        // Store the new ID as pending
+                        // Store the new ID and type as pending
                         // The .onDismiss handler will detect this and handle the restore + re-present
                         pendingDeepLinkStableId = newValue
+                        pendingDeepLinkType = deepLinkInventoryType
                         // Dismiss the current sheet
                         showingDeepLinkedItem = false
                         // Note: .onDismiss will handle restoring the ID and re-presenting
                     } else if !showingDeepLinkedItem {
                         // Case 2: First scan or sheet was closed - just present
                         pendingDeepLinkStableId = nil  // Not a refresh
+                        pendingDeepLinkType = nil
                         showingDeepLinkedItem = true
                     }
                     // Case 3: Same item scanned again - do nothing
@@ -427,8 +440,6 @@ extension MoltenApp {
     private func checkCloudKitStatus() async {
         let log = Logger(subsystem: "com.motleywoods.molten", category: "cloudkit-diagnostics")
 
-        log.info("🔍 [CloudKit Diagnostics] Starting CloudKit account status check...")
-
         let container = CKContainer(identifier: "iCloud.com.motleywoods.molten")
 
         do {
@@ -436,12 +447,9 @@ extension MoltenApp {
 
             switch status {
             case .available:
-                log.info("✅ [CloudKit Diagnostics] iCloud account is AVAILABLE")
-
                 // Try to fetch user record ID to verify access
                 do {
                     let userRecordID = try await container.userRecordID()
-                    log.info("✅ [CloudKit Diagnostics] User Record ID: \(userRecordID.recordName)")
                 } catch {
                     log.error("❌ [CloudKit Diagnostics] Failed to fetch user record ID: \(error.localizedDescription)")
                 }
@@ -700,19 +708,37 @@ extension MoltenApp {
     /// - molten://inventory/{shareCode} - Add friend share
     @MainActor
     private func handleDeepLink(_ url: URL) {
-        guard let host = url.host else { return }
+        print("🔗 handleDeepLink called with URL: \(url)")
+        guard let host = url.host else {
+            print("🔗 handleDeepLink: No host in URL")
+            return
+        }
+        print("🔗 handleDeepLink: host = \(host)")
 
         switch host {
         case "i":
-            // Item detail with quick actions: molten://i/bullseye-clear-001
-            let path = url.path
-            let naturalKey = path.hasPrefix("/") ? String(path.dropFirst()) : path
+            // Item detail with quick actions: molten://i/{stableId}/{typeCode}
+            // e.g., molten://i/bullseye-clear-001/fc (frit coarse)
+            let pathComponents = url.pathComponents.filter { $0 != "/" }
+            print("🔗 handleDeepLink: pathComponents = \(pathComponents)")
 
-            guard !naturalKey.isEmpty else {
+            guard !pathComponents.isEmpty else {
+                print("🔗 handleDeepLink: No path components")
                 return
             }
 
-            deepLinkGlassItemStableId = naturalKey
+            let stableId = pathComponents[0]
+            var decodedType: InventoryTypeEncoder.DecodedType?
+
+            // Parse type code if present (second path component)
+            if pathComponents.count >= 2 {
+                decodedType = InventoryTypeEncoder.decode(pathComponents[1])
+            }
+
+            print("🔗 handleDeepLink: Setting deepLinkGlassItemStableId = \(stableId)")
+            deepLinkGlassItemStableId = stableId
+            deepLinkInventoryType = decodedType
+            print("🔗 handleDeepLink: Done setting state, showingDeepLinkedItem = \(showingDeepLinkedItem)")
             // Note: showingDeepLinkedItem is now managed by .onChange(of: deepLinkGlassItemStableId)
             // This ensures proper handling when scanning multiple QR codes in succession
 

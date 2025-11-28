@@ -43,6 +43,25 @@ enum LabelShape: String, CaseIterable, Identifiable {
     }
 }
 
+/// Style variants for barbell/flag cable labels
+enum BarbellStyle: String, Sendable {
+    case symmetric   // Standard barbell: two flags connected by narrow wrap
+    case tStyle      // T-style: single flag with wrap tail on one end
+    case pStyle      // P-style: flag with curved/loop tail
+    case wrap        // Self-laminating wrap-around labels
+
+    init?(databaseValue: String?) {
+        guard let value = databaseValue else { return nil }
+        switch value {
+        case "symmetric": self = .symmetric
+        case "t-style": self = .tStyle
+        case "p-style": self = .pStyle
+        case "wrap": self = .wrap
+        default: self = .symmetric
+        }
+    }
+}
+
 /// Label format specifications for PDF generation
 ///
 /// All dimensions in points (1 point = 1/72 inch)
@@ -69,9 +88,28 @@ struct LabelGeometry: Equatable, Hashable, Sendable {
     /// Whether this is a circular label (explicitly defined, not computed from dimensions)
     let isCircular: Bool
 
-    /// Computed shape based on isCircular flag and dimensions
+    /// Whether this is a barbell/flag label (for cables, wires, jewelry)
+    let isBarbell: Bool
+
+    /// Barbell-specific geometry (only set when isBarbell is true)
+    /// Width of each printable flag area at the ends
+    let barbellFlagWidth: CGFloat?
+    /// Height of the narrow wrap section in the middle
+    let barbellWrapHeight: CGFloat?
+    /// Style variant for barbell labels (symmetric, t-style, p-style, wrap)
+    let barbellStyle: BarbellStyle?
+
+    /// Computed wrap width for barbell labels (the narrow middle section)
+    var barbellWrapWidth: CGFloat? {
+        guard isBarbell, let flagWidth = barbellFlagWidth else { return nil }
+        return labelWidth - (2 * flagWidth)
+    }
+
+    /// Computed shape based on explicit flags and dimensions
     var shape: LabelShape {
-        if isCircular {
+        if isBarbell {
+            return .flag
+        } else if isCircular {
             return .circular
         } else if abs(labelWidth - labelHeight) < 1.0 {
             return .square
@@ -95,7 +133,11 @@ struct LabelGeometry: Equatable, Hashable, Sendable {
         verticalGap: CGFloat,
         defaultFontScale: CGFloat,
         defaultQRSize: CGFloat,
-        isCircular: Bool = false
+        isCircular: Bool = false,
+        isBarbell: Bool = false,
+        barbellFlagWidth: CGFloat? = nil,
+        barbellWrapHeight: CGFloat? = nil,
+        barbellStyle: BarbellStyle? = nil
     ) {
         self.name = name
         self.labelsPerSheet = labelsPerSheet
@@ -110,6 +152,10 @@ struct LabelGeometry: Equatable, Hashable, Sendable {
         self.defaultFontScale = defaultFontScale
         self.defaultQRSize = defaultQRSize
         self.isCircular = isCircular
+        self.isBarbell = isBarbell
+        self.barbellFlagWidth = barbellFlagWidth
+        self.barbellWrapHeight = barbellWrapHeight
+        self.barbellStyle = barbellStyle
     }
 
     /// Avery 5160 (Address Labels) - Default format

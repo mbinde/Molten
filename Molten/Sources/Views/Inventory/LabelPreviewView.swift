@@ -43,6 +43,49 @@ struct LabelPreviewView: View {
         return config.manufacturerImageSize ?? 0.6
     }
 
+    /// Computed barbell dimensions with defaults
+    private var barbellFlagWidthScaled: CGFloat {
+        (format.barbellFlagWidth ?? format.labelWidth / 3) * scaleFactor
+    }
+
+    private var barbellWrapHeightScaled: CGFloat {
+        (format.barbellWrapHeight ?? format.labelHeight * 0.4) * scaleFactor
+    }
+
+    /// Returns the appropriate shape for the barbell style
+    private func barbellShapeView() -> AnyShape {
+        switch format.barbellStyle {
+        case .tStyle:
+            return AnyShape(TStyleShape(flagWidth: barbellFlagWidthScaled, wrapHeight: barbellWrapHeightScaled))
+        case .pStyle:
+            return AnyShape(PStyleShape(flagWidth: barbellFlagWidthScaled, wrapHeight: barbellWrapHeightScaled))
+        case .wrap:
+            return AnyShape(WrapShape(wrapHeight: barbellWrapHeightScaled))
+        case .symmetric, .none:
+            return AnyShape(BarbellShape(flagWidth: barbellFlagWidthScaled, wrapHeight: barbellWrapHeightScaled))
+        }
+    }
+
+    /// Returns the clip shape for the label
+    private func labelClipShape() -> AnyShape {
+        if format.isCircular {
+            return AnyShape(Circle())
+        } else if format.isBarbell {
+            switch format.barbellStyle {
+            case .tStyle:
+                return AnyShape(TStyleShape(flagWidth: barbellFlagWidthScaled, wrapHeight: barbellWrapHeightScaled))
+            case .pStyle:
+                return AnyShape(PStyleShape(flagWidth: barbellFlagWidthScaled, wrapHeight: barbellWrapHeightScaled))
+            case .wrap:
+                return AnyShape(WrapShape(wrapHeight: barbellWrapHeightScaled))
+            case .symmetric, .none:
+                return AnyShape(BarbellShape(flagWidth: barbellFlagWidthScaled, wrapHeight: barbellWrapHeightScaled))
+            }
+        } else {
+            return AnyShape(RoundedRectangle(cornerRadius: 4))
+        }
+    }
+
     /// Manufacturer image view (if enabled and not overlapping)
     @ViewBuilder
     private func manufacturerImageView(size: CGFloat) -> some View {
@@ -100,7 +143,7 @@ struct LabelPreviewView: View {
                 Spacer()
             }
 
-            // Label preview with border (circular or rectangular)
+            // Label preview with border (circular, barbell, or rectangular)
             ZStack {
                 if format.isCircular {
                     Circle()
@@ -109,6 +152,11 @@ struct LabelPreviewView: View {
                             Circle()
                                 .fill(Color.white)
                         )
+                } else if format.isBarbell {
+                    // Barbell/flag shape: varies by style
+                    barbellShapeView()
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        .background(barbellShapeView().fill(Color.white))
                 } else {
                     RoundedRectangle(cornerRadius: 4)
                         .stroke(Color.gray.opacity(0.3), lineWidth: 1)
@@ -119,13 +167,18 @@ struct LabelPreviewView: View {
                 }
 
                 // Label content based on QR position
-                buildLabelContent()
-                    .frame(width: format.isCircular ? previewWidth * 0.7 : nil, height: previewHeight - 8)
-                    .padding(.vertical, 4)
-                    .offset(x: offsetX * scaleFactor, y: offsetY * scaleFactor)
+                if format.isBarbell {
+                    // For barbell labels, show content in the left flag area only
+                    buildBarbellContent()
+                } else {
+                    buildLabelContent()
+                        .frame(width: format.isCircular ? previewWidth * 0.7 : nil, height: previewHeight - 8)
+                        .padding(.vertical, 4)
+                        .offset(x: offsetX * scaleFactor, y: offsetY * scaleFactor)
+                }
             }
             .frame(width: previewWidth, height: previewHeight)
-            .clipShape(format.isCircular ? AnyShape(Circle()) : AnyShape(RoundedRectangle(cornerRadius: 4)))
+            .clipShape(labelClipShape())
         }
         .padding()
         .background(Color(.systemGray6))
@@ -277,6 +330,107 @@ struct LabelPreviewView: View {
                 }
             }
         }
+    }
+
+    /// Build content for barbell/flag labels - varies by style
+    @ViewBuilder
+    private func buildBarbellContent() -> some View {
+        switch format.barbellStyle {
+        case .tStyle, .pStyle:
+            // Single flag styles - only one printable area on the left
+            buildSingleFlagContent()
+        case .wrap:
+            // Wrap style - content centered in the strip
+            buildWrapContent()
+        case .symmetric, .none:
+            // Symmetric barbell - two flag areas
+            buildSymmetricBarbellContent()
+        }
+    }
+
+    /// Build content for symmetric barbell (two flags)
+    @ViewBuilder
+    private func buildSymmetricBarbellContent() -> some View {
+        HStack(spacing: 0) {
+            // Left flag area - text content
+            VStack(alignment: .center, spacing: 1) {
+                Spacer()
+                buildTextContent()
+                    .padding(.horizontal, 2)
+                Spacer()
+            }
+            .frame(width: barbellFlagWidthScaled, height: previewHeight)
+
+            // Middle wrap section (narrow, shows structure)
+            Rectangle()
+                .fill(Color.clear)
+                .frame(width: previewWidth - (2 * barbellFlagWidthScaled))
+
+            // Right flag area - QR code (if enabled) or mirrored text
+            VStack {
+                Spacer()
+                if config.qrPosition != .none, let service = labelService {
+                    let qrSize = min(barbellFlagWidthScaled, previewHeight) * 0.85
+                    QRCodeView(labelData: sampleData, service: service)
+                        .frame(width: qrSize, height: qrSize)
+                } else {
+                    // Mirror text content on right flag
+                    buildTextContent()
+                        .padding(.horizontal, 2)
+                }
+                Spacer()
+            }
+            .frame(width: barbellFlagWidthScaled, height: previewHeight)
+        }
+    }
+
+    /// Build content for T-style and P-style (single flag)
+    @ViewBuilder
+    private func buildSingleFlagContent() -> some View {
+        HStack(spacing: 0) {
+            // Flag area - contains both text and optional QR
+            VStack(alignment: .center, spacing: 1) {
+                Spacer()
+                if config.qrPosition != .none, let service = labelService {
+                    // Stack QR and text vertically in the single flag
+                    HStack(spacing: 2) {
+                        let qrSize = min(barbellFlagWidthScaled * 0.4, previewHeight * 0.8)
+                        QRCodeView(labelData: sampleData, service: service)
+                            .frame(width: qrSize, height: qrSize)
+                        buildTextContent()
+                            .padding(.horizontal, 2)
+                    }
+                } else {
+                    buildTextContent()
+                        .padding(.horizontal, 2)
+                }
+                Spacer()
+            }
+            .frame(width: barbellFlagWidthScaled, height: previewHeight)
+
+            // Wrap tail section (narrow, non-printable area)
+            Rectangle()
+                .fill(Color.clear)
+                .frame(width: previewWidth - barbellFlagWidthScaled)
+        }
+    }
+
+    /// Build content for wrap-style labels (content in center strip)
+    @ViewBuilder
+    private func buildWrapContent() -> some View {
+        // Content centered in the narrow wrap area
+        HStack(spacing: 2) {
+            Spacer()
+            if config.qrPosition != .none, let service = labelService {
+                let qrSize = barbellWrapHeightScaled * 0.9
+                QRCodeView(labelData: sampleData, service: service)
+                    .frame(width: qrSize, height: qrSize)
+            }
+            buildTextContent()
+                .padding(.horizontal, 2)
+            Spacer()
+        }
+        .frame(height: barbellWrapHeightScaled)
     }
 
     @ViewBuilder
@@ -594,5 +748,111 @@ private struct QRCodeView: View {
             owner: nil
         )
     )
+}
+
+// MARK: - Barbell/Cable Label Shapes
+
+/// Shape for symmetric barbell/flag labels (two rectangles connected by narrow strip)
+/// Used for standard cable labels like Avery 94749
+struct BarbellShape: Shape {
+    let flagWidth: CGFloat
+    let wrapHeight: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        // Calculate dimensions
+        let totalWidth = rect.width
+        let totalHeight = rect.height
+        let wrapWidth = totalWidth - (2 * flagWidth)
+        let wrapY = (totalHeight - wrapHeight) / 2
+
+        // Left flag (full height rectangle on left)
+        path.addRect(CGRect(x: 0, y: 0, width: flagWidth, height: totalHeight))
+
+        // Narrow wrap section in middle
+        path.addRect(CGRect(x: flagWidth, y: wrapY, width: wrapWidth, height: wrapHeight))
+
+        // Right flag (full height rectangle on right)
+        path.addRect(CGRect(x: totalWidth - flagWidth, y: 0, width: flagWidth, height: totalHeight))
+
+        return path
+    }
+}
+
+/// Shape for T-style cable labels (single flag with narrow tail)
+/// Like Avery 61539 - one printable flag area, with narrow wrap extending from one end
+struct TStyleShape: Shape {
+    let flagWidth: CGFloat
+    let wrapHeight: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        let totalWidth = rect.width
+        let totalHeight = rect.height
+        let wrapWidth = totalWidth - flagWidth
+        let wrapY = (totalHeight - wrapHeight) / 2
+
+        // Flag area on left (full height)
+        path.addRect(CGRect(x: 0, y: 0, width: flagWidth, height: totalHeight))
+
+        // Narrow wrap tail extending to the right
+        path.addRect(CGRect(x: flagWidth, y: wrapY, width: wrapWidth, height: wrapHeight))
+
+        return path
+    }
+}
+
+/// Shape for P-style cable labels (flag with curved loop tail)
+/// Like Avery 61540 - one printable flag with a curved/tapered tail for wrapping
+struct PStyleShape: Shape {
+    let flagWidth: CGFloat
+    let wrapHeight: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        let totalWidth = rect.width
+        let totalHeight = rect.height
+        let wrapWidth = totalWidth - flagWidth
+        let wrapY = (totalHeight - wrapHeight) / 2
+
+        // Flag area on left (full height)
+        path.addRect(CGRect(x: 0, y: 0, width: flagWidth, height: totalHeight))
+
+        // Curved wrap section - tapers from flag to a narrower tail
+        // Create a trapezoid shape that narrows toward the right
+        let startY = wrapY
+        let endY = wrapY + wrapHeight
+        let taperAmount = wrapHeight * 0.3  // Taper by 30%
+
+        path.move(to: CGPoint(x: flagWidth, y: startY))
+        path.addLine(to: CGPoint(x: totalWidth, y: startY + taperAmount))
+        path.addLine(to: CGPoint(x: totalWidth, y: endY - taperAmount))
+        path.addLine(to: CGPoint(x: flagWidth, y: endY))
+        path.closeSubpath()
+
+        return path
+    }
+}
+
+/// Shape for self-laminating wrap labels (simple strip, no flags)
+/// The entire label wraps around the cable with a clear overlay
+struct WrapShape: Shape {
+    let wrapHeight: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        let totalWidth = rect.width
+        let totalHeight = rect.height
+        let wrapY = (totalHeight - wrapHeight) / 2
+
+        // Simple strip across the full width at the wrap height
+        path.addRect(CGRect(x: 0, y: wrapY, width: totalWidth, height: wrapHeight))
+
+        return path
+    }
 }
 #endif

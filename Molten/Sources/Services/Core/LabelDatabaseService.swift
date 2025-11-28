@@ -336,6 +336,8 @@ final class LabelDatabaseService: @unchecked Sendable {
                 conditions.append("l.shape = 'rectangle' AND l.label_width > l.label_height")
             case .portrait:
                 conditions.append("l.shape = 'rectangle' AND l.label_height > l.label_width")
+            case .flag:
+                conditions.append("l.shape = 'flag'")  // Cable/wire flag labels
             }
         }
 

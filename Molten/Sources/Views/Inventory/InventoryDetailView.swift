@@ -90,6 +90,7 @@ struct InventoryDetailView: View {
 
     @State private var showingError = false
     @State private var errorMessage: String?
+    @State private var showingShareSheet = false
 
     // MARK: - Initializers
 
@@ -155,11 +156,43 @@ struct InventoryDetailView: View {
         )
     }
 
+    /// Check if we have permission to show manufacturer descriptions for this item
+    private var canShowManufacturerDescription: Bool {
+        GlassManufacturers.productDescriptionPermissions[currentItem.glassItem.manufacturer] ?? false
+    }
+
     /// Check if there's any content to show in the Glass Item Details section
     private var hasGlassItemDetails: Bool {
-        let hasManufacturerNotes = currentItem.glassItem.mfr_notes != nil && !currentItem.glassItem.mfr_notes!.isEmpty
+        let hasManufacturerNotes = canShowManufacturerDescription
+            && currentItem.glassItem.mfr_notes != nil
+            && !currentItem.glassItem.mfr_notes!.isEmpty
         let hasUserNotes = userNotes != nil
         return hasManufacturerNotes || hasUserNotes
+    }
+
+    /// Text content for sharing this glass item
+    private var shareText: String {
+        let glassItem = currentItem.glassItem
+        let manufacturerName = GlassManufacturers.fullName(for: glassItem.manufacturer) ?? glassItem.manufacturer
+
+        var text = "\(glassItem.name)\n"
+        text += "\(manufacturerName)"
+
+        if let sku = glassItem.sku, !sku.isEmpty {
+            text += " • \(sku)"
+        }
+
+        text += " • COE \(glassItem.coe)"
+
+        if canShowManufacturerDescription,
+           let description = glassItem.mfr_notes, !description.isEmpty {
+            text += "\n\n\(description)"
+        }
+
+        // Add deep link URL for opening in Molten (view-only, no QR quick actions)
+        text += "\n\nmolten://v/\(glassItem.stable_id)"
+
+        return text
     }
 
     // MARK: - View Body
@@ -288,7 +321,20 @@ struct InventoryDetailView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showingShareSheet = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .accessibilityIdentifier("inventory_detail_share")
+                }
+            }
             #endif
+        }
+        .sheet(isPresented: $showingShareSheet) {
+            ShareSheet(items: [shareText])
         }
         .sheet(isPresented: $showingShoppingListOptions, onDismiss: {
             // Reload shopping list after adding
@@ -834,7 +880,8 @@ struct InventoryDetailView: View {
             accessibilityId: "section_manufacturer_notes"
         ) {
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
-                if let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
+                if canShowManufacturerDescription,
+                   let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
                     expandableNotesCard(title: nil, content: notes, accessibilityId: "expand_manufacturer_notes")
                 }
 

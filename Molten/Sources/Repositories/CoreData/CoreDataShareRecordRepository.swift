@@ -188,4 +188,22 @@ class CoreDataShareRecordRepository {
         record.setValue(foregroundHex, forKey: "icon_foreground_hex")
         try CoreDataErrorHandler.save(context: context)
     }
+
+    /// Update cached inventory stats for a share
+    /// Called when viewing a friend's inventory to cache stats for display
+    /// - Parameters:
+    ///   - shareCode: Share code
+    ///   - itemCount: Number of unique items in the inventory
+    ///   - totalQuantity: Sum of countable item quantities (rods, sheets, jars, etc.)
+    ///   - totalWeight: Sum of weight-based items in user's preferred unit (oz or g)
+    func updateInventoryStats(shareCode: String, itemCount: Int, totalQuantity: Double, totalWeight: Double) throws {
+        guard let record = try getShareRecord(shareCode: shareCode) else {
+            return
+        }
+
+        record.setValue(Int32(itemCount), forKey: "item_count")
+        record.setValue(totalQuantity, forKey: "total_quantity")
+        record.setValue(totalWeight, forKey: "total_weight")
+        try CoreDataErrorHandler.save(context: context)
+    }
 }

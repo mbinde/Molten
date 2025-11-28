@@ -43,6 +43,13 @@ struct InventorySharingView: View {
                     viewModel.showingAddFriend = true
                 }
             }
+            .onAppear {
+                // Refresh friend list when returning from viewing a friend's inventory
+                // This ensures cached stats (item count, total quantity, weight) are displayed
+                if hasLoadedInitialData {
+                    viewModel.refreshFriendList()
+                }
+            }
             .onChange(of: viewModel.myShareCode) { oldValue, newValue in
                 // Only auto-expand if share code changed from nil to a value AFTER initial load
                 // This ensures we expand when creating a new share, but not when loading an existing one
@@ -100,21 +107,30 @@ struct InventorySharingView: View {
     private var myShareSection: some View {
         Section {
             if let shareCode = viewModel.myShareCode {
-                // Header row (always visible)
-                Button(action: { myShareExpanded.toggle() }) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                // Header row using CollapsibleSectionHeader pattern
+                Button(action: { withAnimation { myShareExpanded.toggle() } }) {
+                    HStack(spacing: DesignSystem.Spacing.md) {
+                        Image(systemName: myShareExpanded ? "chevron.down" : "chevron.right")
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                            .frame(width: 12)
+
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
                             Text("My Inventory")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            Text("Click to show your share code")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .font(DesignSystem.Typography.listItemTitle)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
+                            Text(myShareExpanded ? "Tap to collapse" : "Tap to show share code")
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                         Spacer()
-                        Image(systemName: myShareExpanded ? "chevron.up" : "chevron.down")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
+
+                        // Show share code preview when collapsed
+                        if !myShareExpanded {
+                            Text(shareCode.formattedShareCode)
+                                .font(.system(.subheadline, design: .monospaced))
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                        }
                     }
                     .contentShape(Rectangle())
                 }
@@ -122,17 +138,19 @@ struct InventorySharingView: View {
                 .accessibilityIdentifier("inventory_sharing_my_inventory_toggle")
 
                 if myShareExpanded {
+                    // Share code display with actions
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-                        // Large share code display
                         HStack {
                             Text(shareCode.formattedShareCode)
                                 .font(.system(.title, design: .monospaced))
-                                .fontWeight(.bold)
+                                .fontWeight(DesignSystem.FontWeight.bold)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
 
                             Button {
                                 viewModel.copyShareCode()
                             } label: {
                                 Image(systemName: "doc.on.doc")
+                                    .foregroundColor(DesignSystem.Colors.moltenOrange)
                             }
                             .buttonStyle(.borderless)
                             .accessibilityIdentifier("inventory_sharing_copy_code")
@@ -143,12 +161,13 @@ struct InventorySharingView: View {
                                 shareDeepLink(shareCode: shareCode.unformattedShareCode)
                             } label: {
                                 Image(systemName: "square.and.arrow.up")
+                                    .foregroundColor(DesignSystem.Colors.moltenOrange)
                             }
                             .buttonStyle(.borderless)
                             .accessibilityIdentifier("inventory_sharing_share_code")
                         }
 
-                        // QR Code for easy scanning (deep link to add friend)
+                        // QR Code for easy scanning
                         let deepLinkURL = "molten://inventory/\(shareCode.unformattedShareCode)"
                         if let qrImage = generateQRCode(from: deepLinkURL) {
                             HStack {
@@ -158,6 +177,7 @@ struct InventorySharingView: View {
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 200, height: 200)
+                                    .cornerRadius(DesignSystem.CornerRadius.medium)
                                 Spacer()
                             }
                             .padding(.vertical, DesignSystem.Spacing.sm)
@@ -165,34 +185,36 @@ struct InventorySharingView: View {
                     }
                     .padding(.vertical, DesignSystem.Spacing.xs)
 
+                    // Metadata display
                     if let metadata = viewModel.myShareMetadata {
-                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                                    Text("Display Name: \(metadata.displayName)")
-                                        .font(.subheadline)
+                        HStack {
+                            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                                Text("Display Name: \(metadata.displayName)")
+                                    .font(DesignSystem.Typography.listItemSubtitle)
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
 
-                                    if let notes = metadata.shareNotes {
-                                        Text("Notes: \(notes)")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
+                                if let notes = metadata.shareNotes {
+                                    Text("Notes: \(notes)")
+                                        .font(DesignSystem.Typography.listItemCaption)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                 }
-
-                                Spacer()
-
-                                Button {
-                                    viewModel.showingEditMetadata = true
-                                } label: {
-                                    Image(systemName: "pencil")
-                                }
-                                .buttonStyle(.borderless)
-                                .accessibilityIdentifier("inventory_sharing_edit_metadata")
                             }
+
+                            Spacer()
+
+                            Button {
+                                viewModel.showingEditMetadata = true
+                            } label: {
+                                Image(systemName: "pencil")
+                                    .foregroundColor(DesignSystem.Colors.moltenOrange)
+                            }
+                            .buttonStyle(.borderless)
+                            .accessibilityIdentifier("inventory_sharing_edit_metadata")
                         }
                         .padding(.vertical, DesignSystem.Spacing.xs)
                     }
 
+                    // Refresh action
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                         Button {
                             Task {
@@ -201,18 +223,20 @@ struct InventorySharingView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "arrow.clockwise")
-                                Text("Update Inventory on Server Immediately")
+                                Text("Update Inventory on Server")
                             }
+                            .font(DesignSystem.Typography.listItemSubtitle)
                         }
                         .disabled(viewModel.isLoading)
                         .accessibilityIdentifier("inventory_sharing_refresh")
 
-                        Text("Re-uploads your current inventory to update what friends see. If you don't do this, it will refresh every 24 hours as long as you open the app during that time. All refreshes, whether automatic or manual, also reset the 90-day auto-deletion timer.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .padding(.leading, DesignSystem.Spacing.md)
+                        Text("Re-uploads your inventory to update what friends see. Auto-refreshes every 24 hours when you open the app.")
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                            .padding(.leading, DesignSystem.Spacing.xl)
                     }
 
+                    // Delete action
                     Button(role: .destructive) {
                         Task {
                             await viewModel.deleteMyShare()
@@ -222,6 +246,8 @@ struct InventorySharingView: View {
                             Image(systemName: "trash")
                             Text("Delete Share")
                         }
+                        .font(DesignSystem.Typography.listItemSubtitle)
+                        .foregroundColor(DesignSystem.Colors.accentDanger)
                     }
                     .disabled(viewModel.isLoading)
                     .accessibilityIdentifier("inventory_sharing_delete")
@@ -230,18 +256,28 @@ struct InventorySharingView: View {
             } else {
                 // No share code - show clickable row to create
                 Button(action: { viewModel.showingCreateShare = true }) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                            Text("My Inventory")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            Text("Click to share your inventory")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+                    HStack(spacing: DesignSystem.Spacing.md) {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.title3)
+                            .foregroundColor(DesignSystem.Colors.moltenOrange)
+                            .frame(width: 44, height: 44)
+                            .background(DesignSystem.Colors.moltenOrange.opacity(0.1))
+                            .clipShape(Circle())
+
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                            Text("Share My Inventory")
+                                .font(DesignSystem.Typography.listItemTitle)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
+                            Text("Let friends see what glass you have")
+                                .font(DesignSystem.Typography.listItemSubtitle)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
+
                         Spacer()
-                        Image(systemName: "plus.circle")
-                            .foregroundColor(.accentColor)
+
+                        Image(systemName: "chevron.right")
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
                 .buttonStyle(.plain)
@@ -295,21 +331,26 @@ struct InventorySharingView: View {
     private var expiringSharesSection: some View {
         Section {
             if viewModel.myShareCode != nil {
-                // Header row (always visible)
-                Button(action: { expiringSharesExpanded.toggle() }) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                            Text("Temporary Shares")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            Text("\(viewModel.expiringShares.count) active")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
+                // Header row using CollapsibleSectionHeader pattern
+                Button(action: { withAnimation { expiringSharesExpanded.toggle() } }) {
+                    HStack(spacing: DesignSystem.Spacing.md) {
+                        Image(systemName: expiringSharesExpanded ? "chevron.down" : "chevron.right")
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                            .frame(width: 12)
+
+                        Image(systemName: "clock.arrow.circlepath")
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                        Text("Temporary Shares")
+                            .font(DesignSystem.Typography.listItemTitle)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
+
                         Spacer()
-                        Image(systemName: expiringSharesExpanded ? "chevron.up" : "chevron.down")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
+
+                        Text("\(viewModel.expiringShares.count) active")
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     .contentShape(Rectangle())
                 }
@@ -324,9 +365,11 @@ struct InventorySharingView: View {
                     Button {
                         viewModel.showingCreateExpiringShare = true
                     } label: {
-                        HStack {
-                            Image(systemName: "clock.arrow.circlepath")
+                        HStack(spacing: DesignSystem.Spacing.xs) {
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundColor(DesignSystem.Colors.moltenOrange)
                             Text("Create Temporary Share")
+                                .font(DesignSystem.Typography.listItemSubtitle)
                         }
                     }
                     .accessibilityIdentifier("inventory_sharing_create_temporary")
@@ -340,25 +383,42 @@ struct InventorySharingView: View {
     private var friendsSection: some View {
         Section {
             if viewModel.friendShares.isEmpty {
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                // Empty state
+                VStack(alignment: .center, spacing: DesignSystem.Spacing.md) {
+                    Image(systemName: "person.2")
+                        .font(.system(size: 40))
+                        .foregroundColor(DesignSystem.Colors.textTertiary)
+                        .padding(.bottom, DesignSystem.Spacing.xs)
+
                     Text("No Friends Yet")
-                        .font(.headline)
+                        .font(DesignSystem.Typography.listItemTitle)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
 
                     Text("Add friends to view their glass inventory")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(DesignSystem.Typography.listItemSubtitle)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .multilineTextAlignment(.center)
 
                     Button {
                         viewModel.showingAddFriend = true
                     } label: {
-                        HStack {
+                        HStack(spacing: DesignSystem.Spacing.xs) {
                             Image(systemName: "person.badge.plus")
                             Text("Add Friend")
                         }
+                        .font(DesignSystem.Typography.listItemSubtitle)
+                        .fontWeight(DesignSystem.FontWeight.semibold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, DesignSystem.Spacing.xl)
+                        .padding(.vertical, DesignSystem.Spacing.md)
+                        .background(DesignSystem.Colors.moltenOrange)
+                        .cornerRadius(DesignSystem.CornerRadius.medium)
                     }
+                    .buttonStyle(.plain)
                     .accessibilityIdentifier("inventory_sharing_add_friend")
                 }
-                .padding(.vertical, DesignSystem.Spacing.xs)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DesignSystem.Spacing.lg)
 
             } else {
                 ForEach(viewModel.friendShares) { friend in
@@ -395,12 +455,15 @@ struct InventorySharingView: View {
                     }
                 }
 
+                // Add friend button
                 Button {
                     viewModel.showingAddFriend = true
                 } label: {
-                    HStack {
-                        Image(systemName: "person.badge.plus")
+                    HStack(spacing: DesignSystem.Spacing.xs) {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(DesignSystem.Colors.moltenOrange)
                         Text("Add Friend")
+                            .font(DesignSystem.Typography.listItemSubtitle)
                     }
                 }
                 .accessibilityIdentifier("inventory_sharing_add_friend")
@@ -437,38 +500,6 @@ struct FriendRowView: View {
             return Color(hex: hex)
         }
         return Color(hex: FriendShare.defaultIconForegroundHex)
-    }
-
-    private var relativeTimeString: String {
-        guard let lastRefreshed = friend.lastRefreshed else { return "" }
-        let seconds = currentTime.timeIntervalSince(lastRefreshed)
-
-        // Less than a minute
-        if seconds < 60 {
-            return "< 1 min"
-        }
-
-        // Minutes (1-59)
-        if seconds < 3600 {
-            let minutes = Int(seconds / 60)
-            return "\(minutes) min"
-        }
-
-        // Hours (1-23)
-        if seconds < 86400 {
-            let hours = Int(seconds / 3600)
-            return hours == 1 ? "1 hr" : "\(hours) hrs"
-        }
-
-        // Days (1-6)
-        if seconds < 604800 {
-            let days = Int(seconds / 86400)
-            return days == 1 ? "1 day" : "\(days) days"
-        }
-
-        // Weeks
-        let weeks = Int(seconds / 604800)
-        return weeks == 1 ? "1 week" : "\(weeks) weeks"
     }
 
     private func timeUntilExpiration(_ expiresAt: Date) -> String {
@@ -514,37 +545,40 @@ struct FriendRowView: View {
                 )
 
             // Friend info
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
                 if let nickname = friend.nickname, !nickname.isEmpty {
                     Text(nickname)
-                        .font(.headline)
+                        .font(DesignSystem.Typography.listItemTitle)
                     Text(friend.friendName)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(DesignSystem.Typography.listItemSubtitle)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 } else {
                     Text(friend.friendName)
-                        .font(.headline)
+                        .font(DesignSystem.Typography.listItemTitle)
                 }
 
-                HStack {
-                    Text(friend.shareCode.formattedShareCode)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                // Share code on its own line
+                Text(friend.shareCode.formattedShareCode)
+                    .font(DesignSystem.Typography.listItemCaption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+            }
 
-                    // All shares have expiration times (90 days for regular, 7 days for temporary)
-                    if let expiresAt = friend.expiresAt {
-                        Text("•")
-                            .foregroundColor(.secondary)
-                        if expiresAt < currentTime {
-                            Text("Expired")
-                                .font(.caption)
-                                .foregroundColor(.red)
-                        } else {
-                            Text("Expires in \(timeUntilExpiration(expiresAt))")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
+            Spacer()
+
+            // Trailing: Inventory stats badge (if available) and/or expiration badge
+            VStack(alignment: .trailing, spacing: DesignSystem.Spacing.xs) {
+                // Inventory stats (cached from last view)
+                if let itemCount = friend.itemCount {
+                    InventoryStatsBadge(
+                        itemCount: itemCount,
+                        totalQuantity: friend.totalQuantity,
+                        totalWeight: friend.totalWeight
+                    )
+                }
+
+                // Expiration badge
+                if let expiresAt = friend.expiresAt {
+                    ExpirationBadge(expiresAt: expiresAt, currentTime: currentTime)
                 }
             }
         }
@@ -558,6 +592,150 @@ struct FriendRowView: View {
     }
 }
 
+// MARK: - Inventory Stats Badge
+
+/// Displays cached inventory stats for a friend's inventory
+struct InventoryStatsBadge: View {
+    let itemCount: Int
+    let totalQuantity: Double?
+    let totalWeight: Double?
+
+    private var formattedQuantity: String {
+        guard let qty = totalQuantity, qty > 0 else { return "" }
+        if qty.truncatingRemainder(dividingBy: 1) == 0 {
+            return String(format: "%.0f", qty)
+        } else {
+            return String(format: "%.1f", qty)
+        }
+    }
+
+    /// Format weight with appropriate unit (converting to lbs/kg if large enough)
+    private var formattedWeight: String {
+        guard let weight = totalWeight, weight > 0 else { return "" }
+
+        let preferredUnit = WeightUnitPreference.current
+
+        switch preferredUnit {
+        case .ounces:
+            // Convert to pounds if >= 16 oz
+            if weight >= 16 {
+                let pounds = weight / 16.0
+                if pounds.truncatingRemainder(dividingBy: 1) == 0 {
+                    return String(format: "%.0f lbs", pounds)
+                } else {
+                    return String(format: "%.1f lbs", pounds)
+                }
+            } else {
+                if weight.truncatingRemainder(dividingBy: 1) == 0 {
+                    return String(format: "%.0f oz", weight)
+                } else {
+                    return String(format: "%.1f oz", weight)
+                }
+            }
+        case .grams:
+            // Convert to kg if >= 1000 g
+            if weight >= 1000 {
+                let kg = weight / 1000.0
+                if kg.truncatingRemainder(dividingBy: 1) == 0 {
+                    return String(format: "%.0f kg", kg)
+                } else {
+                    return String(format: "%.1f kg", kg)
+                }
+            } else {
+                if weight.truncatingRemainder(dividingBy: 1) == 0 {
+                    return String(format: "%.0f g", weight)
+                } else {
+                    return String(format: "%.1f g", weight)
+                }
+            }
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .trailing, spacing: DesignSystem.Spacing.xxs) {
+            // Unique item count (prominent)
+            HStack(spacing: DesignSystem.Spacing.xxs) {
+                Text("\(itemCount)")
+                    .font(DesignSystem.Typography.prominentNumberSmall)
+                    .fontWeight(DesignSystem.FontWeight.semibold)
+                    .foregroundColor(DesignSystem.Colors.moltenTeal)
+
+                Text(itemCount == 1 ? "item" : "items")
+                    .font(DesignSystem.Typography.listItemCaptionSmall)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+            }
+
+            // Total quantity (secondary) - only show if > 0
+            if let qty = totalQuantity, qty > 0 {
+                Text("\(formattedQuantity) qty")
+                    .font(DesignSystem.Typography.listItemCaptionSmall)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+            }
+
+            // Total weight (secondary) - only show if > 0
+            if let weight = totalWeight, weight > 0 {
+                Text(formattedWeight)
+                    .font(DesignSystem.Typography.listItemCaptionSmall)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+            }
+        }
+    }
+}
+
+// MARK: - Expiration Badge
+
+/// Displays time until expiration with appropriate color coding
+struct ExpirationBadge: View {
+    let expiresAt: Date
+    let currentTime: Date
+
+    private var isExpired: Bool {
+        expiresAt < currentTime
+    }
+
+    private var isExpiringSoon: Bool {
+        let hoursRemaining = expiresAt.timeIntervalSince(currentTime) / 3600
+        return hoursRemaining > 0 && hoursRemaining < 24
+    }
+
+    private var timeString: String {
+        let seconds = expiresAt.timeIntervalSince(currentTime)
+
+        if seconds <= 0 {
+            return "Expired"
+        }
+
+        if seconds < 3600 {
+            let minutes = Int(seconds / 60)
+            return "\(minutes)m"
+        }
+
+        if seconds < 86400 {
+            let hours = Int(seconds / 3600)
+            return "\(hours)h"
+        }
+
+        let days = Int(seconds / 86400)
+        return "\(days)d"
+    }
+
+    private var displayColor: Color {
+        if isExpired {
+            return DesignSystem.Colors.accentDanger
+        } else if isExpiringSoon {
+            return DesignSystem.Colors.moltenAmber
+        } else {
+            return DesignSystem.Colors.textSecondary
+        }
+    }
+
+    var body: some View {
+        Text(isExpired ? "Expired" : "\(timeString) left")
+            .font(DesignSystem.Typography.listItemCaptionSmall)
+            .foregroundColor(displayColor)
+    }
+}
+
 // MARK: - Expiring Share Row View
 
 struct ExpiringShareRowView: View {
@@ -565,60 +743,66 @@ struct ExpiringShareRowView: View {
     @Bindable var viewModel: InventorySharingViewModel
 
     @State private var showingDeleteConfirmation = false
+    @State private var currentTime = Date()
+
+    private let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-            HStack {
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                    // Share code - large and bold at top
-                    HStack {
-                        Text(share.shareCode.formattedShareCode)
-                            .font(.system(.title3, design: .monospaced))
-                            .fontWeight(.bold)
+        HStack(spacing: DesignSystem.Spacing.md) {
+            // Left side: Share info
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xxs) {
+                // Display name as title
+                Text(share.displayName)
+                    .font(DesignSystem.Typography.listItemTitle)
 
-                        Button {
-                            viewModel.copyExpiringShareCode(share.shareCode)
-                        } label: {
-                            Image(systemName: "doc.on.doc")
-                        }
-                        .buttonStyle(.borderless)
+                // Share code - monospaced with copy button
+                HStack(spacing: DesignSystem.Spacing.xs) {
+                    Text(share.shareCode.formattedShareCode)
+                        .font(.system(.subheadline, design: .monospaced))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                    Button {
+                        viewModel.copyExpiringShareCode(share.shareCode)
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.moltenOrange)
                     }
-
-                    // Display name
-                    Text(share.displayName)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    if let notes = share.shareNotes {
-                        Text(notes)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                    }
-
-                    HStack {
-                        Image(systemName: share.isExpired ? "clock.badge.xmark" : "clock")
-                            .font(.caption)
-                            .foregroundColor(share.isExpired ? .red : .secondary)
-
-                        Text(share.expirationDisplayString)
-                            .font(.caption)
-                            .foregroundColor(share.isExpired ? .red : .secondary)
-                    }
+                    .buttonStyle(.borderless)
                 }
 
-                Spacer()
+                // Notes if present
+                if let notes = share.shareNotes, !notes.isEmpty {
+                    Text(notes)
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .lineLimit(2)
+                }
+            }
+
+            Spacer()
+
+            // Right side: Time remaining badge + delete button
+            HStack(spacing: DesignSystem.Spacing.md) {
+                ExpirationBadge(expiresAt: share.expiresAt, currentTime: currentTime)
 
                 Button(role: .destructive) {
                     showingDeleteConfirmation = true
                 } label: {
                     Image(systemName: "trash")
-                        .foregroundColor(.red)
+                        .font(DesignSystem.Typography.listItemSubtitle)
+                        .foregroundColor(DesignSystem.Colors.accentDanger)
                 }
                 .buttonStyle(.borderless)
             }
         }
         .padding(.vertical, DesignSystem.Spacing.xs)
+        .onReceive(timer) { _ in
+            currentTime = Date()
+        }
+        .onAppear {
+            currentTime = Date()
+        }
         .alert("Delete Temporary Share?", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {

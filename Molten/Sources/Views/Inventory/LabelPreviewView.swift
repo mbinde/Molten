@@ -181,7 +181,7 @@ struct LabelPreviewView: View {
                     let qrSize = previewHeight * effectiveQRSize
                     VStack {
                         Spacer()
-                        QRCodeView(stableId: sampleData.stableId, service: service)
+                        QRCodeView(labelData: sampleData, service: service)
                             .frame(width: qrSize * 0.9, height: qrSize * 0.9)
                             .padding(.leading, 4)
                         Spacer()
@@ -234,7 +234,7 @@ struct LabelPreviewView: View {
                     let qrSize = previewHeight * effectiveQRSize
                     VStack {
                         Spacer()
-                        QRCodeView(stableId: sampleData.stableId, service: service)
+                        QRCodeView(labelData: sampleData, service: service)
                             .frame(width: qrSize * 0.9, height: qrSize * 0.9)
                             .padding(.trailing, 4)
                         Spacer()
@@ -249,7 +249,7 @@ struct LabelPreviewView: View {
                     let qrSize = previewHeight * effectiveQRSize
                     VStack {
                         Spacer()
-                        QRCodeView(stableId: sampleData.stableId, service: service)
+                        QRCodeView(labelData: sampleData, service: service)
                             .frame(width: qrSize * 0.9, height: qrSize * 0.9)
                             .padding(.leading, 4)
                         Spacer()
@@ -269,7 +269,7 @@ struct LabelPreviewView: View {
                     let qrSize = previewHeight * effectiveQRSize
                     VStack {
                         Spacer()
-                        QRCodeView(stableId: sampleData.stableId, service: service)
+                        QRCodeView(labelData: sampleData, service: service)
                             .frame(width: qrSize * 0.9, height: qrSize * 0.9)
                             .padding(.trailing, 4)
                         Spacer()
@@ -498,24 +498,36 @@ struct LabelPreviewView: View {
 
 /// QR Code generator view
 private struct QRCodeView: View {
-    let stableId: String
+    let labelData: LabelData
     let service: LabelPrintingService
 
     @State private var qrImage: UIImage?
 
+    /// Cache key for detecting changes
+    private var cacheKey: String {
+        [labelData.stableId, labelData.inventoryType, labelData.inventorySubtype, labelData.inventorySubsubtype]
+            .compactMap { $0 }
+            .joined(separator: ":")
+    }
+
     var body: some View {
-        if let qrImage = qrImage {
-            Image(uiImage: qrImage)
-                .resizable()
-                .interpolation(.none)
-                .aspectRatio(contentMode: .fit)
-        } else {
-            Rectangle()
-                .fill(Color.gray.opacity(0.2))
-                .onAppear {
-                    // Generate QR code once on appear
-                    qrImage = service.generateQRCode(for: stableId)
-                }
+        Group {
+            if let qrImage = qrImage {
+                Image(uiImage: qrImage)
+                    .resizable()
+                    .interpolation(.none)
+                    .aspectRatio(contentMode: .fit)
+            } else {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.2))
+            }
+        }
+        .onAppear {
+            qrImage = service.generateQRCode(for: labelData)
+        }
+        .onChange(of: cacheKey) { _, _ in
+            // Regenerate QR code when label data changes
+            qrImage = service.generateQRCode(for: labelData)
         }
     }
 }

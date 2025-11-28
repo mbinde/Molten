@@ -113,6 +113,11 @@ class InventorySharingViewModel {
         }
     }
 
+    /// Refresh friend list to pick up updated cached stats (item count, quantity, weight)
+    func refreshFriendList() {
+        friendShares = sharingManager.getFriendShares()
+    }
+
     // MARK: - My Share
 
     func createMyShare() async {
@@ -375,9 +380,6 @@ class InventorySharingViewModel {
             return
         }
 
-        print("🔍 [VIEWMODEL] Main share code: \(mainShareCode)")
-        print("🔍 [VIEWMODEL] Main share code (unformatted): \(mainShareCode.unformattedShareCode)")
-
         guard !expiringShareDisplayName.trimmingCharacters(in: .whitespaces).isEmpty else {
             errorMessage = "Please enter a display name for the expiring share"
             return
@@ -400,8 +402,6 @@ class InventorySharingViewModel {
 
             // Use unformatted share code (remove dash)
             let unformattedMainShareCode = mainShareCode.unformattedShareCode
-
-            print("🔍 [VIEWMODEL] Sending mainShareCode: \(unformattedMainShareCode)")
 
             // Call server to create expiring share
             let (shareCode, expiresAt) = try await apiClient.createExpiringShare(

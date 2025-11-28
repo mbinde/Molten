@@ -30,15 +30,16 @@ struct CreateShareView: View {
                 Section {
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                         Label("Automatic Deletion", systemImage: "clock.arrow.circlepath")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
+                            .font(DesignSystem.Typography.listItemSubtitle)
+                            .fontWeight(DesignSystem.FontWeight.medium)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
 
                         Text("Your share will be automatically deleted from the server 90 days after your last inventory update. Update your inventory at least once every 90 days to keep your share active.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         Text("You can revoke your share at any time on the Inventory Sharing screen, and it will disappear from other devices the next time they try to open it.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     .padding(.vertical, DesignSystem.Spacing.xs)
                 } header: {
@@ -48,8 +49,8 @@ struct CreateShareView: View {
                 if let error = viewModel.errorMessage {
                     Section {
                         Text(error)
-                            .foregroundColor(.red)
-                            .font(.caption)
+                            .foregroundColor(DesignSystem.Colors.accentDanger)
+                            .font(DesignSystem.Typography.listItemCaption)
                     }
                 }
             }

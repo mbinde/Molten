@@ -58,3 +58,7 @@ Molten/Sources/Resources/glassitems.json
 
 # SQLite databases (generated/temporary)
 Molten/Resources/catalog.db
+
+# Auto-generated build info (keep README for directory structure)
+Molten/Sources/Generated/*
+!Molten/Sources/Generated/README.md

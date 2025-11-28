@@ -49,13 +49,13 @@ struct LocationsView: View {
                                 }
                             } label: {
                                 Text("Suggest a location")
-                                    .font(.caption)
-                                    .foregroundStyle(Color.accentColor)
+                                    .font(DesignSystem.Typography.listItemCaptionSmall)
+                                    .foregroundStyle(DesignSystem.Colors.moltenTeal)
                             }
                             .padding(.trailing, DesignSystem.Padding.standard)
                         }
-                        .padding(.vertical, 4)
-                        .padding(.bottom, 4)
+                        .padding(.vertical, DesignSystem.Spacing.xs)
+                        .padding(.bottom, DesignSystem.Spacing.xs)
                     }
                 }
 
@@ -302,12 +302,12 @@ struct LocationsView: View {
                         ZStack {
                             // Outer colored ring
                             Circle()
-                                .stroke(ringColor(for: location), lineWidth: 3)
+                                .stroke(Color.black, lineWidth: 3)
                                 .frame(width: 40, height: 40)
 
-                            // Blue background circle
+                            // Orange background circle
                             Circle()
-                                .fill(DesignSystem.Colors.accentPrimary)
+                                .fill(DesignSystem.Colors.moltenOrange)
                                 .frame(width: 34, height: 34)
 
                             // White icon(s)
@@ -324,7 +324,7 @@ struct LocationsView: View {
                 Annotation("My Location", coordinate: userLoc.coordinate) {
                     ZStack {
                         Circle()
-                            .fill(.blue)
+                            .fill(DesignSystem.Colors.moltenTeal)
                             .frame(width: 20, height: 20)
 
                         Circle()
@@ -430,11 +430,6 @@ struct LocationsView: View {
 
         viewModel.updateMapCenter(userLocation)
         viewModel.updateMapBounds(minLat: minLat, maxLat: maxLat, minLon: minLon, maxLon: maxLon)
-    }
-
-    /// Determine ring color based on location capabilities
-    private func ringColor(for location: AnyLocationModel) -> Color {
-        return .black
     }
 
     /// Determine marker icon based on location capabilities

@@ -55,15 +55,12 @@ final class BackgroundUpdateService {
             return
         }
 
-        log.info("🔍 Starting background update check")
-
         // Update timestamp before check (so we don't retry immediately on error)
         preferences.lastUpdateCheck = Date()
 
         do {
             // Check for available updates
             guard let updateInfo = try await updateService.checkForUpdates() else {
-                log.info("✅ No catalog updates available")
                 return
             }
 

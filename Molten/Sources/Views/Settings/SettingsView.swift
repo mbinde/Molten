@@ -34,6 +34,7 @@ struct SettingsView: View {
     @State private var catalogUpdateViewModel: CatalogUpdateViewModel
     @State private var thumbnailDisplayMode: UserSettings.ThumbnailDisplayMode = UserSettings.shared.thumbnailDisplayMode
     @State private var colorChipDisplayMode: UserSettings.ColorChipDisplayMode = UserSettings.shared.colorChipDisplayMode
+    @State private var qrScanBehavior: UserSettings.QRScanBehavior = UserSettings.shared.qrScanBehavior
 
     init(
         catalogService: CatalogService = AppDependencies().catalogService,
@@ -101,17 +102,27 @@ struct SettingsView: View {
         )
     }
 
+    private var qrScanBehaviorBinding: Binding<UserSettings.QRScanBehavior> {
+        Binding(
+            get: { qrScanBehavior },
+            set: {
+                qrScanBehavior = $0
+                UserSettings.shared.qrScanBehavior = $0
+            }
+        )
+    }
+
     // Subscription computed properties
     private var subscriptionBadge: String {
         subscriptionViewModel.hasProAccess ? "Pro" : "Free"
     }
 
     private var subscriptionBadgeColor: Color {
-        subscriptionViewModel.hasProAccess ? .white : .blue
+        subscriptionViewModel.hasProAccess ? .white : DesignSystem.Colors.moltenTeal
     }
 
     private var subscriptionBadgeBackground: Color {
-        subscriptionViewModel.hasProAccess ? .yellow : .blue.opacity(0.2)
+        subscriptionViewModel.hasProAccess ? DesignSystem.Colors.moltenOrange : DesignSystem.Colors.tintTeal
     }
 
     private var colorScheme: ColorScheme? {
@@ -172,18 +183,18 @@ struct SettingsView: View {
 
                             if let updateMessage = catalogUpdateViewModel.updateAvailableMessage {
                                 Text(updateMessage)
-                                    .font(.caption)
-                                    .foregroundColor(Color.accentColor)
+                                    .font(DesignSystem.Typography.listItemCaption)
+                                    .foregroundColor(DesignSystem.Colors.moltenOrange)
                             } else {
                                 Text("v\(catalogUpdateViewModel.currentVersion)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .font(DesignSystem.Typography.listItemCaption)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                     }
                     .accessibilityIdentifier("settings_catalog_updates")
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                         Picker("Show Color Chips", selection: colorChipDisplayModeBinding) {
                             ForEach(UserSettings.ColorChipDisplayMode.allCases, id: \.self) { mode in
                                 Text(mode.displayName).tag(mode)
@@ -192,8 +203,8 @@ struct SettingsView: View {
                         .pickerStyle(.menu)
 
                         Text(colorChipDisplayMode.description)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
 
                     Toggle("Expand Manufacturer Descriptions by Default", isOn: Binding(
@@ -211,6 +222,20 @@ struct SettingsView: View {
                     Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
                         .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
                         .accessibilityIdentifier("settings_show_ratings")
+
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        Picker("QR Code Scan Opens", selection: qrScanBehaviorBinding) {
+                            ForEach(UserSettings.QRScanBehavior.allCases, id: \.self) { behavior in
+                                Text(behavior.displayName).tag(behavior)
+                            }
+                        }
+                        .pickerStyle(.menu)
+
+                        Text(qrScanBehavior.description)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                    .accessibilityIdentifier("settings_qr_scan_behavior")
                 }
 
                 // MARK: - Sorting and Filtering
@@ -311,7 +336,7 @@ struct SettingsView: View {
                 // MARK: - Projects and Logs
                 if FeatureFlags.ENABLE_PROJECTS {
                     Section("Projects and Logs") {
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                             Picker("Project Thumbnail Style", selection: thumbnailDisplayModeBinding) {
                                 ForEach(UserSettings.ThumbnailDisplayMode.allCases, id: \.self) { mode in
                                     Text(mode.displayName).tag(mode)
@@ -320,8 +345,8 @@ struct SettingsView: View {
                             .pickerStyle(.menu)
 
                             Text(thumbnailDisplayMode.description)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                 }
@@ -373,7 +398,7 @@ struct SettingsView: View {
                             Spacer()
                             if BackupPreferences().isEnabled {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.green)
+                                    .foregroundColor(DesignSystem.Colors.moltenTeal)
                             }
                         }
                     }
@@ -432,12 +457,11 @@ struct SettingsView: View {
                             entitlementService.refreshTier()
                         }
                     )) {
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                             Text("Override Subscription Tier")
-                                .font(.body)
                             Text("Test premium features without purchase")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
 
@@ -458,10 +482,10 @@ struct SettingsView: View {
                         // Show current tier status
                         HStack {
                             Image(systemName: entitlementService.currentTier == .premium ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(entitlementService.currentTier == .premium ? .green : .secondary)
+                                .foregroundColor(entitlementService.currentTier == .premium ? DesignSystem.Colors.moltenTeal : DesignSystem.Colors.textSecondary)
                             Text("Current Tier: \(entitlementService.currentTier == .premium ? "Premium" : "Free")")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
 

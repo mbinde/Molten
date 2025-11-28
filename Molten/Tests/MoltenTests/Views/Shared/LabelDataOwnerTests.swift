@@ -28,6 +28,63 @@ struct LabelDataOwnerTests {
         #expect(labelData.owner == "Test Studio")
     }
 
+    // MARK: - Inventory Type Fields Tests
+
+    @Test("LabelData can be created with inventory type")
+    func labelDataCanBeCreatedWithInventoryType() async throws {
+        let labelData = LabelData(
+            stableId: "test-123",
+            manufacturer: "be",
+            sku: "001",
+            colorName: "Clear",
+            coe: "96",
+            location: nil,
+            owner: nil,
+            inventoryType: "rod"
+        )
+
+        #expect(labelData.inventoryType == "rod")
+        #expect(labelData.inventorySubtype == nil)
+        #expect(labelData.inventorySubsubtype == nil)
+    }
+
+    @Test("LabelData can be created with full inventory type hierarchy")
+    func labelDataCanBeCreatedWithFullInventoryTypeHierarchy() async throws {
+        let labelData = LabelData(
+            stableId: "test-123",
+            manufacturer: "be",
+            sku: "001",
+            colorName: "Clear",
+            coe: "96",
+            location: nil,
+            owner: nil,
+            inventoryType: "frit",
+            inventorySubtype: "coarse",
+            inventorySubsubtype: nil
+        )
+
+        #expect(labelData.inventoryType == "frit")
+        #expect(labelData.inventorySubtype == "coarse")
+        #expect(labelData.inventorySubsubtype == nil)
+    }
+
+    @Test("LabelData inventory type fields default to nil")
+    func labelDataInventoryTypeFieldsDefaultToNil() async throws {
+        let labelData = LabelData(
+            stableId: "test-123",
+            manufacturer: "be",
+            sku: "001",
+            colorName: "Clear",
+            coe: "96",
+            location: nil,
+            owner: nil
+        )
+
+        #expect(labelData.inventoryType == nil)
+        #expect(labelData.inventorySubtype == nil)
+        #expect(labelData.inventorySubsubtype == nil)
+    }
+
     @Test("LabelData owner can be nil")
     func labelDataOwnerCanBeNil() async throws {
         let labelData = LabelData(

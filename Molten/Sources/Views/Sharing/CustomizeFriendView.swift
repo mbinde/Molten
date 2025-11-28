@@ -60,15 +60,18 @@ struct CustomizeFriendView: View {
     ]
 
     // Common background colors with good contrast
+    // Molten brand colors first, then iOS system colors
     private let backgroundColors: [(name: String, color: Color, hex: String)] = [
+        // Molten brand colors
+        ("Molten Orange", DesignSystem.Colors.moltenOrange, "#FF5722"),
+        ("Molten Amber", DesignSystem.Colors.moltenAmber, "#FFC107"),
+        ("Molten Teal", DesignSystem.Colors.moltenTeal, "#00796B"),
+        // iOS system colors
         ("Blue", .blue, "#007AFF"),
         ("Purple", .purple, "#AF52DE"),
         ("Pink", .pink, "#FF2D55"),
         ("Red", .red, "#FF3B30"),
-        ("Orange", .orange, "#FF9500"),
-        ("Yellow", .yellow, "#FFCC00"),
         ("Green", .green, "#34C759"),
-        ("Teal", .teal, "#5AC8FA"),
         ("Indigo", .indigo, "#5856D6"),
         ("Brown", .brown, "#A2845E"),
         ("Gray", .gray, "#8E8E93"),
@@ -76,16 +79,19 @@ struct CustomizeFriendView: View {
     ]
 
     // Foreground/icon colors
+    // Molten brand colors first, then iOS system colors
     private let foregroundColors: [(name: String, color: Color, hex: String)] = [
         ("White", .white, "#FFFFFF"),
+        // Molten brand colors
+        ("Molten Orange", DesignSystem.Colors.moltenOrange, "#FF5722"),
+        ("Molten Amber", DesignSystem.Colors.moltenAmber, "#FFC107"),
+        ("Molten Teal", DesignSystem.Colors.moltenTeal, "#00796B"),
+        // iOS system colors
         ("Blue", .blue, "#007AFF"),
         ("Purple", .purple, "#AF52DE"),
         ("Pink", .pink, "#FF2D55"),
         ("Red", .red, "#FF3B30"),
-        ("Orange", .orange, "#FF9500"),
-        ("Yellow", .yellow, "#FFCC00"),
         ("Green", .green, "#34C759"),
-        ("Teal", .teal, "#5AC8FA"),
         ("Indigo", .indigo, "#5856D6"),
         ("Brown", .brown, "#A2845E"),
         ("Gray", .gray, "#8E8E93"),
@@ -131,7 +137,8 @@ struct CustomizeFriendView: View {
                                 )
 
                             Text(friend.friendName)
-                                .font(.headline)
+                                .font(DesignSystem.Typography.listItemTitle)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
                         }
                         Spacer()
                     }

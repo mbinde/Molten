@@ -33,13 +33,10 @@ class EntitlementService {
         // Read fresh from UserDefaults to get the most current debug settings
         let overrideEnabled = UserDefaults.standard.bool(forKey: "debugOverrideSubscriptionTier")
         let tierValue = UserDefaults.standard.integer(forKey: "debugSubscriptionTierValue")
-        print("🔍 [EntitlementService] currentTier check - overrideEnabled: \(overrideEnabled), tierValue: \(tierValue), baseTier: \(tier)")
         if overrideEnabled {
             let result: SubscriptionTier = tierValue == 1 ? .premium : .free
-            print("🔍 [EntitlementService] Using debug override: \(result)")
             return result
         }
-        print("🔍 [EntitlementService] Using base tier: \(tier)")
         return tier
     }
 

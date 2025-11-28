@@ -524,6 +524,7 @@ struct LabelDesignerView: View {
         let item = items[index]
         let glassItem = item.glassItem
         let location = item.locations.first
+        let inventory = item.inventory.first  // Use first inventory record for type info
 
         return LabelData(
             stableId: glassItem.stable_id,
@@ -532,7 +533,10 @@ struct LabelDesignerView: View {
             colorName: glassItem.name,
             coe: "\(glassItem.coe)",
             location: location,
-            owner: UserSettings.shared.inventoryOwner
+            owner: UserSettings.shared.inventoryOwner,
+            inventoryType: inventory?.type,
+            inventorySubtype: inventory?.subtype,
+            inventorySubsubtype: inventory?.subsubtype
         )
     }
 
@@ -550,29 +554,12 @@ struct LabelDesignerView: View {
         isGenerating = true
         errorMessage = nil
 
-        // Convert CompleteInventoryItemModel to LabelData, using LabelCountCalculator for proper handling
-        var labelData: [LabelData] = []
-
-        for item in items {
-            let glassItem = item.glassItem
-            let location = item.locations.first
-
-            // Use LabelCountCalculator which handles weight-based types properly
-            let labelCount = LabelCountCalculator.calculateLabelCount(for: item, userOverrides: labelCountOverrides)
-
-            // Create one label for each item (uses quantity for count-based, or user-specified for weight-based)
-            for _ in 0..<labelCount {
-                labelData.append(LabelData(
-                    stableId: glassItem.stable_id,
-                    manufacturer: glassItem.manufacturer,
-                    sku: glassItem.sku,
-                    colorName: glassItem.name,
-                    coe: "\(glassItem.coe)",
-                    location: location,
-                    owner: UserSettings.shared.inventoryOwner
-                ))
-            }
-        }
+        // Generate LabelData with proper type info for QR codes
+        let labelData = LabelCountCalculator.generateLabelData(
+            for: items,
+            userOverrides: labelCountOverrides,
+            owner: UserSettings.shared.inventoryOwner
+        )
 
         // Generate PDF with adjustments and start position
         guard let pdfURL = await service.generateLabelSheet(

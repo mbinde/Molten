@@ -34,6 +34,7 @@ struct SettingsView: View {
     @State private var catalogUpdateViewModel: CatalogUpdateViewModel
     @State private var thumbnailDisplayMode: UserSettings.ThumbnailDisplayMode = UserSettings.shared.thumbnailDisplayMode
     @State private var colorChipDisplayMode: UserSettings.ColorChipDisplayMode = UserSettings.shared.colorChipDisplayMode
+    @State private var qrScanBehavior: UserSettings.QRScanBehavior = UserSettings.shared.qrScanBehavior
 
     init(
         catalogService: CatalogService = AppDependencies().catalogService,
@@ -97,6 +98,16 @@ struct SettingsView: View {
             set: {
                 colorChipDisplayMode = $0
                 UserSettings.shared.colorChipDisplayMode = $0
+            }
+        )
+    }
+
+    private var qrScanBehaviorBinding: Binding<UserSettings.QRScanBehavior> {
+        Binding(
+            get: { qrScanBehavior },
+            set: {
+                qrScanBehavior = $0
+                UserSettings.shared.qrScanBehavior = $0
             }
         )
     }
@@ -211,6 +222,20 @@ struct SettingsView: View {
                     Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
                         .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
                         .accessibilityIdentifier("settings_show_ratings")
+
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        Picker("QR Code Scan Opens", selection: qrScanBehaviorBinding) {
+                            ForEach(UserSettings.QRScanBehavior.allCases, id: \.self) { behavior in
+                                Text(behavior.displayName).tag(behavior)
+                            }
+                        }
+                        .pickerStyle(.menu)
+
+                        Text(qrScanBehavior.description)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                    .accessibilityIdentifier("settings_qr_scan_behavior")
                 }
 
                 // MARK: - Sorting and Filtering

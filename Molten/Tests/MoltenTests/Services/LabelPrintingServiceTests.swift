@@ -95,6 +95,71 @@ struct LabelPrintingServiceTests {
         #expect(qrImage.size.width > 0)
     }
 
+    // MARK: - QR Code Generation with Inventory Type
+
+    @Test("Generate QR code with inventory type")
+    func testGenerateQRCodeWithInventoryType() async throws {
+        let service = LabelPrintingService()
+
+        let qrImage = service.generateQRCode(for: "abc123", type: "rod", subtype: nil, subsubtype: nil)
+
+        #expect(qrImage.size.width > 0)
+        #expect(qrImage.size.height > 0)
+    }
+
+    @Test("Generate QR code with inventory type and subtype")
+    func testGenerateQRCodeWithInventoryTypeAndSubtype() async throws {
+        let service = LabelPrintingService()
+
+        let qrImage = service.generateQRCode(for: "abc123", type: "frit", subtype: "coarse", subsubtype: nil)
+
+        #expect(qrImage.size.width > 0)
+        #expect(qrImage.size.height > 0)
+    }
+
+    @Test("Generate QR code from LabelData with inventory type")
+    func testGenerateQRCodeFromLabelDataWithInventoryType() async throws {
+        let service = LabelPrintingService()
+
+        let labelData = LabelData(
+            stableId: "abc123",
+            manufacturer: "be",
+            sku: "001",
+            colorName: "Clear",
+            coe: "96",
+            location: nil,
+            owner: nil,
+            inventoryType: "frit",
+            inventorySubtype: "coarse",
+            inventorySubsubtype: nil
+        )
+
+        let qrImage = service.generateQRCode(for: labelData)
+
+        #expect(qrImage.size.width > 0)
+        #expect(qrImage.size.height > 0)
+    }
+
+    @Test("Generate QR code from LabelData without inventory type")
+    func testGenerateQRCodeFromLabelDataWithoutInventoryType() async throws {
+        let service = LabelPrintingService()
+
+        let labelData = LabelData(
+            stableId: "abc123",
+            manufacturer: "be",
+            sku: "001",
+            colorName: "Clear",
+            coe: "96",
+            location: nil,
+            owner: nil
+        )
+
+        let qrImage = service.generateQRCode(for: labelData)
+
+        #expect(qrImage.size.width > 0)
+        #expect(qrImage.size.height > 0)
+    }
+
     // MARK: - Label Builder Configuration Tests
 
     @Test("LabelBuilderConfig default configuration")

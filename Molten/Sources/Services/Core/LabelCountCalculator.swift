@@ -91,4 +91,57 @@ struct LabelCountCalculator {
 
         return result
     }
+
+    /// Generate LabelData entries for items, with proper type info for QR codes
+    /// Each label includes the inventory type/subtype/subsubtype for accurate QR encoding
+    @MainActor
+    static func generateLabelData(
+        for items: [CompleteInventoryItemModel],
+        userOverrides: [String: Int] = [:],
+        location: String? = nil,
+        owner: String? = nil
+    ) -> [LabelData] {
+        var labelData: [LabelData] = []
+
+        for item in items {
+            let glassItem = item.glassItem
+            let itemLocation = item.locations.first ?? location
+
+            for inventory in item.inventory {
+                let key = "\(item.catalogItem.stable_id):\(inventory.type)"
+
+                // Determine label count for this inventory record
+                let labelCount: Int
+                if let override = userOverrides[key] {
+                    labelCount = override
+                } else if inventory.isWeightBasedType {
+                    if let containerCount = inventory.containerCount, containerCount > 0 {
+                        labelCount = Int(containerCount)
+                    } else {
+                        labelCount = 1
+                    }
+                } else {
+                    labelCount = Int(inventory.quantity)
+                }
+
+                // Create labels with type info
+                for _ in 0..<labelCount {
+                    labelData.append(LabelData(
+                        stableId: glassItem.stable_id,
+                        manufacturer: glassItem.manufacturer,
+                        sku: glassItem.sku,
+                        colorName: glassItem.name,
+                        coe: "\(glassItem.coe)",
+                        location: itemLocation,
+                        owner: owner,
+                        inventoryType: inventory.type,
+                        inventorySubtype: inventory.subtype,
+                        inventorySubsubtype: inventory.subsubtype
+                    ))
+                }
+            }
+        }
+
+        return labelData
+    }
 }

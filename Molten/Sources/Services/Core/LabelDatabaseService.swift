@@ -58,7 +58,12 @@ struct LabelLayout: Identifiable, Hashable, Sendable {
 
     // Shape and styling
     let cornerRadius: Double
-    let shape: String  // "rectangle", "square", "circle", "oval"
+    let shape: String  // "rectangle", "square", "circle", "oval", "barbell"
+
+    // Barbell-specific geometry (nil for non-barbell shapes)
+    let barbellFlagWidth: Double?   // Width of each printable flag area
+    let barbellWrapHeight: Double?  // Height of narrow wrap section
+    let barbellStyle: String?       // "symmetric", "t-style", "p-style", "wrap"
 
     // Page configuration
     let pageFormat: String  // "letter" or "a4"
@@ -85,6 +90,7 @@ struct LabelLayout: Identifiable, Hashable, Sendable {
         case "circle": return .circular
         case "oval": return .circular  // Treat ovals as circular for filtering
         case "square": return .square
+        case "barbell": return .flag  // Cable/wire barbell labels
         default:
             // rectangle - determine by aspect ratio
             if labelWidth > labelHeight {
@@ -157,7 +163,11 @@ struct LabelFormat: Identifiable, Hashable, Sendable {
             verticalGap: CGFloat(layout.verticalGap),
             defaultFontScale: fontScale,
             defaultQRSize: qrSize,
-            isCircular: layout.shape == "circle"
+            isCircular: layout.shape == "circle" || layout.shape == "oval",
+            isBarbell: layout.shape == "barbell",
+            barbellFlagWidth: layout.barbellFlagWidth.map { CGFloat($0) },
+            barbellWrapHeight: layout.barbellWrapHeight.map { CGFloat($0) },
+            barbellStyle: BarbellStyle(databaseValue: layout.barbellStyle)
         )
     }
 }
@@ -203,17 +213,33 @@ final class LabelDatabaseService: @unchecked Sendable {
 
     private func openDatabase() {
         guard let dbPath = Bundle.main.path(forResource: "labels", ofType: "db") else {
-            print("LabelDatabaseService: Could not find labels.db in bundle")
+            print("❌ LabelDatabaseService: Could not find labels.db in bundle")
             return
         }
+
+        print("✅ LabelDatabaseService: Found labels.db at \(dbPath)")
 
         lock.lock()
         defer { lock.unlock() }
 
         if sqlite3_open_v2(dbPath, &_db, SQLITE_OPEN_READONLY, nil) != SQLITE_OK {
-            print("LabelDatabaseService: Failed to open database")
+            print("❌ LabelDatabaseService: Failed to open database")
             _db = nil
+            return
         }
+
+        // Verify database has expected tables
+        var stmt: OpaquePointer?
+        if sqlite3_prepare_v2(_db, "SELECT COUNT(*) FROM products", -1, &stmt, nil) == SQLITE_OK {
+            if sqlite3_step(stmt) == SQLITE_ROW {
+                let count = sqlite3_column_int(stmt, 0)
+                print("✅ LabelDatabaseService: Database opened, \(count) products")
+            }
+        } else {
+            let error = String(cString: sqlite3_errmsg(_db))
+            print("❌ LabelDatabaseService: Query failed - \(error)")
+        }
+        sqlite3_finalize(stmt)
     }
 
     // MARK: - Query Methods
@@ -221,10 +247,14 @@ final class LabelDatabaseService: @unchecked Sendable {
     /// Get all brands, optionally filtered to major brands only
     func getBrands(majorOnly: Bool = false) -> [LabelBrand] {
         if let cached = _brands {
+            print("📋 LabelDatabaseService.getBrands: returning \(cached.count) cached brands")
             return majorOnly ? cached.filter { $0.isMajor } : cached
         }
 
-        guard let db = db else { return [] }
+        guard let db = db else {
+            print("❌ LabelDatabaseService.getBrands: db is nil!")
+            return []
+        }
 
         var brands: [LabelBrand] = []
         let sql = "SELECT id, name, slug, is_major FROM brands ORDER BY is_major DESC, name ASC"
@@ -249,14 +279,19 @@ final class LabelDatabaseService: @unchecked Sendable {
 
     /// Get products for a specific brand
     func getProducts(brandSlug: String) -> [LabelFormat] {
-        guard db != nil else { return [] }
+        print("📦 LabelDatabaseService.getProducts(brandSlug: '\(brandSlug)')")
+        guard db != nil else {
+            print("❌ LabelDatabaseService.getProducts: db is nil!")
+            return []
+        }
 
         let sql = """
             SELECT p.id, p.brand_id, p.layout_id, p.sku, p.display_name, p.description, p.source_url,
                    b.name AS brand_name, b.slug AS brand_slug,
                    l.label_width, l.label_height, l.columns, l.rows,
                    l.left_margin, l.top_margin, l.horizontal_gap, l.vertical_gap,
-                   l.corner_radius, l.shape, l.page_format, l.page_width, l.page_height, l.labels_per_sheet
+                   l.corner_radius, l.shape, l.page_format, l.page_width, l.page_height, l.labels_per_sheet,
+                   l.barbell_flag_width, l.barbell_wrap_height, l.barbell_style
             FROM products p
             JOIN brands b ON p.brand_id = b.id
             JOIN layouts l ON p.layout_id = l.id
@@ -269,7 +304,11 @@ final class LabelDatabaseService: @unchecked Sendable {
 
     /// Search products by SKU or name
     func searchProducts(query: String, limit: Int = 50) -> [LabelFormat] {
-        guard let db = db, !query.isEmpty else { return [] }
+        print("🔍 LabelDatabaseService.searchProducts: query='\(query)'")
+        guard let db = db, !query.isEmpty else {
+            print("❌ LabelDatabaseService.searchProducts: db nil or empty query")
+            return []
+        }
 
         // Use FTS for search
         let searchTerm = query + "*"  // Prefix match
@@ -278,7 +317,8 @@ final class LabelDatabaseService: @unchecked Sendable {
                    b.name AS brand_name, b.slug AS brand_slug,
                    l.label_width, l.label_height, l.columns, l.rows,
                    l.left_margin, l.top_margin, l.horizontal_gap, l.vertical_gap,
-                   l.corner_radius, l.shape, l.page_format, l.page_width, l.page_height, l.labels_per_sheet
+                   l.corner_radius, l.shape, l.page_format, l.page_width, l.page_height, l.labels_per_sheet,
+                   l.barbell_flag_width, l.barbell_wrap_height, l.barbell_style
             FROM products_fts fts
             JOIN products p ON fts.rowid = p.id
             JOIN brands b ON p.brand_id = b.id
@@ -300,9 +340,13 @@ final class LabelDatabaseService: @unchecked Sendable {
                     results.append(format)
                 }
             }
+        } else {
+            let error = String(cString: sqlite3_errmsg(db))
+            print("❌ LabelDatabaseService.searchProducts: SQL error - \(error)")
         }
         sqlite3_finalize(stmt)
 
+        print("🔍 LabelDatabaseService.searchProducts: found \(results.count) results")
         return results
     }
 
@@ -337,7 +381,7 @@ final class LabelDatabaseService: @unchecked Sendable {
             case .portrait:
                 conditions.append("l.shape = 'rectangle' AND l.label_height > l.label_width")
             case .flag:
-                conditions.append("l.shape = 'flag'")  // Cable/wire flag labels
+                conditions.append("l.shape = 'barbell'")  // Cable/wire barbell labels
             }
         }
 
@@ -373,7 +417,8 @@ final class LabelDatabaseService: @unchecked Sendable {
                    b.name AS brand_name, b.slug AS brand_slug,
                    l.label_width, l.label_height, l.columns, l.rows,
                    l.left_margin, l.top_margin, l.horizontal_gap, l.vertical_gap,
-                   l.corner_radius, l.shape, l.page_format, l.page_width, l.page_height, l.labels_per_sheet
+                   l.corner_radius, l.shape, l.page_format, l.page_width, l.page_height, l.labels_per_sheet,
+                   l.barbell_flag_width, l.barbell_wrap_height, l.barbell_style
             FROM products p
             JOIN brands b ON p.brand_id = b.id
             JOIN layouts l ON p.layout_id = l.id
@@ -460,7 +505,10 @@ final class LabelDatabaseService: @unchecked Sendable {
     // MARK: - Private Helpers
 
     private func executeProductQuery(sql: String, bindSlug: String? = nil) -> [LabelFormat] {
-        guard let db = db else { return [] }
+        guard let db = db else {
+            print("❌ executeProductQuery: db is nil")
+            return []
+        }
 
         var results: [LabelFormat] = []
         var stmt: OpaquePointer?
@@ -475,9 +523,13 @@ final class LabelDatabaseService: @unchecked Sendable {
                     results.append(format)
                 }
             }
+        } else {
+            let error = String(cString: sqlite3_errmsg(db))
+            print("❌ executeProductQuery: SQL error - \(error)")
         }
         sqlite3_finalize(stmt)
 
+        print("📦 executeProductQuery: found \(results.count) results")
         return results
     }
 
@@ -496,6 +548,14 @@ final class LabelDatabaseService: @unchecked Sendable {
             brandSlug: String(cString: sqlite3_column_text(stmt, 8))
         )
 
+        // Read barbell fields (columns 23, 24, 25) - may be NULL for non-barbell labels
+        let barbellFlagWidth: Double? = sqlite3_column_type(stmt, 23) != SQLITE_NULL
+            ? sqlite3_column_double(stmt, 23) : nil
+        let barbellWrapHeight: Double? = sqlite3_column_type(stmt, 24) != SQLITE_NULL
+            ? sqlite3_column_double(stmt, 24) : nil
+        let barbellStyle: String? = sqlite3_column_type(stmt, 25) != SQLITE_NULL
+            ? String(cString: sqlite3_column_text(stmt, 25)) : nil
+
         let layout = LabelLayout(
             id: product.layoutId,
             labelWidth: sqlite3_column_double(stmt, 9),
@@ -508,6 +568,9 @@ final class LabelDatabaseService: @unchecked Sendable {
             verticalGap: sqlite3_column_double(stmt, 16),
             cornerRadius: sqlite3_column_double(stmt, 17),
             shape: String(cString: sqlite3_column_text(stmt, 18)),
+            barbellFlagWidth: barbellFlagWidth,
+            barbellWrapHeight: barbellWrapHeight,
+            barbellStyle: barbellStyle,
             pageFormat: String(cString: sqlite3_column_text(stmt, 19)),
             pageWidth: sqlite3_column_double(stmt, 20),
             pageHeight: sqlite3_column_double(stmt, 21),

@@ -5,19 +5,19 @@ Molten
 
 ## Subtitle (30 chars max)
 ```
-Glass Inventory for Artists
+Everything except the heat
 ```
 (27 characters)
 
 ## Keywords (100 chars max)
 ```
-glass,inventory,lampwork,flamework,fusing,bullseye,effetre,COE,studio,artist,catalog,torch,kiln
+glass,inventory,lampwork,flamework,fusing,blowing,hotshop,casting,studio,artist,catalog,torch,kiln
 ```
 (95 characters)
 
 ## Promotional Text (170 chars, can be updated without review)
 ```
-Track 2,500+ glass colors and coatings from 20+ manufacturers. Manage your inventory, build shopping lists, find local suppliers, and sync across all your devices.
+Track 3,000+ glass colors and coatings from 20+ manufacturers. Manage your inventory, build shopping lists, find local suppliers, and sync across all your devices.
 ```
 (166 characters)
 
@@ -26,7 +26,7 @@ Track 2,500+ glass colors and coatings from 20+ manufacturers. Manage your inven
 Molten is the complete inventory management app for glass artists. Whether you work with hot glass, torchwork, or kiln fusing, Molten helps you track your materials, plan shopping trips, and find suppliers—all from your iPhone or iPad.
 
 COMPREHENSIVE CATALOG
-Browse over 2,500 glass colors and coatings from more than 20 manufacturers including Bullseye, Effetre, Double Helix, Glass Alchemy, Northstar, Creation is Messy, and more. Full COE coverage from 33 to 104.
+Browse over 3,000 glass colors and coatings from more than 20 manufacturers including Bullseye, Effetre, Double Helix, Glass Alchemy, Northstar, Creation is Messy, and more. Full COE coverage from 33 to 104.
 
 • Detailed product information for every item
 • Add your own photos and personal notes
@@ -76,7 +76,7 @@ SYNC & BACKUP
 Keep your data safe and accessible.
 
 • iCloud sync across all your devices
-• Optional cloud backups with Pro subscription
+• Optional versioned cloud backups with Pro subscription
 
 HIGHLY CONFIGURABLE
 Make Molten work the way you do.

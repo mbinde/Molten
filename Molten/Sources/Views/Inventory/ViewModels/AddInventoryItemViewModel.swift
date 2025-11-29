@@ -30,9 +30,9 @@ class AddInventoryItemViewModel {
     var searchText: String = ""
     var quantity: String = ""  // Weight input (for weight mode)
     var containerCount: String = ""  // Jar count input (for jars mode)
-    var selectedType: String = "rod"  // Default type
-    var selectedSubtype: String?
-    var selectedSubsubtype: String?
+    var selectedType: String = LastUsedInventoryTypePreference.type  // Default to last used type
+    var selectedSubtype: String? = LastUsedInventoryTypePreference.subtype
+    var selectedSubsubtype: String? = LastUsedInventoryTypePreference.subsubtype
     var selectedWeightUnit: WeightUnit = WeightUnitPreference.current
     var selectedContainerInputMode: ContainerInputMode = ContainerInputModePreference.current
     var dimensions: [String: String] = [:]
@@ -333,6 +333,13 @@ class AddInventoryItemViewModel {
                     print("⚠️ Warning: Failed to save notes for \(stableId): \(error.localizedDescription)")
                 }
             }
+
+            // Remember the type/subtype/subsubtype for next time
+            LastUsedInventoryTypePreference.save(
+                type: selectedType,
+                subtype: selectedSubtype,
+                subsubtype: selectedSubsubtype
+            )
 
             errorMessage = nil
             return true

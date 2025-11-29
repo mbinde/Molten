@@ -422,6 +422,8 @@ actor InventoryTrackingService {
 nonisolated struct DetailedInventorySummaryModel {
     let summary: InventorySummaryModel
     let locationDetails: [String: [(location: String, quantity: Double)]]
+    /// Full inventory records grouped by type (for proper display with container counts)
+    let inventoryByType: [String: [InventoryModel]]
 
     /// Business Logic: Aggregate inventory by type and location
     /// - Parameters:
@@ -430,11 +432,20 @@ nonisolated struct DetailedInventorySummaryModel {
     /// - Returns: Detailed summary with location information grouped by type
     static func from(summary: InventorySummaryModel, inventory: [InventoryModel]) -> DetailedInventorySummaryModel {
         var locationDetails: [String: [(location: String, quantity: Double)]] = [:]
+        var inventoryByType: [String: [InventoryModel]] = [:]
 
         for inventoryRecord in inventory {
+            let typeKey = inventoryRecord.type
+
+            // Store full inventory records by type
+            if inventoryByType[typeKey] == nil {
+                inventoryByType[typeKey] = []
+            }
+            inventoryByType[typeKey]?.append(inventoryRecord)
+
+            // Also store location details for backwards compatibility
             if let location = inventoryRecord.location {
                 let locationInfo = (location: location, quantity: inventoryRecord.quantity)
-                let typeKey = inventoryRecord.type
                 if locationDetails[typeKey] == nil {
                     locationDetails[typeKey] = []
                 }
@@ -444,7 +455,8 @@ nonisolated struct DetailedInventorySummaryModel {
 
         return DetailedInventorySummaryModel(
             summary: summary,
-            locationDetails: locationDetails
+            locationDetails: locationDetails,
+            inventoryByType: inventoryByType
         )
     }
 }

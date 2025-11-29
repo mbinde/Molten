@@ -18,6 +18,10 @@ struct LabelDesignerView: View {
     @State private var selectedShapeFilter: LabelShape?
     @State private var selectedBrandSlug: String?
 
+    // Dimension filters (in inches)
+    @State private var filterWidth: String = ""
+    @State private var filterHeight: String = ""
+
     // Database-backed label formats
     @State private var databaseFormats: [LabelGeometry] = []
     @State private var availableBrands: [LabelBrand] = []
@@ -254,6 +258,12 @@ struct LabelDesignerView: View {
         Section {
                     // Shape filter buttons
                     ShapeFilterButtons(selectedShape: $selectedShapeFilter)
+
+                    // Dimension filter (width × height in inches)
+                    DimensionFilterRow(
+                        filterWidth: $filterWidth,
+                        filterHeight: $filterHeight
+                    )
 
                     if isSearching {
                         FormatSearchView(
@@ -667,9 +677,25 @@ struct LabelDesignerView: View {
         }
     }
 
-    /// Filtered formats based on shape filter and search text
+    /// Parsed dimension filter values (with tolerance for approximate matching)
+    private var parsedDimensionFilters: (width: Double?, height: Double?) {
+        let width = Double(filterWidth.trimmingCharacters(in: .whitespaces))
+        let height = Double(filterHeight.trimmingCharacters(in: .whitespaces))
+        return (width, height)
+    }
+
+    /// Whether any dimension filter is active
+    private var hasDimensionFilter: Bool {
+        parsedDimensionFilters.width != nil || parsedDimensionFilters.height != nil
+    }
+
+    /// Filtered formats based on shape filter, dimension filter, and search text
     /// Uses database for searching 2,600+ label formats
     private var filteredFormats: [LabelGeometry] {
+        let dims = parsedDimensionFilters
+        // Use a small tolerance (0.1") for dimension matching
+        let tolerance = 0.1
+
         // Use database search if we have search text
         if !searchText.isEmpty {
             let results = labelDatabase.searchProducts(query: searchText, limit: 100)
@@ -679,6 +705,10 @@ struct LabelDesignerView: View {
             if let shape = selectedShapeFilter {
                 formats = formats.filter { $0.shape == shape }
             }
+
+            // Apply dimension filters
+            formats = applyDimensionFilter(to: formats, width: dims.width, height: dims.height, tolerance: tolerance)
+
             return formats
         }
 
@@ -690,16 +720,50 @@ struct LabelDesignerView: View {
             if let shape = selectedShapeFilter {
                 formats = formats.filter { $0.shape == shape }
             }
+
+            // Apply dimension filters
+            formats = applyDimensionFilter(to: formats, width: dims.width, height: dims.height, tolerance: tolerance)
+
             return formats
         }
 
-        // Query ALL labels with shape filter from database (not just major brands)
-        if let shape = selectedShapeFilter {
-            let results = labelDatabase.getProducts(shape: shape)
+        // Query with shape and/or dimension filters
+        if selectedShapeFilter != nil || hasDimensionFilter {
+            let results = labelDatabase.getProducts(
+                shape: selectedShapeFilter,
+                minWidth: dims.width.map { $0 - tolerance },
+                maxWidth: dims.width.map { $0 + tolerance },
+                minHeight: dims.height.map { $0 - tolerance },
+                maxHeight: dims.height.map { $0 + tolerance }
+            )
             return results.map { $0.toLabelGeometry() }.sorted { $0.name < $1.name }
         }
 
         return databaseFormats
+    }
+
+    /// Apply dimension filter to a list of formats (for post-search filtering)
+    private func applyDimensionFilter(
+        to formats: [LabelGeometry],
+        width: Double?,
+        height: Double?,
+        tolerance: Double
+    ) -> [LabelGeometry] {
+        formats.filter { format in
+            if let w = width {
+                let formatWidth = format.labelWidth / 72.0  // Convert points to inches
+                if abs(formatWidth - w) > tolerance {
+                    return false
+                }
+            }
+            if let h = height {
+                let formatHeight = format.labelHeight / 72.0  // Convert points to inches
+                if abs(formatHeight - h) > tolerance {
+                    return false
+                }
+            }
+            return true
+        }
     }
 
     /// Total number of labels to print (uses LabelCountCalculator for proper handling of weight-based types)

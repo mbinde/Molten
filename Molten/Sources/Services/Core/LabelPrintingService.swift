@@ -13,10 +13,8 @@ import Combine
 
 /// Shape classification for label formats
 enum LabelShape: String, CaseIterable, Identifiable {
-    case landscape      // wider than tall (aspect ratio < 2.5)
-    case slimLandscape  // very wide (aspect ratio >= 2.5)
-    case portrait       // taller than wide (aspect ratio < 2.5)
-    case slimPortrait   // very tall (aspect ratio >= 2.5)
+    case landscape      // wider than tall
+    case portrait       // taller than wide
     case square         // equal width and height (not circular)
     case circular       // round labels
     case flag           // cable/wire flag labels (barbell shape)
@@ -26,9 +24,7 @@ enum LabelShape: String, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .landscape: return "Wide"
-        case .slimLandscape: return "Slim Wide"
         case .portrait: return "Tall"
-        case .slimPortrait: return "Slim Tall"
         case .square: return "Square"
         case .circular: return "Circle"
         case .flag: return "Flag"
@@ -39,9 +35,7 @@ enum LabelShape: String, CaseIterable, Identifiable {
     var systemImage: String? {
         switch self {
         case .landscape: return "rectangle.fill"
-        case .slimLandscape: return "rectangle.fill"
         case .portrait: return "rectangle.portrait.fill"
-        case .slimPortrait: return "rectangle.portrait.fill"
         case .square: return "square.fill"
         case .circular: return "circle.fill"
         case .flag: return nil  // Uses custom FlagLabelIcon

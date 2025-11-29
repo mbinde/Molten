@@ -94,11 +94,9 @@ struct LabelLayout: Identifiable, Hashable, Sendable {
         default:
             // rectangle - determine by aspect ratio
             if labelWidth > labelHeight {
-                let aspectRatio = labelWidth / labelHeight
-                return aspectRatio >= 2.5 ? .slimLandscape : .landscape
+                return .landscape
             } else if labelHeight > labelWidth {
-                let aspectRatio = labelHeight / labelWidth
-                return aspectRatio >= 2.5 ? .slimPortrait : .portrait
+                return .portrait
             } else {
                 return .square
             }
@@ -381,17 +379,11 @@ final class LabelDatabaseService: @unchecked Sendable {
             case .square:
                 conditions.append("l.shape = 'square'")
             case .landscape:
-                // Wide but not too slim (aspect ratio 1.0 to 2.5)
-                conditions.append("l.shape = 'rectangle' AND l.label_width > l.label_height AND (l.label_width * 1.0 / l.label_height) < 2.5")
-            case .slimLandscape:
-                // Very wide (aspect ratio >= 2.5)
-                conditions.append("l.shape = 'rectangle' AND l.label_width > l.label_height AND (l.label_width * 1.0 / l.label_height) >= 2.5")
+                // Wider than tall
+                conditions.append("l.shape = 'rectangle' AND l.label_width > l.label_height")
             case .portrait:
-                // Tall but not too slim (aspect ratio 1.0 to 2.5)
-                conditions.append("l.shape = 'rectangle' AND l.label_height > l.label_width AND (l.label_height * 1.0 / l.label_width) < 2.5")
-            case .slimPortrait:
-                // Very tall (aspect ratio >= 2.5)
-                conditions.append("l.shape = 'rectangle' AND l.label_height > l.label_width AND (l.label_height * 1.0 / l.label_width) >= 2.5")
+                // Taller than wide
+                conditions.append("l.shape = 'rectangle' AND l.label_height > l.label_width")
             case .flag:
                 conditions.append("l.shape = 'barbell'")  // Cable/wire barbell labels
             }

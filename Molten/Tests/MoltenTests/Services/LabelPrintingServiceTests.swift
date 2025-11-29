@@ -672,8 +672,8 @@ struct LabelPrintingServiceTests {
         #expect(pdfURL != nil)
     }
 
-    @Test("Generate PDF with offset adjustments")
-    func testOffsetAdjustments() async throws {
+    @Test("Generate PDF with position adjustments")
+    func testPositionAdjustments() async throws {
         let service = LabelPrintingService()
 
         let labels = [
@@ -688,12 +688,15 @@ struct LabelPrintingServiceTests {
             )
         ]
 
+        // Position adjustments are now in config
+        var config = LabelBuilderConfig.default
+        config.positionHorizontal = 5.0
+        config.positionVertical = -3.0
+
         let pdfURL = await service.generateLabelSheet(
             labels: labels,
             format: .defaultFormat,
-            config: .default,
-            offsetX: 5.0,
-            offsetY: -3.0
+            config: config
         )
 
         #expect(pdfURL != nil)

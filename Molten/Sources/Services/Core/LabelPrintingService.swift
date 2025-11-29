@@ -260,21 +260,21 @@ struct LabelBuilderConfig: Equatable, Codable, Sendable {
     var fieldFormats: [LabelTextField: LabelFieldFormat]  // per-field formatting
 
     // Content padding within labels (in points)
-    var paddingTop: CGFloat
-    var paddingBottom: CGFloat
-    var paddingLeft: CGFloat
-    var paddingRight: CGFloat
+    var paddingTop: CGFloat = 0
+    var paddingBottom: CGFloat = 0
+    var paddingLeft: CGFloat = 0
+    var paddingRight: CGFloat = 0
 
     // Position adjustments (in points)
-    var positionHorizontal: CGFloat
-    var positionVertical: CGFloat
+    var positionHorizontal: CGFloat = 0
+    var positionVertical: CGFloat = 0
 
     /// Default configuration (information dense)
     static let `default` = LabelBuilderConfig(
         qrPosition: .left,
         qrSize: nil,  // Use format default
         fontScale: nil,  // Use format default
-        manufacturerImagePosition: .right,  // Add manufacturer logo on right
+        manufacturerImagePosition: nil,  // Add manufacturer logo on right
         manufacturerImageSize: nil,  // Use default (0.6)
         textFields: [.manufacturer, .sku, .colorName, .coe],
         textAlignment: .left,

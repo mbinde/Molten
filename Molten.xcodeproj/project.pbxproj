@@ -329,6 +329,7 @@
 				Tests/RepositoryTests/Mock/MockItemTagsRepository.swift,
 				Tests/RepositoryTests/Mock/MockLogbookRepository.swift,
 				Tests/RepositoryTests/Mock/MockPurchaseRecordRepository.swift,
+				Tests/RepositoryTests/Mock/MockRatingRepository.swift,
 				Tests/RepositoryTests/Mock/MockShoppingListRepository.swift,
 				Tests/RepositoryTests/Mock/MockToolItemRepository.swift,
 				Tests/RepositoryTests/Mock/MockUserNotesRepository.swift,

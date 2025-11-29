@@ -1353,6 +1353,7 @@ class LabelPrintingService {
     }
 
     /// Draw the two flag areas of a symmetric barbell label
+    /// Layout: Left flag gets text, Right flag gets QR (if enabled) or duplicate text
     private func drawSymmetricBarbellFlagAreas(
         labelData: LabelData,
         rect: CGRect,
@@ -1379,90 +1380,52 @@ class LabelPrintingService {
             height: rect.height
         )
 
-        // Draw left flag
-        drawBarbellFlagContent(
+        // Draw left flag - TEXT ONLY (no QR)
+        drawBarbellFlagTextOnly(
             labelData: labelData,
             rect: leftFlagRect,
             config: config,
             fontScale: fontScale,
-            rotated: false,
             padding: padding,
             context: context
         )
 
-        // Draw right flag (same orientation - label wraps horizontally around cable)
-        drawBarbellFlagContent(
-            labelData: labelData,
-            rect: rightFlagRect,
-            config: config,
-            fontScale: fontScale,
-            rotated: false,
-            padding: padding,
-            context: context
-        )
+        // Draw right flag - QR ONLY (if enabled) or duplicate text
+        if config.qrPosition != .none {
+            drawBarbellFlagQROnly(
+                labelData: labelData,
+                rect: rightFlagRect,
+                padding: padding,
+                context: context
+            )
+        } else {
+            // No QR configured - duplicate text on right flag
+            drawBarbellFlagTextOnly(
+                labelData: labelData,
+                rect: rightFlagRect,
+                config: config,
+                fontScale: fontScale,
+                padding: padding,
+                context: context
+            )
+        }
     }
 
-    /// Draw content on a single flag area of a barbell label
-    private func drawBarbellFlagContent(
+    /// Draw TEXT ONLY on a barbell flag area (no QR code)
+    private func drawBarbellFlagTextOnly(
         labelData: LabelData,
         rect: CGRect,
         config: LabelBuilderConfig,
         fontScale: CGFloat,
-        rotated: Bool,
         padding: CGFloat,
         context: CGContext
     ) {
-        context.saveGState()
-
-        if rotated {
-            // Rotate 180° around the center of this flag
-            context.translateBy(x: rect.midX, y: rect.midY)
-            context.rotate(by: .pi)
-            context.translateBy(x: -rect.midX, y: -rect.midY)
-        }
-
-        var contentX = rect.minX + padding
-        var contentWidth = rect.width - (padding * 2)
+        let contentX = rect.minX + padding
+        let contentWidth = rect.width - (padding * 2)
         let contentHeight = rect.height - (padding * 2)
 
-        // Draw QR code if configured (scaled to fit the small flag area)
-        if config.qrPosition != .none {
-            // QR code size based on flag height, but capped to not overwhelm the small space
-            let effectiveQRSize = config.qrSize ?? 0.8
-            let qrSize = min(rect.height * effectiveQRSize, rect.width * 0.4)
-            let qrImage = generateQRCode(for: labelData)
-
-            let qrY = rect.minY + (rect.height - qrSize) / 2
-
-            switch config.qrPosition {
-            case .left, .both:
-                let qrRect = CGRect(
-                    x: rect.minX + padding,
-                    y: qrY,
-                    width: qrSize,
-                    height: qrSize
-                )
-                qrImage.draw(in: qrRect)
-                contentX = qrRect.maxX + padding
-                contentWidth = rect.maxX - padding - contentX
-
-            case .right:
-                let qrRect = CGRect(
-                    x: rect.maxX - padding - qrSize,
-                    y: qrY,
-                    width: qrSize,
-                    height: qrSize
-                )
-                qrImage.draw(in: qrRect)
-                contentWidth = qrRect.minX - contentX - padding
-
-            case .none:
-                break
-            }
-        }
-
         // Calculate text sizing - barbell labels need smaller text
-        let barbellFontScale = fontScale * 0.8  // Scale down for small flag area
+        let barbellFontScale = fontScale * 0.8
 
         // Calculate total text height for vertical centering
         var totalTextHeight: CGFloat = 0
@@ -1511,7 +1474,6 @@ class LabelPrintingService {
             case .manufacturer:
                 if let manufacturer = labelData.manufacturer {
                     let fullName = GlassManufacturers.fullName(for: manufacturer) ?? manufacturer
-                    // Skip if SKU already contains manufacturer
                     let skuStartsWithManufacturer: Bool = {
                         guard let sku = labelData.sku, config.textFields.contains(.sku) else { return false }
                         return sku.lowercased().hasPrefix(fullName.lowercased())
@@ -1542,8 +1504,25 @@ class LabelPrintingService {
                 }
             }
         }
+    }
 
-        context.restoreGState()
+    /// Draw QR CODE ONLY on a barbell flag area (centered)
+    private func drawBarbellFlagQROnly(
+        labelData: LabelData,
+        rect: CGRect,
+        padding: CGFloat,
+        context: CGContext
+    ) {
+        // QR code sized to fit the flag, with some padding
+        let qrSize = min(rect.width, rect.height) - (padding * 2)
+        let qrImage = generateQRCode(for: labelData)
+
+        // Center the QR code in the flag area
+        let qrX = rect.minX + (rect.width - qrSize) / 2
+        let qrY = rect.minY + (rect.height - qrSize) / 2
+
+        let qrRect = CGRect(x: qrX, y: qrY, width: qrSize, height: qrSize)
+        qrImage.draw(in: qrRect)
     }
 
     // MARK: - P-Style Folded Label Drawing

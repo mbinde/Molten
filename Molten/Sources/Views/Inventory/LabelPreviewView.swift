@@ -57,7 +57,8 @@ struct LabelPreviewView: View {
         switch format.barbellStyle {
         case .tStyle:
             return AnyShape(TStyleShape(flagWidth: barbellFlagWidthScaled, wrapHeight: barbellWrapHeightScaled))
-        case .pStyle:
+        case .pStyle, .pStyleFolded:
+            // pStyleFolded uses same shape as pStyle, but content shows the fold line
             return AnyShape(PStyleShape(flagWidth: barbellFlagWidthScaled, wrapHeight: barbellWrapHeightScaled))
         case .wrap:
             return AnyShape(WrapShape(wrapHeight: barbellWrapHeightScaled))
@@ -74,7 +75,7 @@ struct LabelPreviewView: View {
             switch format.barbellStyle {
             case .tStyle:
                 return AnyShape(TStyleShape(flagWidth: barbellFlagWidthScaled, wrapHeight: barbellWrapHeightScaled))
-            case .pStyle:
+            case .pStyle, .pStyleFolded:
                 return AnyShape(PStyleShape(flagWidth: barbellFlagWidthScaled, wrapHeight: barbellWrapHeightScaled))
             case .wrap:
                 return AnyShape(WrapShape(wrapHeight: barbellWrapHeightScaled))
@@ -339,6 +340,9 @@ struct LabelPreviewView: View {
         case .tStyle, .pStyle:
             // Single flag styles - only one printable area on the left
             buildSingleFlagContent()
+        case .pStyleFolded:
+            // P-style folded: flag split horizontally with fold line (top=Area A, bottom=Area B)
+            buildFoldedFlagContent()
         case .wrap:
             // Wrap style - content centered in the strip
             buildWrapContent()
@@ -405,6 +409,72 @@ struct LabelPreviewView: View {
                         .padding(.horizontal, 2)
                 }
                 Spacer()
+            }
+            .frame(width: barbellFlagWidthScaled, height: previewHeight)
+
+            // Wrap tail section (narrow, non-printable area)
+            Rectangle()
+                .fill(Color.clear)
+                .frame(width: previewWidth - barbellFlagWidthScaled)
+        }
+    }
+
+    /// Build content for P-style folded (flag split horizontally with fold line)
+    @ViewBuilder
+    private func buildFoldedFlagContent() -> some View {
+        HStack(spacing: 0) {
+            // Flag area - split into top (Area A) and bottom (Area B) with fold line
+            ZStack {
+                VStack(spacing: 0) {
+                    // Top half - Area A
+                    ZStack {
+                        if config.qrPosition != .none, let service = labelService {
+                            HStack(spacing: 2) {
+                                let qrSize = min(barbellFlagWidthScaled * 0.35, previewHeight * 0.4)
+                                QRCodeView(labelData: sampleData, service: service)
+                                    .frame(width: qrSize, height: qrSize)
+                                buildTextContent()
+                                    .padding(.horizontal, 2)
+                            }
+                        } else {
+                            buildTextContent()
+                                .padding(.horizontal, 2)
+                        }
+                    }
+                    .frame(width: barbellFlagWidthScaled, height: previewHeight / 2)
+
+                    // Bottom half - Area B (mirrored content)
+                    ZStack {
+                        if config.qrPosition != .none, let service = labelService {
+                            HStack(spacing: 2) {
+                                let qrSize = min(barbellFlagWidthScaled * 0.35, previewHeight * 0.4)
+                                QRCodeView(labelData: sampleData, service: service)
+                                    .frame(width: qrSize, height: qrSize)
+                                buildTextContent()
+                                    .padding(.horizontal, 2)
+                            }
+                        } else {
+                            buildTextContent()
+                                .padding(.horizontal, 2)
+                        }
+                    }
+                    .frame(width: barbellFlagWidthScaled, height: previewHeight / 2)
+                    .rotationEffect(.degrees(180))  // Flip for when cable is rotated
+                }
+
+                // Dashed fold line in the middle
+                Rectangle()
+                    .fill(Color.gray.opacity(0.5))
+                    .frame(width: barbellFlagWidthScaled - 4, height: 1)
+                    .overlay(
+                        HStack(spacing: 4) {
+                            ForEach(0..<Int(barbellFlagWidthScaled / 8), id: \.self) { _ in
+                                Rectangle()
+                                    .fill(Color.white)
+                                    .frame(width: 4, height: 1)
+                            }
+                        }
+                    )
             }
             .frame(width: barbellFlagWidthScaled, height: previewHeight)
 

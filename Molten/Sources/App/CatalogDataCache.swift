@@ -96,7 +96,6 @@ class CatalogDataCache: ObservableObject {
         #endif
 
         NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
                 // Check if the notification contains changes to entities we care about
                 guard let userInfo = notification.userInfo else { return }
@@ -118,6 +117,7 @@ class CatalogDataCache: ObservableObject {
                 }
 
                 // If we have relevant changes, invalidate and reload cache
+                // Use MainActor.run to properly isolate the state updates
                 if hasRelevantChanges {
                     Task { @MainActor [weak self] in
                         guard let self = self else { return }

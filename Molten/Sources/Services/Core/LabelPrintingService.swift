@@ -994,6 +994,8 @@ class LabelPrintingService {
                             format: format,
                             config: config,
                             fontScale: CGFloat(fontScale),
+                            row: row,
+                            col: col,
                             context: context.cgContext
                         )
 
@@ -1024,8 +1026,32 @@ class LabelPrintingService {
         format: LabelGeometry,
         config: LabelBuilderConfig,
         fontScale: CGFloat = 1.0,
+        row: Int = 0,
+        col: Int = 0,
         context: CGContext
     ) {
+        // Handle special label formats
+        if format.isBarbell, let style = format.barbellStyle {
+            switch style {
+            case .pStyleFolded:
+                drawPStyleFoldedLabel(
+                    labelData: labelData,
+                    rect: rect,
+                    format: format,
+                    config: config,
+                    fontScale: fontScale,
+                    row: row,
+                    col: col,
+                    context: context
+                )
+                return
+            case .symmetric, .tStyle, .pStyle, .wrap:
+                // TODO: Implement other barbell styles
+                // For now, fall through to standard label drawing
+                break
+            }
+        }
+
         let padding: CGFloat = 4
 
         // Draw QR code(s) based on position
@@ -1312,6 +1338,211 @@ class LabelPrintingService {
                 }
             }
         }
+    }
+
+    // MARK: - P-Style Folded Label Drawing
+
+    /// Draw a p-style-folded cable label with two print areas (A and B)
+    /// Labels are vertical on the sheet with alternating stub positions:
+    /// - Even (row+col): stub at top, print areas below
+    /// - Odd (row+col): stub at bottom, print areas above (entire label flipped)
+    private func drawPStyleFoldedLabel(
+        labelData: LabelData,
+        rect: CGRect,
+        format: LabelGeometry,
+        config: LabelBuilderConfig,
+        fontScale: CGFloat,
+        row: Int,
+        col: Int,
+        context: CGContext
+    ) {
+        // Get the printable area height (stored as barbellWrapHeight for vertical labels)
+        guard let printAreaHeight = format.barbellWrapHeight else {
+            return
+        }
+
+        let paddingLeft = max(config.paddingLeft, 2)
+        let paddingRight = max(config.paddingRight, 2)
+        let paddingTop = max(config.paddingTop, 2)
+        let paddingBottom = max(config.paddingBottom, 2)
+
+        // Alternating pattern: (row + col) % 2 determines if label is flipped
+        let isFlipped = (row + col) % 2 == 1
+
+        // Stub height is the remaining space after the print area
+        let stubHeight = format.barbellFlagWidth ?? (rect.height - printAreaHeight)
+        let halfPrintHeight = printAreaHeight / 2
+
+        context.saveGState()
+
+        if isFlipped {
+            // Rotate entire label 180° around its center
+            context.translateBy(x: rect.midX, y: rect.midY)
+            context.rotate(by: .pi)
+            context.translateBy(x: -rect.midX, y: -rect.midY)
+        }
+
+        // Draw as if stub is at top:
+        // [Stub - blank]
+        // [Area A - normal]
+        // [Area B - rotated 180°]
+
+        let areaARect = CGRect(
+            x: rect.minX,
+            y: rect.minY + stubHeight,
+            width: rect.width,
+            height: halfPrintHeight
+        )
+
+        let areaBRect = CGRect(
+            x: rect.minX,
+            y: rect.minY + stubHeight + halfPrintHeight,
+            width: rect.width,
+            height: halfPrintHeight
+        )
+
+        // Draw Area A (normal orientation)
+        drawPStyleFoldedArea(
+            labelData: labelData,
+            rect: areaARect,
+            config: config,
+            fontScale: fontScale,
+            paddingLeft: paddingLeft,
+            paddingRight: paddingRight,
+            paddingTop: paddingTop,
+            paddingBottom: paddingBottom,
+            rotated: false,
+            context: context
+        )
+
+        // Draw Area B (content rotated 180°)
+        drawPStyleFoldedArea(
+            labelData: labelData,
+            rect: areaBRect,
+            config: config,
+            fontScale: fontScale,
+            paddingLeft: paddingLeft,
+            paddingRight: paddingRight,
+            paddingTop: paddingTop,
+            paddingBottom: paddingBottom,
+            rotated: true,
+            context: context
+        )
+
+        context.restoreGState()
+    }
+
+    /// Draw a single print area (A or B) of a p-style-folded label
+    private func drawPStyleFoldedArea(
+        labelData: LabelData,
+        rect: CGRect,
+        config: LabelBuilderConfig,
+        fontScale: CGFloat,
+        paddingLeft: CGFloat,
+        paddingRight: CGFloat,
+        paddingTop: CGFloat,
+        paddingBottom: CGFloat,
+        rotated: Bool,
+        context: CGContext
+    ) {
+        context.saveGState()
+
+        if rotated {
+            context.translateBy(x: rect.midX, y: rect.midY)
+            context.rotate(by: .pi)
+            context.translateBy(x: -rect.midX, y: -rect.midY)
+        }
+
+        var contentX = rect.minX + paddingLeft
+        var contentWidth = rect.width - paddingLeft - paddingRight
+
+        // Draw QR code if configured
+        if config.qrPosition != .none {
+            let effectiveQRSize = config.qrSize ?? 0.7
+            let qrSize = min(rect.width * 0.35, rect.height * effectiveQRSize)
+            let qrImage = generateQRCode(for: labelData.stableId)
+
+            let qrRect = CGRect(
+                x: rect.minX + paddingLeft,
+                y: rect.minY + (rect.height - qrSize) / 2,
+                width: qrSize,
+                height: qrSize
+            )
+            qrImage.draw(in: qrRect)
+
+            contentX = qrRect.maxX + 2
+            contentWidth = rect.maxX - paddingRight - contentX
+        }
+
+        // Draw text fields
+        let textAlignment: NSTextAlignment = {
+            switch config.textAlignment {
+            case .left: return .left
+            case .center: return .center
+            case .right: return .right
+            }
+        }()
+
+        // Calculate total text height for vertical centering
+        var totalTextHeight: CGFloat = 0
+        for field in config.textFields {
+            let fieldFormat = config.format(for: field)
+            let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+
+            let shouldShow: Bool = {
+                switch field {
+                case .manufacturer: return labelData.manufacturer != nil
+                case .sku: return labelData.sku != nil
+                case .colorName: return labelData.colorName != nil
+                case .coe: return labelData.coe != nil
+                case .location: return labelData.location != nil
+                case .owner: return labelData.owner != nil
+                }
+            }()
+
+            if shouldShow {
+                totalTextHeight += font.lineHeight + 1
+            }
+        }
+
+        let availableHeight = rect.height - paddingTop - paddingBottom
+        var yPosition = rect.minY + paddingTop + max(0, (availableHeight - totalTextHeight) / 2)
+
+        // Draw each text field
+        for field in config.textFields {
+            let fieldFormat = config.format(for: field)
+            let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+
+            switch field {
+            case .manufacturer:
+                if let manufacturer = labelData.manufacturer {
+                    let fullName = GlassManufacturers.fullName(for: manufacturer) ?? manufacturer
+                    yPosition = drawText(fullName, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .sku:
+                if let sku = labelData.sku {
+                    yPosition = drawText(sku, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .colorName:
+                if let colorName = labelData.colorName {
+                    yPosition = drawText(colorName, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .coe:
+                if let coe = labelData.coe {
+                    yPosition = drawText("COE \(coe)", at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, color: .darkGray, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .location:
+                if let location = labelData.location {
+                    yPosition = drawText(location, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .owner:
+                if let owner = labelData.owner {
+                    yPosition = drawText(owner, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, color: .darkGray, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            }
+        }
+
+        context.restoreGState()
     }
 
     private func drawText(

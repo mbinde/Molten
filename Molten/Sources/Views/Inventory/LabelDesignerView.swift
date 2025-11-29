@@ -102,6 +102,11 @@ struct LabelDesignerView: View {
             .sheet(isPresented: $showingEditPreset) { editPresetSheet }
             .sheet(isPresented: $showingLabelCountInput) { labelCountInputSheet }
             .sheet(isPresented: $showingFilterSheet) { filterSheet }
+            .sheet(isPresented: $showingShareSheet) {
+                if let pdfURL = generatedPDFURL {
+                    ShareSheet(items: [pdfURL])
+                }
+            }
             .alert("Unsaved Changes", isPresented: $showingUnsavedChangesAlert) {
                 Button("Discard Changes", role: .destructive) { dismiss() }
                 Button("Cancel", role: .cancel) { }

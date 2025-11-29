@@ -363,21 +363,8 @@ struct CatalogView: View {
             }
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
-            .onChange(of: viewModel.searchText) { oldValue, newValue in
-                // Debounce search text updates (300ms delay)
-                // This prevents expensive filtering on every keystroke
-                // TODO: Replace Task.sleep debouncing with Combine publisher for proper cancellation
-                // Current implementation creates zombie tasks that can't be cancelled
-                // Use .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main) instead
-                Task {
-                    try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
-                    // Only update if the value hasn't changed (user stopped typing)
-                    if viewModel.searchText == newValue {
-                        viewModel.debouncedSearchText = newValue
-                        viewModel.applyFilters()
-                    }
-                }
-            }
+            // Note: Search debouncing is now handled in CatalogViewModel.debounceSearch()
+            // This ensures proper task cancellation and prevents zombie tasks
             .modifier(CatalogSheetModifiers(
                 showingAllTags: $showingAllTags,
                 showingCOESelection: $showingCOESelection,

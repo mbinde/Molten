@@ -165,8 +165,19 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
     // MARK: - Search & Filter State
 
+    /// Debounce task for search input
+    private var searchDebounceTask: Task<Void, Never>?
+    private static let searchDebounceDelay: UInt64 = 300_000_000 // 300ms in nanoseconds
+
     /// Immediate search text (updates on every keystroke for UI responsiveness)
-    var searchText = ""
+    private var _searchText = ""
+    var searchText: String {
+        get { _searchText }
+        set {
+            _searchText = newValue
+            debounceSearch(newValue)
+        }
+    }
 
     /// Debounced search text (updates after 300ms delay to avoid expensive filtering on every keystroke)
     var debouncedSearchText = ""
@@ -399,6 +410,35 @@ class CatalogViewModel: CatalogViewModelProtocol {
     func updateSorting(_ newSortOption: SortOption) {
         sortOption = newSortOption
         applySorting()
+    }
+
+    // MARK: - Search Debouncing
+
+    /// Debounce search input to avoid filtering on every keystroke
+    private func debounceSearch(_ text: String) {
+        // Cancel any pending debounce task
+        searchDebounceTask?.cancel()
+
+        // If text is empty, update immediately (user cleared the search)
+        if text.isEmpty {
+            debouncedSearchText = ""
+            applyFilters()
+            return
+        }
+
+        // Schedule debounced update
+        searchDebounceTask = Task {
+            do {
+                try await Task.sleep(nanoseconds: Self.searchDebounceDelay)
+                // Only update if not cancelled and text hasn't changed
+                if !Task.isCancelled && _searchText == text {
+                    debouncedSearchText = text
+                    applyFilters()
+                }
+            } catch {
+                // Task was cancelled - this is expected when typing continues
+            }
+        }
     }
 
     func applyFilters() {

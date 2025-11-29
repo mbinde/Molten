@@ -208,8 +208,9 @@ struct InventoryView: View, CachedDataDeletion {
         }
 
         // Apply search filter using SearchTextParser for advanced search (including grey/gray synonyms)
-        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
-            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
+        // Note: Use debouncedSearchText to avoid filtering on every keystroke
+        if !viewModel.debouncedSearchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.debouncedSearchText) {
+            let searchMode = SearchTextParser.parseSearchText(viewModel.debouncedSearchText)
             items = items.filter { item in
                 let allFields = [
                     item.catalogItem.name,
@@ -754,29 +755,25 @@ struct InventoryView: View, CachedDataDeletion {
             log.info("🗑️ removeFromCache START: completeItems.count = \(viewModel.completeItems.count)")
             log.info("🗑️ removeFromCache: Looking for item \(item.glassItem.stable_id)")
 
-            // DON'T remove the catalog item - just update it to have no inventory
-            // The catalog should always contain all items
+            // Remove the item from the array entirely
+            // This is necessary because:
+            // 1. filteredItems uses `$0.hasInventory` filter
+            // 2. If we just clear inventory, the item disappears from the filtered list
+            // 3. But SwiftUI's collection view expects the count to match during animation
+            // 4. Removing from the source array keeps everything in sync
+            //
+            // Note: The next reload will restore catalog items - we're just removing from
+            // the in-memory cache to keep the UI consistent during the delete animation
             if let index = viewModel.completeItems.firstIndex(where: { $0.id == item.id }) {
-                let existing = viewModel.completeItems[index]
-                log.info("🗑️ removeFromCache: Found at index \(index), inventory count = \(existing.inventory.count)")
-
-                // Create new item with empty inventory (all properties are immutable)
-                let updatedItem = CompleteInventoryItemModel(
-                    catalogItem: existing.catalogItem,
-                    inventory: [],  // Clear inventory records
-                    tags: existing.tags,
-                    userTags: existing.userTags,
-                    rating: existing.rating
-                )
-                viewModel.completeItems[index] = updatedItem
-                log.info("🗑️ removeFromCache: Updated item, new inventory count = \(updatedItem.inventory.count)")
+                log.info("🗑️ removeFromCache: Found at index \(index), removing from array")
+                viewModel.completeItems.remove(at: index)
+                log.info("🗑️ removeFromCache: Removed item, new count = \(viewModel.completeItems.count)")
             } else {
                 log.warning("🗑️ removeFromCache: Item NOT FOUND in completeItems!")
             }
 
             log.info("🗑️ removeFromCache END: completeItems.count = \(viewModel.completeItems.count)")
-            log.info("🗑️ removeFromCache: Incrementing refreshTrigger from \(refreshTrigger) to \(refreshTrigger + 1)")
-            refreshTrigger += 1  // Force SwiftUI to refresh (updates counters, UI)
+            // Note: Don't increment refreshTrigger here - the array mutation already triggers SwiftUI update
         }
     }
 

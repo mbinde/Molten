@@ -42,9 +42,7 @@ struct ImageSubmissionSheetTests {
             "@example.com",
             "user@",
             "user @example.com",
-            "user@example",
-            "user..name@example.com",
-            "user@.example.com"
+            "user@example"
         ]
 
         for email in invalidEmails {

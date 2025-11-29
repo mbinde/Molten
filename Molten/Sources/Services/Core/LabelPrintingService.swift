@@ -274,7 +274,7 @@ struct LabelBuilderConfig: Equatable, Codable, Sendable {
         qrPosition: .left,
         qrSize: nil,  // Use format default
         fontScale: nil,  // Use format default
-        manufacturerImagePosition: nil,  // Add manufacturer logo on right
+        manufacturerImagePosition: .none,  // No manufacturer logo
         manufacturerImageSize: nil,  // Use default (0.6)
         textFields: [.manufacturer, .sku, .colorName, .coe],
         textAlignment: .left,
@@ -312,7 +312,7 @@ struct LabelBuilderConfig: Equatable, Codable, Sendable {
                 qrPosition: .left,
                 qrSize: nil,
                 fontScale: nil,
-                manufacturerImagePosition: .right,
+                manufacturerImagePosition: .none,
                 manufacturerImageSize: nil,
                 textFields: [.manufacturer, .sku, .colorName, .coe],
                 textAlignment: .left,
@@ -337,23 +337,7 @@ struct LabelBuilderConfig: Equatable, Codable, Sendable {
                 positionHorizontal: 0, positionVertical: 0
             )
         ),
-        LabelBuilderPreset(
-            name: "Dual QR",
-            description: "QR codes on both ends",
-            config: LabelBuilderConfig(
-                qrPosition: .both,
-                qrSize: nil,
-                fontScale: nil,
-                manufacturerImagePosition: .none,
-                manufacturerImageSize: nil,
-                textFields: [.manufacturer, .sku, .colorName],
-                textAlignment: .center,
-                fieldFormats: [:],
-                paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
-                positionHorizontal: 0, positionVertical: 0
-            )
-        ),
-        LabelBuilderPreset(
+       LabelBuilderPreset(
             name: "Location Labels",
             description: "With location information",
             config: LabelBuilderConfig(
@@ -721,20 +705,6 @@ struct LabelTemplate: Equatable, Hashable {
         includeOwner: false,
         qrCodeSize: 0.50
     )
-
-    static let dualQR = LabelTemplate(
-        name: "Dual QR",
-        includeQRCode: true,
-        dualQRCodes: true,
-        includeManufacturer: true,
-        includeSKU: true,
-        includeColor: true,
-        includeCOE: false,
-        includeQuantity: false,
-        includeLocation: false,
-        includeOwner: false,
-        qrCodeSize: 0.65
-    )
 }
 
 /// Label data model for a single label (one label = one physical item like one rod)
@@ -1039,7 +1009,17 @@ class LabelPrintingService {
                     context: context
                 )
                 return
-            case .symmetric, .tStyle, .pStyle, .wrap:
+            case .symmetric:
+                drawSymmetricBarbellLabel(
+                    labelData: labelData,
+                    rect: rect,
+                    format: format,
+                    config: config,
+                    fontScale: fontScale,
+                    context: context
+                )
+                return
+            case .tStyle, .pStyle, .wrap:
                 // TODO: Implement other barbell styles
                 // For now, fall through to standard label drawing
                 break
@@ -1332,6 +1312,238 @@ class LabelPrintingService {
                 }
             }
         }
+    }
+
+    // MARK: - Symmetric Barbell Label Drawing
+
+    /// Draw a symmetric barbell/flag cable label with two flag areas on each end
+    /// Layout: [Left Flag] - [Narrow Wrap] - [Right Flag]
+    /// Both flags get identical content in the same orientation (label wraps horizontally)
+    private func drawSymmetricBarbellLabel(
+        labelData: LabelData,
+        rect: CGRect,
+        format: LabelGeometry,
+        config: LabelBuilderConfig,
+        fontScale: CGFloat,
+        context: CGContext
+    ) {
+        // Get flag width - this is the printable area on each end
+        guard let flagWidth = format.barbellFlagWidth else {
+            // Fallback: divide label into thirds (flag-wrap-flag)
+            let fallbackFlagWidth = rect.width / 3
+            drawSymmetricBarbellFlagAreas(
+                labelData: labelData,
+                rect: rect,
+                flagWidth: fallbackFlagWidth,
+                config: config,
+                fontScale: fontScale,
+                context: context
+            )
+            return
+        }
+
+        drawSymmetricBarbellFlagAreas(
+            labelData: labelData,
+            rect: rect,
+            flagWidth: flagWidth,
+            config: config,
+            fontScale: fontScale,
+            context: context
+        )
+    }
+
+    /// Draw the two flag areas of a symmetric barbell label
+    private func drawSymmetricBarbellFlagAreas(
+        labelData: LabelData,
+        rect: CGRect,
+        flagWidth: CGFloat,
+        config: LabelBuilderConfig,
+        fontScale: CGFloat,
+        context: CGContext
+    ) {
+        let padding: CGFloat = 2
+
+        // Left flag area
+        let leftFlagRect = CGRect(
+            x: rect.minX,
+            y: rect.minY,
+            width: flagWidth,
+            height: rect.height
+        )
+
+        // Right flag area
+        let rightFlagRect = CGRect(
+            x: rect.maxX - flagWidth,
+            y: rect.minY,
+            width: flagWidth,
+            height: rect.height
+        )
+
+        // Draw left flag
+        drawBarbellFlagContent(
+            labelData: labelData,
+            rect: leftFlagRect,
+            config: config,
+            fontScale: fontScale,
+            rotated: false,
+            padding: padding,
+            context: context
+        )
+
+        // Draw right flag (same orientation - label wraps horizontally around cable)
+        drawBarbellFlagContent(
+            labelData: labelData,
+            rect: rightFlagRect,
+            config: config,
+            fontScale: fontScale,
+            rotated: false,
+            padding: padding,
+            context: context
+        )
+    }
+
+    /// Draw content on a single flag area of a barbell label
+    private func drawBarbellFlagContent(
+        labelData: LabelData,
+        rect: CGRect,
+        config: LabelBuilderConfig,
+        fontScale: CGFloat,
+        rotated: Bool,
+        padding: CGFloat,
+        context: CGContext
+    ) {
+        context.saveGState()
+
+        if rotated {
+            // Rotate 180° around the center of this flag
+            context.translateBy(x: rect.midX, y: rect.midY)
+            context.rotate(by: .pi)
+            context.translateBy(x: -rect.midX, y: -rect.midY)
+        }
+
+        var contentX = rect.minX + padding
+        var contentWidth = rect.width - (padding * 2)
+        let contentHeight = rect.height - (padding * 2)
+
+        // Draw QR code if configured (scaled to fit the small flag area)
+        if config.qrPosition != .none {
+            // QR code size based on flag height, but capped to not overwhelm the small space
+            let effectiveQRSize = config.qrSize ?? 0.8
+            let qrSize = min(rect.height * effectiveQRSize, rect.width * 0.4)
+            let qrImage = generateQRCode(for: labelData)
+
+            let qrY = rect.minY + (rect.height - qrSize) / 2
+
+            switch config.qrPosition {
+            case .left, .both:
+                let qrRect = CGRect(
+                    x: rect.minX + padding,
+                    y: qrY,
+                    width: qrSize,
+                    height: qrSize
+                )
+                qrImage.draw(in: qrRect)
+                contentX = qrRect.maxX + padding
+                contentWidth = rect.maxX - padding - contentX
+
+            case .right:
+                let qrRect = CGRect(
+                    x: rect.maxX - padding - qrSize,
+                    y: qrY,
+                    width: qrSize,
+                    height: qrSize
+                )
+                qrImage.draw(in: qrRect)
+                contentWidth = qrRect.minX - contentX - padding
+
+            case .none:
+                break
+            }
+        }
+
+        // Calculate text sizing - barbell labels need smaller text
+        let barbellFontScale = fontScale * 0.8  // Scale down for small flag area
+
+        // Calculate total text height for vertical centering
+        var totalTextHeight: CGFloat = 0
+        for field in config.textFields {
+            let fieldFormat = config.format(for: field)
+            let font: UIFont = fieldFormat.bold
+                ? .boldSystemFont(ofSize: fieldFormat.fontSize * barbellFontScale)
+                : .systemFont(ofSize: fieldFormat.fontSize * barbellFontScale)
+
+            let shouldShow: Bool = {
+                switch field {
+                case .manufacturer: return labelData.manufacturer != nil
+                case .sku: return labelData.sku != nil
+                case .colorName: return labelData.colorName != nil
+                case .coe: return labelData.coe != nil
+                case .location: return labelData.location != nil
+                case .owner: return labelData.owner != nil
+                }
+            }()
+
+            if shouldShow {
+                totalTextHeight += font.lineHeight + 1
+            }
+        }
+
+        // Start Y position centered vertically
+        var yPosition = rect.minY + padding + max(0, (contentHeight - totalTextHeight) / 2)
+
+        // Text alignment
+        let textAlignment: NSTextAlignment = {
+            switch config.textAlignment {
+            case .left: return .left
+            case .center: return .center
+            case .right: return .right
+            }
+        }()
+
+        // Draw text fields
+        for field in config.textFields {
+            let fieldFormat = config.format(for: field)
+            let font: UIFont = fieldFormat.bold
+                ? .boldSystemFont(ofSize: fieldFormat.fontSize * barbellFontScale)
+                : .systemFont(ofSize: fieldFormat.fontSize * barbellFontScale)
+
+            switch field {
+            case .manufacturer:
+                if let manufacturer = labelData.manufacturer {
+                    let fullName = GlassManufacturers.fullName(for: manufacturer) ?? manufacturer
+                    // Skip if SKU already contains manufacturer
+                    let skuStartsWithManufacturer: Bool = {
+                        guard let sku = labelData.sku, config.textFields.contains(.sku) else { return false }
+                        return sku.lowercased().hasPrefix(fullName.lowercased())
+                    }()
+                    if !skuStartsWithManufacturer {
+                        yPosition = drawText(fullName, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                    }
+                }
+            case .sku:
+                if let sku = labelData.sku {
+                    yPosition = drawText(sku, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .colorName:
+                if let colorName = labelData.colorName {
+                    yPosition = drawText(colorName, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .coe:
+                if let coe = labelData.coe {
+                    yPosition = drawText("COE \(coe)", at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, color: .darkGray, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .location:
+                if let location = labelData.location {
+                    yPosition = drawText(location, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .owner:
+                if let owner = labelData.owner {
+                    yPosition = drawText(owner, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, color: .darkGray, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            }
+        }
+
+        context.restoreGState()
     }
 
     // MARK: - P-Style Folded Label Drawing

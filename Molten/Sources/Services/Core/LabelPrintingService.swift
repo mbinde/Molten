@@ -51,10 +51,11 @@ enum LabelShape: String, CaseIterable, Identifiable {
 
 /// Style variants for barbell/flag cable labels
 enum BarbellStyle: String, Sendable {
-    case symmetric   // Standard barbell: two flags connected by narrow wrap
-    case tStyle      // T-style: single flag with wrap tail on one end
-    case pStyle      // P-style: flag with curved/loop tail
-    case wrap        // Self-laminating wrap-around labels
+    case symmetric     // Standard barbell: two flags connected by narrow wrap
+    case tStyle        // T-style: single flag with wrap tail on one end
+    case pStyle        // P-style: flag with curved/loop tail
+    case pStyleFolded  // P-style folded: single flag split horizontally (top/bottom areas fold around cable)
+    case wrap          // Self-laminating wrap-around labels
 
     init?(databaseValue: String?) {
         guard let value = databaseValue else { return nil }
@@ -62,6 +63,7 @@ enum BarbellStyle: String, Sendable {
         case "symmetric": self = .symmetric
         case "t-style": self = .tStyle
         case "p-style": self = .pStyle
+        case "p-style-folded": self = .pStyleFolded
         case "wrap": self = .wrap
         default: self = .symmetric
         }

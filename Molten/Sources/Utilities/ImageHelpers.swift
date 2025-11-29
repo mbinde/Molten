@@ -702,6 +702,8 @@ struct ProductImageDetail: View {
     @State private var isLoading: Bool = true
     @State private var showingFullScreen: Bool = false
     @State private var showingImagePicker: Bool = false
+    @State private var showingUploadError: Bool = false
+    @State private var uploadErrorMessage: String = ""
 
     // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
     private static let sharedUserImageRepository = AppDependencies.shared.userImageRepository
@@ -779,6 +781,11 @@ struct ProductImageDetail: View {
                 FullScreenImageViewer(image: loadedImage, isPresented: $showingFullScreen)
             }
         }
+        .alert("Image Upload Failed", isPresented: $showingUploadError) {
+            Button("OK") { }
+        } message: {
+            Text(uploadErrorMessage)
+        }
     }
 
     @MainActor
@@ -816,7 +823,8 @@ struct ProductImageDetail: View {
             // Post notification so all ProductImageView instances reload
             NotificationCenter.default.post(name: .userImageUploaded, object: stableId)
         } catch {
-            // TODO: Show error to user in UI (silently fail for now)
+            uploadErrorMessage = error.localizedDescription
+            showingUploadError = true
         }
     }
 }

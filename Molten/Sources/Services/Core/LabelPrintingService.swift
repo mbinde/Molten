@@ -27,7 +27,7 @@ enum LabelShape: String, CaseIterable, Identifiable {
         case .portrait: return "Tall"
         case .square: return "Square"
         case .circular: return "Circle"
-        case .flag: return "Flag"
+        case .flag: return "Barbell"
         }
     }
 
@@ -191,6 +191,24 @@ enum QRCodePosition: String, CaseIterable, Codable, Sendable {
     case left = "Left side"
     case right = "Right side"
     case both = "Both sides"
+
+    /// Display name adjusted for label shape
+    /// Circular, portrait, and square labels use "Top/Bottom" instead of "Left/Right"
+    /// (text expands horizontally, so QR codes should be positioned vertically)
+    func displayName(for shape: LabelShape) -> String {
+        let useVertical = shape == .circular || shape == .portrait || shape == .square
+        switch self {
+        case .none: return "None"
+        case .left: return useVertical ? "Top" : "Left side"
+        case .right: return useVertical ? "Bottom" : "Right side"
+        case .both: return useVertical ? "Top & Bottom" : "Both sides"
+        }
+    }
+
+    /// Whether this position uses vertical layout (top/bottom) for the given shape
+    func usesVerticalLayout(for shape: LabelShape) -> Bool {
+        return shape == .circular || shape == .portrait || shape == .square
+    }
 }
 
 /// Manufacturer image position on label
@@ -199,6 +217,24 @@ enum ManufacturerImagePosition: String, CaseIterable, Codable, Sendable {
     case left = "Left side"
     case right = "Right side"
     case both = "Both sides"
+
+    /// Display name adjusted for label shape
+    /// Circular, portrait, and square labels use "Top/Bottom" instead of "Left/Right"
+    /// (text expands horizontally, so images should be positioned vertically)
+    func displayName(for shape: LabelShape) -> String {
+        let useVertical = shape == .circular || shape == .portrait || shape == .square
+        switch self {
+        case .none: return "None"
+        case .left: return useVertical ? "Top" : "Left side"
+        case .right: return useVertical ? "Bottom" : "Right side"
+        case .both: return useVertical ? "Top & Bottom" : "Both sides"
+        }
+    }
+
+    /// Whether this position uses vertical layout (top/bottom) for the given shape
+    func usesVerticalLayout(for shape: LabelShape) -> Bool {
+        return shape == .circular || shape == .portrait || shape == .square
+    }
 }
 
 /// Text alignment on label
@@ -982,6 +1018,46 @@ class LabelPrintingService {
         }
     }
 
+    // MARK: - QR Code Sizing
+
+    /// Minimum QR code size in points (must be scannable)
+    private let minQRSize: CGFloat = 36  // ~0.5 inch
+
+    /// Maximum QR code size in points (no need to be huge on large labels)
+    private let maxQRSize: CGFloat = 108  // ~1.5 inches
+
+    /// Calculate QR code size with min/max bounds
+    /// - Parameters:
+    ///   - labelHeight: The height of the label
+    ///   - qrSizePercent: The desired QR size as percentage of label height (0.0-1.0)
+    /// - Returns: The actual QR size in points, clamped to min/max bounds
+    private func calculateQRSize(labelHeight: CGFloat, qrSizePercent: CGFloat) -> CGFloat {
+        let desiredSize = labelHeight * qrSizePercent
+        return min(max(desiredSize, minQRSize), maxQRSize)
+    }
+
+    // MARK: - Font Scaling
+
+    /// Reference label height for font sizing (1 inch = 72pt)
+    /// Font sizes in LabelFieldFormat.defaults are designed for this height
+    private let referenceLabelHeight: CGFloat = 72
+
+    /// Maximum font scale multiplier for large labels
+    private let maxFontScaleMultiplier: CGFloat = 2.5
+
+    /// Calculate font scale multiplier based on label height
+    /// - Parameter labelHeight: The height of the label in points
+    /// - Returns: A multiplier to apply to base font sizes
+    ///
+    /// Labels at reference height (72pt/1") use 1.0x scaling.
+    /// Larger labels scale up proportionally, capped at maxFontScaleMultiplier.
+    /// Smaller labels use 1.0x (don't shrink text below designed sizes).
+    func calculateLabelFontScale(labelHeight: CGFloat) -> CGFloat {
+        let ratio = labelHeight / referenceLabelHeight
+        // Don't shrink below 1.0 for small labels, cap at max for large labels
+        return min(max(ratio, 1.0), maxFontScaleMultiplier)
+    }
+
     // MARK: - Drawing Helpers
 
     private func drawLabel(
@@ -994,6 +1070,24 @@ class LabelPrintingService {
         col: Int = 0,
         context: CGContext
     ) {
+        // Clip all drawing to the label boundary
+        // This prevents any content from overflowing into adjacent labels
+        context.saveGState()
+
+        if format.isCircular {
+            // Circular labels: clip to ellipse (or circle if width == height)
+            context.addEllipse(in: rect)
+        } else {
+            // Rectangular and barbell labels: clip to rect
+            context.addRect(rect)
+        }
+        context.clip()
+
+        // Apply label-size-based font scaling on top of user's fontScale setting
+        // This ensures text scales appropriately for larger labels
+        let labelBasedScale = calculateLabelFontScale(labelHeight: rect.height)
+        let effectiveFontScale = fontScale * labelBasedScale
+
         // Handle special label formats
         if format.isBarbell, let style = format.barbellStyle {
             switch style {
@@ -1003,11 +1097,12 @@ class LabelPrintingService {
                     rect: rect,
                     format: format,
                     config: config,
-                    fontScale: fontScale,
+                    fontScale: effectiveFontScale,
                     row: row,
                     col: col,
                     context: context
                 )
+                context.restoreGState()
                 return
             case .symmetric:
                 drawSymmetricBarbellLabel(
@@ -1015,9 +1110,10 @@ class LabelPrintingService {
                     rect: rect,
                     format: format,
                     config: config,
-                    fontScale: fontScale,
+                    fontScale: effectiveFontScale,
                     context: context
                 )
+                context.restoreGState()
                 return
             case .tStyle, .pStyle, .wrap:
                 // TODO: Implement other barbell styles
@@ -1029,67 +1125,115 @@ class LabelPrintingService {
         let padding: CGFloat = 4
 
         // Draw QR code(s) based on position
+        // For circular labels, positions are top/bottom instead of left/right
         var contentX = rect.minX + padding
         var contentWidth = rect.width - (padding * 2)
+        var contentY = rect.minY + padding
+        var contentHeight = rect.height - (padding * 2)
 
         if config.qrPosition != .none {
-            let effectiveQRSize = config.qrSize ?? format.defaultQRSize
-            let qrSize = rect.height * effectiveQRSize
+            let effectiveQRPercent = config.qrSize ?? format.defaultQRSize
+            let qrSize = calculateQRSize(labelHeight: rect.height, qrSizePercent: effectiveQRPercent)
             let qrImage = generateQRCode(for: labelData.stableId)
 
-            switch config.qrPosition {
-            case .left:
-                // Draw left QR code
-                let leftQRRect = CGRect(
-                    x: rect.minX + padding,
-                    y: rect.minY + (rect.height - qrSize) / 2,
-                    width: qrSize,
-                    height: qrSize
-                )
-                qrImage.draw(in: leftQRRect)
+            // Determine if this label uses vertical layout (top/bottom QR positioning)
+            // Circular, portrait, and square labels all use vertical layout since text expands horizontally
+            let usesVerticalLayout = format.isCircular || format.shape == .portrait || format.shape == .square
 
-                // Adjust content area to be to the right of QR code
-                contentX = leftQRRect.maxX + padding
-                contentWidth = rect.maxX - contentX - padding
+            if usesVerticalLayout {
+                // Circular, portrait, and square labels: top/bottom QR positioning
+                switch config.qrPosition {
+                case .left:  // "Top" for vertical labels
+                    let topQRRect = CGRect(
+                        x: rect.midX - qrSize / 2,
+                        y: rect.minY + padding,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: topQRRect)
+                    contentY = topQRRect.maxY + padding
+                    contentHeight = rect.maxY - contentY - padding
 
-            case .right:
-                // Draw right QR code
-                let rightQRRect = CGRect(
-                    x: rect.maxX - padding - qrSize,
-                    y: rect.minY + (rect.height - qrSize) / 2,
-                    width: qrSize,
-                    height: qrSize
-                )
-                qrImage.draw(in: rightQRRect)
+                case .right:  // "Bottom" for vertical labels
+                    let bottomQRRect = CGRect(
+                        x: rect.midX - qrSize / 2,
+                        y: rect.maxY - padding - qrSize,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: bottomQRRect)
+                    contentHeight = bottomQRRect.minY - contentY - padding
 
-                // Content area is from left edge to QR code
-                contentWidth = rightQRRect.minX - contentX - padding
+                case .both:  // "Top & Bottom" for vertical labels
+                    let topQRRect = CGRect(
+                        x: rect.midX - qrSize / 2,
+                        y: rect.minY + padding,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: topQRRect)
 
-            case .both:
-                // Draw left QR code
-                let leftQRRect = CGRect(
-                    x: rect.minX + padding,
-                    y: rect.minY + (rect.height - qrSize) / 2,
-                    width: qrSize,
-                    height: qrSize
-                )
-                qrImage.draw(in: leftQRRect)
+                    let bottomQRRect = CGRect(
+                        x: rect.midX - qrSize / 2,
+                        y: rect.maxY - padding - qrSize,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: bottomQRRect)
 
-                // Draw right QR code
-                let rightQRRect = CGRect(
-                    x: rect.maxX - padding - qrSize,
-                    y: rect.minY + (rect.height - qrSize) / 2,
-                    width: qrSize,
-                    height: qrSize
-                )
-                qrImage.draw(in: rightQRRect)
+                    contentY = topQRRect.maxY + padding
+                    contentHeight = bottomQRRect.minY - contentY - padding
 
-                // Content area is between the two QR codes
-                contentX = leftQRRect.maxX + padding
-                contentWidth = rightQRRect.minX - contentX - padding
+                case .none:
+                    break
+                }
+            } else {
+                // Landscape and square labels: left/right QR positioning
+                switch config.qrPosition {
+                case .left:
+                    let leftQRRect = CGRect(
+                        x: rect.minX + padding,
+                        y: rect.minY + (rect.height - qrSize) / 2,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: leftQRRect)
+                    contentX = leftQRRect.maxX + padding
+                    contentWidth = rect.maxX - contentX - padding
 
-            case .none:
-                break
+                case .right:
+                    let rightQRRect = CGRect(
+                        x: rect.maxX - padding - qrSize,
+                        y: rect.minY + (rect.height - qrSize) / 2,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: rightQRRect)
+                    contentWidth = rightQRRect.minX - contentX - padding
+
+                case .both:
+                    let leftQRRect = CGRect(
+                        x: rect.minX + padding,
+                        y: rect.minY + (rect.height - qrSize) / 2,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: leftQRRect)
+
+                    let rightQRRect = CGRect(
+                        x: rect.maxX - padding - qrSize,
+                        y: rect.minY + (rect.height - qrSize) / 2,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: rightQRRect)
+
+                    contentX = leftQRRect.maxX + padding
+                    contentWidth = rightQRRect.minX - contentX - padding
+
+                case .none:
+                    break
+                }
             }
         }
 
@@ -1168,7 +1312,7 @@ class LabelPrintingService {
         var totalTextHeight: CGFloat = 0
         for field in config.textFields {
             let fieldFormat = config.format(for: field)
-            let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+            let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * effectiveFontScale) : .systemFont(ofSize: fieldFormat.fontSize * effectiveFontScale)
 
             // Only count this field if it has data to show
             let shouldShow: Bool = {
@@ -1187,9 +1331,9 @@ class LabelPrintingService {
             }
         }
 
-        // Start Y position centered vertically in the available space
-        let availableHeight = rect.height - (padding * 2)
-        var yPosition = rect.minY + padding + max(0, (availableHeight - totalTextHeight) / 2)
+        // Start Y position centered vertically in the available content area
+        // For circular labels with QR codes, contentY and contentHeight are adjusted
+        var yPosition = contentY + max(0, (contentHeight - totalTextHeight) / 2)
 
         // Convert text alignment to NSTextAlignment
         let textAlignment: NSTextAlignment = {
@@ -1220,7 +1364,7 @@ class LabelPrintingService {
                     // Only show manufacturer if SKU doesn't already start with it
                     if !skuStartsWithManufacturer {
                         let fieldFormat = config.format(for: .manufacturer)
-                        let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+                        let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * effectiveFontScale) : .systemFont(ofSize: fieldFormat.fontSize * effectiveFontScale)
                         yPosition = drawText(
                             fullName,
                             at: CGPoint(x: contentX, y: yPosition),
@@ -1236,7 +1380,7 @@ class LabelPrintingService {
             case .sku:
                 if let sku = labelData.sku {
                     let fieldFormat = config.format(for: .sku)
-                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * effectiveFontScale) : .systemFont(ofSize: fieldFormat.fontSize * effectiveFontScale)
                     yPosition = drawText(
                         sku,
                         at: CGPoint(x: contentX, y: yPosition),
@@ -1251,7 +1395,7 @@ class LabelPrintingService {
             case .colorName:
                 if let colorName = labelData.colorName {
                     let fieldFormat = config.format(for: .colorName)
-                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * effectiveFontScale) : .systemFont(ofSize: fieldFormat.fontSize * effectiveFontScale)
                     yPosition = drawText(
                         colorName,
                         at: CGPoint(x: contentX, y: yPosition),
@@ -1266,7 +1410,7 @@ class LabelPrintingService {
             case .coe:
                 if let coe = labelData.coe {
                     let fieldFormat = config.format(for: .coe)
-                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * effectiveFontScale) : .systemFont(ofSize: fieldFormat.fontSize * effectiveFontScale)
                     yPosition = drawText(
                         "COE \(coe)",
                         at: CGPoint(x: contentX, y: yPosition),
@@ -1282,7 +1426,7 @@ class LabelPrintingService {
             case .location:
                 if let location = labelData.location {
                     let fieldFormat = config.format(for: .location)
-                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * effectiveFontScale) : .systemFont(ofSize: fieldFormat.fontSize * effectiveFontScale)
                     yPosition = drawText(
                         "📍 \(location)",
                         at: CGPoint(x: contentX, y: yPosition),
@@ -1298,7 +1442,7 @@ class LabelPrintingService {
             case .owner:
                 if let owner = labelData.owner {
                     let fieldFormat = config.format(for: .owner)
-                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * effectiveFontScale) : .systemFont(ofSize: fieldFormat.fontSize * effectiveFontScale)
                     yPosition = drawText(
                         owner,
                         at: CGPoint(x: contentX, y: yPosition),
@@ -1312,6 +1456,9 @@ class LabelPrintingService {
                 }
             }
         }
+
+        // Restore graphics state (removes clipping)
+        context.restoreGState()
     }
 
     // MARK: - Symmetric Barbell Label Drawing

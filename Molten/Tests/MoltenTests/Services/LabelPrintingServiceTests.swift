@@ -857,6 +857,145 @@ struct LabelPrintingServiceTests {
         #expect(pdfURL != nil)
     }
 
+    // MARK: - QR Position Display Name Tests
+
+    @Test("QR position displayName for landscape labels uses Left/Right")
+    func testQRPositionDisplayNameLandscape() async throws {
+        #expect(QRCodePosition.none.displayName(for: .landscape) == "None")
+        #expect(QRCodePosition.left.displayName(for: .landscape) == "Left side")
+        #expect(QRCodePosition.right.displayName(for: .landscape) == "Right side")
+        #expect(QRCodePosition.both.displayName(for: .landscape) == "Both sides")
+    }
+
+    @Test("QR position displayName for circular labels uses Top/Bottom")
+    func testQRPositionDisplayNameCircular() async throws {
+        #expect(QRCodePosition.none.displayName(for: .circular) == "None")
+        #expect(QRCodePosition.left.displayName(for: .circular) == "Top")
+        #expect(QRCodePosition.right.displayName(for: .circular) == "Bottom")
+        #expect(QRCodePosition.both.displayName(for: .circular) == "Top & Bottom")
+    }
+
+    @Test("QR position displayName for portrait labels uses Top/Bottom")
+    func testQRPositionDisplayNamePortrait() async throws {
+        #expect(QRCodePosition.none.displayName(for: .portrait) == "None")
+        #expect(QRCodePosition.left.displayName(for: .portrait) == "Top")
+        #expect(QRCodePosition.right.displayName(for: .portrait) == "Bottom")
+        #expect(QRCodePosition.both.displayName(for: .portrait) == "Top & Bottom")
+    }
+
+    @Test("QR position displayName for square labels uses Top/Bottom")
+    func testQRPositionDisplayNameSquare() async throws {
+        #expect(QRCodePosition.none.displayName(for: .square) == "None")
+        #expect(QRCodePosition.left.displayName(for: .square) == "Top")
+        #expect(QRCodePosition.right.displayName(for: .square) == "Bottom")
+        #expect(QRCodePosition.both.displayName(for: .square) == "Top & Bottom")
+    }
+
+    @Test("QR position usesVerticalLayout returns correct values")
+    func testQRPositionUsesVerticalLayout() async throws {
+        // Vertical layout shapes
+        #expect(QRCodePosition.left.usesVerticalLayout(for: .circular) == true)
+        #expect(QRCodePosition.left.usesVerticalLayout(for: .portrait) == true)
+        #expect(QRCodePosition.left.usesVerticalLayout(for: .square) == true)
+
+        // Horizontal layout shapes
+        #expect(QRCodePosition.left.usesVerticalLayout(for: .landscape) == false)
+        #expect(QRCodePosition.left.usesVerticalLayout(for: .flag) == false)
+    }
+
+    // MARK: - Manufacturer Image Position Display Name Tests
+
+    @Test("Manufacturer image displayName for landscape labels uses Left/Right")
+    func testManufacturerImageDisplayNameLandscape() async throws {
+        #expect(ManufacturerImagePosition.none.displayName(for: .landscape) == "None")
+        #expect(ManufacturerImagePosition.left.displayName(for: .landscape) == "Left side")
+        #expect(ManufacturerImagePosition.right.displayName(for: .landscape) == "Right side")
+        #expect(ManufacturerImagePosition.both.displayName(for: .landscape) == "Both sides")
+    }
+
+    @Test("Manufacturer image displayName for circular labels uses Top/Bottom")
+    func testManufacturerImageDisplayNameCircular() async throws {
+        #expect(ManufacturerImagePosition.none.displayName(for: .circular) == "None")
+        #expect(ManufacturerImagePosition.left.displayName(for: .circular) == "Top")
+        #expect(ManufacturerImagePosition.right.displayName(for: .circular) == "Bottom")
+        #expect(ManufacturerImagePosition.both.displayName(for: .circular) == "Top & Bottom")
+    }
+
+    @Test("Manufacturer image displayName for portrait labels uses Top/Bottom")
+    func testManufacturerImageDisplayNamePortrait() async throws {
+        #expect(ManufacturerImagePosition.none.displayName(for: .portrait) == "None")
+        #expect(ManufacturerImagePosition.left.displayName(for: .portrait) == "Top")
+        #expect(ManufacturerImagePosition.right.displayName(for: .portrait) == "Bottom")
+        #expect(ManufacturerImagePosition.both.displayName(for: .portrait) == "Top & Bottom")
+    }
+
+    @Test("Manufacturer image displayName for square labels uses Top/Bottom")
+    func testManufacturerImageDisplayNameSquare() async throws {
+        #expect(ManufacturerImagePosition.none.displayName(for: .square) == "None")
+        #expect(ManufacturerImagePosition.left.displayName(for: .square) == "Top")
+        #expect(ManufacturerImagePosition.right.displayName(for: .square) == "Bottom")
+        #expect(ManufacturerImagePosition.both.displayName(for: .square) == "Top & Bottom")
+    }
+
+    @Test("Manufacturer image usesVerticalLayout returns correct values")
+    func testManufacturerImageUsesVerticalLayout() async throws {
+        // Vertical layout shapes
+        #expect(ManufacturerImagePosition.left.usesVerticalLayout(for: .circular) == true)
+        #expect(ManufacturerImagePosition.left.usesVerticalLayout(for: .portrait) == true)
+        #expect(ManufacturerImagePosition.left.usesVerticalLayout(for: .square) == true)
+
+        // Horizontal layout shapes
+        #expect(ManufacturerImagePosition.left.usesVerticalLayout(for: .landscape) == false)
+        #expect(ManufacturerImagePosition.left.usesVerticalLayout(for: .flag) == false)
+    }
+
+    // MARK: - LabelShape Tests
+
+    @Test("LabelGeometry computes correct shape for various dimensions")
+    func testLabelGeometryShape() async throws {
+        // Landscape (wider than tall)
+        let landscape = LabelGeometry(
+            name: "Landscape", labelsPerSheet: 1, columns: 1, rows: 1,
+            labelWidth: 200, labelHeight: 100, leftMargin: 0, topMargin: 0,
+            horizontalGap: 0, verticalGap: 0, defaultFontScale: 1.0, defaultQRSize: 0.65
+        )
+        #expect(landscape.shape == .landscape)
+
+        // Portrait (taller than wide)
+        let portrait = LabelGeometry(
+            name: "Portrait", labelsPerSheet: 1, columns: 1, rows: 1,
+            labelWidth: 100, labelHeight: 200, leftMargin: 0, topMargin: 0,
+            horizontalGap: 0, verticalGap: 0, defaultFontScale: 1.0, defaultQRSize: 0.65
+        )
+        #expect(portrait.shape == .portrait)
+
+        // Square (equal dimensions)
+        let square = LabelGeometry(
+            name: "Square", labelsPerSheet: 1, columns: 1, rows: 1,
+            labelWidth: 100, labelHeight: 100, leftMargin: 0, topMargin: 0,
+            horizontalGap: 0, verticalGap: 0, defaultFontScale: 1.0, defaultQRSize: 0.65
+        )
+        #expect(square.shape == .square)
+
+        // Circular
+        let circular = LabelGeometry(
+            name: "Circular", labelsPerSheet: 1, columns: 1, rows: 1,
+            labelWidth: 100, labelHeight: 100, leftMargin: 0, topMargin: 0,
+            horizontalGap: 0, verticalGap: 0, defaultFontScale: 1.0, defaultQRSize: 0.65,
+            isCircular: true
+        )
+        #expect(circular.shape == .circular)
+
+        // Barbell/Flag
+        let barbell = LabelGeometry(
+            name: "Barbell", labelsPerSheet: 1, columns: 1, rows: 1,
+            labelWidth: 200, labelHeight: 50, leftMargin: 0, topMargin: 0,
+            horizontalGap: 0, verticalGap: 0, defaultFontScale: 1.0, defaultQRSize: 0.65,
+            isBarbell: true, barbellFlagWidth: 50, barbellWrapHeight: 20
+        )
+        #expect(barbell.shape == .flag)
+    }
+
     // MARK: - Labels Per Sheet Calculation Tests
 
     @Test("Labels per sheet equals rows times columns")

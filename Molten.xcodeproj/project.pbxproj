@@ -331,11 +331,6 @@
 				Tests/RepositoryTests/Mock/MockToolItemRepository.swift,
 				Tests/RepositoryTests/Mock/MockUserNotesRepository.swift,
 				Tests/RepositoryTests/Mock/MockUserTagsRepository.swift,
-				Tools/Documentation/check_core_data_violations.sh,
-				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
-				Tools/Documentation/CORE_DATA_PREVENTION_GUIDE.md,
-				Tools/Documentation/detect_all_coredata.sh,
-				Tools/Documentation/RELEASE_STRATEGY_UPDATED.md,
 			);
 			target = F55B2F442E8F335D00C8059F /* MoltenTests */;
 		};
@@ -603,12 +598,6 @@
 				Tests/RepositoryTests/SQLite/SQLiteGlassItemRepositoryTests.swift,
 				Tests/RepositoryTests/SQLite/SQLiteItemTagsRepositoryTests.swift,
 				Tests/RepositoryTests/UserImageRepository_IntegrationTests.swift,
-				Tools/Documentation/check_core_data_violations.sh,
-				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
-				Tools/Documentation/CORE_DATA_PREVENTION_GUIDE.md,
-				Tools/Documentation/detect_all_coredata.sh,
-				Tools/Documentation/RELEASE_STRATEGY_UPDATED.md,
-				Tools/Documentation/TODO.txt,
 			);
 			target = F5A13C4A2E890146002C0F7A /* Molten */;
 		};

@@ -57,9 +57,14 @@ struct LabelPreviewView: View {
         switch format.barbellStyle {
         case .tStyle:
             return AnyShape(TStyleShape(flagWidth: barbellFlagWidthScaled, wrapHeight: barbellWrapHeightScaled))
-        case .pStyle, .pStyleFolded:
-            // pStyleFolded uses same shape as pStyle, but content shows the fold line
+        case .pStyle:
             return AnyShape(PStyleShape(flagWidth: barbellFlagWidthScaled, wrapHeight: barbellWrapHeightScaled))
+        case .pStyleFolded:
+            // Rotated orientation: flag at bottom, wrap extending up
+            // For this shape: flagHeight is the flag portion of the height, wrapWidth is how wide the wrap is
+            let flagPortion = barbellFlagWidthScaled  // Reuse as height of flag section
+            let wrapNarrowWidth = barbellWrapHeightScaled  // The narrow dimension
+            return AnyShape(PStyleFoldedShape(flagHeight: flagPortion, wrapWidth: wrapNarrowWidth))
         case .wrap:
             return AnyShape(WrapShape(wrapHeight: barbellWrapHeightScaled))
         case .symmetric, .none:
@@ -75,8 +80,12 @@ struct LabelPreviewView: View {
             switch format.barbellStyle {
             case .tStyle:
                 return AnyShape(TStyleShape(flagWidth: barbellFlagWidthScaled, wrapHeight: barbellWrapHeightScaled))
-            case .pStyle, .pStyleFolded:
+            case .pStyle:
                 return AnyShape(PStyleShape(flagWidth: barbellFlagWidthScaled, wrapHeight: barbellWrapHeightScaled))
+            case .pStyleFolded:
+                let flagPortion = barbellFlagWidthScaled
+                let wrapNarrowWidth = barbellWrapHeightScaled
+                return AnyShape(PStyleFoldedShape(flagHeight: flagPortion, wrapWidth: wrapNarrowWidth))
             case .wrap:
                 return AnyShape(WrapShape(wrapHeight: barbellWrapHeightScaled))
             case .symmetric, .none:
@@ -419,35 +428,27 @@ struct LabelPreviewView: View {
         }
     }
 
-    /// Build content for P-style folded (flag split horizontally with fold line)
+    /// Build content for P-style folded (flag at bottom, wrap extending up, flag split vertically)
     @ViewBuilder
     private func buildFoldedFlagContent() -> some View {
-        HStack(spacing: 0) {
-            // Flag area - split into top (Area A) and bottom (Area B) with fold line
-            ZStack {
-                VStack(spacing: 0) {
-                    // Top half - Area A
-                    ZStack {
-                        if config.qrPosition != .none, let service = labelService {
-                            HStack(spacing: 2) {
-                                let qrSize = min(barbellFlagWidthScaled * 0.35, previewHeight * 0.4)
-                                QRCodeView(labelData: sampleData, service: service)
-                                    .frame(width: qrSize, height: qrSize)
-                                buildTextContent()
-                                    .padding(.horizontal, 2)
-                            }
-                        } else {
-                            buildTextContent()
-                                .padding(.horizontal, 2)
-                        }
-                    }
-                    .frame(width: barbellFlagWidthScaled, height: previewHeight / 2)
+        let flagHeight = barbellFlagWidthScaled  // Flag section height
+        let wrapTailHeight = previewHeight - flagHeight  // Wrap section above
+        let halfFlagWidth = previewWidth / 2
 
-                    // Bottom half - Area B (mirrored content)
+        VStack(spacing: 0) {
+            // Wrap tail section at top (narrow, non-printable area)
+            Rectangle()
+                .fill(Color.clear)
+                .frame(height: wrapTailHeight)
+
+            // Flag area at bottom - split into left (Area A) and right (Area B) with fold line
+            ZStack {
+                HStack(spacing: 0) {
+                    // Left half - Area A
                     ZStack {
                         if config.qrPosition != .none, let service = labelService {
-                            HStack(spacing: 2) {
-                                let qrSize = min(barbellFlagWidthScaled * 0.35, previewHeight * 0.4)
+                            VStack(spacing: 2) {
+                                let qrSize = min(halfFlagWidth * 0.6, flagHeight * 0.5)
                                 QRCodeView(labelData: sampleData, service: service)
                                     .frame(width: qrSize, height: qrSize)
                                 buildTextContent()
@@ -458,30 +459,42 @@ struct LabelPreviewView: View {
                                 .padding(.horizontal, 2)
                         }
                     }
-                    .frame(width: barbellFlagWidthScaled, height: previewHeight / 2)
+                    .frame(width: halfFlagWidth, height: flagHeight)
+
+                    // Right half - Area B (mirrored content)
+                    ZStack {
+                        if config.qrPosition != .none, let service = labelService {
+                            VStack(spacing: 2) {
+                                let qrSize = min(halfFlagWidth * 0.6, flagHeight * 0.5)
+                                QRCodeView(labelData: sampleData, service: service)
+                                    .frame(width: qrSize, height: qrSize)
+                                buildTextContent()
+                                    .padding(.horizontal, 2)
+                            }
+                        } else {
+                            buildTextContent()
+                                .padding(.horizontal, 2)
+                        }
+                    }
+                    .frame(width: halfFlagWidth, height: flagHeight)
                     .rotationEffect(.degrees(180))  // Flip for when cable is rotated
                 }
 
-                // Dashed fold line in the middle
+                // Dashed fold line in the middle (vertical)
                 Rectangle()
                     .fill(Color.gray.opacity(0.5))
-                    .frame(width: barbellFlagWidthScaled - 4, height: 1)
+                    .frame(width: 1, height: flagHeight - 4)
                     .overlay(
-                        HStack(spacing: 4) {
-                            ForEach(0..<Int(barbellFlagWidthScaled / 8), id: \.self) { _ in
+                        VStack(spacing: 4) {
+                            ForEach(0..<Int(flagHeight / 8), id: \.self) { _ in
                                 Rectangle()
                                     .fill(Color.white)
-                                    .frame(width: 4, height: 1)
+                                    .frame(width: 1, height: 4)
                             }
                         }
                     )
             }
-            .frame(width: barbellFlagWidthScaled, height: previewHeight)
-
-            // Wrap tail section (narrow, non-printable area)
-            Rectangle()
-                .fill(Color.clear)
-                .frame(width: previewWidth - barbellFlagWidthScaled)
+            .frame(width: previewWidth, height: flagHeight)
         }
     }
 
@@ -902,6 +915,30 @@ struct PStyleShape: Shape {
         path.addLine(to: CGPoint(x: totalWidth, y: endY - taperAmount))
         path.addLine(to: CGPoint(x: flagWidth, y: endY))
         path.closeSubpath()
+
+        return path
+    }
+}
+
+/// Shape for P-style folded cable labels (flag with wrap tail extending from top)
+/// Like Mr-Label - flag that folds around cable with wrap going UP
+struct PStyleFoldedShape: Shape {
+    let flagHeight: CGFloat  // Height of the printable flag area
+    let wrapWidth: CGFloat   // Width of the narrow wrap section
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        let totalWidth = rect.width
+        let totalHeight = rect.height
+        let wrapHeight = totalHeight - flagHeight
+        let wrapX = (totalWidth - wrapWidth) / 2
+
+        // Flag area at bottom (full width)
+        path.addRect(CGRect(x: 0, y: wrapHeight, width: totalWidth, height: flagHeight))
+
+        // Narrow wrap tail extending UP from center
+        path.addRect(CGRect(x: wrapX, y: 0, width: wrapWidth, height: wrapHeight))
 
         return path
     }

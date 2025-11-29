@@ -2,7 +2,7 @@
 //  ImageSubmissionSheet.swift
 //  Molten
 //
-//  Sheet for submitting manufacturer images to Molten for consideration
+//  Sheet for submitting community images to Molten for consideration
 //
 
 import SwiftUI
@@ -11,6 +11,7 @@ import SwiftUI
 struct ImageSubmissionSheet: View {
     let image: UIImage
     let glassItem: GlassItemModel
+    let apiClient: ImageSubmissionAPIClientProtocol
 
     @Environment(\.dismiss) private var dismiss
     @State private var hasPermission = false
@@ -19,6 +20,12 @@ struct ImageSubmissionSheet: View {
     @State private var isSubmitting = false
     @State private var showingConfirmation = false
     @State private var errorMessage: String?
+
+    init(image: UIImage, glassItem: GlassItemModel, apiClient: ImageSubmissionAPIClientProtocol = ImageSubmissionAPIClient()) {
+        self.image = image
+        self.glassItem = glassItem
+        self.apiClient = apiClient
+    }
 
     private var isValidEmail: Bool {
         let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
@@ -37,14 +44,14 @@ struct ImageSubmissionSheet: View {
                     // Header
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
                         Text("Submit Image to Molten")
-                            .font(DesignSystem.Typography.sectionHeader)
+                            .font(DesignSystem.Typography.sectionTitle)
                             .fontWeight(.bold)
 
-                        Text("Help improve the catalog by sharing this manufacturer image with other users")
+                        Text("Help improve the catalog by sharing this image with other users")
                             .font(DesignSystem.Typography.formValue)
                             .foregroundColor(DesignSystem.Colors.textSecondary)
 
-                        Text("Note: Custom images you upload are private and visible only to you. This submission shares the manufacturer's default image.")
+                        Text("Note: Custom images you upload are private and visible only to you. This submission shares the image with the Molten community.")
                             .font(DesignSystem.Typography.listItemCaption)
                             .foregroundColor(DesignSystem.Colors.textSecondary)
                             .padding(.vertical, DesignSystem.Spacing.xs)
@@ -161,11 +168,37 @@ struct ImageSubmissionSheet: View {
         isSubmitting = true
         errorMessage = nil
 
-        // TODO: Implement actual submission to API
-        // For now, just show success
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            isSubmitting = false
-            showingConfirmation = true
+        Task {
+            do {
+                // Convert image to JPEG data
+                guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+                    await MainActor.run {
+                        errorMessage = "Failed to process image"
+                        isSubmitting = false
+                    }
+                    return
+                }
+
+                // Submit to API
+                _ = try await apiClient.submitImage(
+                    image: imageData,
+                    glassItem: glassItem,
+                    email: email,
+                    hasPermission: hasPermission,
+                    offersFreeOfCharge: offersFreeOfCharge
+                )
+
+                // Success
+                await MainActor.run {
+                    isSubmitting = false
+                    showingConfirmation = true
+                }
+            } catch {
+                await MainActor.run {
+                    isSubmitting = false
+                    errorMessage = error.localizedDescription
+                }
+            }
         }
     }
 }

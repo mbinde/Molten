@@ -1555,6 +1555,7 @@ class LabelPrintingService {
             drawBarbellFlagQROnly(
                 labelData: labelData,
                 rect: rightFlagRect,
+                config: config,
                 padding: padding,
                 context: context
             )
@@ -1670,11 +1671,19 @@ class LabelPrintingService {
     private func drawBarbellFlagQROnly(
         labelData: LabelData,
         rect: CGRect,
+        config: LabelBuilderConfig,
         padding: CGFloat,
         context: CGContext
     ) {
-        // QR code sized to fit the flag, with some padding
-        let qrSize = min(rect.width, rect.height) - (padding * 2)
+        // Use user's configured QR size percentage (or default 0.65)
+        // For barbell labels, size is relative to label height
+        let qrPercent = config.qrSize ?? 0.65
+        let desiredQRSize = rect.height * qrPercent
+
+        // Clamp to fit within flag area (with padding)
+        let maxFlagSize = min(rect.width, rect.height) - (padding * 2)
+        let qrSize = min(desiredQRSize, maxFlagSize)
+
         let qrImage = generateQRCode(for: labelData)
 
         // Center the QR code in the flag area

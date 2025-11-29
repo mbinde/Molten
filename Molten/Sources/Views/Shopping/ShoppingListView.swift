@@ -1337,6 +1337,10 @@ struct CheckoutSheet: View {
     @State private var currency = "USD"
     @State private var notes = ""
 
+    // Error handling
+    @State private var showCheckoutError = false
+    @State private var checkoutErrorMessage = ""
+
     // Helper methods for quantity binding
     private func getQuantity(for item: DetailedShoppingListItemModel) -> Double {
         quantities[item.catalogItem.stable_id] ?? item.shoppingListItem.neededQuantity
@@ -1562,11 +1566,20 @@ struct CheckoutSheet: View {
                     addToInventory = false
                 }
                 Button("Upgrade to Pro") {
-                    // TODO: Navigate to subscription upgrade screen
                     addToInventory = false
+                    Task {
+                        try? await subscriptionService.presentPaywall()
+                    }
                 }
             } message: {
                 Text("You currently have \(currentInventoryCount) items in your inventory. Free tier users are limited to \(FeatureFlags.FREE_TIER_INVENTORY_LIMIT) items.\n\nIf you complete this checkout, items will not be added to your inventory unless you upgrade to Pro.")
+            }
+            .alert("Checkout Error", isPresented: $showCheckoutError) {
+                Button("OK") {
+                    // User acknowledged the error, they can try again
+                }
+            } message: {
+                Text(checkoutErrorMessage)
             }
         }
     }
@@ -1679,12 +1692,10 @@ struct CheckoutSheet: View {
             }
         } catch {
             print("❌ Checkout error: \(error)")
-            // TODO: Show error alert to user
-            // For now, still exit shopping mode but alert the user
             await MainActor.run {
-                // Don't clear the basket or exit shopping mode on error
-                // so the user can try again
-                dismiss()
+                // Show error alert - don't dismiss so user can try again
+                checkoutErrorMessage = "Checkout failed: \(error.localizedDescription)"
+                showCheckoutError = true
             }
         }
     }

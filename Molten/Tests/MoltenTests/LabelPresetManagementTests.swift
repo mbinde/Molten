@@ -318,9 +318,19 @@ struct LabelPresetManagementTests {
 
     @Test("Use default format when not specified")
     func testDefaultFieldFormat() async throws {
-        let config = LabelBuilderConfig.default
+        // Create a config with no explicit field formats
+        let config = LabelBuilderConfig(
+            qrPosition: .left,
+            qrSize: nil,
+            fontScale: nil,
+            manufacturerImagePosition: .none,
+            manufacturerImageSize: nil,
+            textFields: [.manufacturer],
+            textAlignment: .left,
+            fieldFormats: [:]  // No custom formats
+        )
 
-        // No custom format set, should return default
+        // No custom format set, should return LabelFieldFormat default
         let format = config.format(for: LabelTextField.manufacturer)
         let defaultFormat = LabelFieldFormat.defaultFormat(for: .manufacturer)
 

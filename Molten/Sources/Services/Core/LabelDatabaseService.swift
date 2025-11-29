@@ -167,7 +167,8 @@ struct LabelFormat: Identifiable, Hashable, Sendable {
             isBarbell: layout.shape == "barbell",
             barbellFlagWidth: layout.barbellFlagWidth.map { CGFloat($0) },
             barbellWrapHeight: layout.barbellWrapHeight.map { CGFloat($0) },
-            barbellStyle: BarbellStyle(databaseValue: layout.barbellStyle)
+            barbellStyle: BarbellStyle(databaseValue: layout.barbellStyle),
+            pageFormat: layout.pageFormat
         )
     }
 }
@@ -306,13 +307,14 @@ final class LabelDatabaseService: @unchecked Sendable {
     func searchProducts(
         query: String,
         shape: LabelShape? = nil,
+        pageFormat: String? = nil,
         minWidth: Double? = nil,
         maxWidth: Double? = nil,
         minHeight: Double? = nil,
         maxHeight: Double? = nil,
         limit: Int = 50
     ) -> [LabelFormat] {
-        print("🔍 LabelDatabaseService.searchProducts: query='\(query)', shape=\(String(describing: shape)), width=\(String(describing: minWidth))-\(String(describing: maxWidth)), height=\(String(describing: minHeight))-\(String(describing: maxHeight))")
+        print("🔍 LabelDatabaseService.searchProducts: query='\(query)', shape=\(String(describing: shape)), pageFormat=\(String(describing: pageFormat)), width=\(String(describing: minWidth))-\(String(describing: maxWidth)), height=\(String(describing: minHeight))-\(String(describing: maxHeight))")
         guard let db = db, !query.isEmpty else {
             print("❌ LabelDatabaseService.searchProducts: db nil or empty query")
             return []
@@ -339,6 +341,12 @@ final class LabelDatabaseService: @unchecked Sendable {
             case .flag:
                 filterConditions.append("l.shape = 'barbell'")
             }
+        }
+
+        // Page format condition
+        if let pageFormat = pageFormat {
+            filterConditions.append("l.page_format = ?")
+            filterParams.append(pageFormat)
         }
 
         // Dimension conditions (values in inches, convert to points)
@@ -385,11 +393,14 @@ final class LabelDatabaseService: @unchecked Sendable {
             // Bind the search pattern (used for ?1 which appears 3 times)
             sqlite3_bind_text(stmt, 1, likePattern, -1, SQLITE_TRANSIENT)
 
-            // Bind dimension filter params starting at index 2
+            // Bind filter params starting at index 2
             var paramIndex: Int32 = 2
             for param in filterParams {
                 if let doubleParam = param as? Double {
                     sqlite3_bind_double(stmt, paramIndex, doubleParam)
+                    paramIndex += 1
+                } else if let stringParam = param as? String {
+                    sqlite3_bind_text(stmt, paramIndex, stringParam, -1, SQLITE_TRANSIENT)
                     paramIndex += 1
                 }
             }

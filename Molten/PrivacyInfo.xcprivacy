@@ -2,17 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Tracking -->
 	<key>NSPrivacyTracking</key>
 	<false/>
-
 	<key>NSPrivacyTrackingDomains</key>
 	<array/>
-
-	<!-- Collected Data Types -->
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array>
-		<!-- User Content (Inventory, Projects, Purchases) -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeUserContent</string>
@@ -25,8 +20,6 @@
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
 		</dict>
-
-		<!-- Photos/Videos (Logbook Images) -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypePhotosorVideos</string>
@@ -39,8 +32,6 @@
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
 		</dict>
-
-		<!-- Coarse Location (Store Finding) -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeCoarseLocation</string>
@@ -53,8 +44,6 @@
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
 		</dict>
-
-		<!-- Product Interaction (Subscription Status) -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeProductInteraction</string>
@@ -68,52 +57,38 @@
 			</array>
 		</dict>
 	</array>
-
-	<!-- Accessed API Types -->
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
-		<!-- User Defaults (App Settings) -->
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
-				<!-- CA92.1: Access user defaults to read/write app preferences -->
 				<string>CA92.1</string>
 			</array>
 		</dict>
-
-		<!-- File Timestamp (Core Data) -->
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
-				<!-- C617.1: Access file modification times for Core Data persistence -->
 				<string>C617.1</string>
-				<!-- DDA9.1: Access creation/modification timestamps for user files -->
 				<string>DDA9.1</string>
 			</array>
 		</dict>
-
-		<!-- System Boot Time (Core Data timestamps) -->
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
-				<!-- 35F9.1: Measure time intervals for data synchronization -->
 				<string>35F9.1</string>
 			</array>
 		</dict>
-
-		<!-- Disk Space (Core Data and file operations) -->
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
-				<!-- E174.1: Check available disk space before large database operations -->
 				<string>E174.1</string>
 			</array>
 		</dict>

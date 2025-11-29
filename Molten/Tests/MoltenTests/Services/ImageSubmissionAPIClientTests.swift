@@ -26,6 +26,11 @@ struct ImageSubmissionAPIClientTests {
             }
             return (mockData ?? Data(), mockResponse ?? HTTPURLResponse())
         }
+
+        func download(for request: URLRequest, delegate: URLSessionTaskDelegate?) async throws -> (URL, URLResponse) {
+            // Not used for image submission tests
+            throw URLError(.unsupportedURL)
+        }
     }
 
     // MARK: - Mock AttestationManager

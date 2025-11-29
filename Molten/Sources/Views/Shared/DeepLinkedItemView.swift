@@ -115,19 +115,15 @@ struct DeepLinkedItemView: View {
 
     private func detailsView(item: CompleteInventoryItemModel) -> some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Quick action button to switch to inventory management (if enabled)
-                if showQuickActions {
-                    manageInventoryButton(for: item)
-                    Divider()
-                }
-
-                // Main content
-                InventoryDetailView(
-                    item: item,
-                    deps: deps
-                )
-            }
+            // Main content - pass callback if quick actions enabled
+            InventoryDetailView(
+                item: item,
+                deps: deps,
+                onManageInventory: showQuickActions ? {
+                    showingInventoryView = true
+                    UserSettings.shared.qrScanLastShowedInventory = true
+                } : nil
+            )
             .navigationTitle("Item Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -139,38 +135,6 @@ struct DeepLinkedItemView: View {
                 }
             }
         }
-    }
-
-    private func manageInventoryButton(for item: CompleteInventoryItemModel) -> some View {
-        Button {
-            showingInventoryView = true
-            UserSettings.shared.qrScanLastShowedInventory = true
-        } label: {
-            HStack(spacing: DesignSystem.Spacing.md) {
-                // Small thumbnail to catch the eye
-                ProductImageThumbnail(
-                    itemCode: item.glassItem.stable_id,
-                    manufacturer: item.glassItem.manufacturer,
-                    stableId: item.glassItem.stable_id,
-                    imagePath: item.glassItem.image_path,
-                    imageThumbPath: item.glassItem.image_thumb_path,
-                    dominantColors: item.glassItem.dominant_colors,
-                    size: 32
-                )
-
-                Text("Manage Inventory")
-                    .font(DesignSystem.Typography.listItemTitle)
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-            }
-            .padding(.horizontal)
-            .padding(.vertical, DesignSystem.Spacing.md)
-            .foregroundColor(DesignSystem.Colors.moltenTeal)
-        }
-        .background(DesignSystem.Colors.tintTeal)
     }
 
     // MARK: - Error View

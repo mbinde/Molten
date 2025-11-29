@@ -26,8 +26,10 @@ struct QRScanInventoryView: View {
 
     // State
     @State private var currentQuantity: Int = 0
+    @State private var netChange: Int = 0  // Track +/- changes this session
+    @State private var inventoryRecords: [InventoryModel] = []  // Local copy we can mutate
     @State private var availableLocations: [String] = []
-    @State private var selectedLocation: String? = nil  // nil = "All locations"
+    @State private var selectedLocation: String? = nil  // nil = "No location specified"
     @State private var isCreatingNewLocation = false
     @State private var newLocationName = ""
     @State private var isLoading = true
@@ -77,16 +79,26 @@ struct QRScanInventoryView: View {
                 }
 
                 Spacer()
+
+                // Done button
+                Button {
+                    // Post notification if changes were made
+                    if netChange != 0 {
+                        NotificationCenter.default.post(name: .inventoryChanged, object: nil)
+                    }
+                    dismiss()
+                } label: {
+                    Text("Done")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(DesignSystem.Colors.accentPrimary)
+                .padding()
             }
             .navigationTitle("Manage Inventory")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") {
-                        dismiss()
-                    }
-                }
-            }
             .task {
                 await loadData()
             }
@@ -159,10 +171,10 @@ struct QRScanInventoryView: View {
 
                 if let typeName = typeDisplayName {
                     Text(typeName)
-                        .font(DesignSystem.Typography.listItemCaption)
+                        .font(DesignSystem.Typography.listItemTitle)
                         .foregroundColor(DesignSystem.Colors.accentPrimary)
-                        .padding(.horizontal, DesignSystem.Spacing.sm)
-                        .padding(.vertical, 2)
+                        .padding(.horizontal, DesignSystem.Spacing.md)
+                        .padding(.vertical, DesignSystem.Spacing.xs)
                         .background(DesignSystem.Colors.tintPrimary)
                         .clipShape(Capsule())
                 }
@@ -182,36 +194,45 @@ struct QRScanInventoryView: View {
     // MARK: - Quantity Controls
 
     private var quantityControls: some View {
-        HStack(spacing: DesignSystem.Spacing.xl) {
-            // Minus button
-            Button {
-                Task { await decrementInventory() }
-            } label: {
-                Image(systemName: "minus")
-                    .font(.title2.bold())
-                    .frame(width: 60, height: 60)
-            }
-            .buttonStyle(.bordered)
-            .tint(DesignSystem.Colors.accentDanger)
-            .disabled(actionInProgress || currentQuantity == 0)
+        VStack(spacing: DesignSystem.Spacing.md) {
+            HStack(spacing: DesignSystem.Spacing.xl) {
+                // Minus button
+                Button {
+                    Task { await decrementInventory() }
+                } label: {
+                    Image(systemName: "minus")
+                        .font(.title2.bold())
+                        .frame(width: 60, height: 60)
+                }
+                .buttonStyle(.bordered)
+                .tint(DesignSystem.Colors.accentDanger)
+                .disabled(actionInProgress || currentQuantity == 0)
 
-            // Quantity display
-            Text("\(currentQuantity)")
-                .font(.system(size: 48, weight: .bold, design: .rounded))
-                .foregroundColor(DesignSystem.Colors.textPrimary)
-                .frame(minWidth: 80)
+                // Quantity display
+                Text("\(currentQuantity)")
+                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                    .frame(minWidth: 80)
 
-            // Plus button
-            Button {
-                Task { await incrementInventory() }
-            } label: {
-                Image(systemName: "plus")
-                    .font(.title2.bold())
-                    .frame(width: 60, height: 60)
+                // Plus button
+                Button {
+                    Task { await incrementInventory() }
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.title2.bold())
+                        .frame(width: 60, height: 60)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(DesignSystem.Colors.accentSuccess)
+                .disabled(actionInProgress)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(DesignSystem.Colors.accentSuccess)
-            .disabled(actionInProgress)
+
+            // Net change indicator
+            if netChange != 0 {
+                Text(netChange > 0 ? "+\(netChange)" : "\(netChange)")
+                    .font(DesignSystem.Typography.listItemTitle)
+                    .foregroundColor(netChange > 0 ? DesignSystem.Colors.accentSuccess : DesignSystem.Colors.accentDanger)
+            }
         }
         .padding(.vertical, DesignSystem.Spacing.xl)
     }
@@ -225,19 +246,26 @@ struct QRScanInventoryView: View {
                 .foregroundColor(DesignSystem.Colors.textSecondary)
 
             if isCreatingNewLocation {
-                // Text field for new location
+                // Auto-complete field for new location
                 HStack {
-                    TextField("Enter new location", text: $newLocationName)
-                        .textFieldStyle(.roundedBorder)
+                    LocationAutoCompleteField(
+                        location: $newLocationName,
+                        storageLocationDefinitionRepository: storageLocationDefinitionRepository,
+                        placeholder: "Enter new location"
+                    )
 
                     Button("Add") {
                         if !newLocationName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                             let trimmed = newLocationName.trimmingCharacters(in: .whitespacesAndNewlines)
-                            availableLocations.append(trimmed)
-                            availableLocations.sort()
+                            if !availableLocations.contains(trimmed) {
+                                availableLocations.append(trimmed)
+                                availableLocations.sort()
+                            }
                             selectedLocation = trimmed
                             newLocationName = ""
                             isCreatingNewLocation = false
+                            // Save as last used location
+                            UserDefaults.standard.set(trimmed, forKey: Self.lastQRScanLocationKey)
                             // Recalculate quantity for new location (will be 0)
                             recalculateQuantity()
                         }
@@ -252,7 +280,7 @@ struct QRScanInventoryView: View {
             } else {
                 // Picker for existing locations
                 Picker("Location", selection: $selectedLocation) {
-                    Text("All locations").tag(nil as String?)
+                    Text("No location specified").tag(nil as String?)
 
                     ForEach(availableLocations, id: \.self) { location in
                         Text(location).tag(location as String?)
@@ -269,6 +297,10 @@ struct QRScanInventoryView: View {
                         isCreatingNewLocation = true
                     } else {
                         recalculateQuantity()
+                        // Save as last used location (if not nil)
+                        if let loc = newValue {
+                            UserDefaults.standard.set(loc, forKey: Self.lastQRScanLocationKey)
+                        }
                     }
                 }
             }
@@ -276,11 +308,17 @@ struct QRScanInventoryView: View {
         .padding()
     }
 
+    // UserDefaults key for last used QR scan location
+    private static let lastQRScanLocationKey = "lastQRScanLocation"
+
     // MARK: - Data Loading
 
     @MainActor
     private func loadData() async {
         isLoading = true
+
+        // Initialize local copy of inventory records
+        inventoryRecords = item.inventory
 
         // Load available locations from definitions
         if let definitions = try? await storageLocationDefinitionRepository.fetchAll() {
@@ -296,8 +334,57 @@ struct QRScanInventoryView: View {
         }
         availableLocations.sort()
 
+        // Auto-select location based on item's inventory
+        selectDefaultLocation()
+
         recalculateQuantity()
         isLoading = false
+    }
+
+    private func selectDefaultLocation() {
+        // Get locations that have inventory for this item (matching type if specified)
+        let matchingRecords = getMatchingInventoryRecords()
+        let itemLocations = Set(matchingRecords.compactMap { $0.location })
+
+        // If only one location, select it
+        if itemLocations.count == 1, let onlyLocation = itemLocations.first {
+            selectedLocation = onlyLocation
+            return
+        }
+
+        // If multiple locations, try last used location first
+        if let lastUsed = UserDefaults.standard.string(forKey: Self.lastQRScanLocationKey),
+           itemLocations.contains(lastUsed) {
+            selectedLocation = lastUsed
+            return
+        }
+
+        // Otherwise, select location with highest count
+        if !itemLocations.isEmpty {
+            // Group by location and sum quantities
+            var locationCounts: [String: Double] = [:]
+            for record in matchingRecords {
+                if let loc = record.location {
+                    locationCounts[loc, default: 0] += record.quantity
+                }
+            }
+
+            // Find max count, then sort alphabetically among ties
+            if let maxCount = locationCounts.values.max() {
+                let topLocations = locationCounts
+                    .filter { $0.value == maxCount }
+                    .keys
+                    .sorted()
+
+                if let bestLocation = topLocations.first {
+                    selectedLocation = bestLocation
+                    return
+                }
+            }
+        }
+
+        // Default: no location specified
+        selectedLocation = nil
     }
 
     private func recalculateQuantity() {
@@ -306,7 +393,7 @@ struct QRScanInventoryView: View {
     }
 
     private func getMatchingInventoryRecords() -> [InventoryModel] {
-        item.inventory.filter { inv in
+        inventoryRecords.filter { inv in
             // Filter by location if one is selected
             if let loc = selectedLocation {
                 guard inv.location == loc else { return false }
@@ -352,6 +439,11 @@ struct QRScanInventoryView: View {
                     date_modified: Date()
                 )
                 _ = try await inventoryService.updateInventory(updated)
+
+                // Update local record
+                if let index = inventoryRecords.firstIndex(where: { $0.id == existing.id }) {
+                    inventoryRecords[index] = updated
+                }
             } else {
                 // Create new inventory record
                 let newInventory = InventoryModel(
@@ -368,9 +460,13 @@ struct QRScanInventoryView: View {
                     date_modified: Date()
                 )
                 _ = try await inventoryService.createInventory(newInventory)
+
+                // Add to local records so subsequent increments find it
+                inventoryRecords.append(newInventory)
             }
 
             currentQuantity += 1
+            netChange += 1
         } catch {
             print("❌ QRScanInventoryView: Failed to increment: \(error)")
         }
@@ -401,7 +497,13 @@ struct QRScanInventoryView: View {
             )
             _ = try await inventoryService.updateInventory(updated)
 
+            // Update local record
+            if let index = inventoryRecords.firstIndex(where: { $0.id == existing.id }) {
+                inventoryRecords[index] = updated
+            }
+
             currentQuantity = max(0, currentQuantity - 1)
+            netChange -= 1
         } catch {
             print("❌ QRScanInventoryView: Failed to decrement: \(error)")
         }

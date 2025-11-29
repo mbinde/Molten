@@ -29,6 +29,9 @@ struct InventoryDetailView: View {
     let glassItemRepository: GlassItemRepository
     let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
 
+    /// Optional callback for QR scan workflow - shows "Manage Inventory" button near inventory section
+    let onManageInventory: (() -> Void)?
+
     @Environment(\.dismiss) private var dismiss
     @Environment(EntitlementService.self) private var entitlementService
     @State private var isEditing = false
@@ -106,7 +109,8 @@ struct InventoryDetailView: View {
         userImageRepository: UserImageRepository,
         kilnScheduleService: KilnScheduleService,
         glassItemRepository: GlassItemRepository,
-        storageLocationDefinitionRepository: StorageLocationDefinitionRepository
+        storageLocationDefinitionRepository: StorageLocationDefinitionRepository,
+        onManageInventory: (() -> Void)? = nil
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
@@ -119,6 +123,7 @@ struct InventoryDetailView: View {
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
         self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
+        self.onManageInventory = onManageInventory
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
@@ -127,7 +132,11 @@ struct InventoryDetailView: View {
     }
 
     /// Convenience init using AppDependencies
-    init(item: CompleteInventoryItemModel, deps: AppDependencies = AppDependencies()) {
+    init(
+        item: CompleteInventoryItemModel,
+        deps: AppDependencies = AppDependencies(),
+        onManageInventory: (() -> Void)? = nil
+    ) {
         self.item = item
         self.inventoryTrackingService = deps.inventoryTrackingService
         self.catalogService = deps.catalogService
@@ -139,6 +148,7 @@ struct InventoryDetailView: View {
         self.kilnScheduleService = deps.kilnScheduleService
         self.glassItemRepository = deps.glassItemRepository
         self.storageLocationDefinitionRepository = deps.storageLocationDefinitionRepository
+        self.onManageInventory = onManageInventory
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
@@ -234,6 +244,28 @@ struct InventoryDetailView: View {
                                 showingInventoryDetails = true
                             }
                         )
+                    }
+
+                    // Manage Inventory button (QR scan workflow)
+                    if let onManageInventory = onManageInventory {
+                        Button {
+                            onManageInventory()
+                        } label: {
+                            HStack {
+                                Image(systemName: "plusminus.circle.fill")
+                                    .font(.title2)
+                                Text("Manage Inventory")
+                                    .font(DesignSystem.Typography.listItemTitle)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                            }
+                            .padding()
+                            .foregroundColor(DesignSystem.Colors.moltenTeal)
+                        }
+                        .background(DesignSystem.Colors.tintTeal)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+                        .padding(.horizontal)
                     }
 
                     // Specifications tile grid

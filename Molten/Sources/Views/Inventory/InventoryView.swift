@@ -516,6 +516,13 @@ struct InventoryView: View, CachedDataDeletion {
                     await loadData()
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .inventoryChanged)) { _ in
+                Task {
+                    // Refresh after QR scan inventory changes
+                    await CatalogDataCache.shared.reload(catalogService: catalogService)
+                    await loadData()
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
                 Task {
                     let ratingService = AppDependencies.shared.ratingService

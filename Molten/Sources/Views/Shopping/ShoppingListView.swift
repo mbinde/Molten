@@ -896,6 +896,12 @@ struct ShoppingListView: View {
                     await loadShoppingList()
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .inventoryChanged)) { _ in
+                Task {
+                    // Refresh after QR scan inventory changes
+                    await loadShoppingList()
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .shoppingListItemAdded)) { _ in
                 Task {
                     await loadShoppingList()

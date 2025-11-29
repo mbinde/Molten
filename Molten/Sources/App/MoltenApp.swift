@@ -716,7 +716,7 @@ extension MoltenApp {
         print("🔗 handleDeepLink: host = \(host)")
 
         switch host {
-        case "i":
+        case "i", "g":  // "g" is legacy, kept for backward compatibility
             // Item detail with quick actions: molten://i/{stableId}/{typeCode}
             // e.g., molten://i/bullseye-clear-001/fc (frit coarse)
             let pathComponents = url.pathComponents.filter { $0 != "/" }

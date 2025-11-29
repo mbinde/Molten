@@ -23,6 +23,7 @@ extension Notification.Name {
     static let resetInventoryNavigation = Notification.Name("resetInventoryNavigation")
     static let resetPurchasesNavigation = Notification.Name("resetPurchasesNavigation")
     static let inventoryItemAdded = Notification.Name("inventoryItemAdded")
+    static let inventoryChanged = Notification.Name("inventoryChanged")  // Posted when QR scan modifies inventory
     static let shoppingListItemAdded = Notification.Name("shoppingListItemAdded")
     static let showSettings = Notification.Name("showSettings")
     static let navigateToShoppingListForStore = Notification.Name("navigateToShoppingListForStore")

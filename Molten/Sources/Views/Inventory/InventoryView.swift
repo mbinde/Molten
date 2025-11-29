@@ -26,9 +26,6 @@ struct InventoryView: View, CachedDataDeletion {
     // Search scope state
     @State private var searchScope: InventorySearchScope = .allFields
 
-    // Performance timing (DEBUG builds only)
-    @State private var performanceTimer = PerformanceTimer()
-
     // UI-only state (not in ViewModel)
     @State private var showingAddItem = false
     @State private var showingUpgradePrompt = false
@@ -406,7 +403,7 @@ struct InventoryView: View, CachedDataDeletion {
                 }
                 .id(refreshTrigger)
             }
-            .performanceTitle("Inventory", timer: performanceTimer)
+            .navigationTitle("Inventory")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -514,7 +511,6 @@ struct InventoryView: View, CachedDataDeletion {
             }
             .task {
                 await loadData()
-                performanceTimer.complete()
             }
             .refreshable {
                 // Invalidate cache to force fresh data load on pull-to-refresh

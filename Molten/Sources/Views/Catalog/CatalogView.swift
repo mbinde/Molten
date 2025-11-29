@@ -34,8 +34,6 @@ struct CatalogView: View {
     // Search scope state
     @State private var searchScope: CatalogSearchScope = .allFields
 
-    // Performance timing (DEBUG builds only)
-    @State private var performanceTimer = PerformanceTimer()
 
     // Use manual UserDefaults handling instead of @AppStorage to prevent test crashes
     @State private var defaultSortOptionRawValue = SortOption.name.rawValue
@@ -351,7 +349,7 @@ struct CatalogView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .performanceTitle("Catalog", timer: performanceTimer)
+            .navigationTitle("Catalog")
             .searchable(
                 text: $localSearchText,
                 placement: .navigationBarDrawer(displayMode: .always),
@@ -398,8 +396,7 @@ struct CatalogView: View {
                 clearSearch: clearSearch,
                 resetNavigation: resetNavigation,
                 catalogUpdateMessage: $catalogUpdateMessage,
-                showCatalogUpdateToast: $showCatalogUpdateToast,
-                performanceTimer: performanceTimer
+                showCatalogUpdateToast: $showCatalogUpdateToast
             ))
             .toast(
                 message: catalogUpdateMessage,

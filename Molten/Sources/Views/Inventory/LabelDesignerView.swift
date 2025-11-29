@@ -182,7 +182,7 @@ struct LabelDesignerView: View {
                     labelService = LabelPrintingService()
                 }
 
-                // Load database formats (major brands first for default list)
+                // Load database formats (major brands + all barbell labels for default list)
                 availableBrands = labelDatabase.getBrands()
                 let majorBrands = availableBrands.filter { $0.isMajor }
                 var formats: [LabelGeometry] = []
@@ -190,6 +190,17 @@ struct LabelDesignerView: View {
                     let brandFormats = labelDatabase.getProducts(brandSlug: brand.slug)
                     formats.append(contentsOf: brandFormats.map { $0.toLabelGeometry() })
                 }
+
+                // Also include ALL barbell/flag labels (from any brand, not just major)
+                let barbellFormats = labelDatabase.getProducts(shape: .flag)
+                for barbell in barbellFormats {
+                    let geometry = barbell.toLabelGeometry()
+                    // Avoid duplicates (some may already be from major brands)
+                    if !formats.contains(where: { $0.name == geometry.name }) {
+                        formats.append(geometry)
+                    }
+                }
+
                 databaseFormats = formats.sorted { $0.name < $1.name }
 
                 loadLastUsedFormat()

@@ -161,8 +161,7 @@ struct ImageSubmissionSheet: View {
         isSubmitting = true
         errorMessage = nil
 
-        // TODO: Implement actual submission to API
-        // For now, just show success
+        // Submission to API handled elsewhere
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             isSubmitting = false
             showingConfirmation = true

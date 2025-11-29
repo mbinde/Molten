@@ -439,13 +439,34 @@ struct LabelPreviewView: View {
 
         HStack(alignment: .top, spacing: 0) {
             // LEFT SIDE: Print Areas A and B
-            ZStack {
-                VStack(spacing: 0) {
-                    // Print Area A (top half)
-                    ZStack {
-                        Rectangle().fill(Color.white)
-                        Rectangle().stroke(Color.gray.opacity(0.6), lineWidth: 1.5)
+            VStack(spacing: 0) {
+                // Print Area A (top half)
+                ZStack {
+                    if config.qrPosition != .none, let service = labelService {
+                        HStack(spacing: 2) {
+                            let qrSize = min(printAreaWidth * 0.35, halfFlagHeight * 0.85)
+                            QRCodeView(labelData: sampleData, service: service)
+                                .frame(width: qrSize, height: qrSize)
+                            buildTextContent()
+                                .padding(.horizontal, 2)
+                        }
+                    } else {
+                        buildTextContent()
+                            .padding(.horizontal, 2)
+                    }
+                }
+                .frame(width: printAreaWidth, height: halfFlagHeight)
+                .border(Color.gray.opacity(0.6), width: 1)
 
+                // Dashed fold line between A and B
+                Rectangle()
+                    .stroke(style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                    .foregroundColor(Color.gray.opacity(0.5))
+                    .frame(width: printAreaWidth, height: 1)
+
+                // Print Area B (bottom half) - content rotated 180°
+                ZStack {
+                    Group {
                         if config.qrPosition != .none, let service = labelService {
                             HStack(spacing: 2) {
                                 let qrSize = min(printAreaWidth * 0.35, halfFlagHeight * 0.85)
@@ -459,38 +480,10 @@ struct LabelPreviewView: View {
                                 .padding(.horizontal, 2)
                         }
                     }
-                    .frame(height: halfFlagHeight)
-
-                    // Print Area B (bottom half) - content rotated 180°
-                    ZStack {
-                        Rectangle().fill(Color.white)
-                        Rectangle().stroke(Color.gray.opacity(0.6), lineWidth: 1.5)
-
-                        Group {
-                            if config.qrPosition != .none, let service = labelService {
-                                HStack(spacing: 2) {
-                                    let qrSize = min(printAreaWidth * 0.35, halfFlagHeight * 0.85)
-                                    QRCodeView(labelData: sampleData, service: service)
-                                        .frame(width: qrSize, height: qrSize)
-                                    buildTextContent()
-                                        .padding(.horizontal, 2)
-                                }
-                            } else {
-                                buildTextContent()
-                                    .padding(.horizontal, 2)
-                            }
-                        }
-                        .rotationEffect(.degrees(180))
-                    }
-                    .frame(height: halfFlagHeight)
+                    .rotationEffect(.degrees(180))
                 }
-
-                // Dashed fold line
-                Rectangle()
-                    .stroke(style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                    .foregroundColor(Color.gray.opacity(0.6))
-                    .frame(height: 1)
-                    .offset(y: 0)
+                .frame(width: printAreaWidth, height: halfFlagHeight)
+                .border(Color.gray.opacity(0.6), width: 1)
             }
             .frame(width: printAreaWidth, height: previewHeight)
 

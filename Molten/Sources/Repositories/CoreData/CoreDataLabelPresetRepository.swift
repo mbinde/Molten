@@ -182,13 +182,17 @@ class CoreDataLabelPresetRepository: @unchecked Sendable, LabelPresetRepository 
             fieldFormats: fieldFormats
         )
 
+        // Optional fields
+        let recommendedLabel = entity.value(forKey: "recommended_label") as? String
+
         return LabelBuilderPreset(
             id: id,
             name: name,
             description: description ?? "",
             config: config,
             createdAt: createdAt,
-            modifiedAt: modifiedAt
+            modifiedAt: modifiedAt,
+            recommended_label: recommendedLabel
         )
     }
 
@@ -224,6 +228,9 @@ class CoreDataLabelPresetRepository: @unchecked Sendable, LabelPresetRepository 
             throw CoreDataLabelPresetError.encodingFailed("field_formats")
         }
         entity.setValue(fieldFormatsJSON, forKey: "field_formats")
+
+        // Optional fields
+        entity.setValue(preset.recommended_label, forKey: "recommended_label")
     }
 }
 

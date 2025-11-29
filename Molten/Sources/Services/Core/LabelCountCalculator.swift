@@ -26,34 +26,32 @@ struct LabelCountCalculator {
     /// - Parameters:
     ///   - item: The inventory item
     ///   - userOverrides: Optional dictionary of user-specified label counts (key: "stableId:type")
+    ///   - inventoryRecordOverrides: Optional dictionary of per-record label counts (key: inventory UUID)
     /// - Returns: Number of labels to print
     @MainActor
     static func calculateLabelCount(
         for item: CompleteInventoryItemModel,
-        userOverrides: [String: Int] = [:]
+        userOverrides: [String: Int] = [:],
+        inventoryRecordOverrides: [UUID: Int] = [:]
     ) -> Int {
         var total = 0
 
         for inventory in item.inventory {
-            let key = "\(item.catalogItem.stable_id):\(inventory.type)"
+            // Check for UUID-based per-record override first (highest priority)
+            if let override = inventoryRecordOverrides[inventory.id] {
+                total += override
+                continue
+            }
 
-            // Check for user override first
+            // Check for type-based override second
+            let key = "\(item.catalogItem.stable_id):\(inventory.type)"
             if let override = userOverrides[key] {
                 total += override
                 continue
             }
 
-            if inventory.isWeightBasedType {
-                // For weight-based types, use containerCount if available, otherwise default to 1
-                if let containerCount = inventory.containerCount, containerCount > 0 {
-                    total += Int(containerCount)
-                } else {
-                    total += 1  // Default to 1 label if no container count
-                }
-            } else {
-                // For count-based types (rod, tube, sheet, etc.), use quantity directly
-                total += Int(inventory.quantity)
-            }
+            // Use default logic
+            total += inventory.defaultLabelCount
         }
 
         return max(total, 0)
@@ -63,10 +61,11 @@ struct LabelCountCalculator {
     @MainActor
     static func calculateTotalLabelCount(
         for items: [CompleteInventoryItemModel],
-        userOverrides: [String: Int] = [:]
+        userOverrides: [String: Int] = [:],
+        inventoryRecordOverrides: [UUID: Int] = [:]
     ) -> Int {
         items.reduce(0) { total, item in
-            total + calculateLabelCount(for: item, userOverrides: userOverrides)
+            total + calculateLabelCount(for: item, userOverrides: userOverrides, inventoryRecordOverrides: inventoryRecordOverrides)
         }
     }
 
@@ -98,6 +97,7 @@ struct LabelCountCalculator {
     static func generateLabelData(
         for items: [CompleteInventoryItemModel],
         userOverrides: [String: Int] = [:],
+        inventoryRecordOverrides: [UUID: Int] = [:],
         location: String? = nil,
         owner: String? = nil
     ) -> [LabelData] {
@@ -108,20 +108,18 @@ struct LabelCountCalculator {
             let itemLocation = item.locations.first ?? location
 
             for inventory in item.inventory {
-                let key = "\(item.catalogItem.stable_id):\(inventory.type)"
-
                 // Determine label count for this inventory record
+                // UUID-based override takes highest priority
                 let labelCount: Int
-                if let override = userOverrides[key] {
+                if let override = inventoryRecordOverrides[inventory.id] {
                     labelCount = override
-                } else if inventory.isWeightBasedType {
-                    if let containerCount = inventory.containerCount, containerCount > 0 {
-                        labelCount = Int(containerCount)
-                    } else {
-                        labelCount = 1
-                    }
                 } else {
-                    labelCount = Int(inventory.quantity)
+                    let key = "\(item.catalogItem.stable_id):\(inventory.type)"
+                    if let override = userOverrides[key] {
+                        labelCount = override
+                    } else {
+                        labelCount = inventory.defaultLabelCount
+                    }
                 }
 
                 // Create labels with type info

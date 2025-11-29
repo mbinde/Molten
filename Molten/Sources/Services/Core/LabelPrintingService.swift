@@ -312,9 +312,13 @@ struct LabelBuilderConfig: Equatable, Codable, Sendable {
         fontScale: nil,  // Use format default
         manufacturerImagePosition: .none,  // No manufacturer logo
         manufacturerImageSize: nil,  // Use default (0.6)
-        textFields: [.manufacturer, .sku, .colorName, .coe],
+        textFields: [.colorName, .manufacturer, .sku],
         textAlignment: .left,
-        fieldFormats: [:],  // Empty - use LabelFieldFormat.defaults
+        fieldFormats: [
+            .colorName: LabelFieldFormat(fontSize: 9, bold: true, italic: false),
+            .manufacturer: LabelFieldFormat(fontSize: 8, bold: false, italic: false),
+            .sku: LabelFieldFormat(fontSize: 8, bold: false, italic: false)
+        ],
         paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
         positionHorizontal: 0, positionVertical: 0
     )
@@ -343,16 +347,20 @@ struct LabelBuilderConfig: Equatable, Codable, Sendable {
     static let presets: [LabelBuilderPreset] = [
         LabelBuilderPreset(
             name: "Information Dense",
-            description: "Maximum info with QR code on left",
+            description: "Item name prominent, with manufacturer and SKU",
             config: LabelBuilderConfig(
                 qrPosition: .left,
                 qrSize: nil,
                 fontScale: nil,
                 manufacturerImagePosition: .none,
                 manufacturerImageSize: nil,
-                textFields: [.manufacturer, .sku, .colorName, .coe],
+                textFields: [.colorName, .manufacturer, .sku],
                 textAlignment: .left,
-                fieldFormats: [:],
+                fieldFormats: [
+                    .colorName: LabelFieldFormat(fontSize: 9, bold: true, italic: false),
+                    .manufacturer: LabelFieldFormat(fontSize: 8, bold: false, italic: false),
+                    .sku: LabelFieldFormat(fontSize: 8, bold: false, italic: false)
+                ],
                 paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
                 positionHorizontal: 0, positionVertical: 0
             )

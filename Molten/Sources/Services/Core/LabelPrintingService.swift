@@ -1586,7 +1586,8 @@ class LabelPrintingService {
         let contentHeight = rect.height - (padding * 2)
 
         // Calculate text sizing - barbell labels need smaller text
-        let barbellFontScale = fontScale * 0.8
+        // Use user's font scale directly - they can adjust if text doesn't fit
+        let barbellFontScale = fontScale
 
         // Calculate total text height for vertical centering
         var totalTextHeight: CGFloat = 0

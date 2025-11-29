@@ -265,6 +265,16 @@ struct LabelBuilderConfig: Equatable, Codable, Sendable {
     var textAlignment: LabelTextAlignment  // text alignment (left, center, right)
     var fieldFormats: [LabelTextField: LabelFieldFormat]  // per-field formatting
 
+    // Content padding within labels (in points)
+    var paddingTop: CGFloat
+    var paddingBottom: CGFloat
+    var paddingLeft: CGFloat
+    var paddingRight: CGFloat
+
+    // Position adjustments (in points)
+    var positionHorizontal: CGFloat
+    var positionVertical: CGFloat
+
     /// Default configuration (information dense)
     static let `default` = LabelBuilderConfig(
         qrPosition: .left,
@@ -274,7 +284,9 @@ struct LabelBuilderConfig: Equatable, Codable, Sendable {
         manufacturerImageSize: nil,  // Use default (0.6)
         textFields: [.manufacturer, .sku, .colorName, .coe],
         textAlignment: .left,
-        fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
+        fieldFormats: [:],  // Empty - use LabelFieldFormat.defaults
+        paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+        positionHorizontal: 0, positionVertical: 0
     )
 
     /// Get format for a specific field (with fallback to default)
@@ -304,13 +316,15 @@ struct LabelBuilderConfig: Equatable, Codable, Sendable {
             description: "Maximum info with QR code on left",
             config: LabelBuilderConfig(
                 qrPosition: .left,
-                qrSize: nil,  // Use format default
-                fontScale: nil,  // Use format default
-                manufacturerImagePosition: .right,  // Add manufacturer logo on right
-                manufacturerImageSize: nil,  // Use default (0.6)
+                qrSize: nil,
+                fontScale: nil,
+                manufacturerImagePosition: .right,
+                manufacturerImageSize: nil,
                 textFields: [.manufacturer, .sku, .colorName, .coe],
                 textAlignment: .left,
-                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
+                fieldFormats: [:],
+                paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+                positionHorizontal: 0, positionVertical: 0
             )
         ),
         LabelBuilderPreset(
@@ -318,13 +332,15 @@ struct LabelBuilderConfig: Equatable, Codable, Sendable {
             description: "Large QR code, minimal text",
             config: LabelBuilderConfig(
                 qrPosition: .left,
-                qrSize: nil,  // Use format default
-                fontScale: nil,  // Use format default
+                qrSize: nil,
+                fontScale: nil,
                 manufacturerImagePosition: .none,
                 manufacturerImageSize: nil,
                 textFields: [.manufacturer, .sku],
                 textAlignment: .left,
-                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
+                fieldFormats: [:],
+                paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+                positionHorizontal: 0, positionVertical: 0
             )
         ),
         LabelBuilderPreset(
@@ -332,13 +348,15 @@ struct LabelBuilderConfig: Equatable, Codable, Sendable {
             description: "QR codes on both ends",
             config: LabelBuilderConfig(
                 qrPosition: .both,
-                qrSize: nil,  // Use format default
-                fontScale: nil,  // Use format default
+                qrSize: nil,
+                fontScale: nil,
                 manufacturerImagePosition: .none,
                 manufacturerImageSize: nil,
                 textFields: [.manufacturer, .sku, .colorName],
                 textAlignment: .center,
-                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
+                fieldFormats: [:],
+                paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+                positionHorizontal: 0, positionVertical: 0
             )
         ),
         LabelBuilderPreset(
@@ -346,13 +364,15 @@ struct LabelBuilderConfig: Equatable, Codable, Sendable {
             description: "With location information",
             config: LabelBuilderConfig(
                 qrPosition: .left,
-                qrSize: nil,  // Use format default
-                fontScale: nil,  // Use format default
+                qrSize: nil,
+                fontScale: nil,
                 manufacturerImagePosition: .none,
                 manufacturerImageSize: nil,
-                textFields: [.manufacturer, .sku, .colorName, .location],  // Removed .coe
+                textFields: [.manufacturer, .sku, .colorName, .location],
                 textAlignment: .left,
-                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
+                fieldFormats: [:],
+                paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+                positionHorizontal: 0, positionVertical: 0
             )
         )
     ]
@@ -660,7 +680,9 @@ struct LabelTemplate: Equatable, Hashable {
             manufacturerImageSize: nil,
             textFields: fields,
             textAlignment: .left,  // Default to left alignment for legacy templates
-            fieldFormats: LabelFieldFormat.defaults  // Use default field formats for legacy templates
+            fieldFormats: LabelFieldFormat.defaults,  // Use default field formats for legacy templates
+            paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+            positionHorizontal: 0, positionVertical: 0
         )
     }
 
@@ -916,18 +938,15 @@ class LabelPrintingService {
     ///   - format: Avery format to use
     ///   - config: Label builder configuration
     ///   - fontScale: Font size multiplier (0.7 to 1.3)
-    ///   - offsetX: Horizontal position adjustment in points (-10 to +10)
-    ///   - offsetY: Vertical position adjustment in points (-10 to +10)
     ///   - startRow: Starting row (0-based) for partial sheets (default: 0)
     ///   - startColumn: Starting column (0-based) for partial sheets (default: 0)
     /// - Returns: URL to the generated PDF file in temporary storage
+    /// Note: Position offsets (horizontal/vertical) are now taken from config.positionHorizontal/positionVertical
     func generateLabelSheet(
         labels: [LabelData],
         format: LabelGeometry = .defaultFormat,
         config: LabelBuilderConfig = .default,
         fontScale: Double = 1.0,
-        offsetX: Double = 0.0,
-        offsetY: Double = 0.0,
         startRow: Int = 0,
         startColumn: Int = 0
     ) async -> URL? {
@@ -964,8 +983,8 @@ class LabelPrintingService {
                         let labelData = labels[labelIndex]
 
                         // Calculate label position with user adjustments
-                        let x = format.leftMargin + (CGFloat(col) * (format.labelWidth + format.horizontalGap)) + CGFloat(offsetX)
-                        let y = format.topMargin + (CGFloat(row) * (format.labelHeight + format.verticalGap)) + CGFloat(offsetY)
+                        let x = format.leftMargin + (CGFloat(col) * (format.labelWidth + format.horizontalGap)) + config.positionHorizontal
+                        let y = format.topMargin + (CGFloat(row) * (format.labelHeight + format.verticalGap)) + config.positionVertical
                         let labelRect = CGRect(x: x, y: y, width: format.labelWidth, height: format.labelHeight)
 
                         // Draw single label

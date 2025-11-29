@@ -20,8 +20,10 @@ struct LabelPreviewView: View {
     let config: LabelBuilderConfig
     let sampleData: LabelData
     var fontScale: Double = 1.0
-    var offsetX: Double = 0.0
-    var offsetY: Double = 0.0
+
+    // Position offsets now come from config.positionHorizontal/positionVertical
+    private var offsetX: Double { Double(config.positionHorizontal) }
+    private var offsetY: Double { Double(config.positionVertical) }
 
     // CRITICAL: Cache service instance in @State to prevent recreation on every body evaluation
     @State private var labelService: LabelPrintingService?
@@ -424,25 +426,30 @@ struct LabelPreviewView: View {
         }
     }
 
-    /// Build content for P-style folded (horizontal: flag split into top/bottom with fold line, stub on right)
+    /// Build content for P-style folded cable labels
+    /// Layout: [Print Area A (top)] [fold line] [Print Area B (bottom, rotated)] + [stub centered on right]
     @ViewBuilder
     private func buildFoldedFlagContent() -> some View {
+        // For p-style-folded: print area is ~44% of width (37mm/84mm), stub is ~56%
+        // Use format.barbellFlagWidth if set, otherwise calculate from proportions
+        let printAreaWidth = format.barbellFlagWidth.map { $0 * scaleFactor } ?? (previewWidth * 0.44)
         let halfFlagHeight = previewHeight / 2
-        let stubWidth = barbellFlagWidthScaled * 0.5
+        let stubWidth = previewWidth - printAreaWidth
+        let stubHeight = barbellWrapHeightScaled  // Stub is narrower than full height
+        let stubY = (previewHeight - stubHeight) / 2  // Centered vertically
 
         HStack(spacing: 0) {
-            // Flag area - split into top (Area A) and bottom (Area B) with horizontal fold line
+            // Main printable area with two zones (LEFT side)
             ZStack {
                 VStack(spacing: 0) {
-                    // Top half - Area A (with border)
+                    // Print Area A (top half) - bordered
                     ZStack {
-                        // Border rectangle
                         Rectangle()
-                            .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                            .stroke(Color.gray.opacity(0.6), lineWidth: 1.5)
 
                         if config.qrPosition != .none, let service = labelService {
                             HStack(spacing: 2) {
-                                let qrSize = min(barbellFlagWidthScaled * 0.4, halfFlagHeight * 0.9)
+                                let qrSize = min(printAreaWidth * 0.35, halfFlagHeight * 0.85)
                                 QRCodeView(labelData: sampleData, service: service)
                                     .frame(width: qrSize, height: qrSize)
                                 buildTextContent()
@@ -453,54 +460,62 @@ struct LabelPreviewView: View {
                                 .padding(.horizontal, 2)
                         }
                     }
-                    .frame(width: barbellFlagWidthScaled, height: halfFlagHeight)
+                    .frame(height: halfFlagHeight)
 
-                    // Bottom half - Area B (with border, mirrored content)
+                    // Print Area B (bottom half) - bordered, content rotated 180°
                     ZStack {
-                        // Border rectangle
                         Rectangle()
-                            .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                            .stroke(Color.gray.opacity(0.6), lineWidth: 1.5)
 
-                        if config.qrPosition != .none, let service = labelService {
-                            HStack(spacing: 2) {
-                                let qrSize = min(barbellFlagWidthScaled * 0.4, halfFlagHeight * 0.9)
-                                QRCodeView(labelData: sampleData, service: service)
-                                    .frame(width: qrSize, height: qrSize)
+                        Group {
+                            if config.qrPosition != .none, let service = labelService {
+                                HStack(spacing: 2) {
+                                    let qrSize = min(printAreaWidth * 0.35, halfFlagHeight * 0.85)
+                                    QRCodeView(labelData: sampleData, service: service)
+                                        .frame(width: qrSize, height: qrSize)
+                                    buildTextContent()
+                                        .padding(.horizontal, 2)
+                                }
+                            } else {
                                 buildTextContent()
                                     .padding(.horizontal, 2)
                             }
-                        } else {
-                            buildTextContent()
-                                .padding(.horizontal, 2)
                         }
+                        .rotationEffect(.degrees(180))
                     }
-                    .frame(width: barbellFlagWidthScaled, height: halfFlagHeight)
-                    .rotationEffect(.degrees(180))  // Flip for when cable is rotated
+                    .frame(height: halfFlagHeight)
                 }
 
-                // Dashed horizontal fold line in the middle
+                // Dashed fold line between areas
                 Rectangle()
                     .stroke(style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
                     .foregroundColor(Color.gray.opacity(0.6))
-                    .frame(width: barbellFlagWidthScaled - 8, height: 1)
+                    .frame(height: 1)
             }
-            .frame(width: barbellFlagWidthScaled, height: previewHeight)
+            .frame(width: printAreaWidth, height: previewHeight)
 
-            // Wrap stub area (non-printable, shown with diagonal stripes)
-            let wrapY = (previewHeight - barbellWrapHeightScaled) / 2
-            let taperAmount = barbellWrapHeightScaled * 0.15
+            // Stub/handle on right - centered vertically (P-style), with stripes
+            VStack {
+                Spacer()
+                    .frame(height: stubY)
+                ZStack {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.08))
+                        .overlay(
+                            DiagonalStripePattern()
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
 
-            // Simple tapered stub shape with diagonal stripes
-            TaperedStubShape(wrapY: wrapY, wrapHeight: barbellWrapHeightScaled, taperAmount: taperAmount)
-                .fill(Color.gray.opacity(0.1))
-                .overlay(
-                    DiagonalStripePattern()
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                        .clipShape(TaperedStubShape(wrapY: wrapY, wrapHeight: barbellWrapHeightScaled, taperAmount: taperAmount))
-                )
-                .frame(width: stubWidth, height: previewHeight)
+                    Rectangle()
+                        .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                }
+                .frame(width: stubWidth, height: stubHeight)
+                Spacer()
+                    .frame(height: stubY)
+            }
+            .frame(width: stubWidth, height: previewHeight)
         }
-        .frame(width: barbellFlagWidthScaled + stubWidth, height: previewHeight)
+        .frame(width: previewWidth, height: previewHeight)
     }
 
     /// Diagonal stripe pattern for non-printable areas
@@ -937,7 +952,6 @@ struct PStyleShape: Shape {
 
         let totalWidth = rect.width
         let totalHeight = rect.height
-        let wrapWidth = totalWidth - flagWidth
         let wrapY = (totalHeight - wrapHeight) / 2
 
         // Flag area on left (full height)

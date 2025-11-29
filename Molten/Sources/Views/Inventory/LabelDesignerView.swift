@@ -61,6 +61,14 @@ struct LabelDesignerView: View {
     @State private var editingPresetName = ""
     @State private var editingPresetDescription = ""
 
+    // Label format change alert when overwriting preset
+    @State private var showingLabelChangeAlert = false
+    @State private var pendingOverwritePreset: LabelBuilderPreset?  // Preset waiting to be overwritten
+
+    // Switch to recommended label alert when loading preset
+    @State private var showingSwitchToRecommendedAlert = false
+    @State private var recommendedLabelName: String?  // The label name the preset recommends
+
     // CRITICAL: Cache service instance in @State to prevent recreation on every body evaluation
     @State private var labelService: LabelPrintingService?
 
@@ -71,62 +79,104 @@ struct LabelDesignerView: View {
     @State private var labelCountOverrides: [String: Int] = [:]
     @State private var showingLabelCountInput: Bool = false
 
-    var body: some View {
+    // Label selection (inclusion-based - start with nothing selected)
+    @State private var selectedInventoryIds: Set<UUID> = []  // What we want to print
+    @State private var inventoryLabelCounts: [UUID: Int] = [:]  // Per-record label count overrides
+    @State private var showingFilterSheet: Bool = false
+    @State private var showAllSelected: Bool = false  // Override filters to show all selected items
+    @State private var locationFilter: String? = nil
+    @State private var dateAddedFilter: LabelDateFilter = .any
+    @State private var dateModifiedFilter: LabelDateFilter = .any
+
+    // MARK: - Navigation Content (extracted to reduce body complexity)
+
+    @ViewBuilder
+    private var navigationContent: some View {
         NavigationStack {
             Form {
                 formContent
             }
             .navigationTitle("Label Designer")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                toolbarContent
-            }
-            .sheet(isPresented: $showingPresetSheet) {
-                presetSheet
-            }
-            .sheet(isPresented: $showingSavePreset) {
-                savePresetSheet
-            }
-            .sheet(isPresented: $showingEditPreset) {
-                editPresetSheet
-            }
-            .sheet(isPresented: $showingLabelCountInput) {
-                WeightBasedLabelCountSheet(
-                    items: items,
-                    labelCountOverrides: $labelCountOverrides,
-                    onComplete: {
-                        showingLabelCountInput = false
-                        Task {
-                            await generatePDF()
-                        }
-                    },
-                    onCancel: {
-                        showingLabelCountInput = false
-                    }
-                )
-            }
+            .toolbar { toolbarContent }
+            .sheet(isPresented: $showingPresetSheet) { presetSheet }
+            .sheet(isPresented: $showingSavePreset) { savePresetSheet }
+            .sheet(isPresented: $showingEditPreset) { editPresetSheet }
+            .sheet(isPresented: $showingLabelCountInput) { labelCountInputSheet }
+            .sheet(isPresented: $showingFilterSheet) { filterSheet }
             .alert("Unsaved Changes", isPresented: $showingUnsavedChangesAlert) {
-                Button("Discard Changes", role: .destructive) {
-                    dismiss()
-                }
+                Button("Discard Changes", role: .destructive) { dismiss() }
                 Button("Cancel", role: .cancel) { }
             } message: {
-                if let presetName = currentPresetName {
-                    Text("You have unsaved changes to '\(presetName)'. Discard them?")
-                } else {
-                    Text("You have unsaved changes. Discard them?")
-                }
+                unsavedChangesMessage
             }
             .alert("Delete Preset?", isPresented: $showingDeleteConfirmation, presenting: presetToDelete) { preset in
-                Button("Cancel", role: .cancel) {
-                    presetToDelete = nil
-                }
-                Button("Delete", role: .destructive) {
-                    deletePreset(preset)
-                }
+                Button("Cancel", role: .cancel) { presetToDelete = nil }
+                Button("Delete", role: .destructive) { deletePreset(preset) }
             } message: { preset in
                 Text("Are you sure you want to delete '\(preset.name)'? This action cannot be undone.")
             }
+            .alert("Update Recommended Label?", isPresented: $showingLabelChangeAlert, presenting: pendingOverwritePreset) { preset in
+                Button("Cancel", role: .cancel) { pendingOverwritePreset = nil }
+                Button("Keep Current") { savePresetWithLabel(preset, labelName: preset.recommended_label) }
+                Button("Update Label") { savePresetWithLabel(preset, labelName: selectedFormat.name) }
+            } message: { preset in
+                labelChangeMessage(for: preset)
+            }
+            .alert("Switch to Recommended Label?", isPresented: $showingSwitchToRecommendedAlert) {
+                Button("Keep Current", role: .cancel) { recommendedLabelName = nil }
+                Button("Switch") { switchToRecommendedLabel() }
+            } message: {
+                switchToRecommendedMessage
+            }
+        }
+    }
+
+    private var unsavedChangesMessage: Text {
+        if let presetName = currentPresetName {
+            return Text("You have unsaved changes to '\(presetName)'. Discard them?")
+        } else {
+            return Text("You have unsaved changes. Discard them?")
+        }
+    }
+
+    private func labelChangeMessage(for preset: LabelBuilderPreset) -> Text {
+        let existingLabel = preset.recommended_label ?? "none"
+        return Text("This preset recommends '\(existingLabel)' but you're using '\(selectedFormat.name)'. Update the recommended label?")
+    }
+
+    private var switchToRecommendedMessage: Text {
+        let recommended = recommendedLabelName ?? ""
+        return Text("This preset was designed for '\(recommended)'. You're currently using '\(selectedFormat.name)'. Switch to the recommended label format?")
+    }
+
+    private var labelCountInputSheet: some View {
+        WeightBasedLabelCountSheet(
+            items: filteredItems,
+            labelCountOverrides: $labelCountOverrides,
+            onComplete: {
+                showingLabelCountInput = false
+                Task { await generatePDF() }
+            },
+            onCancel: { showingLabelCountInput = false }
+        )
+    }
+
+    private var filterSheet: some View {
+        LabelFilterSheet(
+            items: items,
+            selectedFormat: selectedFormat,
+            selectedInventoryIds: $selectedInventoryIds,
+            inventoryLabelCounts: $inventoryLabelCounts,
+            showAllSelected: $showAllSelected,
+            locationFilter: $locationFilter,
+            dateAddedFilter: $dateAddedFilter,
+            dateModifiedFilter: $dateModifiedFilter
+        )
+    }
+
+    var body: some View {
+        navigationContent
             .task {
                 if labelService == nil {
                     labelService = LabelPrintingService()
@@ -195,7 +245,6 @@ struct LabelDesignerView: View {
                 }
                 saveSettings()
             }
-        }
     }
 
     @ViewBuilder
@@ -226,6 +275,24 @@ struct LabelDesignerView: View {
                         let stats = labelDatabase.getStatistics()
                         Text("Tap to search from \(stats.products) formats across \(stats.brands) brands")
                             .font(.caption)
+                    }
+                }
+
+                // Show label format preview immediately after selection
+                if let previewData = sampleLabelData {
+                    Section {
+                        LabelPreviewView(
+                            format: selectedFormat,
+                            config: builderConfig,
+                            sampleData: previewData,
+                            fontScale: fontScale,
+                            offsetX: offsetX,
+                            offsetY: offsetY
+                        )
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                    } header: {
+                        Text("Format Preview")
                     }
                 }
 
@@ -323,7 +390,7 @@ struct LabelDesignerView: View {
                     }
                 }
             }
-            .disabled(isGenerating || items.isEmpty)
+            .disabled(isGenerating || filteredItems.isEmpty)
             .accessibilityIdentifier("label_designer_generate_pdf")
         }
     }
@@ -338,6 +405,12 @@ struct LabelDesignerView: View {
                 builderConfig = preset.config
                 currentPresetName = preset.name
                 showingPresetSheet = false
+
+                // Check if preset recommends a different label format
+                if let recommended = preset.recommended_label, recommended != selectedFormat.name {
+                    recommendedLabelName = recommended
+                    showingSwitchToRecommendedAlert = true
+                }
 
                 // Reset flags after a short delay to ensure onChange has processed
                 // Store the task so we can cancel it if user makes changes
@@ -364,7 +437,8 @@ struct LabelDesignerView: View {
                 let preset = LabelBuilderPreset(
                     name: presetName,
                     description: newPresetDescription.isEmpty ? "User-created preset" : newPresetDescription,
-                    config: builderConfig
+                    config: builderConfig,
+                    recommended_label: selectedFormat.name
                 )
                 Task {
                     try? await presetsManager.savePreset(preset)
@@ -470,21 +544,119 @@ struct LabelDesignerView: View {
         }
     }
 
+    /// Total inventory record count (before filtering)
+    private var totalInventoryRecordCount: Int {
+        items.reduce(0) { $0 + $1.inventory.count }
+    }
+
+    /// Filtered inventory record count
+    private var filteredInventoryRecordCount: Int {
+        filteredItems.reduce(0) { $0 + $1.inventory.count }
+    }
+
     /// Label count summary section
     private var labelCountSection: some View {
         Section {
-            Text("\(totalLabelCount) label\(totalLabelCount == 1 ? "" : "s") to print")
-                .font(.headline)
+            if hasSelectedLabels {
+                // Items selected - show summary and small filter button
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(totalLabelCount) label\(totalLabelCount == 1 ? "" : "s") to print")
+                            .font(.headline)
 
-            Text("From \(items.count) item\(items.count == 1 ? "" : "s") selected")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                        Text("From \(selectedInventoryIds.count) inventory type\(selectedInventoryIds.count == 1 ? "" : "s")")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
 
-            if totalLabelCount > selectedFormat.labelsPerSheet {
-                Text("This will create \(numberOfSheets) sheet\(numberOfSheets == 1 ? "" : "s")")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                        if totalLabelCount > 0 {
+                            if totalLabelCount < selectedFormat.labelsPerSheet {
+                                Text("Less than 1 sheet (\(selectedFormat.labelsPerSheet) labels per sheet)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else if totalLabelCount > selectedFormat.labelsPerSheet {
+                                Text("This will create \(numberOfSheets) sheets")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("Exactly 1 full sheet")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+
+                    Spacer()
+
+                    Button {
+                        showingFilterSheet = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checklist")
+                            Text("Edit")
+                        }
+                        .font(.subheadline)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            } else {
+                // Nothing selected - show prominent button to select labels
+                VStack(spacing: 12) {
+                    Text("No labels selected")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+
+                    Text("Select which inventory items you want to print labels for")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Button {
+                        showingFilterSheet = true
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "checklist")
+                            Text("Select Labels to Print")
+                        }
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
             }
+        }
+    }
+
+    /// Whether any filters are active (location or date filters)
+    private var hasActiveFilters: Bool {
+        locationFilter != nil || dateAddedFilter != .any || dateModifiedFilter != .any
+    }
+
+    /// Whether any labels are selected for printing
+    private var hasSelectedLabels: Bool {
+        !selectedInventoryIds.isEmpty
+    }
+
+    /// Items that are selected for printing
+    /// Only returns items with at least one selected inventory record
+    private var filteredItems: [CompleteInventoryItemModel] {
+        // Only include inventory records that are explicitly selected
+        items.compactMap { item in
+            let selectedInventory = item.inventory.filter { record in
+                selectedInventoryIds.contains(record.id)
+            }
+
+            guard !selectedInventory.isEmpty else { return nil }
+
+            return CompleteInventoryItemModel(
+                catalogItem: item.catalogItem,
+                inventory: selectedInventory,
+                tags: item.tags,
+                userTags: item.userTags,
+                rating: item.rating
+            )
         }
     }
 
@@ -524,12 +696,16 @@ struct LabelDesignerView: View {
 
     /// Total number of labels to print (uses LabelCountCalculator for proper handling of weight-based types)
     private var totalLabelCount: Int {
-        LabelCountCalculator.calculateTotalLabelCount(for: items, userOverrides: labelCountOverrides)
+        LabelCountCalculator.calculateTotalLabelCount(
+            for: filteredItems,
+            userOverrides: labelCountOverrides,
+            inventoryRecordOverrides: inventoryLabelCounts
+        )
     }
 
     /// Items that need user input for label count (weight-based items without containerCount)
     private var itemsNeedingLabelCountInput: [LabelCountCalculator.WeightBasedItem] {
-        LabelCountCalculator.itemsNeedingLabelCountInput(from: items)
+        LabelCountCalculator.itemsNeedingLabelCountInput(from: filteredItems)
     }
 
     private var numberOfSheets: Int {
@@ -574,10 +750,11 @@ struct LabelDesignerView: View {
         isGenerating = true
         errorMessage = nil
 
-        // Generate LabelData with proper type info for QR codes
+        // Generate LabelData with proper type info for QR codes (uses filtered items)
         let labelData = LabelCountCalculator.generateLabelData(
-            for: items,
+            for: filteredItems,
             userOverrides: labelCountOverrides,
+            inventoryRecordOverrides: inventoryLabelCounts,
             owner: UserSettings.shared.inventoryOwner
         )
 
@@ -654,23 +831,51 @@ struct LabelDesignerView: View {
             return
         }
 
-        // Create updated preset with same ID and name but new config
+        // Check if label format has changed
+        let existingLabel = existingPreset.recommended_label
+        let currentLabel = selectedFormat.name
+
+        if let existingLabel = existingLabel, existingLabel != currentLabel {
+            // Label format is different - ask user what to do
+            pendingOverwritePreset = existingPreset
+            showingLabelChangeAlert = true
+        } else {
+            // No label change (or no previous label) - save with current label
+            savePresetWithLabel(existingPreset, labelName: currentLabel)
+        }
+    }
+
+    /// Switch to the recommended label format
+    private func switchToRecommendedLabel() {
+        guard let labelName = recommendedLabelName else { return }
+
+        // Search database for the label format by name
+        let results = labelDatabase.searchProducts(query: labelName, limit: 10)
+        if let matchedFormat = results.first(where: { $0.displayName == labelName })?.toLabelGeometry() {
+            selectedFormat = matchedFormat
+        }
+
+        recommendedLabelName = nil
+    }
+
+    /// Save preset with specified label format
+    private func savePresetWithLabel(_ existingPreset: LabelBuilderPreset, labelName: String?) {
         let updatedPreset = LabelBuilderPreset(
             id: existingPreset.id,
             name: existingPreset.name,
             description: existingPreset.description,
             config: builderConfig,
             createdAt: existingPreset.createdAt,
-            modifiedAt: Date()
+            modifiedAt: Date(),
+            recommended_label: labelName
         )
 
-        // Update the preset
         Task {
             try? await presetsManager.savePreset(updatedPreset)
 
             await MainActor.run {
-                // Clear the modified flag
                 isPresetModified = false
+                pendingOverwritePreset = nil
             }
         }
     }

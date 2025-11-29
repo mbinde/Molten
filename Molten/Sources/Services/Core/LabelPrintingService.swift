@@ -467,8 +467,9 @@ struct LabelBuilderPreset: Identifiable, Codable, Sendable {
 
     // Future-proofing fields (added pre-release for easier migrations)
     var workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
+    var recommended_label: String?  // Recommended label format name (e.g., "Avery 5160")
 
-    nonisolated init(id: UUID = UUID(), name: String, description: String, config: LabelBuilderConfig, createdAt: Date = Date(), modifiedAt: Date = Date(), workspace_id: UUID? = nil) {
+    nonisolated init(id: UUID = UUID(), name: String, description: String, config: LabelBuilderConfig, createdAt: Date = Date(), modifiedAt: Date = Date(), workspace_id: UUID? = nil, recommended_label: String? = nil) {
         self.id = id
         self.name = name
         self.description = description
@@ -476,6 +477,7 @@ struct LabelBuilderPreset: Identifiable, Codable, Sendable {
         self.createdAt = createdAt
         self.modifiedAt = modifiedAt
         self.workspace_id = workspace_id
+        self.recommended_label = recommended_label
     }
 
     /// Export preset as JSON for sharing

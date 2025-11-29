@@ -95,17 +95,9 @@ struct LabelTextAlignmentTests {
         #expect(preset.config.textAlignment == .left)
     }
 
-    @Test("Dual QR preset has center alignment")
-    func dualQRPresetHasCenterAlignment() async throws {
-        let preset = LabelBuilderConfig.presets[2]
-
-        #expect(preset.name == "Dual QR")
-        #expect(preset.config.textAlignment == .center)
-    }
-
     @Test("Location Labels preset has left alignment")
     func locationLabelsPresetHasLeftAlignment() async throws {
-        let preset = LabelBuilderConfig.presets[3]
+        let preset = LabelBuilderConfig.presets[2]
 
         #expect(preset.name == "Location Labels")
         #expect(preset.config.textAlignment == .left)

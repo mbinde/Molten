@@ -697,19 +697,18 @@ struct LabelDesignerView: View {
         let tolerance = 0.1
 
         // Use database search if we have search text
+        // Pass all filters to database so LIMIT is applied AFTER filtering
         if !searchText.isEmpty {
-            let results = labelDatabase.searchProducts(query: searchText, limit: 100)
-            var formats = results.map { $0.toLabelGeometry() }
-
-            // Apply shape filter to search results
-            if let shape = selectedShapeFilter {
-                formats = formats.filter { $0.shape == shape }
-            }
-
-            // Apply dimension filters
-            formats = applyDimensionFilter(to: formats, width: dims.width, height: dims.height, tolerance: tolerance)
-
-            return formats
+            let results = labelDatabase.searchProducts(
+                query: searchText,
+                shape: selectedShapeFilter,
+                minWidth: dims.width.map { $0 - tolerance },
+                maxWidth: dims.width.map { $0 + tolerance },
+                minHeight: dims.height.map { $0 - tolerance },
+                maxHeight: dims.height.map { $0 + tolerance },
+                limit: 100
+            )
+            return results.map { $0.toLabelGeometry() }
         }
 
         // If filtering by brand

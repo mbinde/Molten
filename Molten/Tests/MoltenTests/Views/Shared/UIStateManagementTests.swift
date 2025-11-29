@@ -19,6 +19,7 @@ import Combine
 @testable import Molten
 
 @Suite("UI State Management Tests", .serialized)
+@MainActor
 struct UIStateManagementTests {
     
     // MARK: - Loading State Transition Tests

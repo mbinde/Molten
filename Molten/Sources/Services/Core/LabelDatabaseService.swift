@@ -303,8 +303,16 @@ final class LabelDatabaseService: @unchecked Sendable {
     }
 
     /// Search products by SKU or name
-    func searchProducts(query: String, limit: Int = 50) -> [LabelFormat] {
-        print("🔍 LabelDatabaseService.searchProducts: query='\(query)'")
+    func searchProducts(
+        query: String,
+        shape: LabelShape? = nil,
+        minWidth: Double? = nil,
+        maxWidth: Double? = nil,
+        minHeight: Double? = nil,
+        maxHeight: Double? = nil,
+        limit: Int = 50
+    ) -> [LabelFormat] {
+        print("🔍 LabelDatabaseService.searchProducts: query='\(query)', shape=\(String(describing: shape)), width=\(String(describing: minWidth))-\(String(describing: maxWidth)), height=\(String(describing: minHeight))-\(String(describing: maxHeight))")
         guard let db = db, !query.isEmpty else {
             print("❌ LabelDatabaseService.searchProducts: db nil or empty query")
             return []
@@ -312,6 +320,47 @@ final class LabelDatabaseService: @unchecked Sendable {
 
         // Use LIKE for substring matching (finds "5160" in "15160")
         let likePattern = "%\(query)%"
+
+        // Build additional filter conditions
+        var filterConditions: [String] = []
+        var filterParams: [Any] = []
+
+        // Shape condition
+        if let shape = shape {
+            switch shape {
+            case .circular:
+                filterConditions.append("l.shape IN ('circle', 'oval')")
+            case .square:
+                filterConditions.append("l.shape = 'square'")
+            case .landscape:
+                filterConditions.append("l.shape = 'rectangle' AND l.label_width > l.label_height")
+            case .portrait:
+                filterConditions.append("l.shape = 'rectangle' AND l.label_height > l.label_width")
+            case .flag:
+                filterConditions.append("l.shape = 'barbell'")
+            }
+        }
+
+        // Dimension conditions (values in inches, convert to points)
+        if let minWidth = minWidth {
+            filterConditions.append("l.label_width >= ?")
+            filterParams.append(minWidth * 72)
+        }
+        if let maxWidth = maxWidth {
+            filterConditions.append("l.label_width <= ?")
+            filterParams.append(maxWidth * 72)
+        }
+        if let minHeight = minHeight {
+            filterConditions.append("l.label_height >= ?")
+            filterParams.append(minHeight * 72)
+        }
+        if let maxHeight = maxHeight {
+            filterConditions.append("l.label_height <= ?")
+            filterParams.append(maxHeight * 72)
+        }
+
+        let filterClause = filterConditions.isEmpty ? "" : " AND " + filterConditions.joined(separator: " AND ")
+
         let sql = """
             SELECT p.id, p.brand_id, p.layout_id, p.sku, p.display_name, p.description, p.source_url,
                    b.name AS brand_name, b.slug AS brand_slug,
@@ -322,7 +371,7 @@ final class LabelDatabaseService: @unchecked Sendable {
             FROM products p
             JOIN brands b ON p.brand_id = b.id
             JOIN layouts l ON p.layout_id = l.id
-            WHERE p.sku LIKE ? OR p.display_name LIKE ? OR b.name LIKE ?
+            WHERE (p.sku LIKE ?1 OR p.display_name LIKE ?1 OR b.name LIKE ?1)\(filterClause)
             ORDER BY b.is_major DESC, b.name ASC, p.sku ASC
             LIMIT ?
             """
@@ -332,10 +381,21 @@ final class LabelDatabaseService: @unchecked Sendable {
 
         if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
             let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+
+            // Bind the search pattern (used for ?1 which appears 3 times)
             sqlite3_bind_text(stmt, 1, likePattern, -1, SQLITE_TRANSIENT)
-            sqlite3_bind_text(stmt, 2, likePattern, -1, SQLITE_TRANSIENT)
-            sqlite3_bind_text(stmt, 3, likePattern, -1, SQLITE_TRANSIENT)
-            sqlite3_bind_int(stmt, 4, Int32(limit))
+
+            // Bind dimension filter params starting at index 2
+            var paramIndex: Int32 = 2
+            for param in filterParams {
+                if let doubleParam = param as? Double {
+                    sqlite3_bind_double(stmt, paramIndex, doubleParam)
+                    paramIndex += 1
+                }
+            }
+
+            // Bind limit as last parameter
+            sqlite3_bind_int(stmt, paramIndex, Int32(limit))
 
             while sqlite3_step(stmt) == SQLITE_ROW {
                 if let format = parseLabelFormat(stmt: stmt) {

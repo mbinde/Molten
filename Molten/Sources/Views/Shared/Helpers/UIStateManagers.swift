@@ -12,6 +12,7 @@ import Combine
 // MARK: - Loading State Manager
 
 /// Manages loading state for UI operations with duplicate prevention
+@MainActor
 class LoadingStateManager: ObservableObject {
     
     @Published var isLoading: Bool = false
@@ -48,6 +49,7 @@ class LoadingStateManager: ObservableObject {
 // MARK: - Selection State Manager
 
 /// Generic selection state manager for managing sets of selected items
+@MainActor
 class SelectionStateManager<T: Hashable>: ObservableObject {
     
     @Published var selectedItems: Set<T> = []
@@ -84,6 +86,7 @@ class SelectionStateManager<T: Hashable>: ObservableObject {
 // MARK: - Filter State Manager
 
 /// Manages various filter states and active filter detection
+@MainActor
 class FilterStateManager: ObservableObject {
     
     @Published var textFilter: String = ""

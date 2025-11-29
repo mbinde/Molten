@@ -153,7 +153,6 @@ struct LabelPrintingOwnerTests {
         #expect(LabelTemplate.informationDense.includeOwner == false)
         #expect(LabelTemplate.qrFocused.includeOwner == false)
         #expect(LabelTemplate.locationBased.includeOwner == false)
-        #expect(LabelTemplate.dualQR.includeOwner == false)
     }
 
     @Test("Owner field can be combined with all other fields")

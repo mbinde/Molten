@@ -233,15 +233,6 @@ struct LabelPrintingServiceTests {
         #expect(preset?.config.textFields.count == 2)
     }
 
-    @Test("LabelBuilderConfig preset: Dual QR")
-    func testPresetDualQR() async throws {
-        let preset = LabelBuilderConfig.presets.first { $0.name == "Dual QR" }
-
-        #expect(preset != nil)
-        #expect(preset?.config.qrPosition == .both)
-        #expect(preset?.config.textAlignment == .center)
-    }
-
     @Test("LabelBuilderConfig preset: Location Labels")
     func testPresetLocationLabels() async throws {
         let preset = LabelBuilderConfig.presets.first { $0.name == "Location Labels" }

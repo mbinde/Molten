@@ -206,8 +206,18 @@ struct LabelPrintingServiceTests {
         #expect(config.textFields.contains(.manufacturer))
         #expect(config.textFields.contains(.sku))
         #expect(config.textFields.contains(.colorName))
-        #expect(config.textFields.contains(.coe))
         #expect(config.textAlignment == .left)
+        // Verify field order: colorName first (item name), then manufacturer, then sku
+        #expect(config.textFields[0] == .colorName)
+        #expect(config.textFields[1] == .manufacturer)
+        #expect(config.textFields[2] == .sku)
+        // Verify formatting: colorName 9pt bold, manufacturer/sku 8pt normal
+        #expect(config.format(for: .colorName).fontSize == 9)
+        #expect(config.format(for: .colorName).bold == true)
+        #expect(config.format(for: .manufacturer).fontSize == 8)
+        #expect(config.format(for: .manufacturer).bold == false)
+        #expect(config.format(for: .sku).fontSize == 8)
+        #expect(config.format(for: .sku).bold == false)
     }
 
     @Test("LabelBuilderConfig preset: Information Dense")
@@ -220,7 +230,10 @@ struct LabelPrintingServiceTests {
         #expect(preset?.config.textFields.contains(.manufacturer) == true)
         #expect(preset?.config.textFields.contains(.sku) == true)
         #expect(preset?.config.textFields.contains(.colorName) == true)
-        #expect(preset?.config.textFields.contains(.coe) == true)
+        // Verify field order: colorName first (item name), then manufacturer, then sku
+        #expect(preset?.config.textFields[0] == .colorName)
+        #expect(preset?.config.textFields[1] == .manufacturer)
+        #expect(preset?.config.textFields[2] == .sku)
     }
 
     @Test("LabelBuilderConfig preset: QR Focused")

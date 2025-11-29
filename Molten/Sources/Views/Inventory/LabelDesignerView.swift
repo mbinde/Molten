@@ -382,14 +382,14 @@ struct LabelDesignerView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel") {
+            Button("Done") {
                 if isPresetModified {
                     showingUnsavedChangesAlert = true
                 } else {
                     dismiss()
                 }
             }
-            .accessibilityIdentifier("label_designer_cancel")
+            .accessibilityIdentifier("label_designer_done")
         }
 
         ToolbarItem(placement: .primaryAction) {

@@ -24,6 +24,11 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
 
     private let shoppingListService: ShoppingListService
 
+    // MARK: - Debouncing
+
+    private var searchDebounceTask: Task<Void, Never>?
+    private static let searchDebounceDelay: UInt64 = 300_000_000 // 300ms in nanoseconds
+
     // MARK: - Published State
 
     var shoppingLists: [String: DetailedShoppingListModel] = [:]
@@ -32,13 +37,19 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
 
     // MARK: - Search & Filter State
 
-    var searchText = "" {
-        didSet {
-            if searchText != oldValue {
-                applyFilters()
+    private var _searchText = ""
+    var searchText: String {
+        get { _searchText }
+        set {
+            if _searchText != newValue {
+                _searchText = newValue
+                debounceSearch(newValue)
             }
         }
     }
+
+    /// The debounced search text - use this for filtering
+    var debouncedSearchText = ""
 
     var searchTitlesOnly = false {
         didSet {
@@ -237,12 +248,40 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
 
     // MARK: - Search & Filter
 
+    /// Debounce search input to avoid filtering on every keystroke
+    private func debounceSearch(_ text: String) {
+        // Cancel any pending debounce task
+        searchDebounceTask?.cancel()
+
+        // If text is empty, update immediately (user cleared the search)
+        if text.isEmpty {
+            debouncedSearchText = ""
+            applyFilters()
+            return
+        }
+
+        // Schedule debounced update
+        searchDebounceTask = Task {
+            do {
+                try await Task.sleep(nanoseconds: Self.searchDebounceDelay)
+                // Only update if not cancelled and text hasn't changed
+                if !Task.isCancelled && _searchText == text {
+                    debouncedSearchText = text
+                    applyFilters()
+                }
+            } catch {
+                // Task was cancelled - this is expected when typing continues
+            }
+        }
+    }
+
     func searchItems(text: String) {
         searchText = text
     }
 
     func clearFilters() {
         searchText = ""
+        debouncedSearchText = ""
         searchTitlesOnly = false
         selectedTags = []
         selectedCOEs = []
@@ -287,9 +326,9 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
     private func applyFilters() {
         var allItems = shoppingLists.values.flatMap { $0.items }
 
-        // Apply search filter
-        if !searchText.isEmpty {
-            let searchLower = searchText.lowercased()
+        // Apply search filter (use debounced text to avoid filtering on every keystroke)
+        if !debouncedSearchText.isEmpty {
+            let searchLower = debouncedSearchText.lowercased()
             allItems = allItems.filter { item in
                 if searchTitlesOnly {
                     return item.catalogItem.name.lowercased().contains(searchLower)

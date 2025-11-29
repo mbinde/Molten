@@ -255,7 +255,8 @@ class MockInventoryViewModel: InventoryViewModelProtocol {
 
         return DetailedInventorySummaryModel(
             summary: summary,
-            locationDetails: [:]  // Empty location details for mock
+            locationDetails: [:],  // Empty location details for mock
+            inventoryByType: [:]   // Empty inventory by type for mock
         )
     }
 

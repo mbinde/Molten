@@ -52,6 +52,10 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var cachedManufacturers: [String] = []
     @State private var cachedLocations: [String] = []
 
+    // Local search text state - isolates TextField from ViewModel to prevent full view re-renders
+    // The ViewModel's searchText setter handles debouncing and triggers filtering
+    @State private var localSearchText = ""
+
     // CRITICAL: Service instances (not optional - always provided)
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
@@ -420,7 +424,7 @@ struct InventoryView: View, CachedDataDeletion {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .searchable(
-                text: $viewModel.searchText,
+                text: $localSearchText,
                 placement: .navigationBarDrawer(displayMode: .always),
                 prompt: "Search inventory by name, code, manufacturer..."
             )
@@ -431,6 +435,10 @@ struct InventoryView: View, CachedDataDeletion {
             }
             .onChange(of: searchScope) { oldValue, newValue in
                 viewModel.searchTitlesOnly = (newValue == .titlesOnly)
+            }
+            .onChange(of: localSearchText) { oldValue, newValue in
+                // Sync local state to ViewModel - debouncing happens in ViewModel
+                viewModel.searchText = newValue
             }
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
@@ -596,6 +604,7 @@ struct InventoryView: View, CachedDataDeletion {
             searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
             filters: activeFilters,
             onClearFilters: {
+                localSearchText = ""  // Sync local state with ViewModel
                 viewModel.searchText = ""
                 viewModel.selectedTags.removeAll()
                 viewModel.selectedCOEs.removeAll()

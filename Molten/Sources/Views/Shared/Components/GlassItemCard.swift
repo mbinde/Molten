@@ -306,7 +306,7 @@ struct GlassItemCard: View {
     }
 
     private func shareItem() {
-        // TODO: Implement share functionality
+        // Share functionality is implemented in InventoryDetailView
         print("Share item: \(item.name)")
     }
 

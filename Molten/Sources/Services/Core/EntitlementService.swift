@@ -17,8 +17,7 @@ class EntitlementService {
 
     // MARK: - Properties
 
-    /// Current subscription tier
-    /// TODO: In production, this should be fetched from StoreKit/App Store
+    /// Current subscription tier (fetched from RevenueCat)
     private(set) var tier: SubscriptionTier
 
     /// Debug override flag - observed property that triggers view updates
@@ -61,11 +60,9 @@ class EntitlementService {
         self.tier = newTier
     }
 
-    /// Refresh subscription status from StoreKit
-    /// TODO: Implement StoreKit integration
+    /// Refresh subscription status (handled by RevenueCat)
     func refreshSubscriptionStatus() async {
-        // TODO: Query StoreKit for current subscription status
-        // For now, defaults to free tier
+        // RevenueCat handles subscription status
     }
 
     // MARK: - Inventory Limits

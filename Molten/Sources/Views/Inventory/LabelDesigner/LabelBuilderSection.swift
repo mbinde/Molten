@@ -120,7 +120,7 @@ struct LabelBuilderSection: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
 
-                    // Active fields - drag to reorder, tap to remove
+                    // Active fields with drag-to-reorder
                     if !builderConfig.textFields.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
@@ -128,42 +128,37 @@ struct LabelBuilderSection: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 Spacer()
-                                Text("Drag to reorder")
+                                Text("Hold & drag to reorder")
                                     .font(.caption2)
                                     .foregroundColor(.secondary)
                             }
 
-                            List {
-                                ForEach(builderConfig.textFields, id: \.self) { field in
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(.green)
-
-                                        Text(field.rawValue)
-                                            .font(.subheadline)
-
-                                        Spacer()
-
-                                        // Tap to remove
-                                        Button {
-                                            onToggleField(field)
-                                        } label: {
-                                            Image(systemName: "minus.circle.fill")
-                                                .foregroundColor(.red)
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                    .listRowInsets(EdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8))
-                                    .listRowBackground(Color(.systemGray6))
-                                    .accessibilityIdentifier("label_builder_field_\(field.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
+                            ForEach(Array(builderConfig.textFields.enumerated()), id: \.element) { index, field in
+                                LabelFieldRow(
+                                    field: field,
+                                    isActive: true,
+                                    onTap: { onToggleField(field) }
+                                )
+                                .draggable(field.rawValue) {
+                                    // Drag preview
+                                    Text(field.rawValue)
+                                        .padding(8)
+                                        .background(Color(.systemGray5))
+                                        .cornerRadius(6)
                                 }
-                                .onMove { from, to in
-                                    builderConfig.textFields.move(fromOffsets: from, toOffset: to)
+                                .dropDestination(for: String.self) { items, _ in
+                                    guard let droppedName = items.first,
+                                          let droppedField = LabelTextField(rawValue: droppedName),
+                                          let fromIndex = builderConfig.textFields.firstIndex(of: droppedField),
+                                          fromIndex != index else {
+                                        return false
+                                    }
+                                    withAnimation {
+                                        builderConfig.textFields.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: index > fromIndex ? index + 1 : index)
+                                    }
+                                    return true
                                 }
                             }
-                            .listStyle(.plain)
-                            .frame(height: CGFloat(builderConfig.textFields.count) * 44)
-                            .environment(\.editMode, .constant(.active))
                         }
                     }
 
@@ -177,26 +172,11 @@ struct LabelBuilderSection: View {
                                 .padding(.top, 8)
 
                             ForEach(unusedFields, id: \.self) { field in
-                                Button {
-                                    onToggleField(field)
-                                } label: {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "plus.circle.fill")
-                                            .foregroundColor(.green)
-
-                                        Text(field.rawValue)
-                                            .font(.subheadline)
-                                            .foregroundColor(.primary)
-
-                                        Spacer()
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                                .padding(.vertical, 6)
-                                .padding(.horizontal, 8)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(6)
-                                .accessibilityIdentifier("label_builder_field_\(field.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
+                                LabelFieldRow(
+                                    field: field,
+                                    isActive: false,
+                                    onTap: { onToggleField(field) }
+                                )
                             }
                         }
                     }
@@ -223,5 +203,47 @@ struct LabelBuilderSection: View {
                 .padding(.top, 8)
             }
         }
+    }
+}
+
+// MARK: - Label Field Row
+
+private struct LabelFieldRow: View {
+    let field: LabelTextField
+    let isActive: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 8) {
+                if isActive {
+                    Image(systemName: "line.3.horizontal")
+                        .foregroundColor(.secondary)
+                        .font(.caption)
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                } else {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundColor(.green)
+                }
+
+                Text(field.rawValue)
+                    .font(.subheadline)
+                    .foregroundColor(isActive ? .primary : .secondary)
+
+                Spacer()
+
+                if isActive {
+                    Image(systemName: "minus.circle.fill")
+                        .foregroundColor(.red)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
+        .background(Color(.systemGray6))
+        .cornerRadius(6)
+        .accessibilityIdentifier("label_builder_field_\(field.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
     }
 }

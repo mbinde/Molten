@@ -53,8 +53,13 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var cachedLocations: [String] = []
 
     // Local search text state - isolates TextField from ViewModel to prevent full view re-renders
-    // The ViewModel's searchText setter handles debouncing and triggers filtering
+    // Debouncing happens here in the View, and we only update ViewModel.debouncedSearchText after delay
     @State private var localSearchText = ""
+    @State private var searchDebounceTask: Task<Void, Never>?
+
+    // Cached filtered items - only recomputed when filters/data actually change, not on every keystroke
+    @State private var cachedFilteredItems: [CompleteInventoryItemModel] = []
+    @State private var cachedSortedFilteredItems: [CompleteInventoryItemModel] = []
 
     // CRITICAL: Service instances (not optional - always provided)
     private let catalogService: CatalogService
@@ -114,146 +119,19 @@ struct InventoryView: View, CachedDataDeletion {
         )
     }
     
-    // Computed properties
-    private var filteredItems: [CompleteInventoryItemModel] {
-        // Reference filterRefreshTrigger to force re-evaluation when Settings filters change
-        _ = filterRefreshTrigger
-        var items = viewModel.completeItems
-
-        // Only show items with inventory (weight OR containers)
-        items = items.filter { $0.hasInventory }
-
-        // Apply product type filter
-        if !viewModel.selectedProductTypes.isEmpty {
-            items = items.filter { item in
-                viewModel.selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
-            }
-        }
-
-        // Apply manufacturer filter
-        // First apply manual filter (from UI)
-        if !viewModel.selectedManufacturers.isEmpty {
-            items = items.filter { item in
-                viewModel.selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
-            }
-        }
-        // Then apply global manufacturer filter from Settings (if enabled)
-        if UserSettings.shared.applyFiltersToInventory {
-            if let data = UserDefaults.standard.data(forKey: "selectedManufacturerFilter"),
-               let selectedManufacturers = try? JSONDecoder().decode(Set<String>.self, from: data),
-               !selectedManufacturers.isEmpty {
-                items = items.filter { item in
-                    selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
-                }
-            }
-        }
-
-        // Apply tag filter
-        if !viewModel.selectedTags.isEmpty {
-            items = items.filter { item in
-                !viewModel.selectedTags.isDisjoint(with: Set(item.tags))
-            }
-        }
-
-        // Apply COE filter (only affects glass items - coatings/tools don't have COE)
-        // First apply manual filter (from UI)
-        if !viewModel.selectedCOEs.isEmpty {
-            items = items.filter { item in
-                // Non-glass items (coatings, tools) don't have COE - don't filter them out
-                if item.catalogItem.itemType != .glass {
-                    return true
-                }
-                if let coe = item.catalogItem.coe {
-                    return viewModel.selectedCOEs.contains(coe)
-                }
-                return false
-            }
-        }
-        // Then apply global COE filter from Settings (if enabled)
-        if UserSettings.shared.applyFiltersToInventory {
-            let globalCOEs = COEGlassPreference.selectedCOETypes
-            // Only apply if it's a subset (not all COEs selected)
-            if !globalCOEs.isEmpty && globalCOEs.count < COEGlassType.allCases.count {
-                let globalCOEValues = Set(globalCOEs.map { Int32($0.rawValue) })
-                items = items.filter { item in
-                    if let coe = item.catalogItem.coe {
-                        return globalCOEValues.contains(coe)
-                    }
-                    return false
-                }
-            }
-        }
-
-        // Apply inventory type filter (rod, tube, frit, etc.) - single selection from dropdown
-        if let inventoryType = viewModel.selectedInventoryType {
-            items = items.filter { item in
-                item.inventory.contains { inventory in
-                    inventory.type == inventoryType
-                }
-            }
-        }
-
-        // Legacy multi-select inventory type filter (keep for backwards compatibility if used elsewhere)
-        if !viewModel.selectedTypes.isEmpty {
-            items = items.filter { item in
-                item.inventory.contains { inventory in
-                    viewModel.selectedTypes.contains(inventory.type)
-                }
-            }
-        }
-
-        // Apply location filter
-        if let location = viewModel.selectedLocation {
-            items = items.filter { item in
-                item.inventory.contains { inventory in
-                    inventory.location == location
-                }
-            }
-        }
-
-        // Apply search filter using SearchTextParser for advanced search (including grey/gray synonyms)
-        // Note: Use debouncedSearchText to avoid filtering on every keystroke
-        if !viewModel.debouncedSearchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.debouncedSearchText) {
-            let searchMode = SearchTextParser.parseSearchText(viewModel.debouncedSearchText)
-            items = items.filter { item in
-                let allFields = [
-                    item.catalogItem.name,
-                    item.catalogItem.stable_id,
-                    item.catalogItem.manufacturer
-                ]
-                return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-            }
-        }
-
-        return items
-    }
-    
+    // Use cached filtered items to avoid recomputation on every keystroke
+    // These are updated via updateFilteredItemsCache() when filters actually change
     private var sortedFilteredItems: [CompleteInventoryItemModel] {
-        return filteredItems.sorted { (item1: CompleteInventoryItemModel, item2: CompleteInventoryItemModel) -> Bool in
-            switch viewModel.sortOption {
-            case .name:
-                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
-            case .totalQuantity:
-                return item1.totalQuantity != item2.totalQuantity ?
-                    item1.totalQuantity > item2.totalQuantity :
-                    item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
-            case .manufacturer:
-                return item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer) == .orderedAscending
-            case .dateAdded:
-                // Sort by most recent first (descending order) - get the newest date_added from inventory
-                let item1Date = item1.inventory.map { $0.date_added }.max() ?? Date.distantPast
-                let item2Date = item2.inventory.map { $0.date_added }.max() ?? Date.distantPast
-                return item1Date > item2Date
-            }
-        }
+        cachedSortedFilteredItems
     }
-    
+
     private var isEmpty: Bool {
-        filteredItems.isEmpty
+        cachedFilteredItems.isEmpty
     }
 
     private var shouldShowSearchEmptyState: Bool {
-        !viewModel.completeItems.isEmpty && (!viewModel.searchText.isEmpty || !viewModel.selectedTags.isEmpty || !viewModel.selectedCOEs.isEmpty || !viewModel.selectedManufacturers.isEmpty || viewModel.selectedLocation != nil)
+        // Use debouncedSearchText to avoid triggering re-renders on every keystroke
+        !viewModel.completeItems.isEmpty && (!viewModel.debouncedSearchText.isEmpty || !viewModel.selectedTags.isEmpty || !viewModel.selectedCOEs.isEmpty || !viewModel.selectedManufacturers.isEmpty || viewModel.selectedLocation != nil)
     }
 
     // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
@@ -355,6 +233,115 @@ struct InventoryView: View, CachedDataDeletion {
         cachedLocations = locationsSet.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
+    /// Update cached filtered items - call this when filters change, not on every keystroke
+    private func updateFilteredItemsCache() {
+        var items = viewModel.completeItems
+
+        // Only show items with inventory (weight OR containers)
+        items = items.filter { $0.hasInventory }
+
+        // Apply product type filter
+        if !viewModel.selectedProductTypes.isEmpty {
+            items = items.filter { item in
+                viewModel.selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
+        // Apply manufacturer filter
+        if !viewModel.selectedManufacturers.isEmpty {
+            items = items.filter { item in
+                viewModel.selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        }
+        // Apply global manufacturer filter from Settings (if enabled)
+        if UserSettings.shared.applyFiltersToInventory {
+            if let data = UserDefaults.standard.data(forKey: "selectedManufacturerFilter"),
+               let selectedManufacturers = try? JSONDecoder().decode(Set<String>.self, from: data),
+               !selectedManufacturers.isEmpty {
+                items = items.filter { item in
+                    selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+                }
+            }
+        }
+
+        // Apply tag filter
+        if !viewModel.selectedTags.isEmpty {
+            items = items.filter { item in
+                !viewModel.selectedTags.isDisjoint(with: Set(item.tags))
+            }
+        }
+
+        // Apply COE filter
+        if !viewModel.selectedCOEs.isEmpty {
+            items = items.filter { item in
+                if item.catalogItem.itemType != .glass { return true }
+                if let coe = item.catalogItem.coe { return viewModel.selectedCOEs.contains(coe) }
+                return false
+            }
+        }
+        // Apply global COE filter from Settings (if enabled)
+        if UserSettings.shared.applyFiltersToInventory {
+            let globalCOEs = COEGlassPreference.selectedCOETypes
+            if !globalCOEs.isEmpty && globalCOEs.count < COEGlassType.allCases.count {
+                let globalCOEValues = Set(globalCOEs.map { Int32($0.rawValue) })
+                items = items.filter { item in
+                    if let coe = item.catalogItem.coe { return globalCOEValues.contains(coe) }
+                    return false
+                }
+            }
+        }
+
+        // Apply inventory type filter
+        if let inventoryType = viewModel.selectedInventoryType {
+            items = items.filter { item in
+                item.inventory.contains { $0.type == inventoryType }
+            }
+        }
+
+        // Legacy multi-select inventory type filter
+        if !viewModel.selectedTypes.isEmpty {
+            items = items.filter { item in
+                item.inventory.contains { viewModel.selectedTypes.contains($0.type) }
+            }
+        }
+
+        // Apply location filter
+        if let location = viewModel.selectedLocation {
+            items = items.filter { item in
+                item.inventory.contains { $0.location == location }
+            }
+        }
+
+        // Apply search filter
+        if !viewModel.debouncedSearchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.debouncedSearchText) {
+            let searchMode = SearchTextParser.parseSearchText(viewModel.debouncedSearchText)
+            items = items.filter { item in
+                let allFields = [item.catalogItem.name, item.catalogItem.stable_id, item.catalogItem.manufacturer]
+                return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+            }
+        }
+
+        cachedFilteredItems = items
+
+        // Apply sorting
+        cachedSortedFilteredItems = items.sorted { (item1, item2) in
+            switch viewModel.sortOption {
+            case .name:
+                return item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
+            case .totalQuantity:
+                return item1.totalQuantity != item2.totalQuantity ?
+                    item1.totalQuantity > item2.totalQuantity :
+                    item1.glassItem.name.localizedCaseInsensitiveCompare(item2.glassItem.name) == .orderedAscending
+            case .manufacturer:
+                return item1.glassItem.manufacturer.localizedCaseInsensitiveCompare(item2.glassItem.manufacturer) == .orderedAscending
+            case .dateAdded:
+                let item1Date = item1.inventory.map { $0.date_added }.max() ?? Date.distantPast
+                let item2Date = item2.inventory.map { $0.date_added }.max() ?? Date.distantPast
+                return item1Date > item2Date
+            }
+        }
+    }
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
@@ -437,8 +424,24 @@ struct InventoryView: View, CachedDataDeletion {
                 viewModel.searchTitlesOnly = (newValue == .titlesOnly)
             }
             .onChange(of: localSearchText) { oldValue, newValue in
-                // Sync local state to ViewModel - debouncing happens in ViewModel
-                viewModel.searchText = newValue
+                // Debounce search locally - only update ViewModel after delay
+                // This prevents any ViewModel observation triggers during typing
+                searchDebounceTask?.cancel()
+
+                if newValue.isEmpty {
+                    // Clear immediately when user clears search
+                    viewModel.debouncedSearchText = ""
+                    updateFilteredItemsCache()
+                } else {
+                    // Debounce non-empty searches
+                    searchDebounceTask = Task {
+                        try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
+                        if !Task.isCancelled {
+                            viewModel.debouncedSearchText = newValue
+                            updateFilteredItemsCache()
+                        }
+                    }
+                }
             }
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
@@ -601,14 +604,16 @@ struct InventoryView: View, CachedDataDeletion {
         }
 
         return CustomEmptyStateView.searchResults(
-            searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
+            // Use debouncedSearchText to avoid re-renders on every keystroke
+            searchTerm: viewModel.debouncedSearchText.isEmpty ? nil : viewModel.debouncedSearchText,
             filters: activeFilters,
             onClearFilters: {
-                localSearchText = ""  // Sync local state with ViewModel
-                viewModel.searchText = ""
+                localSearchText = ""  // Clear local search text
+                viewModel.debouncedSearchText = ""  // Clear debounced text directly
                 viewModel.selectedTags.removeAll()
                 viewModel.selectedCOEs.removeAll()
                 viewModel.selectedManufacturers.removeAll()
+                updateFilteredItemsCache()
             }
         )
     }
@@ -731,6 +736,7 @@ struct InventoryView: View, CachedDataDeletion {
             }
             #endif
             updateCaches()  // PERFORMANCE: Update cached filter values
+            updateFilteredItemsCache()  // PERFORMANCE: Update filtered items cache
             refreshTrigger += 1  // Force SwiftUI to refresh the list
         }
     }
@@ -802,6 +808,31 @@ struct InventoryView: View, CachedDataDeletion {
     // Convenience wrapper for .onDelete handler
     private func deleteInventoryItem(_ item: CompleteInventoryItemModel) async {
         await deleteItem(item)
+    }
+}
+
+// MARK: - Filter Change Modifier
+// Extracted to reduce body complexity and help Swift compiler
+
+private struct FilterChangeModifier: ViewModifier {
+    @Bindable var viewModel: InventoryViewModel
+    let updateCache: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: viewModel.selectedTags) { _, _ in updateCache() }
+            .onChange(of: viewModel.selectedCOEs) { _, _ in updateCache() }
+            .onChange(of: viewModel.selectedManufacturers) { _, _ in updateCache() }
+            .onChange(of: viewModel.selectedProductTypes) { _, _ in updateCache() }
+            .onChange(of: viewModel.selectedLocation) { _, _ in updateCache() }
+            .onChange(of: viewModel.selectedInventoryType) { _, _ in updateCache() }
+            .onChange(of: viewModel.sortOption) { _, _ in updateCache() }
+    }
+}
+
+private extension View {
+    func onFilterChange(viewModel: InventoryViewModel, updateCache: @escaping () -> Void) -> some View {
+        modifier(FilterChangeModifier(viewModel: viewModel, updateCache: updateCache))
     }
 }
 

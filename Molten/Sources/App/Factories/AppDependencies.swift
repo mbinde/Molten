@@ -321,6 +321,13 @@ class AppDependencies {
             guard persistenceController.isReady else {
                 fatalError("Core Data initialization completed but persistence controller is not ready. Check initialization logic.")
             }
+
+            // Configure viewContext for CloudKit auto-merge on main thread
+            // This must happen after initialization but on main thread to avoid deadlock
+            Task { @MainActor in
+                persistenceController.container.viewContext.automaticallyMergesChangesFromParent = true
+                persistenceController.container.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyStoreTrump
+            }
         }
 
         // Extract and store contexts from persistenceController

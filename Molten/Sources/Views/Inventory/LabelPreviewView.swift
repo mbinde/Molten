@@ -424,58 +424,117 @@ struct LabelPreviewView: View {
         }
     }
 
-    /// Build content for P-style folded (horizontal: flag split into top/bottom with fold line, short stub on right)
+    /// Build content for P-style folded (horizontal: flag split into top/bottom with fold line, stub on right)
     @ViewBuilder
     private func buildFoldedFlagContent() -> some View {
         let halfFlagHeight = previewHeight / 2
+        let stubWidth = barbellFlagWidthScaled * 0.5
 
-        // Flag area - split into top (Area A) and bottom (Area B) with horizontal fold line
-        // The shape handles the stub tail, content just fills the flag
-        ZStack {
-            VStack(spacing: 0) {
-                // Top half - Area A
-                ZStack {
-                    if config.qrPosition != .none, let service = labelService {
-                        HStack(spacing: 2) {
-                            let qrSize = min(barbellFlagWidthScaled * 0.4, halfFlagHeight * 0.9)
-                            QRCodeView(labelData: sampleData, service: service)
-                                .frame(width: qrSize, height: qrSize)
+        HStack(spacing: 0) {
+            // Flag area - split into top (Area A) and bottom (Area B) with horizontal fold line
+            ZStack {
+                VStack(spacing: 0) {
+                    // Top half - Area A (with border)
+                    ZStack {
+                        // Border rectangle
+                        Rectangle()
+                            .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+
+                        if config.qrPosition != .none, let service = labelService {
+                            HStack(spacing: 2) {
+                                let qrSize = min(barbellFlagWidthScaled * 0.4, halfFlagHeight * 0.9)
+                                QRCodeView(labelData: sampleData, service: service)
+                                    .frame(width: qrSize, height: qrSize)
+                                buildTextContent()
+                                    .padding(.horizontal, 2)
+                            }
+                        } else {
                             buildTextContent()
                                 .padding(.horizontal, 2)
                         }
-                    } else {
-                        buildTextContent()
-                            .padding(.horizontal, 2)
                     }
-                }
-                .frame(width: barbellFlagWidthScaled, height: halfFlagHeight)
+                    .frame(width: barbellFlagWidthScaled, height: halfFlagHeight)
 
-                // Bottom half - Area B (mirrored content - shows upside down when wrapped)
-                ZStack {
-                    if config.qrPosition != .none, let service = labelService {
-                        HStack(spacing: 2) {
-                            let qrSize = min(barbellFlagWidthScaled * 0.4, halfFlagHeight * 0.9)
-                            QRCodeView(labelData: sampleData, service: service)
-                                .frame(width: qrSize, height: qrSize)
+                    // Bottom half - Area B (with border, mirrored content)
+                    ZStack {
+                        // Border rectangle
+                        Rectangle()
+                            .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+
+                        if config.qrPosition != .none, let service = labelService {
+                            HStack(spacing: 2) {
+                                let qrSize = min(barbellFlagWidthScaled * 0.4, halfFlagHeight * 0.9)
+                                QRCodeView(labelData: sampleData, service: service)
+                                    .frame(width: qrSize, height: qrSize)
+                                buildTextContent()
+                                    .padding(.horizontal, 2)
+                            }
+                        } else {
                             buildTextContent()
                                 .padding(.horizontal, 2)
                         }
-                    } else {
-                        buildTextContent()
-                            .padding(.horizontal, 2)
                     }
+                    .frame(width: barbellFlagWidthScaled, height: halfFlagHeight)
+                    .rotationEffect(.degrees(180))  // Flip for when cable is rotated
                 }
-                .frame(width: barbellFlagWidthScaled, height: halfFlagHeight)
-                .rotationEffect(.degrees(180))  // Flip for when cable is rotated
+
+                // Dashed horizontal fold line in the middle
+                Rectangle()
+                    .stroke(style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                    .foregroundColor(Color.gray.opacity(0.6))
+                    .frame(width: barbellFlagWidthScaled - 8, height: 1)
             }
+            .frame(width: barbellFlagWidthScaled, height: previewHeight)
 
-            // Dashed horizontal fold line in the middle
-            Rectangle()
-                .stroke(style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                .foregroundColor(Color.gray.opacity(0.6))
-                .frame(width: barbellFlagWidthScaled - 8, height: 1)
+            // Wrap stub area (non-printable, shown with diagonal stripes)
+            let wrapY = (previewHeight - barbellWrapHeightScaled) / 2
+            let taperAmount = barbellWrapHeightScaled * 0.15
+
+            // Simple tapered stub shape with diagonal stripes
+            TaperedStubShape(wrapY: wrapY, wrapHeight: barbellWrapHeightScaled, taperAmount: taperAmount)
+                .fill(Color.gray.opacity(0.1))
+                .overlay(
+                    DiagonalStripePattern()
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        .clipShape(TaperedStubShape(wrapY: wrapY, wrapHeight: barbellWrapHeightScaled, taperAmount: taperAmount))
+                )
+                .frame(width: stubWidth, height: previewHeight)
         }
-        .frame(width: barbellFlagWidthScaled, height: previewHeight)
+        .frame(width: barbellFlagWidthScaled + stubWidth, height: previewHeight)
+    }
+
+    /// Diagonal stripe pattern for non-printable areas
+    struct DiagonalStripePattern: Shape {
+        func path(in rect: CGRect) -> Path {
+            var path = Path()
+            let spacing: CGFloat = 6
+            let diagonal = sqrt(rect.width * rect.width + rect.height * rect.height)
+
+            for offset in stride(from: -diagonal, through: diagonal, by: spacing) {
+                path.move(to: CGPoint(x: offset, y: 0))
+                path.addLine(to: CGPoint(x: offset + rect.height, y: rect.height))
+            }
+            return path
+        }
+    }
+
+    /// Simple tapered stub shape (starts at left edge, tapers toward right)
+    struct TaperedStubShape: Shape {
+        let wrapY: CGFloat
+        let wrapHeight: CGFloat
+        let taperAmount: CGFloat
+
+        func path(in rect: CGRect) -> Path {
+            var path = Path()
+
+            path.move(to: CGPoint(x: 0, y: wrapY))
+            path.addLine(to: CGPoint(x: rect.width, y: wrapY + taperAmount))
+            path.addLine(to: CGPoint(x: rect.width, y: wrapY + wrapHeight - taperAmount))
+            path.addLine(to: CGPoint(x: 0, y: wrapY + wrapHeight))
+            path.closeSubpath()
+
+            return path
+        }
     }
 
     /// Build content for wrap-style labels (content in center strip)
@@ -900,8 +959,8 @@ struct PStyleShape: Shape {
     }
 }
 
-/// Shape for P-style folded cable labels (flag with SHORT wrap stub on right)
-/// Like Mr-Label - shows flag split horizontally with a short tail indicator
+/// Shape for P-style folded cable labels (flag with wrap stub on right)
+/// Like Mr-Label - shows flag split horizontally with wrap tail indicator
 struct PStyleFoldedShape: Shape {
     let flagWidth: CGFloat
     let wrapHeight: CGFloat
@@ -915,9 +974,32 @@ struct PStyleFoldedShape: Shape {
         // Flag area on left (full height) - takes most of the space
         path.addRect(CGRect(x: 0, y: 0, width: flagWidth, height: totalHeight))
 
-        // Short wrap stub on right - just enough to show where it attaches
-        let stubLength = min(flagWidth * 0.3, 30)  // Short stub
-        let taperAmount = wrapHeight * 0.2
+        // Wrap stub on right - visible tail showing where it attaches
+        let stubLength = flagWidth * 0.5  // Longer stub for clarity
+        let taperAmount = wrapHeight * 0.15
+
+        path.move(to: CGPoint(x: flagWidth, y: wrapY))
+        path.addLine(to: CGPoint(x: flagWidth + stubLength, y: wrapY + taperAmount))
+        path.addLine(to: CGPoint(x: flagWidth + stubLength, y: wrapY + wrapHeight - taperAmount))
+        path.addLine(to: CGPoint(x: flagWidth, y: wrapY + wrapHeight))
+        path.closeSubpath()
+
+        return path
+    }
+}
+
+/// Shape for just the wrap stub portion (for overlay effects)
+struct PStyleFoldedStubShape: Shape {
+    let flagWidth: CGFloat
+    let wrapHeight: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        let totalHeight = rect.height
+        let wrapY = (totalHeight - wrapHeight) / 2
+        let stubLength = flagWidth * 0.5
+        let taperAmount = wrapHeight * 0.15
 
         path.move(to: CGPoint(x: flagWidth, y: wrapY))
         path.addLine(to: CGPoint(x: flagWidth + stubLength, y: wrapY + taperAmount))

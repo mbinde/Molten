@@ -25,8 +25,8 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
     private let shoppingListService: ShoppingListService
 
     // MARK: - Debouncing
-
-    private var searchDebounceTask: Task<Void, Never>?
+    // @ObservationIgnored to prevent triggering observation on every keystroke
+    @ObservationIgnored private var searchDebounceTask: Task<Void, Never>?
     private static let searchDebounceDelay: UInt64 = 300_000_000 // 300ms in nanoseconds
 
     // MARK: - Published State
@@ -36,8 +36,8 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
     var errorMessage: String?
 
     // MARK: - Search & Filter State
-
-    private var _searchText = ""
+    // @ObservationIgnored to prevent triggering observation - only debouncedSearchText should trigger updates
+    @ObservationIgnored private var _searchText = ""
     var searchText: String {
         get { _searchText }
         set {

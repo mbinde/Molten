@@ -1912,7 +1912,7 @@ class LabelPrintingService {
     ) -> CGFloat {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = alignment
-        paragraphStyle.lineBreakMode = .byTruncatingTail
+        paragraphStyle.lineBreakMode = .byClipping  // Cut off at edge, no ellipsis
 
         // Apply italic if requested by creating italic font descriptor
         let finalFont: UIFont

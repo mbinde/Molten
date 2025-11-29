@@ -166,11 +166,13 @@ class CatalogViewModel: CatalogViewModelProtocol {
     // MARK: - Search & Filter State
 
     /// Debounce task for search input
-    private var searchDebounceTask: Task<Void, Never>?
+    /// @ObservationIgnored to prevent triggering observation on every keystroke
+    @ObservationIgnored private var searchDebounceTask: Task<Void, Never>?
     private static let searchDebounceDelay: UInt64 = 300_000_000 // 300ms in nanoseconds
 
     /// Immediate search text (updates on every keystroke for UI responsiveness)
-    private var _searchText = ""
+    /// @ObservationIgnored to prevent triggering observation - only debouncedSearchText should trigger updates
+    @ObservationIgnored private var _searchText = ""
     var searchText: String {
         get { _searchText }
         set {
@@ -326,21 +328,11 @@ class CatalogViewModel: CatalogViewModelProtocol {
         return Array(manufacturerCounts.keys).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
-    var manufacturerCounts: [String: Int] {
-        computeManufacturerCounts()
-    }
-
-    var coeCounts: [Int32: Int] {
-        computeCOECounts()
-    }
-
-    var tagCounts: [String: Int] {
-        computeTagCounts()
-    }
-
-    var productTypeCounts: [String: Int] {
-        computeProductTypeCounts()
-    }
+    // PERFORMANCE: Cached counts - recomputed only in applyFilters(), not on every view render
+    private(set) var manufacturerCounts: [String: Int] = [:]
+    private(set) var coeCounts: [Int32: Int] = [:]
+    private(set) var tagCounts: [String: Int] = [:]
+    private(set) var productTypeCounts: [String: Int] = [:]
 
     var emptyStateMessage: String {
         generateEmptyStateMessage()
@@ -537,6 +529,13 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
         filteredItems = filtered
         applySorting()
+
+        // PERFORMANCE: Update cached counts after filtering
+        // This avoids expensive recomputation on every view render
+        manufacturerCounts = computeManufacturerCounts()
+        coeCounts = computeCOECounts()
+        tagCounts = computeTagCounts()
+        productTypeCounts = computeProductTypeCounts()
     }
 
     // MARK: - Private Helpers

@@ -10,6 +10,7 @@ import Foundation
 @testable import Molten
 
 @Suite("InventoryTypeEncoder Tests")
+@MainActor
 struct InventoryTypeEncoderTests {
 
     // MARK: - Type Encoding Tests

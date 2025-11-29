@@ -17,6 +17,7 @@ import Combine
 /// - "rod" for 5-6mm rods → displays as "Rod"
 ///
 /// Users can customize terminology in Settings if desired.
+@MainActor
 class GlassTerminologySettings: ObservableObject {
 
     // MARK: - Shared Instance

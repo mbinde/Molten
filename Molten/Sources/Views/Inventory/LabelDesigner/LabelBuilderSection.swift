@@ -58,7 +58,7 @@ struct LabelBuilderSection: View {
 
                     Picker("QR Position", selection: $builderConfig.qrPosition) {
                         ForEach(QRCodePosition.allCases, id: \.self) { position in
-                            Text(position.rawValue).tag(position)
+                            Text(position.displayName(for: selectedFormat.shape)).tag(position)
                         }
                     }
                     .pickerStyle(.segmented)

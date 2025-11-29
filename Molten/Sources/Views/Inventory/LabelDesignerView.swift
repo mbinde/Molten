@@ -18,6 +18,10 @@ struct LabelDesignerView: View {
     @State private var selectedShapeFilter: LabelShape?
     @State private var selectedBrandSlug: String?
 
+    // Dimension filters (in inches)
+    @State private var filterWidth: String = ""
+    @State private var filterHeight: String = ""
+
     // Database-backed label formats
     @State private var databaseFormats: [LabelGeometry] = []
     @State private var availableBrands: [LabelBrand] = []
@@ -33,8 +37,6 @@ struct LabelDesignerView: View {
 
     // Print adjustments (persisted per format/template in UserDefaults)
     @State private var fontScale: Double = 1.0
-    @State private var offsetX: Double = 0.0
-    @State private var offsetY: Double = 0.0
 
     // Start position for partial sheets
     @State private var startRow: Int = 0
@@ -104,6 +106,11 @@ struct LabelDesignerView: View {
             .sheet(isPresented: $showingEditPreset) { editPresetSheet }
             .sheet(isPresented: $showingLabelCountInput) { labelCountInputSheet }
             .sheet(isPresented: $showingFilterSheet) { filterSheet }
+            .sheet(isPresented: $showingShareSheet) {
+                if let pdfURL = generatedPDFURL {
+                    ShareSheet(items: [pdfURL])
+                }
+            }
             .alert("Unsaved Changes", isPresented: $showingUnsavedChangesAlert) {
                 Button("Discard Changes", role: .destructive) { dismiss() }
                 Button("Cancel", role: .cancel) { }
@@ -227,20 +234,6 @@ struct LabelDesignerView: View {
             .onChange(of: startColumn) { _, _ in
                 saveSettings()
             }
-            .onChange(of: offsetX) { _, _ in
-                // Mark as modified if not currently loading
-                if !isLoadingPreset && currentPresetName != nil {
-                    isPresetModified = true
-                }
-                saveSettings()
-            }
-            .onChange(of: offsetY) { _, _ in
-                // Mark as modified if not currently loading
-                if !isLoadingPreset && currentPresetName != nil {
-                    isPresetModified = true
-                }
-                saveSettings()
-            }
             .onChange(of: builderConfig) { _, _ in
                 // Cancel any pending loading task (user made a change)
                 loadingTask?.cancel()
@@ -265,6 +258,12 @@ struct LabelDesignerView: View {
         Section {
                     // Shape filter buttons
                     ShapeFilterButtons(selectedShape: $selectedShapeFilter)
+
+                    // Dimension filter (width × height in inches)
+                    DimensionFilterRow(
+                        filterWidth: $filterWidth,
+                        filterHeight: $filterHeight
+                    )
 
                     if isSearching {
                         FormatSearchView(
@@ -296,9 +295,7 @@ struct LabelDesignerView: View {
                             format: selectedFormat,
                             config: builderConfig,
                             sampleData: previewData,
-                            fontScale: fontScale,
-                            offsetX: offsetX,
-                            offsetY: offsetY
+                            fontScale: fontScale
                         )
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
@@ -337,9 +334,7 @@ struct LabelDesignerView: View {
                             format: selectedFormat,
                             config: builderConfig,
                             sampleData: previewData,
-                            fontScale: fontScale,
-                            offsetX: offsetX,
-                            offsetY: offsetY
+                            fontScale: fontScale
                         )
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
@@ -352,13 +347,26 @@ struct LabelDesignerView: View {
                     showAdvancedLayoutOptions: $showAdvancedLayoutOptions
                 )
 
+                // Label preview between layout and sheet options
+                if let previewData = sampleLabelData {
+                    Section {
+                        LabelPreviewView(
+                            format: selectedFormat,
+                            config: builderConfig,
+                            sampleData: previewData,
+                            fontScale: fontScale
+                        )
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                    }
+                }
+
                 // Advanced Options Section (collapsed by default)
                 AdvancedSheetOptionsSection(
                     showAdvancedOptions: $showAdvancedOptions,
                     startRow: $startRow,
                     startColumn: $startColumn,
-                    offsetX: $offsetX,
-                    offsetY: $offsetY,
+                    builderConfig: $builderConfig,
                     selectedFormat: selectedFormat
                 )
 
@@ -535,9 +543,7 @@ struct LabelDesignerView: View {
                     format: selectedFormat,
                     config: builderConfig,
                     sampleData: previewData,
-                    fontScale: fontScale,
-                    offsetX: offsetX,
-                    offsetY: offsetY
+                    fontScale: fontScale
                 )
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
@@ -671,19 +677,38 @@ struct LabelDesignerView: View {
         }
     }
 
-    /// Filtered formats based on shape filter and search text
+    /// Parsed dimension filter values (with tolerance for approximate matching)
+    private var parsedDimensionFilters: (width: Double?, height: Double?) {
+        let width = Double(filterWidth.trimmingCharacters(in: .whitespaces))
+        let height = Double(filterHeight.trimmingCharacters(in: .whitespaces))
+        return (width, height)
+    }
+
+    /// Whether any dimension filter is active
+    private var hasDimensionFilter: Bool {
+        parsedDimensionFilters.width != nil || parsedDimensionFilters.height != nil
+    }
+
+    /// Filtered formats based on shape filter, dimension filter, and search text
     /// Uses database for searching 2,600+ label formats
     private var filteredFormats: [LabelGeometry] {
-        // Use database search if we have search text
-        if !searchText.isEmpty {
-            let results = labelDatabase.searchProducts(query: searchText, limit: 100)
-            var formats = results.map { $0.toLabelGeometry() }
+        let dims = parsedDimensionFilters
+        // Use a small tolerance (0.1") for dimension matching
+        let tolerance = 0.1
 
-            // Apply shape filter to search results
-            if let shape = selectedShapeFilter {
-                formats = formats.filter { $0.shape == shape }
-            }
-            return formats
+        // Use database search if we have search text
+        // Pass all filters to database so LIMIT is applied AFTER filtering
+        if !searchText.isEmpty {
+            let results = labelDatabase.searchProducts(
+                query: searchText,
+                shape: selectedShapeFilter,
+                minWidth: dims.width.map { $0 - tolerance },
+                maxWidth: dims.width.map { $0 + tolerance },
+                minHeight: dims.height.map { $0 - tolerance },
+                maxHeight: dims.height.map { $0 + tolerance },
+                limit: 100
+            )
+            return results.map { $0.toLabelGeometry() }
         }
 
         // If filtering by brand
@@ -694,16 +719,50 @@ struct LabelDesignerView: View {
             if let shape = selectedShapeFilter {
                 formats = formats.filter { $0.shape == shape }
             }
+
+            // Apply dimension filters
+            formats = applyDimensionFilter(to: formats, width: dims.width, height: dims.height, tolerance: tolerance)
+
             return formats
         }
 
-        // Query ALL labels with shape filter from database (not just major brands)
-        if let shape = selectedShapeFilter {
-            let results = labelDatabase.getProducts(shape: shape)
+        // Query with shape and/or dimension filters
+        if selectedShapeFilter != nil || hasDimensionFilter {
+            let results = labelDatabase.getProducts(
+                shape: selectedShapeFilter,
+                minWidth: dims.width.map { $0 - tolerance },
+                maxWidth: dims.width.map { $0 + tolerance },
+                minHeight: dims.height.map { $0 - tolerance },
+                maxHeight: dims.height.map { $0 + tolerance }
+            )
             return results.map { $0.toLabelGeometry() }.sorted { $0.name < $1.name }
         }
 
         return databaseFormats
+    }
+
+    /// Apply dimension filter to a list of formats (for post-search filtering)
+    private func applyDimensionFilter(
+        to formats: [LabelGeometry],
+        width: Double?,
+        height: Double?,
+        tolerance: Double
+    ) -> [LabelGeometry] {
+        formats.filter { format in
+            if let w = width {
+                let formatWidth = format.labelWidth / 72.0  // Convert points to inches
+                if abs(formatWidth - w) > tolerance {
+                    return false
+                }
+            }
+            if let h = height {
+                let formatHeight = format.labelHeight / 72.0  // Convert points to inches
+                if abs(formatHeight - h) > tolerance {
+                    return false
+                }
+            }
+            return true
+        }
     }
 
     /// Total number of labels to print (uses LabelCountCalculator for proper handling of weight-based types)
@@ -776,8 +835,6 @@ struct LabelDesignerView: View {
             format: selectedFormat,
             config: builderConfig,
             fontScale: fontScale,
-            offsetX: offsetX,
-            offsetY: offsetY,
             startRow: startRow,
             startColumn: startColumn
         ) else {
@@ -968,8 +1025,6 @@ struct LabelDesignerView: View {
         let defaults = UserDefaults.standard
         fontScale = defaults.double(forKey: "\(settingsKey).fontScale")
         if fontScale == 0 { fontScale = 1.0 }  // Default if never set
-        offsetX = defaults.double(forKey: "\(settingsKey).offsetX")
-        offsetY = defaults.double(forKey: "\(settingsKey).offsetY")
 
         // Load current preset name
         currentPresetName = defaults.string(forKey: "\(settingsKey).currentPresetName")
@@ -997,8 +1052,7 @@ struct LabelDesignerView: View {
     private func saveSettings() {
         let defaults = UserDefaults.standard
         defaults.set(fontScale, forKey: "\(settingsKey).fontScale")
-        defaults.set(offsetX, forKey: "\(settingsKey).offsetX")
-        defaults.set(offsetY, forKey: "\(settingsKey).offsetY")
+        // Note: positionHorizontal/positionVertical are now saved as part of builderConfig
 
         // Save current preset name
         if let presetName = currentPresetName {

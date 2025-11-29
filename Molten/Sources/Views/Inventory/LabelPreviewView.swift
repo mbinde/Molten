@@ -20,8 +20,10 @@ struct LabelPreviewView: View {
     let config: LabelBuilderConfig
     let sampleData: LabelData
     var fontScale: Double = 1.0
-    var offsetX: Double = 0.0
-    var offsetY: Double = 0.0
+
+    // Position offsets now come from config.positionHorizontal/positionVertical
+    private var offsetX: Double { Double(config.positionHorizontal) }
+    private var offsetY: Double { Double(config.positionVertical) }
 
     // CRITICAL: Cache service instance in @State to prevent recreation on every body evaluation
     @State private var labelService: LabelPrintingService?
@@ -33,9 +35,45 @@ struct LabelPreviewView: View {
         return targetWidth / format.labelWidth
     }
 
-    /// Effective QR size (preset override or format default)
+    // MARK: - QR Code Sizing Constants (must match LabelPrintingService)
+
+    /// Minimum QR code size in points (must be scannable)
+    private let minQRSize: CGFloat = 36  // ~0.5 inch
+
+    /// Maximum QR code size in points (no need to be huge on large labels)
+    private let maxQRSize: CGFloat = 108  // ~1.5 inches
+
+    /// Effective QR size in points (clamped to min/max bounds)
+    /// This matches the logic in LabelPrintingService.calculateQRSize
     private var effectiveQRSize: CGFloat {
+        let qrPercent = config.qrSize ?? format.defaultQRSize
+        let desiredSize = format.labelHeight * qrPercent
+        return min(max(desiredSize, minQRSize), maxQRSize)
+    }
+
+    /// Effective QR size as percentage for compatibility (some places still use percentage)
+    private var effectiveQRPercent: CGFloat {
         return config.qrSize ?? format.defaultQRSize
+    }
+
+    // MARK: - Font Scaling Constants (must match LabelPrintingService)
+
+    /// Reference label height for font sizing (1 inch = 72pt)
+    private let referenceLabelHeight: CGFloat = 72
+
+    /// Maximum font scale multiplier for large labels
+    private let maxFontScaleMultiplier: CGFloat = 2.5
+
+    /// Label-based font scale multiplier
+    /// Larger labels get proportionally larger text, capped at maxFontScaleMultiplier
+    private var labelBasedFontScale: CGFloat {
+        let ratio = format.labelHeight / referenceLabelHeight
+        return min(max(ratio, 1.0), maxFontScaleMultiplier)
+    }
+
+    /// Effective font scale combining user setting with label-based scaling
+    private var effectiveFontScale: CGFloat {
+        return fontScale * labelBasedFontScale
     }
 
     /// Effective manufacturer image size (config override or default 0.6)
@@ -150,10 +188,15 @@ struct LabelPreviewView: View {
             }
 
             // Label preview with border (circular, barbell, or rectangular)
+            // Red border indicates content will be clipped (overflow)
+            let hasOverflow = format.isBarbell ? barbellContentWillOverflowVertically : contentWillOverflowVertically
+            let borderColor = hasOverflow ? DesignSystem.Colors.accentDanger : Color.gray.opacity(0.3)
+            let borderWidth: CGFloat = hasOverflow ? 2 : 1
+
             ZStack {
                 if format.isCircular {
                     Circle()
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        .stroke(borderColor, lineWidth: borderWidth)
                         .background(
                             Circle()
                                 .fill(Color.white)
@@ -161,24 +204,36 @@ struct LabelPreviewView: View {
                 } else if format.isBarbell {
                     // Barbell/flag shape: varies by style
                     barbellShapeView()
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        .stroke(borderColor, lineWidth: borderWidth)
                         .background(barbellShapeView().fill(Color.white))
                 } else {
                     RoundedRectangle(cornerRadius: 4)
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        .stroke(borderColor, lineWidth: borderWidth)
                         .background(
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(Color.white)
                         )
                 }
 
-                // Label content based on QR position
+                // Label content based on shape and QR position
                 if format.isBarbell {
                     // For barbell labels, show content in the left flag area only
                     buildBarbellContent()
+                } else if format.isCircular {
+                    // For circular labels, use vertical layout (top/bottom)
+                    buildCircularLabelContent()
+                        .frame(width: previewWidth * 0.7, height: previewHeight * 0.7)
+                        .offset(x: offsetX * scaleFactor, y: offsetY * scaleFactor)
+                } else if format.shape == .portrait || format.shape == .square {
+                    // For portrait/tall and square labels, use vertical layout (top/bottom)
+                    // Text expands horizontally, so QR codes go at top/bottom
+                    buildPortraitLabelContent()
+                        .frame(width: previewWidth - 8, height: previewHeight - 8)
+                        .padding(4)
+                        .offset(x: offsetX * scaleFactor, y: offsetY * scaleFactor)
                 } else {
                     buildLabelContent()
-                        .frame(width: format.isCircular ? previewWidth * 0.7 : nil, height: previewHeight - 8)
+                        .frame(height: previewHeight - 8)
                         .padding(.vertical, 4)
                         .offset(x: offsetX * scaleFactor, y: offsetY * scaleFactor)
                 }
@@ -237,7 +292,7 @@ struct LabelPreviewView: View {
             // QR code on left, text on right, optional manufacturer image on right
             HStack(alignment: .top, spacing: 0) {
                 if let service = labelService {
-                    let qrSize = previewHeight * effectiveQRSize
+                    let qrSize = effectiveQRSize * scaleFactor  // effectiveQRSize is in points, scale for preview
                     VStack {
                         Spacer()
                         QRCodeView(labelData: sampleData, service: service)
@@ -290,7 +345,7 @@ struct LabelPreviewView: View {
                 .frame(maxWidth: .infinity, alignment: frameAlignmentFromConfig)
 
                 if let service = labelService {
-                    let qrSize = previewHeight * effectiveQRSize
+                    let qrSize = effectiveQRSize * scaleFactor  // effectiveQRSize is in points, scale for preview
                     VStack {
                         Spacer()
                         QRCodeView(labelData: sampleData, service: service)
@@ -305,7 +360,7 @@ struct LabelPreviewView: View {
             // QR codes on both sides, text in middle
             HStack(alignment: .top, spacing: 0) {
                 if let service = labelService {
-                    let qrSize = previewHeight * effectiveQRSize
+                    let qrSize = effectiveQRSize * scaleFactor  // effectiveQRSize is in points, scale for preview
                     VStack {
                         Spacer()
                         QRCodeView(labelData: sampleData, service: service)
@@ -325,7 +380,7 @@ struct LabelPreviewView: View {
                 .frame(maxWidth: .infinity, alignment: frameAlignmentFromConfig)
 
                 if let service = labelService {
-                    let qrSize = previewHeight * effectiveQRSize
+                    let qrSize = effectiveQRSize * scaleFactor  // effectiveQRSize is in points, scale for preview
                     VStack {
                         Spacer()
                         QRCodeView(labelData: sampleData, service: service)
@@ -333,6 +388,131 @@ struct LabelPreviewView: View {
                             .padding(.trailing, 4)
                         Spacer()
                     }
+                }
+            }
+        }
+    }
+
+    // MARK: - Circular Label Content Builder
+
+    /// Build content for circular/oval labels with vertical layout (top/bottom QR positions)
+    @ViewBuilder
+    private func buildCircularLabelContent() -> some View {
+        let qrSize = effectiveQRSize * scaleFactor * 0.8  // Slightly smaller for circular labels
+
+        switch config.qrPosition {
+        case .none:
+            // Just text centered
+            VStack(alignment: .center, spacing: 2) {
+                Spacer()
+                buildTextContent()
+                Spacer()
+            }
+
+        case .left:  // "Top" for circular
+            // QR at top, text below
+            VStack(alignment: .center, spacing: 4) {
+                if let service = labelService {
+                    QRCodeView(labelData: sampleData, service: service)
+                        .frame(width: qrSize, height: qrSize)
+                }
+                Spacer()
+                buildTextContent()
+                Spacer()
+            }
+
+        case .right:  // "Bottom" for circular
+            // Text at top, QR at bottom
+            VStack(alignment: .center, spacing: 4) {
+                Spacer()
+                buildTextContent()
+                Spacer()
+                if let service = labelService {
+                    QRCodeView(labelData: sampleData, service: service)
+                        .frame(width: qrSize, height: qrSize)
+                }
+            }
+
+        case .both:  // "Top & Bottom" for circular
+            // QR at top, text in middle, QR at bottom
+            VStack(alignment: .center, spacing: 2) {
+                if let service = labelService {
+                    QRCodeView(labelData: sampleData, service: service)
+                        .frame(width: qrSize * 0.8, height: qrSize * 0.8)
+                }
+                Spacer()
+                buildTextContent()
+                Spacer()
+                if let service = labelService {
+                    QRCodeView(labelData: sampleData, service: service)
+                        .frame(width: qrSize * 0.8, height: qrSize * 0.8)
+                }
+            }
+        }
+    }
+
+    // MARK: - Portrait Label Content Builder
+
+    /// Build content for portrait/tall labels with vertical layout (top/bottom QR positions)
+    @ViewBuilder
+    private func buildPortraitLabelContent() -> some View {
+        let qrSize = effectiveQRSize * scaleFactor
+
+        switch config.qrPosition {
+        case .none:
+            // Just text centered
+            VStack(alignment: alignmentFromConfig, spacing: 2) {
+                Spacer()
+                buildTextContent()
+                Spacer()
+            }
+
+        case .left:  // "Top" for portrait
+            // QR at top, text below
+            VStack(alignment: .center, spacing: 4) {
+                if let service = labelService {
+                    QRCodeView(labelData: sampleData, service: service)
+                        .frame(width: qrSize, height: qrSize)
+                }
+                Spacer()
+                VStack(alignment: alignmentFromConfig, spacing: 1) {
+                    buildTextContent()
+                }
+                .frame(maxWidth: .infinity, alignment: frameAlignmentFromConfig)
+                Spacer()
+            }
+
+        case .right:  // "Bottom" for portrait
+            // Text at top, QR at bottom
+            VStack(alignment: .center, spacing: 4) {
+                Spacer()
+                VStack(alignment: alignmentFromConfig, spacing: 1) {
+                    buildTextContent()
+                }
+                .frame(maxWidth: .infinity, alignment: frameAlignmentFromConfig)
+                Spacer()
+                if let service = labelService {
+                    QRCodeView(labelData: sampleData, service: service)
+                        .frame(width: qrSize, height: qrSize)
+                }
+            }
+
+        case .both:  // "Top & Bottom" for portrait
+            // QR at top, text in middle, QR at bottom
+            VStack(alignment: .center, spacing: 2) {
+                if let service = labelService {
+                    QRCodeView(labelData: sampleData, service: service)
+                        .frame(width: qrSize * 0.85, height: qrSize * 0.85)
+                }
+                Spacer()
+                VStack(alignment: alignmentFromConfig, spacing: 1) {
+                    buildTextContent()
+                }
+                .frame(maxWidth: .infinity, alignment: frameAlignmentFromConfig)
+                Spacer()
+                if let service = labelService {
+                    QRCodeView(labelData: sampleData, service: service)
+                        .frame(width: qrSize * 0.85, height: qrSize * 0.85)
                 }
             }
         }
@@ -358,13 +538,18 @@ struct LabelPreviewView: View {
     }
 
     /// Build content for symmetric barbell (two flags)
+    /// Uses the SAME font scaling as PDF (effectiveFontScale * 0.8) so preview matches reality
     @ViewBuilder
     private func buildSymmetricBarbellContent() -> some View {
+        // Match PDF scaling: barbellFontScale = effectiveFontScale * 0.8
+        // effectiveFontScale already includes label-based scaling
+        let barbellFontScale: CGFloat = effectiveFontScale * 0.8
+
         HStack(spacing: 0) {
             // Left flag area - text content
-            VStack(alignment: .center, spacing: 1) {
+            VStack(alignment: .center, spacing: 0) {
                 Spacer()
-                buildTextContent()
+                buildBarbellTextContent(fontScale: barbellFontScale)
                     .padding(.horizontal, 2)
                 Spacer()
             }
@@ -384,13 +569,115 @@ struct LabelPreviewView: View {
                         .frame(width: qrSize, height: qrSize)
                 } else {
                     // Mirror text content on right flag
-                    buildTextContent()
+                    buildBarbellTextContent(fontScale: barbellFontScale)
                         .padding(.horizontal, 2)
                 }
                 Spacer()
             }
             .frame(width: barbellFlagWidthScaled, height: previewHeight)
         }
+    }
+
+    /// Build text content for barbell labels with custom font scaling
+    @ViewBuilder
+    private func buildBarbellTextContent(fontScale: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(config.textFields, id: \.self) { field in
+                buildBarbellTextField(field, fontScale: fontScale)
+            }
+        }
+    }
+
+    /// Build a single text field for barbell labels with truncation warning
+    @ViewBuilder
+    private func buildBarbellTextField(_ field: LabelTextField, fontScale: CGFloat) -> some View {
+        let fieldFormat = config.format(for: field)
+        let displayFontSize = fieldFormat.fontSize * scaleFactor * effectiveFontScale
+        // Calculate actual font size for truncation check (matches PDF rendering)
+        let actualFontSize = fieldFormat.fontSize * effectiveFontScale
+        let actualFont = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
+
+        switch field {
+        case .manufacturer:
+            if let manufacturer = sampleData.manufacturer {
+                let fullName = GlassManufacturers.fullName(for: manufacturer) ?? manufacturer
+                let skuStartsWithManufacturer: Bool = {
+                    guard let sku = sampleData.sku, config.textFields.contains(.sku) else { return false }
+                    return sku.lowercased().hasPrefix(fullName.lowercased())
+                }()
+                if !skuStartsWithManufacturer {
+                    let willTruncate = barbellTextWillTruncate(fullName, font: actualFont)
+                    Text(fullName)
+                        .font(.system(size: displayFontSize, weight: fieldFormat.bold ? .bold : .regular))
+                        .italic(fieldFormat.italic)
+                        .lineLimit(1)
+                        .background(willTruncate ? DesignSystem.Colors.accentDanger.opacity(0.2) : Color.clear)
+                }
+            }
+        case .sku:
+            if let sku = sampleData.sku {
+                let willTruncate = barbellTextWillTruncate(sku, font: actualFont)
+                Text(sku)
+                    .font(.system(size: displayFontSize, weight: fieldFormat.bold ? .bold : .regular))
+                    .italic(fieldFormat.italic)
+                    .lineLimit(1)
+                    .background(willTruncate ? DesignSystem.Colors.accentDanger.opacity(0.2) : Color.clear)
+            }
+        case .colorName:
+            if let colorName = sampleData.colorName {
+                let willTruncate = barbellTextWillTruncate(colorName, font: actualFont)
+                Text(colorName)
+                    .font(.system(size: displayFontSize, weight: fieldFormat.bold ? .bold : .regular))
+                    .italic(fieldFormat.italic)
+                    .lineLimit(1)
+                    .background(willTruncate ? DesignSystem.Colors.accentDanger.opacity(0.2) : Color.clear)
+            }
+        case .coe:
+            if let coe = sampleData.coe {
+                let text = "COE \(coe)"
+                let willTruncate = barbellTextWillTruncate(text, font: actualFont)
+                Text(text)
+                    .font(.system(size: displayFontSize, weight: fieldFormat.bold ? .bold : .regular))
+                    .italic(fieldFormat.italic)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .background(willTruncate ? DesignSystem.Colors.accentDanger.opacity(0.2) : Color.clear)
+            }
+        case .location:
+            if let location = sampleData.location {
+                let willTruncate = barbellTextWillTruncate(location, font: actualFont)
+                Text(location)
+                    .font(.system(size: displayFontSize, weight: fieldFormat.bold ? .bold : .regular))
+                    .italic(fieldFormat.italic)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .background(willTruncate ? DesignSystem.Colors.accentDanger.opacity(0.2) : Color.clear)
+            }
+        case .owner:
+            if let owner = sampleData.owner {
+                let willTruncate = barbellTextWillTruncate(owner, font: actualFont)
+                Text(owner)
+                    .font(.system(size: displayFontSize, weight: fieldFormat.bold ? .bold : .regular))
+                    .italic(fieldFormat.italic)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .background(willTruncate ? DesignSystem.Colors.accentDanger.opacity(0.2) : Color.clear)
+            }
+        }
+    }
+
+    /// Check if text will be truncated in barbell flag area
+    private func barbellTextWillTruncate(_ text: String, font: UIFont) -> Bool {
+        // For barbell labels, available width is the flag width minus padding
+        let padding: CGFloat = 2
+        let flagWidth = format.barbellFlagWidth ?? format.labelWidth / 3
+        let availableWidth = flagWidth - (padding * 2)
+
+        // Calculate text width using actual font metrics (matches PDF rendering)
+        let attributes: [NSAttributedString.Key: Any] = [.font: font]
+        let textSize = (text as NSString).size(withAttributes: attributes)
+
+        return textSize.width > availableWidth
     }
 
     /// Build content for T-style and P-style (single flag)
@@ -424,83 +711,88 @@ struct LabelPreviewView: View {
         }
     }
 
-    /// Build content for P-style folded (horizontal: flag split into top/bottom with fold line, stub on right)
+    /// Build content for P-style folded cable labels
+    /// Layout: [Print Area A (top)] [fold line] [Print Area B (bottom, rotated)] + [stub centered on right]
     @ViewBuilder
     private func buildFoldedFlagContent() -> some View {
+        // Print area width must match the shape's flagWidth (barbellFlagWidthScaled)
+        let printAreaWidth = barbellFlagWidthScaled
         let halfFlagHeight = previewHeight / 2
-        let stubWidth = barbellFlagWidthScaled * 0.5
+        let stubWidth = previewWidth - printAreaWidth
+        let stubHeight = barbellWrapHeightScaled  // Stub is narrower than full height
+        let stubY: CGFloat = 0  // P-style: stub at TOP right
 
-        HStack(spacing: 0) {
-            // Flag area - split into top (Area A) and bottom (Area B) with horizontal fold line
-            ZStack {
-                VStack(spacing: 0) {
-                    // Top half - Area A (with border)
-                    ZStack {
-                        // Border rectangle
-                        Rectangle()
-                            .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-
-                        if config.qrPosition != .none, let service = labelService {
-                            HStack(spacing: 2) {
-                                let qrSize = min(barbellFlagWidthScaled * 0.4, halfFlagHeight * 0.9)
-                                QRCodeView(labelData: sampleData, service: service)
-                                    .frame(width: qrSize, height: qrSize)
-                                buildTextContent()
-                                    .padding(.horizontal, 2)
-                            }
-                        } else {
+        HStack(alignment: .top, spacing: 0) {
+            // LEFT SIDE: Print Areas A and B
+            VStack(spacing: 0) {
+                // Print Area A (top half)
+                ZStack {
+                    if config.qrPosition != .none, let service = labelService {
+                        HStack(spacing: 2) {
+                            let qrSize = min(printAreaWidth * 0.35, halfFlagHeight * 0.85)
+                            QRCodeView(labelData: sampleData, service: service)
+                                .frame(width: qrSize, height: qrSize)
                             buildTextContent()
                                 .padding(.horizontal, 2)
                         }
+                    } else {
+                        buildTextContent()
+                            .padding(.horizontal, 2)
                     }
-                    .frame(width: barbellFlagWidthScaled, height: halfFlagHeight)
-
-                    // Bottom half - Area B (with border, mirrored content)
-                    ZStack {
-                        // Border rectangle
-                        Rectangle()
-                            .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-
-                        if config.qrPosition != .none, let service = labelService {
-                            HStack(spacing: 2) {
-                                let qrSize = min(barbellFlagWidthScaled * 0.4, halfFlagHeight * 0.9)
-                                QRCodeView(labelData: sampleData, service: service)
-                                    .frame(width: qrSize, height: qrSize)
-                                buildTextContent()
-                                    .padding(.horizontal, 2)
-                            }
-                        } else {
-                            buildTextContent()
-                                .padding(.horizontal, 2)
-                        }
-                    }
-                    .frame(width: barbellFlagWidthScaled, height: halfFlagHeight)
-                    .rotationEffect(.degrees(180))  // Flip for when cable is rotated
                 }
+                .frame(width: printAreaWidth, height: halfFlagHeight)
+                .border(Color.gray.opacity(0.6), width: 1)
 
-                // Dashed horizontal fold line in the middle
+                // Dashed fold line between A and B
                 Rectangle()
                     .stroke(style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                    .foregroundColor(Color.gray.opacity(0.6))
-                    .frame(width: barbellFlagWidthScaled - 8, height: 1)
+                    .foregroundColor(Color.gray.opacity(0.5))
+                    .frame(width: printAreaWidth, height: 1)
+
+                // Print Area B (bottom half) - content rotated 180°
+                ZStack {
+                    Group {
+                        if config.qrPosition != .none, let service = labelService {
+                            HStack(spacing: 2) {
+                                let qrSize = min(printAreaWidth * 0.35, halfFlagHeight * 0.85)
+                                QRCodeView(labelData: sampleData, service: service)
+                                    .frame(width: qrSize, height: qrSize)
+                                buildTextContent()
+                                    .padding(.horizontal, 2)
+                            }
+                        } else {
+                            buildTextContent()
+                                .padding(.horizontal, 2)
+                        }
+                    }
+                    .rotationEffect(.degrees(180))
+                }
+                .frame(width: printAreaWidth, height: halfFlagHeight)
+                .border(Color.gray.opacity(0.6), width: 1)
             }
-            .frame(width: barbellFlagWidthScaled, height: previewHeight)
+            .frame(width: printAreaWidth, height: previewHeight)
 
-            // Wrap stub area (non-printable, shown with diagonal stripes)
-            let wrapY = (previewHeight - barbellWrapHeightScaled) / 2
-            let taperAmount = barbellWrapHeightScaled * 0.15
+            // RIGHT SIDE: Stub at top (P-style)
+            VStack(spacing: 0) {
+                // Stub with diagonal stripes
+                ZStack {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.08))
+                        .overlay(
+                            DiagonalStripePattern()
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                        .clipped()
+                    Rectangle()
+                        .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                }
+                .frame(height: stubHeight)
 
-            // Simple tapered stub shape with diagonal stripes
-            TaperedStubShape(wrapY: wrapY, wrapHeight: barbellWrapHeightScaled, taperAmount: taperAmount)
-                .fill(Color.gray.opacity(0.1))
-                .overlay(
-                    DiagonalStripePattern()
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                        .clipShape(TaperedStubShape(wrapY: wrapY, wrapHeight: barbellWrapHeightScaled, taperAmount: taperAmount))
-                )
-                .frame(width: stubWidth, height: previewHeight)
+                Spacer()
+            }
+            .frame(width: stubWidth, height: previewHeight)
         }
-        .frame(width: barbellFlagWidthScaled + stubWidth, height: previewHeight)
+        .frame(width: previewWidth, height: previewHeight)
     }
 
     /// Diagonal stripe pattern for non-printable areas
@@ -586,8 +878,8 @@ struct LabelPreviewView: View {
                 // Only show manufacturer if SKU doesn't already start with it
                 if !skuStartsWithManufacturer {
                     let fieldFormat = config.format(for: .manufacturer)
-                    let displayFontSize = fieldFormat.fontSize * scaleFactor * fontScale
-                    let actualFontSize = fieldFormat.fontSize * fontScale  // Font size on actual PDF (no scaleFactor)
+                    let displayFontSize = fieldFormat.fontSize * scaleFactor * effectiveFontScale
+                    let actualFontSize = fieldFormat.fontSize * effectiveFontScale  // Font size on actual PDF (no scaleFactor)
                     let actualFont = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
                     let willTruncate = textWillTruncate(fullName, font: actualFont)
 
@@ -603,8 +895,8 @@ struct LabelPreviewView: View {
         case .sku:
             if let sku = sampleData.sku {
                 let fieldFormat = config.format(for: .sku)
-                let displayFontSize = fieldFormat.fontSize * scaleFactor * fontScale
-                let actualFontSize = fieldFormat.fontSize * fontScale
+                let displayFontSize = fieldFormat.fontSize * scaleFactor * effectiveFontScale
+                let actualFontSize = fieldFormat.fontSize * effectiveFontScale
                 let actualFont = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(sku, font: actualFont)
 
@@ -619,8 +911,8 @@ struct LabelPreviewView: View {
         case .colorName:
             if let colorName = sampleData.colorName {
                 let fieldFormat = config.format(for: .colorName)
-                let displayFontSize = fieldFormat.fontSize * scaleFactor * fontScale
-                let actualFontSize = fieldFormat.fontSize * fontScale
+                let displayFontSize = fieldFormat.fontSize * scaleFactor * effectiveFontScale
+                let actualFontSize = fieldFormat.fontSize * effectiveFontScale
                 let actualFont = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(colorName, font: actualFont)
 
@@ -636,8 +928,8 @@ struct LabelPreviewView: View {
             if let coe = sampleData.coe {
                 let text = "COE \(coe)"
                 let fieldFormat = config.format(for: .coe)
-                let displayFontSize = fieldFormat.fontSize * scaleFactor * fontScale
-                let actualFontSize = fieldFormat.fontSize * fontScale
+                let displayFontSize = fieldFormat.fontSize * scaleFactor * effectiveFontScale
+                let actualFontSize = fieldFormat.fontSize * effectiveFontScale
                 let actualFont = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(text, font: actualFont)
 
@@ -654,8 +946,8 @@ struct LabelPreviewView: View {
             if let location = sampleData.location {
                 let text = "📍 \(location)"
                 let fieldFormat = config.format(for: .location)
-                let displayFontSize = fieldFormat.fontSize * scaleFactor * fontScale
-                let actualFontSize = fieldFormat.fontSize * fontScale
+                let displayFontSize = fieldFormat.fontSize * scaleFactor * effectiveFontScale
+                let actualFontSize = fieldFormat.fontSize * effectiveFontScale
                 let actualFont = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(text, font: actualFont)
 
@@ -671,8 +963,8 @@ struct LabelPreviewView: View {
         case .owner:
             if let owner = sampleData.owner {
                 let fieldFormat = config.format(for: .owner)
-                let displayFontSize = fieldFormat.fontSize * scaleFactor * fontScale
-                let actualFontSize = fieldFormat.fontSize * fontScale
+                let displayFontSize = fieldFormat.fontSize * scaleFactor * effectiveFontScale
+                let actualFontSize = fieldFormat.fontSize * effectiveFontScale
                 let actualFont = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
                 let willTruncate = textWillTruncate(owner, font: actualFont)
 
@@ -687,37 +979,160 @@ struct LabelPreviewView: View {
         }
     }
 
-    /// Check if text will be truncated given the available width
-    private func textWillTruncate(_ text: String, font: UIFont) -> Bool {
-        // Calculate available width based on QR position and manufacturer image
+    /// Check if content will overflow vertically (be clipped)
+    private var contentWillOverflowVertically: Bool {
         let padding: CGFloat = 4
-        var availableWidth = format.labelWidth - (padding * 2)
 
-        // Account for QR code space
-        if config.qrPosition != .none {
-            let qrSize = format.labelHeight * effectiveQRSize
+        // Calculate available height based on label shape and QR position
+        var availableHeight: CGFloat
 
-            switch config.qrPosition {
-            case .left, .right:
-                availableWidth -= (qrSize + padding)
-            case .both:
-                availableWidth -= (2 * qrSize + 2 * padding)
-            case .none:
-                break
+        // Determine if this label uses vertical layout (top/bottom QR positioning)
+        // Circular, portrait, and square labels all use vertical layout since text expands horizontally
+        let usesVerticalLayout = format.isCircular || format.shape == .portrait || format.shape == .square
+
+        if format.isCircular {
+            // For circular labels, the usable area is smaller (inscribed content area)
+            // Use ~70% of diameter for content to stay within the circle
+            availableHeight = format.labelHeight * 0.7 - (padding * 2)
+
+            // For circular labels, QR codes take vertical space (top/bottom)
+            if config.qrPosition != .none {
+                let qrSize = effectiveQRSize
+                switch config.qrPosition {
+                case .left, .right:  // Top or Bottom for circular
+                    availableHeight -= (qrSize + padding)
+                case .both:  // Top & Bottom for circular
+                    availableHeight -= (2 * qrSize + 2 * padding)
+                case .none:
+                    break
+                }
+            }
+        } else if usesVerticalLayout {
+            // Portrait labels - QR codes take vertical space (top/bottom)
+            availableHeight = format.labelHeight - (padding * 2)
+
+            if config.qrPosition != .none {
+                let qrSize = effectiveQRSize
+                switch config.qrPosition {
+                case .left, .right:  // Top or Bottom for portrait
+                    availableHeight -= (qrSize + padding)
+                case .both:  // Top & Bottom for portrait
+                    availableHeight -= (2 * qrSize + 2 * padding)
+                case .none:
+                    break
+                }
+            }
+        } else {
+            // Landscape and square labels - QR codes take horizontal space, not vertical
+            availableHeight = format.labelHeight - (padding * 2)
+        }
+
+        // Calculate total text height
+        var totalTextHeight: CGFloat = 0
+        for field in config.textFields {
+            let fieldFormat = config.format(for: field)
+            let actualFontSize = fieldFormat.fontSize * effectiveFontScale
+            let font = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
+
+            // Only count if the field has data
+            let hasData: Bool = {
+                switch field {
+                case .manufacturer: return sampleData.manufacturer != nil
+                case .sku: return sampleData.sku != nil
+                case .colorName: return sampleData.colorName != nil
+                case .coe: return sampleData.coe != nil
+                case .location: return sampleData.location != nil
+                case .owner: return sampleData.owner != nil
+                }
+            }()
+
+            if hasData {
+                totalTextHeight += font.lineHeight + 1
             }
         }
 
-        // Account for manufacturer image space (if enabled and not overlapping)
-        if config.manufacturerImagePosition != .none && !config.manufacturerImageOverlapsQR() {
-            let imageSize = format.labelHeight * effectiveManufacturerImageSize
+        return totalTextHeight > availableHeight
+    }
 
-            switch config.manufacturerImagePosition {
-            case .left, .right:
-                availableWidth -= (imageSize + padding)
-            case .both:
-                availableWidth -= (2 * imageSize + 2 * padding)
-            case .none:
-                break
+    /// Check if barbell content will overflow vertically
+    private var barbellContentWillOverflowVertically: Bool {
+        let padding: CGFloat = 2
+        let availableHeight = format.labelHeight - (padding * 2)
+
+        // Calculate total text height with barbell scaling (effectiveFontScale * 0.8)
+        let barbellFontScale = effectiveFontScale * 0.8
+        var totalTextHeight: CGFloat = 0
+        for field in config.textFields {
+            let fieldFormat = config.format(for: field)
+            let actualFontSize = fieldFormat.fontSize * barbellFontScale
+            let font = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
+
+            let hasData: Bool = {
+                switch field {
+                case .manufacturer: return sampleData.manufacturer != nil
+                case .sku: return sampleData.sku != nil
+                case .colorName: return sampleData.colorName != nil
+                case .coe: return sampleData.coe != nil
+                case .location: return sampleData.location != nil
+                case .owner: return sampleData.owner != nil
+                }
+            }()
+
+            if hasData {
+                totalTextHeight += font.lineHeight + 1
+            }
+        }
+
+        return totalTextHeight > availableHeight
+    }
+
+    /// Check if text will be truncated given the available width
+    private func textWillTruncate(_ text: String, font: UIFont) -> Bool {
+        // Calculate available width based on label shape, QR position and manufacturer image
+        let padding: CGFloat = 4
+        var availableWidth: CGFloat
+
+        // Determine if this label uses vertical layout (top/bottom QR positioning)
+        // Circular, portrait, and square labels all use vertical layout since text expands horizontally
+        let usesVerticalLayout = format.isCircular || format.shape == .portrait || format.shape == .square
+
+        if format.isCircular {
+            // Circular labels: text is centered, use ~70% of diameter for content width
+            // QR codes are at top/bottom and don't reduce horizontal space
+            availableWidth = format.labelWidth * 0.7 - (padding * 2)
+        } else if usesVerticalLayout {
+            // Portrait labels: QR codes are at top/bottom and don't reduce horizontal space
+            availableWidth = format.labelWidth - (padding * 2)
+        } else {
+            // Landscape and square labels: full width minus padding
+            availableWidth = format.labelWidth - (padding * 2)
+
+            // Account for QR code space (left/right positioning)
+            if config.qrPosition != .none {
+                let qrSize = effectiveQRSize
+
+                switch config.qrPosition {
+                case .left, .right:
+                    availableWidth -= (qrSize + padding)
+                case .both:
+                    availableWidth -= (2 * qrSize + 2 * padding)
+                case .none:
+                    break
+                }
+            }
+
+            // Account for manufacturer image space (if enabled and not overlapping)
+            if config.manufacturerImagePosition != .none && !config.manufacturerImageOverlapsQR() {
+                let imageSize = format.labelHeight * effectiveManufacturerImageSize
+
+                switch config.manufacturerImagePosition {
+                case .left, .right:
+                    availableWidth -= (imageSize + padding)
+                case .both:
+                    availableWidth -= (2 * imageSize + 2 * padding)
+                case .none:
+                    break
+                }
             }
         }
 
@@ -937,7 +1352,6 @@ struct PStyleShape: Shape {
 
         let totalWidth = rect.width
         let totalHeight = rect.height
-        let wrapWidth = totalWidth - flagWidth
         let wrapY = (totalHeight - wrapHeight) / 2
 
         // Flag area on left (full height)
@@ -961,6 +1375,7 @@ struct PStyleShape: Shape {
 
 /// Shape for P-style folded cable labels (flag with wrap stub on right)
 /// Like Mr-Label - shows flag split horizontally with wrap tail indicator
+/// P-style = stub at TOP right (like letter P)
 struct PStyleFoldedShape: Shape {
     let flagWidth: CGFloat
     let wrapHeight: CGFloat
@@ -969,12 +1384,12 @@ struct PStyleFoldedShape: Shape {
         var path = Path()
 
         let totalHeight = rect.height
-        let wrapY = (totalHeight - wrapHeight) / 2
+        let wrapY: CGFloat = 0  // P-style: stub at TOP
 
         // Flag area on left (full height) - takes most of the space
         path.addRect(CGRect(x: 0, y: 0, width: flagWidth, height: totalHeight))
 
-        // Wrap stub on right - visible tail showing where it attaches
+        // Wrap stub on right at TOP - visible tail showing where it attaches
         let stubLength = flagWidth * 0.5  // Longer stub for clarity
         let taperAmount = wrapHeight * 0.15
 
@@ -989,6 +1404,7 @@ struct PStyleFoldedShape: Shape {
 }
 
 /// Shape for just the wrap stub portion (for overlay effects)
+/// P-style = stub at TOP right
 struct PStyleFoldedStubShape: Shape {
     let flagWidth: CGFloat
     let wrapHeight: CGFloat
@@ -996,8 +1412,7 @@ struct PStyleFoldedStubShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
 
-        let totalHeight = rect.height
-        let wrapY = (totalHeight - wrapHeight) / 2
+        let wrapY: CGFloat = 0  // P-style: stub at TOP
         let stubLength = flagWidth * 0.5
         let taperAmount = wrapHeight * 0.15
 

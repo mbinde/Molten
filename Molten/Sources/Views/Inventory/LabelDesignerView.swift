@@ -686,9 +686,10 @@ struct LabelDesignerView: View {
             return formats
         }
 
-        // Use cached database formats with shape filter
+        // Query ALL labels with shape filter from database (not just major brands)
         if let shape = selectedShapeFilter {
-            return databaseFormats.filter { $0.shape == shape }
+            let results = labelDatabase.getProducts(shape: shape)
+            return results.map { $0.toLabelGeometry() }.sorted { $0.name < $1.name }
         }
 
         return databaseFormats

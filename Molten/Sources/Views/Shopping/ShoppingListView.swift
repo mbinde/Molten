@@ -61,6 +61,10 @@ struct ShoppingListView: View {
     @State private var cachedAllStores: [String] = []
     @State private var cachedAllManufacturers: [String] = []
 
+    // Local search text state - isolates TextField from ViewModel to prevent full view re-renders
+    // The ViewModel's searchText setter handles debouncing and triggers filtering
+    @State private var localSearchText = ""
+
     // Accept ViewModel directly (protocol-based pattern)
     #if canImport(UIKit)
     init(viewModel: ShoppingListViewModel,
@@ -746,6 +750,7 @@ struct ShoppingListView: View {
                                 searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
                                 activeFilters: activeFiltersForEmptyState,
                                 onClearFilters: {
+                                    localSearchText = ""  // Sync local state with ViewModel
                                     viewModel.searchText = ""
                                     viewModel.clearFilters()
                                 }
@@ -763,10 +768,14 @@ struct ShoppingListView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .searchable(
-                text: $viewModel.searchText,
+                text: $localSearchText,
                 placement: .navigationBarDrawer(displayMode: .always),
                 prompt: "Search shopping list..."
             )
+            .onChange(of: localSearchText) { oldValue, newValue in
+                // Sync local state to ViewModel - debouncing happens in ViewModel
+                viewModel.searchText = newValue
+            }
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
             .toolbar {

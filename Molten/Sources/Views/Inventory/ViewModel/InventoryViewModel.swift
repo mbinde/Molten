@@ -8,6 +8,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 /// SwiftUI ViewModel for inventory management using new GlassItem architecture
 @MainActor
@@ -15,15 +16,30 @@ import SwiftUI
 class InventoryViewModel: InventoryViewModelProtocol {
     private let inventoryTrackingService: InventoryTrackingService
     private let catalogService: CatalogService?
-    
+
+    // Debouncing infrastructure - marked @ObservationIgnored since these are internal mechanics
+    @ObservationIgnored private var searchDebounceTask: Task<Void, Never>?
+    private static let searchDebounceDelay: UInt64 = 300_000_000 // 300ms in nanoseconds
+
     // Published state - updated for new architecture
     var completeItems: [CompleteInventoryItemModel] = []
     var filteredItems: [CompleteInventoryItemModel] = []
     var isLoading = false
     var errorMessage: String?
-    
+
     // Search and filter state - updated for new architecture
-    var searchText = ""
+    // Note: searchText is the raw input, debouncedSearchText is used for actual filtering
+    // IMPORTANT: @ObservationIgnored prevents re-renders on every keystroke - only debouncedSearchText triggers updates
+    @ObservationIgnored private var _searchText = ""
+    var searchText: String {
+        get { _searchText }
+        set {
+            _searchText = newValue
+            debounceSearch(newValue)
+        }
+    }
+    /// The debounced search text - use this for filtering, not searchText directly
+    var debouncedSearchText = ""
     var searchTitlesOnly = false
     var selectedTypes: Set<String> = [] // String types instead of enum
     var selectedInventoryType: String? = nil // Single inventory type filter for dropdown (nil = all kinds)
@@ -61,6 +77,8 @@ class InventoryViewModel: InventoryViewModelProtocol {
         if let catalogService = catalogService {
             completeItems = await CatalogDataCache.loadItems(using: catalogService)
             filteredItems = completeItems
+            // PERFORMANCE: Initialize cached counts after loading
+            updateFilterCounts()
         } else {
             // Fallback: load through inventory tracking service
             // Since there's no getInventorySummaries method, we use an empty set for now
@@ -78,9 +96,36 @@ class InventoryViewModel: InventoryViewModelProtocol {
     
     // MARK: - Search Functionality
     
+    // MARK: - Search Debouncing
+
+    /// Debounce search input to avoid filtering on every keystroke
+    private func debounceSearch(_ text: String) {
+        // Cancel any pending debounce task
+        searchDebounceTask?.cancel()
+
+        // If text is empty, update immediately (user cleared the search)
+        if text.isEmpty {
+            debouncedSearchText = ""
+            return
+        }
+
+        // Schedule debounced update
+        searchDebounceTask = Task {
+            do {
+                try await Task.sleep(nanoseconds: Self.searchDebounceDelay)
+                // Only update if not cancelled and text hasn't changed
+                if !Task.isCancelled && _searchText == text {
+                    debouncedSearchText = text
+                }
+            } catch {
+                // Task was cancelled - this is expected when typing continues
+            }
+        }
+    }
+
     func searchItems(searchText: String) async {
         self.searchText = searchText
-        
+
         do {
             if searchText.isEmpty {
                 await loadInventoryItems()
@@ -179,24 +224,37 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        // Apply search text filter
-        if !searchText.isEmpty {
+        // Apply search text filter - use debouncedSearchText to avoid filtering on every keystroke
+        if !debouncedSearchText.isEmpty {
             filtered = filtered.filter { item in
                 let name = item.catalogItem.name
                 let manufacturer = item.catalogItem.manufacturer
                 let sku = item.catalogItem.sku ?? ""
                 let stableId = item.catalogItem.stable_id
 
-                return name.localizedCaseInsensitiveContains(searchText) ||
-                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
-                       sku.localizedCaseInsensitiveContains(searchText) ||
-                       stableId.localizedCaseInsensitiveContains(searchText)
+                return name.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       sku.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       stableId.localizedCaseInsensitiveContains(debouncedSearchText)
             }
         }
 
         filteredItems = filtered
+
+        // PERFORMANCE: Update cached counts after filtering
+        updateFilterCounts()
     }
-    
+
+    /// Update all cached filter counts - called after filtering completes
+    private func updateFilterCounts() {
+        manufacturerCounts = computeManufacturerCounts()
+        coeCounts = computeCOECounts()
+        tagCounts = computeTagCounts()
+        locationCounts = computeLocationCounts()
+        inventoryTypeCounts = computeInventoryTypeCounts()
+        productTypeCounts = computeProductTypeCounts()
+    }
+
     // MARK: - CRUD Operations - Updated for new architecture
     
     func addInventory(quantity: Double, type: String, toItemNaturalKey stableId: String) async {
@@ -328,30 +386,13 @@ class InventoryViewModel: InventoryViewModelProtocol {
     }
 
     // MARK: - Filter Counts
-
-    var manufacturerCounts: [String: Int] {
-        computeManufacturerCounts()
-    }
-
-    var coeCounts: [Int32: Int] {
-        computeCOECounts()
-    }
-
-    var tagCounts: [String: Int] {
-        computeTagCounts()
-    }
-
-    var locationCounts: [String: Int] {
-        computeLocationCounts()
-    }
-
-    var inventoryTypeCounts: [String: Int] {
-        computeInventoryTypeCounts()
-    }
-
-    var productTypeCounts: [String: Int] {
-        computeProductTypeCounts()
-    }
+    // PERFORMANCE: Cached counts - recomputed only when filters change, not on every view render
+    private(set) var manufacturerCounts: [String: Int] = [:]
+    private(set) var coeCounts: [Int32: Int] = [:]
+    private(set) var tagCounts: [String: Int] = [:]
+    private(set) var locationCounts: [String: Int] = [:]
+    private(set) var inventoryTypeCounts: [String: Int] = [:]
+    private(set) var productTypeCounts: [String: Int] = [:]
 
     // MARK: - Filter Count Computation
 
@@ -394,17 +435,18 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        if !searchText.isEmpty {
+        // Use debouncedSearchText to avoid recomputation on every keystroke
+        if !debouncedSearchText.isEmpty {
             items = items.filter { item in
                 let name = item.glassItem.name
                 let manufacturer = item.glassItem.manufacturer
                 let sku = item.glassItem.sku ?? ""
                 let stableId = item.glassItem.stable_id
 
-                return name.localizedCaseInsensitiveContains(searchText) ||
-                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
-                       sku.localizedCaseInsensitiveContains(searchText) ||
-                       stableId.localizedCaseInsensitiveContains(searchText)
+                return name.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       sku.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       stableId.localizedCaseInsensitiveContains(debouncedSearchText)
             }
         }
 
@@ -458,17 +500,18 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        if !searchText.isEmpty {
+        // Use debouncedSearchText to avoid recomputation on every keystroke
+        if !debouncedSearchText.isEmpty {
             items = items.filter { item in
                 let name = item.glassItem.name
                 let manufacturer = item.glassItem.manufacturer
                 let sku = item.glassItem.sku ?? ""
                 let stableId = item.glassItem.stable_id
 
-                return name.localizedCaseInsensitiveContains(searchText) ||
-                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
-                       sku.localizedCaseInsensitiveContains(searchText) ||
-                       stableId.localizedCaseInsensitiveContains(searchText)
+                return name.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       sku.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       stableId.localizedCaseInsensitiveContains(debouncedSearchText)
             }
         }
 
@@ -518,17 +561,18 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        if !searchText.isEmpty {
+        // Use debouncedSearchText to avoid recomputation on every keystroke
+        if !debouncedSearchText.isEmpty {
             items = items.filter { item in
                 let name = item.glassItem.name
                 let manufacturer = item.glassItem.manufacturer
                 let sku = item.glassItem.sku ?? ""
                 let stableId = item.glassItem.stable_id
 
-                return name.localizedCaseInsensitiveContains(searchText) ||
-                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
-                       sku.localizedCaseInsensitiveContains(searchText) ||
-                       stableId.localizedCaseInsensitiveContains(searchText)
+                return name.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       sku.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       stableId.localizedCaseInsensitiveContains(debouncedSearchText)
             }
         }
 
@@ -577,17 +621,18 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        if !searchText.isEmpty {
+        // Use debouncedSearchText to avoid recomputation on every keystroke
+        if !debouncedSearchText.isEmpty {
             items = items.filter { item in
                 let name = item.glassItem.name
                 let manufacturer = item.glassItem.manufacturer
                 let sku = item.glassItem.sku ?? ""
                 let stableId = item.glassItem.stable_id
 
-                return name.localizedCaseInsensitiveContains(searchText) ||
-                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
-                       sku.localizedCaseInsensitiveContains(searchText) ||
-                       stableId.localizedCaseInsensitiveContains(searchText)
+                return name.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       sku.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       stableId.localizedCaseInsensitiveContains(debouncedSearchText)
             }
         }
 
@@ -639,17 +684,18 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        if !searchText.isEmpty {
+        // Use debouncedSearchText to avoid recomputation on every keystroke
+        if !debouncedSearchText.isEmpty {
             items = items.filter { item in
                 let name = item.glassItem.name
                 let manufacturer = item.glassItem.manufacturer
                 let sku = item.glassItem.sku ?? ""
                 let stableId = item.glassItem.stable_id
 
-                return name.localizedCaseInsensitiveContains(searchText) ||
-                       manufacturer.localizedCaseInsensitiveContains(searchText) ||
-                       sku.localizedCaseInsensitiveContains(searchText) ||
-                       stableId.localizedCaseInsensitiveContains(searchText)
+                return name.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       manufacturer.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       sku.localizedCaseInsensitiveContains(debouncedSearchText) ||
+                       stableId.localizedCaseInsensitiveContains(debouncedSearchText)
             }
         }
 

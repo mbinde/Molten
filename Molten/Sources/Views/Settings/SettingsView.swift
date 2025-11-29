@@ -428,6 +428,19 @@ struct SettingsView: View {
                     await subscriptionViewModel.loadSubscriptionStatus()
                 }
 
+                // MARK: - Legal
+                Section("Legal") {
+                    Link(destination: URL(string: "https://moltenglass.app/privacy/")!) {
+                        HStack {
+                            Text("Privacy Policy")
+                            Spacer()
+                            Image(systemName: "arrow.up.forward.square")
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                        }
+                    }
+                    .accessibilityIdentifier("settings_privacy_policy")
+                }
+
                 // MARK: - Advanced
                 Section("Advanced") {
                     NavigationLink {

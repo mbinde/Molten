@@ -101,6 +101,9 @@ struct LabelGeometry: Equatable, Hashable, Sendable {
     /// Style variant for barbell labels (symmetric, t-style, p-style, wrap)
     let barbellStyle: BarbellStyle?
 
+    /// Page format ("letter" or "a4")
+    let pageFormat: String
+
     /// Computed wrap width for barbell labels (the narrow middle section)
     var barbellWrapWidth: CGFloat? {
         guard isBarbell, let flagWidth = barbellFlagWidth else { return nil }
@@ -139,7 +142,8 @@ struct LabelGeometry: Equatable, Hashable, Sendable {
         isBarbell: Bool = false,
         barbellFlagWidth: CGFloat? = nil,
         barbellWrapHeight: CGFloat? = nil,
-        barbellStyle: BarbellStyle? = nil
+        barbellStyle: BarbellStyle? = nil,
+        pageFormat: String = "letter"
     ) {
         self.name = name
         self.labelsPerSheet = labelsPerSheet
@@ -158,6 +162,7 @@ struct LabelGeometry: Equatable, Hashable, Sendable {
         self.barbellFlagWidth = barbellFlagWidth
         self.barbellWrapHeight = barbellWrapHeight
         self.barbellStyle = barbellStyle
+        self.pageFormat = pageFormat
     }
 
     /// Avery 5160 (Address Labels) - Default format
@@ -312,9 +317,13 @@ struct LabelBuilderConfig: Equatable, Codable, Sendable {
         fontScale: nil,  // Use format default
         manufacturerImagePosition: .none,  // No manufacturer logo
         manufacturerImageSize: nil,  // Use default (0.6)
-        textFields: [.manufacturer, .sku, .colorName, .coe],
+        textFields: [.colorName, .manufacturer, .sku],
         textAlignment: .left,
-        fieldFormats: [:],  // Empty - use LabelFieldFormat.defaults
+        fieldFormats: [
+            .colorName: LabelFieldFormat(fontSize: 9, bold: true, italic: false),
+            .manufacturer: LabelFieldFormat(fontSize: 8, bold: false, italic: false),
+            .sku: LabelFieldFormat(fontSize: 8, bold: false, italic: false)
+        ],
         paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
         positionHorizontal: 0, positionVertical: 0
     )
@@ -343,16 +352,20 @@ struct LabelBuilderConfig: Equatable, Codable, Sendable {
     static let presets: [LabelBuilderPreset] = [
         LabelBuilderPreset(
             name: "Information Dense",
-            description: "Maximum info with QR code on left",
+            description: "Item name prominent, with manufacturer and SKU",
             config: LabelBuilderConfig(
                 qrPosition: .left,
                 qrSize: nil,
                 fontScale: nil,
                 manufacturerImagePosition: .none,
                 manufacturerImageSize: nil,
-                textFields: [.manufacturer, .sku, .colorName, .coe],
+                textFields: [.colorName, .manufacturer, .sku],
                 textAlignment: .left,
-                fieldFormats: [:],
+                fieldFormats: [
+                    .colorName: LabelFieldFormat(fontSize: 9, bold: true, italic: false),
+                    .manufacturer: LabelFieldFormat(fontSize: 8, bold: false, italic: false),
+                    .sku: LabelFieldFormat(fontSize: 8, bold: false, italic: false)
+                ],
                 paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
                 positionHorizontal: 0, positionVertical: 0
             )
@@ -1542,6 +1555,7 @@ class LabelPrintingService {
             drawBarbellFlagQROnly(
                 labelData: labelData,
                 rect: rightFlagRect,
+                config: config,
                 padding: padding,
                 context: context
             )
@@ -1572,7 +1586,8 @@ class LabelPrintingService {
         let contentHeight = rect.height - (padding * 2)
 
         // Calculate text sizing - barbell labels need smaller text
-        let barbellFontScale = fontScale * 0.8
+        // Use user's font scale directly - they can adjust if text doesn't fit
+        let barbellFontScale = fontScale
 
         // Calculate total text height for vertical centering
         var totalTextHeight: CGFloat = 0
@@ -1657,11 +1672,19 @@ class LabelPrintingService {
     private func drawBarbellFlagQROnly(
         labelData: LabelData,
         rect: CGRect,
+        config: LabelBuilderConfig,
         padding: CGFloat,
         context: CGContext
     ) {
-        // QR code sized to fit the flag, with some padding
-        let qrSize = min(rect.width, rect.height) - (padding * 2)
+        // Use user's configured QR size percentage (or default 0.65)
+        // For barbell labels, size is relative to label height
+        let qrPercent = config.qrSize ?? 0.65
+        let desiredQRSize = rect.height * qrPercent
+
+        // Clamp to fit within flag area (with padding)
+        let maxFlagSize = min(rect.width, rect.height) - (padding * 2)
+        let qrSize = min(desiredQRSize, maxFlagSize)
+
         let qrImage = generateQRCode(for: labelData)
 
         // Center the QR code in the flag area
@@ -1889,7 +1912,7 @@ class LabelPrintingService {
     ) -> CGFloat {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = alignment
-        paragraphStyle.lineBreakMode = .byTruncatingTail
+        paragraphStyle.lineBreakMode = .byClipping  // Cut off at edge, no ellipsis
 
         // Apply italic if requested by creating italic font descriptor
         let finalFont: UIFont

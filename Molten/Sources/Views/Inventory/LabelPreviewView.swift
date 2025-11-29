@@ -538,12 +538,10 @@ struct LabelPreviewView: View {
     }
 
     /// Build content for symmetric barbell (two flags)
-    /// Uses the SAME font scaling as PDF (effectiveFontScale * 0.8) so preview matches reality
     @ViewBuilder
     private func buildSymmetricBarbellContent() -> some View {
-        // Match PDF scaling: barbellFontScale = effectiveFontScale * 0.8
-        // effectiveFontScale already includes label-based scaling
-        let barbellFontScale: CGFloat = effectiveFontScale * 0.8
+        // Use user's font scale directly - they can adjust if text doesn't fit
+        let barbellFontScale: CGFloat = effectiveFontScale
 
         HStack(spacing: 0) {
             // Left flag area - text content
@@ -564,9 +562,14 @@ struct LabelPreviewView: View {
             VStack {
                 Spacer()
                 if config.qrPosition != .none, let service = labelService {
-                    let qrSize = min(barbellFlagWidthScaled, previewHeight) * 0.85
+                    // Match PDF logic: qrSize = label_height * qrPercent, clamped to fit flag
+                    let qrPercent = config.qrSize ?? 0.65
+                    let desiredQRSize = format.labelHeight * qrPercent
+                    let maxFlagSize = min(format.barbellFlagWidth ?? format.labelWidth / 3, format.labelHeight) - 4  // 4pt = padding * 2
+                    let actualQRSize = min(desiredQRSize, maxFlagSize)
+                    let qrSizeScaled = actualQRSize * scaleFactor
                     QRCodeView(labelData: sampleData, service: service)
-                        .frame(width: qrSize, height: qrSize)
+                        .frame(width: qrSizeScaled, height: qrSizeScaled)
                 } else {
                     // Mirror text content on right flag
                     buildBarbellTextContent(fontScale: barbellFontScale)
@@ -592,9 +595,10 @@ struct LabelPreviewView: View {
     @ViewBuilder
     private func buildBarbellTextField(_ field: LabelTextField, fontScale: CGFloat) -> some View {
         let fieldFormat = config.format(for: field)
-        let displayFontSize = fieldFormat.fontSize * scaleFactor * effectiveFontScale
+        // Use the passed-in fontScale (user's effective font scale)
+        let displayFontSize = fieldFormat.fontSize * scaleFactor * fontScale
         // Calculate actual font size for truncation check (matches PDF rendering)
-        let actualFontSize = fieldFormat.fontSize * effectiveFontScale
+        let actualFontSize = fieldFormat.fontSize * fontScale
         let actualFont = fieldFormat.bold ? UIFont.boldSystemFont(ofSize: actualFontSize) : UIFont.systemFont(ofSize: actualFontSize)
 
         switch field {
@@ -1059,8 +1063,8 @@ struct LabelPreviewView: View {
         let padding: CGFloat = 2
         let availableHeight = format.labelHeight - (padding * 2)
 
-        // Calculate total text height with barbell scaling (effectiveFontScale * 0.8)
-        let barbellFontScale = effectiveFontScale * 0.8
+        // Calculate total text height with user's font scale
+        let barbellFontScale = effectiveFontScale
         var totalTextHeight: CGFloat = 0
         for field in config.textFields {
             let fieldFormat = config.format(for: field)

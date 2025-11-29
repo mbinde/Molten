@@ -33,8 +33,6 @@ struct LabelDesignerView: View {
 
     // Print adjustments (persisted per format/template in UserDefaults)
     @State private var fontScale: Double = 1.0
-    @State private var offsetX: Double = 0.0
-    @State private var offsetY: Double = 0.0
 
     // Start position for partial sheets
     @State private var startRow: Int = 0
@@ -227,20 +225,6 @@ struct LabelDesignerView: View {
             .onChange(of: startColumn) { _, _ in
                 saveSettings()
             }
-            .onChange(of: offsetX) { _, _ in
-                // Mark as modified if not currently loading
-                if !isLoadingPreset && currentPresetName != nil {
-                    isPresetModified = true
-                }
-                saveSettings()
-            }
-            .onChange(of: offsetY) { _, _ in
-                // Mark as modified if not currently loading
-                if !isLoadingPreset && currentPresetName != nil {
-                    isPresetModified = true
-                }
-                saveSettings()
-            }
             .onChange(of: builderConfig) { _, _ in
                 // Cancel any pending loading task (user made a change)
                 loadingTask?.cancel()
@@ -296,9 +280,7 @@ struct LabelDesignerView: View {
                             format: selectedFormat,
                             config: builderConfig,
                             sampleData: previewData,
-                            fontScale: fontScale,
-                            offsetX: offsetX,
-                            offsetY: offsetY
+                            fontScale: fontScale
                         )
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
@@ -337,9 +319,7 @@ struct LabelDesignerView: View {
                             format: selectedFormat,
                             config: builderConfig,
                             sampleData: previewData,
-                            fontScale: fontScale,
-                            offsetX: offsetX,
-                            offsetY: offsetY
+                            fontScale: fontScale
                         )
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
@@ -352,13 +332,26 @@ struct LabelDesignerView: View {
                     showAdvancedLayoutOptions: $showAdvancedLayoutOptions
                 )
 
+                // Label preview between layout and sheet options
+                if let previewData = sampleLabelData {
+                    Section {
+                        LabelPreviewView(
+                            format: selectedFormat,
+                            config: builderConfig,
+                            sampleData: previewData,
+                            fontScale: fontScale
+                        )
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                    }
+                }
+
                 // Advanced Options Section (collapsed by default)
                 AdvancedSheetOptionsSection(
                     showAdvancedOptions: $showAdvancedOptions,
                     startRow: $startRow,
                     startColumn: $startColumn,
-                    offsetX: $offsetX,
-                    offsetY: $offsetY,
+                    builderConfig: $builderConfig,
                     selectedFormat: selectedFormat
                 )
 
@@ -535,9 +528,7 @@ struct LabelDesignerView: View {
                     format: selectedFormat,
                     config: builderConfig,
                     sampleData: previewData,
-                    fontScale: fontScale,
-                    offsetX: offsetX,
-                    offsetY: offsetY
+                    fontScale: fontScale
                 )
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
@@ -776,8 +767,6 @@ struct LabelDesignerView: View {
             format: selectedFormat,
             config: builderConfig,
             fontScale: fontScale,
-            offsetX: offsetX,
-            offsetY: offsetY,
             startRow: startRow,
             startColumn: startColumn
         ) else {
@@ -968,8 +957,6 @@ struct LabelDesignerView: View {
         let defaults = UserDefaults.standard
         fontScale = defaults.double(forKey: "\(settingsKey).fontScale")
         if fontScale == 0 { fontScale = 1.0 }  // Default if never set
-        offsetX = defaults.double(forKey: "\(settingsKey).offsetX")
-        offsetY = defaults.double(forKey: "\(settingsKey).offsetY")
 
         // Load current preset name
         currentPresetName = defaults.string(forKey: "\(settingsKey).currentPresetName")
@@ -997,8 +984,7 @@ struct LabelDesignerView: View {
     private func saveSettings() {
         let defaults = UserDefaults.standard
         defaults.set(fontScale, forKey: "\(settingsKey).fontScale")
-        defaults.set(offsetX, forKey: "\(settingsKey).offsetX")
-        defaults.set(offsetY, forKey: "\(settingsKey).offsetY")
+        // Note: positionHorizontal/positionVertical are now saved as part of builderConfig
 
         // Save current preset name
         if let presetName = currentPresetName {

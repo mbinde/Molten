@@ -423,46 +423,20 @@ struct QRScanInventoryView: View {
         defer { actionInProgress = false }
 
         do {
-            // Find existing record to increment, or create new one
-            if let existing = getMatchingInventoryRecords().first {
-                let updated = InventoryModel(
-                    id: existing.id,
-                    item_stable_id: existing.item_stable_id,
-                    type: existing.type,
-                    subtype: existing.subtype,
-                    subsubtype: existing.subsubtype,
-                    dimensions: existing.dimensions,
-                    quantity: existing.quantity + 1,
-                    containerCount: existing.containerCount,
-                    location: existing.location,
-                    date_added: existing.date_added,
-                    date_modified: Date()
-                )
-                _ = try await inventoryService.updateInventory(updated)
+            // Use date-aware increment: finds/creates record for TODAY's date
+            let result = try await inventoryService.incrementInventory(
+                forItem: item.glassItem.stable_id,
+                type: inventoryType ?? "rod",
+                subtype: inventorySubtype,
+                subsubtype: inventorySubsubtype,
+                atLocation: selectedLocation
+            )
 
-                // Update local record
-                if let index = inventoryRecords.firstIndex(where: { $0.id == existing.id }) {
-                    inventoryRecords[index] = updated
-                }
+            // Update local records cache
+            if let index = inventoryRecords.firstIndex(where: { $0.id == result.id }) {
+                inventoryRecords[index] = result
             } else {
-                // Create new inventory record
-                let newInventory = InventoryModel(
-                    id: UUID(),
-                    item_stable_id: item.glassItem.stable_id,
-                    type: inventoryType ?? "rod",
-                    subtype: inventorySubtype,
-                    subsubtype: inventorySubsubtype,
-                    dimensions: nil,
-                    quantity: 1,
-                    containerCount: nil,
-                    location: selectedLocation,
-                    date_added: Date(),
-                    date_modified: Date()
-                )
-                _ = try await inventoryService.createInventory(newInventory)
-
-                // Add to local records so subsequent increments find it
-                inventoryRecords.append(newInventory)
+                inventoryRecords.append(result)
             }
 
             currentQuantity += 1
@@ -477,29 +451,29 @@ struct QRScanInventoryView: View {
         actionInProgress = true
         defer { actionInProgress = false }
 
+        // Check if there's any inventory to decrement
+        guard currentQuantity > 0 else { return }
+
         do {
-            guard let existing = getMatchingInventoryRecords().first(where: { $0.quantity > 0 }) else {
-                return
-            }
-
-            let updated = InventoryModel(
-                id: existing.id,
-                item_stable_id: existing.item_stable_id,
-                type: existing.type,
-                subtype: existing.subtype,
-                subsubtype: existing.subsubtype,
-                dimensions: existing.dimensions,
-                quantity: max(0, existing.quantity - 1),
-                containerCount: existing.containerCount,
-                location: existing.location,
-                date_added: existing.date_added,
-                date_modified: Date()
+            // Use LIFO decrement: removes from newest record first
+            let result = try await inventoryService.decrementInventoryLIFO(
+                forItem: item.glassItem.stable_id,
+                type: inventoryType ?? "rod",
+                subtype: inventorySubtype,
+                subsubtype: inventorySubsubtype,
+                atLocation: selectedLocation
             )
-            _ = try await inventoryService.updateInventory(updated)
 
-            // Update local record
-            if let index = inventoryRecords.firstIndex(where: { $0.id == existing.id }) {
-                inventoryRecords[index] = updated
+            // Update local records cache
+            if let updatedRecord = result {
+                // Record was updated (quantity > 0)
+                if let index = inventoryRecords.firstIndex(where: { $0.id == updatedRecord.id }) {
+                    inventoryRecords[index] = updatedRecord
+                }
+            } else {
+                // Record was deleted (hit zero) - need to find and remove it
+                // Reload from service to sync local state
+                inventoryRecords = try await inventoryService.fetchInventory(forItem: item.glassItem.stable_id)
             }
 
             currentQuantity = max(0, currentQuantity - 1)

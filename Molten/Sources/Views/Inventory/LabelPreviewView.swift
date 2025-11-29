@@ -430,22 +430,21 @@ struct LabelPreviewView: View {
     /// Layout: [Print Area A (top)] [fold line] [Print Area B (bottom, rotated)] + [stub centered on right]
     @ViewBuilder
     private func buildFoldedFlagContent() -> some View {
-        // For p-style-folded: print area is ~44% of width (37mm/84mm), stub is ~56%
-        // Use format.barbellFlagWidth if set, otherwise calculate from proportions
-        let printAreaWidth = format.barbellFlagWidth.map { $0 * scaleFactor } ?? (previewWidth * 0.44)
+        // Print area width must match the shape's flagWidth (barbellFlagWidthScaled)
+        let printAreaWidth = barbellFlagWidthScaled
         let halfFlagHeight = previewHeight / 2
         let stubWidth = previewWidth - printAreaWidth
         let stubHeight = barbellWrapHeightScaled  // Stub is narrower than full height
-        let stubY = (previewHeight - stubHeight) / 2  // Centered vertically
+        let stubY: CGFloat = 0  // P-style: stub at TOP right
 
-        HStack(spacing: 0) {
-            // Main printable area with two zones (LEFT side)
+        HStack(alignment: .top, spacing: 0) {
+            // LEFT SIDE: Print Areas A and B
             ZStack {
                 VStack(spacing: 0) {
-                    // Print Area A (top half) - bordered
+                    // Print Area A (top half)
                     ZStack {
-                        Rectangle()
-                            .stroke(Color.gray.opacity(0.6), lineWidth: 1.5)
+                        Rectangle().fill(Color.white)
+                        Rectangle().stroke(Color.gray.opacity(0.6), lineWidth: 1.5)
 
                         if config.qrPosition != .none, let service = labelService {
                             HStack(spacing: 2) {
@@ -462,10 +461,10 @@ struct LabelPreviewView: View {
                     }
                     .frame(height: halfFlagHeight)
 
-                    // Print Area B (bottom half) - bordered, content rotated 180°
+                    // Print Area B (bottom half) - content rotated 180°
                     ZStack {
-                        Rectangle()
-                            .stroke(Color.gray.opacity(0.6), lineWidth: 1.5)
+                        Rectangle().fill(Color.white)
+                        Rectangle().stroke(Color.gray.opacity(0.6), lineWidth: 1.5)
 
                         Group {
                             if config.qrPosition != .none, let service = labelService {
@@ -486,18 +485,18 @@ struct LabelPreviewView: View {
                     .frame(height: halfFlagHeight)
                 }
 
-                // Dashed fold line between areas
+                // Dashed fold line
                 Rectangle()
                     .stroke(style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
                     .foregroundColor(Color.gray.opacity(0.6))
                     .frame(height: 1)
+                    .offset(y: 0)
             }
             .frame(width: printAreaWidth, height: previewHeight)
 
-            // Stub/handle on right - centered vertically (P-style), with stripes
-            VStack {
-                Spacer()
-                    .frame(height: stubY)
+            // RIGHT SIDE: Stub at top (P-style)
+            VStack(spacing: 0) {
+                // Stub with diagonal stripes
                 ZStack {
                     Rectangle()
                         .fill(Color.gray.opacity(0.08))
@@ -505,13 +504,13 @@ struct LabelPreviewView: View {
                             DiagonalStripePattern()
                                 .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                         )
-
+                        .clipped()
                     Rectangle()
                         .stroke(Color.gray.opacity(0.4), lineWidth: 1)
                 }
-                .frame(width: stubWidth, height: stubHeight)
+                .frame(height: stubHeight)
+
                 Spacer()
-                    .frame(height: stubY)
             }
             .frame(width: stubWidth, height: previewHeight)
         }
@@ -975,6 +974,7 @@ struct PStyleShape: Shape {
 
 /// Shape for P-style folded cable labels (flag with wrap stub on right)
 /// Like Mr-Label - shows flag split horizontally with wrap tail indicator
+/// P-style = stub at TOP right (like letter P)
 struct PStyleFoldedShape: Shape {
     let flagWidth: CGFloat
     let wrapHeight: CGFloat
@@ -983,12 +983,12 @@ struct PStyleFoldedShape: Shape {
         var path = Path()
 
         let totalHeight = rect.height
-        let wrapY = (totalHeight - wrapHeight) / 2
+        let wrapY: CGFloat = 0  // P-style: stub at TOP
 
         // Flag area on left (full height) - takes most of the space
         path.addRect(CGRect(x: 0, y: 0, width: flagWidth, height: totalHeight))
 
-        // Wrap stub on right - visible tail showing where it attaches
+        // Wrap stub on right at TOP - visible tail showing where it attaches
         let stubLength = flagWidth * 0.5  // Longer stub for clarity
         let taperAmount = wrapHeight * 0.15
 
@@ -1003,6 +1003,7 @@ struct PStyleFoldedShape: Shape {
 }
 
 /// Shape for just the wrap stub portion (for overlay effects)
+/// P-style = stub at TOP right
 struct PStyleFoldedStubShape: Shape {
     let flagWidth: CGFloat
     let wrapHeight: CGFloat
@@ -1010,8 +1011,7 @@ struct PStyleFoldedStubShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
 
-        let totalHeight = rect.height
-        let wrapY = (totalHeight - wrapHeight) / 2
+        let wrapY: CGFloat = 0  // P-style: stub at TOP
         let stubLength = flagWidth * 0.5
         let taperAmount = wrapHeight * 0.15
 

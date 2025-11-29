@@ -310,8 +310,8 @@ final class LabelDatabaseService: @unchecked Sendable {
             return []
         }
 
-        // Use FTS for search
-        let searchTerm = query + "*"  // Prefix match
+        // Use LIKE for substring matching (finds "5160" in "15160")
+        let likePattern = "%\(query)%"
         let sql = """
             SELECT p.id, p.brand_id, p.layout_id, p.sku, p.display_name, p.description, p.source_url,
                    b.name AS brand_name, b.slug AS brand_slug,
@@ -319,12 +319,11 @@ final class LabelDatabaseService: @unchecked Sendable {
                    l.left_margin, l.top_margin, l.horizontal_gap, l.vertical_gap,
                    l.corner_radius, l.shape, l.page_format, l.page_width, l.page_height, l.labels_per_sheet,
                    l.barbell_flag_width, l.barbell_wrap_height, l.barbell_style
-            FROM products_fts fts
-            JOIN products p ON fts.rowid = p.id
+            FROM products p
             JOIN brands b ON p.brand_id = b.id
             JOIN layouts l ON p.layout_id = l.id
-            WHERE products_fts MATCH ?
-            ORDER BY rank
+            WHERE p.sku LIKE ? OR p.display_name LIKE ? OR b.name LIKE ?
+            ORDER BY b.is_major DESC, b.name ASC, p.sku ASC
             LIMIT ?
             """
 
@@ -332,8 +331,11 @@ final class LabelDatabaseService: @unchecked Sendable {
         var stmt: OpaquePointer?
 
         if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
-            sqlite3_bind_text(stmt, 1, searchTerm, -1, nil)
-            sqlite3_bind_int(stmt, 2, Int32(limit))
+            let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+            sqlite3_bind_text(stmt, 1, likePattern, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_text(stmt, 2, likePattern, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_text(stmt, 3, likePattern, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_int(stmt, 4, Int32(limit))
 
             while sqlite3_step(stmt) == SQLITE_ROW {
                 if let format = parseLabelFormat(stmt: stmt) {
@@ -429,8 +431,10 @@ final class LabelDatabaseService: @unchecked Sendable {
         var results: [LabelFormat] = []
         var stmt: OpaquePointer?
 
+        print("🔎 getProducts geometry filter SQL: \(whereClause)")
         if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
             // Bind parameters
+            let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
             for (index, param) in params.enumerated() {
                 let bindIndex = Int32(index + 1)
                 if let intParam = param as? Int {
@@ -438,7 +442,7 @@ final class LabelDatabaseService: @unchecked Sendable {
                 } else if let doubleParam = param as? Double {
                     sqlite3_bind_double(stmt, bindIndex, doubleParam)
                 } else if let stringParam = param as? String {
-                    sqlite3_bind_text(stmt, bindIndex, stringParam, -1, nil)
+                    sqlite3_bind_text(stmt, bindIndex, stringParam, -1, SQLITE_TRANSIENT)
                 }
             }
 
@@ -447,9 +451,13 @@ final class LabelDatabaseService: @unchecked Sendable {
                     results.append(format)
                 }
             }
+        } else {
+            let error = String(cString: sqlite3_errmsg(db))
+            print("❌ getProducts geometry: SQL error - \(error)")
         }
         sqlite3_finalize(stmt)
 
+        print("🔎 getProducts geometry: found \(results.count) results")
         return results
     }
 
@@ -515,7 +523,9 @@ final class LabelDatabaseService: @unchecked Sendable {
 
         if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
             if let slug = bindSlug {
-                sqlite3_bind_text(stmt, 1, slug, -1, nil)
+                // Use SQLITE_TRANSIENT to ensure SQLite copies the string
+                let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+                sqlite3_bind_text(stmt, 1, slug, -1, SQLITE_TRANSIENT)
             }
 
             while sqlite3_step(stmt) == SQLITE_ROW {

@@ -15,7 +15,7 @@ struct QuickAddInventoryView: View {
     let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
 
     @Environment(\.dismiss) private var dismiss
-    @State private var type = "rod"
+    @State private var type = LastUsedInventoryTypePreference.type
     @State private var quantity = ""
     @State private var location = ""
     @State private var isSaving = false
@@ -97,6 +97,9 @@ struct QuickAddInventoryView: View {
                 )
 
                 _ = try await inventoryRepository.createInventory(newInventory)
+
+                // Remember the type for next time
+                LastUsedInventoryTypePreference.save(type: type, subtype: nil, subsubtype: nil)
 
                 await MainActor.run {
                     dismiss()

@@ -17,6 +17,7 @@ struct LabelDesignerView: View {
     @State private var isSearching: Bool = false
     @State private var selectedShapeFilter: LabelShape?
     @State private var selectedBrandSlug: String?
+    @State private var selectedPageFormat: LabelPageFormat = .letter  // Default to US Letter
 
     // Dimension filters (in inches)
     @State private var filterWidth: String = ""
@@ -259,10 +260,11 @@ struct LabelDesignerView: View {
                     // Shape filter buttons
                     ShapeFilterButtons(selectedShape: $selectedShapeFilter)
 
-                    // Dimension filter (width × height in inches)
+                    // Dimension filter (width × height) and page format (US Letter vs A4)
                     DimensionFilterRow(
                         filterWidth: $filterWidth,
-                        filterHeight: $filterHeight
+                        filterHeight: $filterHeight,
+                        pageFormat: $selectedPageFormat
                     )
 
                     if isSearching {
@@ -691,12 +693,13 @@ struct LabelDesignerView: View {
         parsedDimensionFilters.width != nil || parsedDimensionFilters.height != nil
     }
 
-    /// Filtered formats based on shape filter, dimension filter, and search text
+    /// Filtered formats based on shape filter, dimension filter, page format, and search text
     /// Uses database for searching 2,600+ label formats
     private var filteredFormats: [LabelGeometry] {
         let dims = parsedDimensionFilters
         // Use a small tolerance (0.1") for dimension matching
         let tolerance = 0.1
+        let pageFormat = selectedPageFormat.databaseValue  // nil for "all"
 
         // Use database search if we have search text
         // Pass all filters to database so LIMIT is applied AFTER filtering
@@ -704,6 +707,7 @@ struct LabelDesignerView: View {
             let results = labelDatabase.searchProducts(
                 query: searchText,
                 shape: selectedShapeFilter,
+                pageFormat: pageFormat,
                 minWidth: dims.width.map { $0 - tolerance },
                 maxWidth: dims.width.map { $0 + tolerance },
                 minHeight: dims.height.map { $0 - tolerance },
@@ -722,16 +726,22 @@ struct LabelDesignerView: View {
                 formats = formats.filter { $0.shape == shape }
             }
 
+            // Apply page format filter
+            if let pageFormat = pageFormat {
+                formats = formats.filter { $0.pageFormat == pageFormat }
+            }
+
             // Apply dimension filters
             formats = applyDimensionFilter(to: formats, width: dims.width, height: dims.height, tolerance: tolerance)
 
             return formats
         }
 
-        // Query with shape and/or dimension filters
-        if selectedShapeFilter != nil || hasDimensionFilter {
+        // Query with shape, page format, and/or dimension filters
+        if selectedShapeFilter != nil || hasDimensionFilter || pageFormat != nil {
             let results = labelDatabase.getProducts(
                 shape: selectedShapeFilter,
+                pageFormat: pageFormat,
                 minWidth: dims.width.map { $0 - tolerance },
                 maxWidth: dims.width.map { $0 + tolerance },
                 minHeight: dims.height.map { $0 - tolerance },

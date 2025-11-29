@@ -114,19 +114,19 @@ struct LabelBuilderSection: View {
 
                 Divider()
 
-                // Text Fields (Reorderable List)
+                // Text Fields
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Text("Label Fields")
                             .font(.subheadline)
                             .fontWeight(.medium)
                         Spacer()
-                        Text("Tap to toggle • Drag to reorder")
+                        Text("Tap to toggle")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
 
-                    // Included fields (reorderable)
+                    // Included fields with reorder buttons
                     if !builderConfig.textFields.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Active Fields (in order):")
@@ -134,11 +134,34 @@ struct LabelBuilderSection: View {
                                 .foregroundColor(.secondary)
                                 .padding(.bottom, 4)
 
-                            ForEach(builderConfig.textFields, id: \.self) { field in
+                            ForEach(Array(builderConfig.textFields.enumerated()), id: \.element) { index, field in
                                 HStack(spacing: 8) {
-                                    Image(systemName: "line.3.horizontal")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                                    // Reorder buttons
+                                    VStack(spacing: 0) {
+                                        Button {
+                                            if index > 0 {
+                                                builderConfig.textFields.swapAt(index, index - 1)
+                                            }
+                                        } label: {
+                                            Image(systemName: "chevron.up")
+                                                .font(.caption2)
+                                                .foregroundColor(index > 0 ? .secondary : .clear)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .disabled(index == 0)
+
+                                        Button {
+                                            if index < builderConfig.textFields.count - 1 {
+                                                builderConfig.textFields.swapAt(index, index + 1)
+                                            }
+                                        } label: {
+                                            Image(systemName: "chevron.down")
+                                                .font(.caption2)
+                                                .foregroundColor(index < builderConfig.textFields.count - 1 ? .secondary : .clear)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .disabled(index == builderConfig.textFields.count - 1)
+                                    }
 
                                     Button {
                                         onToggleField(field)
@@ -151,13 +174,6 @@ struct LabelBuilderSection: View {
                                                 .font(.subheadline)
 
                                             Spacer()
-
-                                            if let index = builderConfig.textFields.firstIndex(of: field) {
-                                                Text("#\(index + 1)")
-                                                    .font(.caption2)
-                                                    .foregroundColor(.secondary)
-                                                    .monospacedDigit()
-                                            }
                                         }
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                     }
@@ -168,9 +184,6 @@ struct LabelBuilderSection: View {
                                 .padding(.horizontal, 8)
                                 .background(Color(.systemGray6))
                                 .cornerRadius(6)
-                            }
-                            .onMove { from, to in
-                                builderConfig.textFields.move(fromOffsets: from, toOffset: to)
                             }
                         }
 
@@ -209,14 +222,6 @@ struct LabelBuilderSection: View {
                                 .accessibilityIdentifier("label_builder_field_\(field.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
                             }
                         }
-                    }
-
-                    if !builderConfig.textFields.isEmpty {
-                        Text("Long-press and drag to reorder active fields")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .italic()
-                            .padding(.top, 8)
                     }
                 }
             }

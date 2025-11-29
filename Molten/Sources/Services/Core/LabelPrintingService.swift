@@ -101,6 +101,9 @@ struct LabelGeometry: Equatable, Hashable, Sendable {
     /// Style variant for barbell labels (symmetric, t-style, p-style, wrap)
     let barbellStyle: BarbellStyle?
 
+    /// Page format ("letter" or "a4")
+    let pageFormat: String
+
     /// Computed wrap width for barbell labels (the narrow middle section)
     var barbellWrapWidth: CGFloat? {
         guard isBarbell, let flagWidth = barbellFlagWidth else { return nil }
@@ -139,7 +142,8 @@ struct LabelGeometry: Equatable, Hashable, Sendable {
         isBarbell: Bool = false,
         barbellFlagWidth: CGFloat? = nil,
         barbellWrapHeight: CGFloat? = nil,
-        barbellStyle: BarbellStyle? = nil
+        barbellStyle: BarbellStyle? = nil,
+        pageFormat: String = "letter"
     ) {
         self.name = name
         self.labelsPerSheet = labelsPerSheet
@@ -158,6 +162,7 @@ struct LabelGeometry: Equatable, Hashable, Sendable {
         self.barbellFlagWidth = barbellFlagWidth
         self.barbellWrapHeight = barbellWrapHeight
         self.barbellStyle = barbellStyle
+        self.pageFormat = pageFormat
     }
 
     /// Avery 5160 (Address Labels) - Default format

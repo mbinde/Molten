@@ -62,6 +62,10 @@ struct ProjectDetailView: View {
     @State private var projectCount = 0
     @State private var projectLimit = 0
 
+    // Error handling
+    @State private var showingErrorAlert = false
+    @State private var errorMessage = ""
+
     @Environment(\.dismiss) private var dismiss
     @Environment(EntitlementService.self) private var entitlementService
 
@@ -226,6 +230,11 @@ struct ProjectDetailView: View {
                 currentCount: projectCount,
                 limit: projectLimit
             )
+        }
+        .alert("Error", isPresented: $showingErrorAlert) {
+            Button("OK") { }
+        } message: {
+            Text(errorMessage)
         }
         .task {
             await loadPlan()
@@ -1024,7 +1033,8 @@ struct ProjectDetailView: View {
             }
         } catch {
             print("Error saving plan changes: \(error)")
-            // TODO: Show error alert
+            errorMessage = "Failed to save changes: \(error.localizedDescription)"
+            showingErrorAlert = true
         }
     }
 
@@ -1115,7 +1125,8 @@ struct ProjectDetailView: View {
             }
         } catch {
             print("Error creating plan in background: \(error)")
-            // TODO: Show error alert
+            errorMessage = "Failed to create project: \(error.localizedDescription)"
+            showingErrorAlert = true
         }
     }
 
@@ -1369,7 +1380,8 @@ struct ProjectDetailView: View {
             }
         } catch {
             print("Error exporting PDF: \(error)")
-            // TODO: Show error alert
+            errorMessage = "Failed to export PDF: \(error.localizedDescription)"
+            showingErrorAlert = true
         }
     }
 }

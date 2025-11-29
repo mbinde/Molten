@@ -20,6 +20,8 @@ struct AddSuggestedGlassView: View {
     @State private var notes = ""
     @State private var glassItems: [UnifiedCatalogItem] = []
     @State private var isLoading = false
+    @State private var showingErrorAlert = false
+    @State private var errorMessage = ""
 
     private let catalogService: CatalogService
 
@@ -105,6 +107,11 @@ struct AddSuggestedGlassView: View {
         .task {
             await loadGlassItems()
         }
+        .alert("Error", isPresented: $showingErrorAlert) {
+            Button("OK") { }
+        } message: {
+            Text(errorMessage)
+        }
     }
 
     private func loadGlassItems() async {
@@ -175,8 +182,11 @@ struct AddSuggestedGlassView: View {
                 dismiss()
             }
         } catch {
-            // TODO: Show error alert
             print("Error saving glass item: \(error)")
+            await MainActor.run {
+                errorMessage = "Failed to save glass item: \(error.localizedDescription)"
+                showingErrorAlert = true
+            }
         }
     }
 }

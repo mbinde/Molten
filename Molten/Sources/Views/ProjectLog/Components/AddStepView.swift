@@ -25,6 +25,8 @@ struct AddStepView: View {
     @State private var showingImagePicker = false
     @State private var showingCamera = false
     @State private var showingAddGlass = false
+    @State private var showingErrorAlert = false
+    @State private var errorMessage = ""
 
     /// Check if step has any content
     private var hasAnyContent: Bool {
@@ -203,6 +205,11 @@ struct AddStepView: View {
                 }
             }
         }
+        .alert("Error", isPresented: $showingErrorAlert) {
+            Button("OK") { }
+        } message: {
+            Text(errorMessage)
+        }
     }
 
     private func saveStep() async {
@@ -252,7 +259,10 @@ struct AddStepView: View {
             await MainActor.run { dismiss() }
         } catch {
             print("Error saving step: \(error)")
-            // TODO: Show error alert
+            await MainActor.run {
+                errorMessage = "Failed to save step: \(error.localizedDescription)"
+                showingErrorAlert = true
+            }
         }
     }
 }

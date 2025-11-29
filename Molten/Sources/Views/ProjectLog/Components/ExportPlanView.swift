@@ -17,6 +17,8 @@ struct ExportPlanView: View {
     @State private var estimatedSizes: [ExportQuality: (bytes: Int64, formatted: String)] = [:]
     @State private var includeAuthor = true
     @State private var showingAuthorSettings = false
+    @State private var showingErrorAlert = false
+    @State private var errorMessage = ""
 
     @StateObject private var authorSettings = AuthorSettings.shared
     private let exportService: ProjectExportService
@@ -106,6 +108,11 @@ struct ExportPlanView: View {
                 NavigationStack {
                     AuthorSettingsView()
                 }
+            }
+            .alert("Error", isPresented: $showingErrorAlert) {
+                Button("OK") { }
+            } message: {
+                Text(errorMessage)
             }
         }
     }
@@ -261,7 +268,8 @@ struct ExportPlanView: View {
         } catch {
             await MainActor.run {
                 isExporting = false
-                // TODO: Show error alert
+                errorMessage = "Failed to export plan: \(error.localizedDescription)"
+                showingErrorAlert = true
                 print("Export failed: \(error)")
             }
         }

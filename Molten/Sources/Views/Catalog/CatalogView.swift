@@ -64,6 +64,10 @@ struct CatalogView: View {
     @State private var catalogUpdateMessage = ""
     @State private var showCatalogUpdateToast = false
 
+    // Local search text state - isolates TextField from ViewModel to prevent full view re-renders
+    // The ViewModel's searchText setter handles debouncing and triggers filtering
+    @State private var localSearchText = ""
+
     // Repository pattern - single source of truth for data
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
@@ -349,7 +353,7 @@ struct CatalogView: View {
             #endif
             .performanceTitle("Catalog", timer: performanceTimer)
             .searchable(
-                text: $viewModel.searchText,
+                text: $localSearchText,
                 placement: .navigationBarDrawer(displayMode: .always),
                 prompt: "Search colors, codes, manufacturers..."
             )
@@ -361,10 +365,12 @@ struct CatalogView: View {
             .onChange(of: searchScope) { oldValue, newValue in
                 viewModel.searchTitlesOnly = (newValue == .titlesOnly)
             }
+            .onChange(of: localSearchText) { oldValue, newValue in
+                // Sync local state to ViewModel - debouncing happens in ViewModel
+                viewModel.searchText = newValue
+            }
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
-            // Note: Search debouncing is now handled in CatalogViewModel.debounceSearch()
-            // This ensures proper task cancellation and prevents zombie tasks
             .modifier(CatalogSheetModifiers(
                 showingAllTags: $showingAllTags,
                 showingCOESelection: $showingCOESelection,
@@ -497,6 +503,7 @@ extension CatalogView {
     private func clearSearch() {
         // MIGRATION: Use ViewModel clearSearch
         hideKeyboard()
+        localSearchText = ""  // Sync local state with ViewModel
         viewModel.clearSearch()
     }
     

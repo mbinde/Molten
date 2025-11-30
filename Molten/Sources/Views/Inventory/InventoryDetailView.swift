@@ -47,7 +47,7 @@ struct InventoryDetailView: View {
     @State private var showingUpgradePrompt = false
     @State private var inventoryItemCount = 0
     @State private var inventoryItemLimit = 0
-    @State private var expandedSections: Set<String> = ["glass-item", "inventory"]
+    @State private var expandedSections: Set<String> = ["glass-item", "inventory", "shopping-list"]
     @State private var isManufacturerNotesExpanded: Bool
     @State private var showNavTitle = false
 

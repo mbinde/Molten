@@ -31,8 +31,8 @@ struct CatalogView: View {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data ✓
     @State private var viewModel: CatalogViewModel
 
-    // Search scope state
-    @State private var searchScope: CatalogSearchScope = .allFields
+    // Search scope state - persisted via viewModel.searchTitlesOnly and UserDefaults
+    @State private var searchScope: CatalogSearchScope = .titlesOnly
 
 
     // Use manual UserDefaults handling instead of @AppStorage to prevent test crashes
@@ -362,6 +362,8 @@ struct CatalogView: View {
             }
             .onChange(of: searchScope) { oldValue, newValue in
                 viewModel.searchTitlesOnly = (newValue == .titlesOnly)
+                // Persist to UserDefaults
+                userDefaults.set(newValue == .titlesOnly, forKey: "searchTitlesOnly")
             }
             .onChange(of: localSearchText) { oldValue, newValue in
                 // Sync local state to ViewModel - debouncing happens in ViewModel
@@ -390,6 +392,7 @@ struct CatalogView: View {
                 defaultSortOptionRawValue: $defaultSortOptionRawValue,
                 enabledManufacturersData: $enabledManufacturersData,
                 searchTitlesOnly: $viewModel.searchTitlesOnly,
+                searchScope: $searchScope,
                 selectedProductTypes: $selectedProductTypes,
                 sortOption: $viewModel.sortOption,
                 viewModel: viewModel,

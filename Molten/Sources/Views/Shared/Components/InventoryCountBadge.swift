@@ -113,7 +113,7 @@ struct InventoryCountBadge: View {
 extension InventoryCountBadge {
     /// Create badge from inventory type and quantity
     /// Automatically determines the display unit based on type
-    /// For weight-based types, will show jars if containerCount is provided and quantity is 0
+    /// For weight-based types, will show jars if containerCount is provided (jars are more meaningful for frit tracking)
     /// - Parameters:
     ///   - type: The inventory type (e.g., "frit", "rod")
     ///   - quantity: The quantity (weight in grams for weight-based, count for others)
@@ -129,8 +129,8 @@ extension InventoryCountBadge {
     ) -> InventoryCountBadge {
         let isWeightBased = ["frit", "powder", "enamel", "flakes"].contains(type.lowercased())
 
-        // For weight-based types with jars but no weight, show jars
-        if isWeightBased, let jars = containerCount, jars > 0, quantity <= 0 {
+        // For weight-based types with jars, prefer showing jars (more meaningful for frit tracking)
+        if isWeightBased, let jars = containerCount, jars > 0 {
             let jarLabel = jars == 1 ? "jar" : "jars"
             // Append type name for glass items (e.g., "3 jars frit")
             let unit = includeTypeForJars ? "\(jarLabel) \(type.lowercased())" : jarLabel
@@ -141,8 +141,7 @@ extension InventoryCountBadge {
             )
         }
 
-        // For weight-based types with both jars and weight, show weight with jars in parens
-        // (or just weight if that's all we have)
+        // For weight-based types without jars, or non-weight types, show the quantity
         let unit = displayUnit(for: type)
         let displayQuantity: Double
         if isWeightBased {

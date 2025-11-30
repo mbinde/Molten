@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import CoreData
+import Combine
 
 enum SearchScope: String, CaseIterable {
     case allFields = "All fields"
@@ -893,25 +895,26 @@ struct ShoppingListView: View {
                 }
             }
             .task {
+                print("🛒 [View] .task triggered")
                 await loadShoppingList()
             }
-            .onAppear {
-                Task {
-                    await loadShoppingList()
-                }
-            }
+            // NOTE: Removed .onAppear - it was causing duplicate concurrent calls with .task
+            // .task already handles initial load when view appears
             .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
+                print("🛒 [View] .onReceive inventoryItemAdded")
                 Task {
                     await loadShoppingList()
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .inventoryChanged)) { _ in
+                print("🛒 [View] .onReceive inventoryChanged")
                 Task {
                     // Refresh after QR scan inventory changes
                     await loadShoppingList()
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .shoppingListItemAdded)) { _ in
+                print("🛒 [View] .onReceive shoppingListItemAdded")
                 Task {
                     await loadShoppingList()
                 }
@@ -1253,6 +1256,7 @@ struct ShoppingListView: View {
 
             // Step 2: Immediately update the view model to remove the deleted item
             // This ensures counters and other UI elements update right away
+            // No full reload needed - just update local state to avoid image flashing
             await MainActor.run {
                 // Remove from the view model's shopping lists by creating new filtered dictionaries
                 // (Custom logic needed because of nested Dictionary<String, DetailedShoppingListModel> structure)
@@ -1264,13 +1268,8 @@ struct ShoppingListView: View {
                         totalItems: filteredItems.count
                     )
                 }
-            }
-
-            // Step 3: Defer full reload to allow .onDelete animation to complete
-            // (Same timing as DeletionHelpers.deleteItem: 0.3 seconds)
-            Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 300_000_000)  // 0.3 seconds
-                await viewModel.loadShoppingLists()
+                // Remove empty stores
+                viewModel.shoppingLists = viewModel.shoppingLists.filter { !$0.value.items.isEmpty }
                 updateCaches()
             }
         } catch {
@@ -1280,11 +1279,15 @@ struct ShoppingListView: View {
 
 
     private func loadShoppingList() async {
-        print("🛒 ShoppingListView: Loading shopping list...")
+        print("🛒 [View] loadShoppingList: START")
+        print("🛒 [View] loadShoppingList: calling viewModel.loadShoppingLists...")
         await viewModel.loadShoppingLists()
+        print("🛒 [View] loadShoppingList: viewModel.loadShoppingLists returned, isLoading=\(viewModel.isLoading)")
 
         // Update view-specific caches and state
+        print("🛒 [View] loadShoppingList: calling updateCaches...")
         updateCaches()  // PERFORMANCE: Update cached filter values
+        print("🛒 [View] loadShoppingList: updateCaches done")
 
         // Initialize all stores as expanded by default
         expandedStores = Set(viewModel.shoppingLists.keys)
@@ -1293,7 +1296,7 @@ struct ShoppingListView: View {
         expandedManufacturers = Set(cachedAllManufacturers)
 
         refreshTrigger += 1  // Force SwiftUI to refresh the list
-        print("🛒 ShoppingListView: Loaded \(viewModel.shoppingLists.count) stores with \(viewModel.shoppingLists.values.flatMap { $0.items }.count) total items")
+        print("🛒 [View] loadShoppingList: END - \(viewModel.shoppingLists.count) stores, \(viewModel.shoppingLists.values.flatMap { $0.items }.count) items")
     }
 
     private func cancelShoppingMode() {

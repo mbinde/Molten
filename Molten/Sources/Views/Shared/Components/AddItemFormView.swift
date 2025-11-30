@@ -14,6 +14,15 @@ enum LocationFieldType {
     case shopping(shoppingListRepository: ShoppingListRepository, locationService: UnifiedLocationService)
 }
 
+/// Prefill data for edit mode
+struct AddItemFormPrefill {
+    let quantity: Double
+    let type: String
+    let subtype: String?
+    let subsubtype: String?
+    let locationOrStore: String?
+}
+
 /// Unified sophisticated form for adding items to inventory or shopping list
 /// Matches the advanced inventory form UX with inline pickers, collapsible dimensions, weight units
 struct AddItemFormView: View {
@@ -24,15 +33,16 @@ struct AddItemFormView: View {
     let showNotesField: Bool
     let catalogService: CatalogService
     let prefilledNaturalKey: String?
+    let prefillData: AddItemFormPrefill?
     let onSave: (AddItemFormData) async throws -> Void
 
     @State private var selectedGlassItem: UnifiedCatalogItem?
     @State private var searchText: String = ""
-    @State private var selectedType: String = "rod"
-    @State private var selectedSubtype: String? = nil
-    @State private var selectedSubsubtype: String? = nil
-    @State private var quantity: String = ""
-    @State private var locationOrStore: String = ""
+    @State private var selectedType: String
+    @State private var selectedSubtype: String?
+    @State private var selectedSubsubtype: String?
+    @State private var quantity: String
+    @State private var locationOrStore: String
     @State private var dimensions: [String: String] = [:]
     @State private var dimensionUnits: [String: DimensionUnit] = [:]
     @State private var selectedWeightUnit: WeightUnit = .grams
@@ -42,6 +52,7 @@ struct AddItemFormView: View {
     @State private var glassItems: [UnifiedCatalogItem] = []
     @State private var isLoading = false
     @State private var isDimensionsExpanded = false
+    @State private var didApplyPrefill = false
     @StateObject private var terminologySettings = GlassTerminologySettings.shared
 
     init(
@@ -50,6 +61,7 @@ struct AddItemFormView: View {
         showNotesField: Bool = false,
         catalogService: CatalogService,
         prefilledNaturalKey: String? = nil,
+        prefillData: AddItemFormPrefill? = nil,
         onSave: @escaping (AddItemFormData) async throws -> Void
     ) {
         self.title = title
@@ -57,7 +69,26 @@ struct AddItemFormView: View {
         self.showNotesField = showNotesField
         self.catalogService = catalogService
         self.prefilledNaturalKey = prefilledNaturalKey
+        self.prefillData = prefillData
         self.onSave = onSave
+
+        // Initialize state from prefill data or defaults
+        if let prefill = prefillData {
+            let qtyString = prefill.quantity.truncatingRemainder(dividingBy: 1) == 0
+                ? String(format: "%.0f", prefill.quantity)
+                : String(format: "%.1f", prefill.quantity)
+            self._quantity = State(initialValue: qtyString)
+            self._selectedType = State(initialValue: prefill.type)
+            self._selectedSubtype = State(initialValue: prefill.subtype)
+            self._selectedSubsubtype = State(initialValue: prefill.subsubtype)
+            self._locationOrStore = State(initialValue: prefill.locationOrStore ?? "")
+        } else {
+            self._quantity = State(initialValue: "")
+            self._selectedType = State(initialValue: "rod")
+            self._selectedSubtype = State(initialValue: nil)
+            self._selectedSubsubtype = State(initialValue: nil)
+            self._locationOrStore = State(initialValue: "")
+        }
     }
 
     var body: some View {
@@ -298,7 +329,7 @@ struct AddItemFormView: View {
         }
 
         ToolbarItem(placement: .confirmationAction) {
-            Button("Add") {
+            Button(prefillData != nil ? "Save" : "Add") {
                 saveItem()
             }
             .disabled(!isFormValid)
@@ -346,6 +377,19 @@ struct AddItemFormView: View {
     // MARK: - Actions
 
     private func setupInitialData() {
+        // Apply prefill data once (for edit mode)
+        if !didApplyPrefill, let prefill = prefillData {
+            let qtyString = prefill.quantity.truncatingRemainder(dividingBy: 1) == 0
+                ? String(format: "%.0f", prefill.quantity)
+                : String(format: "%.1f", prefill.quantity)
+            quantity = qtyString
+            selectedType = prefill.type
+            selectedSubtype = prefill.subtype
+            selectedSubsubtype = prefill.subsubtype
+            locationOrStore = prefill.locationOrStore ?? ""
+            didApplyPrefill = true
+        }
+
         Task {
             await loadGlassItems()
             if let prefilledKey = prefilledNaturalKey {
@@ -398,6 +442,9 @@ struct AddItemFormView: View {
                 await MainActor.run {
                     dismiss()
                 }
+            } catch is ShoppingListLimitError {
+                // Don't show error alert for limit errors - the upgrade prompt is shown instead
+                // Just don't dismiss the form
             } catch {
                 showError(error.localizedDescription)
             }

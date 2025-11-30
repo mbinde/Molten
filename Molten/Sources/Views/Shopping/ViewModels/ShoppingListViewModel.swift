@@ -227,23 +227,39 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
     // MARK: - Data Loading
 
     func loadShoppingLists() async {
+        print("🛒 [VM] loadShoppingLists: START - isLoading=\(isLoading)")
+
+        // Prevent concurrent loads - if already loading, skip this call
+        guard !isLoading else {
+            print("🛒 [VM] loadShoppingLists: SKIPPING - already loading")
+            return
+        }
+
         isLoading = true
         errorMessage = nil
 
         do {
+            print("🛒 [VM] loadShoppingLists: calling generateAllShoppingLists...")
             shoppingLists = try await shoppingListService.generateAllShoppingLists()
+            print("🛒 [VM] loadShoppingLists: got \(shoppingLists.count) stores, calling applyFilters...")
             applyFilters()
+            print("🛒 [VM] loadShoppingLists: filters applied, filteredItems=\(_filteredItems.count)")
         } catch {
+            print("🛒 [VM] loadShoppingLists: ERROR - \(error)")
             errorMessage = "Failed to load shopping lists: \(error.localizedDescription)"
             shoppingLists = [:]
             _filteredItems = []
         }
 
+        print("🛒 [VM] loadShoppingLists: setting isLoading=false")
         isLoading = false
+        print("🛒 [VM] loadShoppingLists: END - isLoading=\(isLoading)")
     }
 
     func refreshShoppingLists() async {
+        print("🛒 [VM] refreshShoppingLists: START")
         await loadShoppingLists()
+        print("🛒 [VM] refreshShoppingLists: END")
     }
 
     // MARK: - Search & Filter

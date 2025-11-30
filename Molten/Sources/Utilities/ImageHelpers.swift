@@ -566,6 +566,13 @@ struct ImageHelpers {
         imageCache.removeAllObjects()
         negativeCache.removeAllObjects()
     }
+
+    /// Synchronously check if an image is already cached (for avoiding loading flash)
+    /// Returns the cached image if available, nil otherwise
+    nonisolated static func getCachedImage(itemCode: String, manufacturer: String?) -> UIImage? {
+        let cacheKey = "\(manufacturer ?? "nil")-\(itemCode)"
+        return imageCache.object(forKey: cacheKey as NSString)
+    }
 }
 
 struct ProductImageView: View {
@@ -578,7 +585,7 @@ struct ProductImageView: View {
     let size: CGFloat
 
     @State private var loadedImage: UIImage?
-    @State private var isLoading: Bool = true
+    @State private var isLoading: Bool
     @State private var refreshTrigger: UUID = UUID()
 
     // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
@@ -592,6 +599,15 @@ struct ProductImageView: View {
         self.imageThumbPath = imageThumbPath
         self.dominantColors = dominantColors
         self.size = size
+
+        // Check cache synchronously to avoid loading flash on view recreation
+        if let cachedImage = ImageHelpers.getCachedImage(itemCode: itemCode, manufacturer: manufacturer) {
+            self._loadedImage = State(initialValue: cachedImage)
+            self._isLoading = State(initialValue: false)
+        } else {
+            self._loadedImage = State(initialValue: nil)
+            self._isLoading = State(initialValue: true)
+        }
     }
 
     var body: some View {
@@ -622,6 +638,9 @@ struct ProductImageView: View {
             }
         }
         .onAppear {
+            // Skip if already loaded from cache in init (prevents flash on view recreation)
+            guard loadedImage == nil else { return }
+
             // Skip image loading if disabled via debug flag
             if DebugConfig.disableImageLoading {
                 isLoading = false

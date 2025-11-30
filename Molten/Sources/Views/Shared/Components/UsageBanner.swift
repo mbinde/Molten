@@ -32,9 +32,15 @@ struct UsageBanner: View {
         self.onUpgradeTap = onUpgradeTap
     }
 
+    private var shouldShowBanner: Bool {
+        guard let limit = limit, limit > 0 else { return false }
+        let percentage = CGFloat(currentCount) / CGFloat(limit)
+        return percentage >= 0.80  // Only show when at 80%+ of limit
+    }
+
     var body: some View {
-        if let limit = limit {
-            // Free tier with limit - show usage indicator
+        if let limit = limit, shouldShowBanner {
+            // Free tier with limit at 75%+ - show usage indicator
             HStack(spacing: 12) {
                 Image(systemName: usageIcon)
                     .font(.title3)

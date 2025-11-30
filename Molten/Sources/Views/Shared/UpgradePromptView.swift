@@ -49,8 +49,8 @@ struct UpgradePromptView: View {
 
                 // Benefits list
                 VStack(alignment: .leading, spacing: 16) {
-                    BenefitRow(icon: "infinity", text: "Unlimited \(feature) items")
-                    BenefitRow(icon: "square.stack.3d.up.fill", text: "Unlimited projects & logbook entries")
+                    BenefitRow(icon: "archivebox.fill", text: "Unlimited inventory items")
+                    BenefitRow(icon: "cart.fill", text: "Unlimited shopping list items")
                     BenefitRow(icon: "clock.arrow.circlepath", text: "Versioned cloud backups")
                 }
                 .padding(.horizontal, 32)
@@ -89,17 +89,6 @@ struct UpgradePromptView: View {
                 .padding(.bottom, 40)
             }
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
-                    }
-                    .accessibilityIdentifier("upgrade_close_button")
-                }
-            }
         }
     }
 }

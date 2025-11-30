@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
-		F52C8C2F2EC95283001E5CB0 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = F52C8C2E2EC95283001E5CB0 /* Sentry */; };
 		F53C0BD32EA81F980020E1AB /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */; };
 		F59F21B92EBF2CDE005A6269 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = F59F21B82EBF2CDE005A6269 /* RevenueCat */; };
 		F59F21BB2EBF2CDE005A6269 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = F59F21BA2EBF2CDE005A6269 /* RevenueCatUI */; };
@@ -241,7 +240,6 @@
 				Tests/MoltenTests/Services/ProjectServiceTests.swift,
 				Tests/MoltenTests/Services/PurchaseRecordServiceTests.swift,
 				Tests/MoltenTests/Services/ReportingServiceTests.swift,
-				Tests/MoltenTests/Services/SentryLoggerTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
 				Tests/MoltenTests/Services/SubscriptionServiceTests.swift,
 				Tests/MoltenTests/ShareCodeGeneratorTests.swift,
@@ -458,7 +456,6 @@
 				Tests/MoltenTests/Services/ProjectServiceTests.swift,
 				Tests/MoltenTests/Services/PurchaseRecordServiceTests.swift,
 				Tests/MoltenTests/Services/ReportingServiceTests.swift,
-				Tests/MoltenTests/Services/SentryLoggerTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
 				Tests/MoltenTests/Services/SubscriptionServiceTests.swift,
 				Tests/MoltenTests/ShareCodeGeneratorTests.swift,
@@ -772,7 +769,6 @@
 			files = (
 				F59F3AD82EBF1A2C005A6269 /* RevenueCatUI in Frameworks */,
 				F59F3AD62EBF1A2C005A6269 /* RevenueCat in Frameworks */,
-				F52C8C2F2EC95283001E5CB0 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1198,7 +1194,6 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				F59F3AD42EBF1A2C005A6269 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
-				F52C8C2D2EC95283001E5CB0 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F5A13C422E890146002C0F7A;
@@ -1766,7 +1761,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -2161,14 +2156,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		F52C8C2D2EC95283001E5CB0 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/getsentry/sentry-cocoa";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 8.57.3;
-			};
-		};
 		F59F3AD42EBF1A2C005A6269 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
@@ -2180,11 +2167,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		F52C8C2E2EC95283001E5CB0 /* Sentry */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F52C8C2D2EC95283001E5CB0 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
-			productName = Sentry;
-		};
 		F59F21B82EBF2CDE005A6269 /* RevenueCat */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = F59F3AD42EBF1A2C005A6269 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;

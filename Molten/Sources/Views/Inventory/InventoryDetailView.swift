@@ -369,10 +369,13 @@ struct InventoryDetailView: View {
             ShareSheet(items: [shareText])
         }
         .sheet(isPresented: $showingShoppingListOptions, onDismiss: {
-            // Reload shopping list after adding
+            // Reload shopping list after adding/editing
             loadShoppingList()
         }) {
-            AddShoppingListItemView(prefilledNaturalKey: item.glassItem.stable_id)
+            AddShoppingListItemView(
+                prefilledNaturalKey: item.glassItem.stable_id,
+                existingItem: shoppingListItem  // Pass existing item for edit mode
+            )
         }
         .sheet(isPresented: $showingInventoryDetails) {
             InventoryStorageDetailView(
@@ -517,16 +520,18 @@ struct InventoryDetailView: View {
     }
 
     private func loadShoppingList() {
-        Task {
+        Task { @MainActor in
             isLoadingShoppingList = true
-            defer { isLoadingShoppingList = false }
 
             do {
                 shoppingListItem = try await shoppingListRepository.fetchItem(forItem: item.glassItem.stable_id)
             } catch {
                 // No shopping list item is fine, just leave nil
+                shoppingListItem = nil
                 print("No shopping list item found or error loading: \(error)")
             }
+
+            isLoadingShoppingList = false
         }
     }
 
@@ -1043,6 +1048,7 @@ struct InventoryDetailView: View {
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.bordered)
+                        .tint(DesignSystem.Colors.accentDanger)
                     }
                 }
             } else {

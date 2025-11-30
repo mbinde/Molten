@@ -564,7 +564,6 @@ struct MyService {
         do {
             try await riskyOperation()
         } catch {
-            // Log with context for pattern detection in Sentry
             logger.error("Operation failed", context: [
                 "operation": "my-operation",
                 "retry_count": 3
@@ -579,29 +578,19 @@ struct MyService {
 - `.debug` - Detailed debugging (local only)
 - `.info` - General information (local only)
 - `.warning` - Potential issues (local only)
-- `.error` - Errors needing attention (sent to Sentry)
-- `.critical` - Critical failures (sent to Sentry)
-
-**Pattern Detection**: Use consistent `operation` keys in context:
-- `operation:catalog-download` - Track catalog download failures
-- `operation:rating-cache-rebuild` - Track rating cache issues
-- `operation:cloudkit-sync` - Track CloudKit sync problems
+- `.error` - Errors needing attention (logged locally)
+- `.critical` - Critical failures (logged locally)
 
 **Automatic Features**:
-- Logs to OSLog (local) and Sentry (remote errors only)
-- Filters sensitive data (passwords, emails, tokens)
-- Captures breadcrumbs (user actions leading to errors)
+- Logs to OSLog for local debugging
 - Auto-detects test environment (uses MockLogger)
-- Enriches errors with app version, device info, memory usage
-
-See `Molten/Docs/Logging-and-Error-Tracking.md` for complete setup and usage.
+- Apple's TestFlight/App Store crash reports provide remote error tracking
 
 ---
 
 ## Additional Documentation
 
 For detailed guidance on specific topics, see:
-- `Molten/Docs/Logging-and-Error-Tracking.md` - Sentry setup, pattern detection, alerting
 - `Molten/Docs/Swift6-Concurrency-Guide.md` - Concurrency patterns and diagnostics
 - `Molten/Docs/SwiftUI-View-Lifecycle-Guide.md` - View lifecycle patterns
 - `Molten/Docs/ViewModel-Protocol-Pattern.md` - Protocol-based ViewModels for testability

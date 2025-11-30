@@ -219,12 +219,14 @@ struct SettingsView: View {
                     ))
                     .help("When enabled, your personal notes in item detail views will be fully expanded by default")
 
-                    Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
-                        .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
-                        .accessibilityIdentifier("settings_show_ratings")
+                    if FeatureFlags.ENABLE_RATINGS {
+                        Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
+                            .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
+                            .accessibilityIdentifier("settings_show_ratings")
+                    }
 
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                        Picker("QR Code Scan Opens", selection: qrScanBehaviorBinding) {
+                        Picker("QR Code", selection: qrScanBehaviorBinding) {
                             ForEach(UserSettings.QRScanBehavior.allCases, id: \.self) { behavior in
                                 Text(behavior.displayName).tag(behavior)
                             }
@@ -310,12 +312,14 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("settings_terminology")
 
-                    NavigationLink {
-                        RatingSettingsView()
-                    } label: {
-                        Text("Manage Ratings")
+                    if FeatureFlags.ENABLE_RATINGS {
+                        NavigationLink {
+                            RatingSettingsView()
+                        } label: {
+                            Text("Manage Ratings")
+                        }
+                        .accessibilityIdentifier("settings_manage_ratings")
                     }
-                    .accessibilityIdentifier("settings_manage_ratings")
 
                     HStack {
                         Text("Inventory Owner")
@@ -428,8 +432,15 @@ struct SettingsView: View {
                     await subscriptionViewModel.loadSubscriptionStatus()
                 }
 
-                // MARK: - Legal
-                Section("Legal") {
+                // MARK: - About
+                Section("About") {
+                    NavigationLink {
+                        AboutView()
+                    } label: {
+                        Text("About Molten")
+                    }
+                    .accessibilityIdentifier("settings_about")
+
                     Link(destination: URL(string: "https://moltenglass.app/privacy/")!) {
                         HStack {
                             Text("Privacy Policy")
@@ -441,7 +452,8 @@ struct SettingsView: View {
                     .accessibilityIdentifier("settings_privacy_policy")
                 }
 
-                // MARK: - Advanced
+                #if DEBUG
+                // MARK: - Advanced (Debug only)
                 Section("Advanced") {
                     NavigationLink {
                         DebugSettingsView()
@@ -449,13 +461,6 @@ struct SettingsView: View {
                         Text("Debug Settings")
                     }
                     .accessibilityIdentifier("settings_debug")
-
-                    NavigationLink {
-                        SentryTestView()
-                    } label: {
-                        Text("Test Sentry Logging")
-                    }
-                    .accessibilityIdentifier("settings_sentry_test")
 
                     // Subscription tier override for testing
                     Toggle(isOn: Binding(
@@ -501,14 +506,8 @@ struct SettingsView: View {
                                 .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
-
-                    NavigationLink {
-                        AboutView()
-                    } label: {
-                        Text("About")
-                    }
-                    .accessibilityIdentifier("settings_about")
                 }
+                #endif
             }
             .navigationTitle("Settings")
         }

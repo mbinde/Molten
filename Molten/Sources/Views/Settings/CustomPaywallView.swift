@@ -44,7 +44,6 @@ struct CustomPaywallView: View {
                     paywallContent
                 }
             }
-            .navigationTitle("Upgrade to Pro")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -153,8 +152,8 @@ struct CustomPaywallView: View {
 
                 // Links
                 HStack(spacing: 20) {
-                    Link("Privacy Policy", destination: URL(string: "https://moltenapp.com/privacy")!)
-                    Link("Terms of Use", destination: URL(string: "https://moltenapp.com/terms")!)
+                    Link("Privacy Policy", destination: URL(string: "https://moltenglass.app/privacy/")!)
+                    Link("Terms of Use (EULA)", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
                 }
                 .font(.caption)
                 .foregroundColor(.accentColor)
@@ -230,12 +229,23 @@ struct CustomPaywallView: View {
         do {
             offerings = try await Purchases.shared.offerings()
 
+            #if DEBUG
+            print("📦 [Paywall] Loaded offerings: \(offerings?.current?.identifier ?? "nil")")
+            print("📦 [Paywall] Available packages: \(offerings?.current?.availablePackages.map { $0.identifier } ?? [])")
+            #endif
+
             // Auto-select the first package (usually monthly or the best value)
             if let current = offerings?.current {
                 // Prefer annual if available, otherwise first package
                 selectedPackage = current.annual ?? current.availablePackages.first
+                #if DEBUG
+                print("📦 [Paywall] Selected package: \(selectedPackage?.identifier ?? "nil")")
+                #endif
             }
         } catch {
+            #if DEBUG
+            print("❌ [Paywall] Failed to load offerings: \(error)")
+            #endif
             errorMessage = error.localizedDescription
         }
 
@@ -243,17 +253,33 @@ struct CustomPaywallView: View {
     }
 
     private func purchase() async {
-        guard let package = selectedPackage else { return }
+        guard let package = selectedPackage else {
+            #if DEBUG
+            print("❌ [Paywall] purchase() called but no package selected!")
+            #endif
+            return
+        }
+
+        #if DEBUG
+        print("🛒 [Paywall] Starting purchase for: \(package.identifier)")
+        #endif
 
         isPurchasing = true
 
         do {
             let result = try await Purchases.shared.purchase(package: package)
+            #if DEBUG
+            print("✅ [Paywall] Purchase completed, pro active: \(result.customerInfo.entitlements["pro"]?.isActive ?? false)")
+            #endif
 
-            if result.customerInfo.entitlements["pro"]?.isActive == true {
-                purchaseSuccess = true
-                NotificationCenter.default.post(name: .subscriptionStatusChanged, object: nil)
-            }
+            // Purchase succeeded - show success and dismiss
+            // (entitlement may take a moment to sync, but purchase is confirmed)
+            purchaseSuccess = true
+            NotificationCenter.default.post(name: .subscriptionStatusChanged, object: nil)
+
+            // Auto-dismiss after brief success display
+            try? await Task.sleep(nanoseconds: 1_500_000_000)  // 1.5 seconds
+            dismiss()
         } catch {
             if let rcError = error as? RevenueCat.ErrorCode, rcError == .purchaseCancelledError {
                 // User cancelled - do nothing
@@ -274,6 +300,10 @@ struct CustomPaywallView: View {
             if customerInfo.entitlements["pro"]?.isActive == true {
                 purchaseSuccess = true
                 NotificationCenter.default.post(name: .subscriptionStatusChanged, object: nil)
+
+                // Auto-dismiss after brief success display
+                try? await Task.sleep(nanoseconds: 1_500_000_000)  // 1.5 seconds
+                dismiss()
             } else {
                 errorMessage = "No active subscription found"
             }
@@ -400,12 +430,13 @@ private struct PackageOptionView: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large)
-                    .stroke(isSelected ? DesignSystem.Colors.moltenOrange : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1)
-                    .background(
-                        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large)
-                            .fill(isSelected ? DesignSystem.Colors.moltenOrange.opacity(0.1) : Color.clear)
-                    )
+                    .fill(isSelected ? DesignSystem.Colors.moltenOrange.opacity(0.1) : Color.clear)
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large)
+                    .stroke(isSelected ? DesignSystem.Colors.moltenOrange : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+            )
+            .contentShape(Rectangle())  // Ensure entire area is tappable
         }
         .buttonStyle(.plain)
     }

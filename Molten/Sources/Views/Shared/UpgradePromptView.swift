@@ -2,15 +2,16 @@
 //  UpgradePromptView.swift
 //  Molten
 //
-//  Upgrade prompt that presents RevenueCat paywall
+//  Upgrade prompt that presents RevenueCat paywall directly
+//  (Wrapper for CustomPaywallView to maintain backward compatibility)
 //
 
 import SwiftUI
 
 struct UpgradePromptView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    let feature: String  // "inventory", "shopping", "projects", etc.
+    // These parameters are kept for API compatibility but no longer displayed
+    // (CustomPaywallView shows its own feature list)
+    let feature: String
     let currentCount: Int
     let limit: Int
 
@@ -24,77 +25,12 @@ struct UpgradePromptView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
-                // Icon
-                Image(systemName: "star.circle.fill")
-                    .font(.system(size: 64))
-                    .foregroundStyle(.yellow, .orange.opacity(0.3))
-                    .padding(.top, 40)
-
-                // Title
-                Text("Upgrade to Pro")
-                    .font(.title.bold())
-
-                // Message
-                VStack(spacing: 12) {
-                    Text("You've reached the free tier limit")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-
-                    Text("\(currentCount) / \(limit) \(feature) items")
-                        .font(.title2.bold())
-                        .foregroundColor(.primary)
-                }
-
-                // Benefits list
-                VStack(alignment: .leading, spacing: 16) {
-                    BenefitRow(icon: "archivebox.fill", text: "Unlimited inventory items")
-                    BenefitRow(icon: "cart.fill", text: "Unlimited shopping list items")
-                    BenefitRow(icon: "clock.arrow.circlepath", text: "Versioned cloud backups")
-                }
-                .padding(.horizontal, 32)
-                .padding(.top, 20)
-
-                Spacer()
-
-                // Action buttons
-                VStack(spacing: 12) {
-                    Button {
-                        Task {
-                            // Present paywall - don't dismiss, user can tap "Maybe Later" if needed
-                            // The paywall presents over this view and user returns here when done
-                            try? await subscriptionService.presentPaywall()
-                        }
-                    } label: {
-                        Text("View Subscription Options")
-                            .font(.headline)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .accessibilityIdentifier("upgrade_purchase_button")
-
-                    Button {
-                        dismiss()
-                    } label: {
-                        Text("Maybe Later")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .accessibilityIdentifier("upgrade_dismiss_button")
-                }
-                .padding(.horizontal, 32)
-                .padding(.bottom, 40)
-            }
-            .navigationBarTitleDisplayMode(.inline)
-        }
+        // Go directly to the paywall - no intermediate screen
+        CustomPaywallView()
     }
 }
 
-// MARK: - Benefit Row
+// MARK: - Benefit Row (kept for any external usage)
 
 struct BenefitRow: View {
     let icon: String

@@ -34,7 +34,7 @@ typealias PlatformImage = NSImage
     let lastModified: String
 }
 
-/// Service for downloading product images from images.molten.glass and caching locally
+/// Service for downloading product images from images on moltenglass.app and caching locally
 /// This is a utility service with static methods - does not need MainActor isolation
 final class ImageDownloadService: Sendable {
 

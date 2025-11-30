@@ -331,8 +331,8 @@ extension GlassItemRowView {
         let isWeightBased = ["frit", "powder", "enamel", "flakes"].contains(type.lowercased())
 
         if isWeightBased {
-            // For weight-based types with jars but no weight, show jars
-            if containerCount > 0 && quantity <= 0 {
+            // For weight-based types with jars, prefer showing jars (more meaningful for frit tracking)
+            if containerCount > 0 {
                 let jarLabel = containerCount == 1 ? "jar" : "jars"
                 let jarText = containerCount.truncatingRemainder(dividingBy: 1) == 0
                     ? String(format: "%.0f", containerCount)
@@ -340,7 +340,7 @@ extension GlassItemRowView {
                 return "\(jarText) \(jarLabel) \(typeName)"
             }
 
-            // Weight-based with weight: convert from grams (storage) to user's preferred unit
+            // Weight-based without jars: convert from grams (storage) to user's preferred unit
             let preferredUnit = WeightUnitPreference.current
             let convertedQuantity = WeightUnit.grams.convert(quantity, to: preferredUnit)
             let quantityText = String(format: "%.1f", convertedQuantity).replacingOccurrences(of: ".0", with: "")

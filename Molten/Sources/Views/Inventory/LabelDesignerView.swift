@@ -391,11 +391,12 @@ struct LabelDesignerView: View {
                     dismiss()
                 }
             }
+            .frame(minWidth: 100, alignment: .leading)
             .accessibilityIdentifier("label_designer_done")
         }
 
         ToolbarItem(placement: .primaryAction) {
-            Button("Generate PDF") {
+            Button("Generate") {
                 // Check if we need to ask for label counts for weight-based items
                 let needsInput = itemsNeedingLabelCountInput.filter { item in
                     // Only show sheet if user hasn't already set an override

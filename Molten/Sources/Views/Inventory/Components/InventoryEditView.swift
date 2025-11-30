@@ -17,14 +17,20 @@ struct InventoryEditView: View {
     @State private var quantity: String
     @State private var location: String
     @State private var isSaving = false
+    @State private var isDeleting = false
     @State private var showingError = false
     @State private var errorMessage = ""
+    @State private var showingDeleteConfirmation = false
 
     init(record: InventoryModel, inventoryRepository: InventoryRepository, storageLocationDefinitionRepository: StorageLocationDefinitionRepository) {
         self.record = record
         self.inventoryRepository = inventoryRepository
         self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
-        self._quantity = State(initialValue: String(format: "%.1f", record.quantity))
+        // Format quantity without decimal if it's a whole number
+        let quantityString = record.quantity.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", record.quantity)
+            : String(format: "%.1f", record.quantity)
+        self._quantity = State(initialValue: quantityString)
         self._location = State(initialValue: record.location ?? "")
     }
 
@@ -49,6 +55,25 @@ struct InventoryEditView: View {
                         storageLocationDefinitionRepository: storageLocationDefinitionRepository
                     )
                 }
+
+                Section {
+                    Button(role: .destructive) {
+                        showingDeleteConfirmation = true
+                    } label: {
+                        HStack {
+                            Spacer()
+                            if isDeleting {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                            } else {
+                                Text("Delete Inventory Record")
+                            }
+                            Spacer()
+                        }
+                    }
+                    .disabled(isSaving || isDeleting)
+                    .accessibilityIdentifier("inventory_edit_delete")
+                }
             }
             .navigationTitle("Edit Inventory")
             .navigationBarTitleDisplayMode(.inline)
@@ -72,6 +97,37 @@ struct InventoryEditView: View {
                 Button("OK") {}
             } message: {
                 Text(errorMessage)
+            }
+            .confirmationDialog(
+                "Delete Inventory Record",
+                isPresented: $showingDeleteConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Delete", role: .destructive) {
+                    deleteRecord()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Are you sure you want to delete this inventory record? This cannot be undone.")
+            }
+        }
+    }
+
+    private func deleteRecord() {
+        isDeleting = true
+
+        Task {
+            do {
+                try await inventoryRepository.deleteInventory(id: record.id)
+                await MainActor.run {
+                    dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    isDeleting = false
+                    errorMessage = "Failed to delete: \(error.localizedDescription)"
+                    showingError = true
+                }
             }
         }
     }

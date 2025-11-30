@@ -580,7 +580,9 @@ struct InventoryView: View, CachedDataDeletion {
                 // When UserDefaults changes (e.g., COE filter, manufacturer filter, or applyFiltersToInventory in Settings),
                 // increment the trigger to force filteredItems to re-evaluate
                 filterRefreshTrigger += 1
+                updateFilteredItemsCache()
             }
+            .onFilterChange(viewModel: viewModel, updateCache: updateFilteredItemsCache)
         }
     }
     

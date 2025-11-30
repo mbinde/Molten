@@ -106,7 +106,7 @@ struct BugReportSheet: View {
                     dismiss()
                 }
             } message: {
-                Text("Thank you for helping improve Molten! Your bug report has been submitted to Sentry.")
+                Text("Thank you for helping improve Molten! Your bug report has been logged.")
             }
         }
     }
@@ -155,7 +155,7 @@ struct BugReportSheet: View {
             message += "• iOS: \(iosVersion)\n"
         }
 
-        // Send to Sentry as a user feedback/message event
+        // Log the bug report locally (could be sent to a server in the future)
         let logger = AppDependencies.shared.loggingService
         logger.error("User-reported bug via shake gesture", context: [
             "bug_description": bugDescription,

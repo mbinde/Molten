@@ -12,6 +12,7 @@ struct AddShoppingListItemView: View {
     @Environment(EntitlementService.self) private var entitlementService
 
     let prefilledNaturalKey: String?
+    let existingItem: ItemShoppingModel?  // For edit mode
     let shoppingListService: ShoppingListService
     let catalogService: CatalogService
     let locationService: UnifiedLocationService
@@ -20,19 +21,24 @@ struct AddShoppingListItemView: View {
     @State private var shoppingItemCount = 0
     @State private var shoppingItemLimit = 0
 
+    private var isEditMode: Bool { existingItem != nil }
+
     init(prefilledNaturalKey: String? = nil,
+         existingItem: ItemShoppingModel? = nil,
          shoppingListService: ShoppingListService,
          catalogService: CatalogService,
          locationService: UnifiedLocationService) {
         self.prefilledNaturalKey = prefilledNaturalKey
+        self.existingItem = existingItem
         self.shoppingListService = shoppingListService
         self.catalogService = catalogService
         self.locationService = locationService
     }
 
     /// Convenience init using AppDependencies
-    init(prefilledNaturalKey: String? = nil, deps: AppDependencies = AppDependencies()) {
+    init(prefilledNaturalKey: String? = nil, existingItem: ItemShoppingModel? = nil, deps: AppDependencies = AppDependencies()) {
         self.prefilledNaturalKey = prefilledNaturalKey
+        self.existingItem = existingItem
         self.shoppingListService = deps.shoppingListService
         self.catalogService = deps.catalogService
         self.locationService = deps.unifiedLocationService
@@ -40,14 +46,23 @@ struct AddShoppingListItemView: View {
 
     var body: some View {
         AddItemFormView(
-            title: "Add to Shopping List",
+            title: isEditMode ? "Edit Shopping List Item" : "Add to Shopping List",
             locationFieldType: .shopping(
                 shoppingListRepository: shoppingListService.shoppingListRepository,
                 locationService: locationService
             ),
             showNotesField: false,
             catalogService: catalogService,
-            prefilledNaturalKey: prefilledNaturalKey,
+            prefilledNaturalKey: prefilledNaturalKey ?? existingItem?.item_stable_id,
+            prefillData: existingItem.map { item in
+                AddItemFormPrefill(
+                    quantity: item.quantity,
+                    type: item.type ?? "rod",
+                    subtype: item.subtype,
+                    subsubtype: item.subsubtype,
+                    locationOrStore: item.store
+                )
+            },
             onSave: { formData in
                 try await saveShoppingListItem(formData)
             }
@@ -62,40 +77,65 @@ struct AddShoppingListItemView: View {
     }
 
     private func saveShoppingListItem(_ formData: AddItemFormData) async throws {
-        // Check subscription entitlement before adding shopping list item
-        let allShoppingItems = try await shoppingListService.shoppingListRepository.fetchAllItems()
-        let currentShoppingCount = allShoppingItems.count
-        let canAdd = entitlementService.canAddShoppingListItem(currentCount: currentShoppingCount)
+        // Skip entitlement check if editing (not adding new item)
+        if !isEditMode {
+            // Check subscription entitlement before adding shopping list item
+            // Use the same logic as the display - generate shopping lists and count unique items
+            // This accounts for catalog lookup failures, merging, and deduplication
+            let shoppingLists = try await shoppingListService.generateAllShoppingLists()
+            let currentShoppingCount = shoppingLists.values.reduce(0) { $0 + $1.items.count }
+            let limit = entitlementService.getShoppingListLimit()
+            let canAdd = entitlementService.canAddShoppingListItem(currentCount: currentShoppingCount)
 
-        if !canAdd {
-            // Hit the limit - show upgrade prompt
-            let limit = entitlementService.getShoppingListLimit() ?? 0
-            await MainActor.run {
-                shoppingItemCount = currentShoppingCount
-                shoppingItemLimit = limit
-                showingUpgradePrompt = true
+            print("🛒 [Entitlement] Shopping list check: displayCount=\(currentShoppingCount), limit=\(limit ?? -1), canAdd=\(canAdd), tier=\(entitlementService.currentTier)")
+
+            if !canAdd {
+                // Hit the limit - show upgrade prompt
+                let limitValue = limit ?? 0
+                print("🛒 [Entitlement] BLOCKED - showing upgrade prompt with count=\(currentShoppingCount), limit=\(limitValue)")
+                await MainActor.run {
+                    shoppingItemCount = currentShoppingCount
+                    shoppingItemLimit = limitValue
+                    showingUpgradePrompt = true
+                }
+                // Throw a special error that AddItemFormView will ignore (not show alert)
+                // This prevents the form from dismissing while upgrade prompt is shown
+                throw ShoppingListLimitError.limitReached
             }
-            throw NSError(domain: "ShoppingList", code: 1, userInfo: [NSLocalizedDescriptionKey: "Shopping list limit reached"])
         }
 
-        // Create shopping list item (ignoring dimensions/weight units - shopping list doesn't track those)
-        let newShoppingListItem = ItemShoppingModel(
-            item_stable_id: formData.glassItem.stable_id,
-            quantity: formData.quantity,
-            store: formData.locationOrStore,
-            type: formData.type,
-            subtype: formData.subtype,
-            subsubtype: formData.subsubtype
-        )
-
-        // Save to repository
-        _ = try await shoppingListService.shoppingListRepository.createItem(newShoppingListItem)
+        if isEditMode, let existing = existingItem {
+            // Update existing item - preserve the original ID
+            let updatedItem = ItemShoppingModel(
+                id: existing.id,
+                item_stable_id: formData.glassItem.stable_id,
+                quantity: formData.quantity,
+                store: formData.locationOrStore,
+                type: formData.type,
+                subtype: formData.subtype,
+                subsubtype: formData.subsubtype,
+                dateAdded: existing.dateAdded
+            )
+            _ = try await shoppingListService.shoppingListRepository.updateItem(updatedItem)
+        } else {
+            // Create new item
+            let newItem = ItemShoppingModel(
+                item_stable_id: formData.glassItem.stable_id,
+                quantity: formData.quantity,
+                store: formData.locationOrStore,
+                type: formData.type,
+                subtype: formData.subtype,
+                subsubtype: formData.subsubtype
+            )
+            _ = try await shoppingListService.shoppingListRepository.createItem(newItem)
+        }
 
         // Post success notification
         await MainActor.run {
             let quantityText = String(format: "%.1f", formData.quantity).replacingOccurrences(of: ".0", with: "")
             let typeText = formData.type
-            let message = "\(formData.glassItem.name) (\(quantityText) \(typeText)) added to shopping list."
+            let action = isEditMode ? "updated" : "added to"
+            let message = "\(formData.glassItem.name) (\(quantityText) \(typeText)) \(action) shopping list."
 
             NotificationCenter.default.post(
                 name: .shoppingListItemAdded,
@@ -104,6 +144,12 @@ struct AddShoppingListItemView: View {
             )
         }
     }
+}
+
+/// Error thrown when shopping list limit is reached
+/// This error is handled specially - it shows the upgrade prompt without an error alert
+enum ShoppingListLimitError: Error {
+    case limitReached
 }
 
 #Preview {

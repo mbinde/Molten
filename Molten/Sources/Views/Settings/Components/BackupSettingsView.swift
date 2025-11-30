@@ -10,6 +10,7 @@ import SwiftUI
 
 struct BackupSettingsView: View {
     @Environment(\.appDependencies) private var dependencies
+    @Environment(EntitlementService.self) private var entitlementService
     @State private var isEnabled: Bool = false
     @State private var isPaused: Bool = false
     @State private var backupKey: String?
@@ -20,6 +21,7 @@ struct BackupSettingsView: View {
     @State private var successMessage: String?
     @State private var showingRerollConfirmation = false
     @State private var showingDeleteConfirmation = false
+    @State private var showingUpgradePrompt = false
     @State private var lastBackupTimestamp: Date?
     @State private var showCopiedFeedback = false
 
@@ -113,7 +115,12 @@ struct BackupSettingsView: View {
                     .padding(.vertical, 4)
 
                     Button {
-                        enableBackups()
+                        // Check if user has Pro subscription
+                        if entitlementService.canUseVersionedCloudBackups() {
+                            enableBackups()
+                        } else {
+                            showingUpgradePrompt = true
+                        }
                     } label: {
                         HStack {
                             Spacer()
@@ -271,6 +278,13 @@ struct BackupSettingsView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This will permanently delete your backup key. You'll need to set up backups again if you want to use them in the future.")
+        }
+        .sheet(isPresented: $showingUpgradePrompt) {
+            UpgradePromptView(
+                feature: "backups",
+                currentCount: 0,
+                limit: 0
+            )
         }
     }
 

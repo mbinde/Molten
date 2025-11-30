@@ -58,18 +58,29 @@ struct QRScanInventoryView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // View Item Details button at top
+                // Hero image at top
+                HeroHeader(item: item.glassItem)
+
+                // View Item Details button below hero
                 viewItemDetailsButton
+                    .padding(.vertical, DesignSystem.Spacing.md)
 
-                Divider()
+                // Type badge and +/- controls
+                VStack(spacing: DesignSystem.Spacing.md) {
+                    if let typeName = typeDisplayName {
+                        Text(typeName)
+                            .font(DesignSystem.Typography.listItemTitle)
+                            .foregroundColor(DesignSystem.Colors.accentPrimary)
+                            .padding(.horizontal, DesignSystem.Spacing.lg)
+                            .padding(.vertical, DesignSystem.Spacing.sm)
+                            .background(DesignSystem.Colors.tintPrimary)
+                            .clipShape(Capsule())
+                    }
 
-                // Item header
-                itemHeader
-
-                Divider()
-
-                // Main +/- controls (always show, don't wait for loading)
-                quantityControls
+                    // Main +/- controls
+                    quantityControls
+                }
+                .padding(.top, DesignSystem.Spacing.md)
 
                 Divider()
 
@@ -82,6 +93,9 @@ struct QRScanInventoryView: View {
 
                 // Done button
                 Button {
+                    // Commit any pending new location before dismissing
+                    commitPendingNewLocation()
+
                     // Post notification if changes were made
                     if netChange != 0 {
                         NotificationCenter.default.post(name: .inventoryChanged, object: nil)
@@ -111,79 +125,21 @@ struct QRScanInventoryView: View {
         Button {
             onViewDetails()
         } label: {
-            HStack(spacing: DesignSystem.Spacing.md) {
-                ProductImageThumbnail(
-                    itemCode: item.glassItem.stable_id,
-                    manufacturer: item.glassItem.manufacturer,
-                    stableId: item.glassItem.stable_id,
-                    imagePath: item.glassItem.image_path,
-                    imageThumbPath: item.glassItem.image_thumb_path,
-                    dominantColors: item.glassItem.dominant_colors,
-                    size: 32
-                )
-
+            HStack {
+                Image(systemName: "info.circle.fill")
+                    .font(.title2)
                 Text("View Item Details")
                     .font(DesignSystem.Typography.listItemTitle)
-
                 Spacer()
-
                 Image(systemName: "chevron.right")
                     .font(.caption)
             }
-            .padding(.horizontal)
-            .padding(.vertical, DesignSystem.Spacing.md)
+            .padding()
             .foregroundColor(DesignSystem.Colors.moltenTeal)
         }
         .background(DesignSystem.Colors.tintTeal)
-    }
-
-    // MARK: - Item Header
-
-    private var itemHeader: some View {
-        HStack(spacing: DesignSystem.Spacing.lg) {
-            ProductImageThumbnail(
-                itemCode: item.glassItem.stable_id,
-                manufacturer: item.glassItem.manufacturer,
-                stableId: item.glassItem.stable_id,
-                imagePath: item.glassItem.image_path,
-                imageThumbPath: item.glassItem.image_thumb_path,
-                dominantColors: item.glassItem.dominant_colors,
-                size: 60
-            )
-
-            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                Text(item.glassItem.name)
-                    .font(DesignSystem.Typography.sectionTitle)
-                    .foregroundColor(DesignSystem.Colors.textPrimary)
-
-                HStack(spacing: DesignSystem.Spacing.sm) {
-                    Text(GlassManufacturers.fullName(for: item.glassItem.manufacturer) ?? item.glassItem.manufacturer)
-                        .font(DesignSystem.Typography.listItemCaption)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-
-                    Text("•")
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-
-                    Text("COE \(item.glassItem.coe)")
-                        .font(DesignSystem.Typography.listItemCaption)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                }
-
-                if let typeName = typeDisplayName {
-                    Text(typeName)
-                        .font(DesignSystem.Typography.listItemTitle)
-                        .foregroundColor(DesignSystem.Colors.accentPrimary)
-                        .padding(.horizontal, DesignSystem.Spacing.md)
-                        .padding(.vertical, DesignSystem.Spacing.xs)
-                        .background(DesignSystem.Colors.tintPrimary)
-                        .clipShape(Capsule())
-                }
-            }
-
-            Spacer()
-        }
-        .padding()
-        .background(DesignSystem.Colors.backgroundSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        .padding(.horizontal)
     }
 
     private var typeDisplayName: String? {
@@ -415,12 +371,49 @@ struct QRScanInventoryView: View {
         }
     }
 
+    // MARK: - Helper Methods
+
+    /// Commits a pending new location name if the user was in the middle of creating one
+    private func commitPendingNewLocation() {
+        guard isCreatingNewLocation else { return }
+
+        let trimmed = newLocationName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            // Empty location name - just cancel
+            isCreatingNewLocation = false
+            newLocationName = ""
+            return
+        }
+
+        // Add to available locations if not already present
+        if !availableLocations.contains(trimmed) {
+            availableLocations.append(trimmed)
+            availableLocations.sort()
+        }
+
+        // Select the new location
+        selectedLocation = trimmed
+
+        // Save as last used location
+        UserDefaults.standard.set(trimmed, forKey: Self.lastQRScanLocationKey)
+
+        // Reset state
+        newLocationName = ""
+        isCreatingNewLocation = false
+
+        // Recalculate quantity for new location
+        recalculateQuantity()
+    }
+
     // MARK: - Inventory Actions
 
     @MainActor
     private func incrementInventory() async {
         actionInProgress = true
         defer { actionInProgress = false }
+
+        // Commit any pending new location before adding inventory
+        commitPendingNewLocation()
 
         do {
             // Use date-aware increment: finds/creates record for TODAY's date
@@ -450,6 +443,9 @@ struct QRScanInventoryView: View {
     private func decrementInventory() async {
         actionInProgress = true
         defer { actionInProgress = false }
+
+        // Commit any pending new location before removing inventory
+        commitPendingNewLocation()
 
         // Check if there's any inventory to decrement
         guard currentQuantity > 0 else { return }

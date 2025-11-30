@@ -96,6 +96,7 @@ class CatalogDataCache: ObservableObject {
         #endif
 
         NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
                 // Check if the notification contains changes to entities we care about
                 guard let userInfo = notification.userInfo else { return }

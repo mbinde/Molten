@@ -97,7 +97,7 @@ struct InventoryView: View, CachedDataDeletion {
     }
 
     // Convenience init for production use
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         let viewModel = InventoryViewModel(
             inventoryTrackingService: deps.inventoryTrackingService,
             catalogService: deps.catalogService
@@ -482,7 +482,7 @@ struct InventoryView: View, CachedDataDeletion {
             }) {
                 AddInventoryItemView(
                     prefilledNaturalKey: prefilledNaturalKey.isEmpty ? nil : prefilledNaturalKey,
-                    deps: AppDependencies()
+                    deps: .shared
                 )
             }
             .sheet(isPresented: $showingLabelDesigner) {
@@ -657,7 +657,7 @@ struct InventoryView: View, CachedDataDeletion {
         .navigationDestination(for: CompleteInventoryItemModel.self) { item in
             InventoryDetailView(
                 item: item,
-                deps: AppDependencies()
+                deps: .shared
             )
         }
     }
@@ -666,7 +666,13 @@ struct InventoryView: View, CachedDataDeletion {
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Button {
-                showingAddItem = true
+                // Check if at limit before showing add screen
+                if let limit = entitlementService.getInventoryLimit(),
+                   inventoryItemCount >= limit {
+                    showingUpgradePrompt = true
+                } else {
+                    showingAddItem = true
+                }
             } label: {
                 Image(systemName: "plus")
             }
@@ -676,7 +682,13 @@ struct InventoryView: View, CachedDataDeletion {
         ToolbarItem(placement: .confirmationAction) {
             Menu {
                 Button {
-                    showingAddItem = true
+                    // Check if at limit before showing add screen
+                    if let limit = entitlementService.getInventoryLimit(),
+                       inventoryItemCount >= limit {
+                        showingUpgradePrompt = true
+                    } else {
+                        showingAddItem = true
+                    }
                 } label: {
                     Label("Add Inventory", systemImage: "plus")
                 }

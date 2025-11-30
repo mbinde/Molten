@@ -107,22 +107,14 @@ actor ShoppingListService {
     /// 2. Manually added shopping list items (from ItemShopping)
     /// - Returns: Dictionary mapping store names to detailed shopping lists
     func generateAllShoppingLists() async throws -> [String: DetailedShoppingListModel] {
-        print("🛒 [Service] generateAllShoppingLists: START")
-
         // 1. Get current inventory state
-        print("🛒 [Service] generateAllShoppingLists: getting current inventory state...")
         let currentInventory = try await getCurrentInventoryState()
-        print("🛒 [Service] generateAllShoppingLists: got \(currentInventory.count) inventory items")
 
         // 2. Generate shopping lists from minimums (items below threshold)
-        print("🛒 [Service] generateAllShoppingLists: generating minimum-based lists...")
         let minimumBasedLists = try await self.itemMinimumRepository.generateShoppingLists(currentInventory: currentInventory)
-        print("🛒 [Service] generateAllShoppingLists: got \(minimumBasedLists.count) stores from minimums")
 
         // 3. Get manually added shopping list items
-        print("🛒 [Service] generateAllShoppingLists: fetching manually added items...")
         let manuallyAddedItems = try await self._shoppingListRepository.fetchAllItems()
-        print("🛒 [Service] generateAllShoppingLists: got \(manuallyAddedItems.count) manually added items")
 
         // 4. Combine both sources, grouping by store
         var combinedListsByStore: [String: [ShoppingListItemModel]] = [:]
@@ -175,7 +167,6 @@ actor ShoppingListService {
         }
 
         // 5. Convert to detailed shopping lists
-        print("🛒 [Service] generateAllShoppingLists: converting to detailed lists...")
         var detailedShoppingLists: [String: DetailedShoppingListModel] = [:]
 
         for (store, basicItems) in combinedListsByStore {
@@ -206,7 +197,6 @@ actor ShoppingListService {
             )
         }
 
-        print("🛒 [Service] generateAllShoppingLists: END - returning \(detailedShoppingLists.count) stores")
         return detailedShoppingLists
     }
     

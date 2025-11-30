@@ -30,7 +30,7 @@ struct ExportPlanView: View {
     }
 
     /// Convenience init using AppDependencies
-    init(plan: ProjectModel, deps: AppDependencies = AppDependencies(), onExportComplete: ((URL) -> Void)? = nil) {
+    init(plan: ProjectModel, deps: AppDependencies = .shared, onExportComplete: ((URL) -> Void)? = nil) {
         self.plan = plan
         self.onExportComplete = onExportComplete
         self.exportService = ProjectExportService(

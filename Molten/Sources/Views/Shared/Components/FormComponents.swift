@@ -85,7 +85,7 @@ struct CatalogItemSearchField: View {
 
     private let catalogService: CatalogService
 
-    init(selectedCatalogId: Binding<String>, deps: AppDependencies = AppDependencies()) {
+    init(selectedCatalogId: Binding<String>, deps: AppDependencies = .shared) {
         self._selectedCatalogId = selectedCatalogId
         self.catalogService = deps.catalogService
     }
@@ -443,7 +443,7 @@ struct InventoryFormView: View {
     init(
         editinginventory_id: UUID? = nil,
         prefilledCatalogCode: String? = nil,
-        deps: AppDependencies = AppDependencies()
+        deps: AppDependencies = .shared
     ) {
         self.editinginventory_id = editinginventory_id
         self.inventoryService = deps.inventoryTrackingService

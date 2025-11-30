@@ -14,7 +14,7 @@ import CoreData
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
-    private let deps = AppDependencies()
+    private let deps = AppDependencies.shared
 
     var body: some View {
         CatalogView(deps: deps)

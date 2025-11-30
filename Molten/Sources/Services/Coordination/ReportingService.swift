@@ -302,7 +302,7 @@ struct DateRange {
 
 extension ReportingService {
     /// Create ReportingService using AppDependencies
-    convenience init(deps: AppDependencies = AppDependencies()) {
+    convenience init(deps: AppDependencies = .shared) {
         self.init(
             catalogService: deps.catalogService,
             inventoryTrackingService: deps.inventoryTrackingService,

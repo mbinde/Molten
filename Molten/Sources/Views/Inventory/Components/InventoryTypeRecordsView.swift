@@ -47,7 +47,7 @@ struct InventoryTypeRecordsView: View {
         records: [InventoryModel],
         type: String,
         itemName: String,
-        deps: AppDependencies = AppDependencies()
+        deps: AppDependencies = .shared
     ) {
         self.init(
             records: records,

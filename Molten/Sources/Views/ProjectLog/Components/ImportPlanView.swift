@@ -28,7 +28,7 @@ struct ImportPlanView: View {
     }
 
     /// Convenience init using AppDependencies
-    init(fileURL: URL, deps: AppDependencies = AppDependencies(), onImportComplete: ((ProjectModel) -> Void)? = nil) {
+    init(fileURL: URL, deps: AppDependencies = .shared, onImportComplete: ((ProjectModel) -> Void)? = nil) {
         self.fileURL = fileURL
         self.onImportComplete = onImportComplete
         self.importService = ProjectImportService(

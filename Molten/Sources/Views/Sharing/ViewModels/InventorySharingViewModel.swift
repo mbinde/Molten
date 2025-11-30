@@ -72,7 +72,7 @@ class InventorySharingViewModel {
     }
 
     /// Convenience init using AppDependencies
-    convenience init(deps: AppDependencies = AppDependencies()) {
+    convenience init(deps: AppDependencies = .shared) {
         let persistence = PersistenceController.shared
         let cloudContext = persistence.cloudContext
 

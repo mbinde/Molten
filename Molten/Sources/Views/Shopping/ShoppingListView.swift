@@ -125,7 +125,7 @@ struct ShoppingListView: View {
     #endif
 
     // Convenience init for production use
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         let viewModel = ShoppingListViewModel(shoppingListService: deps.shoppingListService)
         #if canImport(UIKit)
         self.init(
@@ -835,7 +835,13 @@ struct ShoppingListView: View {
 
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        showingAddItem = true
+                        // Check if at limit before showing add screen
+                        if let limit = entitlementService.getShoppingListLimit(),
+                           shoppingListItemCount >= limit {
+                            showingUpgradePrompt = true
+                        } else {
+                            showingAddItem = true
+                        }
                     } label: {
                         Image(systemName: "plus")
                     }
@@ -890,31 +896,27 @@ struct ShoppingListView: View {
             }) {
                 NavigationStack {
                     AddShoppingListItemView(
-                        deps: AppDependencies()
+                        deps: .shared
                     )
                 }
             }
             .task {
-                print("🛒 [View] .task triggered")
                 await loadShoppingList()
             }
             // NOTE: Removed .onAppear - it was causing duplicate concurrent calls with .task
             // .task already handles initial load when view appears
             .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
-                print("🛒 [View] .onReceive inventoryItemAdded")
                 Task {
                     await loadShoppingList()
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .inventoryChanged)) { _ in
-                print("🛒 [View] .onReceive inventoryChanged")
                 Task {
                     // Refresh after QR scan inventory changes
                     await loadShoppingList()
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .shoppingListItemAdded)) { _ in
-                print("🛒 [View] .onReceive shoppingListItemAdded")
                 Task {
                     await loadShoppingList()
                 }
@@ -957,7 +959,7 @@ struct ShoppingListView: View {
             .navigationDestination(for: CompleteInventoryItemModel.self) { item in
                 InventoryDetailView(
                     item: item,
-                    deps: AppDependencies()
+                    deps: .shared
                 )
             }
         }
@@ -1279,15 +1281,10 @@ struct ShoppingListView: View {
 
 
     private func loadShoppingList() async {
-        print("🛒 [View] loadShoppingList: START")
-        print("🛒 [View] loadShoppingList: calling viewModel.loadShoppingLists...")
         await viewModel.loadShoppingLists()
-        print("🛒 [View] loadShoppingList: viewModel.loadShoppingLists returned, isLoading=\(viewModel.isLoading)")
 
         // Update view-specific caches and state
-        print("🛒 [View] loadShoppingList: calling updateCaches...")
         updateCaches()  // PERFORMANCE: Update cached filter values
-        print("🛒 [View] loadShoppingList: updateCaches done")
 
         // Initialize all stores as expanded by default
         expandedStores = Set(viewModel.shoppingLists.keys)
@@ -1296,7 +1293,6 @@ struct ShoppingListView: View {
         expandedManufacturers = Set(cachedAllManufacturers)
 
         refreshTrigger += 1  // Force SwiftUI to refresh the list
-        print("🛒 [View] loadShoppingList: END - \(viewModel.shoppingLists.count) stores, \(viewModel.shoppingLists.values.flatMap { $0.items }.count) items")
     }
 
     private func cancelShoppingMode() {

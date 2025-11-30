@@ -36,7 +36,7 @@ struct ImportInventoryView: View {
     }
 
     /// Convenience init using AppDependencies
-    init(fileURL: URL, deps: AppDependencies = AppDependencies(), onImportComplete: (() -> Void)? = nil) {
+    init(fileURL: URL, deps: AppDependencies = .shared, onImportComplete: (() -> Void)? = nil) {
         self.fileURL = fileURL
         self.onImportComplete = onImportComplete
         self.importService = InventoryImportService(

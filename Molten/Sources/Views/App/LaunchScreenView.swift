@@ -76,7 +76,7 @@ struct LaunchScreenView: View {
             try await CatalogDatabaseManager.shared.initialize()
             print("✅ Catalog database initialized")
 
-            let catalogService = AppDependencies().catalogService
+            let catalogService = AppDependencies.shared.catalogService
 
             // Build search cache for instant search
             print("🔍 Building search cache...")
@@ -91,7 +91,7 @@ struct LaunchScreenView: View {
             }
 
             // Load location data (hybrid: bundle + web)
-            let locationService = AppDependencies().unifiedLocationService
+            let locationService = AppDependencies.shared.unifiedLocationService
             do {
                 let result = try await locationService.loadLocationsHybrid()
                 print("✅ Loaded \(result.total) locations")
@@ -103,7 +103,7 @@ struct LaunchScreenView: View {
             // Generate demo data if in screenshot mode
             if isScreenshotMode {
                 print("🎬 [SCREENSHOTS] Generating demo data...")
-                let deps = AppDependencies()
+                let deps = AppDependencies.shared
                 let demoDataGenerator = DemoDataGenerator(
                     catalogService: catalogService,
                     inventoryService: deps.inventoryTrackingService,

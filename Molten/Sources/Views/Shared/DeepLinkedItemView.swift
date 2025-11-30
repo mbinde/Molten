@@ -36,7 +36,7 @@ struct DeepLinkedItemView: View {
         inventoryType: String? = nil,
         inventorySubtype: String? = nil,
         inventorySubsubtype: String? = nil,
-        deps: AppDependencies = AppDependencies()
+        deps: AppDependencies = .shared
     ) {
         self.stableId = stableId
         self.showQuickActions = showQuickActions

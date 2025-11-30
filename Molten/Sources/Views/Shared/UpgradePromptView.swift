@@ -62,7 +62,8 @@ struct UpgradePromptView: View {
                 VStack(spacing: 12) {
                     Button {
                         Task {
-                            dismiss()
+                            // Present paywall - don't dismiss, user can tap "Maybe Later" if needed
+                            // The paywall presents over this view and user returns here when done
                             try? await subscriptionService.presentPaywall()
                         }
                     } label: {

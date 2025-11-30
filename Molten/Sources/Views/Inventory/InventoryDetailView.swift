@@ -134,7 +134,7 @@ struct InventoryDetailView: View {
     /// Convenience init using AppDependencies
     init(
         item: CompleteInventoryItemModel,
-        deps: AppDependencies = AppDependencies(),
+        deps: AppDependencies = .shared,
         onManageInventory: (() -> Void)? = nil
     ) {
         self.item = item
@@ -440,7 +440,7 @@ struct InventoryDetailView: View {
                let _ = catalogService {
                 AddInventoryItemView(
                     prefilledNaturalKey: item.glassItem.stable_id,
-                    deps: AppDependencies()
+                    deps: .shared
                 )
             }
         }

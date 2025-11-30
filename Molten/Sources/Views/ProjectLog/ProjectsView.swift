@@ -39,7 +39,7 @@ struct ProjectsView: View, CachedDataDeletion {
     private let userImageRepository: UserImageRepository
     private let projectImageRepository: ProjectImageRepository
 
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         self.deps = deps
         self.projectPlanRepository = deps.projectRepository
         self.userImageRepository = deps.userImageRepository

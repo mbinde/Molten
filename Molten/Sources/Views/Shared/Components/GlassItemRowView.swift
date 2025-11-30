@@ -354,10 +354,15 @@ extension GlassItemRowView {
 
     /// Friend inventory-style row with quantity and location
     static func friendInventory(item: EnrichedFriendInventoryItem) -> GlassItemRowView {
+        // Format quantity without trailing .0
+        let quantityText = item.snapshot.quantity.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", item.snapshot.quantity)
+            : String(format: "%.1f", item.snapshot.quantity)
+
         let badge = AnyView(
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                 HStack(spacing: DesignSystem.Spacing.sm) {
-                    Text("\(item.snapshot.quantity, specifier: "%.1f")")
+                    Text(quantityText)
                         .font(DesignSystem.Typography.listItemCaption)
                         .fontWeight(DesignSystem.FontWeight.semibold)
                         .foregroundColor(DesignSystem.Colors.moltenTeal)

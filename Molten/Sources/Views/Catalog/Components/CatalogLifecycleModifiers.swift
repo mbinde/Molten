@@ -12,6 +12,7 @@ struct CatalogLifecycleModifiers: ViewModifier {
     @Binding var defaultSortOptionRawValue: String
     @Binding var enabledManufacturersData: Data
     @Binding var searchTitlesOnly: Bool
+    @Binding var searchScope: CatalogSearchScope
     @Binding var selectedProductTypes: Set<String>
     @Binding var sortOption: SortOption
     let viewModel: CatalogViewModel
@@ -84,7 +85,9 @@ struct CatalogLifecycleModifiers: ViewModifier {
                 enabledManufacturersData = userDefaults.data(forKey: "enabledManufacturers") ?? Data()
 
                 // Load search titles only setting (default: true)
-                searchTitlesOnly = userDefaults.bool(forKey: "searchTitlesOnly") != false  // Default to true if not set
+                let titlesOnly = userDefaults.bool(forKey: "searchTitlesOnly") != false  // Default to true if not set
+                searchTitlesOnly = titlesOnly
+                searchScope = titlesOnly ? .titlesOnly : .allFields
 
                 // Product types: empty set = show all (new behavior, no need to persist)
 

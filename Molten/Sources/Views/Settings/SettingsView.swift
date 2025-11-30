@@ -37,8 +37,8 @@ struct SettingsView: View {
     @State private var qrScanBehavior: UserSettings.QRScanBehavior = UserSettings.shared.qrScanBehavior
 
     init(
-        catalogService: CatalogService = AppDependencies().catalogService,
-        subscriptionService: SubscriptionServiceProtocol = AppDependencies().subscriptionService,
+        catalogService: CatalogService = AppDependencies.shared.catalogService,
+        subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService,
         catalogUpdateService: CatalogUpdateService? = nil
     ) {
         self.catalogService = catalogService

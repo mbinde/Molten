@@ -43,7 +43,7 @@ struct QRScanInventoryView: View {
         inventorySubtype: String? = nil,
         inventorySubsubtype: String? = nil,
         onViewDetails: @escaping () -> Void,
-        deps: AppDependencies = AppDependencies()
+        deps: AppDependencies = .shared
     ) {
         self.item = item
         self.inventoryType = inventoryType

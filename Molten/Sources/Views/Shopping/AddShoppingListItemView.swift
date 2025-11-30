@@ -36,7 +36,7 @@ struct AddShoppingListItemView: View {
     }
 
     /// Convenience init using AppDependencies
-    init(prefilledNaturalKey: String? = nil, existingItem: ItemShoppingModel? = nil, deps: AppDependencies = AppDependencies()) {
+    init(prefilledNaturalKey: String? = nil, existingItem: ItemShoppingModel? = nil, deps: AppDependencies = .shared) {
         self.prefilledNaturalKey = prefilledNaturalKey
         self.existingItem = existingItem
         self.shoppingListService = deps.shoppingListService

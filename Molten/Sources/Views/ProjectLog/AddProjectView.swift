@@ -45,7 +45,7 @@ struct AddProjectView: View {
     private let onSave: ((ProjectModel) -> Void)?
 
     init(
-        deps: AppDependencies = AppDependencies(),
+        deps: AppDependencies = .shared,
         onSave: ((ProjectModel) -> Void)? = nil
     ) {
         self.deps = deps

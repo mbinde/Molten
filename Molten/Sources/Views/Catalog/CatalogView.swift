@@ -103,7 +103,7 @@ struct CatalogView: View {
     }
 
     /// Convenience initializer - creates ViewModel with services from AppDependencies
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         let viewModel = CatalogViewModel(catalogService: deps.catalogService)
         self.init(
             viewModel: viewModel,
@@ -411,12 +411,12 @@ struct CatalogView: View {
                 case .addInventoryItem(let naturalKey):
                     AddInventoryItemView(
                         prefilledNaturalKey: naturalKey,
-                        deps: AppDependencies()
+                        deps: .shared
                     )
                 case .catalogItemDetail(let itemModel):
                     InventoryDetailView(
                         item: itemModel,
-                        deps: AppDependencies()
+                        deps: .shared
                     )
                 }
             }

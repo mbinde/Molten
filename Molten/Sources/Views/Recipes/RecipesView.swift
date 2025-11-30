@@ -18,7 +18,7 @@ struct RecipesView: View {
     @State private var searchText = ""
     @State private var showingAddRecipe = false
 
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         self.deps = deps
         self.recipeService = deps.recipeService
         self.recipeRepository = deps.recipeRepository
@@ -275,7 +275,7 @@ struct RecipeDetailView: View {
     @State private var availableGlassItems: [CompleteInventoryItemModel] = []
     @State private var isLoadingGlassItems = false
 
-    init(recipe: RecipeModel, deps: AppDependencies = AppDependencies()) {
+    init(recipe: RecipeModel, deps: AppDependencies = .shared) {
         self.recipe = recipe
         self.recipeService = deps.recipeService
         self.catalogService = deps.catalogService

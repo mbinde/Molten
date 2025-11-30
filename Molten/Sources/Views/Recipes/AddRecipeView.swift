@@ -39,7 +39,7 @@ struct AddRecipeView: View {
     }
 
     /// Convenience init using AppDependencies
-    init(deps: AppDependencies = AppDependencies(), onSave: @escaping (RecipeModel) -> Void = { _ in }) {
+    init(deps: AppDependencies = .shared, onSave: @escaping (RecipeModel) -> Void = { _ in }) {
         self.recipeService = deps.recipeService
         self.catalogService = deps.catalogService
         self.onSave = onSave

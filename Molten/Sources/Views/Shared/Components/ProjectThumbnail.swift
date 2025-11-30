@@ -44,7 +44,7 @@ struct ProjectThumbnail: View {
         projectId: UUID,
         projectCategory: ProjectCategory,
         size: CGFloat = 60,
-        deps: AppDependencies = AppDependencies()
+        deps: AppDependencies = .shared
     ) {
         self.heroImageId = heroImageId
         self.projectId = projectId

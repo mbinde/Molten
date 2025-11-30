@@ -49,7 +49,7 @@ struct AddLogbookEntryView: View {
     init(
         viewModel: AddLogbookEntryViewModel,
         logbookRepository: LogbookRepository? = nil,
-        deps: AppDependencies = AppDependencies()
+        deps: AppDependencies = .shared
     ) {
         self.viewModel = viewModel
         self.logbookRepository = logbookRepository
@@ -60,7 +60,7 @@ struct AddLogbookEntryView: View {
     // Convenience init for production use
     init(
         logbookRepository: LogbookRepository? = nil,
-        deps: AppDependencies = AppDependencies()
+        deps: AppDependencies = .shared
     ) {
         self.viewModel = AddLogbookEntryViewModel(
             logbookRepository: logbookRepository ?? deps.logbookRepository,

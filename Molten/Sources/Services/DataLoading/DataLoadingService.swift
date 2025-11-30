@@ -30,7 +30,7 @@ class DataLoadingService {
 
     private init() {
         // Use AppDependencies for shared instance (production mode for real data)
-        let deps = AppDependencies()
+        let deps = AppDependencies.shared
         self.catalogService = deps.catalogService
     }
 
@@ -40,7 +40,7 @@ class DataLoadingService {
     }
 
     /// Convenience init using AppDependencies
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         self.catalogService = deps.catalogService
     }
     
@@ -195,7 +195,7 @@ extension DataLoadingService {
 
     /// Create DataLoadingService for production
     static func createForProduction() -> DataLoadingService {
-        let deps = AppDependencies()
+        let deps = AppDependencies.shared
         return DataLoadingService(deps: deps)
     }
 }

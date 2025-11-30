@@ -61,7 +61,7 @@ struct MoltenApp: App {
             ))
         } else {
             // Production mode - real Core Data (will init in background during launch screen)
-            let prodDeps = AppDependencies()
+            let prodDeps = AppDependencies.shared
             _dependencies = State(initialValue: prodDeps)
 
             // MUST initialize subscriptionManager before calling instance methods (Swift 6 requirement)

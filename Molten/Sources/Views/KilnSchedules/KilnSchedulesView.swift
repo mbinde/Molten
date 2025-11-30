@@ -27,13 +27,13 @@ struct KilnSchedulesView: View, CachedDataDeletion {
     }
 
     // Convenience init for production use
-    init(kilnScheduleService: KilnScheduleService, deps: AppDependencies = AppDependencies()) {
+    init(kilnScheduleService: KilnScheduleService, deps: AppDependencies = .shared) {
         let viewModel = KilnSchedulesViewModel(kilnScheduleService: kilnScheduleService)
         self.init(viewModel: viewModel, kilnScheduleService: kilnScheduleService, kilnScheduleRepository: deps.kilnScheduleRepository)
     }
 
     /// Convenience init using AppDependencies
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         let service = deps.kilnScheduleService
         let viewModel = KilnSchedulesViewModel(kilnScheduleService: service)
         self.init(viewModel: viewModel, kilnScheduleService: service, kilnScheduleRepository: deps.kilnScheduleRepository)

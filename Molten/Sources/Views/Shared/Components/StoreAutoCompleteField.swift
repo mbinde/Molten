@@ -27,7 +27,7 @@ struct StoreAutoCompleteField: View {
     }
 
     /// Convenience init using AppDependencies
-    init(store: Binding<String>, deps: AppDependencies = AppDependencies()) {
+    init(store: Binding<String>, deps: AppDependencies = .shared) {
         self._store = store
         self.shoppingListRepository = deps.shoppingListRepository
         self.locationService = deps.unifiedLocationService

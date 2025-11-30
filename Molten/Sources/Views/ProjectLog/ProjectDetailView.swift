@@ -74,7 +74,7 @@ struct ProjectDetailView: View {
     private let projectService: ProjectService
     private let kilnScheduleService: KilnScheduleService
 
-    init(plan: ProjectModel, repository: ProjectRepository, startInEditMode: Bool = false, deps: AppDependencies = AppDependencies()) {
+    init(plan: ProjectModel, repository: ProjectRepository, startInEditMode: Bool = false, deps: AppDependencies = .shared) {
         self.projectId = plan.id
         self.repository = repository
         self._isNewPlan = State(initialValue: startInEditMode)  // If starting in edit mode, it's a new plan

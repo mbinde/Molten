@@ -24,7 +24,7 @@ struct DataExportView: View {
     }
 
     /// Convenience init using AppDependencies
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         self.exportService = deps.dataExportService
     }
 

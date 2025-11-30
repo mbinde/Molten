@@ -17,12 +17,12 @@ enum SearchScope: String, CaseIterable {
 struct ShoppingListView: View {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data
     @State private var viewModel: ShoppingListViewModel
+    @Environment(EntitlementService.self) private var entitlementService
     private let shoppingListService: ShoppingListService
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
     private let purchaseService: PurchaseRecordService
     private let subscriptionService: SubscriptionServiceProtocol
-    private let entitlementService: EntitlementService
     private let userNotesRepository: UserNotesRepository
     private let userTagsRepository: UserTagsRepository
     private let shoppingListRepository: ShoppingListRepository
@@ -75,7 +75,6 @@ struct ShoppingListView: View {
          inventoryTrackingService: InventoryTrackingService,
          purchaseService: PurchaseRecordService,
          subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService,
-         entitlementService: EntitlementService = AppDependencies.shared.entitlementService,
          userNotesRepository: UserNotesRepository,
          userTagsRepository: UserTagsRepository,
          shoppingListRepository: ShoppingListRepository,
@@ -88,7 +87,6 @@ struct ShoppingListView: View {
         self.inventoryTrackingService = inventoryTrackingService
         self.purchaseService = purchaseService
         self.subscriptionService = subscriptionService
-        self.entitlementService = entitlementService
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
@@ -103,7 +101,6 @@ struct ShoppingListView: View {
          inventoryTrackingService: InventoryTrackingService,
          purchaseService: PurchaseRecordService,
          subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService,
-         entitlementService: EntitlementService = AppDependencies.shared.entitlementService,
          userNotesRepository: UserNotesRepository,
          userTagsRepository: UserTagsRepository,
          shoppingListRepository: ShoppingListRepository,
@@ -115,7 +112,6 @@ struct ShoppingListView: View {
         self.inventoryTrackingService = inventoryTrackingService
         self.purchaseService = purchaseService
         self.subscriptionService = subscriptionService
-        self.entitlementService = entitlementService
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
@@ -924,6 +920,12 @@ struct ShoppingListView: View {
             .onReceive(NotificationCenter.default.publisher(for: .filterShoppingListByStore)) { notification in
                 if let storeName = notification.userInfo?["storeName"] as? String {
                     viewModel.selectedStore = storeName
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .subscriptionStatusChanged)) { _ in
+                // Refresh view when subscription changes (removes limit warnings)
+                Task {
+                    await loadShoppingList()
                 }
             }
             .alert("Keep Basket Items?", isPresented: $showingExitShoppingModeAlert) {

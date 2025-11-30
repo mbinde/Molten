@@ -35,6 +35,7 @@ struct SettingsView: View {
     @State private var thumbnailDisplayMode: UserSettings.ThumbnailDisplayMode = UserSettings.shared.thumbnailDisplayMode
     @State private var colorChipDisplayMode: UserSettings.ColorChipDisplayMode = UserSettings.shared.colorChipDisplayMode
     @State private var qrScanBehavior: UserSettings.QRScanBehavior = UserSettings.shared.qrScanBehavior
+    @State private var showingPaywall = false
 
     init(
         catalogService: CatalogService = AppDependencies.shared.catalogService,
@@ -410,22 +411,43 @@ struct SettingsView: View {
 
                 // MARK: - Subscription
                 Section("Subscription") {
-                    NavigationLink {
-                        SubscriptionStatusView(viewModel: subscriptionViewModel)
-                    } label: {
-                        HStack {
-                            Text("Manage Subscription")
-                            Spacer()
-                            Text(subscriptionBadge)
-                                .font(.caption.bold())
-                                .foregroundColor(subscriptionBadgeColor)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(subscriptionBadgeBackground)
-                                .cornerRadius(6)
+                    if subscriptionViewModel.hasProAccess {
+                        // Pro users: Navigate to management screen
+                        NavigationLink {
+                            SubscriptionStatusView(viewModel: subscriptionViewModel)
+                        } label: {
+                            HStack {
+                                Text("Manage Subscription")
+                                Spacer()
+                                Text(subscriptionBadge)
+                                    .font(.caption.bold())
+                                    .foregroundColor(subscriptionBadgeColor)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(subscriptionBadgeBackground)
+                                    .cornerRadius(6)
+                            }
                         }
+                        .accessibilityIdentifier("settings_manage_subscription")
+                    } else {
+                        // Free users: Show paywall directly (same as Inventory/Shopping)
+                        Button {
+                            showingPaywall = true
+                        } label: {
+                            HStack {
+                                Text("Upgrade to Pro")
+                                Spacer()
+                                Text(subscriptionBadge)
+                                    .font(.caption.bold())
+                                    .foregroundColor(subscriptionBadgeColor)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(subscriptionBadgeBackground)
+                                    .cornerRadius(6)
+                            }
+                        }
+                        .accessibilityIdentifier("settings_upgrade_subscription")
                     }
-                    .accessibilityIdentifier("settings_manage_subscription")
                 }
                 .task {
                     // Load subscription status when settings view appears
@@ -510,6 +532,9 @@ struct SettingsView: View {
                 #endif
             }
             .navigationTitle("Settings")
+            .sheet(isPresented: $showingPaywall) {
+                CustomPaywallView()
+            }
         }
         .preferredColorScheme(colorScheme)
     }

@@ -39,111 +39,226 @@ class AppDependencies {
 
     // MARK: - Core Dependencies
 
+    /// ✅ CRITICAL: Store the PersistenceController to prevent Core Data zombie crashes
+    /// The controller owns the NSManagedObjectModel and must stay alive for contexts to work.
     let persistenceController: PersistenceController
     let mode: RepositoryMode
 
-    var isReady: Bool { persistenceController.isReady }
-
-    // MARK: - Lazy Instance Cache
-
-    /// Generic lazy loader - creates instance on first access, caches by type
-    private var cache: [ObjectIdentifier: Any] = [:]
-
-    private func lazy<T>(_ factory: () -> T) -> T {
-        let key = ObjectIdentifier(T.self)
-        if let existing = cache[key] as? T { return existing }
-        let instance = factory()
-        cache[key] = instance
-        return instance
+    /// Returns true if Core Data is initialized and ready for use
+    /// Check this before accessing Core Data repositories in production
+    var isReady: Bool {
+        persistenceController.isReady
     }
 
-    // MARK: - SQLite Repositories (initialized eagerly - no Core Data dependency)
+    // MARK: - SQLite Repositories (always available - no Core Data dependency)
 
     let glassItemRepository: GlassItemRepository
     let coatingItemRepository: CoatingItemRepository
     let toolItemRepository: ToolItemRepository
     let itemTagsRepository: ItemTagsRepository
+
+    // MARK: - UserDefaults Repository (always available)
+
     let userPreferencesRepository: UserPreferencesRepository
 
-    // MARK: - Core Data Repositories (lazy - created after initialization)
+    // MARK: - Core Data Repository Backing Storage (lazy creation after initialization)
+
+    private var _inventoryRepository: InventoryRepository?
+    private var _storageLocationRepository: StorageLocationRepository?
+    private var _userTagsRepository: UserTagsRepository?
+    private var _userNotesRepository: UserNotesRepository?
+    private var _shoppingListRepository: ShoppingListRepository?
+    private var _itemMinimumRepository: ItemMinimumRepository?
+    private var _projectRepository: ProjectRepository?
+    private var _logbookRepository: LogbookRepository?
+    private var _purchaseRecordRepository: PurchaseRecordRepository?
+    private var _projectImageRepository: ProjectImageRepository?
+    private var _kilnScheduleRepository: KilnScheduleRepository?
+    private var _recipeRepository: RecipeRepository?
+    private var _unifiedLocationRepository: UnifiedLocationRepository?
+    private var _ratingRepository: RatingRepository?
+    private var _workspaceRepository: WorkspaceRepository?
+    private var _storageLocationDefinitionRepository: StorageLocationDefinitionRepository?
+    #if os(iOS)
+    private var _userImageRepository: UserImageRepository?
+    #endif
+
+    // MARK: - Lazy Core Data Repository Accessors
+    // These are created on first access AFTER Core Data initialization completes
+    // LaunchScreenView ensures initialization happens before any repository access
 
     var inventoryRepository: InventoryRepository {
-        lazy { CoreDataInventoryRepository(context: persistenceController.cloudContext) }
+        if let repo = _inventoryRepository { return repo }
+        let repo = CoreDataInventoryRepository(context: persistenceController.cloudContext)
+        _inventoryRepository = repo
+        return repo
     }
+
     var storageLocationRepository: StorageLocationRepository {
-        lazy { CoreDataStorageLocationRepository(context: persistenceController.cloudContext) }
+        if let repo = _storageLocationRepository { return repo }
+        let repo = CoreDataStorageLocationRepository(context: persistenceController.cloudContext)
+        _storageLocationRepository = repo
+        return repo
     }
+
     var userTagsRepository: UserTagsRepository {
-        lazy { CoreDataUserTagsRepository(context: persistenceController.cloudContext) }
+        if let repo = _userTagsRepository { return repo }
+        let repo = CoreDataUserTagsRepository(context: persistenceController.cloudContext)
+        _userTagsRepository = repo
+        return repo
     }
+
     var userNotesRepository: UserNotesRepository {
-        lazy { CoreDataUserNotesRepository(context: persistenceController.cloudContext) }
+        if let repo = _userNotesRepository { return repo }
+        let repo = CoreDataUserNotesRepository(context: persistenceController.cloudContext)
+        _userNotesRepository = repo
+        return repo
     }
+
     var shoppingListRepository: ShoppingListRepository {
-        lazy { CoreDataShoppingListRepository(context: persistenceController.cloudContext) }
+        if let repo = _shoppingListRepository { return repo }
+        let repo = CoreDataShoppingListRepository(context: persistenceController.cloudContext)
+        _shoppingListRepository = repo
+        return repo
     }
+
     var itemMinimumRepository: ItemMinimumRepository {
-        lazy { CoreDataItemMinimumRepository(context: persistenceController.cloudContext) }
+        if let repo = _itemMinimumRepository { return repo }
+        let repo = CoreDataItemMinimumRepository(context: persistenceController.cloudContext)
+        _itemMinimumRepository = repo
+        return repo
     }
+
     var projectRepository: ProjectRepository {
-        lazy { CoreDataProjectRepository(context: persistenceController.cloudContext) }
+        if let repo = _projectRepository { return repo }
+        let repo = CoreDataProjectRepository(context: persistenceController.cloudContext)
+        _projectRepository = repo
+        return repo
     }
+
     var logbookRepository: LogbookRepository {
-        lazy { CoreDataLogbookRepository(context: persistenceController.cloudContext) }
+        if let repo = _logbookRepository { return repo }
+        let repo = CoreDataLogbookRepository(context: persistenceController.cloudContext)
+        _logbookRepository = repo
+        return repo
     }
+
     var purchaseRecordRepository: PurchaseRecordRepository {
-        lazy { CoreDataPurchaseRecordRepository(context: persistenceController.cloudContext) }
+        if let repo = _purchaseRecordRepository { return repo }
+        let repo = CoreDataPurchaseRecordRepository(context: persistenceController.cloudContext)
+        _purchaseRecordRepository = repo
+        return repo
     }
+
     var projectImageRepository: ProjectImageRepository {
-        lazy { CoreDataProjectImageRepository(context: persistenceController.cloudContext) }
+        if let repo = _projectImageRepository { return repo }
+        let repo = CoreDataProjectImageRepository(context: persistenceController.cloudContext)
+        _projectImageRepository = repo
+        return repo
     }
+
     var kilnScheduleRepository: KilnScheduleRepository {
-        lazy { CoreDataKilnScheduleRepository(context: persistenceController.cloudContext) }
+        if let repo = _kilnScheduleRepository { return repo }
+        let repo = CoreDataKilnScheduleRepository(context: persistenceController.cloudContext)
+        _kilnScheduleRepository = repo
+        return repo
     }
+
     var recipeRepository: RecipeRepository {
-        lazy { CoreDataRecipeRepository(context: persistenceController.cloudContext) }
+        if let repo = _recipeRepository { return repo }
+        let repo = CoreDataRecipeRepository(context: persistenceController.cloudContext)
+        _recipeRepository = repo
+        return repo
     }
+
     var unifiedLocationRepository: UnifiedLocationRepository {
-        lazy { CoreDataUnifiedLocationRepository(persistenceController: persistenceController) }
+        if let repo = _unifiedLocationRepository { return repo }
+        let repo = CoreDataUnifiedLocationRepository(persistenceController: persistenceController)
+        _unifiedLocationRepository = repo
+        return repo
     }
+
     var ratingRepository: RatingRepository {
-        lazy { CoreDataRatingRepository(localContext: persistenceController.localContext, cloudContext: persistenceController.cloudContext) }
+        if let repo = _ratingRepository { return repo }
+        let repo = CoreDataRatingRepository(localContext: persistenceController.localContext, cloudContext: persistenceController.cloudContext)
+        _ratingRepository = repo
+        return repo
     }
+
     var workspaceRepository: WorkspaceRepository {
-        lazy { CoreDataWorkspaceRepository(context: persistenceController.cloudContext) }
+        if let repo = _workspaceRepository { return repo }
+        let repo = CoreDataWorkspaceRepository(context: persistenceController.cloudContext)
+        _workspaceRepository = repo
+        return repo
     }
+
     var storageLocationDefinitionRepository: StorageLocationDefinitionRepository {
-        lazy { CoreDataStorageLocationDefinitionRepository(context: persistenceController.cloudContext) }
+        if let repo = _storageLocationDefinitionRepository { return repo }
+        let repo = CoreDataStorageLocationDefinitionRepository(context: persistenceController.cloudContext)
+        _storageLocationDefinitionRepository = repo
+        return repo
     }
+
     #if os(iOS)
     var userImageRepository: UserImageRepository {
-        lazy { CoreDataUserImageRepository(context: persistenceController.cloudContext) }
+        if let repo = _userImageRepository { return repo }
+        let repo = CoreDataUserImageRepository(context: persistenceController.cloudContext)
+        _userImageRepository = repo
+        return repo
     }
     #endif
 
-    // MARK: - Services (lazy)
+    // MARK: - Workspace Provider
 
-    let loggingService: LoggingService
-    private let _subscriptionService: SubscriptionServiceProtocol
-    var subscriptionService: SubscriptionServiceProtocol { _subscriptionService }
-
+    /// Provides the default workspace ID, creating the workspace if needed
+    private var _defaultWorkspaceProvider: DefaultWorkspaceProvider?
     var defaultWorkspaceProvider: DefaultWorkspaceProvider {
-        lazy { DefaultWorkspaceProvider(workspaceRepository: workspaceRepository) }
+        if let provider = _defaultWorkspaceProvider {
+            return provider
+        }
+        let provider = DefaultWorkspaceProvider(workspaceRepository: workspaceRepository)
+        _defaultWorkspaceProvider = provider
+        return provider
     }
+
+    // MARK: - Services
+
+    public let loggingService: LoggingService
+    private let _subscriptionService: SubscriptionServiceProtocol
+
+    // Core services (created lazily via private backing properties)
+    private var _inventoryTrackingService: InventoryTrackingService?
     var inventoryTrackingService: InventoryTrackingService {
-        lazy { InventoryTrackingService(
+        if let service = _inventoryTrackingService {
+            return service
+        }
+        let service = InventoryTrackingService(
             glassItemRepository: glassItemRepository,
             coatingItemRepository: coatingItemRepository,
             toolItemRepository: toolItemRepository,
             inventoryRepository: inventoryRepository,
             itemTagsRepository: itemTagsRepository
-        )}
+        )
+        _inventoryTrackingService = service
+        return service
     }
+
+    private var _ratingService: RatingService?
     var ratingService: RatingService {
-        lazy { RatingService(repository: ratingRepository, logger: loggingService) }
+        if let service = _ratingService {
+            return service
+        }
+        let service = RatingService(repository: ratingRepository, logger: loggingService)
+        _ratingService = service
+        return service
     }
+
+    private var _catalogService: CatalogService?
     var catalogService: CatalogService {
-        lazy { CatalogService(
+        if let service = _catalogService {
+            return service
+        }
+        let service = CatalogService(
             glassItemRepository: glassItemRepository,
             coatingItemRepository: coatingItemRepository,
             toolItemRepository: toolItemRepository,
@@ -152,10 +267,17 @@ class AppDependencies {
             itemTagsRepository: itemTagsRepository,
             userTagsRepository: userTagsRepository,
             ratingService: ratingService
-        )}
+        )
+        _catalogService = service
+        return service
     }
+
+    private var _shoppingListService: ShoppingListService?
     var shoppingListService: ShoppingListService {
-        lazy { ShoppingListService(
+        if let service = _shoppingListService {
+            return service
+        }
+        let service = ShoppingListService(
             itemMinimumRepository: itemMinimumRepository,
             shoppingListRepository: shoppingListRepository,
             inventoryRepository: inventoryRepository,
@@ -164,86 +286,111 @@ class AppDependencies {
             toolItemRepository: toolItemRepository,
             itemTagsRepository: itemTagsRepository,
             userTagsRepository: userTagsRepository
-        )}
+        )
+        _shoppingListService = service
+        return service
     }
+
+    private var _projectService: ProjectService?
     var projectService: ProjectService {
-        lazy { ProjectService(
+        if let service = _projectService {
+            return service
+        }
+        let service = ProjectService(
             projectRepository: projectRepository,
             logbookRepository: logbookRepository,
             userTagsRepository: userTagsRepository
-        )}
+        )
+        _projectService = service
+        return service
     }
+
+    private var _purchaseRecordService: PurchaseRecordService?
     var purchaseRecordService: PurchaseRecordService {
-        lazy { PurchaseRecordService(repository: purchaseRecordRepository) }
+        if let service = _purchaseRecordService {
+            return service
+        }
+        let service = PurchaseRecordService(repository: purchaseRecordRepository)
+        _purchaseRecordService = service
+        return service
     }
+
+    private var _kilnScheduleService: KilnScheduleService?
     var kilnScheduleService: KilnScheduleService {
-        lazy { KilnScheduleService(repository: kilnScheduleRepository) }
+        if let service = _kilnScheduleService {
+            return service
+        }
+        let service = KilnScheduleService(repository: kilnScheduleRepository)
+        _kilnScheduleService = service
+        return service
     }
+
+    private var _storageLocationService: StorageLocationService?
     var storageLocationService: StorageLocationService {
-        lazy { StorageLocationService(
+        if let service = _storageLocationService {
+            return service
+        }
+        let service = StorageLocationService(
             definitionRepository: storageLocationDefinitionRepository,
             storageLocationRepository: storageLocationRepository
-        )}
+        )
+        _storageLocationService = service
+        return service
     }
+
+    private var _recipeService: RecipeService?
     var recipeService: RecipeService {
-        lazy { RecipeService(repository: recipeRepository) }
+        if let service = _recipeService {
+            return service
+        }
+        let service = RecipeService(repository: recipeRepository)
+        _recipeService = service
+        return service
     }
+
+    private var _unifiedLocationService: UnifiedLocationService?
     var unifiedLocationService: UnifiedLocationService {
-        lazy { UnifiedLocationService(repository: unifiedLocationRepository) }
+        if let service = _unifiedLocationService {
+            return service
+        }
+        let service = UnifiedLocationService(repository: unifiedLocationRepository)
+        _unifiedLocationService = service
+        return service
     }
+
+    private var _entitlementService: EntitlementService?
     var entitlementService: EntitlementService {
-        lazy { EntitlementService() }
+        if let service = _entitlementService {
+            return service
+        }
+        let service = EntitlementService()
+        _entitlementService = service
+        return service
     }
+
+    var subscriptionService: SubscriptionServiceProtocol {
+        _subscriptionService
+    }
+
+    private var _manufacturerFilterService: ManufacturerFilterService?
     var manufacturerFilterService: ManufacturerFilterService {
-        lazy { ManufacturerFilterService(
+        if let service = _manufacturerFilterService {
+            return service
+        }
+        let service = ManufacturerFilterService(
             repository: userPreferencesRepository,
             availableManufacturers: GlassManufacturers.allCodes
-        )}
+        )
+        _manufacturerFilterService = service
+        return service
     }
-    var catalogUpdateService: CatalogUpdateService {
-        lazy { CatalogUpdateService(
-            apiClient: CatalogAPIClient(),
-            storageService: try! CatalogStorageService(),
-            databaseManager: CatalogDatabaseManager.shared,
-            networkMonitor: NetworkMonitor.shared
-        )}
-    }
-    var backgroundUpdateService: BackgroundUpdateService {
-        lazy { BackgroundUpdateService(
-            updateService: catalogUpdateService,
-            networkMonitor: NetworkMonitor.shared
-        )}
-    }
-    var inventorySharingManager: InventorySharingManager {
-        lazy { InventorySharingManager(deps: self) }
-    }
-    var backupService: BackupService {
-        lazy { BackupService(inventoryRepository: inventoryRepository) }
-    }
-    #if os(iOS)
-    var dataExportService: DataExportService {
-        lazy { DataExportService(
-            catalogService: catalogService,
-            inventoryService: inventoryTrackingService,
-            projectRepository: projectRepository,
-            logbookRepository: logbookRepository,
-            purchaseRecordRepository: purchaseRecordRepository,
-            userNotesRepository: userNotesRepository,
-            userImageRepository: userImageRepository
-        )}
-    }
-    #else
-    var dataExportService: DataExportService {
-        lazy { DataExportService(
-            catalogService: catalogService,
-            inventoryService: inventoryTrackingService,
-            projectRepository: projectRepository,
-            logbookRepository: logbookRepository,
-            purchaseRecordRepository: purchaseRecordRepository,
-            userNotesRepository: userNotesRepository
-        )}
-    }
-    #endif
+
+    // Background services (created lazily)
+    private var _catalogUpdateService: CatalogUpdateService?
+    private var _backgroundUpdateService: BackgroundUpdateService?
+    private var _dataExportService: DataExportService?
+    private var _inventorySharingManager: InventorySharingManager?
+    private var _backupService: BackupService?
 
     // MARK: - Initialization
 
@@ -324,6 +471,89 @@ class AppDependencies {
         }
     }
 
+    // MARK: - Lazy Services
+
+    /// Catalog update service (created lazily)
+    var catalogUpdateService: CatalogUpdateService {
+        if let service = _catalogUpdateService {
+            return service
+        }
+        let service = CatalogUpdateService(
+            apiClient: CatalogAPIClient(),
+            storageService: try! CatalogStorageService(),
+            databaseManager: CatalogDatabaseManager.shared,
+            networkMonitor: NetworkMonitor.shared
+        )
+        _catalogUpdateService = service
+        return service
+    }
+
+    /// Background update service (created lazily)
+    var backgroundUpdateService: BackgroundUpdateService {
+        if let service = _backgroundUpdateService {
+            return service
+        }
+        let service = BackgroundUpdateService(
+            updateService: catalogUpdateService,
+            networkMonitor: NetworkMonitor.shared
+        )
+        _backgroundUpdateService = service
+        return service
+    }
+
+    /// Data export service (created lazily)
+    var dataExportService: DataExportService {
+        if let service = _dataExportService {
+            return service
+        }
+        #if os(iOS)
+        let service = DataExportService(
+            catalogService: catalogService,
+            inventoryService: inventoryTrackingService,
+            projectRepository: projectRepository,
+            logbookRepository: logbookRepository,
+            purchaseRecordRepository: purchaseRecordRepository,
+            userNotesRepository: userNotesRepository,
+            userImageRepository: userImageRepository
+        )
+        #else
+        let service = DataExportService(
+            catalogService: catalogService,
+            inventoryService: inventoryTrackingService,
+            projectRepository: projectRepository,
+            logbookRepository: logbookRepository,
+            purchaseRecordRepository: purchaseRecordRepository,
+            userNotesRepository: userNotesRepository
+        )
+        #endif
+        _dataExportService = service
+        return service
+    }
+
+    /// Inventory sharing manager (created lazily)
+    var inventorySharingManager: InventorySharingManager {
+        if let manager = _inventorySharingManager {
+            return manager
+        }
+
+        // Use the convenience init which handles all the setup
+        let manager = InventorySharingManager(deps: self)
+
+        _inventorySharingManager = manager
+        return manager
+    }
+
+    /// Backup service (created lazily)
+    var backupService: BackupService {
+        if let service = _backupService {
+            return service
+        }
+        let service = BackupService(
+            inventoryRepository: inventoryRepository
+        )
+        _backupService = service
+        return service
+    }
 }
 
 // MARK: - Environment Key

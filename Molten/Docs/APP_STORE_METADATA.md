@@ -17,7 +17,7 @@ glass,inventory,lampwork,flamework,fusing,blowing,hotshop,casting,studio,artist,
 
 ## Promotional Text (170 chars, can be updated without review)
 ```
-Track 3,000+ glass colors and coatings from 20+ manufacturers. Manage your inventory, build shopping lists, find local suppliers, and sync across all your devices.
+Track 3,000+ glass colors and coatings from 25+ manufacturers. Manage your inventory, build shopping lists, find local suppliers, and sync across all your devices.
 ```
 (166 characters)
 
@@ -26,7 +26,7 @@ Track 3,000+ glass colors and coatings from 20+ manufacturers. Manage your inven
 Molten is the complete inventory management app for glass artists. Whether you work with hot glass, torchwork, or kiln fusing, Molten helps you track your materials, plan shopping trips, and find suppliers—all from your iPhone or iPad.
 
 COMPREHENSIVE CATALOG
-Browse over 3,000 glass colors and coatings from more than 20 manufacturers including Bullseye, Effetre, Double Helix, Glass Alchemy, Northstar, Creation is Messy, and more. Full COE coverage from 33 to 104.
+Browse over 3,000 glass colors and coatings from more than 25 manufacturers including Bullseye, Effetre, Double Helix, Glass Alchemy, Northstar, Creation is Messy, and more. Full COE coverage from 33 to 104.
 
 • Detailed product information for every item
 • Add your own photos and personal notes
@@ -44,7 +44,7 @@ Know exactly what you have and where it's stored.
 LABEL PRINTING WITH QR CODES
 Organize your studio with professional printed labels.
 
-• Choose from 50+ label templates for any label sheet
+• Choose from 300+ label templates for any label sheet
 • Fully customizable layouts and content
 • Include QR codes that open directly in the app
 • Scan to instantly view glass details or update inventory
@@ -105,7 +105,7 @@ Questions or feedback? Contact us at info@moltenglass.app
 4+
 
 ## Copyright
-2025 [Your Name or Business]
+2025 Motley Woods
 
 ## Support URL
 https://moltenglass.app/contact

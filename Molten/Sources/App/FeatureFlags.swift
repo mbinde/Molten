@@ -69,10 +69,6 @@ enum FeatureFlags {
     /// Set to false to ship with bundled catalog only
     nonisolated static let ENABLE_CATALOG_UPDATES = true
 
-    /// Controls whether ratings are shown in catalog/inventory
-    /// Set to false to hide star ratings feature for launch
-    nonisolated static let ENABLE_RATINGS = false
-
     // MARK: - Free Tier Limits
 
     /// Maximum number of distinct glass items allowed in inventory for free tier

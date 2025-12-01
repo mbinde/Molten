@@ -81,68 +81,68 @@ final class ScreenshotAutomation: XCTestCase {
         // 2. Glass Detail - Rich Information
         print("2️⃣ Hero: Glass Detail View")
         ensureOnCatalog()
-        // Search for Black Lagoon Glass
         if activateSearch() {
             app.searchFields.firstMatch.typeText("Blue Flamb")
             waitForContentToLoad(seconds: 2)
-
-            // Tap on first search result
             let searchResultCells = app.cells
             if searchResultCells.count > 0 {
-                searchResultCells.firstMatch.tap()
-                waitForContentToLoad(seconds: 2)
-                // Scroll to show more specifications
-                app.swipeUp()
-                sleep(1)
-                takeScreenshot(named: "hero-glass-detail", subdirectory: "website", delay: 0.5)
-                navigateBack()
+                // IMPORTANT: Clear search BEFORE tapping result, while Cancel is still visible
                 clearSearch()
+                // Reactivate search and tap result
+                if activateSearch() {
+                    app.searchFields.firstMatch.typeText("Blue Flamb")
+                    waitForContentToLoad(seconds: 2)
+                    app.cells.firstMatch.tap()
+                    waitForContentToLoad(seconds: 2)
+                    app.swipeUp()
+                    sleep(1)
+                    takeScreenshot(named: "hero-glass-detail", subdirectory: "website", delay: 0.5)
+                    navigateBack()
+                }
             } else {
                 print("   ⚠️ SKIPPED: No search results for 'Blue Flamb'")
                 clearSearch()
             }
-        } else {
-            print("   ⚠️ SKIPPED: Could not activate search")
         }
+        // Reset by double-tapping Catalog tab
+        app.buttons["Catalog"].tap()
+        sleep(1)
 
-        // 2b. Glass Detail with Manufacturer Info (Maleficent Flake Holographic)
-        print("2️⃣b Glass Detail: Manufacturer Info (Maleficent Flake Holographic)")
+        // 2b. Glass Detail with Manufacturer Info
+        print("2️⃣b Glass Detail: Manufacturer Info")
         ensureOnCatalog()
-        // Search for Maleficent Flake Holographic
         if activateSearch() {
-            app.searchFields.firstMatch.typeText("Maleficent Flake Holographic")
+            app.searchFields.firstMatch.typeText("Maleficent Flake")
             waitForContentToLoad(seconds: 2)
-            // Tap on the search result
             let searchResultCells = app.cells
-            print("   📊 DEBUG: searchResultCells.count = \(searchResultCells.count)")
             if searchResultCells.count > 0 {
-                searchResultCells.firstMatch.tap()
-                waitForContentToLoad(seconds: 2)
-                // Look for and tap Manufacturer tab if it exists
-                print("   📊 DEBUG: Manufacturer button exists = \(app.buttons["Manufacturer"].exists)")
-                print("   📊 DEBUG: About button exists = \(app.buttons["About"].exists)")
-                print("   📊 DEBUG: Info button exists = \(app.buttons["Info"].exists)")
-                if app.buttons["Manufacturer"].exists {
-                    app.buttons["Manufacturer"].tap()
+                // Clear search first while Cancel visible
+                clearSearch()
+                // Reactivate and tap
+                if activateSearch() {
+                    app.searchFields.firstMatch.typeText("Maleficent Flake")
+                    waitForContentToLoad(seconds: 2)
+                    app.cells.firstMatch.tap()
+                    waitForContentToLoad(seconds: 2)
+                    if app.buttons["Manufacturer"].exists {
+                        app.buttons["Manufacturer"].tap()
+                    } else if app.buttons["About"].exists {
+                        app.buttons["About"].tap()
+                    } else if app.buttons["Info"].exists {
+                        app.buttons["Info"].tap()
+                    }
                     sleep(1)
-                } else if app.buttons["About"].exists {
-                    app.buttons["About"].tap()
-                    sleep(1)
-                } else if app.buttons["Info"].exists {
-                    app.buttons["Info"].tap()
-                    sleep(1)
+                    takeScreenshot(named: "feature-glass-detail-manufacturer", subdirectory: "website", delay: 0.5)
+                    navigateBack()
                 }
-                // Take screenshot showing manufacturer info
-                takeScreenshot(named: "feature-glass-detail-manufacturer", subdirectory: "website", delay: 0.5)
-                navigateBack()
-                waitForContentToLoad()
             } else {
-                print("   ⚠️ SKIPPED: No search results for 'Maleficent Flake Holographic'")
+                print("   ⚠️ SKIPPED: No search results")
+                clearSearch()
             }
-            clearSearch()
-        } else {
-            print("   ⚠️ SKIPPED: Could not activate search")
         }
+        // Reset by double-tapping Catalog tab
+        app.buttons["Catalog"].tap()
+        sleep(1)
 
         // CORE FEATURES
 
@@ -154,12 +154,6 @@ final class ScreenshotAutomation: XCTestCase {
             waitForContentToLoad()
             takeScreenshot(named: "feature-search-active", subdirectory: "website", delay: 0.5)
             clearSearch()
-
-            // FORCE dismiss keyboard by tapping Catalog tab twice
-            app.buttons["Catalog"].tap()
-            sleep(1)
-            app.buttons["Catalog"].tap()
-            sleep(1)
         }
 
         // 4b. Color/Tag Filter Results
@@ -169,17 +163,15 @@ final class ScreenshotAutomation: XCTestCase {
 
         // 5. Inventory Management - Track Your Stock
         print("5️⃣ Feature: Inventory List")
-
-        // Go to Shopping first to "reset" keyboard state from catalog search
-        navigateToTab("Shopping")
+        // Double-tap Catalog to fully reset search state before going to Inventory
+        app.buttons["Catalog"].tap()
+        sleep(1)
+        app.buttons["Catalog"].tap()
         sleep(1)
 
-        // Now navigate to Inventory - keyboard should not auto-appear
         navigateToTab("Inventory")
         waitForContentToLoad()
-
         print("   📊 DEBUG: Keyboard exists = \(app.keyboards.element.exists)")
-
         takeScreenshot(named: "feature-inventory-list", subdirectory: "website", delay: 0.5)
 
         // 6. Inventory Detail - Complete Tracking
@@ -490,7 +482,7 @@ final class ScreenshotAutomation: XCTestCase {
         // "Find exactly what you need with powerful search & filters"
         print("2️⃣ App Store: Search & Filter")
         if activateSearch() {
-            app.searchFields.firstMatch.typeText("blue")
+            app.searchFields.firstMatch.typeText("black")
             waitForContentToLoad()
             takeScreenshot(named: "AppStore-02-Find", subdirectory: "appstore", delay: 0.5)
             clearSearch()
@@ -516,19 +508,46 @@ final class ScreenshotAutomation: XCTestCase {
         // Try to show label printing OR detailed inventory view
         navigateToTab("Inventory")
         waitForContentToLoad()
-        if app.buttons["Print Labels"].exists {
-            app.buttons["Print Labels"].tap()
-            waitForContentToLoad(seconds: 2)
-            takeScreenshot(named: "AppStore-05-Professional", subdirectory: "appstore", delay: 0.5)
-            dismissModal()
-        } else if app.tables.cells.count > 0 {
-            // Fall back to inventory detail view
-            app.tables.cells.firstMatch.tap()
-            waitForContentToLoad(seconds: 2)
-            app.swipeUp()
+
+        // Print Labels is in the ellipsis menu (same as website screenshots)
+        let menuButton = app.buttons["inventory_menu"]
+        if menuButton.waitForExistence(timeout: 5) && menuButton.isHittable {
+            menuButton.tap()
             sleep(1)
-            takeScreenshot(named: "AppStore-05-Professional", subdirectory: "appstore", delay: 0.5)
-            navigateBack()
+            let printLabelsButton = app.buttons["inventory_menu_print_labels"]
+            if printLabelsButton.waitForExistence(timeout: 3) && printLabelsButton.isHittable {
+                printLabelsButton.tap()
+                waitForContentToLoad(seconds: 2)
+                takeScreenshot(named: "AppStore-05-Professional", subdirectory: "appstore", delay: 0.5)
+                dismissModal()
+            } else {
+                print("   ⚠️ Print Labels menu item not found, falling back to inventory detail")
+                // Dismiss menu first
+                app.tap()
+                sleep(1)
+                // Fall back to inventory detail view
+                let inventoryCells = app.cells
+                if inventoryCells.count > 0 && inventoryCells.firstMatch.isHittable {
+                    inventoryCells.firstMatch.tap()
+                    waitForContentToLoad(seconds: 2)
+                    app.swipeUp()
+                    sleep(1)
+                    takeScreenshot(named: "AppStore-05-Professional", subdirectory: "appstore", delay: 0.5)
+                    navigateBack()
+                }
+            }
+        } else {
+            print("   ⚠️ Inventory menu not found, falling back to inventory detail")
+            // Fall back to inventory detail view
+            let inventoryCells = app.cells
+            if inventoryCells.count > 0 && inventoryCells.firstMatch.isHittable {
+                inventoryCells.firstMatch.tap()
+                waitForContentToLoad(seconds: 2)
+                app.swipeUp()
+                sleep(1)
+                takeScreenshot(named: "AppStore-05-Professional", subdirectory: "appstore", delay: 0.5)
+                navigateBack()
+            }
         }
 
         print("\n✅ App Store screenshots complete! (5 total)")
@@ -656,38 +675,57 @@ final class ScreenshotAutomation: XCTestCase {
         return false
     }
 
-    /// Clear search field
+    /// Clear search field and fully dismiss search state
     private func clearSearch() {
-        // Dismiss keyboard first
-        if app.keyboards.buttons["Return"].exists {
-            app.keyboards.buttons["Return"].tap()
-            usleep(500_000) // 0.5 seconds
-        } else if app.keyboards.buttons["return"].exists {
-            app.keyboards.buttons["return"].tap()
-            usleep(500_000) // 0.5 seconds
-        } else {
-            app.swipeDown()
-            usleep(500_000) // 0.5 seconds
+        print("   🔍 clearSearch() called")
+        print("   🔍 Cancel button exists = \(app.buttons["Cancel"].exists)")
+        // Debug: print all button labels
+        let allButtons = app.buttons.allElementsBoundByIndex
+        print("   🔍 All buttons (\(allButtons.count)):")
+        for (index, button) in allButtons.prefix(20).enumerated() {
+            print("      [\(index)] label='\(button.label)' id='\(button.identifier)'")
         }
 
-        // Try standard clear button
-        if app.buttons["Clear text"].exists {
-            app.buttons["Clear text"].tap()
+        // First priority: Tap Cancel button to exit search mode entirely
+        // This is the cleanest way to dismiss .searchable
+        if app.buttons["Cancel"].exists && app.buttons["Cancel"].isHittable {
+            print("   🔍 Tapping Cancel button...")
+            app.buttons["Cancel"].tap()
             sleep(1)
             return
         }
 
-        // Try X button
+        // Second: Try pressing Search/Return key to submit and dismiss keyboard
+        if app.keyboards.element.exists {
+            if app.keyboards.buttons["Search"].exists {
+                app.keyboards.buttons["Search"].tap()
+                sleep(1)
+            } else if app.keyboards.buttons["Return"].exists {
+                app.keyboards.buttons["Return"].tap()
+                sleep(1)
+            } else if app.keyboards.buttons["return"].exists {
+                app.keyboards.buttons["return"].tap()
+                sleep(1)
+            }
+        }
+
+        // Third: Try X/clear buttons to clear text
+        if app.buttons["Clear text"].exists {
+            app.buttons["Clear text"].tap()
+            sleep(1)
+        }
+
         let clearButtons = app.buttons.matching(identifier: "xmark.circle.fill")
         if clearButtons.count > 0 {
             clearButtons.firstMatch.tap()
             sleep(1)
-            return
         }
 
-        // Try Cancel
-        if app.buttons["Cancel"].exists {
-            app.buttons["Cancel"].tap()
+        // Finally: Tap somewhere else to ensure we exit search focus
+        // Tap the navigation bar title area
+        let navBar = app.navigationBars.firstMatch
+        if navBar.exists {
+            navBar.tap()
             sleep(1)
         }
     }

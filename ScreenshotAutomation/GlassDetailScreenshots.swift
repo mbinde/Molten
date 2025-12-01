@@ -19,12 +19,12 @@ final class GlassDetailScreenshots: XCTestCase {
     private let glassItems: [(searchTerm: String, filename: String)] = [
         ("Blue Flambé", "blue-flambe"),
         ("Maleficent Flake Holographic", "maleficent-flake-holographic"),
-        ("Caribbean Blue Bullseye", "caribbean-blue-bullseye"),
+        ("AUTUMN: Orange", "autumn-orange-bullseye"),
         ("Atlas 2", "atlas-2"),
         ("Green Petroleum Filigrana", "green-petroleum-filigrana"),
         ("Unicorn Tears", "unicorn-tears"),
         ("Transitional Rose Quartz", "transitional-rose-quartz"),
-        ("Black Iridescent Opalescent Oceanside", "black-iridescent-opalescent-oceanside"),
+        ("Black Iridescent Opalescent", "black-iridescent-opalescent-oceanside"),
         ("Yellow (A)", "yellow-a"),
     ]
 
@@ -78,8 +78,26 @@ final class GlassDetailScreenshots: XCTestCase {
 
             // Search for the item
             if activateSearch() {
+                let searchField = app.searchFields.firstMatch
+
+                // Try to clear existing text by tapping the clear button (X) in search field
+                let clearButton = app.buttons["Clear text"]
+                if clearButton.exists && clearButton.isHittable {
+                    clearButton.tap()
+                    sleep(1)
+                } else {
+                    // Fallback: try other clear button identifiers
+                    let clearButtonAlt = searchField.buttons.firstMatch
+                    if clearButtonAlt.exists && clearButtonAlt.isHittable {
+                        clearButtonAlt.tap()
+                        sleep(1)
+                    }
+                }
+
                 // Type search term
-                app.searchFields.firstMatch.typeText(item.searchTerm)
+                searchField.tap()
+                sleep(1)
+                searchField.typeText(item.searchTerm)
                 sleep(2)
 
                 // Check if we got results

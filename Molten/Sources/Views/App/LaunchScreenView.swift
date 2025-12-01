@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreData
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -60,6 +61,12 @@ struct LaunchScreenView: View {
             isComplete = true
             return
         }
+
+        // Configure viewContext for CloudKit auto-merge (must be done on main thread after initialization)
+        let viewContext = PersistenceController.shared.container.viewContext
+        viewContext.automaticallyMergesChangesFromParent = true
+        viewContext.mergePolicy = NSMergePolicy.mergeByPropertyStoreTrump
+        print("✅ viewContext configured for CloudKit sync")
 
         // Check for screenshot mode reset flag
         let isScreenshotMode = ProcessInfo.processInfo.arguments.contains("-ResetForScreenshots")

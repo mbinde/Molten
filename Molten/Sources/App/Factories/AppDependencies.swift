@@ -67,36 +67,168 @@ class AppDependencies {
     let persistenceController: PersistenceController
     let mode: RepositoryMode
 
-    /// Store contexts extracted from persistenceController
-    /// These maintain strong references to contexts which in turn reference the model
-    private let localContext: NSManagedObjectContext
-    private let cloudContext: NSManagedObjectContext
+    /// Returns true if Core Data is initialized and ready for use
+    /// Check this before accessing Core Data repositories in production
+    var isReady: Bool {
+        persistenceController.isReady
+    }
 
-    // MARK: - Repositories
+    // MARK: - SQLite Repositories (always available - no Core Data dependency)
 
     let glassItemRepository: GlassItemRepository
     let coatingItemRepository: CoatingItemRepository
     let toolItemRepository: ToolItemRepository
-    let inventoryRepository: InventoryRepository
-    let storageLocationRepository: StorageLocationRepository
     let itemTagsRepository: ItemTagsRepository
-    let userTagsRepository: UserTagsRepository
-    let userNotesRepository: UserNotesRepository
-    let shoppingListRepository: ShoppingListRepository
-    let itemMinimumRepository: ItemMinimumRepository
-    let projectRepository: ProjectRepository
-    let logbookRepository: LogbookRepository
-    let purchaseRecordRepository: PurchaseRecordRepository
-    let projectImageRepository: ProjectImageRepository
-    let kilnScheduleRepository: KilnScheduleRepository
-    let recipeRepository: RecipeRepository
-    let unifiedLocationRepository: UnifiedLocationRepository
-    let ratingRepository: RatingRepository
+
+    // MARK: - UserDefaults Repository (always available)
+
     let userPreferencesRepository: UserPreferencesRepository
-    let workspaceRepository: WorkspaceRepository
-    let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
+
+    // MARK: - Core Data Repository Backing Storage (lazy creation after initialization)
+
+    private var _inventoryRepository: InventoryRepository?
+    private var _storageLocationRepository: StorageLocationRepository?
+    private var _userTagsRepository: UserTagsRepository?
+    private var _userNotesRepository: UserNotesRepository?
+    private var _shoppingListRepository: ShoppingListRepository?
+    private var _itemMinimumRepository: ItemMinimumRepository?
+    private var _projectRepository: ProjectRepository?
+    private var _logbookRepository: LogbookRepository?
+    private var _purchaseRecordRepository: PurchaseRecordRepository?
+    private var _projectImageRepository: ProjectImageRepository?
+    private var _kilnScheduleRepository: KilnScheduleRepository?
+    private var _recipeRepository: RecipeRepository?
+    private var _unifiedLocationRepository: UnifiedLocationRepository?
+    private var _ratingRepository: RatingRepository?
+    private var _workspaceRepository: WorkspaceRepository?
+    private var _storageLocationDefinitionRepository: StorageLocationDefinitionRepository?
     #if os(iOS)
-    let userImageRepository: UserImageRepository
+    private var _userImageRepository: UserImageRepository?
+    #endif
+
+    // MARK: - Lazy Core Data Repository Accessors
+    // These are created on first access AFTER Core Data initialization completes
+    // LaunchScreenView ensures initialization happens before any repository access
+
+    var inventoryRepository: InventoryRepository {
+        if let repo = _inventoryRepository { return repo }
+        let repo = CoreDataInventoryRepository(context: persistenceController.cloudContext)
+        _inventoryRepository = repo
+        return repo
+    }
+
+    var storageLocationRepository: StorageLocationRepository {
+        if let repo = _storageLocationRepository { return repo }
+        let repo = CoreDataStorageLocationRepository(context: persistenceController.cloudContext)
+        _storageLocationRepository = repo
+        return repo
+    }
+
+    var userTagsRepository: UserTagsRepository {
+        if let repo = _userTagsRepository { return repo }
+        let repo = CoreDataUserTagsRepository(context: persistenceController.cloudContext)
+        _userTagsRepository = repo
+        return repo
+    }
+
+    var userNotesRepository: UserNotesRepository {
+        if let repo = _userNotesRepository { return repo }
+        let repo = CoreDataUserNotesRepository(context: persistenceController.cloudContext)
+        _userNotesRepository = repo
+        return repo
+    }
+
+    var shoppingListRepository: ShoppingListRepository {
+        if let repo = _shoppingListRepository { return repo }
+        let repo = CoreDataShoppingListRepository(context: persistenceController.cloudContext)
+        _shoppingListRepository = repo
+        return repo
+    }
+
+    var itemMinimumRepository: ItemMinimumRepository {
+        if let repo = _itemMinimumRepository { return repo }
+        let repo = CoreDataItemMinimumRepository(context: persistenceController.cloudContext)
+        _itemMinimumRepository = repo
+        return repo
+    }
+
+    var projectRepository: ProjectRepository {
+        if let repo = _projectRepository { return repo }
+        let repo = CoreDataProjectRepository(context: persistenceController.cloudContext)
+        _projectRepository = repo
+        return repo
+    }
+
+    var logbookRepository: LogbookRepository {
+        if let repo = _logbookRepository { return repo }
+        let repo = CoreDataLogbookRepository(context: persistenceController.cloudContext)
+        _logbookRepository = repo
+        return repo
+    }
+
+    var purchaseRecordRepository: PurchaseRecordRepository {
+        if let repo = _purchaseRecordRepository { return repo }
+        let repo = CoreDataPurchaseRecordRepository(context: persistenceController.cloudContext)
+        _purchaseRecordRepository = repo
+        return repo
+    }
+
+    var projectImageRepository: ProjectImageRepository {
+        if let repo = _projectImageRepository { return repo }
+        let repo = CoreDataProjectImageRepository(context: persistenceController.cloudContext)
+        _projectImageRepository = repo
+        return repo
+    }
+
+    var kilnScheduleRepository: KilnScheduleRepository {
+        if let repo = _kilnScheduleRepository { return repo }
+        let repo = CoreDataKilnScheduleRepository(context: persistenceController.cloudContext)
+        _kilnScheduleRepository = repo
+        return repo
+    }
+
+    var recipeRepository: RecipeRepository {
+        if let repo = _recipeRepository { return repo }
+        let repo = CoreDataRecipeRepository(context: persistenceController.cloudContext)
+        _recipeRepository = repo
+        return repo
+    }
+
+    var unifiedLocationRepository: UnifiedLocationRepository {
+        if let repo = _unifiedLocationRepository { return repo }
+        let repo = CoreDataUnifiedLocationRepository(persistenceController: persistenceController)
+        _unifiedLocationRepository = repo
+        return repo
+    }
+
+    var ratingRepository: RatingRepository {
+        if let repo = _ratingRepository { return repo }
+        let repo = CoreDataRatingRepository(localContext: persistenceController.localContext, cloudContext: persistenceController.cloudContext)
+        _ratingRepository = repo
+        return repo
+    }
+
+    var workspaceRepository: WorkspaceRepository {
+        if let repo = _workspaceRepository { return repo }
+        let repo = CoreDataWorkspaceRepository(context: persistenceController.cloudContext)
+        _workspaceRepository = repo
+        return repo
+    }
+
+    var storageLocationDefinitionRepository: StorageLocationDefinitionRepository {
+        if let repo = _storageLocationDefinitionRepository { return repo }
+        let repo = CoreDataStorageLocationDefinitionRepository(context: persistenceController.cloudContext)
+        _storageLocationDefinitionRepository = repo
+        return repo
+    }
+
+    #if os(iOS)
+    var userImageRepository: UserImageRepository {
+        if let repo = _userImageRepository { return repo }
+        let repo = CoreDataUserImageRepository(context: persistenceController.cloudContext)
+        _userImageRepository = repo
+        return repo
+    }
     #endif
 
     // MARK: - Workspace Provider
@@ -287,6 +419,11 @@ class AppDependencies {
 
     /// Initialize with custom or default persistence controller
     /// - Parameter persistenceController: Optional persistence controller (defaults to shared production controller)
+    ///
+    /// IMPORTANT: This initializer does NOT block waiting for Core Data initialization!
+    /// Core Data repositories are created lazily on first access.
+    /// LaunchScreenView is responsible for calling PersistenceController.shared.initialize()
+    /// before any Core Data repositories are accessed.
     init(persistenceController: PersistenceController = PersistenceController.shared) {
         self.persistenceController = persistenceController
 
@@ -295,47 +432,7 @@ class AppDependencies {
         let isInMemory = persistenceController.container.persistentStoreDescriptions.first?.url?.path.contains("/dev/null") ?? false
         self.mode = isInMemory ? .mock : .coreData
 
-        // Initialize persistence controller if not already initialized (production only)
-        if self.mode == .coreData && !persistenceController.isReady {
-            print("🔧 AppDependencies: Core Data not ready, starting initialization...")
-            // Need to initialize - use a semaphore to wait for async init
-            let semaphore = DispatchSemaphore(value: 0)
-            Task.detached(priority: .userInitiated) {
-                print("🔧 AppDependencies: Task.detached started")
-                print("🔧 AppDependencies: About to access PersistenceController.shared")
-                let controller = PersistenceController.shared
-                print("🔧 AppDependencies: Got controller, about to call initialize()")
-                await controller.initialize()
-                print("🔧 AppDependencies: initialize() completed, signaling semaphore")
-                semaphore.signal()
-            }
-            print("🔧 AppDependencies: Waiting for semaphore...")
-            let result = semaphore.wait(timeout: .now() + .seconds(30))
-
-            // If initialization timed out, we cannot safely continue
-            if result == .timedOut {
-                fatalError("Core Data initialization timed out after 30 seconds. Cannot proceed without valid persistence layer.")
-            }
-
-            // Verify initialization actually succeeded
-            guard persistenceController.isReady else {
-                fatalError("Core Data initialization completed but persistence controller is not ready. Check initialization logic.")
-            }
-
-            // Configure viewContext for CloudKit auto-merge on main thread
-            // This must happen after initialization but on main thread to avoid deadlock
-            Task { @MainActor in
-                persistenceController.container.viewContext.automaticallyMergesChangesFromParent = true
-                persistenceController.container.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyStoreTrump
-            }
-        }
-
-        // Extract and store contexts from persistenceController
-        // Both persistenceController AND contexts are retained to ensure model stays alive
-        self.localContext = persistenceController.localContext
-        self.cloudContext = persistenceController.cloudContext
-
-        // Create repositories (catalog data from bundled SQLite, user data from cloud store)
+        // Create SQLite repositories (catalog data - no Core Data dependency)
         // Both production and tests use SQLite for catalog data (read-only)
         if self.mode == .mock {
             // Tests: Use bundled SQLite database directly (no Documents copy)
@@ -357,34 +454,19 @@ class AppDependencies {
             self.coatingItemRepository = SQLiteCoatingItemRepository(databaseManager: CatalogDatabaseManager.shared)
             self.toolItemRepository = SQLiteToolItemRepository(databaseManager: CatalogDatabaseManager.shared)
         }
-        self.inventoryRepository = CoreDataInventoryRepository(context: self.cloudContext)
-        self.storageLocationRepository = CoreDataStorageLocationRepository(context: self.cloudContext)
-        self.userTagsRepository = CoreDataUserTagsRepository(context: self.cloudContext)
-        self.userNotesRepository = CoreDataUserNotesRepository(context: self.cloudContext)
-        self.shoppingListRepository = CoreDataShoppingListRepository(context: self.cloudContext)
-        self.itemMinimumRepository = CoreDataItemMinimumRepository(context: self.cloudContext)
-        self.projectRepository = CoreDataProjectRepository(context: self.cloudContext)
-        self.logbookRepository = CoreDataLogbookRepository(context: self.cloudContext)
-        self.purchaseRecordRepository = CoreDataPurchaseRecordRepository(context: self.cloudContext)
-        self.projectImageRepository = CoreDataProjectImageRepository(context: self.cloudContext)
-        self.kilnScheduleRepository = CoreDataKilnScheduleRepository(context: self.cloudContext)
-        self.recipeRepository = CoreDataRecipeRepository(context: self.cloudContext)
-        self.unifiedLocationRepository = CoreDataUnifiedLocationRepository(persistenceController: persistenceController)
-        self.ratingRepository = CoreDataRatingRepository(localContext: self.localContext, cloudContext: self.cloudContext)
-        self.userPreferencesRepository = UserDefaultsPreferencesRepository()
-        self.workspaceRepository = CoreDataWorkspaceRepository(context: self.cloudContext)
-        self.storageLocationDefinitionRepository = CoreDataStorageLocationDefinitionRepository(context: self.cloudContext)
-        #if os(iOS)
-        self.userImageRepository = CoreDataUserImageRepository(context: self.cloudContext)
-        #endif
 
-        // Create logging service first (needed by other services)
+        // UserDefaults repository (no Core Data dependency)
+        self.userPreferencesRepository = UserDefaultsPreferencesRepository()
+
+        // Create logging service (needed by other services)
         self.loggingService = Self.createLoggingService(isTestMode: self.mode == .mock)
 
         // Create subscription service (not lazy because it's passed through)
         self._subscriptionService = RevenueCatSubscriptionService()
 
-        // All other services are created lazily when first accessed
+        // All Core Data repositories are created lazily when first accessed
+        // This allows the app to start immediately without blocking for Core Data initialization
+        // LaunchScreenView will call PersistenceController.shared.initialize() before any access
     }
 
     // MARK: - Service Setup Helper

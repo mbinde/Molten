@@ -43,8 +43,14 @@ struct PerformanceTitleModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         #if DEBUG
-        content
-            .navigationTitle(navigationTitleWithTiming)
+        // Hide performance timing during screenshot/UI test runs
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("UI-Testing")
+
+        if isUITesting {
+            content.navigationTitle(title)
+        } else {
+            content.navigationTitle(navigationTitleWithTiming)
+        }
         #else
         content
             .navigationTitle(title)

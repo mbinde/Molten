@@ -4,7 +4,7 @@
       "id" : "B2C3D4E5-F6A7-4890-BCDE-F01234567890",
       "name" : "Configuration 1",
       "options" : {
-
+        "buildConfiguration" : "Release"
       }
     }
   ],

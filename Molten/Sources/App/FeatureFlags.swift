@@ -50,6 +50,11 @@ enum FeatureFlags {
     /// IMPLEMENTED: Tab visibility
     nonisolated static let ENABLE_RECIPES = false
 
+    /// Controls whether the Ratings feature is enabled
+    /// Set to false to disable ratings management for launch
+    /// IMPLEMENTED: Settings menu visibility
+    nonisolated static let ENABLE_RATINGS = false
+
     // MARK: - Advanced Features
 
     /// Controls whether data export functionality is enabled

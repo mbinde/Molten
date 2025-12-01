@@ -399,8 +399,13 @@ struct ShoppingListView: View {
     }
 
     // Helper to determine if we should show search empty state
+    // Check if there are actual items (not just empty store entries)
+    private var viewModelHasAnyItems: Bool {
+        viewModel.shoppingLists.values.contains { !$0.items.isEmpty }
+    }
+
     private var shouldShowSearchEmptyState: Bool {
-        !viewModel.shoppingLists.isEmpty && (!viewModel.searchText.isEmpty || !viewModel.selectedTags.isEmpty || !viewModel.selectedCOEs.isEmpty || !viewModel.selectedManufacturers.isEmpty || viewModel.selectedStore != nil)
+        viewModelHasAnyItems && (!viewModel.searchText.isEmpty || !viewModel.selectedTags.isEmpty || !viewModel.selectedCOEs.isEmpty || !viewModel.selectedManufacturers.isEmpty || viewModel.selectedStore != nil)
     }
 
     // Active filters for empty state display
@@ -739,10 +744,12 @@ struct ShoppingListView: View {
                 }
 
                 // Main content
+                // Check if there are actual items, not just empty store entries
+                let hasAnyItems = filteredShoppingLists.values.contains { !$0.items.isEmpty }
                 Group {
                     if viewModel.isLoading {
                         LoadingStateView()
-                    } else if filteredShoppingLists.isEmpty {
+                    } else if !hasAnyItems {
                         if shouldShowSearchEmptyState {
                             ShoppingListEmptyStates.searchResults(
                                 searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,

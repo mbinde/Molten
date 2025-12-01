@@ -51,11 +51,8 @@ protocol CatalogViewModelProtocol {
     /// Currently selected COEs for filtering
     var selectedCOEs: Set<Int32> { get set }
 
-    /// Currently selected manufacturers for filtering (new multi-select)
+    /// Currently selected manufacturers for filtering
     var selectedManufacturers: Set<String> { get set }
-
-    /// Legacy single manufacturer selection
-    var selectedManufacturer: String? { get set }
 
     // MARK: - Sort State
 

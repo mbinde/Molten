@@ -239,8 +239,6 @@ class CatalogViewModel: CatalogViewModelProtocol {
         }
     }
 
-    var selectedManufacturer: String? = nil
-
     var selectedProductTypes: Set<String> = [] {
         didSet {
             if selectedProductTypes != oldValue {
@@ -367,8 +365,7 @@ class CatalogViewModel: CatalogViewModelProtocol {
         !selectedTags.isEmpty ||
         !selectedCOEs.isEmpty ||
         !selectedManufacturers.isEmpty ||
-        !selectedProductTypes.isEmpty ||
-        selectedManufacturer != nil
+        !selectedProductTypes.isEmpty
     }
 
     // MARK: - Actions
@@ -409,7 +406,6 @@ class CatalogViewModel: CatalogViewModelProtocol {
         selectedCOEs.removeAll()
         selectedManufacturers.removeAll()
         selectedProductTypes.removeAll()
-        selectedManufacturer = nil
         searchClearedFeedback = true
 
         // Reset feedback after delay (will be handled by view)
@@ -483,13 +479,6 @@ class CatalogViewModel: CatalogViewModelProtocol {
         if let manufacturers = activeManufacturerFilter {
             filtered = filtered.filter { item in
                 manufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
-            }
-        }
-
-        // Apply legacy single manufacturer filter
-        if let selectedManufacturer = selectedManufacturer {
-            filtered = filtered.filter { item in
-                item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines) == selectedManufacturer
             }
         }
 
@@ -723,10 +712,6 @@ class CatalogViewModel: CatalogViewModelProtocol {
             let mfrText = selectedManufacturers.count == 1 ? "manufacturer" : "manufacturers"
             let mfrList = selectedManufacturers.sorted().compactMap { GlassManufacturers.fullName(for: $0) ?? $0 }.joined(separator: ", ")
             filters.append("\(mfrText) \(mfrList)")
-        }
-
-        if let selectedManufacturer = selectedManufacturer {
-            filters.append("manufacturer '\(selectedManufacturer)'")
         }
 
         if !selectedTags.isEmpty {

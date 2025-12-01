@@ -55,7 +55,6 @@ struct CatalogView: View {
     @State private var showingAllTags = false
     @State private var showingCOESelection = false
     @State private var showingManufacturerFilterSelection = false
-    @State private var showingManufacturerSelection = false  // Keep for legacy CatalogManufacturerFilterView
     @State private var navigationPath = NavigationPath()
     @State private var isRefreshing = false
     @State private var lastRefreshTime: Date = Date.distantPast
@@ -424,24 +423,6 @@ struct CatalogView: View {
     
     // MARK: - Filter Buttons
 
-    private var manufacturerFilterButton: some View {
-        Button {
-            showingManufacturerSelection = true
-        } label: {
-            HStack(spacing: 4) {
-                Text(viewModel.selectedManufacturer != nil ? manufacturerDisplayName(viewModel.selectedManufacturer!) : "All Manufacturers")
-                    .font(.system(size: 14, weight: .medium))
-                Image(systemName: "chevron.down")
-                    .font(.caption)
-            }
-            .foregroundColor(viewModel.selectedManufacturer != nil ? .white : .primary)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(viewModel.selectedManufacturer != nil ? Color.accentColor : DesignSystem.Colors.backgroundInput)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-        }
-    }
-    
     private var tagFilterButton: some View {
         Button {
             showingAllTags = true

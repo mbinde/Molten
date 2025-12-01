@@ -91,49 +91,9 @@ Technical reference for working with the Molten codebase.
 **Cross-Store References**: Use **string-based lookups** (`stable_id`), NOT CoreData relationships.
 
 **CloudKit Rules**:
-1. NEVER manually purge persistent history (breaks CloudKit sync state)
-2. ALWAYS use `automaticallyMergesChangesFromParent = true`
-3. NEVER create Transformable attributes (causes CloudKit conflicts)
-4. Let CloudKit manage its own history tokens
-
-**🛡️ Runtime Enforcement** (`CoreDataSafetyGuards.swift`):
-```swift
-// DEBUG builds crash if you try to delete history
-#if DEBUG
-extension NSPersistentContainer {
-    @MainActor
-    func safeExecute(_ request: NSPersistentStoreRequest,
-                     with context: NSManagedObjectContext) throws -> NSPersistentStoreResult {
-        // Detect persistent history deletion attempts
-        if request is NSPersistentHistoryChangeRequest {
-            let requestDescription = String(describing: request)
-            if requestDescription.contains("deleteHistory") {
-                fatalError("""
-                    ❌ FATAL: Attempted to delete persistent history - this BREAKS CloudKit sync!
-
-                    CloudKit sync relies on persistent history to track changes across devices.
-                    Manually purging history destroys sync state and causes:
-                    - Data duplication (CloudKit re-imports already-synced data)
-                    - Data loss (local changes never sync to cloud)
-                    - Sync conflicts (mismatched history tokens)
-
-                    NEVER call:
-                    - NSPersistentHistoryChangeRequest.deleteHistory(before:)
-                    - context.execute(deleteHistoryRequest)
-
-                    Let CloudKit manage its own history tokens.
-                    """)
-            }
-        }
-        return try context.execute(request)
-    }
-}
-#endif
-```
-
-This makes the mistake **impossible to ship** - it will crash during development if anyone tries to purge history.
-
-**Detection Method**: While `NSPersistentHistoryChangeRequest` doesn't expose a public `requestType` property, we can detect deletion attempts by examining the request's string representation. Requests created via `deleteHistory(before:)` will contain "deleteHistory" in their description.
+1. ALWAYS use `automaticallyMergesChangesFromParent = true`
+2. NEVER create Transformable attributes (causes CloudKit conflicts)
+3. Let CloudKit manage its own history tokens
 
 **🚨 CRITICAL: Tests MUST Use Two-Store Architecture**
 
@@ -515,9 +475,8 @@ Molten/
 5. **Manual Core Data files** → Use Xcode's automatic code generation only
 6. **Skipping TDD** → Write tests first, always
 7. **Creating Transformable attributes** → Breaks CloudKit sync
-8. **Purging persistent history** → Breaks CloudKit sync state
-9. **Cross-store CoreData relationships** → Use string-based lookups (`stable_id`)
-10. **Assuming Core Data schema** → Verify entity names/attributes before writing tests
+8. **Cross-store CoreData relationships** → Use string-based lookups (`stable_id`)
+9. **Assuming Core Data schema** → Verify entity names/attributes before writing tests
 
 ---
 

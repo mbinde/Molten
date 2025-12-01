@@ -32,32 +32,9 @@ class AppDependencies {
         }
     }()
 
-    /// Detect if we're running in a test bundle (not production code)
+    /// Detect if we're running in a test bundle
     private nonisolated static func isRunningInTestBundle() -> Bool {
-        // Check if XCTest bundle is loaded
-        let testBundleIdentifiers = [
-            "MoltenTests",
-            "RepositoryTests",
-            "ViewModelTests",
-            "PerformanceTests",
-            "MoltenUITests"
-        ]
-
-        // Check if any test bundle is in the loaded bundles
-        for bundle in Bundle.allBundles {
-            if let bundleId = bundle.bundleIdentifier,
-               testBundleIdentifiers.contains(where: { bundleId.contains($0) }) {
-                return true
-            }
-        }
-
-        // Also check if the main bundle is a test bundle
-        if let mainBundleId = Bundle.main.bundleIdentifier, mainBundleId.contains("Tests") {
-            return true
-        }
-
-        // Check for XCTest framework presence
-        return NSClassFromString("XCTestCase") != nil
+        NSClassFromString("XCTestCase") != nil
     }
 
     // MARK: - Core Dependencies

@@ -24,6 +24,11 @@ protocol Filterable {
 
     /// Apply this specific filter to items
     func applyFilter(to items: [CompleteInventoryItemModel], viewModel: CatalogViewModel) -> [CompleteInventoryItemModel]
+
+    /// Whether to skip this filter when computing available values for the same filter type
+    /// - Parameter sameType: true if we're computing counts for this filter type
+    /// - Parameter viewModel: the view model with current filter state
+    func shouldSkipWhenComputing(sameType: Bool, viewModel: CatalogViewModel) -> Bool
 }
 
 // MARK: - Concrete Filters
@@ -70,6 +75,11 @@ struct ManufacturerFilter: Filterable {
         }
         return manufacturers
     }
+
+    func shouldSkipWhenComputing(sameType: Bool, viewModel: CatalogViewModel) -> Bool {
+        // Skip only if computing manufacturer counts AND user has manual selection
+        sameType && !viewModel.selectedManufacturers.isEmpty
+    }
 }
 
 struct COEFilter: Filterable {
@@ -115,6 +125,11 @@ struct COEFilter: Filterable {
             return true
         }
     }
+
+    func shouldSkipWhenComputing(sameType: Bool, viewModel: CatalogViewModel) -> Bool {
+        // Skip only if computing COE counts AND user has manual selection
+        sameType && !viewModel.selectedCOEs.isEmpty
+    }
 }
 
 struct TagFilter: Filterable {
@@ -132,6 +147,11 @@ struct TagFilter: Filterable {
             // AND logic: item must have ALL selected tags
             viewModel.selectedTags.isSubset(of: Set(item.allTags))
         }
+    }
+
+    func shouldSkipWhenComputing(sameType: Bool, viewModel: CatalogViewModel) -> Bool {
+        // Never skip tags - always apply to show only tags in filtered results
+        false
     }
 }
 
@@ -633,46 +653,11 @@ class CatalogViewModel: CatalogViewModelProtocol {
         ]
 
         for otherFilter in allFilters {
-            // CRITICAL: Always apply filters with global preferences (COE, Manufacturer)
-            // even when computing counts for that same filter type, because we want to
-            // show only the values present in the currently filtered items.
-            //
-            // For tags, we also always apply the tag filter to show only tags in the current filtered set.
-            //
-            // Skip ONLY filters that are manually selected in the catalog UI when computing their own counts.
-
             let isSameFilterType = type(of: otherFilter) == type(of: filter)
-            let shouldSkip: Bool
-
-            if type(of: otherFilter) == ManufacturerFilter.self {
-                // Skip only if computing manufacturer counts AND user has manual selection (no global pref active)
-                shouldSkip = isSameFilterType && !selectedManufacturers.isEmpty
-            } else if type(of: otherFilter) == COEFilter.self {
-                // Skip only if computing COE counts AND user has manual selection (no global pref active)
-                shouldSkip = isSameFilterType && !selectedCOEs.isEmpty
-            } else if type(of: otherFilter) == TagFilter.self {
-                // Never skip tags - always apply to show only tags in filtered results
-                shouldSkip = false
-            } else {
-                // Default: skip if same filter type
-                shouldSkip = isSameFilterType
-            }
-
-            if shouldSkip {
+            if otherFilter.shouldSkipWhenComputing(sameType: isSameFilterType, viewModel: self) {
                 continue
             }
-
-            // Apply filters
-            if type(of: otherFilter) == ManufacturerFilter.self {
-                let mfrFilter = ManufacturerFilter()
-                filtered = mfrFilter.applyFilter(to: filtered, viewModel: self)
-            } else if type(of: otherFilter) == COEFilter.self {
-                let coeFilter = COEFilter()
-                filtered = coeFilter.applyFilter(to: filtered, viewModel: self)
-            } else if type(of: otherFilter) == TagFilter.self {
-                let tagFilter = TagFilter()
-                filtered = tagFilter.applyFilter(to: filtered, viewModel: self)
-            }
+            filtered = otherFilter.applyFilter(to: filtered, viewModel: self)
         }
 
         // Apply search filter (always applied when active, using debounced search text)

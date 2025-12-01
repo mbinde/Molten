@@ -850,7 +850,7 @@ struct GlassItemSearchResult: Sendable {
 }
 
 /// Sort options for glass items
-enum GlassItemSortOption: CaseIterable, Sendable {
+enum GlassItemSortOption: CaseIterable, Sendable, Equatable {
     case name
     case manufacturer
     case coe

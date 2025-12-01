@@ -157,7 +157,9 @@ actor CatalogService {
         let userTagsByItem = try await userTagsRepository.fetchTagsForItems(allItemKeys)
 
         // OPTIMIZED: Conditionally fetch ratings (only when needed for sorting or explicitly requested)
-        let shouldFetchRatings = includeRatings ?? (sortBy == .rating)
+        // Note: Using pattern matching instead of == to avoid Swift 6 actor isolation issue with Equatable
+        let sortNeedsRatings = if case .rating = sortBy { true } else { false }
+        let shouldFetchRatings = includeRatings ?? sortNeedsRatings
 
         var ratingsByItem: [String: AggregatedRatingModel] = [:]
         if shouldFetchRatings {

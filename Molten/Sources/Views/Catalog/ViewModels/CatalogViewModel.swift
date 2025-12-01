@@ -144,13 +144,72 @@ struct TagFilter: Filterable {
     func applyFilter(to items: [CompleteInventoryItemModel], viewModel: CatalogViewModel) -> [CompleteInventoryItemModel] {
         guard !viewModel.selectedTags.isEmpty else { return items }
         return items.filter { item in
-            // AND logic: item must have ALL selected tags
-            viewModel.selectedTags.isSubset(of: Set(item.allTags))
+            // OR logic: item must have ANY of the selected tags
+            !viewModel.selectedTags.isDisjoint(with: Set(item.allTags))
         }
     }
 
     func shouldSkipWhenComputing(sameType: Bool, viewModel: CatalogViewModel) -> Bool {
         // Never skip tags - always apply to show only tags in filtered results
+        false
+    }
+}
+
+struct ProductTypeFilter: Filterable {
+    func extractFilterKeys(_ item: CompleteInventoryItemModel) -> [String] {
+        return [item.catalogItem.itemType.rawValue]
+    }
+
+    func isActive(in viewModel: CatalogViewModel) -> Bool {
+        return !viewModel.selectedProductTypes.isEmpty
+    }
+
+    func applyFilter(to items: [CompleteInventoryItemModel], viewModel: CatalogViewModel) -> [CompleteInventoryItemModel] {
+        guard !viewModel.selectedProductTypes.isEmpty else { return items }
+        return items.filter { item in
+            viewModel.selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+        }
+    }
+
+    func shouldSkipWhenComputing(sameType: Bool, viewModel: CatalogViewModel) -> Bool {
+        // Skip when computing product type counts AND filter is active
+        sameType && !viewModel.selectedProductTypes.isEmpty
+    }
+}
+
+struct SearchFilter: Filterable {
+    func extractFilterKeys(_ item: CompleteInventoryItemModel) -> [String] {
+        // Search doesn't use key extraction for counts
+        return []
+    }
+
+    func isActive(in viewModel: CatalogViewModel) -> Bool {
+        return !viewModel.debouncedSearchText.isEmpty &&
+               SearchTextParser.isSearchTextMeaningful(viewModel.debouncedSearchText)
+    }
+
+    func applyFilter(to items: [CompleteInventoryItemModel], viewModel: CatalogViewModel) -> [CompleteInventoryItemModel] {
+        guard isActive(in: viewModel) else { return items }
+
+        let searchMode = SearchTextParser.parseSearchText(viewModel.debouncedSearchText)
+        return items.filter { item in
+            if viewModel.searchTitlesOnly {
+                return SearchTextParser.matchesName(name: item.catalogItem.name, mode: searchMode)
+            } else {
+                let allFields = [
+                    item.catalogItem.name,
+                    item.catalogItem.stable_id,
+                    item.catalogItem.manufacturer,
+                    item.catalogItem.sku,
+                    item.catalogItem.mfr_notes
+                ].compactMap { $0 }
+                return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+            }
+        }
+    }
+
+    func shouldSkipWhenComputing(sameType: Bool, viewModel: CatalogViewModel) -> Bool {
+        // Never skip search - always apply when active
         false
     }
 }
@@ -452,88 +511,21 @@ class CatalogViewModel: CatalogViewModelProtocol {
     func applyFilters() {
         var filtered = items
 
-        // Apply product type filter
-        if !selectedProductTypes.isEmpty {
-            filtered = filtered.filter { item in
-                selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
-            }
-        }
+        // IMPORTANT: When adding a new filter type:
+        // 1. Create a new struct conforming to Filterable (see ManufacturerFilter, etc.)
+        // 2. Add it to this allFilters array
+        // 3. Add it to the allFilters array in computeAvailableValues() as well
+        let allFilters: [any Filterable] = [
+            ProductTypeFilter(),
+            ManufacturerFilter(),
+            COEFilter(),
+            TagFilter(),
+            SearchFilter()
+        ]
 
-        // Apply manufacturer filter (global preference from settings OR manual selection in catalog)
-        // Global preference: UserDefaults "selectedManufacturerFilter" (set in Settings)
-        // Manual selection: selectedManufacturers (set by checkboxes in Catalog filter UI)
-        // Logic: If user manually selected manufacturers in catalog, use those. Otherwise, apply global preference.
-
-        let activeManufacturerFilter: Set<String>?
-        if !selectedManufacturers.isEmpty {
-            // User manually selected specific manufacturers in catalog filter UI
-            activeManufacturerFilter = selectedManufacturers
-        } else if let data = UserDefaults.standard.data(forKey: "selectedManufacturerFilter"),
-                  let globalPref = try? JSONDecoder().decode(Set<String>.self, from: data) {
-            // Use global manufacturer preference from settings
-            activeManufacturerFilter = globalPref
-        } else {
-            activeManufacturerFilter = nil
-        }
-
-        if let manufacturers = activeManufacturerFilter {
-            filtered = filtered.filter { item in
-                manufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
-            }
-        }
-
-        // Apply tag filter
-        if !selectedTags.isEmpty {
-            filtered = filtered.filter { item in
-                !selectedTags.isDisjoint(with: Set(item.allTags))
-            }
-        }
-
-        // Apply COE filter (global COE preference from settings OR manual selection in catalog)
-        // Global preference: COEGlassPreference.selectedCOETypes (set in Settings)
-        // Manual selection: selectedCOEs (set by checkboxes in Catalog filter UI)
-        // Logic: If user manually selected COEs in catalog, use those. Otherwise, apply global preference.
-
-        let activeCOEFilter: Set<Int32>
-        if !selectedCOEs.isEmpty {
-            // User manually selected specific COEs in catalog filter UI
-            activeCOEFilter = selectedCOEs
-        } else {
-            // Use global COE preference from settings
-            activeCOEFilter = Set(COEGlassPreference.selectedCOETypes.map { Int32($0.rawValue) })
-        }
-
-        // Apply the active COE filter (only for glass items - coatings/tools pass through)
-        if !activeCOEFilter.isEmpty {
-            filtered = filtered.filter { item in
-                // Non-glass items (coatings, tools) don't have COE - let them pass through
-                if item.catalogItem.itemType != .glass {
-                    return true
-                }
-                if let coe = item.catalogItem.coe {
-                    return activeCOEFilter.contains(coe)
-                }
-                return false  // Glass item without COE - shouldn't happen, but filter out
-            }
-        }
-
-        // Apply search filter (using debounced search text for performance)
-        if !debouncedSearchText.isEmpty && SearchTextParser.isSearchTextMeaningful(debouncedSearchText) {
-            let searchMode = SearchTextParser.parseSearchText(debouncedSearchText)
-            filtered = filtered.filter { item in
-                if searchTitlesOnly {
-                    return SearchTextParser.matchesName(name: item.catalogItem.name, mode: searchMode)
-                } else {
-                    let allFields = [
-                        item.catalogItem.name,
-                        item.catalogItem.stable_id,
-                        item.catalogItem.manufacturer,
-                        item.catalogItem.sku,
-                        item.catalogItem.mfr_notes
-                    ].compactMap { $0 }
-                    return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-                }
-            }
+        // Apply all filters in sequence
+        for filter in allFilters {
+            filtered = filter.applyFilter(to: filtered, viewModel: self)
         }
 
         filteredItems = filtered
@@ -627,45 +619,25 @@ class CatalogViewModel: CatalogViewModelProtocol {
     private func computeAvailableValues<F: Filterable>(_ filter: F) -> [F.FilterKey: Int] {
         var filtered = items
 
-        // Apply product type filter (always applied)
-        if !selectedProductTypes.isEmpty {
-            filtered = filtered.filter { item in
-                selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
-            }
-        }
-
-        // Apply all OTHER filters (not the one we're computing)
+        // IMPORTANT: When adding a new filter type:
+        // 1. Create a new struct conforming to Filterable (see ManufacturerFilter, etc.)
+        // 2. Add it to this allFilters array
+        // 3. Add it to the allFilters array in applyFilters() as well
         let allFilters: [any Filterable] = [
+            ProductTypeFilter(),
             ManufacturerFilter(),
             COEFilter(),
-            TagFilter()
+            TagFilter(),
+            SearchFilter()
         ]
 
+        // Apply all OTHER filters (not the one we're computing counts for)
         for otherFilter in allFilters {
             let isSameFilterType = type(of: otherFilter) == type(of: filter)
             if otherFilter.shouldSkipWhenComputing(sameType: isSameFilterType, viewModel: self) {
                 continue
             }
             filtered = otherFilter.applyFilter(to: filtered, viewModel: self)
-        }
-
-        // Apply search filter (always applied when active, using debounced search text)
-        if !debouncedSearchText.isEmpty && SearchTextParser.isSearchTextMeaningful(debouncedSearchText) {
-            let searchMode = SearchTextParser.parseSearchText(debouncedSearchText)
-            filtered = filtered.filter { item in
-                if searchTitlesOnly {
-                    return SearchTextParser.matchesName(name: item.catalogItem.name, mode: searchMode)
-                } else {
-                    let allFields = [
-                        item.catalogItem.name,
-                        item.catalogItem.stable_id,
-                        item.catalogItem.manufacturer,
-                        item.catalogItem.sku,
-                        item.catalogItem.mfr_notes
-                    ].compactMap { $0 }
-                    return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
-                }
-            }
         }
 
         // Count occurrences of each filter key

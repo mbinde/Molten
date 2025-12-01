@@ -57,6 +57,7 @@ private struct QuickActionButton: View {
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("quick_action_\(title.lowercased().replacingOccurrences(of: " ", with: "_"))")
     }
 }
 

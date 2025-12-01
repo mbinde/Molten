@@ -94,12 +94,14 @@ struct ImageSubmissionSheet: View {
                                 .font(DesignSystem.Typography.formValue)
                         }
                         .toggleStyle(SwitchToggleStyle(tint: DesignSystem.Colors.accentPrimary))
+                        .accessibilityIdentifier("image_submission_permission_toggle")
 
                         Toggle(isOn: $offersFreeOfCharge) {
                             Text("I offer this image to Molten free of charge")
                                 .font(DesignSystem.Typography.formValue)
                         }
                         .toggleStyle(SwitchToggleStyle(tint: DesignSystem.Colors.accentPrimary))
+                        .accessibilityIdentifier("image_submission_free_toggle")
                     }
 
                     Divider()
@@ -119,6 +121,7 @@ struct ImageSubmissionSheet: View {
                             .keyboardType(.emailAddress)
                             .autocapitalization(.none)
                             .autocorrectionDisabled()
+                            .accessibilityIdentifier("image_submission_email_field")
 
                         if !email.isEmpty && !isValidEmail {
                             Text("Please enter a valid email address")
@@ -145,6 +148,7 @@ struct ImageSubmissionSheet: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("image_submission_cancel")
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -152,6 +156,7 @@ struct ImageSubmissionSheet: View {
                         submitImage()
                     }
                     .disabled(!canSubmit || isSubmitting)
+                    .accessibilityIdentifier("image_submission_submit")
                 }
             }
             .alert("Image Submitted", isPresented: $showingConfirmation) {

@@ -34,10 +34,12 @@ struct SettingsView: View {
     @State private var catalogUpdateViewModel: CatalogUpdateViewModel
     @State private var thumbnailDisplayMode: UserSettings.ThumbnailDisplayMode = UserSettings.shared.thumbnailDisplayMode
     @State private var colorChipDisplayMode: UserSettings.ColorChipDisplayMode = UserSettings.shared.colorChipDisplayMode
+    @State private var qrScanBehavior: UserSettings.QRScanBehavior = UserSettings.shared.qrScanBehavior
+    @State private var showingPaywall = false
 
     init(
-        catalogService: CatalogService = AppDependencies().catalogService,
-        subscriptionService: SubscriptionServiceProtocol = AppDependencies().subscriptionService,
+        catalogService: CatalogService = AppDependencies.shared.catalogService,
+        subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService,
         catalogUpdateService: CatalogUpdateService? = nil
     ) {
         self.catalogService = catalogService
@@ -101,17 +103,27 @@ struct SettingsView: View {
         )
     }
 
+    private var qrScanBehaviorBinding: Binding<UserSettings.QRScanBehavior> {
+        Binding(
+            get: { qrScanBehavior },
+            set: {
+                qrScanBehavior = $0
+                UserSettings.shared.qrScanBehavior = $0
+            }
+        )
+    }
+
     // Subscription computed properties
     private var subscriptionBadge: String {
         subscriptionViewModel.hasProAccess ? "Pro" : "Free"
     }
 
     private var subscriptionBadgeColor: Color {
-        subscriptionViewModel.hasProAccess ? .white : .blue
+        subscriptionViewModel.hasProAccess ? .white : DesignSystem.Colors.moltenTeal
     }
 
     private var subscriptionBadgeBackground: Color {
-        subscriptionViewModel.hasProAccess ? .yellow : .blue.opacity(0.2)
+        subscriptionViewModel.hasProAccess ? DesignSystem.Colors.moltenOrange : DesignSystem.Colors.tintTeal
     }
 
     private var colorScheme: ColorScheme? {
@@ -172,18 +184,18 @@ struct SettingsView: View {
 
                             if let updateMessage = catalogUpdateViewModel.updateAvailableMessage {
                                 Text(updateMessage)
-                                    .font(.caption)
-                                    .foregroundColor(Color.accentColor)
+                                    .font(DesignSystem.Typography.listItemCaption)
+                                    .foregroundColor(DesignSystem.Colors.moltenOrange)
                             } else {
                                 Text("v\(catalogUpdateViewModel.currentVersion)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .font(DesignSystem.Typography.listItemCaption)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                     }
                     .accessibilityIdentifier("settings_catalog_updates")
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                         Picker("Show Color Chips", selection: colorChipDisplayModeBinding) {
                             ForEach(UserSettings.ColorChipDisplayMode.allCases, id: \.self) { mode in
                                 Text(mode.displayName).tag(mode)
@@ -192,8 +204,8 @@ struct SettingsView: View {
                         .pickerStyle(.menu)
 
                         Text(colorChipDisplayMode.description)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
 
                     Toggle("Expand Manufacturer Descriptions by Default", isOn: Binding(
@@ -208,9 +220,25 @@ struct SettingsView: View {
                     ))
                     .help("When enabled, your personal notes in item detail views will be fully expanded by default")
 
-                    Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
-                        .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
-                        .accessibilityIdentifier("settings_show_ratings")
+                    if FeatureFlags.ENABLE_RATINGS {
+                        Toggle("Show Ratings in Catalog", isOn: $showRatingsInCatalog)
+                            .help("When enabled, star ratings and review counts will be displayed in catalog and inventory lists")
+                            .accessibilityIdentifier("settings_show_ratings")
+                    }
+
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        Picker("QR Code", selection: qrScanBehaviorBinding) {
+                            ForEach(UserSettings.QRScanBehavior.allCases, id: \.self) { behavior in
+                                Text(behavior.displayName).tag(behavior)
+                            }
+                        }
+                        .pickerStyle(.menu)
+
+                        Text(qrScanBehavior.description)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                    .accessibilityIdentifier("settings_qr_scan_behavior")
                 }
 
                 // MARK: - Sorting and Filtering
@@ -271,14 +299,12 @@ struct SettingsView: View {
 
                 // MARK: - Content & Customization
                 Section {
-                    if FeatureFlags.ENABLE_PROJECTS {
-                        NavigationLink {
-                            AuthorSettingsView()
-                        } label: {
-                            Text("Author Information")
-                        }
-                        .accessibilityIdentifier("settings_author_information")
+                    NavigationLink {
+                        AuthorSettingsView()
+                    } label: {
+                        Text("Author Information")
                     }
+                    .accessibilityIdentifier("settings_author_information")
 
                     NavigationLink {
                         TerminologySettingsView()
@@ -315,7 +341,7 @@ struct SettingsView: View {
                 // MARK: - Projects and Logs
                 if FeatureFlags.ENABLE_PROJECTS {
                     Section("Projects and Logs") {
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                             Picker("Project Thumbnail Style", selection: thumbnailDisplayModeBinding) {
                                 ForEach(UserSettings.ThumbnailDisplayMode.allCases, id: \.self) { mode in
                                     Text(mode.displayName).tag(mode)
@@ -324,8 +350,8 @@ struct SettingsView: View {
                             .pickerStyle(.menu)
 
                             Text(thumbnailDisplayMode.description)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                 }
@@ -377,7 +403,7 @@ struct SettingsView: View {
                             Spacer()
                             if BackupPreferences().isEnabled {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.green)
+                                    .foregroundColor(DesignSystem.Colors.moltenTeal)
                             }
                         }
                     }
@@ -385,106 +411,130 @@ struct SettingsView: View {
 
                 // MARK: - Subscription
                 Section("Subscription") {
-                    NavigationLink {
-                        SubscriptionStatusView(viewModel: subscriptionViewModel)
-                    } label: {
-                        HStack {
-                            Text("Manage Subscription")
-                            Spacer()
-                            Text(subscriptionBadge)
-                                .font(.caption.bold())
-                                .foregroundColor(subscriptionBadgeColor)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(subscriptionBadgeBackground)
-                                .cornerRadius(6)
+                    if subscriptionViewModel.hasProAccess {
+                        // Pro users: Navigate to management screen
+                        NavigationLink {
+                            SubscriptionStatusView(viewModel: subscriptionViewModel)
+                        } label: {
+                            HStack {
+                                Text("Manage Subscription")
+                                Spacer()
+                                Text(subscriptionBadge)
+                                    .font(.caption.bold())
+                                    .foregroundColor(subscriptionBadgeColor)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(subscriptionBadgeBackground)
+                                    .cornerRadius(6)
+                            }
                         }
+                        .accessibilityIdentifier("settings_manage_subscription")
+                    } else {
+                        // Free users: Show paywall directly (same as Inventory/Shopping)
+                        Button {
+                            showingPaywall = true
+                        } label: {
+                            HStack {
+                                Text("Upgrade to Pro")
+                                Spacer()
+                                Text(subscriptionBadge)
+                                    .font(.caption.bold())
+                                    .foregroundColor(subscriptionBadgeColor)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(subscriptionBadgeBackground)
+                                    .cornerRadius(6)
+                            }
+                        }
+                        .accessibilityIdentifier("settings_upgrade_subscription")
                     }
-                    .accessibilityIdentifier("settings_manage_subscription")
                 }
                 .task {
                     // Load subscription status when settings view appears
                     await subscriptionViewModel.loadSubscriptionStatus()
                 }
 
-                // MARK: - Advanced
-                Section("") {
-                    #if DEBUG
-                    // Hide debug settings during UI tests/screenshots
-                    let isUITesting = ProcessInfo.processInfo.arguments.contains("UI-Testing")
+                // MARK: - About
+                Section("About") {
+                    NavigationLink {
+                        AboutView()
+                    } label: {
+                        Text("About Molten")
+                    }
+                    .accessibilityIdentifier("settings_about")
 
-                    if !isUITesting {
-                        NavigationLink {
-                            DebugSettingsView()
-                        } label: {
-                            Text("Debug Settings")
+                    Link(destination: URL(string: "https://moltenglass.app/privacy/")!) {
+                        HStack {
+                            Text("Privacy Policy")
+                            Spacer()
+                            Image(systemName: "arrow.up.forward.square")
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
-                        .accessibilityIdentifier("settings_debug")
+                    }
+                    .accessibilityIdentifier("settings_privacy_policy")
+                }
 
-                        NavigationLink {
-                            SentryTestView()
-                        } label: {
-                            Text("Test Sentry Logging")
+                #if DEBUG
+                // MARK: - Advanced (Debug only)
+                Section("Advanced") {
+                    NavigationLink {
+                        DebugSettingsView()
+                    } label: {
+                        Text("Debug Settings")
+                    }
+                    .accessibilityIdentifier("settings_debug")
+
+                    // Subscription tier override for testing
+                    Toggle(isOn: Binding(
+                        get: { DebugConfig.debugOverrideSubscriptionTier },
+                        set: { newValue in
+                            DebugConfig.debugOverrideSubscriptionTier = newValue
+                            // When enabling override, default to Premium (the typical test case)
+                            if newValue {
+                                DebugConfig.debugSubscriptionTierValue = 1  // 1 = premium
+                            }
+                            // Trigger refresh so views pick up the change immediately
+                            entitlementService.refreshTier()
                         }
-                        .accessibilityIdentifier("settings_sentry_test")
+                    )) {
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                            Text("Override Subscription Tier")
+                            Text("Test premium features without purchase")
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                        }
+                    }
 
-                        // Subscription tier override for testing
-                        Toggle(isOn: Binding(
-                            get: { DebugConfig.debugOverrideSubscriptionTier },
+                    if DebugConfig.debugOverrideSubscriptionTier {
+                        Picker("Debug Tier", selection: Binding(
+                            get: { DebugConfig.debugSubscriptionTierValue },
                             set: { newValue in
-                                DebugConfig.debugOverrideSubscriptionTier = newValue
-                                // When enabling override, default to Premium (the typical test case)
-                                if newValue {
-                                    DebugConfig.debugSubscriptionTierValue = 1  // 1 = premium
-                                }
+                                DebugConfig.debugSubscriptionTierValue = newValue
                                 // Trigger refresh so views pick up the change immediately
                                 entitlementService.refreshTier()
                             }
                         )) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Override Subscription Tier")
-                                    .font(.body)
-                                Text("Test premium features without purchase")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
+                            Text("Free").tag(0)
+                            Text("Premium").tag(1)
                         }
+                        .pickerStyle(.segmented)
 
-                        if DebugConfig.debugOverrideSubscriptionTier {
-                            Picker("Debug Tier", selection: Binding(
-                                get: { DebugConfig.debugSubscriptionTierValue },
-                                set: { newValue in
-                                    DebugConfig.debugSubscriptionTierValue = newValue
-                                    // Trigger refresh so views pick up the change immediately
-                                    entitlementService.refreshTier()
-                                }
-                            )) {
-                                Text("Free").tag(0)
-                                Text("Premium").tag(1)
-                            }
-                            .pickerStyle(.segmented)
-
-                            // Show current tier status
-                            HStack {
-                                Image(systemName: entitlementService.currentTier == .premium ? "checkmark.circle.fill" : "circle")
-                                    .foregroundColor(entitlementService.currentTier == .premium ? .green : .secondary)
-                                Text("Current Tier: \(entitlementService.currentTier == .premium ? "Premium" : "Free")")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
+                        // Show current tier status
+                        HStack {
+                            Image(systemName: entitlementService.currentTier == .premium ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(entitlementService.currentTier == .premium ? DesignSystem.Colors.moltenTeal : DesignSystem.Colors.textSecondary)
+                            Text("Current Tier: \(entitlementService.currentTier == .premium ? "Premium" : "Free")")
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
-                    #endif
-
-                    NavigationLink {
-                        AboutView()
-                    } label: {
-                        Text("About")
-                    }
-                    .accessibilityIdentifier("settings_about")
                 }
+                #endif
             }
             .navigationTitle("Settings")
+            .sheet(isPresented: $showingPaywall) {
+                CustomPaywallView()
+            }
         }
         .preferredColorScheme(colorScheme)
     }

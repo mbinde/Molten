@@ -31,11 +31,9 @@ struct CatalogView: View {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data ✓
     @State private var viewModel: CatalogViewModel
 
-    // Search scope state
-    @State private var searchScope: CatalogSearchScope = .allFields
+    // Search scope state - persisted via viewModel.searchTitlesOnly and UserDefaults
+    @State private var searchScope: CatalogSearchScope = .titlesOnly
 
-    // Performance timing (DEBUG builds only)
-    @State private var performanceTimer = PerformanceTimer()
 
     // Use manual UserDefaults handling instead of @AppStorage to prevent test crashes
     @State private var defaultSortOptionRawValue = SortOption.name.rawValue
@@ -63,6 +61,10 @@ struct CatalogView: View {
     @State private var lastRefreshTime: Date = Date.distantPast
     @State private var catalogUpdateMessage = ""
     @State private var showCatalogUpdateToast = false
+
+    // Local search text state - isolates TextField from ViewModel to prevent full view re-renders
+    // The ViewModel's searchText setter handles debouncing and triggers filtering
+    @State private var localSearchText = ""
 
     // Repository pattern - single source of truth for data
     private let catalogService: CatalogService
@@ -101,7 +103,7 @@ struct CatalogView: View {
     }
 
     /// Convenience initializer - creates ViewModel with services from AppDependencies
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         let viewModel = CatalogViewModel(catalogService: deps.catalogService)
         self.init(
             viewModel: viewModel,
@@ -347,9 +349,9 @@ struct CatalogView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .performanceTitle("Catalog", timer: performanceTimer)
+            .navigationTitle("Catalog")
             .searchable(
-                text: $viewModel.searchText,
+                text: $localSearchText,
                 placement: .navigationBarDrawer(displayMode: .always),
                 prompt: "Search colors, codes, manufacturers..."
             )
@@ -360,24 +362,15 @@ struct CatalogView: View {
             }
             .onChange(of: searchScope) { oldValue, newValue in
                 viewModel.searchTitlesOnly = (newValue == .titlesOnly)
+                // Persist to UserDefaults
+                userDefaults.set(newValue == .titlesOnly, forKey: "searchTitlesOnly")
+            }
+            .onChange(of: localSearchText) { oldValue, newValue in
+                // Sync local state to ViewModel - debouncing happens in ViewModel
+                viewModel.searchText = newValue
             }
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
-            .onChange(of: viewModel.searchText) { oldValue, newValue in
-                // Debounce search text updates (300ms delay)
-                // This prevents expensive filtering on every keystroke
-                // TODO: Replace Task.sleep debouncing with Combine publisher for proper cancellation
-                // Current implementation creates zombie tasks that can't be cancelled
-                // Use .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main) instead
-                Task {
-                    try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
-                    // Only update if the value hasn't changed (user stopped typing)
-                    if viewModel.searchText == newValue {
-                        viewModel.debouncedSearchText = newValue
-                        viewModel.applyFilters()
-                    }
-                }
-            }
             .modifier(CatalogSheetModifiers(
                 showingAllTags: $showingAllTags,
                 showingCOESelection: $showingCOESelection,
@@ -399,14 +392,14 @@ struct CatalogView: View {
                 defaultSortOptionRawValue: $defaultSortOptionRawValue,
                 enabledManufacturersData: $enabledManufacturersData,
                 searchTitlesOnly: $viewModel.searchTitlesOnly,
+                searchScope: $searchScope,
                 selectedProductTypes: $selectedProductTypes,
                 sortOption: $viewModel.sortOption,
                 viewModel: viewModel,
                 clearSearch: clearSearch,
                 resetNavigation: resetNavigation,
                 catalogUpdateMessage: $catalogUpdateMessage,
-                showCatalogUpdateToast: $showCatalogUpdateToast,
-                performanceTimer: performanceTimer
+                showCatalogUpdateToast: $showCatalogUpdateToast
             ))
             .toast(
                 message: catalogUpdateMessage,
@@ -418,12 +411,12 @@ struct CatalogView: View {
                 case .addInventoryItem(let naturalKey):
                     AddInventoryItemView(
                         prefilledNaturalKey: naturalKey,
-                        deps: AppDependencies()
+                        deps: .shared
                     )
                 case .catalogItemDetail(let itemModel):
                     InventoryDetailView(
                         item: itemModel,
-                        deps: AppDependencies()
+                        deps: .shared
                     )
                 }
             }
@@ -510,6 +503,7 @@ extension CatalogView {
     private func clearSearch() {
         // MIGRATION: Use ViewModel clearSearch
         hideKeyboard()
+        localSearchText = ""  // Sync local state with ViewModel
         viewModel.clearSearch()
     }
     

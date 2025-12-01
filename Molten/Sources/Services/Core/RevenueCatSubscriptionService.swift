@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 #if canImport(UIKit)
 import UIKit
 import RevenueCatUI
@@ -99,7 +100,6 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
 
     public func presentPaywall() async throws {
         #if canImport(UIKit)
-        // RevenueCat Paywalls (modern approach with default offering)
         guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene else {
             throw SubscriptionServiceError.configurationError
         }
@@ -114,12 +114,12 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
             topViewController = presented
         }
 
-        let paywallViewController = PaywallViewController()
+        // Use our custom SwiftUI paywall
+        let paywallView = CustomPaywallView()
+        let hostingController = UIHostingController(rootView: paywallView)
+        hostingController.modalPresentationStyle = .pageSheet
 
-        // Handle purchase completion
-        paywallViewController.delegate = PaywallViewControllerDelegateHandler.shared
-
-        await topViewController.present(paywallViewController, animated: true)
+        await topViewController.present(hostingController, animated: true)
         #else
         throw SubscriptionServiceError.configurationError
         #endif

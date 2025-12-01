@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Format row in search results
 struct FormatRow: View {
-    let format: AveryFormat
+    let format: LabelGeometry
     let onTap: () -> Void
 
     var body: some View {
@@ -23,6 +23,7 @@ struct FormatRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 8)
+            .contentShape(Rectangle())  // Make entire row tappable
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("format_row_\(format.name.lowercased().replacingOccurrences(of: " ", with: "_"))")

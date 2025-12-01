@@ -72,7 +72,7 @@ class InventorySharingViewModel {
     }
 
     /// Convenience init using AppDependencies
-    convenience init(deps: AppDependencies = AppDependencies()) {
+    convenience init(deps: AppDependencies = .shared) {
         let persistence = PersistenceController.shared
         let cloudContext = persistence.cloudContext
 
@@ -111,6 +111,11 @@ class InventorySharingViewModel {
             displayName = metadata.displayName
             shareNotes = metadata.shareNotes ?? ""
         }
+    }
+
+    /// Refresh friend list to pick up updated cached stats (item count, quantity, weight)
+    func refreshFriendList() {
+        friendShares = sharingManager.getFriendShares()
     }
 
     // MARK: - My Share
@@ -375,9 +380,6 @@ class InventorySharingViewModel {
             return
         }
 
-        print("🔍 [VIEWMODEL] Main share code: \(mainShareCode)")
-        print("🔍 [VIEWMODEL] Main share code (unformatted): \(mainShareCode.unformattedShareCode)")
-
         guard !expiringShareDisplayName.trimmingCharacters(in: .whitespaces).isEmpty else {
             errorMessage = "Please enter a display name for the expiring share"
             return
@@ -400,8 +402,6 @@ class InventorySharingViewModel {
 
             // Use unformatted share code (remove dash)
             let unformattedMainShareCode = mainShareCode.unformattedShareCode
-
-            print("🔍 [VIEWMODEL] Sending mainShareCode: \(unformattedMainShareCode)")
 
             // Call server to create expiring share
             let (shareCode, expiresAt) = try await apiClient.createExpiringShare(

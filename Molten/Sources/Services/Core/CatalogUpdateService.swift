@@ -220,7 +220,7 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
             log.info("✅ Catalog updated successfully to v\(updateInfo.availableVersion)")
             log.info("   Created: \(result.itemsCreated), Updated: \(result.itemsUpdated)")
 
-            // Log success to Sentry for pattern tracking
+            // Log success for debugging
             logger.info("Catalog download completed successfully", context: [
                 "operation": "catalog-download",
                 "version": updateInfo.availableVersion,
@@ -239,7 +239,7 @@ class CatalogUpdateService: CatalogUpdateServiceProtocol {
         } catch {
             log.error("Failed to download/install update: \(error.localizedDescription)")
 
-            // Log failure to Sentry for alerting
+            // Log failure for debugging
             logger.error("Catalog download failed", context: [
                 "operation": "catalog-download",
                 "version": updateInfo.availableVersion,

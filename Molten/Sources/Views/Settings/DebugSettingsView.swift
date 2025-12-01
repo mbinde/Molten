@@ -16,7 +16,7 @@ struct DebugSettingsView: View {
 
     private let deps: AppDependencies
 
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         self.deps = deps
     }
 

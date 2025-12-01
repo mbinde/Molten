@@ -20,6 +20,8 @@ struct AddSuggestedGlassView: View {
     @State private var notes = ""
     @State private var glassItems: [UnifiedCatalogItem] = []
     @State private var isLoading = false
+    @State private var showingErrorAlert = false
+    @State private var errorMessage = ""
 
     private let catalogService: CatalogService
 
@@ -30,7 +32,7 @@ struct AddSuggestedGlassView: View {
     }
 
     /// Convenience init using AppDependencies
-    init(plan: ProjectModel, repository: ProjectRepository, deps: AppDependencies = AppDependencies()) {
+    init(plan: ProjectModel, repository: ProjectRepository, deps: AppDependencies = .shared) {
         self.plan = plan
         self.repository = repository
         self.catalogService = deps.catalogService
@@ -105,22 +107,27 @@ struct AddSuggestedGlassView: View {
         .task {
             await loadGlassItems()
         }
+        .alert("Error", isPresented: $showingErrorAlert) {
+            Button("OK") { }
+        } message: {
+            Text(errorMessage)
+        }
     }
 
     private func loadGlassItems() async {
         print("⏱️ [SEARCH] loadGlassItems() started, cache isLoaded=\(CatalogSearchCache.shared.isLoaded)")
         isLoading = true
 
-        // CRITICAL: Trust the cache is loaded during FirstRunDataLoadingView
-        // The cache is ALWAYS loaded during startup (see FirstRunDataLoadingView line 189)
+        // CRITICAL: Trust the cache is loaded during LaunchScreenView
+        // The cache is ALWAYS loaded during startup
         // If it's not loaded yet, we wait for it to finish loading (don't reload!)
         if CatalogSearchCache.shared.isLoaded {
             // Cache ready - instant access! Filter to glass items only
             glassItems = CatalogSearchCache.shared.items.filter { $0.itemType == .glass }
             print("✅ [SEARCH] Using pre-loaded cache with \(glassItems.count) glass items")
         } else {
-            // Cache still loading from FirstRunDataLoadingView, wait for it
-            print("⏳ [SEARCH] Cache not ready, waiting for FirstRunDataLoadingView to finish...")
+            // Cache still loading from LaunchScreenView, wait for it
+            print("⏳ [SEARCH] Cache not ready, waiting for LaunchScreenView to finish...")
             await CatalogSearchCache.shared.loadIfNeeded(catalogService: catalogService)
             glassItems = CatalogSearchCache.shared.items.filter { $0.itemType == .glass }
             print("✅ [SEARCH] Cache now ready with \(glassItems.count) glass items")
@@ -175,8 +182,11 @@ struct AddSuggestedGlassView: View {
                 dismiss()
             }
         } catch {
-            // TODO: Show error alert
             print("Error saving glass item: \(error)")
+            await MainActor.run {
+                errorMessage = "Failed to save glass item: \(error.localizedDescription)"
+                showingErrorAlert = true
+            }
         }
     }
 }

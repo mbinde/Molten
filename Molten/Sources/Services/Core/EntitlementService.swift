@@ -17,8 +17,7 @@ class EntitlementService {
 
     // MARK: - Properties
 
-    /// Current subscription tier
-    /// TODO: In production, this should be fetched from StoreKit/App Store
+    /// Current subscription tier (updated by SubscriptionManager via RevenueCat)
     private(set) var tier: SubscriptionTier
 
     /// Debug override flag - observed property that triggers view updates
@@ -33,13 +32,10 @@ class EntitlementService {
         // Read fresh from UserDefaults to get the most current debug settings
         let overrideEnabled = UserDefaults.standard.bool(forKey: "debugOverrideSubscriptionTier")
         let tierValue = UserDefaults.standard.integer(forKey: "debugSubscriptionTierValue")
-        print("🔍 [EntitlementService] currentTier check - overrideEnabled: \(overrideEnabled), tierValue: \(tierValue), baseTier: \(tier)")
         if overrideEnabled {
             let result: SubscriptionTier = tierValue == 1 ? .premium : .free
-            print("🔍 [EntitlementService] Using debug override: \(result)")
             return result
         }
-        print("🔍 [EntitlementService] Using base tier: \(tier)")
         return tier
     }
 
@@ -52,7 +48,7 @@ class EntitlementService {
     // MARK: - Initialization
 
     /// Initialize with a specific tier (for testing and development)
-    /// In production, this will integrate with StoreKit to determine actual tier
+    /// Production tier is managed by SubscriptionManager via RevenueCat
     init(tier: SubscriptionTier = .free) {
         self.tier = tier
     }
@@ -64,11 +60,12 @@ class EntitlementService {
         self.tier = newTier
     }
 
-    /// Refresh subscription status from StoreKit
-    /// TODO: Implement StoreKit integration
+    /// Refresh subscription status
+    /// Note: Subscription status is managed by SubscriptionManager via RevenueCat.
+    /// This method is kept for potential future use but currently does nothing.
     func refreshSubscriptionStatus() async {
-        // TODO: Query StoreKit for current subscription status
-        // For now, defaults to free tier
+        // Subscription status is updated by SubscriptionManager.checkSubscriptionStatus()
+        // which queries RevenueCat and calls updateTier() on this service
     }
 
     // MARK: - Inventory Limits

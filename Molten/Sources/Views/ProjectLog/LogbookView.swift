@@ -41,7 +41,7 @@ struct LogbookView: View, CachedDataDeletion {
     #endif
 
     // Convenience init for production use (DI pattern)
-    init(logbookRepository: LogbookRepository, deps: AppDependencies = AppDependencies()) {
+    init(logbookRepository: LogbookRepository, deps: AppDependencies = .shared) {
         let viewModel = LogbookViewModel(logbookRepository: logbookRepository)
         #if canImport(UIKit)
         self.init(viewModel: viewModel, logbookRepository: logbookRepository, userImageRepository: deps.userImageRepository)

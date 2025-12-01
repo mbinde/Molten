@@ -60,13 +60,9 @@ struct RatingWordsSection: View {
         defer { isLoading = false }
 
         do {
-            print("🔍 [RatingWordsSection] Fetching words for stable_id: \(itemStableId)")
             let ratings = try await service.fetchRatings(forItems: [itemStableId])
             if let rating = ratings.first {
                 words = rating.topWords
-                print("🔍 [RatingWordsSection] Got \(words.count) words for \(itemStableId)")
-            } else {
-                print("🔍 [RatingWordsSection] No rating found for \(itemStableId)")
             }
         } catch {
             // Silently fail

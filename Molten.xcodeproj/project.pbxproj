@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
-		F52C8C2F2EC95283001E5CB0 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = F52C8C2E2EC95283001E5CB0 /* Sentry */; };
 		F53C0BD32EA81F980020E1AB /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */; };
 		F59F21B92EBF2CDE005A6269 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = F59F21B82EBF2CDE005A6269 /* RevenueCat */; };
 		F59F21BB2EBF2CDE005A6269 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = F59F21BA2EBF2CDE005A6269 /* RevenueCatUI */; };
@@ -190,6 +189,8 @@
 				Tests/MoltenTests/Models/InventoryModelValidationTests.swift,
 				Tests/MoltenTests/Models/ItemShoppingModelTests.swift,
 				Tests/MoltenTests/Models/KilnScheduleModelTests.swift,
+				Tests/MoltenTests/Models/LabelPresetTests.swift,
+				Tests/MoltenTests/Models/LastUsedInventoryTypePreferenceTests.swift,
 				Tests/MoltenTests/Models/LocationTypeTests.swift,
 				Tests/MoltenTests/Models/LogbookModelTests.swift,
 				Tests/MoltenTests/Models/LowStockDetailModelTests.swift,
@@ -232,7 +233,9 @@
 				Tests/MoltenTests/Services/DataExportServiceTests.swift,
 				Tests/MoltenTests/Services/DataInitializationServiceTests.swift,
 				Tests/MoltenTests/Services/DataLoadingServiceTests.swift,
+				Tests/MoltenTests/Services/DateAwareInventoryTests.swift,
 				Tests/MoltenTests/Services/EntityCoordinatorTests.swift,
+				Tests/MoltenTests/Services/ImageSubmissionAPIClientTests.swift,
 				Tests/MoltenTests/Services/InventoryServiceTests.swift,
 				Tests/MoltenTests/Services/InventoryTrackingServiceLocationTests.swift,
 				Tests/MoltenTests/Services/InventoryTrackingServiceTests.swift,
@@ -246,7 +249,6 @@
 				Tests/MoltenTests/Services/ProjectServiceTests.swift,
 				Tests/MoltenTests/Services/PurchaseRecordServiceTests.swift,
 				Tests/MoltenTests/Services/ReportingServiceTests.swift,
-				Tests/MoltenTests/Services/SentryLoggerTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
 				Tests/MoltenTests/Services/SubscriptionServiceTests.swift,
 				Tests/MoltenTests/ShareCodeGeneratorTests.swift,
@@ -263,6 +265,7 @@
 				Tests/MoltenTests/Utilities/ImageLoadingTests.swift,
 				Tests/MoltenTests/Utilities/ImagePermissionTests.swift,
 				Tests/MoltenTests/Utilities/ImageTextExtractionTests.swift,
+				Tests/MoltenTests/Utilities/InventoryTypeEncoderTests.swift,
 				Tests/MoltenTests/Utilities/JSON5ParserTests.swift,
 				Tests/MoltenTests/Utilities/NetworkSimulationTests.swift,
 				Tests/MoltenTests/Utilities/SearchTextParserTests.swift,
@@ -280,7 +283,6 @@
 				Tests/MoltenTests/Views/Catalog/MockCatalogViewModel.swift,
 				Tests/MoltenTests/Views/CatalogUpdateViewModelTests.swift,
 				Tests/MoltenTests/Views/CatalogViewModelTests.swift,
-				Tests/MoltenTests/Views/DebugCatalogViewModelTests.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemView_NotesTests.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailView_EntitlementTests.swift,
@@ -333,15 +335,11 @@
 				Tests/RepositoryTests/Mock/MockItemTagsRepository.swift,
 				Tests/RepositoryTests/Mock/MockLogbookRepository.swift,
 				Tests/RepositoryTests/Mock/MockPurchaseRecordRepository.swift,
+				Tests/RepositoryTests/Mock/MockRatingRepository.swift,
 				Tests/RepositoryTests/Mock/MockShoppingListRepository.swift,
 				Tests/RepositoryTests/Mock/MockToolItemRepository.swift,
 				Tests/RepositoryTests/Mock/MockUserNotesRepository.swift,
 				Tests/RepositoryTests/Mock/MockUserTagsRepository.swift,
-				Tools/Documentation/check_core_data_violations.sh,
-				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
-				Tools/Documentation/CORE_DATA_PREVENTION_GUIDE.md,
-				Tools/Documentation/detect_all_coredata.sh,
-				Tools/Documentation/RELEASE_STRATEGY_UPDATED.md,
 			);
 			target = F55B2F442E8F335D00C8059F /* MoltenTests */;
 		};
@@ -406,6 +404,8 @@
 				Tests/MoltenTests/Models/InventoryModelValidationTests.swift,
 				Tests/MoltenTests/Models/ItemShoppingModelTests.swift,
 				Tests/MoltenTests/Models/KilnScheduleModelTests.swift,
+				Tests/MoltenTests/Models/LabelPresetTests.swift,
+				Tests/MoltenTests/Models/LastUsedInventoryTypePreferenceTests.swift,
 				Tests/MoltenTests/Models/LocationTypeTests.swift,
 				Tests/MoltenTests/Models/LogbookModelTests.swift,
 				Tests/MoltenTests/Models/LowStockDetailModelTests.swift,
@@ -449,7 +449,9 @@
 				Tests/MoltenTests/Services/DataExportServiceTests.swift,
 				Tests/MoltenTests/Services/DataInitializationServiceTests.swift,
 				Tests/MoltenTests/Services/DataLoadingServiceTests.swift,
+				Tests/MoltenTests/Services/DateAwareInventoryTests.swift,
 				Tests/MoltenTests/Services/EntityCoordinatorTests.swift,
+				Tests/MoltenTests/Services/ImageSubmissionAPIClientTests.swift,
 				Tests/MoltenTests/Services/InventoryServiceTests.swift,
 				Tests/MoltenTests/Services/InventoryTrackingServiceLocationTests.swift,
 				Tests/MoltenTests/Services/InventoryTrackingServiceTests.swift,
@@ -463,7 +465,6 @@
 				Tests/MoltenTests/Services/ProjectServiceTests.swift,
 				Tests/MoltenTests/Services/PurchaseRecordServiceTests.swift,
 				Tests/MoltenTests/Services/ReportingServiceTests.swift,
-				Tests/MoltenTests/Services/SentryLoggerTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
 				Tests/MoltenTests/Services/SubscriptionServiceTests.swift,
 				Tests/MoltenTests/ShareCodeGeneratorTests.swift,
@@ -480,6 +481,7 @@
 				Tests/MoltenTests/Utilities/ImageLoadingTests.swift,
 				Tests/MoltenTests/Utilities/ImagePermissionTests.swift,
 				Tests/MoltenTests/Utilities/ImageTextExtractionTests.swift,
+				Tests/MoltenTests/Utilities/InventoryTypeEncoderTests.swift,
 				Tests/MoltenTests/Utilities/JSON5ParserTests.swift,
 				Tests/MoltenTests/Utilities/NetworkSimulationTests.swift,
 				Tests/MoltenTests/Utilities/SearchTextParserTests.swift,
@@ -497,7 +499,6 @@
 				Tests/MoltenTests/Views/Catalog/MockCatalogViewModel.swift,
 				Tests/MoltenTests/Views/CatalogUpdateViewModelTests.swift,
 				Tests/MoltenTests/Views/CatalogViewModelTests.swift,
-				Tests/MoltenTests/Views/DebugCatalogViewModelTests.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemView_NotesTests.swift,
 				Tests/MoltenTests/Views/Inventory/AddInventoryItemViewTests.swift,
 				Tests/MoltenTests/Views/Inventory/InventoryDetailView_EntitlementTests.swift,
@@ -598,6 +599,7 @@
 				Tests/RepositoryTests/Mock/MockItemTagsRepository.swift,
 				Tests/RepositoryTests/Mock/MockLogbookRepository.swift,
 				Tests/RepositoryTests/Mock/MockPurchaseRecordRepository.swift,
+				Tests/RepositoryTests/Mock/MockRatingRepository.swift,
 				Tests/RepositoryTests/Mock/MockShoppingListRepository.swift,
 				Tests/RepositoryTests/Mock/MockToolItemRepository.swift,
 				Tests/RepositoryTests/Mock/MockUserNotesRepository.swift,
@@ -606,12 +608,6 @@
 				Tests/RepositoryTests/SQLite/SQLiteGlassItemRepositoryTests.swift,
 				Tests/RepositoryTests/SQLite/SQLiteItemTagsRepositoryTests.swift,
 				Tests/RepositoryTests/UserImageRepository_IntegrationTests.swift,
-				Tools/Documentation/check_core_data_violations.sh,
-				Tools/Documentation/CORE_DATA_CLEANUP_SUMMARY.md,
-				Tools/Documentation/CORE_DATA_PREVENTION_GUIDE.md,
-				Tools/Documentation/detect_all_coredata.sh,
-				Tools/Documentation/RELEASE_STRATEGY_UPDATED.md,
-				Tools/Documentation/TODO.txt,
 			);
 			target = F5A13C4A2E890146002C0F7A /* Molten */;
 		};
@@ -701,6 +697,7 @@
 				Tests/RepositoryTests/Mock/MockItemTagsRepository.swift,
 				Tests/RepositoryTests/Mock/MockLogbookRepository.swift,
 				Tests/RepositoryTests/Mock/MockPurchaseRecordRepository.swift,
+				Tests/RepositoryTests/Mock/MockRatingRepository.swift,
 				Tests/RepositoryTests/Mock/MockShoppingListRepository.swift,
 				Tests/RepositoryTests/Mock/MockToolItemRepository.swift,
 				Tests/RepositoryTests/Mock/MockUserNotesRepository.swift,
@@ -784,7 +781,6 @@
 			files = (
 				F59F3AD82EBF1A2C005A6269 /* RevenueCatUI in Frameworks */,
 				F59F3AD62EBF1A2C005A6269 /* RevenueCat in Frameworks */,
-				F52C8C2F2EC95283001E5CB0 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1210,7 +1206,6 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				F59F3AD42EBF1A2C005A6269 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
-				F52C8C2D2EC95283001E5CB0 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F5A13C422E890146002C0F7A;
@@ -1452,7 +1447,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 			};
 			name = Debug;
@@ -1476,7 +1471,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -1502,7 +1497,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = Molten;
 			};
 			name = Debug;
@@ -1527,7 +1522,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = Molten;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -1553,7 +1548,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = Molten;
 			};
 			name = Debug;
@@ -1578,7 +1573,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = Molten;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -1606,7 +1601,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 			};
 			name = Debug;
@@ -1633,7 +1628,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -1672,7 +1667,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.MotleyWoods.Molten;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -1686,7 +1681,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Debug;
@@ -1724,7 +1719,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.MotleyWoods.Molten;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -1738,7 +1733,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;
@@ -1777,7 +1772,8 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -1838,6 +1834,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1878,7 +1875,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 			};
 			name = Debug;
@@ -1904,7 +1901,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -1937,7 +1934,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -1968,7 +1965,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -1992,7 +1989,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 			};
 			name = Debug;
@@ -2016,7 +2013,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -2043,7 +2040,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 			};
 			name = Debug;
@@ -2069,7 +2066,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Molten.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Molten";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -2171,14 +2168,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		F52C8C2D2EC95283001E5CB0 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/getsentry/sentry-cocoa";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 8.57.3;
-			};
-		};
 		F59F3AD42EBF1A2C005A6269 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
@@ -2190,11 +2179,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		F52C8C2E2EC95283001E5CB0 /* Sentry */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F52C8C2D2EC95283001E5CB0 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
-			productName = Sentry;
-		};
 		F59F21B82EBF2CDE005A6269 /* RevenueCat */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = F59F3AD42EBF1A2C005A6269 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;

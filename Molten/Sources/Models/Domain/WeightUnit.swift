@@ -250,3 +250,88 @@ struct UnitsDisplayHelper {
         return convertCount(count, from: units)
     }
 }
+
+// MARK: - Last Used Inventory Type Preference
+
+/// Stores the last used inventory type/subtype/subsubtype for quick re-entry
+/// Useful when adding multiple items from the same order
+struct LastUsedInventoryTypePreference {
+    private nonisolated static let typeKey = "lastUsedInventoryType"
+    private nonisolated static let subtypeKey = "lastUsedInventorySubtype"
+    private nonisolated static let subsubtypeKey = "lastUsedInventorySubsubtype"
+
+    // Private storage for dependency injection during testing
+    private nonisolated(unsafe) static var _userDefaults: UserDefaults? = nil
+    private nonisolated static let lock = NSLock()
+
+    private nonisolated static var userDefaults: UserDefaults {
+        lock.lock()
+        defer { lock.unlock() }
+
+        if let customDefaults = _userDefaults {
+            return customDefaults
+        }
+
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            let testSuiteName = "Test_LastUsedInventoryType"
+            return UserDefaults(suiteName: testSuiteName) ?? UserDefaults.standard
+        } else {
+            return UserDefaults.standard
+        }
+    }
+
+    /// Get the last used inventory type (default: "rod")
+    nonisolated static var type: String {
+        let defaults = userDefaults
+        guard let raw = defaults.string(forKey: typeKey), !raw.isEmpty else {
+            return "rod"
+        }
+        return raw
+    }
+
+    /// Get the last used subtype (optional)
+    nonisolated static var subtype: String? {
+        let defaults = userDefaults
+        let raw = defaults.string(forKey: subtypeKey)
+        return (raw?.isEmpty ?? true) ? nil : raw
+    }
+
+    /// Get the last used subsubtype (optional)
+    nonisolated static var subsubtype: String? {
+        let defaults = userDefaults
+        let raw = defaults.string(forKey: subsubtypeKey)
+        return (raw?.isEmpty ?? true) ? nil : raw
+    }
+
+    /// Save the last used type/subtype/subsubtype
+    nonisolated static func save(type: String, subtype: String?, subsubtype: String?) {
+        let defaults = userDefaults
+        defaults.set(type, forKey: typeKey)
+
+        if let subtype = subtype {
+            defaults.set(subtype, forKey: subtypeKey)
+        } else {
+            defaults.removeObject(forKey: subtypeKey)
+        }
+
+        if let subsubtype = subsubtype {
+            defaults.set(subsubtype, forKey: subsubtypeKey)
+        } else {
+            defaults.removeObject(forKey: subsubtypeKey)
+        }
+    }
+
+    // MARK: - Testing Support
+
+    nonisolated static func setUserDefaults(_ userDefaults: UserDefaults) {
+        lock.lock()
+        defer { lock.unlock() }
+        _userDefaults = userDefaults
+    }
+
+    nonisolated static func resetToStandard() {
+        lock.lock()
+        defer { lock.unlock() }
+        _userDefaults = nil
+    }
+}

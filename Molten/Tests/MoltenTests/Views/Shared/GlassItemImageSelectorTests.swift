@@ -70,8 +70,11 @@ struct GlassItemImageSelectorTests {
     @Test("Should hide Submit to Molten option with single image")
     func testSubmitOptionWithSingleImage() {
         let sampleImage = UserImageModel(
+            id: UUID(),
             item_stable_id: "test-001-0",
-            imageType: .primary
+            imageType: .primary,
+            fileExtension: "jpg",
+            dateAdded: Date()
         )
         let images = [sampleImage]
 
@@ -83,8 +86,8 @@ struct GlassItemImageSelectorTests {
     @Test("Should hide Submit to Molten option with multiple images")
     func testSubmitOptionWithMultipleImages() {
         let sampleImages = [
-            UserImageModel(item_stable_id: "test-001-0", imageType: .primary),
-            UserImageModel(item_stable_id: "test-001-0", imageType: .alternate)
+            UserImageModel(id: UUID(), item_stable_id: "test-001-0", imageType: .primary, fileExtension: "jpg", dateAdded: Date()),
+            UserImageModel(id: UUID(), item_stable_id: "test-001-0", imageType: .alternate, fileExtension: "jpg", dateAdded: Date())
         ]
 
         let shouldShowSubmitOption = sampleImages.isEmpty

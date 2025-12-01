@@ -27,7 +27,7 @@ struct InventoryStorageDetailView: View {
     private let inventoryTrackingService: InventoryTrackingService
     private let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
 
-    init(item: CompleteInventoryItemModel, inventoryType: String, deps: AppDependencies = AppDependencies()) {
+    init(item: CompleteInventoryItemModel, inventoryType: String, deps: AppDependencies = .shared) {
         self.item = item
         self.inventoryType = inventoryType
         self.inventoryRepository = deps.inventoryRepository

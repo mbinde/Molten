@@ -196,6 +196,197 @@ actor InventoryTrackingService {
         return try await inventoryRepository.createInventory(inventory)
     }
 
+    // MARK: - Date-Aware Inventory Operations
+    //
+    // These methods support the date-based inventory model where each record represents
+    // items added on a specific date. This enables:
+    // - "Print labels for items added today/this week" filtering
+    // - Historical tracking of when inventory was acquired
+    // - LIFO (last in, first out) decrement behavior
+
+    /// Normalize a date to the start of day (midnight) in the current calendar
+    /// This ensures all inventory added on the same calendar day shares the same date_added
+    private nonisolated func startOfDay(_ date: Date) -> Date {
+        Calendar.current.startOfDay(for: date)
+    }
+
+    /// Check if two dates represent the same calendar day
+    private nonisolated func isSameDay(_ date1: Date, _ date2: Date) -> Bool {
+        Calendar.current.isDate(date1, inSameDayAs: date2)
+    }
+
+    /// Increment inventory by 1 for a specific item/type/location combination.
+    /// Uses date-aware logic: finds or creates a record for TODAY's date.
+    ///
+    /// - Parameters:
+    ///   - stableId: Item natural key
+    ///   - type: Inventory type (rod, tube, frit, etc.)
+    ///   - subtype: Optional subtype
+    ///   - subsubtype: Optional sub-subtype
+    ///   - location: Optional storage location
+    /// - Returns: The updated or newly created inventory record
+    func incrementInventory(
+        forItem stableId: String,
+        type: String,
+        subtype: String? = nil,
+        subsubtype: String? = nil,
+        atLocation location: String? = nil
+    ) async throws -> InventoryModel {
+        let today = startOfDay(Date())
+
+        // Find all matching records for this item/type/location
+        let allRecords = try await inventoryRepository.fetchInventory(forItem: stableId)
+        let matchingRecords = allRecords.filter { record in
+            guard record.type.lowercased() == type.lowercased() else { return false }
+            guard record.location == location else { return false }
+
+            // Match subtype if specified
+            if let sub = subtype {
+                guard record.subtype?.lowercased() == sub.lowercased() else { return false }
+            } else {
+                guard record.subtype == nil else { return false }
+            }
+
+            // Match subsubtype if specified
+            if let subsub = subsubtype {
+                guard record.subsubtype?.lowercased() == subsub.lowercased() else { return false }
+            } else {
+                guard record.subsubtype == nil else { return false }
+            }
+
+            return true
+        }
+
+        // Find a record from today
+        if let todayRecord = matchingRecords.first(where: { isSameDay($0.date_added, today) }) {
+            // Update existing today's record
+            let updated = InventoryModel(
+                id: todayRecord.id,
+                item_stable_id: todayRecord.item_stable_id,
+                type: todayRecord.type,
+                subtype: todayRecord.subtype,
+                subsubtype: todayRecord.subsubtype,
+                dimensions: todayRecord.dimensions,
+                quantity: todayRecord.quantity + 1,
+                containerCount: todayRecord.containerCount,
+                location: todayRecord.location,
+                date_added: todayRecord.date_added,
+                date_modified: Date()
+            )
+            return try await inventoryRepository.updateInventory(updated)
+        } else {
+            // Create new record for today
+            let newRecord = InventoryModel(
+                item_stable_id: stableId,
+                type: type,
+                subtype: subtype,
+                subsubtype: subsubtype,
+                quantity: 1,
+                location: location,
+                date_added: today,
+                date_modified: Date()
+            )
+            return try await inventoryRepository.createInventory(newRecord)
+        }
+    }
+
+    /// Decrement inventory by 1 using LIFO (Last In, First Out) strategy.
+    /// Decrements from the newest record first (by date_added).
+    /// Deletes records when they reach zero quantity.
+    ///
+    /// - Parameters:
+    ///   - stableId: Item natural key
+    ///   - type: Inventory type (rod, tube, frit, etc.)
+    ///   - subtype: Optional subtype
+    ///   - subsubtype: Optional sub-subtype
+    ///   - location: Optional storage location (nil matches records with no location)
+    /// - Returns: The updated inventory record, or nil if the record was deleted (hit zero)
+    /// - Throws: `InventoryTrackingServiceError.invalidOperation` if no inventory exists to decrement
+    func decrementInventoryLIFO(
+        forItem stableId: String,
+        type: String,
+        subtype: String? = nil,
+        subsubtype: String? = nil,
+        atLocation location: String? = nil
+    ) async throws -> InventoryModel? {
+        // Find all matching records for this item/type/location
+        let allRecords = try await inventoryRepository.fetchInventory(forItem: stableId)
+        let matchingRecords = allRecords.filter { record in
+            guard record.type.lowercased() == type.lowercased() else { return false }
+            guard record.location == location else { return false }
+            guard record.quantity > 0 else { return false }
+
+            // Match subtype if specified
+            if let sub = subtype {
+                guard record.subtype?.lowercased() == sub.lowercased() else { return false }
+            } else {
+                guard record.subtype == nil else { return false }
+            }
+
+            // Match subsubtype if specified
+            if let subsub = subsubtype {
+                guard record.subsubtype?.lowercased() == subsub.lowercased() else { return false }
+            } else {
+                guard record.subsubtype == nil else { return false }
+            }
+
+            return true
+        }
+
+        // Sort by date_added descending (newest first) for LIFO
+        let sortedRecords = matchingRecords.sorted { $0.date_added > $1.date_added }
+
+        guard let newestRecord = sortedRecords.first else {
+            throw InventoryTrackingServiceError.invalidOperation(
+                "No inventory to decrement for \(stableId) type=\(type) location=\(location ?? "none")"
+            )
+        }
+
+        let newQuantity = newestRecord.quantity - 1
+
+        if newQuantity <= 0 {
+            // Delete the record when it hits zero
+            try await inventoryRepository.deleteInventory(id: newestRecord.id)
+            return nil
+        } else {
+            // Update with decremented quantity
+            let updated = InventoryModel(
+                id: newestRecord.id,
+                item_stable_id: newestRecord.item_stable_id,
+                type: newestRecord.type,
+                subtype: newestRecord.subtype,
+                subsubtype: newestRecord.subsubtype,
+                dimensions: newestRecord.dimensions,
+                quantity: newQuantity,
+                containerCount: newestRecord.containerCount,
+                location: newestRecord.location,
+                date_added: newestRecord.date_added,
+                date_modified: Date()
+            )
+            return try await inventoryRepository.updateInventory(updated)
+        }
+    }
+
+    /// Fetch inventory records added on or after a specific date
+    /// Useful for "print labels for items added this week" filtering
+    ///
+    /// - Parameters:
+    ///   - date: The cutoff date (records with date_added >= this date are returned)
+    ///   - stableId: Optional item filter
+    /// - Returns: Array of inventory records added on or after the date
+    func fetchInventoryAddedSince(_ date: Date, forItem stableId: String? = nil) async throws -> [InventoryModel] {
+        let cutoff = startOfDay(date)
+        let allRecords: [InventoryModel]
+
+        if let stableId = stableId {
+            allRecords = try await inventoryRepository.fetchInventory(forItem: stableId)
+        } else {
+            allRecords = try await inventoryRepository.fetchInventory(matching: nil)
+        }
+
+        return allRecords.filter { $0.date_added >= cutoff }
+    }
+
     /// Add inventory to an item with optional location and container count
     /// - Parameters:
     ///   - quantity: Quantity to add (weight in grams for frit/powder/enamel, count for others)
@@ -422,6 +613,8 @@ actor InventoryTrackingService {
 nonisolated struct DetailedInventorySummaryModel {
     let summary: InventorySummaryModel
     let locationDetails: [String: [(location: String, quantity: Double)]]
+    /// Full inventory records grouped by type (for proper display with container counts)
+    let inventoryByType: [String: [InventoryModel]]
 
     /// Business Logic: Aggregate inventory by type and location
     /// - Parameters:
@@ -430,11 +623,20 @@ nonisolated struct DetailedInventorySummaryModel {
     /// - Returns: Detailed summary with location information grouped by type
     static func from(summary: InventorySummaryModel, inventory: [InventoryModel]) -> DetailedInventorySummaryModel {
         var locationDetails: [String: [(location: String, quantity: Double)]] = [:]
+        var inventoryByType: [String: [InventoryModel]] = [:]
 
         for inventoryRecord in inventory {
+            let typeKey = inventoryRecord.type
+
+            // Store full inventory records by type
+            if inventoryByType[typeKey] == nil {
+                inventoryByType[typeKey] = []
+            }
+            inventoryByType[typeKey]?.append(inventoryRecord)
+
+            // Also store location details for backwards compatibility
             if let location = inventoryRecord.location {
                 let locationInfo = (location: location, quantity: inventoryRecord.quantity)
-                let typeKey = inventoryRecord.type
                 if locationDetails[typeKey] == nil {
                     locationDetails[typeKey] = []
                 }
@@ -444,7 +646,8 @@ nonisolated struct DetailedInventorySummaryModel {
 
         return DetailedInventorySummaryModel(
             summary: summary,
-            locationDetails: locationDetails
+            locationDetails: locationDetails,
+            inventoryByType: inventoryByType
         )
     }
 }

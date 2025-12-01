@@ -29,6 +29,9 @@ struct InventoryDetailView: View {
     let glassItemRepository: GlassItemRepository
     let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
 
+    /// Optional callback for QR scan workflow - shows "Manage Inventory" button near inventory section
+    let onManageInventory: (() -> Void)?
+
     @Environment(\.dismiss) private var dismiss
     @Environment(EntitlementService.self) private var entitlementService
     @State private var isEditing = false
@@ -44,7 +47,7 @@ struct InventoryDetailView: View {
     @State private var showingUpgradePrompt = false
     @State private var inventoryItemCount = 0
     @State private var inventoryItemLimit = 0
-    @State private var expandedSections: Set<String> = ["glass-item", "inventory"]
+    @State private var expandedSections: Set<String> = ["glass-item", "inventory", "shopping-list"]
     @State private var isManufacturerNotesExpanded: Bool
     @State private var showNavTitle = false
 
@@ -90,6 +93,7 @@ struct InventoryDetailView: View {
 
     @State private var showingError = false
     @State private var errorMessage: String?
+    @State private var showingShareSheet = false
 
     // MARK: - Initializers
 
@@ -105,7 +109,8 @@ struct InventoryDetailView: View {
         userImageRepository: UserImageRepository,
         kilnScheduleService: KilnScheduleService,
         glassItemRepository: GlassItemRepository,
-        storageLocationDefinitionRepository: StorageLocationDefinitionRepository
+        storageLocationDefinitionRepository: StorageLocationDefinitionRepository,
+        onManageInventory: (() -> Void)? = nil
     ) {
         self.item = item
         self.inventoryTrackingService = inventoryTrackingService
@@ -118,6 +123,7 @@ struct InventoryDetailView: View {
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
         self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
+        self.onManageInventory = onManageInventory
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
@@ -126,7 +132,11 @@ struct InventoryDetailView: View {
     }
 
     /// Convenience init using AppDependencies
-    init(item: CompleteInventoryItemModel, deps: AppDependencies = AppDependencies()) {
+    init(
+        item: CompleteInventoryItemModel,
+        deps: AppDependencies = .shared,
+        onManageInventory: (() -> Void)? = nil
+    ) {
         self.item = item
         self.inventoryTrackingService = deps.inventoryTrackingService
         self.catalogService = deps.catalogService
@@ -138,6 +148,7 @@ struct InventoryDetailView: View {
         self.kilnScheduleService = deps.kilnScheduleService
         self.glassItemRepository = deps.glassItemRepository
         self.storageLocationDefinitionRepository = deps.storageLocationDefinitionRepository
+        self.onManageInventory = onManageInventory
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
         self._isUserNotesExpanded = State(initialValue: UserSettings.shared.expandUserNotesByDefault)
@@ -155,11 +166,43 @@ struct InventoryDetailView: View {
         )
     }
 
+    /// Check if we have permission to show manufacturer descriptions for this item
+    private var canShowManufacturerDescription: Bool {
+        GlassManufacturers.productDescriptionPermissions[currentItem.glassItem.manufacturer] ?? false
+    }
+
     /// Check if there's any content to show in the Glass Item Details section
     private var hasGlassItemDetails: Bool {
-        let hasManufacturerNotes = currentItem.glassItem.mfr_notes != nil && !currentItem.glassItem.mfr_notes!.isEmpty
+        let hasManufacturerNotes = canShowManufacturerDescription
+            && currentItem.glassItem.mfr_notes != nil
+            && !currentItem.glassItem.mfr_notes!.isEmpty
         let hasUserNotes = userNotes != nil
         return hasManufacturerNotes || hasUserNotes
+    }
+
+    /// Text content for sharing this glass item
+    private var shareText: String {
+        let glassItem = currentItem.glassItem
+        let manufacturerName = GlassManufacturers.fullName(for: glassItem.manufacturer) ?? glassItem.manufacturer
+
+        var text = "\(glassItem.name)\n"
+        text += "\(manufacturerName)"
+
+        if let sku = glassItem.sku, !sku.isEmpty {
+            text += " • \(sku)"
+        }
+
+        text += " • COE \(glassItem.coe)"
+
+        if canShowManufacturerDescription,
+           let description = glassItem.mfr_notes, !description.isEmpty {
+            text += "\n\n\(description)"
+        }
+
+        // Add deep link URL for opening in Molten (view-only, no QR quick actions)
+        text += "\n\nmolten://v/\(glassItem.stable_id)"
+
+        return text
     }
 
     // MARK: - View Body
@@ -201,6 +244,28 @@ struct InventoryDetailView: View {
                                 showingInventoryDetails = true
                             }
                         )
+                    }
+
+                    // Manage Inventory button (QR scan workflow)
+                    if let onManageInventory = onManageInventory {
+                        Button {
+                            onManageInventory()
+                        } label: {
+                            HStack {
+                                Image(systemName: "plusminus.circle.fill")
+                                    .font(.title2)
+                                Text("Manage Inventory")
+                                    .font(DesignSystem.Typography.listItemTitle)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                            }
+                            .padding()
+                            .foregroundColor(DesignSystem.Colors.moltenTeal)
+                        }
+                        .background(DesignSystem.Colors.tintTeal)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+                        .padding(.horizontal)
                     }
 
                     // Specifications tile grid
@@ -288,13 +353,29 @@ struct InventoryDetailView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showingShareSheet = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .accessibilityIdentifier("inventory_detail_share")
+                }
+            }
             #endif
         }
+        .sheet(isPresented: $showingShareSheet) {
+            ShareSheet(items: [shareText])
+        }
         .sheet(isPresented: $showingShoppingListOptions, onDismiss: {
-            // Reload shopping list after adding
+            // Reload shopping list after adding/editing
             loadShoppingList()
         }) {
-            AddShoppingListItemView(prefilledNaturalKey: item.glassItem.stable_id)
+            AddShoppingListItemView(
+                prefilledNaturalKey: item.glassItem.stable_id,
+                existingItem: shoppingListItem  // Pass existing item for edit mode
+            )
         }
         .sheet(isPresented: $showingInventoryDetails) {
             InventoryStorageDetailView(
@@ -359,7 +440,7 @@ struct InventoryDetailView: View {
                let _ = catalogService {
                 AddInventoryItemView(
                     prefilledNaturalKey: item.glassItem.stable_id,
-                    deps: AppDependencies()
+                    deps: .shared
                 )
             }
         }
@@ -439,16 +520,18 @@ struct InventoryDetailView: View {
     }
 
     private func loadShoppingList() {
-        Task {
+        Task { @MainActor in
             isLoadingShoppingList = true
-            defer { isLoadingShoppingList = false }
 
             do {
                 shoppingListItem = try await shoppingListRepository.fetchItem(forItem: item.glassItem.stable_id)
             } catch {
                 // No shopping list item is fine, just leave nil
+                shoppingListItem = nil
                 print("No shopping list item found or error loading: \(error)")
             }
+
+            isLoadingShoppingList = false
         }
     }
 
@@ -834,7 +917,8 @@ struct InventoryDetailView: View {
             accessibilityId: "section_manufacturer_notes"
         ) {
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
-                if let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
+                if canShowManufacturerDescription,
+                   let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
                     expandableNotesCard(title: nil, content: notes, accessibilityId: "expand_manufacturer_notes")
                 }
 
@@ -964,6 +1048,7 @@ struct InventoryDetailView: View {
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.bordered)
+                        .tint(DesignSystem.Colors.accentDanger)
                     }
                 }
             } else {

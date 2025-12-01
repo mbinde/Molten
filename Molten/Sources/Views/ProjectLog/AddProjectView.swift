@@ -35,6 +35,8 @@ struct AddProjectView: View {
     @State private var projectCount = 0
     @State private var projectLimit = 0
     @State private var kilnScheduleId: UUID?
+    @State private var showingErrorAlert = false
+    @State private var errorMessage = ""
 
     private let deps: AppDependencies
     private let projectPlanRepository: ProjectRepository
@@ -43,7 +45,7 @@ struct AddProjectView: View {
     private let onSave: ((ProjectModel) -> Void)?
 
     init(
-        deps: AppDependencies = AppDependencies(),
+        deps: AppDependencies = .shared,
         onSave: ((ProjectModel) -> Void)? = nil
     ) {
         self.deps = deps
@@ -207,6 +209,11 @@ struct AddProjectView: View {
                 limit: projectLimit
             )
         }
+        .alert("Error", isPresented: $showingErrorAlert) {
+            Button("OK") { }
+        } message: {
+            Text(errorMessage)
+        }
     }
 
     private func savePlan() async {
@@ -266,8 +273,11 @@ struct AddProjectView: View {
                 dismiss()
             }
         } catch {
-            // TODO: Show error alert
             print("Error saving plan: \(error)")
+            await MainActor.run {
+                errorMessage = "Failed to save project: \(error.localizedDescription)"
+                showingErrorAlert = true
+            }
         }
     }
 }

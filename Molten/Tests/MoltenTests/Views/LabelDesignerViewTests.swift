@@ -280,4 +280,225 @@ struct LabelDesignerViewTests {
         #expect(weightBasedItems.count == 1)
         #expect(weightBasedItems.first?.item.catalogItem.stable_id == "test-frit")
     }
+
+    // MARK: - UUID-Based Override Tests
+
+    /// Create a test inventory item with a specific UUID for testing UUID-based overrides
+    private func createTestItemWithUUID(
+        inventoryId: UUID,
+        stableId: String = "test-mfr-sku-0",
+        name: String = "Test Item",
+        type: String,
+        quantity: Double,
+        containerCount: Double? = nil
+    ) -> CompleteInventoryItemModel {
+        let glassItem = GlassItemModel(
+            stable_id: stableId,
+            name: name,
+            sku: "SKU-001",
+            manufacturer: "test",
+            mfr_notes: nil,
+            coe: 96,
+            url: nil,
+            mfr_status: "active",
+            image_url: nil,
+            image_path: nil,
+            image_thumb_path: nil,
+            dominant_colors: nil
+        )
+
+        let inventory = [
+            InventoryModel(
+                id: inventoryId,
+                item_stable_id: stableId,
+                type: type,
+                subtype: nil,
+                subsubtype: nil,
+                dimensions: nil,
+                quantity: quantity,
+                containerCount: containerCount,
+                location: "Studio"
+            )
+        ]
+
+        return CompleteInventoryItemModel(
+            glassItem: glassItem,
+            inventory: inventory,
+            tags: [],
+            userTags: []
+        )
+    }
+
+    @Test("Should use UUID-based override when provided")
+    func testUUIDBasedOverride() {
+        let inventoryId = UUID()
+        let item = createTestItemWithUUID(inventoryId: inventoryId, type: "rod", quantity: 10)
+
+        var uuidOverrides: [UUID: Int] = [:]
+        uuidOverrides[inventoryId] = 3  // Override to 3 labels
+
+        let labelCount = LabelCountCalculator.calculateLabelCount(
+            for: item,
+            inventoryRecordOverrides: uuidOverrides
+        )
+
+        #expect(labelCount == 3)
+    }
+
+    @Test("UUID override takes priority over type-based override")
+    func testUUIDOverridePriorityOverTypeOverride() {
+        let inventoryId = UUID()
+        let item = createTestItemWithUUID(
+            inventoryId: inventoryId,
+            stableId: "test-rod-1",
+            type: "rod",
+            quantity: 10
+        )
+
+        var typeOverrides: [String: Int] = [:]
+        typeOverrides["test-rod-1:rod"] = 5  // Type-based override: 5
+
+        var uuidOverrides: [UUID: Int] = [:]
+        uuidOverrides[inventoryId] = 2  // UUID-based override: 2 (should win)
+
+        let labelCount = LabelCountCalculator.calculateLabelCount(
+            for: item,
+            userOverrides: typeOverrides,
+            inventoryRecordOverrides: uuidOverrides
+        )
+
+        // UUID override should take priority
+        #expect(labelCount == 2)
+    }
+
+    @Test("Should use type override when no UUID override exists")
+    func testFallbackToTypeOverride() {
+        let inventoryId = UUID()
+        let item = createTestItemWithUUID(
+            inventoryId: inventoryId,
+            stableId: "test-rod-1",
+            type: "rod",
+            quantity: 10
+        )
+
+        var typeOverrides: [String: Int] = [:]
+        typeOverrides["test-rod-1:rod"] = 5  // Type-based override: 5
+
+        // No UUID override provided
+        let labelCount = LabelCountCalculator.calculateLabelCount(
+            for: item,
+            userOverrides: typeOverrides,
+            inventoryRecordOverrides: [:]
+        )
+
+        #expect(labelCount == 5)
+    }
+
+    @Test("Should use default when no overrides exist")
+    func testFallbackToDefault() {
+        let inventoryId = UUID()
+        let item = createTestItemWithUUID(inventoryId: inventoryId, type: "rod", quantity: 10)
+
+        // No overrides
+        let labelCount = LabelCountCalculator.calculateLabelCount(
+            for: item,
+            userOverrides: [:],
+            inventoryRecordOverrides: [:]
+        )
+
+        // Default for rod is quantity (10)
+        #expect(labelCount == 10)
+    }
+
+    @Test("UUID override works for weight-based types")
+    func testUUIDOverrideForWeightBased() {
+        let inventoryId = UUID()
+        let item = createTestItemWithUUID(
+            inventoryId: inventoryId,
+            type: "frit",
+            quantity: 100,
+            containerCount: 3  // Has 3 jars
+        )
+
+        var uuidOverrides: [UUID: Int] = [:]
+        uuidOverrides[inventoryId] = 1  // Only print 1 label
+
+        let labelCount = LabelCountCalculator.calculateLabelCount(
+            for: item,
+            inventoryRecordOverrides: uuidOverrides
+        )
+
+        // Should use UUID override (1), not containerCount (3)
+        #expect(labelCount == 1)
+    }
+
+    // MARK: - defaultLabelCount Tests
+
+    @Test("defaultLabelCount returns quantity for count-based types")
+    func testDefaultLabelCountForRod() {
+        let inventory = InventoryModel(
+            id: UUID(),
+            item_stable_id: "test-item",
+            type: "rod",
+            subtype: nil,
+            subsubtype: nil,
+            dimensions: nil,
+            quantity: 10,
+            containerCount: nil,
+            location: "Studio"
+        )
+
+        #expect(inventory.defaultLabelCount == 10)
+    }
+
+    @Test("defaultLabelCount returns containerCount for weight-based types with jars")
+    func testDefaultLabelCountForFritWithJars() {
+        let inventory = InventoryModel(
+            id: UUID(),
+            item_stable_id: "test-item",
+            type: "frit",
+            subtype: nil,
+            subsubtype: nil,
+            dimensions: nil,
+            quantity: 100,
+            containerCount: 3,
+            location: "Studio"
+        )
+
+        #expect(inventory.defaultLabelCount == 3)
+    }
+
+    @Test("defaultLabelCount returns 1 for weight-based types without jars")
+    func testDefaultLabelCountForFritNoJars() {
+        let inventory = InventoryModel(
+            id: UUID(),
+            item_stable_id: "test-item",
+            type: "frit",
+            subtype: nil,
+            subsubtype: nil,
+            dimensions: nil,
+            quantity: 100,
+            containerCount: nil,
+            location: "Studio"
+        )
+
+        #expect(inventory.defaultLabelCount == 1)
+    }
+
+    @Test("defaultLabelCount returns 1 for weight-based types with zero jars")
+    func testDefaultLabelCountForFritZeroJars() {
+        let inventory = InventoryModel(
+            id: UUID(),
+            item_stable_id: "test-item",
+            type: "frit",
+            subtype: nil,
+            subsubtype: nil,
+            dimensions: nil,
+            quantity: 100,
+            containerCount: 0,
+            location: "Studio"
+        )
+
+        #expect(inventory.defaultLabelCount == 1)
+    }
 }

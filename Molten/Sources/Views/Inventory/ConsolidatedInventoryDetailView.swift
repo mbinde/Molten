@@ -113,8 +113,9 @@ struct ConsolidatedInventoryDetailView: View {
                         // Individual Inventory Items Section
                         if summary.inventories.count > 0 {
                             Section("Inventory by Type (\(summary.inventories.count))") {
-                                ForEach(summary.inventoryByType.sorted(by: { $0.key < $1.key }), id: \.key) { type, quantity in
-                                    InventoryTypeRow(type: type, quantity: quantity, locations: detailed.locationDetails[type] ?? [])
+                                ForEach(summary.inventoryByType.sorted(by: { $0.key < $1.key }), id: \.key) { type, _ in
+                                    let inventoryRecords = detailed.inventoryByType[type] ?? []
+                                    InventoryTypeRow(type: type, inventoryRecords: inventoryRecords)
                                 }
                             }
                         }
@@ -203,47 +204,83 @@ struct InventoryStatView: View {
 
 struct InventoryTypeRow: View {
     let type: String
-    let quantity: Double
-    let locations: [(location: String, quantity: Double)]
-    
+    let inventoryRecords: [InventoryModel]
+
+    /// Total quantity display combining all records
+    private var totalQuantityDisplay: String {
+        // If all records are weight-based, aggregate properly
+        guard let firstRecord = inventoryRecords.first else { return "0" }
+
+        if firstRecord.isWeightBasedType {
+            // Aggregate jars and weight separately
+            let totalJars = inventoryRecords.compactMap { $0.containerCount }.reduce(0, +)
+            let totalWeight = inventoryRecords.reduce(0.0) { $0 + $1.quantity }
+            let hasJars = totalJars > 0
+            let hasWeight = totalWeight > 0
+
+            if hasJars && hasWeight {
+                let jarText = formatJarCount(totalJars)
+                let weightText = formatWeight(totalWeight)
+                if ContainerInputModePreference.current == .jars {
+                    return "\(jarText) (~\(weightText))"
+                } else {
+                    return "\(weightText) (\(jarText))"
+                }
+            } else if hasJars {
+                return formatJarCount(totalJars)
+            } else if hasWeight {
+                return formatWeight(totalWeight)
+            } else {
+                return "0"
+            }
+        } else {
+            // Non-weight type: sum quantities
+            let total = inventoryRecords.reduce(0.0) { $0 + $1.quantity }
+            return formatQuantity(total)
+        }
+    }
+
+    /// Unique locations from inventory records
+    private var locations: [String] {
+        let allLocations = inventoryRecords.compactMap { $0.location }
+        return Array(Set(allLocations)).sorted()
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(type.capitalized)
                         .font(.headline)
-                    
+
                     if !locations.isEmpty {
                         Text("\(locations.count) location\(locations.count == 1 ? "" : "s")")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text(formatQuantity(quantity))
+                    Text(totalQuantityDisplay)
                         .font(.headline)
                         .fontWeight(.semibold)
                         .foregroundColor(Color.accentColor)
-                    
-                    Text("units")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
                 }
             }
-            
+
             // Show location breakdown if available
             if !locations.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {
-                    ForEach(locations.sorted(by: { $0.location < $1.location }), id: \.location) { locationInfo in
+                    ForEach(locations, id: \.self) { location in
+                        let recordsAtLocation = inventoryRecords.filter { $0.location == location }
                         HStack {
-                            Text("• \(locationInfo.location)")
+                            Text("• \(location)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             Spacer()
-                            Text(formatQuantity(locationInfo.quantity))
+                            Text(formatRecordsQuantity(recordsAtLocation))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -254,7 +291,62 @@ struct InventoryTypeRow: View {
         }
         .padding(.vertical, 2)
     }
-    
+
+    private func formatRecordsQuantity(_ records: [InventoryModel]) -> String {
+        guard let firstRecord = records.first else { return "0" }
+
+        if firstRecord.isWeightBasedType {
+            let totalJars = records.compactMap { $0.containerCount }.reduce(0, +)
+            let totalWeight = records.reduce(0.0) { $0 + $1.quantity }
+            let hasJars = totalJars > 0
+            let hasWeight = totalWeight > 0
+
+            if hasJars && hasWeight {
+                let jarText = formatJarCount(totalJars)
+                let weightText = formatWeight(totalWeight)
+                if ContainerInputModePreference.current == .jars {
+                    return "\(jarText) (~\(weightText))"
+                } else {
+                    return "\(weightText) (\(jarText))"
+                }
+            } else if hasJars {
+                return formatJarCount(totalJars)
+            } else if hasWeight {
+                return formatWeight(totalWeight)
+            } else {
+                return "0"
+            }
+        } else {
+            let total = records.reduce(0.0) { $0 + $1.quantity }
+            return formatQuantity(total)
+        }
+    }
+
+    private func formatJarCount(_ count: Double) -> String {
+        let countStr = count.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", count)
+            : String(format: "%.1f", count)
+        let label = count == 1 ? "jar" : "jars"
+        return "\(countStr) \(label)"
+    }
+
+    private func formatWeight(_ grams: Double) -> String {
+        let preferredUnit = WeightUnitPreference.current
+        let value: Double
+        let unitSymbol: String
+        if preferredUnit == .ounces {
+            value = grams / 28.3495
+            unitSymbol = "oz"
+        } else {
+            value = grams
+            unitSymbol = "g"
+        }
+        let valueStr = value.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", value)
+            : String(format: "%.1f", value)
+        return "\(valueStr)\(unitSymbol)"
+    }
+
     private func formatQuantity(_ quantity: Double) -> String {
         if quantity == Double(Int(quantity)) {
             return String(Int(quantity))

@@ -171,6 +171,16 @@ class CoreDataLabelPresetRepository: @unchecked Sendable, LabelPresetRepository 
         let fontScaleCGFloat: CGFloat? = fontScale != nil ? CGFloat(fontScale!) : nil
         let manufacturerImageSizeCGFloat: CGFloat? = manufacturerImageSize != nil ? CGFloat(manufacturerImageSize!) : nil
 
+        // Padding fields (default to 0 for old presets)
+        let paddingTop = entity.value(forKey: "padding_top") as? Double ?? 0
+        let paddingBottom = entity.value(forKey: "padding_bottom") as? Double ?? 0
+        let paddingLeft = entity.value(forKey: "padding_left") as? Double ?? 0
+        let paddingRight = entity.value(forKey: "padding_right") as? Double ?? 0
+
+        // Position fields (default to 0 for old presets)
+        let positionHorizontal = entity.value(forKey: "position_horizontal") as? Double ?? 0
+        let positionVertical = entity.value(forKey: "position_vertical") as? Double ?? 0
+
         let config = LabelBuilderConfig(
             qrPosition: qrPosition,
             qrSize: qrSizeCGFloat,
@@ -179,21 +189,27 @@ class CoreDataLabelPresetRepository: @unchecked Sendable, LabelPresetRepository 
             manufacturerImageSize: manufacturerImageSizeCGFloat,
             textFields: textFields,
             textAlignment: textAlignment,
-            fieldFormats: fieldFormats
+            fieldFormats: fieldFormats,
+            paddingTop: CGFloat(paddingTop),
+            paddingBottom: CGFloat(paddingBottom),
+            paddingLeft: CGFloat(paddingLeft),
+            paddingRight: CGFloat(paddingRight),
+            positionHorizontal: CGFloat(positionHorizontal),
+            positionVertical: CGFloat(positionVertical)
         )
 
-        // LabelBuilderPreset is not Sendable but is safe to construct off MainActor
-        // Using assumeIsolated to bypass false positive
-        return MainActor.assumeIsolated {
-            LabelBuilderPreset(
-                id: id,
-                name: name,
-                description: description ?? "",
-                config: config,
-                createdAt: createdAt,
-                modifiedAt: modifiedAt
-            )
-        }
+        // Optional fields
+        let recommendedLabel = entity.value(forKey: "recommended_label") as? String
+
+        return LabelBuilderPreset(
+            id: id,
+            name: name,
+            description: description ?? "",
+            config: config,
+            createdAt: createdAt,
+            modifiedAt: modifiedAt,
+            recommended_label: recommendedLabel
+        )
     }
 
     /// Update Core Data entity from model
@@ -228,6 +244,19 @@ class CoreDataLabelPresetRepository: @unchecked Sendable, LabelPresetRepository 
             throw CoreDataLabelPresetError.encodingFailed("field_formats")
         }
         entity.setValue(fieldFormatsJSON, forKey: "field_formats")
+
+        // Optional fields
+        entity.setValue(preset.recommended_label, forKey: "recommended_label")
+
+        // Padding fields
+        entity.setValue(Double(preset.config.paddingTop), forKey: "padding_top")
+        entity.setValue(Double(preset.config.paddingBottom), forKey: "padding_bottom")
+        entity.setValue(Double(preset.config.paddingLeft), forKey: "padding_left")
+        entity.setValue(Double(preset.config.paddingRight), forKey: "padding_right")
+
+        // Position fields
+        entity.setValue(Double(preset.config.positionHorizontal), forKey: "position_horizontal")
+        entity.setValue(Double(preset.config.positionVertical), forKey: "position_vertical")
     }
 }
 

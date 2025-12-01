@@ -321,6 +321,13 @@ class AppDependencies {
             guard persistenceController.isReady else {
                 fatalError("Core Data initialization completed but persistence controller is not ready. Check initialization logic.")
             }
+
+            // Configure viewContext for CloudKit auto-merge on main thread
+            // This must happen after initialization but on main thread to avoid deadlock
+            Task { @MainActor in
+                persistenceController.container.viewContext.automaticallyMergesChangesFromParent = true
+                persistenceController.container.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyStoreTrump
+            }
         }
 
         // Extract and store contexts from persistenceController
@@ -383,7 +390,7 @@ class AppDependencies {
     // MARK: - Service Setup Helper
 
     /// Create logging service with appropriate backends
-    /// - Parameter isTestMode: Whether running in test mode (uses MockLogger instead of Sentry)
+    /// - Parameter isTestMode: Whether running in test mode (uses MockLogger)
     private static func createLoggingService(isTestMode: Bool) -> LoggingService {
         if isTestMode {
             // In test mode, use mock logger only
@@ -394,36 +401,13 @@ class AppDependencies {
                 minimumRemoteLevel: .error
             )
         } else {
-            // In production, configure Sentry
-            // Sentry DSN is not a secret - it's safe to commit
-            // See: https://docs.sentry.io/product/sentry-basics/dsn-explainer/
-
-            // Option 1: Hardcode (simplest)
-            let sentryDSN = "https://9656fde5615b69579eb41101834237b6@o4510371843932160.ingest.us.sentry.io/4510371846356992"
-
-            // Option 2: Read from Info.plist (if you prefer)
-            // Add <key>SentryDSN</key><string>your-dsn</string> to Info.plist
-            // let sentryDSN = Bundle.main.infoDictionary?["SentryDSN"] as? String ?? ""
-
-            // Option 3: Environment variable (fallback for CI/CD)
-            // let sentryDSN = ProcessInfo.processInfo.environment["SENTRY_DSN"] ?? "https://your-dsn..."
-
-            var backends: [LoggerBackend] = []
-
-            // Only add Sentry if DSN is configured
-            if !sentryDSN.isEmpty && !sentryDSN.contains("your-dsn") {
-                let sentryLogger = SentryLogger(
-                    dsn: sentryDSN,
-                    environment: SentryEnvironment.current,
-                    maxBreadcrumbs: 100
-                )
-                backends.append(sentryLogger)
-            }
-
+            // Production: Use OSLog for local logging
+            // Remote error tracking (Sentry) was removed to simplify launch
+            // Apple's TestFlight/App Store crash reports provide similar functionality
             return LoggingService(
-                backends: backends,
-                minimumLocalLevel: .debug,     // Log everything locally
-                minimumRemoteLevel: .error     // Only send errors/critical to Sentry
+                backends: [],  // OSLog is used internally by LoggingService
+                minimumLocalLevel: .debug,
+                minimumRemoteLevel: .error
             )
         }
     }

@@ -12,9 +12,21 @@ struct LabelDesignerView: View {
     let items: [CompleteInventoryItemModel]
     @Environment(\.dismiss) private var dismiss
 
-    @State private var selectedFormat: AveryFormat = .avery5160
+    @State private var selectedFormat: LabelGeometry = .defaultFormat
     @State private var searchText: String = ""
     @State private var isSearching: Bool = false
+    @State private var selectedShapeFilter: LabelShape?
+    @State private var selectedBrandSlug: String?
+    @State private var selectedPageFormat: LabelPageFormat = .letter  // Default to US Letter
+
+    // Dimension filters (in inches)
+    @State private var filterWidth: String = ""
+    @State private var filterHeight: String = ""
+
+    // Database-backed label formats
+    @State private var databaseFormats: [LabelGeometry] = []
+    @State private var availableBrands: [LabelBrand] = []
+    private let labelDatabase = LabelDatabaseService.shared
 
     // Label builder configuration (replaces template)
     @State private var builderConfig: LabelBuilderConfig = .default
@@ -26,8 +38,6 @@ struct LabelDesignerView: View {
 
     // Print adjustments (persisted per format/template in UserDefaults)
     @State private var fontScale: Double = 1.0
-    @State private var offsetX: Double = 0.0
-    @State private var offsetY: Double = 0.0
 
     // Start position for partial sheets
     @State private var startRow: Int = 0
@@ -54,6 +64,14 @@ struct LabelDesignerView: View {
     @State private var editingPresetName = ""
     @State private var editingPresetDescription = ""
 
+    // Label format change alert when overwriting preset
+    @State private var showingLabelChangeAlert = false
+    @State private var pendingOverwritePreset: LabelBuilderPreset?  // Preset waiting to be overwritten
+
+    // Switch to recommended label alert when loading preset
+    @State private var showingSwitchToRecommendedAlert = false
+    @State private var recommendedLabelName: String?  // The label name the preset recommends
+
     // CRITICAL: Cache service instance in @State to prevent recreation on every body evaluation
     @State private var labelService: LabelPrintingService?
 
@@ -64,66 +82,135 @@ struct LabelDesignerView: View {
     @State private var labelCountOverrides: [String: Int] = [:]
     @State private var showingLabelCountInput: Bool = false
 
-    var body: some View {
+    // Label selection (inclusion-based - start with nothing selected)
+    @State private var selectedInventoryIds: Set<UUID> = []  // What we want to print
+    @State private var inventoryLabelCounts: [UUID: Int] = [:]  // Per-record label count overrides
+    @State private var showingFilterSheet: Bool = false
+    @State private var showAllSelected: Bool = false  // Override filters to show all selected items
+    @State private var locationFilter: String? = nil
+    @State private var dateAddedFilter: LabelDateFilter = .any
+    @State private var dateModifiedFilter: LabelDateFilter = .any
+
+    // MARK: - Navigation Content (extracted to reduce body complexity)
+
+    @ViewBuilder
+    private var navigationContent: some View {
         NavigationStack {
             Form {
                 formContent
             }
             .navigationTitle("Label Designer")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                toolbarContent
-            }
-            .sheet(isPresented: $showingPresetSheet) {
-                presetSheet
-            }
-            .sheet(isPresented: $showingSavePreset) {
-                savePresetSheet
-            }
-            .sheet(isPresented: $showingEditPreset) {
-                editPresetSheet
-            }
-            .sheet(isPresented: $showingLabelCountInput) {
-                WeightBasedLabelCountSheet(
-                    items: items,
-                    labelCountOverrides: $labelCountOverrides,
-                    onComplete: {
-                        showingLabelCountInput = false
-                        Task {
-                            await generatePDF()
-                        }
-                    },
-                    onCancel: {
-                        showingLabelCountInput = false
-                    }
-                )
+            .toolbar { toolbarContent }
+            .sheet(isPresented: $showingPresetSheet) { presetSheet }
+            .sheet(isPresented: $showingSavePreset) { savePresetSheet }
+            .sheet(isPresented: $showingEditPreset) { editPresetSheet }
+            .sheet(isPresented: $showingLabelCountInput) { labelCountInputSheet }
+            .sheet(isPresented: $showingFilterSheet) { filterSheet }
+            .sheet(isPresented: $showingShareSheet) {
+                if let pdfURL = generatedPDFURL {
+                    ShareSheet(items: [pdfURL])
+                }
             }
             .alert("Unsaved Changes", isPresented: $showingUnsavedChangesAlert) {
-                Button("Discard Changes", role: .destructive) {
-                    dismiss()
-                }
+                Button("Discard Changes", role: .destructive) { dismiss() }
                 Button("Cancel", role: .cancel) { }
             } message: {
-                if let presetName = currentPresetName {
-                    Text("You have unsaved changes to '\(presetName)'. Discard them?")
-                } else {
-                    Text("You have unsaved changes. Discard them?")
-                }
+                unsavedChangesMessage
             }
             .alert("Delete Preset?", isPresented: $showingDeleteConfirmation, presenting: presetToDelete) { preset in
-                Button("Cancel", role: .cancel) {
-                    presetToDelete = nil
-                }
-                Button("Delete", role: .destructive) {
-                    deletePreset(preset)
-                }
+                Button("Cancel", role: .cancel) { presetToDelete = nil }
+                Button("Delete", role: .destructive) { deletePreset(preset) }
             } message: { preset in
                 Text("Are you sure you want to delete '\(preset.name)'? This action cannot be undone.")
             }
+            .alert("Update Recommended Label?", isPresented: $showingLabelChangeAlert, presenting: pendingOverwritePreset) { preset in
+                Button("Cancel", role: .cancel) { pendingOverwritePreset = nil }
+                Button("Keep Current") { savePresetWithLabel(preset, labelName: preset.recommended_label) }
+                Button("Update Label") { savePresetWithLabel(preset, labelName: selectedFormat.name) }
+            } message: { preset in
+                labelChangeMessage(for: preset)
+            }
+            .alert("Switch to Recommended Label?", isPresented: $showingSwitchToRecommendedAlert) {
+                Button("Keep Current", role: .cancel) { recommendedLabelName = nil }
+                Button("Switch") { switchToRecommendedLabel() }
+            } message: {
+                switchToRecommendedMessage
+            }
+        }
+    }
+
+    private var unsavedChangesMessage: Text {
+        if let presetName = currentPresetName {
+            return Text("You have unsaved changes to '\(presetName)'. Discard them?")
+        } else {
+            return Text("You have unsaved changes. Discard them?")
+        }
+    }
+
+    private func labelChangeMessage(for preset: LabelBuilderPreset) -> Text {
+        let existingLabel = preset.recommended_label ?? "none"
+        return Text("This preset recommends '\(existingLabel)' but you're using '\(selectedFormat.name)'. Update the recommended label?")
+    }
+
+    private var switchToRecommendedMessage: Text {
+        let recommended = recommendedLabelName ?? ""
+        return Text("This preset was designed for '\(recommended)'. You're currently using '\(selectedFormat.name)'. Switch to the recommended label format?")
+    }
+
+    private var labelCountInputSheet: some View {
+        WeightBasedLabelCountSheet(
+            items: filteredItems,
+            labelCountOverrides: $labelCountOverrides,
+            onComplete: {
+                showingLabelCountInput = false
+                Task { await generatePDF() }
+            },
+            onCancel: { showingLabelCountInput = false }
+        )
+    }
+
+    private var filterSheet: some View {
+        LabelFilterSheet(
+            items: items,
+            selectedFormat: selectedFormat,
+            selectedInventoryIds: $selectedInventoryIds,
+            inventoryLabelCounts: $inventoryLabelCounts,
+            showAllSelected: $showAllSelected,
+            locationFilter: $locationFilter,
+            dateAddedFilter: $dateAddedFilter,
+            dateModifiedFilter: $dateModifiedFilter
+        )
+    }
+
+    var body: some View {
+        navigationContent
             .task {
                 if labelService == nil {
                     labelService = LabelPrintingService()
                 }
+
+                // Load database formats (major brands + all barbell labels for default list)
+                availableBrands = labelDatabase.getBrands()
+                let majorBrands = availableBrands.filter { $0.isMajor }
+                var formats: [LabelGeometry] = []
+                for brand in majorBrands {
+                    let brandFormats = labelDatabase.getProducts(brandSlug: brand.slug)
+                    formats.append(contentsOf: brandFormats.map { $0.toLabelGeometry() })
+                }
+
+                // Also include ALL barbell/flag labels (from any brand, not just major)
+                let barbellFormats = labelDatabase.getProducts(shape: .flag)
+                for barbell in barbellFormats {
+                    let geometry = barbell.toLabelGeometry()
+                    // Avoid duplicates (some may already be from major brands)
+                    if !formats.contains(where: { $0.name == geometry.name }) {
+                        formats.append(geometry)
+                    }
+                }
+
+                databaseFormats = formats.sorted { $0.name < $1.name }
+
                 loadLastUsedFormat()
                 await loadSettings()
             }
@@ -148,20 +235,6 @@ struct LabelDesignerView: View {
             .onChange(of: startColumn) { _, _ in
                 saveSettings()
             }
-            .onChange(of: offsetX) { _, _ in
-                // Mark as modified if not currently loading
-                if !isLoadingPreset && currentPresetName != nil {
-                    isPresetModified = true
-                }
-                saveSettings()
-            }
-            .onChange(of: offsetY) { _, _ in
-                // Mark as modified if not currently loading
-                if !isLoadingPreset && currentPresetName != nil {
-                    isPresetModified = true
-                }
-                saveSettings()
-            }
             .onChange(of: builderConfig) { _, _ in
                 // Cancel any pending loading task (user made a change)
                 loadingTask?.cancel()
@@ -177,7 +250,6 @@ struct LabelDesignerView: View {
                 }
                 saveSettings()
             }
-        }
     }
 
     @ViewBuilder
@@ -185,6 +257,16 @@ struct LabelDesignerView: View {
         labelCountSection
 
         Section {
+                    // Shape filter buttons
+                    ShapeFilterButtons(selectedShape: $selectedShapeFilter)
+
+                    // Dimension filter (width × height) and page format (US Letter vs A4)
+                    DimensionFilterRow(
+                        filterWidth: $filterWidth,
+                        filterHeight: $filterHeight,
+                        pageFormat: $selectedPageFormat
+                    )
+
                     if isSearching {
                         FormatSearchView(
                             searchText: $searchText,
@@ -202,8 +284,25 @@ struct LabelDesignerView: View {
                     Text("Label Format")
                 } footer: {
                     if !isSearching {
-                        Text("Tap to search from \(AveryFormat.flatList.count) available formats")
+                        let stats = labelDatabase.getStatistics()
+                        Text("Tap to search from \(stats.products) formats across \(stats.brands) brands")
                             .font(.caption)
+                    }
+                }
+
+                // Show label format preview immediately after selection
+                if let previewData = sampleLabelData {
+                    Section {
+                        LabelPreviewView(
+                            format: selectedFormat,
+                            config: builderConfig,
+                            sampleData: previewData,
+                            fontScale: fontScale
+                        )
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                    } header: {
+                        Text("Format Preview")
                     }
                 }
 
@@ -237,9 +336,7 @@ struct LabelDesignerView: View {
                             format: selectedFormat,
                             config: builderConfig,
                             sampleData: previewData,
-                            fontScale: fontScale,
-                            offsetX: offsetX,
-                            offsetY: offsetY
+                            fontScale: fontScale
                         )
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
@@ -252,13 +349,26 @@ struct LabelDesignerView: View {
                     showAdvancedLayoutOptions: $showAdvancedLayoutOptions
                 )
 
+                // Label preview between layout and sheet options
+                if let previewData = sampleLabelData {
+                    Section {
+                        LabelPreviewView(
+                            format: selectedFormat,
+                            config: builderConfig,
+                            sampleData: previewData,
+                            fontScale: fontScale
+                        )
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                    }
+                }
+
                 // Advanced Options Section (collapsed by default)
                 AdvancedSheetOptionsSection(
                     showAdvancedOptions: $showAdvancedOptions,
                     startRow: $startRow,
                     startColumn: $startColumn,
-                    offsetX: $offsetX,
-                    offsetY: $offsetY,
+                    builderConfig: $builderConfig,
                     selectedFormat: selectedFormat
                 )
 
@@ -274,18 +384,19 @@ struct LabelDesignerView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel") {
+            Button("Done") {
                 if isPresetModified {
                     showingUnsavedChangesAlert = true
                 } else {
                     dismiss()
                 }
             }
-            .accessibilityIdentifier("label_designer_cancel")
+            .frame(minWidth: 100, alignment: .leading)
+            .accessibilityIdentifier("label_designer_done")
         }
 
         ToolbarItem(placement: .primaryAction) {
-            Button("Generate PDF") {
+            Button("Generate") {
                 // Check if we need to ask for label counts for weight-based items
                 let needsInput = itemsNeedingLabelCountInput.filter { item in
                     // Only show sheet if user hasn't already set an override
@@ -301,7 +412,7 @@ struct LabelDesignerView: View {
                     }
                 }
             }
-            .disabled(isGenerating || items.isEmpty)
+            .disabled(isGenerating || filteredItems.isEmpty)
             .accessibilityIdentifier("label_designer_generate_pdf")
         }
     }
@@ -316,6 +427,12 @@ struct LabelDesignerView: View {
                 builderConfig = preset.config
                 currentPresetName = preset.name
                 showingPresetSheet = false
+
+                // Check if preset recommends a different label format
+                if let recommended = preset.recommended_label, recommended != selectedFormat.name {
+                    recommendedLabelName = recommended
+                    showingSwitchToRecommendedAlert = true
+                }
 
                 // Reset flags after a short delay to ensure onChange has processed
                 // Store the task so we can cancel it if user makes changes
@@ -342,7 +459,8 @@ struct LabelDesignerView: View {
                 let preset = LabelBuilderPreset(
                     name: presetName,
                     description: newPresetDescription.isEmpty ? "User-created preset" : newPresetDescription,
-                    config: builderConfig
+                    config: builderConfig,
+                    recommended_label: selectedFormat.name
                 )
                 Task {
                     try? await presetsManager.savePreset(preset)
@@ -416,7 +534,9 @@ struct LabelDesignerView: View {
                     Picker("Preview Item", selection: $selectedPreviewIndex) {
                         ForEach(0..<items.count, id: \.self) { index in
                             let item = items[index]
-                            Text("\(GlassManufacturers.fullName(for: item.glassItem.manufacturer) ?? item.glassItem.manufacturer)  \(item.glassItem.sku ?? "") - \(item.glassItem.name)")
+                            let manufacturer = GlassManufacturers.fullName(for: item.glassItem.manufacturer) ?? item.glassItem.manufacturer
+                            let sku = item.glassItem.sku ?? ""
+                            Text("\(item.glassItem.name) (\(manufacturer) · \(sku))")
                                 .lineLimit(1)
                                 .tag(index)
                         }
@@ -428,9 +548,7 @@ struct LabelDesignerView: View {
                     format: selectedFormat,
                     config: builderConfig,
                     sampleData: previewData,
-                    fontScale: fontScale,
-                    offsetX: offsetX,
-                    offsetY: offsetY
+                    fontScale: fontScale
                 )
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
@@ -448,68 +566,230 @@ struct LabelDesignerView: View {
         }
     }
 
+    /// Total inventory record count (before filtering)
+    private var totalInventoryRecordCount: Int {
+        items.reduce(0) { $0 + $1.inventory.count }
+    }
+
+    /// Filtered inventory record count
+    private var filteredInventoryRecordCount: Int {
+        filteredItems.reduce(0) { $0 + $1.inventory.count }
+    }
+
     /// Label count summary section
     private var labelCountSection: some View {
         Section {
-            Text("\(totalLabelCount) label\(totalLabelCount == 1 ? "" : "s") to print")
-                .font(.headline)
+            if hasSelectedLabels {
+                // Items selected - show summary and small filter button
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(totalLabelCount) label\(totalLabelCount == 1 ? "" : "s") to print")
+                            .font(.headline)
 
-            Text("From \(items.count) item\(items.count == 1 ? "" : "s") selected")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                        Text("From \(selectedInventoryIds.count) inventory type\(selectedInventoryIds.count == 1 ? "" : "s")")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
 
-            if totalLabelCount > selectedFormat.labelsPerSheet {
-                Text("This will create \(numberOfSheets) sheet\(numberOfSheets == 1 ? "" : "s")")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                        if totalLabelCount > 0 {
+                            if totalLabelCount < selectedFormat.labelsPerSheet {
+                                Text("Less than 1 sheet (\(selectedFormat.labelsPerSheet) labels per sheet)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else if totalLabelCount > selectedFormat.labelsPerSheet {
+                                Text("This will create \(numberOfSheets) sheets")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("Exactly 1 full sheet")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+
+                    Spacer()
+
+                    Button {
+                        showingFilterSheet = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checklist")
+                            Text("Edit")
+                        }
+                        .font(.subheadline)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            } else {
+                // Nothing selected - show prominent button to select labels
+                VStack(spacing: 12) {
+                    Text("No labels selected")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+
+                    Text("Select which inventory items you want to print labels for")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Button {
+                        showingFilterSheet = true
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "checklist")
+                            Text("Select Labels to Print")
+                        }
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
             }
         }
     }
 
-    /// Filtered formats based on search text
-    private var filteredFormats: [AveryFormat] {
-        if searchText.isEmpty {
-            // Show popular formats when no search
-            return AveryFormat.allFormats["Popular"] ?? []
+    /// Whether any filters are active (location or date filters)
+    private var hasActiveFilters: Bool {
+        locationFilter != nil || dateAddedFilter != .any || dateModifiedFilter != .any
+    }
+
+    /// Whether any labels are selected for printing
+    private var hasSelectedLabels: Bool {
+        !selectedInventoryIds.isEmpty
+    }
+
+    /// Items that are selected for printing
+    /// Only returns items with at least one selected inventory record
+    private var filteredItems: [CompleteInventoryItemModel] {
+        // Only include inventory records that are explicitly selected
+        items.compactMap { item in
+            let selectedInventory = item.inventory.filter { record in
+                selectedInventoryIds.contains(record.id)
+            }
+
+            guard !selectedInventory.isEmpty else { return nil }
+
+            return CompleteInventoryItemModel(
+                catalogItem: item.catalogItem,
+                inventory: selectedInventory,
+                tags: item.tags,
+                userTags: item.userTags,
+                rating: item.rating
+            )
+        }
+    }
+
+    /// Parsed dimension filter values (with tolerance for approximate matching)
+    private var parsedDimensionFilters: (width: Double?, height: Double?) {
+        let width = Double(filterWidth.trimmingCharacters(in: .whitespaces))
+        let height = Double(filterHeight.trimmingCharacters(in: .whitespaces))
+        return (width, height)
+    }
+
+    /// Whether any dimension filter is active
+    private var hasDimensionFilter: Bool {
+        parsedDimensionFilters.width != nil || parsedDimensionFilters.height != nil
+    }
+
+    /// Filtered formats based on shape filter, dimension filter, page format, and search text
+    /// Uses database for searching 2,600+ label formats
+    private var filteredFormats: [LabelGeometry] {
+        let dims = parsedDimensionFilters
+        // Use a small tolerance (0.1") for dimension matching
+        let tolerance = 0.1
+        let pageFormat = selectedPageFormat.databaseValue  // nil for "all"
+
+        // Use database search if we have search text
+        // Pass all filters to database so LIMIT is applied AFTER filtering
+        if !searchText.isEmpty {
+            let results = labelDatabase.searchProducts(
+                query: searchText,
+                shape: selectedShapeFilter,
+                pageFormat: pageFormat,
+                minWidth: dims.width.map { $0 - tolerance },
+                maxWidth: dims.width.map { $0 + tolerance },
+                minHeight: dims.height.map { $0 - tolerance },
+                maxHeight: dims.height.map { $0 + tolerance },
+                limit: 100
+            )
+            return results.map { $0.toLabelGeometry() }
         }
 
-        let searchLower = searchText.lowercased()
-        return AveryFormat.flatList.filter { format in
-            // Search by name (e.g., "5160", "Avery 5160")
-            if format.name.lowercased().contains(searchLower) {
-                return true
+        // If filtering by brand
+        if let brandSlug = selectedBrandSlug {
+            let results = labelDatabase.getProducts(brandSlug: brandSlug)
+            var formats = results.map { $0.toLabelGeometry() }
+
+            if let shape = selectedShapeFilter {
+                formats = formats.filter { $0.shape == shape }
             }
 
-            // Search by dimensions (e.g., "2.625", "1 x 2")
-            let dimensions = formatDimensions(format).lowercased()
-            if dimensions.contains(searchLower) {
-                return true
+            // Apply page format filter
+            if let pageFormat = pageFormat {
+                formats = formats.filter { $0.pageFormat == pageFormat }
             }
 
-            // Search by label count (e.g., "30 labels")
-            if "\(format.labelsPerSheet)".contains(searchLower) {
-                return true
-            }
+            // Apply dimension filters
+            formats = applyDimensionFilter(to: formats, width: dims.width, height: dims.height, tolerance: tolerance)
 
-            // Search by category
-            for (category, formats) in AveryFormat.allFormats {
-                if category.lowercased().contains(searchLower) && formats.contains(where: { $0.name == format.name }) {
-                    return true
+            return formats
+        }
+
+        // Query with shape, page format, and/or dimension filters
+        if selectedShapeFilter != nil || hasDimensionFilter || pageFormat != nil {
+            let results = labelDatabase.getProducts(
+                shape: selectedShapeFilter,
+                pageFormat: pageFormat,
+                minWidth: dims.width.map { $0 - tolerance },
+                maxWidth: dims.width.map { $0 + tolerance },
+                minHeight: dims.height.map { $0 - tolerance },
+                maxHeight: dims.height.map { $0 + tolerance }
+            )
+            return results.map { $0.toLabelGeometry() }.sorted { $0.name < $1.name }
+        }
+
+        return databaseFormats
+    }
+
+    /// Apply dimension filter to a list of formats (for post-search filtering)
+    private func applyDimensionFilter(
+        to formats: [LabelGeometry],
+        width: Double?,
+        height: Double?,
+        tolerance: Double
+    ) -> [LabelGeometry] {
+        formats.filter { format in
+            if let w = width {
+                let formatWidth = format.labelWidth / 72.0  // Convert points to inches
+                if abs(formatWidth - w) > tolerance {
+                    return false
                 }
             }
-
-            return false
+            if let h = height {
+                let formatHeight = format.labelHeight / 72.0  // Convert points to inches
+                if abs(formatHeight - h) > tolerance {
+                    return false
+                }
+            }
+            return true
         }
     }
 
     /// Total number of labels to print (uses LabelCountCalculator for proper handling of weight-based types)
     private var totalLabelCount: Int {
-        LabelCountCalculator.calculateTotalLabelCount(for: items, userOverrides: labelCountOverrides)
+        LabelCountCalculator.calculateTotalLabelCount(
+            for: filteredItems,
+            userOverrides: labelCountOverrides,
+            inventoryRecordOverrides: inventoryLabelCounts
+        )
     }
 
     /// Items that need user input for label count (weight-based items without containerCount)
     private var itemsNeedingLabelCountInput: [LabelCountCalculator.WeightBasedItem] {
-        LabelCountCalculator.itemsNeedingLabelCountInput(from: items)
+        LabelCountCalculator.itemsNeedingLabelCountInput(from: filteredItems)
     }
 
     private var numberOfSheets: Int {
@@ -524,6 +804,7 @@ struct LabelDesignerView: View {
         let item = items[index]
         let glassItem = item.glassItem
         let location = item.locations.first
+        let inventory = item.inventory.first  // Use first inventory record for type info
 
         return LabelData(
             stableId: glassItem.stable_id,
@@ -532,7 +813,10 @@ struct LabelDesignerView: View {
             colorName: glassItem.name,
             coe: "\(glassItem.coe)",
             location: location,
-            owner: UserSettings.shared.inventoryOwner
+            owner: UserSettings.shared.inventoryOwner,
+            inventoryType: inventory?.type,
+            inventorySubtype: inventory?.subtype,
+            inventorySubsubtype: inventory?.subsubtype
         )
     }
 
@@ -550,29 +834,13 @@ struct LabelDesignerView: View {
         isGenerating = true
         errorMessage = nil
 
-        // Convert CompleteInventoryItemModel to LabelData, using LabelCountCalculator for proper handling
-        var labelData: [LabelData] = []
-
-        for item in items {
-            let glassItem = item.glassItem
-            let location = item.locations.first
-
-            // Use LabelCountCalculator which handles weight-based types properly
-            let labelCount = LabelCountCalculator.calculateLabelCount(for: item, userOverrides: labelCountOverrides)
-
-            // Create one label for each item (uses quantity for count-based, or user-specified for weight-based)
-            for _ in 0..<labelCount {
-                labelData.append(LabelData(
-                    stableId: glassItem.stable_id,
-                    manufacturer: glassItem.manufacturer,
-                    sku: glassItem.sku,
-                    colorName: glassItem.name,
-                    coe: "\(glassItem.coe)",
-                    location: location,
-                    owner: UserSettings.shared.inventoryOwner
-                ))
-            }
-        }
+        // Generate LabelData with proper type info for QR codes (uses filtered items)
+        let labelData = LabelCountCalculator.generateLabelData(
+            for: filteredItems,
+            userOverrides: labelCountOverrides,
+            inventoryRecordOverrides: inventoryLabelCounts,
+            owner: UserSettings.shared.inventoryOwner
+        )
 
         // Generate PDF with adjustments and start position
         guard let pdfURL = await service.generateLabelSheet(
@@ -580,8 +848,6 @@ struct LabelDesignerView: View {
             format: selectedFormat,
             config: builderConfig,
             fontScale: fontScale,
-            offsetX: offsetX,
-            offsetY: offsetY,
             startRow: startRow,
             startColumn: startColumn
         ) else {
@@ -647,23 +913,51 @@ struct LabelDesignerView: View {
             return
         }
 
-        // Create updated preset with same ID and name but new config
+        // Check if label format has changed
+        let existingLabel = existingPreset.recommended_label
+        let currentLabel = selectedFormat.name
+
+        if let existingLabel = existingLabel, existingLabel != currentLabel {
+            // Label format is different - ask user what to do
+            pendingOverwritePreset = existingPreset
+            showingLabelChangeAlert = true
+        } else {
+            // No label change (or no previous label) - save with current label
+            savePresetWithLabel(existingPreset, labelName: currentLabel)
+        }
+    }
+
+    /// Switch to the recommended label format
+    private func switchToRecommendedLabel() {
+        guard let labelName = recommendedLabelName else { return }
+
+        // Search database for the label format by name
+        let results = labelDatabase.searchProducts(query: labelName, limit: 10)
+        if let matchedFormat = results.first(where: { $0.displayName == labelName })?.toLabelGeometry() {
+            selectedFormat = matchedFormat
+        }
+
+        recommendedLabelName = nil
+    }
+
+    /// Save preset with specified label format
+    private func savePresetWithLabel(_ existingPreset: LabelBuilderPreset, labelName: String?) {
         let updatedPreset = LabelBuilderPreset(
             id: existingPreset.id,
             name: existingPreset.name,
             description: existingPreset.description,
             config: builderConfig,
             createdAt: existingPreset.createdAt,
-            modifiedAt: Date()
+            modifiedAt: Date(),
+            recommended_label: labelName
         )
 
-        // Update the preset
         Task {
             try? await presetsManager.savePreset(updatedPreset)
 
             await MainActor.run {
-                // Clear the modified flag
                 isPresetModified = false
+                pendingOverwritePreset = nil
             }
         }
     }
@@ -671,13 +965,13 @@ struct LabelDesignerView: View {
     // MARK: - Format Display Helpers
 
     /// Format display name for picker (shows count and dimensions)
-    private func formatDisplayName(_ format: AveryFormat) -> String {
+    private func formatDisplayName(_ format: LabelGeometry) -> String {
         let dimensions = formatDimensions(format)
         return "\(format.name) (\(format.labelsPerSheet) labels, \(dimensions))"
     }
 
     /// Format dimensions as human-readable string
-    private func formatDimensions(_ format: AveryFormat) -> String {
+    private func formatDimensions(_ format: LabelGeometry) -> String {
         let widthInches = format.labelWidth / 72.0
         let heightInches = format.labelHeight / 72.0
 
@@ -722,16 +1016,17 @@ struct LabelDesignerView: View {
     private func loadLastUsedFormat() {
         let defaults = UserDefaults.standard
         if let formatName = defaults.string(forKey: "labelPrinting.lastUsedFormat") {
-            // Search through all available formats to find matching name
-            if let matchedFormat = AveryFormat.flatList.first(where: { $0.name == formatName }) {
+            // Search database for the saved format name
+            let results = labelDatabase.searchProducts(query: formatName, limit: 1)
+            if let matchedFormat = results.first?.toLabelGeometry(), matchedFormat.name == formatName {
                 selectedFormat = matchedFormat
             }
-            // If no match, keep default .avery5160
+            // If no exact match, keep default
         }
     }
 
     /// Save the currently selected format to UserDefaults
-    private func saveLastUsedFormat(_ format: AveryFormat) {
+    private func saveLastUsedFormat(_ format: LabelGeometry) {
         let defaults = UserDefaults.standard
         defaults.set(format.name, forKey: "labelPrinting.lastUsedFormat")
     }
@@ -743,8 +1038,6 @@ struct LabelDesignerView: View {
         let defaults = UserDefaults.standard
         fontScale = defaults.double(forKey: "\(settingsKey).fontScale")
         if fontScale == 0 { fontScale = 1.0 }  // Default if never set
-        offsetX = defaults.double(forKey: "\(settingsKey).offsetX")
-        offsetY = defaults.double(forKey: "\(settingsKey).offsetY")
 
         // Load current preset name
         currentPresetName = defaults.string(forKey: "\(settingsKey).currentPresetName")
@@ -772,8 +1065,7 @@ struct LabelDesignerView: View {
     private func saveSettings() {
         let defaults = UserDefaults.standard
         defaults.set(fontScale, forKey: "\(settingsKey).fontScale")
-        defaults.set(offsetX, forKey: "\(settingsKey).offsetX")
-        defaults.set(offsetY, forKey: "\(settingsKey).offsetY")
+        // Note: positionHorizontal/positionVertical are now saved as part of builderConfig
 
         // Save current preset name
         if let presetName = currentPresetName {

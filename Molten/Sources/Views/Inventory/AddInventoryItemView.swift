@@ -15,7 +15,7 @@ struct AddInventoryItemView: View {
     let prefilledNaturalKey: String?
     private let deps: AppDependencies
 
-    init(prefilledNaturalKey: String? = nil, deps: AppDependencies = AppDependencies()) {
+    init(prefilledNaturalKey: String? = nil, deps: AppDependencies = .shared) {
         self.prefilledNaturalKey = prefilledNaturalKey
         self.deps = deps
     }
@@ -42,7 +42,7 @@ struct AddInventoryFormView: View {
     @State private var currentInventoryCount = 0
     @StateObject private var terminologySettings = GlassTerminologySettings.shared
 
-    init(prefilledNaturalKey: String? = nil, deps: AppDependencies = AppDependencies()) {
+    init(prefilledNaturalKey: String? = nil, deps: AppDependencies = .shared) {
         self.catalogService = deps.catalogService
         self.inventoryTrackingService = deps.inventoryTrackingService
         self.inventoryRepository = deps.inventoryRepository

@@ -15,7 +15,7 @@ struct ExampleFeatureGateView: View {
         self.subscriptionService = subscriptionService
     }
 
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         self.subscriptionService = deps.subscriptionService
     }
 
@@ -70,7 +70,7 @@ struct ExampleListWithProFeatures: View {
         self.subscriptionService = subscriptionService
     }
 
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         self.subscriptionService = deps.subscriptionService
     }
 
@@ -124,7 +124,7 @@ struct ExampleConditionalNavigation: View {
         self.subscriptionService = subscriptionService
     }
 
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         self.subscriptionService = deps.subscriptionService
     }
 
@@ -159,7 +159,7 @@ struct ExampleQuantityLimitView: View {
         self.subscriptionService = subscriptionService
     }
 
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         self.subscriptionService = deps.subscriptionService
     }
 

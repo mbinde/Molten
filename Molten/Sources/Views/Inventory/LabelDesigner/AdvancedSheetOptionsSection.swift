@@ -11,9 +11,8 @@ struct AdvancedSheetOptionsSection: View {
     @Binding var showAdvancedOptions: Bool
     @Binding var startRow: Int
     @Binding var startColumn: Int
-    @Binding var offsetX: Double
-    @Binding var offsetY: Double
-    let selectedFormat: AveryFormat
+    @Binding var builderConfig: LabelBuilderConfig
+    let selectedFormat: LabelGeometry
 
     var body: some View {
         Section {
@@ -108,13 +107,13 @@ struct AdvancedSheetOptionsSection: View {
                                     Text("Horizontal Position")
                                         .font(.subheadline)
                                     Spacer()
-                                    Text(offsetX > 0 ? "+\(Int(offsetX))pt" : "\(Int(offsetX))pt")
+                                    Text(builderConfig.positionHorizontal > 0 ? "+\(Int(builderConfig.positionHorizontal))pt" : "\(Int(builderConfig.positionHorizontal))pt")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                         .monospacedDigit()
                                 }
 
-                                Slider(value: $offsetX, in: -10...10, step: 0.5) {
+                                Slider(value: $builderConfig.positionHorizontal, in: -10...10, step: 0.5) {
                                     Text("Horizontal Offset")
                                 }
                                 .tint(.orange)
@@ -136,13 +135,13 @@ struct AdvancedSheetOptionsSection: View {
                                     Text("Vertical Position")
                                         .font(.subheadline)
                                     Spacer()
-                                    Text(offsetY > 0 ? "+\(Int(offsetY))pt" : "\(Int(offsetY))pt")
+                                    Text(builderConfig.positionVertical > 0 ? "+\(Int(builderConfig.positionVertical))pt" : "\(Int(builderConfig.positionVertical))pt")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                         .monospacedDigit()
                                 }
 
-                                Slider(value: $offsetY, in: -10...10, step: 0.5) {
+                                Slider(value: $builderConfig.positionVertical, in: -10...10, step: 0.5) {
                                     Text("Vertical Offset")
                                 }
                                 .tint(.orange)
@@ -159,11 +158,11 @@ struct AdvancedSheetOptionsSection: View {
                             }
 
                             // Reset button
-                            if offsetX != 0.0 || offsetY != 0.0 {
+                            if builderConfig.positionHorizontal != 0 || builderConfig.positionVertical != 0 {
                                 Button {
                                     withAnimation {
-                                        offsetX = 0.0
-                                        offsetY = 0.0
+                                        builderConfig.positionHorizontal = 0
+                                        builderConfig.positionVertical = 0
                                     }
                                 } label: {
                                     Label("Reset Position", systemImage: "arrow.counterclockwise")
@@ -171,6 +170,103 @@ struct AdvancedSheetOptionsSection: View {
                                 }
                                 .buttonStyle(.bordered)
                                 .accessibilityIdentifier("label_designer_reset_position")
+                            }
+                        }
+
+                        Divider()
+
+                        // Content Padding
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Content Padding")
+                                .font(.headline)
+
+                            Text("Add space between label edge and content")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            // Top padding
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text("Top")
+                                        .font(.subheadline)
+                                    Spacer()
+                                    Text("\(Int(builderConfig.paddingTop))pt")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .monospacedDigit()
+                                }
+                                Slider(value: $builderConfig.paddingTop, in: 0...20, step: 1) {
+                                    Text("Top Padding")
+                                }
+                                .tint(.blue)
+                            }
+
+                            // Bottom padding
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text("Bottom")
+                                        .font(.subheadline)
+                                    Spacer()
+                                    Text("\(Int(builderConfig.paddingBottom))pt")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .monospacedDigit()
+                                }
+                                Slider(value: $builderConfig.paddingBottom, in: 0...20, step: 1) {
+                                    Text("Bottom Padding")
+                                }
+                                .tint(.blue)
+                            }
+
+                            // Left padding
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text("Left")
+                                        .font(.subheadline)
+                                    Spacer()
+                                    Text("\(Int(builderConfig.paddingLeft))pt")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .monospacedDigit()
+                                }
+                                Slider(value: $builderConfig.paddingLeft, in: 0...20, step: 1) {
+                                    Text("Left Padding")
+                                }
+                                .tint(.blue)
+                            }
+
+                            // Right padding
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text("Right")
+                                        .font(.subheadline)
+                                    Spacer()
+                                    Text("\(Int(builderConfig.paddingRight))pt")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .monospacedDigit()
+                                }
+                                Slider(value: $builderConfig.paddingRight, in: 0...20, step: 1) {
+                                    Text("Right Padding")
+                                }
+                                .tint(.blue)
+                            }
+
+                            // Reset button
+                            if builderConfig.paddingTop != 0 || builderConfig.paddingBottom != 0 || builderConfig.paddingLeft != 0 || builderConfig.paddingRight != 0 {
+                                Button {
+                                    withAnimation {
+                                        builderConfig.paddingTop = 0
+                                        builderConfig.paddingBottom = 0
+                                        builderConfig.paddingLeft = 0
+                                        builderConfig.paddingRight = 0
+                                    }
+                                } label: {
+                                    Label("Reset Padding", systemImage: "arrow.counterclockwise")
+                                        .font(.caption)
+                                }
+                                .buttonStyle(.bordered)
+                                .accessibilityIdentifier("label_designer_reset_padding")
                             }
                         }
                     }

@@ -31,7 +31,7 @@ struct TestDataGeneratorView: View {
     }
 
     /// Convenience init using AppDependencies
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         self.inventoryTrackingService = deps.inventoryTrackingService
         self.shoppingListService = deps.shoppingListService
         self.catalogService = deps.catalogService

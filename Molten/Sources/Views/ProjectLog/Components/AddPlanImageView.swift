@@ -39,7 +39,7 @@ struct AddPlanImageView: View {
     }
 
     /// Convenience init using AppDependencies
-    init(plan: ProjectModel, repository: ProjectRepository, deps: AppDependencies = AppDependencies()) {
+    init(plan: ProjectModel, repository: ProjectRepository, deps: AppDependencies = .shared) {
         self.plan = plan
         self.repository = repository
         self.userImageRepository = deps.userImageRepository

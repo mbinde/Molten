@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Format details text (labels • dimensions • grid)
 struct FormatDetailsText: View {
-    let format: AveryFormat
+    let format: LabelGeometry
 
     var body: some View {
         HStack(spacing: 4) {

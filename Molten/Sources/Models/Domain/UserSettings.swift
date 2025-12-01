@@ -179,6 +179,39 @@ class UserSettings {
         }
     }
 
+    // MARK: - QR Scan Settings
+
+    /// Controls what view is shown when scanning a QR code
+    /// - Default: .rememberLast (shows whatever you last used)
+    /// - Options: .inventoryFirst (always show inventory management), .detailsFirst (always show item details), .rememberLast
+    var qrScanBehavior: QRScanBehavior {
+        get {
+            if let rawValue = UserDefaults.standard.string(forKey: Keys.qrScanBehavior),
+               let behavior = QRScanBehavior(rawValue: rawValue) {
+                return behavior
+            }
+            return .rememberLast
+        }
+        set {
+            withMutation(keyPath: \.qrScanBehavior) {
+                UserDefaults.standard.set(newValue.rawValue, forKey: Keys.qrScanBehavior)
+            }
+        }
+    }
+
+    /// Tracks the last view shown when scanning a QR code (for .rememberLast behavior)
+    /// - true = inventory management view was shown last
+    /// - false = item details view was shown last
+    var qrScanLastShowedInventory: Bool {
+        get {
+            // Default to false (item details) if not set - most users want to see item info first
+            UserDefaults.standard.object(forKey: Keys.qrScanLastShowedInventory) as? Bool ?? false
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: Keys.qrScanLastShowedInventory)
+        }
+    }
+
     // MARK: - Label Settings
 
     /// Inventory owner name (optional)
@@ -447,6 +480,8 @@ class UserSettings {
         static let kilnCooldownRate815Plus = "kilnCooldownRate815Plus"
         static let downloadFullSizeImages = "downloadFullSizeImages"
         static let applyFiltersToInventory = "applyFiltersToInventory"
+        static let qrScanBehavior = "qrScanBehavior"
+        static let qrScanLastShowedInventory = "qrScanLastShowedInventory"
     }
 
     // MARK: - Enums
@@ -558,6 +593,46 @@ class UserSettings {
                 return "photo.badge.plus"
             case .never:
                 return "photo.slash"
+            }
+        }
+    }
+
+    /// QR scan behavior options - what view to show when scanning a QR code
+    enum QRScanBehavior: String, CaseIterable {
+        case inventoryFirst = "inventoryFirst"
+        case detailsFirst = "detailsFirst"
+        case rememberLast = "rememberLast"
+
+        var displayName: String {
+            switch self {
+            case .inventoryFirst:
+                return "Inventory Management"
+            case .detailsFirst:
+                return "Item Details"
+            case .rememberLast:
+                return "Remember Last Used"
+            }
+        }
+
+        var description: String {
+            switch self {
+            case .inventoryFirst:
+                return "Always show inventory management with per-location +/- controls"
+            case .detailsFirst:
+                return "Always show full item details (notes, specs, etc.)"
+            case .rememberLast:
+                return "Show whichever view you used last time"
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .inventoryFirst:
+                return "shippingbox"
+            case .detailsFirst:
+                return "doc.text"
+            case .rememberLast:
+                return "clock.arrow.circlepath"
             }
         }
     }

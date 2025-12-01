@@ -27,7 +27,7 @@ struct StoreAutoCompleteField: View {
     }
 
     /// Convenience init using AppDependencies
-    init(store: Binding<String>, deps: AppDependencies = AppDependencies()) {
+    init(store: Binding<String>, deps: AppDependencies = .shared) {
         self._store = store
         self.shoppingListRepository = deps.shoppingListRepository
         self.locationService = deps.unifiedLocationService
@@ -50,7 +50,7 @@ struct StoreAutoCompleteField: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 4) {
             TextField("Optional", text: $store)
                 .textFieldStyle(.roundedBorder)
                 .autocorrectionDisabled()
@@ -63,17 +63,18 @@ struct StoreAutoCompleteField: View {
                 }
                 .onChange(of: isTextFieldFocused) { _, isFocused in
                     if isFocused {
-                        loadInitialSuggestions()
-                        showingSuggestions = true
+                        Task {
+                            await loadInitialSuggestions()
+                        }
                     } else {
                         // Delay hiding to allow tapping suggestions
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                             showingSuggestions = false
                         }
                     }
                 }
 
-            // Auto-complete suggestions dropdown
+            // Auto-complete suggestions below the text field
             if showingSuggestions && !storeSuggestions.isEmpty {
                 VStack(spacing: 0) {
                     ForEach(storeSuggestions.prefix(5)) { suggestion in
@@ -101,7 +102,7 @@ struct StoreAutoCompleteField: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .background(Color(white: 1.0))
+                        .background(Color(UIColor.systemBackground))
                         .accessibilityIdentifier("store_autocomplete_\(suggestion.name.replacingOccurrences(of: " ", with: "_").lowercased())")
 
                         if suggestion != storeSuggestions.prefix(5).last {
@@ -109,13 +110,13 @@ struct StoreAutoCompleteField: View {
                         }
                     }
                 }
-                .background(Color(white: 1.0))
+                .background(Color(UIColor.systemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                 )
                 .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-                .zIndex(1)
             }
         }
     }
@@ -129,9 +130,11 @@ struct StoreAutoCompleteField: View {
         }
     }
 
-    private func loadInitialSuggestions() {
-        Task {
-            storeSuggestions = await getDistinctStores()
+    private func loadInitialSuggestions() async {
+        let suggestions = await getDistinctStores()
+        await MainActor.run {
+            storeSuggestions = suggestions
+            showingSuggestions = !suggestions.isEmpty && isTextFieldFocused
         }
     }
 
@@ -139,13 +142,16 @@ struct StoreAutoCompleteField: View {
 
     private func getDistinctStores() async -> [StoreSuggestion] {
         do {
-            // Get store names from both sources
+            // Get store names from multiple sources:
+            // 1. Previous shopping list stores entered by user
+            // 2. Retail locations (stores)
+            // 3. All locations (including inventory storage locations like "Studio")
             let shoppingListStores = try await shoppingListRepository.getDistinctStores()
-            let locationEntities = try await locationService.getRetailLocations()
+            let allLocations = try await locationService.getAllLocations()
 
-            // Create suggestions from retail locations (with icon)
-            let locationSuggestions = locationEntities.map { location in
-                StoreSuggestion(name: location.name, isStoreEntity: true)
+            // Create suggestions from all locations (with icon for retail ones)
+            let locationSuggestions = allLocations.map { location in
+                StoreSuggestion(name: location.name, isStoreEntity: location.hasRetail)
             }
 
             // Create suggestions from shopping list stores (without icon)
@@ -172,27 +178,26 @@ struct StoreAutoCompleteField: View {
     }
 
     private func getStoreSuggestions(matching searchText: String) async -> [StoreSuggestion] {
-        do {
-            let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
 
-            // Get all stores from both sources
-            let allStoreSuggestions = await getDistinctStores()
+        // Get all stores from both sources
+        let allStoreSuggestions = await getDistinctStores()
 
-            guard !trimmedSearchText.isEmpty else {
-                return allStoreSuggestions
-            }
-
-            // Filter stores that start with search text (case-insensitive)
-            let lowercaseSearch = trimmedSearchText.lowercased()
-            let suggestions = allStoreSuggestions.filter {
-                $0.name.lowercased().hasPrefix(lowercaseSearch)
-            }
-            return suggestions
-
-        } catch {
-            print("❌ Failed to get store suggestions: \(error)")
-            return []
+        guard !trimmedSearchText.isEmpty else {
+            return allStoreSuggestions
         }
+
+        // Filter stores that contain search text (case-insensitive)
+        // Prioritize stores that START with the search text, then ones that contain it
+        let lowercaseSearch = trimmedSearchText.lowercased()
+        let startsWithMatches = allStoreSuggestions.filter {
+            $0.name.lowercased().hasPrefix(lowercaseSearch)
+        }
+        let containsMatches = allStoreSuggestions.filter {
+            !$0.name.lowercased().hasPrefix(lowercaseSearch) &&
+            $0.name.lowercased().contains(lowercaseSearch)
+        }
+        return startsWithMatches + containsMatches
     }
 }
 

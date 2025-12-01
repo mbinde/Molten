@@ -99,6 +99,7 @@ class CloudKitSyncMonitor: ObservableObject {
                 let isImport = event.type == .import
                 return (isImport, event.endDate, event.error)
             }
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] eventData in
                 let (isImport, endDate, error) = eventData
                 Task { @MainActor [weak self] in
@@ -109,6 +110,7 @@ class CloudKitSyncMonitor: ObservableObject {
 
         // Observe network reachability changes (using simple approach)
         NotificationCenter.default.publisher(for: NSPersistentCloudKitContainer.eventChangedNotification)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 Task { @MainActor [weak self] in
                     self?.updateOnlineStatus()

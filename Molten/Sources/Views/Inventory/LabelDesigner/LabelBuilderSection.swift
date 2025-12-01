@@ -10,7 +10,7 @@ import SwiftUI
 struct LabelBuilderSection: View {
     @Binding var builderConfig: LabelBuilderConfig
     @Binding var fontScale: Double
-    let selectedFormat: AveryFormat
+    let selectedFormat: LabelGeometry
     let onToggleField: (LabelTextField) -> Void
 
     var body: some View {
@@ -58,7 +58,7 @@ struct LabelBuilderSection: View {
 
                     Picker("QR Position", selection: $builderConfig.qrPosition) {
                         ForEach(QRCodePosition.allCases, id: \.self) { position in
-                            Text(position.rawValue).tag(position)
+                            Text(position.displayName(for: selectedFormat.shape)).tag(position)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -114,109 +114,71 @@ struct LabelBuilderSection: View {
 
                 Divider()
 
-                // Text Fields (Reorderable List)
+                // Text Fields
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text("Label Fields")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                        Spacer()
-                        Text("Tap to toggle • Drag to reorder")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
+                    Text("Label Fields")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
 
-                    // Included fields (reorderable)
+                    // Active fields with drag-to-reorder
                     if !builderConfig.textFields.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Active Fields (in order):")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .padding(.bottom, 4)
-
-                            ForEach(builderConfig.textFields, id: \.self) { field in
-                                HStack(spacing: 8) {
-                                    Image(systemName: "line.3.horizontal")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-
-                                    Button {
-                                        onToggleField(field)
-                                    } label: {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "checkmark.circle.fill")
-                                                .foregroundColor(.green)
-
-                                            Text(field.rawValue)
-                                                .font(.subheadline)
-
-                                            Spacer()
-
-                                            if let index = builderConfig.textFields.firstIndex(of: field) {
-                                                Text("#\(index + 1)")
-                                                    .font(.caption2)
-                                                    .foregroundColor(.secondary)
-                                                    .monospacedDigit()
-                                            }
-                                        }
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .accessibilityIdentifier("label_builder_field_\(field.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
-                                }
-                                .padding(.vertical, 6)
-                                .padding(.horizontal, 8)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(6)
+                            HStack {
+                                Text("Active Fields")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("Hold & drag to reorder")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
                             }
-                            .onMove { from, to in
-                                builderConfig.textFields.move(fromOffsets: from, toOffset: to)
+
+                            ForEach(Array(builderConfig.textFields.enumerated()), id: \.element) { index, field in
+                                LabelFieldRow(
+                                    field: field,
+                                    isActive: true,
+                                    onTap: { onToggleField(field) }
+                                )
+                                .draggable(field.rawValue) {
+                                    // Drag preview
+                                    Text(field.rawValue)
+                                        .padding(8)
+                                        .background(Color(.systemGray5))
+                                        .cornerRadius(6)
+                                }
+                                .dropDestination(for: String.self) { items, _ in
+                                    guard let droppedName = items.first,
+                                          let droppedField = LabelTextField(rawValue: droppedName),
+                                          let fromIndex = builderConfig.textFields.firstIndex(of: droppedField),
+                                          fromIndex != index else {
+                                        return false
+                                    }
+                                    withAnimation {
+                                        builderConfig.textFields.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: index > fromIndex ? index + 1 : index)
+                                    }
+                                    return true
+                                }
                             }
                         }
-
-                        Divider()
-                            .padding(.vertical, 8)
                     }
 
-                    // Available fields (not included)
+                    // Available fields - tap to add
                     let unusedFields = LabelTextField.allCases.filter { !builderConfig.textFields.contains($0) }
                     if !unusedFields.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Available Fields:")
+                            Text("Available Fields")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                                .padding(.bottom, 4)
+                                .padding(.top, 8)
 
                             ForEach(unusedFields, id: \.self) { field in
-                                Button {
-                                    onToggleField(field)
-                                } label: {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "circle")
-                                            .foregroundColor(.secondary)
-
-                                        Text(field.rawValue)
-                                            .font(.subheadline)
-                                            .foregroundColor(.secondary)
-
-                                        Spacer()
-                                    }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                                .buttonStyle(.plain)
-                                .padding(.vertical, 6)
-                                .padding(.horizontal, 8)
-                                .accessibilityIdentifier("label_builder_field_\(field.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
+                                LabelFieldRow(
+                                    field: field,
+                                    isActive: false,
+                                    onTap: { onToggleField(field) }
+                                )
                             }
                         }
-                    }
-
-                    if !builderConfig.textFields.isEmpty {
-                        Text("Long-press and drag to reorder active fields")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .italic()
-                            .padding(.top, 8)
                     }
                 }
             }
@@ -241,5 +203,47 @@ struct LabelBuilderSection: View {
                 .padding(.top, 8)
             }
         }
+    }
+}
+
+// MARK: - Label Field Row
+
+private struct LabelFieldRow: View {
+    let field: LabelTextField
+    let isActive: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 8) {
+                if isActive {
+                    Image(systemName: "line.3.horizontal")
+                        .foregroundColor(.secondary)
+                        .font(.caption)
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                } else {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundColor(.green)
+                }
+
+                Text(field.rawValue)
+                    .font(.subheadline)
+                    .foregroundColor(isActive ? .primary : .secondary)
+
+                Spacer()
+
+                if isActive {
+                    Image(systemName: "minus.circle.fill")
+                        .foregroundColor(.red)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
+        .background(Color(.systemGray6))
+        .cornerRadius(6)
+        .accessibilityIdentifier("label_builder_field_\(field.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
     }
 }

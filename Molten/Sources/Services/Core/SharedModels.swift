@@ -300,6 +300,23 @@ struct InventoryModel: Identifiable, Equatable, Hashable, Sendable {
         quantity > 0 || (containerCount ?? 0) > 0
     }
 
+    /// Default number of labels to print for this inventory record
+    ///
+    /// For weight-based types: uses container count (jars) if available, otherwise 1
+    /// For count-based types: uses the quantity (rods, tubes, etc.)
+    nonisolated var defaultLabelCount: Int {
+        if isWeightBasedType {
+            // For frit/powder: one label per jar, or 1 if no jars specified
+            if let jars = containerCount, jars > 0 {
+                return Int(jars)
+            }
+            return 1
+        } else {
+            // For rods/tubes/etc: one label per item
+            return Int(quantity)
+        }
+    }
+
     /// Format the quantity for display, considering both weight and container count
     /// Returns a string like "3 jars", "142g", or "3 jars (~142g)"
     nonisolated func formattedQuantityDisplay(preferredUnit: WeightUnit = WeightUnitPreference.current) -> String {

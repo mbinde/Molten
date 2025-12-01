@@ -11,16 +11,67 @@ import UIKit
 import CoreImage.CIFilterBuiltins
 import Combine
 
-/// Avery label format specifications
-///
-/// Data sources for template specifications:
-/// - Primary: CSV database from https://gist.github.com/armadsen/5084458
-/// - Secondary: XML templates from https://github.com/yardstick/PDF-Labels
-/// - Verification: Official Avery product specifications
+/// Shape classification for label formats
+enum LabelShape: String, CaseIterable, Identifiable {
+    case landscape      // wider than tall
+    case portrait       // taller than wide
+    case square         // equal width and height (not circular)
+    case circular       // round labels
+    case flag           // cable/wire flag labels (barbell shape)
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .landscape: return "Wide"
+        case .portrait: return "Tall"
+        case .square: return "Square"
+        case .circular: return "Circle"
+        case .flag: return "Barbell"
+        }
+    }
+
+    /// SF Symbol name, or nil if custom icon needed
+    var systemImage: String? {
+        switch self {
+        case .landscape: return "rectangle.fill"
+        case .portrait: return "rectangle.portrait.fill"
+        case .square: return "square.fill"
+        case .circular: return "circle.fill"
+        case .flag: return nil  // Uses custom FlagLabelIcon
+        }
+    }
+}
+
+/// Style variants for barbell/flag cable labels
+enum BarbellStyle: String, Sendable {
+    case symmetric     // Standard barbell: two flags connected by narrow wrap
+    case tStyle        // T-style: single flag with wrap tail on one end
+    case pStyle        // P-style: flag with curved/loop tail
+    case pStyleFolded  // P-style folded: single flag split horizontally (top/bottom areas fold around cable)
+    case wrap          // Self-laminating wrap-around labels
+
+    init?(databaseValue: String?) {
+        guard let value = databaseValue else { return nil }
+        switch value {
+        case "symmetric": self = .symmetric
+        case "t-style": self = .tStyle
+        case "p-style": self = .pStyle
+        case "p-style-folded": self = .pStyleFolded
+        case "wrap": self = .wrap
+        default: self = .symmetric
+        }
+    }
+}
+
+/// Label format specifications for PDF generation
 ///
 /// All dimensions in points (1 point = 1/72 inch)
 /// Standard sheet size: 8.5" × 11" (US Letter) = 612 × 792 points
-struct AveryFormat: Equatable, Hashable {
+///
+/// Label data is loaded from labels.db (SQLite) which contains 2,600+ formats
+/// from 87 brands, scraped from hlabels.com
+struct LabelGeometry: Equatable, Hashable, Sendable {
     let name: String
     let labelsPerSheet: Int
     let columns: Int
@@ -36,11 +87,89 @@ struct AveryFormat: Equatable, Hashable {
     let defaultFontScale: CGFloat
     let defaultQRSize: CGFloat  // as percentage of label height (0.5 to 0.8)
 
-    /// Avery 5160 (Address Labels)
+    /// Whether this is a circular label (explicitly defined, not computed from dimensions)
+    let isCircular: Bool
+
+    /// Whether this is a barbell/flag label (for cables, wires, jewelry)
+    let isBarbell: Bool
+
+    /// Barbell-specific geometry (only set when isBarbell is true)
+    /// Width of each printable flag area at the ends
+    let barbellFlagWidth: CGFloat?
+    /// Height of the narrow wrap section in the middle
+    let barbellWrapHeight: CGFloat?
+    /// Style variant for barbell labels (symmetric, t-style, p-style, wrap)
+    let barbellStyle: BarbellStyle?
+
+    /// Page format ("letter" or "a4")
+    let pageFormat: String
+
+    /// Computed wrap width for barbell labels (the narrow middle section)
+    var barbellWrapWidth: CGFloat? {
+        guard isBarbell, let flagWidth = barbellFlagWidth else { return nil }
+        return labelWidth - (2 * flagWidth)
+    }
+
+    /// Computed shape based on explicit flags and dimensions
+    var shape: LabelShape {
+        if isBarbell {
+            return .flag
+        } else if isCircular {
+            return .circular
+        } else if abs(labelWidth - labelHeight) < 1.0 {
+            return .square
+        } else if labelWidth > labelHeight {
+            return .landscape
+        } else {
+            return .portrait
+        }
+    }
+
+    init(
+        name: String,
+        labelsPerSheet: Int,
+        columns: Int,
+        rows: Int,
+        labelWidth: CGFloat,
+        labelHeight: CGFloat,
+        leftMargin: CGFloat,
+        topMargin: CGFloat,
+        horizontalGap: CGFloat,
+        verticalGap: CGFloat,
+        defaultFontScale: CGFloat,
+        defaultQRSize: CGFloat,
+        isCircular: Bool = false,
+        isBarbell: Bool = false,
+        barbellFlagWidth: CGFloat? = nil,
+        barbellWrapHeight: CGFloat? = nil,
+        barbellStyle: BarbellStyle? = nil,
+        pageFormat: String = "letter"
+    ) {
+        self.name = name
+        self.labelsPerSheet = labelsPerSheet
+        self.columns = columns
+        self.rows = rows
+        self.labelWidth = labelWidth
+        self.labelHeight = labelHeight
+        self.leftMargin = leftMargin
+        self.topMargin = topMargin
+        self.horizontalGap = horizontalGap
+        self.verticalGap = verticalGap
+        self.defaultFontScale = defaultFontScale
+        self.defaultQRSize = defaultQRSize
+        self.isCircular = isCircular
+        self.isBarbell = isBarbell
+        self.barbellFlagWidth = barbellFlagWidth
+        self.barbellWrapHeight = barbellWrapHeight
+        self.barbellStyle = barbellStyle
+        self.pageFormat = pageFormat
+    }
+
+    /// Avery 5160 (Address Labels) - Default format
     /// 30 labels per sheet (3 columns × 10 rows)
     /// 1" × 2⅝" per label
     /// Most common format for rod labels
-    static let avery5160 = AveryFormat(
+    static let default5160 = LabelGeometry(
         name: "Avery 5160",
         labelsPerSheet: 30,
         columns: 3,
@@ -55,1253 +184,73 @@ struct AveryFormat: Equatable, Hashable {
         defaultQRSize: 0.65
     )
 
-    /// Avery 5163 (Shipping Labels)
-    /// 10 labels per sheet (2 columns × 5 rows)
-    /// 2" × 4" per label
-    /// Use for box labels with more detailed info
-    static let avery5163 = AveryFormat(
-        name: "Avery 5163",
-        labelsPerSheet: 10,
-        columns: 2,
-        rows: 5,
-        labelWidth: 288,  // 4" × 72 = 288pt
-        labelHeight: 144,  // 2" × 72 = 144pt
-        leftMargin: 18,
-        topMargin: 36,
-        horizontalGap: 18,
-        verticalGap: 0,
-        defaultFontScale: 1.2,  // Larger label = can afford bigger text
-        defaultQRSize: 0.6
-    )
 
-    /// Avery 5167 (Return Address)
-    /// 80 labels per sheet (4 columns × 20 rows)
-    /// ½" × 1¾" per label
-    /// Use for tiny labels on small rods
-    static let avery5167 = AveryFormat(
-        name: "Avery 5167",
-        labelsPerSheet: 80,
-        columns: 4,
-        rows: 20,
-        labelWidth: 126,  // 1¾" × 72 = 126pt
-        labelHeight: 36,  // ½" × 72 = 36pt
-        leftMargin: 20.25,  // 0.28125" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 22.5,  // Spacing: 2.0625" × 72 - 126pt = 22.5pt
-        verticalGap: 0,  // Labels are vertically contiguous
-        defaultFontScale: 0.75,  // Tiny label = need smaller text
-        defaultQRSize: 0.7
-    )
-
-    /// Avery 18167 (Return Address - Same dimensions as 5167)
-    /// 80 labels per sheet (4 columns × 20 rows)
-    /// ½" × 1¾" per label
-    /// Alternative product code for same format as 5167
-    static let avery18167 = AveryFormat(
-        name: "Avery 18167",
-        labelsPerSheet: 80,
-        columns: 4,
-        rows: 20,
-        labelWidth: 126,  // 1¾" × 72 = 126pt
-        labelHeight: 36,  // ½" × 72 = 36pt
-        leftMargin: 20.25,  // 0.28125" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 22.5,  // Spacing: 2.0625" × 72 - 126pt = 22.5pt
-        verticalGap: 0,  // Labels are vertically contiguous
-        defaultFontScale: 0.75,  // Tiny label = need smaller text
-        defaultQRSize: 0.7
-    )
-
-    /// Mr-Label MR184 (Cable Labels)
-    /// 30 labels per sheet (3 columns × 10 rows)
-    /// 1" × 2.625" per label (similar layout to Avery 5160)
-    /// Waterproof, tear-resistant flag-style cable labels
-    /// Note: Use offset adjustments in UI to fine-tune alignment for your specific label sheets
-    static let mrLabel184 = AveryFormat(
-        name: "Mr-Label MR184",
-        labelsPerSheet: 30,
-        columns: 3,
-        rows: 10,
-        labelWidth: 189,  // 2.625" × 72 = 189pt (same as Avery 5160)
-        labelHeight: 72,  // 1" × 72 = 72pt
-        leftMargin: 13.5,  // 0.1875" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 9,  // Spacing between columns
-        verticalGap: 0,  // Labels are vertically contiguous
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    // MARK: - Additional Address Labels
-
-    /// Avery 5161 (Address Labels)
-    /// 20 labels per sheet (2 columns × 10 rows)
-    /// 1" × 4" per label
-    /// Larger width than 5160, good for longer text
-    static let avery5161 = AveryFormat(
-        name: "Avery 5161",
-        labelsPerSheet: 20,
-        columns: 2,
-        rows: 10,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 72,  // 1" × 72
-        leftMargin: 11.25,  // 0.156" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5162 (Address Labels)
-    /// 14 labels per sheet (2 columns × 7 rows)
-    /// 1.33" × 4" per label
-    /// Taller labels for more text per label
-    static let avery5162 = AveryFormat(
-        name: "Avery 5162",
-        labelsPerSheet: 14,
-        columns: 2,
-        rows: 7,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 96,  // 1.33" × 72
-        leftMargin: 11.25,  // 0.156" × 72
-        topMargin: 60,  // 0.833" × 72
-        horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5164 (Shipping Labels)
-    /// 6 labels per sheet (2 columns × 3 rows)
-    /// 3.33" × 4" per label
-    /// Large labels for detailed shipping information
-    static let avery5164 = AveryFormat(
-        name: "Avery 5164",
-        labelsPerSheet: 6,
-        columns: 2,
-        rows: 3,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 240,  // 3.33" × 72
-        leftMargin: 11.25,  // 0.156" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5159 (Address Labels)
-    /// 14 labels per sheet (2 columns × 7 rows)
-    /// 1.25" × 4" per label
-    /// Similar to 5162 but slightly smaller height
-    static let avery5159 = AveryFormat(
-        name: "Avery 5159",
-        labelsPerSheet: 14,
-        columns: 2,
-        rows: 7,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 90,  // 1.25" × 72
-        leftMargin: 11.25,  // 0.156" × 72
-        topMargin: 18,  // 0.25" × 72
-        horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    // MARK: - Small Labels (High Density)
-
-    /// Avery 5260 (Address Labels - Same as 5160)
-    /// 30 labels per sheet (3 columns × 10 rows)
-    /// 1" × 2⅝" per label
-    /// EasyPeel version of 5160
-    static let avery5260 = AveryFormat(
-        name: "Avery 5260",
-        labelsPerSheet: 30,
-        columns: 3,
-        rows: 10,
-        labelWidth: 189,  // 2.625" × 72
-        labelHeight: 72,  // 1" × 72
-        leftMargin: 13.5,  // 0.188" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 9,  // 0.125" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5261 (Address Labels - Same as 5161)
-    /// 20 labels per sheet (2 columns × 10 rows)
-    /// 1" × 4" per label
-    /// EasyPeel version of 5161
-    static let avery5261 = AveryFormat(
-        name: "Avery 5261",
-        labelsPerSheet: 20,
-        columns: 2,
-        rows: 10,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 72,  // 1" × 72
-        leftMargin: 11.25,  // 0.156" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5262 (Address Labels - Same as 5162)
-    /// 14 labels per sheet (2 columns × 7 rows)
-    /// 1.33" × 4" per label
-    /// EasyPeel version of 5162
-    static let avery5262 = AveryFormat(
-        name: "Avery 5262",
-        labelsPerSheet: 14,
-        columns: 2,
-        rows: 7,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 96,  // 1.33" × 72
-        leftMargin: 11.25,  // 0.156" × 72
-        topMargin: 60,  // 0.835" × 72
-        horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5263 (Shipping Labels - Same as 5163)
-    /// 10 labels per sheet (2 columns × 5 rows)
-    /// 2" × 4" per label
-    /// EasyPeel version of 5163
-    static let avery5263 = AveryFormat(
-        name: "Avery 5263",
-        labelsPerSheet: 10,
-        columns: 2,
-        rows: 5,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 144,  // 2" × 72
-        leftMargin: 12.25,  // 0.17" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 11.5,  // 0.16" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5264 (Shipping Labels - Same as 5164)
-    /// 6 labels per sheet (2 columns × 3 rows)
-    /// 3.33" × 4" per label
-    /// EasyPeel version of 5164
-    static let avery5264 = AveryFormat(
-        name: "Avery 5264",
-        labelsPerSheet: 6,
-        columns: 2,
-        rows: 3,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 240,  // 3.33" × 72
-        leftMargin: 11.25,  // 0.156" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5267 (Return Address - Same as 5167)
-    /// 80 labels per sheet (4 columns × 20 rows)
-    /// ½" × 1¾" per label
-    /// EasyPeel version of 5167
-    static let avery5267 = AveryFormat(
-        name: "Avery 5267",
-        labelsPerSheet: 80,
-        columns: 4,
-        rows: 20,
-        labelWidth: 126,  // 1.75" × 72
-        labelHeight: 36,  // 0.5" × 72
-        leftMargin: 21.6,  // 0.3" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 21.6,  // 0.3" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    // MARK: - Inkjet Labels (8xxx Series)
-
-    /// Avery 8160 (Address Labels - Inkjet)
-    /// 30 labels per sheet (3 columns × 10 rows)
-    /// 1" × 2⅝" per label
-    /// Inkjet version of 5160
-    static let avery8160 = AveryFormat(
-        name: "Avery 8160",
-        labelsPerSheet: 30,
-        columns: 3,
-        rows: 10,
-        labelWidth: 189,  // 2.625" × 72
-        labelHeight: 72,  // 1" × 72
-        leftMargin: 13.5,  // 0.188" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 9,  // 0.125" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 8161 (Address Labels - Inkjet)
-    /// 20 labels per sheet (2 columns × 10 rows)
-    /// 1" × 4" per label
-    /// Inkjet version of 5161
-    static let avery8161 = AveryFormat(
-        name: "Avery 8161",
-        labelsPerSheet: 20,
-        columns: 2,
-        rows: 10,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 72,  // 1" × 72
-        leftMargin: 11.25,  // 0.156" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 8162 (Address Labels - Inkjet)
-    /// 14 labels per sheet (2 columns × 7 rows)
-    /// 1.33" × 4" per label
-    /// Inkjet version of 5162
-    static let avery8162 = AveryFormat(
-        name: "Avery 8162",
-        labelsPerSheet: 14,
-        columns: 2,
-        rows: 7,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 96,  // 1.33" × 72
-        leftMargin: 11.25,  // 0.156" × 72
-        topMargin: 60,  // 0.833" × 72
-        horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 8163 (Shipping Labels - Inkjet)
-    /// 10 labels per sheet (2 columns × 5 rows)
-    /// 2" × 4" per label
-    /// Inkjet version of 5163
-    static let avery8163 = AveryFormat(
-        name: "Avery 8163",
-        labelsPerSheet: 10,
-        columns: 2,
-        rows: 5,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 144,  // 2" × 72
-        leftMargin: 12.25,  // 0.17" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 11.5,  // 0.16" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 8164 (Shipping Labels - Inkjet)
-    /// 6 labels per sheet (2 columns × 3 rows)
-    /// 3.33" × 4" per label
-    /// Inkjet version of 5164
-    static let avery8164 = AveryFormat(
-        name: "Avery 8164",
-        labelsPerSheet: 6,
-        columns: 2,
-        rows: 3,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 240,  // 3.33" × 72
-        leftMargin: 11.25,  // 0.156" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 8167 (Return Address - Inkjet)
-    /// 80 labels per sheet (4 columns × 20 rows)
-    /// ½" × 1¾" per label
-    /// Inkjet version of 5167
-    static let avery8167 = AveryFormat(
-        name: "Avery 8167",
-        labelsPerSheet: 80,
-        columns: 4,
-        rows: 20,
-        labelWidth: 126,  // 1.75" × 72
-        labelHeight: 36,  // 0.5" × 72
-        leftMargin: 21.6,  // 0.3" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 21.6,  // 0.3" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    // MARK: - Specialty Labels
-
-    /// Avery 5168 (Shipping Labels)
-    /// 4 labels per sheet (2 columns × 2 rows)
-    /// 3.5" × 5" per label
-    /// Extra large labels for packages
-    static let avery5168 = AveryFormat(
-        name: "Avery 5168",
-        labelsPerSheet: 4,
-        columns: 2,
-        rows: 2,
-        labelWidth: 360,  // 5" × 72
-        labelHeight: 252,  // 3.5" × 72
-        leftMargin: 36,  // 0.5" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 36,  // 0.5" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5960 (Address Labels)
-    /// 30 labels per sheet (3 columns × 10 rows)
-    /// 1" × 2⅝" per label
-    /// Template-free edge labels (same as 5160)
-    static let avery5960 = AveryFormat(
-        name: "Avery 5960",
-        labelsPerSheet: 30,
-        columns: 3,
-        rows: 10,
-        labelWidth: 189,  // 2.625" × 72
-        labelHeight: 72,  // 1" × 72
-        leftMargin: 13.5,  // 0.188" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 9,  // 0.125" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5961 (Address Labels)
-    /// 20 labels per sheet (2 columns × 10 rows)
-    /// 1" × 4" per label
-    /// Template-free edge labels (same as 5161)
-    static let avery5961 = AveryFormat(
-        name: "Avery 5961",
-        labelsPerSheet: 20,
-        columns: 2,
-        rows: 10,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 72,  // 1" × 72
-        leftMargin: 11.25,  // 0.156" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5962 (Address Labels)
-    /// 14 labels per sheet (2 columns × 7 rows)
-    /// 1.33" × 4" per label
-    /// Template-free edge labels (same as 5162)
-    static let avery5962 = AveryFormat(
-        name: "Avery 5962",
-        labelsPerSheet: 14,
-        columns: 2,
-        rows: 7,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 96,  // 1.33" × 72
-        leftMargin: 11.25,  // 0.156" × 72
-        topMargin: 60,  // 0.833" × 72
-        horizontalGap: 13.5,  // 0.188" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5963 (Shipping Labels)
-    /// 10 labels per sheet (2 columns × 5 rows)
-    /// 2" × 4" per label
-    /// Template-free edge labels (same as 5163)
-    static let avery5963 = AveryFormat(
-        name: "Avery 5963",
-        labelsPerSheet: 10,
-        columns: 2,
-        rows: 5,
-        labelWidth: 288,  // 4" × 72
-        labelHeight: 144,  // 2" × 72
-        leftMargin: 12.25,  // 0.17" × 72
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 11.5,  // 0.16" × 72
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    // MARK: - Name Badge Labels
-
-    /// Avery 5395 (Name Badge Labels)
-    /// 8 labels per sheet (2 columns × 4 rows)
-    /// 2⅓" × 3⅜" per label
-    /// Perfect for name tags and badges
-    static let avery5395 = AveryFormat(
-        name: "Avery 5395",
-        labelsPerSheet: 8,
-        columns: 2,
-        rows: 4,
-        labelWidth: 243,  // 3.375" × 72
-        labelHeight: 168,  // 2.33" × 72
-        leftMargin: 27,  // 0.375" × 72
-        topMargin: 45,  // 0.625" × 72
-        horizontalGap: 18,  // 0.25" × 72
-        verticalGap: 18,  // 0.25" × 72
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 6870 (Durable ID Labels)
-    /// 30 labels per sheet (3 columns × 10 rows)
-    /// ¾" × 2¼" per label
-    /// Smaller than 5160, good for asset tags
-    static let avery6870 = AveryFormat(
-        name: "Avery 6870",
-        labelsPerSheet: 30,
-        columns: 3,
-        rows: 10,
-        labelWidth: 162,  // 2.25" × 72
-        labelHeight: 54,  // 0.75" × 72
-        leftMargin: 27,  // 0.375" × 72
-        topMargin: 45,  // 0.625" × 72
-        horizontalGap: 36,  // 0.5" × 72
-        verticalGap: 18,  // 0.25" × 72
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 8371 (Business Cards)
-    /// 10 per sheet (2 columns × 5 rows)
-    /// 2" × 3.5" per label
-    /// Standard business card size
-    static let avery8371 = AveryFormat(
-        name: "Avery 8371",
-        labelsPerSheet: 10,
-        columns: 2,
-        rows: 5,
-        labelWidth: 252,  // 3.5" × 72
-        labelHeight: 144,  // 2" × 72
-        leftMargin: 27,  // Calculated from sheet width
-        topMargin: 36,  // 0.5" × 72
-        horizontalGap: 0,
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5165 (Full Sheet Labels)
-    /// 1 label per sheet
-    /// 8.5" × 11" full page
-    /// For posters, signs, or full-page designs
-    static let avery5165 = AveryFormat(
-        name: "Avery 5165",
-        labelsPerSheet: 1,
-        columns: 1,
-        rows: 1,
-        labelWidth: 612,  // 8.5" × 72
-        labelHeight: 792,  // 11" × 72
-        leftMargin: 0,
-        topMargin: 0,
-        horizontalGap: 0,
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 8165 (Full Sheet Labels - Inkjet)
-    /// 1 label per sheet
-    /// 8.5" × 11" full page
-    /// Inkjet version for posters, signs, or full-page designs
-    static let avery8165 = AveryFormat(
-        name: "Avery 8165",
-        labelsPerSheet: 1,
-        columns: 1,
-        rows: 1,
-        labelWidth: 612,  // 8.5" × 72
-        labelHeight: 792,  // 11" × 72
-        leftMargin: 0,
-        topMargin: 0,
-        horizontalGap: 0,
-        verticalGap: 0,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    // MARK: - Laser Labels (55xx Series)
-
-    /// Avery 5510 (Laser Address Labels)
-    /// 30 labels per sheet (3 columns × 10 rows)
-    /// 1" × 2⅝" per label
-    static let avery5510 = AveryFormat(
-        name: "Avery 5510",
-        labelsPerSheet: 30,
-        columns: 3,
-        rows: 10,
-        labelWidth: 189.0,
-        labelHeight: 72.0,
-        leftMargin: 13.54,
-        topMargin: 36.00,
-        horizontalGap: 9.00,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5512 (Laser Address Labels)
-    /// 14 labels per sheet (2 columns × 7 rows)
-    /// 1⅓" × 4" per label
-    static let avery5512 = AveryFormat(
-        name: "Avery 5512",
-        labelsPerSheet: 14,
-        columns: 2,
-        rows: 7,
-        labelWidth: 288.0,
-        labelHeight: 96.0,
-        leftMargin: 11.23,
-        topMargin: 59.98,
-        horizontalGap: 13.54,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5513 (Laser Shipping Labels)
-    /// 10 labels per sheet (2 columns × 5 rows)
-    /// 2" × 4" per label
-    static let avery5513 = AveryFormat(
-        name: "Avery 5513",
-        labelsPerSheet: 10,
-        columns: 2,
-        rows: 5,
-        labelWidth: 288.0,
-        labelHeight: 144.0,
-        leftMargin: 12.24,
-        topMargin: 36.00,
-        horizontalGap: 11.52,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5514 (Laser Shipping Labels)
-    /// 6 labels per sheet (2 columns × 3 rows)
-    /// 3⅓" × 4" per label
-    static let avery5514 = AveryFormat(
-        name: "Avery 5514",
-        labelsPerSheet: 6,
-        columns: 2,
-        rows: 3,
-        labelWidth: 288.0,
-        labelHeight: 240.0,
-        leftMargin: 11.23,
-        topMargin: 36.00,
-        horizontalGap: 13.54,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5516 (Laser Half Sheet Labels)
-    /// 2 labels per sheet (1 column × 2 rows)
-    /// 5.5" × 8.5" per label
-    static let avery5516 = AveryFormat(
-        name: "Avery 5516",
-        labelsPerSheet: 2,
-        columns: 1,
-        rows: 2,
-        labelWidth: 606.2,
-        labelHeight: 393.1,
-        leftMargin: 2.88,
-        topMargin: 2.88,
-        horizontalGap: 0.00,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5520 (Laser Address Labels)
-    /// 30 labels per sheet (3 columns × 10 rows)
-    /// 1" × 2⅝" per label
-    static let avery5520 = AveryFormat(
-        name: "Avery 5520",
-        labelsPerSheet: 30,
-        columns: 3,
-        rows: 10,
-        labelWidth: 189.0,
-        labelHeight: 72.0,
-        leftMargin: 13.54,
-        topMargin: 36.00,
-        horizontalGap: 9.00,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5522 (Laser Address Labels)
-    /// 14 labels per sheet (2 columns × 7 rows)
-    /// 1⅓" × 4" per label
-    static let avery5522 = AveryFormat(
-        name: "Avery 5522",
-        labelsPerSheet: 14,
-        columns: 2,
-        rows: 7,
-        labelWidth: 288.0,
-        labelHeight: 96.0,
-        leftMargin: 11.23,
-        topMargin: 59.98,
-        horizontalGap: 13.54,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5523 (Laser Shipping Labels)
-    /// 10 labels per sheet (2 columns × 5 rows)
-    /// 2" × 4" per label
-    static let avery5523 = AveryFormat(
-        name: "Avery 5523",
-        labelsPerSheet: 10,
-        columns: 2,
-        rows: 5,
-        labelWidth: 288.0,
-        labelHeight: 144.0,
-        leftMargin: 12.24,
-        topMargin: 36.00,
-        horizontalGap: 11.52,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5524 (Laser Shipping Labels)
-    /// 6 labels per sheet (2 columns × 3 rows)
-    /// 3⅓" × 4" per label
-    static let avery5524 = AveryFormat(
-        name: "Avery 5524",
-        labelsPerSheet: 6,
-        columns: 2,
-        rows: 3,
-        labelWidth: 288.0,
-        labelHeight: 240.0,
-        leftMargin: 11.23,
-        topMargin: 36.00,
-        horizontalGap: 13.54,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5526 (Laser Shipping Labels)
-    /// 8 labels per sheet (2 columns × 4 rows)
-    /// 2" × 4" per label
-    static let avery5526 = AveryFormat(
-        name: "Avery 5526",
-        labelsPerSheet: 8,
-        columns: 2,
-        rows: 4,
-        labelWidth: 288.0,
-        labelHeight: 144.0,
-        leftMargin: 18.00,
-        topMargin: 36.00,
-        horizontalGap: 18.00,
-        verticalGap: 36.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5560 (Laser Mailing Labels)
-    /// 30 labels per sheet (3 columns × 10 rows)
-    /// 1" × 2⅝" per label
-    static let avery5560 = AveryFormat(
-        name: "Avery 5560",
-        labelsPerSheet: 30,
-        columns: 3,
-        rows: 10,
-        labelWidth: 189.0,
-        labelHeight: 72.0,
-        leftMargin: 13.54,
-        topMargin: 36.00,
-        horizontalGap: 9.00,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    // MARK: - Round/Circle Labels
-
-    /// Avery 5293 (Round Labels)
-    /// 12 labels per sheet (3 columns × 4 rows)
-    /// 2.5" diameter circles
-    static let avery5293 = AveryFormat(
-        name: "Avery 5293",
-        labelsPerSheet: 12,
-        columns: 3,
-        rows: 4,
-        labelWidth: 180.0,  // 2.5" diameter
-        labelHeight: 180.0,
-        leftMargin: 41.04,
-        topMargin: 54.00,
-        horizontalGap: 18.00,
-        verticalGap: 18.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5294 (Round Labels)
-    /// 32 labels per sheet (4 columns × 8 rows)
-    /// 1.5" diameter circles
-    static let avery5294 = AveryFormat(
-        name: "Avery 5294",
-        labelsPerSheet: 32,
-        columns: 4,
-        rows: 8,
-        labelWidth: 108.0,  // 1.5" diameter
-        labelHeight: 108.0,
-        leftMargin: 36.00,
-        topMargin: 18.00,
-        horizontalGap: 18.00,
-        verticalGap: 18.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5923 (Round Labels)
-    /// 12 labels per sheet (3 columns × 4 rows)
-    /// 2.5" diameter circles
-    static let avery5923 = AveryFormat(
-        name: "Avery 5923",
-        labelsPerSheet: 12,
-        columns: 3,
-        rows: 4,
-        labelWidth: 180.0,  // 2.5" diameter
-        labelHeight: 180.0,
-        leftMargin: 41.04,
-        topMargin: 54.00,
-        horizontalGap: 18.00,
-        verticalGap: 18.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5930 (Round Labels)
-    /// 30 labels per sheet (3 columns × 10 rows)
-    /// 1.5" diameter circles
-    static let avery5930 = AveryFormat(
-        name: "Avery 5930",
-        labelsPerSheet: 30,
-        columns: 3,
-        rows: 10,
-        labelWidth: 108.0,  // 1.5" diameter
-        labelHeight: 108.0,
-        leftMargin: 54.00,
-        topMargin: 27.00,
-        horizontalGap: 27.00,
-        verticalGap: 9.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    // MARK: - File Folder Labels
-
-    /// Avery 5734 (File Folder Labels)
-    /// 78 labels per sheet (6 columns × 13 rows)
-    /// ⅔" × 3.44" per label
-    static let avery5734 = AveryFormat(
-        name: "Avery 5734",
-        labelsPerSheet: 78,
-        columns: 6,
-        rows: 13,
-        labelWidth: 247.7,
-        labelHeight: 48.0,
-        leftMargin: 11.23,
-        topMargin: 18.00,
-        horizontalGap: 0.00,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 5777 (File Folder Labels)
-    /// 78 labels per sheet (6 columns × 13 rows)
-    /// ⅔" × 3.44" per label
-    static let avery5777 = AveryFormat(
-        name: "Avery 5777",
-        labelsPerSheet: 78,
-        columns: 6,
-        rows: 13,
-        labelWidth: 247.7,
-        labelHeight: 48.0,
-        leftMargin: 11.23,
-        topMargin: 18.00,
-        horizontalGap: 0.00,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    // MARK: - Durable/Ultra Duty Labels
-
-    /// Avery 6871 (Durable ID Labels)
-    /// 30 labels per sheet (3 columns × 10 rows)
-    /// ¾" × 2.25" per label
-    static let avery6871 = AveryFormat(
-        name: "Avery 6871",
-        labelsPerSheet: 30,
-        columns: 3,
-        rows: 10,
-        labelWidth: 162.0,
-        labelHeight: 54.0,
-        leftMargin: 27.00,
-        topMargin: 45.00,
-        horizontalGap: 36.00,
-        verticalGap: 18.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 6873 (Ultra Duty Labels)
-    /// 20 labels per sheet (4 columns × 5 rows)
-    /// 1.25" × 1.75" per label
-    static let avery6873 = AveryFormat(
-        name: "Avery 6873",
-        labelsPerSheet: 20,
-        columns: 4,
-        rows: 5,
-        labelWidth: 126.0,
-        labelHeight: 90.0,
-        leftMargin: 27.00,
-        topMargin: 54.00,
-        horizontalGap: 27.00,
-        verticalGap: 27.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 6874 (Ultra Duty Labels)
-    /// 8 labels per sheet (2 columns × 4 rows)
-    /// 2.33" × 3.375" per label
-    static let avery6874 = AveryFormat(
-        name: "Avery 6874",
-        labelsPerSheet: 8,
-        columns: 2,
-        rows: 4,
-        labelWidth: 243.0,
-        labelHeight: 168.0,
-        leftMargin: 27.00,
-        topMargin: 45.00,
-        horizontalGap: 18.00,
-        verticalGap: 18.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    // MARK: - Additional Inkjet Labels (82xx, 84xx, 86xx, 87xx)
-
-    /// Avery 8250 (Inkjet Address Labels)
-    /// 30 labels per sheet (3 columns × 10 rows)
-    /// 1" × 2⅝" per label
-    static let avery8250 = AveryFormat(
-        name: "Avery 8250",
-        labelsPerSheet: 30,
-        columns: 3,
-        rows: 10,
-        labelWidth: 189.0,
-        labelHeight: 72.0,
-        leftMargin: 13.54,
-        topMargin: 36.00,
-        horizontalGap: 9.00,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 8253 (Inkjet Shipping Labels)
-    /// 10 labels per sheet (2 columns × 5 rows)
-    /// 2" × 4" per label
-    static let avery8253 = AveryFormat(
-        name: "Avery 8253",
-        labelsPerSheet: 10,
-        columns: 2,
-        rows: 5,
-        labelWidth: 288.0,
-        labelHeight: 144.0,
-        leftMargin: 12.24,
-        topMargin: 36.00,
-        horizontalGap: 11.52,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 8460 (Inkjet Address Labels)
-    /// 20 labels per sheet (2 columns × 10 rows)
-    /// 1" × 4" per label
-    static let avery8460 = AveryFormat(
-        name: "Avery 8460",
-        labelsPerSheet: 20,
-        columns: 2,
-        rows: 10,
-        labelWidth: 288.0,
-        labelHeight: 72.0,
-        leftMargin: 11.23,
-        topMargin: 36.00,
-        horizontalGap: 13.54,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 8461 (Inkjet Address Labels)
-    /// 20 labels per sheet (2 columns × 10 rows)
-    /// 1" × 4" per label
-    static let avery8461 = AveryFormat(
-        name: "Avery 8461",
-        labelsPerSheet: 20,
-        columns: 2,
-        rows: 10,
-        labelWidth: 288.0,
-        labelHeight: 72.0,
-        leftMargin: 11.23,
-        topMargin: 36.00,
-        horizontalGap: 13.54,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 8462 (Inkjet Address Labels)
-    /// 14 labels per sheet (2 columns × 7 rows)
-    /// 1⅓" × 4" per label
-    static let avery8462 = AveryFormat(
-        name: "Avery 8462",
-        labelsPerSheet: 14,
-        columns: 2,
-        rows: 7,
-        labelWidth: 288.0,
-        labelHeight: 96.0,
-        leftMargin: 11.23,
-        topMargin: 59.98,
-        horizontalGap: 13.54,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 8660 (Inkjet Address Labels)
-    /// 30 labels per sheet (3 columns × 10 rows)
-    /// 1" × 2⅝" per label
-    static let avery8660 = AveryFormat(
-        name: "Avery 8660",
-        labelsPerSheet: 30,
-        columns: 3,
-        rows: 10,
-        labelWidth: 189.0,
-        labelHeight: 72.0,
-        leftMargin: 13.54,
-        topMargin: 36.00,
-        horizontalGap: 9.00,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 8760 (Inkjet Address Labels)
-    /// 20 labels per sheet (2 columns × 10 rows)
-    /// 1" × 4" per label
-    static let avery8760 = AveryFormat(
-        name: "Avery 8760",
-        labelsPerSheet: 20,
-        columns: 2,
-        rows: 10,
-        labelWidth: 288.0,
-        labelHeight: 72.0,
-        leftMargin: 11.23,
-        topMargin: 36.00,
-        horizontalGap: 13.54,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    // MARK: - Multipurpose Labels
-
-    /// Avery 5810 (Multipurpose Labels)
-    /// 42 labels per sheet (3 columns × 14 rows)
-    /// ½" × 1.75" per label
-    static let avery5810 = AveryFormat(
-        name: "Avery 5810",
-        labelsPerSheet: 42,
-        columns: 3,
-        rows: 14,
-        labelWidth: 126.0,
-        labelHeight: 36.0,
-        leftMargin: 54.00,
-        topMargin: 40.50,
-        horizontalGap: 54.00,
-        verticalGap: 0.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    /// Avery 6464 (Multipurpose Labels)
-    /// 24 labels per sheet (3 columns × 8 rows)
-    /// 1⅓" × 2.33" per label
-    static let avery6464 = AveryFormat(
-        name: "Avery 6464",
-        labelsPerSheet: 24,
-        columns: 3,
-        rows: 8,
-        labelWidth: 168.0,
-        labelHeight: 96.0,
-        leftMargin: 27.00,
-        topMargin: 54.00,
-        horizontalGap: 27.00,
-        verticalGap: 27.00,
-        defaultFontScale: 1.0,
-        defaultQRSize: 0.65
-    )
-
-    // MARK: - All Available Formats
-
-    /// All available Avery formats, organized by category
-    static let allFormats: [String: [AveryFormat]] = [
-        "Popular": [
-            .avery5160,
-            .avery5163,
-            .avery5167,
-            .avery8160,
-            .avery8163,
-            .avery8167
-        ],
-        "Address Labels": [
-            .avery5160,
-            .avery5161,
-            .avery5162,
-            .avery5159,
-            .avery5260,
-            .avery5261,
-            .avery5262,
-            .avery5960,
-            .avery5961,
-            .avery5962,
-            .avery5510,
-            .avery5512,
-            .avery5520,
-            .avery5522,
-            .avery5560,
-            .avery8460,
-            .avery8461,
-            .avery8462,
-            .avery8660,
-            .avery8760,
-            .avery8250
-        ],
-        "Shipping Labels": [
-            .avery5163,
-            .avery5164,
-            .avery5168,
-            .avery5263,
-            .avery5264,
-            .avery5963,
-            .avery5513,
-            .avery5514,
-            .avery5516,
-            .avery5523,
-            .avery5524,
-            .avery5526,
-            .avery8253
-        ],
-        "Return Address": [
-            .avery5167,
-            .avery18167,
-            .avery5267,
-            .avery8167
-        ],
-        "Round/Circle Labels": [
-            .avery5293,
-            .avery5294,
-            .avery5923,
-            .avery5930
-        ],
-        "File Folder Labels": [
-            .avery5734,
-            .avery5777
-        ],
-        "Durable/Ultra Duty": [
-            .avery6870,
-            .avery6871,
-            .avery6873,
-            .avery6874
-        ],
-        "Multipurpose": [
-            .avery5810,
-            .avery6464
-        ],
-        "Name Badges & Cards": [
-            .avery5395,
-            .avery8371
-        ],
-        "Full Sheet": [
-            .avery5165,
-            .avery8165
-        ],
-        "Other Brands": [
-            .mrLabel184
-        ]
-    ]
-
-    /// Get a flat list of all formats
-    static var flatList: [AveryFormat] {
-        var seen = Set<String>()
-        var result: [AveryFormat] = []
-
-        for category in allFormats.values {
-            for format in category {
-                if !seen.contains(format.name) {
-                    seen.insert(format.name)
-                    result.append(format)
-                }
-            }
-        }
-
-        return result.sorted { $0.name < $1.name }
-    }
+    /// Default format (Avery 5160) - used as fallback if database unavailable
+    /// All other formats are loaded from labels.db via LabelDatabaseService
+    static let defaultFormat = default5160
 }
 
 /// QR code position on label
-enum QRCodePosition: String, CaseIterable, Codable {
+enum QRCodePosition: String, CaseIterable, Codable, Sendable {
     case none = "None"
     case left = "Left side"
     case right = "Right side"
     case both = "Both sides"
+
+    /// Display name adjusted for label shape
+    /// Circular, portrait, and square labels use "Top/Bottom" instead of "Left/Right"
+    /// (text expands horizontally, so QR codes should be positioned vertically)
+    func displayName(for shape: LabelShape) -> String {
+        let useVertical = shape == .circular || shape == .portrait || shape == .square
+        switch self {
+        case .none: return "None"
+        case .left: return useVertical ? "Top" : "Left side"
+        case .right: return useVertical ? "Bottom" : "Right side"
+        case .both: return useVertical ? "Top & Bottom" : "Both sides"
+        }
+    }
+
+    /// Whether this position uses vertical layout (top/bottom) for the given shape
+    func usesVerticalLayout(for shape: LabelShape) -> Bool {
+        return shape == .circular || shape == .portrait || shape == .square
+    }
 }
 
 /// Manufacturer image position on label
-enum ManufacturerImagePosition: String, CaseIterable, Codable {
+enum ManufacturerImagePosition: String, CaseIterable, Codable, Sendable {
     case none = "None"
     case left = "Left side"
     case right = "Right side"
     case both = "Both sides"
+
+    /// Display name adjusted for label shape
+    /// Circular, portrait, and square labels use "Top/Bottom" instead of "Left/Right"
+    /// (text expands horizontally, so images should be positioned vertically)
+    func displayName(for shape: LabelShape) -> String {
+        let useVertical = shape == .circular || shape == .portrait || shape == .square
+        switch self {
+        case .none: return "None"
+        case .left: return useVertical ? "Top" : "Left side"
+        case .right: return useVertical ? "Bottom" : "Right side"
+        case .both: return useVertical ? "Top & Bottom" : "Both sides"
+        }
+    }
+
+    /// Whether this position uses vertical layout (top/bottom) for the given shape
+    func usesVerticalLayout(for shape: LabelShape) -> Bool {
+        return shape == .circular || shape == .portrait || shape == .square
+    }
 }
 
 /// Text alignment on label
-enum LabelTextAlignment: String, CaseIterable, Codable {
+enum LabelTextAlignment: String, CaseIterable, Codable, Sendable {
     case left = "Left"
     case center = "Center"
     case right = "Right"
 }
 
 /// Text field that can be included on a label
-enum LabelTextField: String, CaseIterable, Codable {
+enum LabelTextField: String, CaseIterable, Codable, Sendable {
     case manufacturer = "Manufacturer"
     case sku = "SKU"
     case colorName = "Color Name"
@@ -1319,7 +268,7 @@ enum LabelTextField: String, CaseIterable, Codable {
 }
 
 /// Formatting configuration for individual label fields
-struct LabelFieldFormat: Equatable, Codable {
+struct LabelFieldFormat: Equatable, Codable, Sendable {
     var fontSize: CGFloat
     var bold: Bool
     var italic: Bool
@@ -1341,7 +290,7 @@ struct LabelFieldFormat: Equatable, Codable {
 }
 
 /// Label builder configuration - user-customizable label layout
-struct LabelBuilderConfig: Equatable, Codable {
+struct LabelBuilderConfig: Equatable, Codable, Sendable {
     var qrPosition: QRCodePosition
     var qrSize: CGFloat?  // as percentage of label height (0.5 to 0.8) - nil = use format default
     var fontScale: CGFloat?  // text size multiplier - nil = use format default
@@ -1351,16 +300,32 @@ struct LabelBuilderConfig: Equatable, Codable {
     var textAlignment: LabelTextAlignment  // text alignment (left, center, right)
     var fieldFormats: [LabelTextField: LabelFieldFormat]  // per-field formatting
 
+    // Content padding within labels (in points)
+    var paddingTop: CGFloat = 0
+    var paddingBottom: CGFloat = 0
+    var paddingLeft: CGFloat = 0
+    var paddingRight: CGFloat = 0
+
+    // Position adjustments (in points)
+    var positionHorizontal: CGFloat = 0
+    var positionVertical: CGFloat = 0
+
     /// Default configuration (information dense)
     static let `default` = LabelBuilderConfig(
         qrPosition: .left,
         qrSize: nil,  // Use format default
         fontScale: nil,  // Use format default
-        manufacturerImagePosition: .right,  // Add manufacturer logo on right
+        manufacturerImagePosition: .none,  // No manufacturer logo
         manufacturerImageSize: nil,  // Use default (0.6)
-        textFields: [.manufacturer, .sku, .colorName, .coe],
+        textFields: [.colorName, .manufacturer, .sku],
         textAlignment: .left,
-        fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
+        fieldFormats: [
+            .colorName: LabelFieldFormat(fontSize: 9, bold: true, italic: false),
+            .manufacturer: LabelFieldFormat(fontSize: 8, bold: false, italic: false),
+            .sku: LabelFieldFormat(fontSize: 8, bold: false, italic: false)
+        ],
+        paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+        positionHorizontal: 0, positionVertical: 0
     )
 
     /// Get format for a specific field (with fallback to default)
@@ -1387,16 +352,22 @@ struct LabelBuilderConfig: Equatable, Codable {
     static let presets: [LabelBuilderPreset] = [
         LabelBuilderPreset(
             name: "Information Dense",
-            description: "Maximum info with QR code on left",
+            description: "Item name prominent, with manufacturer and SKU",
             config: LabelBuilderConfig(
                 qrPosition: .left,
-                qrSize: nil,  // Use format default
-                fontScale: nil,  // Use format default
-                manufacturerImagePosition: .right,  // Add manufacturer logo on right
-                manufacturerImageSize: nil,  // Use default (0.6)
-                textFields: [.manufacturer, .sku, .colorName, .coe],
+                qrSize: nil,
+                fontScale: nil,
+                manufacturerImagePosition: .none,
+                manufacturerImageSize: nil,
+                textFields: [.colorName, .manufacturer, .sku],
                 textAlignment: .left,
-                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
+                fieldFormats: [
+                    .colorName: LabelFieldFormat(fontSize: 9, bold: true, italic: false),
+                    .manufacturer: LabelFieldFormat(fontSize: 8, bold: false, italic: false),
+                    .sku: LabelFieldFormat(fontSize: 8, bold: false, italic: false)
+                ],
+                paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+                positionHorizontal: 0, positionVertical: 0
             )
         ),
         LabelBuilderPreset(
@@ -1404,47 +375,37 @@ struct LabelBuilderConfig: Equatable, Codable {
             description: "Large QR code, minimal text",
             config: LabelBuilderConfig(
                 qrPosition: .left,
-                qrSize: nil,  // Use format default
-                fontScale: nil,  // Use format default
+                qrSize: nil,
+                fontScale: nil,
                 manufacturerImagePosition: .none,
                 manufacturerImageSize: nil,
                 textFields: [.manufacturer, .sku],
                 textAlignment: .left,
-                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
+                fieldFormats: [:],
+                paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+                positionHorizontal: 0, positionVertical: 0
             )
         ),
-        LabelBuilderPreset(
-            name: "Dual QR",
-            description: "QR codes on both ends",
-            config: LabelBuilderConfig(
-                qrPosition: .both,
-                qrSize: nil,  // Use format default
-                fontScale: nil,  // Use format default
-                manufacturerImagePosition: .none,
-                manufacturerImageSize: nil,
-                textFields: [.manufacturer, .sku, .colorName],
-                textAlignment: .center,
-                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
-            )
-        ),
-        LabelBuilderPreset(
+       LabelBuilderPreset(
             name: "Location Labels",
             description: "With location information",
             config: LabelBuilderConfig(
                 qrPosition: .left,
-                qrSize: nil,  // Use format default
-                fontScale: nil,  // Use format default
+                qrSize: nil,
+                fontScale: nil,
                 manufacturerImagePosition: .none,
                 manufacturerImageSize: nil,
-                textFields: [.manufacturer, .sku, .colorName, .location],  // Removed .coe
+                textFields: [.manufacturer, .sku, .colorName, .location],
                 textAlignment: .left,
-                fieldFormats: [:]  // Empty - use LabelFieldFormat.defaults
+                fieldFormats: [:],
+                paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+                positionHorizontal: 0, positionVertical: 0
             )
         )
     ]
 
     /// Convert to legacy LabelTemplate for backwards compatibility
-    func toLegacyTemplate(format: AveryFormat) -> LabelTemplate {
+    func toLegacyTemplate(format: LabelGeometry) -> LabelTemplate {
         return LabelTemplate(
             name: "Custom",
             includeQRCode: qrPosition != .none,
@@ -1466,7 +427,7 @@ struct LabelBuilderConfig: Equatable, Codable {
     ///   - fontScale: Font scale multiplier
     /// - Returns: (fits, estimatedHeight, warnings)
     /// - Note: QR codes will NEVER overflow - they are sized to always fit. Only text may be truncated.
-    func validateLayout(for format: AveryFormat, fontScale: CGFloat = 1.0) -> LabelLayoutValidation {
+    func validateLayout(for format: LabelGeometry, fontScale: CGFloat = 1.0) -> LabelLayoutValidation {
         let padding: CGFloat = 4
         var warnings: [String] = []
 
@@ -1551,7 +512,7 @@ struct LabelLayoutValidation {
 }
 
 /// Label builder preset - named configuration that can be saved and shared
-struct LabelBuilderPreset: Identifiable, Codable {
+struct LabelBuilderPreset: Identifiable, Codable, Sendable {
     let id: UUID
     var name: String
     var description: String
@@ -1561,8 +522,9 @@ struct LabelBuilderPreset: Identifiable, Codable {
 
     // Future-proofing fields (added pre-release for easier migrations)
     var workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
+    var recommended_label: String?  // Recommended label format name (e.g., "Avery 5160")
 
-    init(id: UUID = UUID(), name: String, description: String, config: LabelBuilderConfig, createdAt: Date = Date(), modifiedAt: Date = Date(), workspace_id: UUID? = nil) {
+    nonisolated init(id: UUID = UUID(), name: String, description: String, config: LabelBuilderConfig, createdAt: Date = Date(), modifiedAt: Date = Date(), workspace_id: UUID? = nil, recommended_label: String? = nil) {
         self.id = id
         self.name = name
         self.description = description
@@ -1570,6 +532,7 @@ struct LabelBuilderPreset: Identifiable, Codable {
         self.createdAt = createdAt
         self.modifiedAt = modifiedAt
         self.workspace_id = workspace_id
+        self.recommended_label = recommended_label
     }
 
     /// Export preset as JSON for sharing
@@ -1744,7 +707,9 @@ struct LabelTemplate: Equatable, Hashable {
             manufacturerImageSize: nil,
             textFields: fields,
             textAlignment: .left,  // Default to left alignment for legacy templates
-            fieldFormats: LabelFieldFormat.defaults  // Use default field formats for legacy templates
+            fieldFormats: LabelFieldFormat.defaults,  // Use default field formats for legacy templates
+            paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+            positionHorizontal: 0, positionVertical: 0
         )
     }
 
@@ -1789,20 +754,6 @@ struct LabelTemplate: Equatable, Hashable {
         includeOwner: false,
         qrCodeSize: 0.50
     )
-
-    static let dualQR = LabelTemplate(
-        name: "Dual QR",
-        includeQRCode: true,
-        dualQRCodes: true,
-        includeManufacturer: true,
-        includeSKU: true,
-        includeColor: true,
-        includeCOE: false,
-        includeQuantity: false,
-        includeLocation: false,
-        includeOwner: false,
-        qrCodeSize: 0.65
-    )
 }
 
 /// Label data model for a single label (one label = one physical item like one rod)
@@ -1814,6 +765,35 @@ struct LabelData: Sendable {
     let coe: String?
     let location: String?
     let owner: String?
+
+    // Inventory type info for QR code encoding
+    let inventoryType: String?      // e.g., "rod", "frit", "tube"
+    let inventorySubtype: String?   // e.g., "coarse", "fine"
+    let inventorySubsubtype: String?
+
+    init(
+        stableId: String,
+        manufacturer: String? = nil,
+        sku: String? = nil,
+        colorName: String? = nil,
+        coe: String? = nil,
+        location: String? = nil,
+        owner: String? = nil,
+        inventoryType: String? = nil,
+        inventorySubtype: String? = nil,
+        inventorySubsubtype: String? = nil
+    ) {
+        self.stableId = stableId
+        self.manufacturer = manufacturer
+        self.sku = sku
+        self.colorName = colorName
+        self.coe = coe
+        self.location = location
+        self.owner = owner
+        self.inventoryType = inventoryType
+        self.inventorySubtype = inventorySubtype
+        self.inventorySubsubtype = inventorySubsubtype
+    }
 }
 
 #if os(iOS)
@@ -1833,15 +813,47 @@ class LabelPrintingService {
     /// - Parameter stableId: The stable_id of the glass item (e.g., "2wjEBu")
     /// - Returns: UIImage containing the QR code with logo in center
     func generateQRCode(for stableId: String) -> UIImage {
+        return generateQRCode(for: stableId, type: nil, subtype: nil, subsubtype: nil)
+    }
+
+    /// Generate QR code image for a glass item with inventory type info
+    /// - Parameters:
+    ///   - stableId: The stable_id of the glass item (e.g., "2wjEBu")
+    ///   - type: Inventory type (e.g., "rod", "frit")
+    ///   - subtype: Optional subtype (e.g., "coarse", "fine")
+    ///   - subsubtype: Optional subsubtype
+    /// - Returns: UIImage containing the QR code with logo in center
+    func generateQRCode(
+        for stableId: String,
+        type: String?,
+        subtype: String?,
+        subsubtype: String?
+    ) -> UIImage {
+        // Build cache key including type info
+        let cacheKey = [stableId, type, subtype, subsubtype]
+            .compactMap { $0 }
+            .joined(separator: ":")
+
         // Check cache first
-        if let cachedQR = qrCodeCache[stableId] {
+        if let cachedQR = qrCodeCache[cacheKey] {
             return cachedQR
         }
 
         let filter = CIFilter.qrCodeGenerator()
 
-        // Create deep link URL with stable_id
-        let deepLink = "molten://g/\(stableId)"
+        // Create deep link URL with stable_id and optional type code
+        let deepLink: String
+        if let type = type {
+            deepLink = InventoryTypeEncoder.buildQRCodeURL(
+                stableId: stableId,
+                type: type,
+                subtype: subtype,
+                subsubtype: subsubtype
+            )
+        } else {
+            deepLink = "molten://i/\(stableId)"
+        }
+
         let data = Data(deepLink.utf8)
         filter.setValue(data, forKey: "inputMessage")
         filter.setValue("H", forKey: "inputCorrectionLevel") // High error correction
@@ -1863,9 +875,19 @@ class LabelPrintingService {
         let finalImage = overlayLogoOnQRCode(qrImage: qrImage, qrSize: qrSize)
 
         // Cache for reuse
-        qrCodeCache[stableId] = finalImage
+        qrCodeCache[cacheKey] = finalImage
 
         return finalImage
+    }
+
+    /// Generate QR code from LabelData (convenience method)
+    func generateQRCode(for labelData: LabelData) -> UIImage {
+        return generateQRCode(
+            for: labelData.stableId,
+            type: labelData.inventoryType,
+            subtype: labelData.inventorySubtype,
+            subsubtype: labelData.inventorySubsubtype
+        )
     }
 
     /// Overlay Molten logo in the center of QR code
@@ -1929,18 +951,15 @@ class LabelPrintingService {
     ///   - format: Avery format to use
     ///   - config: Label builder configuration
     ///   - fontScale: Font size multiplier (0.7 to 1.3)
-    ///   - offsetX: Horizontal position adjustment in points (-10 to +10)
-    ///   - offsetY: Vertical position adjustment in points (-10 to +10)
     ///   - startRow: Starting row (0-based) for partial sheets (default: 0)
     ///   - startColumn: Starting column (0-based) for partial sheets (default: 0)
     /// - Returns: URL to the generated PDF file in temporary storage
+    /// Note: Position offsets (horizontal/vertical) are now taken from config.positionHorizontal/positionVertical
     func generateLabelSheet(
         labels: [LabelData],
-        format: AveryFormat = .avery5160,
+        format: LabelGeometry = .defaultFormat,
         config: LabelBuilderConfig = .default,
         fontScale: Double = 1.0,
-        offsetX: Double = 0.0,
-        offsetY: Double = 0.0,
         startRow: Int = 0,
         startColumn: Int = 0
     ) async -> URL? {
@@ -1977,8 +996,8 @@ class LabelPrintingService {
                         let labelData = labels[labelIndex]
 
                         // Calculate label position with user adjustments
-                        let x = format.leftMargin + (CGFloat(col) * (format.labelWidth + format.horizontalGap)) + CGFloat(offsetX)
-                        let y = format.topMargin + (CGFloat(row) * (format.labelHeight + format.verticalGap)) + CGFloat(offsetY)
+                        let x = format.leftMargin + (CGFloat(col) * (format.labelWidth + format.horizontalGap)) + config.positionHorizontal
+                        let y = format.topMargin + (CGFloat(row) * (format.labelHeight + format.verticalGap)) + config.positionVertical
                         let labelRect = CGRect(x: x, y: y, width: format.labelWidth, height: format.labelHeight)
 
                         // Draw single label
@@ -1988,6 +1007,8 @@ class LabelPrintingService {
                             format: format,
                             config: config,
                             fontScale: CGFloat(fontScale),
+                            row: row,
+                            col: col,
                             context: context.cgContext
                         )
 
@@ -2010,80 +1031,222 @@ class LabelPrintingService {
         }
     }
 
+    // MARK: - QR Code Sizing
+
+    /// Minimum QR code size in points (must be scannable)
+    private let minQRSize: CGFloat = 36  // ~0.5 inch
+
+    /// Maximum QR code size in points (no need to be huge on large labels)
+    private let maxQRSize: CGFloat = 108  // ~1.5 inches
+
+    /// Calculate QR code size with min/max bounds
+    /// - Parameters:
+    ///   - labelHeight: The height of the label
+    ///   - qrSizePercent: The desired QR size as percentage of label height (0.0-1.0)
+    /// - Returns: The actual QR size in points, clamped to min/max bounds
+    private func calculateQRSize(labelHeight: CGFloat, qrSizePercent: CGFloat) -> CGFloat {
+        let desiredSize = labelHeight * qrSizePercent
+        return min(max(desiredSize, minQRSize), maxQRSize)
+    }
+
+    // MARK: - Font Scaling
+
+    /// Reference label height for font sizing (1 inch = 72pt)
+    /// Font sizes in LabelFieldFormat.defaults are designed for this height
+    private let referenceLabelHeight: CGFloat = 72
+
+    /// Maximum font scale multiplier for large labels
+    private let maxFontScaleMultiplier: CGFloat = 2.5
+
+    /// Calculate font scale multiplier based on label height
+    /// - Parameter labelHeight: The height of the label in points
+    /// - Returns: A multiplier to apply to base font sizes
+    ///
+    /// Labels at reference height (72pt/1") use 1.0x scaling.
+    /// Larger labels scale up proportionally, capped at maxFontScaleMultiplier.
+    /// Smaller labels use 1.0x (don't shrink text below designed sizes).
+    func calculateLabelFontScale(labelHeight: CGFloat) -> CGFloat {
+        let ratio = labelHeight / referenceLabelHeight
+        // Don't shrink below 1.0 for small labels, cap at max for large labels
+        return min(max(ratio, 1.0), maxFontScaleMultiplier)
+    }
+
     // MARK: - Drawing Helpers
 
     private func drawLabel(
         labelData: LabelData,
         rect: CGRect,
-        format: AveryFormat,
+        format: LabelGeometry,
         config: LabelBuilderConfig,
         fontScale: CGFloat = 1.0,
+        row: Int = 0,
+        col: Int = 0,
         context: CGContext
     ) {
+        // Clip all drawing to the label boundary
+        // This prevents any content from overflowing into adjacent labels
+        context.saveGState()
+
+        if format.isCircular {
+            // Circular labels: clip to ellipse (or circle if width == height)
+            context.addEllipse(in: rect)
+        } else {
+            // Rectangular and barbell labels: clip to rect
+            context.addRect(rect)
+        }
+        context.clip()
+
+        // Apply label-size-based font scaling on top of user's fontScale setting
+        // This ensures text scales appropriately for larger labels
+        let labelBasedScale = calculateLabelFontScale(labelHeight: rect.height)
+        let effectiveFontScale = fontScale * labelBasedScale
+
+        // Handle special label formats
+        if format.isBarbell, let style = format.barbellStyle {
+            switch style {
+            case .pStyleFolded:
+                drawPStyleFoldedLabel(
+                    labelData: labelData,
+                    rect: rect,
+                    format: format,
+                    config: config,
+                    fontScale: effectiveFontScale,
+                    row: row,
+                    col: col,
+                    context: context
+                )
+                context.restoreGState()
+                return
+            case .symmetric:
+                drawSymmetricBarbellLabel(
+                    labelData: labelData,
+                    rect: rect,
+                    format: format,
+                    config: config,
+                    fontScale: effectiveFontScale,
+                    context: context
+                )
+                context.restoreGState()
+                return
+            case .tStyle, .pStyle, .wrap:
+                // TODO: Implement other barbell styles
+                // For now, fall through to standard label drawing
+                break
+            }
+        }
+
         let padding: CGFloat = 4
 
         // Draw QR code(s) based on position
+        // For circular labels, positions are top/bottom instead of left/right
         var contentX = rect.minX + padding
         var contentWidth = rect.width - (padding * 2)
+        var contentY = rect.minY + padding
+        var contentHeight = rect.height - (padding * 2)
 
         if config.qrPosition != .none {
-            let effectiveQRSize = config.qrSize ?? format.defaultQRSize
-            let qrSize = rect.height * effectiveQRSize
+            let effectiveQRPercent = config.qrSize ?? format.defaultQRSize
+            let qrSize = calculateQRSize(labelHeight: rect.height, qrSizePercent: effectiveQRPercent)
             let qrImage = generateQRCode(for: labelData.stableId)
 
-            switch config.qrPosition {
-            case .left:
-                // Draw left QR code
-                let leftQRRect = CGRect(
-                    x: rect.minX + padding,
-                    y: rect.minY + (rect.height - qrSize) / 2,
-                    width: qrSize,
-                    height: qrSize
-                )
-                qrImage.draw(in: leftQRRect)
+            // Determine if this label uses vertical layout (top/bottom QR positioning)
+            // Circular, portrait, and square labels all use vertical layout since text expands horizontally
+            let usesVerticalLayout = format.isCircular || format.shape == .portrait || format.shape == .square
 
-                // Adjust content area to be to the right of QR code
-                contentX = leftQRRect.maxX + padding
-                contentWidth = rect.maxX - contentX - padding
+            if usesVerticalLayout {
+                // Circular, portrait, and square labels: top/bottom QR positioning
+                switch config.qrPosition {
+                case .left:  // "Top" for vertical labels
+                    let topQRRect = CGRect(
+                        x: rect.midX - qrSize / 2,
+                        y: rect.minY + padding,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: topQRRect)
+                    contentY = topQRRect.maxY + padding
+                    contentHeight = rect.maxY - contentY - padding
 
-            case .right:
-                // Draw right QR code
-                let rightQRRect = CGRect(
-                    x: rect.maxX - padding - qrSize,
-                    y: rect.minY + (rect.height - qrSize) / 2,
-                    width: qrSize,
-                    height: qrSize
-                )
-                qrImage.draw(in: rightQRRect)
+                case .right:  // "Bottom" for vertical labels
+                    let bottomQRRect = CGRect(
+                        x: rect.midX - qrSize / 2,
+                        y: rect.maxY - padding - qrSize,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: bottomQRRect)
+                    contentHeight = bottomQRRect.minY - contentY - padding
 
-                // Content area is from left edge to QR code
-                contentWidth = rightQRRect.minX - contentX - padding
+                case .both:  // "Top & Bottom" for vertical labels
+                    let topQRRect = CGRect(
+                        x: rect.midX - qrSize / 2,
+                        y: rect.minY + padding,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: topQRRect)
 
-            case .both:
-                // Draw left QR code
-                let leftQRRect = CGRect(
-                    x: rect.minX + padding,
-                    y: rect.minY + (rect.height - qrSize) / 2,
-                    width: qrSize,
-                    height: qrSize
-                )
-                qrImage.draw(in: leftQRRect)
+                    let bottomQRRect = CGRect(
+                        x: rect.midX - qrSize / 2,
+                        y: rect.maxY - padding - qrSize,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: bottomQRRect)
 
-                // Draw right QR code
-                let rightQRRect = CGRect(
-                    x: rect.maxX - padding - qrSize,
-                    y: rect.minY + (rect.height - qrSize) / 2,
-                    width: qrSize,
-                    height: qrSize
-                )
-                qrImage.draw(in: rightQRRect)
+                    contentY = topQRRect.maxY + padding
+                    contentHeight = bottomQRRect.minY - contentY - padding
 
-                // Content area is between the two QR codes
-                contentX = leftQRRect.maxX + padding
-                contentWidth = rightQRRect.minX - contentX - padding
+                case .none:
+                    break
+                }
+            } else {
+                // Landscape and square labels: left/right QR positioning
+                switch config.qrPosition {
+                case .left:
+                    let leftQRRect = CGRect(
+                        x: rect.minX + padding,
+                        y: rect.minY + (rect.height - qrSize) / 2,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: leftQRRect)
+                    contentX = leftQRRect.maxX + padding
+                    contentWidth = rect.maxX - contentX - padding
 
-            case .none:
-                break
+                case .right:
+                    let rightQRRect = CGRect(
+                        x: rect.maxX - padding - qrSize,
+                        y: rect.minY + (rect.height - qrSize) / 2,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: rightQRRect)
+                    contentWidth = rightQRRect.minX - contentX - padding
+
+                case .both:
+                    let leftQRRect = CGRect(
+                        x: rect.minX + padding,
+                        y: rect.minY + (rect.height - qrSize) / 2,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: leftQRRect)
+
+                    let rightQRRect = CGRect(
+                        x: rect.maxX - padding - qrSize,
+                        y: rect.minY + (rect.height - qrSize) / 2,
+                        width: qrSize,
+                        height: qrSize
+                    )
+                    qrImage.draw(in: rightQRRect)
+
+                    contentX = leftQRRect.maxX + padding
+                    contentWidth = rightQRRect.minX - contentX - padding
+
+                case .none:
+                    break
+                }
             }
         }
 
@@ -2162,7 +1325,7 @@ class LabelPrintingService {
         var totalTextHeight: CGFloat = 0
         for field in config.textFields {
             let fieldFormat = config.format(for: field)
-            let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+            let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * effectiveFontScale) : .systemFont(ofSize: fieldFormat.fontSize * effectiveFontScale)
 
             // Only count this field if it has data to show
             let shouldShow: Bool = {
@@ -2181,9 +1344,9 @@ class LabelPrintingService {
             }
         }
 
-        // Start Y position centered vertically in the available space
-        let availableHeight = rect.height - (padding * 2)
-        var yPosition = rect.minY + padding + max(0, (availableHeight - totalTextHeight) / 2)
+        // Start Y position centered vertically in the available content area
+        // For circular labels with QR codes, contentY and contentHeight are adjusted
+        var yPosition = contentY + max(0, (contentHeight - totalTextHeight) / 2)
 
         // Convert text alignment to NSTextAlignment
         let textAlignment: NSTextAlignment = {
@@ -2214,7 +1377,7 @@ class LabelPrintingService {
                     // Only show manufacturer if SKU doesn't already start with it
                     if !skuStartsWithManufacturer {
                         let fieldFormat = config.format(for: .manufacturer)
-                        let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+                        let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * effectiveFontScale) : .systemFont(ofSize: fieldFormat.fontSize * effectiveFontScale)
                         yPosition = drawText(
                             fullName,
                             at: CGPoint(x: contentX, y: yPosition),
@@ -2230,7 +1393,7 @@ class LabelPrintingService {
             case .sku:
                 if let sku = labelData.sku {
                     let fieldFormat = config.format(for: .sku)
-                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * effectiveFontScale) : .systemFont(ofSize: fieldFormat.fontSize * effectiveFontScale)
                     yPosition = drawText(
                         sku,
                         at: CGPoint(x: contentX, y: yPosition),
@@ -2245,7 +1408,7 @@ class LabelPrintingService {
             case .colorName:
                 if let colorName = labelData.colorName {
                     let fieldFormat = config.format(for: .colorName)
-                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * effectiveFontScale) : .systemFont(ofSize: fieldFormat.fontSize * effectiveFontScale)
                     yPosition = drawText(
                         colorName,
                         at: CGPoint(x: contentX, y: yPosition),
@@ -2260,7 +1423,7 @@ class LabelPrintingService {
             case .coe:
                 if let coe = labelData.coe {
                     let fieldFormat = config.format(for: .coe)
-                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * effectiveFontScale) : .systemFont(ofSize: fieldFormat.fontSize * effectiveFontScale)
                     yPosition = drawText(
                         "COE \(coe)",
                         at: CGPoint(x: contentX, y: yPosition),
@@ -2276,7 +1439,7 @@ class LabelPrintingService {
             case .location:
                 if let location = labelData.location {
                     let fieldFormat = config.format(for: .location)
-                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * effectiveFontScale) : .systemFont(ofSize: fieldFormat.fontSize * effectiveFontScale)
                     yPosition = drawText(
                         "📍 \(location)",
                         at: CGPoint(x: contentX, y: yPosition),
@@ -2292,7 +1455,7 @@ class LabelPrintingService {
             case .owner:
                 if let owner = labelData.owner {
                     let fieldFormat = config.format(for: .owner)
-                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+                    let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * effectiveFontScale) : .systemFont(ofSize: fieldFormat.fontSize * effectiveFontScale)
                     yPosition = drawText(
                         owner,
                         at: CGPoint(x: contentX, y: yPosition),
@@ -2306,6 +1469,435 @@ class LabelPrintingService {
                 }
             }
         }
+
+        // Restore graphics state (removes clipping)
+        context.restoreGState()
+    }
+
+    // MARK: - Symmetric Barbell Label Drawing
+
+    /// Draw a symmetric barbell/flag cable label with two flag areas on each end
+    /// Layout: [Left Flag] - [Narrow Wrap] - [Right Flag]
+    /// Both flags get identical content in the same orientation (label wraps horizontally)
+    private func drawSymmetricBarbellLabel(
+        labelData: LabelData,
+        rect: CGRect,
+        format: LabelGeometry,
+        config: LabelBuilderConfig,
+        fontScale: CGFloat,
+        context: CGContext
+    ) {
+        // Get flag width - this is the printable area on each end
+        guard let flagWidth = format.barbellFlagWidth else {
+            // Fallback: divide label into thirds (flag-wrap-flag)
+            let fallbackFlagWidth = rect.width / 3
+            drawSymmetricBarbellFlagAreas(
+                labelData: labelData,
+                rect: rect,
+                flagWidth: fallbackFlagWidth,
+                config: config,
+                fontScale: fontScale,
+                context: context
+            )
+            return
+        }
+
+        drawSymmetricBarbellFlagAreas(
+            labelData: labelData,
+            rect: rect,
+            flagWidth: flagWidth,
+            config: config,
+            fontScale: fontScale,
+            context: context
+        )
+    }
+
+    /// Draw the two flag areas of a symmetric barbell label
+    /// Layout: Left flag gets text, Right flag gets QR (if enabled) or duplicate text
+    private func drawSymmetricBarbellFlagAreas(
+        labelData: LabelData,
+        rect: CGRect,
+        flagWidth: CGFloat,
+        config: LabelBuilderConfig,
+        fontScale: CGFloat,
+        context: CGContext
+    ) {
+        let padding: CGFloat = 2
+
+        // Left flag area
+        let leftFlagRect = CGRect(
+            x: rect.minX,
+            y: rect.minY,
+            width: flagWidth,
+            height: rect.height
+        )
+
+        // Right flag area
+        let rightFlagRect = CGRect(
+            x: rect.maxX - flagWidth,
+            y: rect.minY,
+            width: flagWidth,
+            height: rect.height
+        )
+
+        // Draw left flag - TEXT ONLY (no QR)
+        drawBarbellFlagTextOnly(
+            labelData: labelData,
+            rect: leftFlagRect,
+            config: config,
+            fontScale: fontScale,
+            padding: padding,
+            context: context
+        )
+
+        // Draw right flag - QR ONLY (if enabled) or duplicate text
+        if config.qrPosition != .none {
+            drawBarbellFlagQROnly(
+                labelData: labelData,
+                rect: rightFlagRect,
+                config: config,
+                padding: padding,
+                context: context
+            )
+        } else {
+            // No QR configured - duplicate text on right flag
+            drawBarbellFlagTextOnly(
+                labelData: labelData,
+                rect: rightFlagRect,
+                config: config,
+                fontScale: fontScale,
+                padding: padding,
+                context: context
+            )
+        }
+    }
+
+    /// Draw TEXT ONLY on a barbell flag area (no QR code)
+    private func drawBarbellFlagTextOnly(
+        labelData: LabelData,
+        rect: CGRect,
+        config: LabelBuilderConfig,
+        fontScale: CGFloat,
+        padding: CGFloat,
+        context: CGContext
+    ) {
+        let contentX = rect.minX + padding
+        let contentWidth = rect.width - (padding * 2)
+        let contentHeight = rect.height - (padding * 2)
+
+        // Calculate text sizing - barbell labels need smaller text
+        // Use user's font scale directly - they can adjust if text doesn't fit
+        let barbellFontScale = fontScale
+
+        // Calculate total text height for vertical centering
+        var totalTextHeight: CGFloat = 0
+        for field in config.textFields {
+            let fieldFormat = config.format(for: field)
+            let font: UIFont = fieldFormat.bold
+                ? .boldSystemFont(ofSize: fieldFormat.fontSize * barbellFontScale)
+                : .systemFont(ofSize: fieldFormat.fontSize * barbellFontScale)
+
+            let shouldShow: Bool = {
+                switch field {
+                case .manufacturer: return labelData.manufacturer != nil
+                case .sku: return labelData.sku != nil
+                case .colorName: return labelData.colorName != nil
+                case .coe: return labelData.coe != nil
+                case .location: return labelData.location != nil
+                case .owner: return labelData.owner != nil
+                }
+            }()
+
+            if shouldShow {
+                totalTextHeight += font.lineHeight + 1
+            }
+        }
+
+        // Start Y position centered vertically
+        var yPosition = rect.minY + padding + max(0, (contentHeight - totalTextHeight) / 2)
+
+        // Text alignment
+        let textAlignment: NSTextAlignment = {
+            switch config.textAlignment {
+            case .left: return .left
+            case .center: return .center
+            case .right: return .right
+            }
+        }()
+
+        // Draw text fields
+        for field in config.textFields {
+            let fieldFormat = config.format(for: field)
+            let font: UIFont = fieldFormat.bold
+                ? .boldSystemFont(ofSize: fieldFormat.fontSize * barbellFontScale)
+                : .systemFont(ofSize: fieldFormat.fontSize * barbellFontScale)
+
+            switch field {
+            case .manufacturer:
+                if let manufacturer = labelData.manufacturer {
+                    let fullName = GlassManufacturers.fullName(for: manufacturer) ?? manufacturer
+                    let skuStartsWithManufacturer: Bool = {
+                        guard let sku = labelData.sku, config.textFields.contains(.sku) else { return false }
+                        return sku.lowercased().hasPrefix(fullName.lowercased())
+                    }()
+                    if !skuStartsWithManufacturer {
+                        yPosition = drawText(fullName, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                    }
+                }
+            case .sku:
+                if let sku = labelData.sku {
+                    yPosition = drawText(sku, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .colorName:
+                if let colorName = labelData.colorName {
+                    yPosition = drawText(colorName, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .coe:
+                if let coe = labelData.coe {
+                    yPosition = drawText("COE \(coe)", at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, color: .darkGray, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .location:
+                if let location = labelData.location {
+                    yPosition = drawText(location, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .owner:
+                if let owner = labelData.owner {
+                    yPosition = drawText(owner, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, color: .darkGray, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            }
+        }
+    }
+
+    /// Draw QR CODE ONLY on a barbell flag area (centered)
+    private func drawBarbellFlagQROnly(
+        labelData: LabelData,
+        rect: CGRect,
+        config: LabelBuilderConfig,
+        padding: CGFloat,
+        context: CGContext
+    ) {
+        // Use user's configured QR size percentage (or default 0.65)
+        // For barbell labels, size is relative to label height
+        let qrPercent = config.qrSize ?? 0.65
+        let desiredQRSize = rect.height * qrPercent
+
+        // Clamp to fit within flag area (with padding)
+        let maxFlagSize = min(rect.width, rect.height) - (padding * 2)
+        let qrSize = min(desiredQRSize, maxFlagSize)
+
+        let qrImage = generateQRCode(for: labelData)
+
+        // Center the QR code in the flag area
+        let qrX = rect.minX + (rect.width - qrSize) / 2
+        let qrY = rect.minY + (rect.height - qrSize) / 2
+
+        let qrRect = CGRect(x: qrX, y: qrY, width: qrSize, height: qrSize)
+        qrImage.draw(in: qrRect)
+    }
+
+    // MARK: - P-Style Folded Label Drawing
+
+    /// Draw a p-style-folded cable label with two print areas (A and B)
+    /// Labels are vertical on the sheet with alternating stub positions:
+    /// - Even (row+col): stub at top, print areas below
+    /// - Odd (row+col): stub at bottom, print areas above (entire label flipped)
+    private func drawPStyleFoldedLabel(
+        labelData: LabelData,
+        rect: CGRect,
+        format: LabelGeometry,
+        config: LabelBuilderConfig,
+        fontScale: CGFloat,
+        row: Int,
+        col: Int,
+        context: CGContext
+    ) {
+        // Get the printable area height (stored as barbellWrapHeight for vertical labels)
+        guard let printAreaHeight = format.barbellWrapHeight else {
+            return
+        }
+
+        let paddingLeft = max(config.paddingLeft, 2)
+        let paddingRight = max(config.paddingRight, 2)
+        let paddingTop = max(config.paddingTop, 2)
+        let paddingBottom = max(config.paddingBottom, 2)
+
+        // Alternating pattern: (row + col) % 2 determines if label is flipped
+        let isFlipped = (row + col) % 2 == 1
+
+        // Stub height is the remaining space after the print area
+        let stubHeight = format.barbellFlagWidth ?? (rect.height - printAreaHeight)
+        let halfPrintHeight = printAreaHeight / 2
+
+        context.saveGState()
+
+        if isFlipped {
+            // Rotate entire label 180° around its center
+            context.translateBy(x: rect.midX, y: rect.midY)
+            context.rotate(by: .pi)
+            context.translateBy(x: -rect.midX, y: -rect.midY)
+        }
+
+        // Draw as if stub is at top:
+        // [Stub - blank]
+        // [Area A - normal]
+        // [Area B - rotated 180°]
+
+        let areaARect = CGRect(
+            x: rect.minX,
+            y: rect.minY + stubHeight,
+            width: rect.width,
+            height: halfPrintHeight
+        )
+
+        let areaBRect = CGRect(
+            x: rect.minX,
+            y: rect.minY + stubHeight + halfPrintHeight,
+            width: rect.width,
+            height: halfPrintHeight
+        )
+
+        // Draw Area A (normal orientation)
+        drawPStyleFoldedArea(
+            labelData: labelData,
+            rect: areaARect,
+            config: config,
+            fontScale: fontScale,
+            paddingLeft: paddingLeft,
+            paddingRight: paddingRight,
+            paddingTop: paddingTop,
+            paddingBottom: paddingBottom,
+            rotated: false,
+            context: context
+        )
+
+        // Draw Area B (content rotated 180°)
+        drawPStyleFoldedArea(
+            labelData: labelData,
+            rect: areaBRect,
+            config: config,
+            fontScale: fontScale,
+            paddingLeft: paddingLeft,
+            paddingRight: paddingRight,
+            paddingTop: paddingTop,
+            paddingBottom: paddingBottom,
+            rotated: true,
+            context: context
+        )
+
+        context.restoreGState()
+    }
+
+    /// Draw a single print area (A or B) of a p-style-folded label
+    private func drawPStyleFoldedArea(
+        labelData: LabelData,
+        rect: CGRect,
+        config: LabelBuilderConfig,
+        fontScale: CGFloat,
+        paddingLeft: CGFloat,
+        paddingRight: CGFloat,
+        paddingTop: CGFloat,
+        paddingBottom: CGFloat,
+        rotated: Bool,
+        context: CGContext
+    ) {
+        context.saveGState()
+
+        if rotated {
+            context.translateBy(x: rect.midX, y: rect.midY)
+            context.rotate(by: .pi)
+            context.translateBy(x: -rect.midX, y: -rect.midY)
+        }
+
+        var contentX = rect.minX + paddingLeft
+        var contentWidth = rect.width - paddingLeft - paddingRight
+
+        // Draw QR code if configured
+        if config.qrPosition != .none {
+            let effectiveQRSize = config.qrSize ?? 0.7
+            let qrSize = min(rect.width * 0.35, rect.height * effectiveQRSize)
+            let qrImage = generateQRCode(for: labelData.stableId)
+
+            let qrRect = CGRect(
+                x: rect.minX + paddingLeft,
+                y: rect.minY + (rect.height - qrSize) / 2,
+                width: qrSize,
+                height: qrSize
+            )
+            qrImage.draw(in: qrRect)
+
+            contentX = qrRect.maxX + 2
+            contentWidth = rect.maxX - paddingRight - contentX
+        }
+
+        // Draw text fields
+        let textAlignment: NSTextAlignment = {
+            switch config.textAlignment {
+            case .left: return .left
+            case .center: return .center
+            case .right: return .right
+            }
+        }()
+
+        // Calculate total text height for vertical centering
+        var totalTextHeight: CGFloat = 0
+        for field in config.textFields {
+            let fieldFormat = config.format(for: field)
+            let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+
+            let shouldShow: Bool = {
+                switch field {
+                case .manufacturer: return labelData.manufacturer != nil
+                case .sku: return labelData.sku != nil
+                case .colorName: return labelData.colorName != nil
+                case .coe: return labelData.coe != nil
+                case .location: return labelData.location != nil
+                case .owner: return labelData.owner != nil
+                }
+            }()
+
+            if shouldShow {
+                totalTextHeight += font.lineHeight + 1
+            }
+        }
+
+        let availableHeight = rect.height - paddingTop - paddingBottom
+        var yPosition = rect.minY + paddingTop + max(0, (availableHeight - totalTextHeight) / 2)
+
+        // Draw each text field
+        for field in config.textFields {
+            let fieldFormat = config.format(for: field)
+            let font: UIFont = fieldFormat.bold ? .boldSystemFont(ofSize: fieldFormat.fontSize * fontScale) : .systemFont(ofSize: fieldFormat.fontSize * fontScale)
+
+            switch field {
+            case .manufacturer:
+                if let manufacturer = labelData.manufacturer {
+                    let fullName = GlassManufacturers.fullName(for: manufacturer) ?? manufacturer
+                    yPosition = drawText(fullName, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .sku:
+                if let sku = labelData.sku {
+                    yPosition = drawText(sku, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .colorName:
+                if let colorName = labelData.colorName {
+                    yPosition = drawText(colorName, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .coe:
+                if let coe = labelData.coe {
+                    yPosition = drawText("COE \(coe)", at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, color: .darkGray, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .location:
+                if let location = labelData.location {
+                    yPosition = drawText(location, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            case .owner:
+                if let owner = labelData.owner {
+                    yPosition = drawText(owner, at: CGPoint(x: contentX, y: yPosition), width: contentWidth, font: font, color: .darkGray, alignment: textAlignment, context: context, italic: fieldFormat.italic)
+                }
+            }
+        }
+
+        context.restoreGState()
     }
 
     private func drawText(
@@ -2320,7 +1912,7 @@ class LabelPrintingService {
     ) -> CGFloat {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = alignment
-        paragraphStyle.lineBreakMode = .byTruncatingTail
+        paragraphStyle.lineBreakMode = .byClipping  // Cut off at edge, no ellipsis
 
         // Apply italic if requested by creating italic font descriptor
         let finalFont: UIFont

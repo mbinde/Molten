@@ -35,7 +35,7 @@ struct AddGlassToStepView: View {
     }
 
     /// Convenience init using AppDependencies
-    init(plan: ProjectModel, deps: AppDependencies = AppDependencies(), onSave: @escaping (ProjectGlassItem) -> Void) {
+    init(plan: ProjectModel, deps: AppDependencies = .shared, onSave: @escaping (ProjectGlassItem) -> Void) {
         self.plan = plan
         self.onSave = onSave
         self.catalogService = deps.catalogService

@@ -30,9 +30,9 @@ class AddInventoryItemViewModel {
     var searchText: String = ""
     var quantity: String = ""  // Weight input (for weight mode)
     var containerCount: String = ""  // Jar count input (for jars mode)
-    var selectedType: String = "rod"  // Default type
-    var selectedSubtype: String?
-    var selectedSubsubtype: String?
+    var selectedType: String = LastUsedInventoryTypePreference.type  // Default to last used type
+    var selectedSubtype: String? = LastUsedInventoryTypePreference.subtype
+    var selectedSubsubtype: String? = LastUsedInventoryTypePreference.subsubtype
     var selectedWeightUnit: WeightUnit = WeightUnitPreference.current
     var selectedContainerInputMode: ContainerInputMode = ContainerInputModePreference.current
     var dimensions: [String: String] = [:]
@@ -148,15 +148,15 @@ class AddInventoryItemViewModel {
         isLoading = true
         defer { isLoading = false }
 
-        // CRITICAL: Trust the cache is loaded during FirstRunDataLoadingView
-        // The cache is ALWAYS loaded during startup (see FirstRunDataLoadingView line 189)
+        // CRITICAL: Trust the cache is loaded during LaunchScreenView
+        // The cache is ALWAYS loaded during startup
         // If it's not loaded yet, we wait for it to finish loading (don't reload!)
         if CatalogSearchCache.shared.isLoaded {
             // Cache ready - instant access!
             catalogItems = CatalogSearchCache.shared.items
             print("✅ [SEARCH] Using pre-loaded cache with \(catalogItems.count) items")
         } else {
-            // Cache still loading from FirstRunDataLoadingView, wait for it
+            // Cache still loading from LaunchScreenView, wait for it
             print("⏳ [SEARCH] Cache not ready, loading from catalog service...")
             do {
                 catalogItems = try await catalogService.getAllCatalogItemsLightweight()
@@ -333,6 +333,13 @@ class AddInventoryItemViewModel {
                     print("⚠️ Warning: Failed to save notes for \(stableId): \(error.localizedDescription)")
                 }
             }
+
+            // Remember the type/subtype/subsubtype for next time
+            LastUsedInventoryTypePreference.save(
+                type: selectedType,
+                subtype: selectedSubtype,
+                subsubtype: selectedSubsubtype
+            )
 
             errorMessage = nil
             return true

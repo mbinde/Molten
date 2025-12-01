@@ -393,4 +393,15 @@ class InventorySharingManager {
             foregroundHex: foregroundHex
         )
     }
+
+    /// Update cached inventory stats for a friend's share
+    /// Called when viewing a friend's inventory to cache stats for display in the list
+    /// - Parameters:
+    ///   - shareCode: Share code to update
+    ///   - itemCount: Number of unique items in the friend's inventory
+    ///   - totalQuantity: Sum of countable item quantities (rods, sheets, jars, etc.)
+    ///   - totalWeight: Sum of weight-based items in user's preferred unit (oz or g)
+    func updateFriendInventoryStats(shareCode: String, itemCount: Int, totalQuantity: Double, totalWeight: Double) throws {
+        try shareRecordRepository.updateInventoryStats(shareCode: shareCode, itemCount: itemCount, totalQuantity: totalQuantity, totalWeight: totalWeight)
+    }
 }

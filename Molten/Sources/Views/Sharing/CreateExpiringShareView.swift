@@ -46,6 +46,8 @@ struct CreateExpiringShareView: View {
                             .frame(width: 60)
 
                             Text("Hours")
+                                .font(DesignSystem.Typography.listItemSubtitle)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
 
                             Spacer()
 
@@ -59,26 +61,31 @@ struct CreateExpiringShareView: View {
                             .frame(width: 60)
 
                             Text("Days")
+                                .font(DesignSystem.Typography.listItemSubtitle)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
                         }
 
                         // Show calculated expiration time
                         if let expirationDate = expirationPreview {
                             HStack {
                                 Text("Expires")
+                                    .font(DesignSystem.Typography.listItemSubtitle)
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
                                 Spacer()
                                 Text(expirationDate, style: .date)
-                                    .foregroundColor(.secondary)
+                                    .font(DesignSystem.Typography.listItemSubtitle)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                 Text(expirationDate, style: .time)
-                                    .foregroundColor(.secondary)
+                                    .font(DesignSystem.Typography.listItemSubtitle)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
-                            .font(.subheadline)
                         }
 
                         // Show validation error if invalid
                         if !isValidDuration {
                             Text("Minimum 1 hour, maximum 30 days + 23 hours")
-                                .font(.caption)
-                                .foregroundColor(.red)
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.accentDanger)
                         }
                     }
                 } header: {
@@ -90,8 +97,8 @@ struct CreateExpiringShareView: View {
                 if let error = viewModel.errorMessage {
                     Section {
                         Text(error)
-                            .foregroundColor(.red)
-                            .font(.caption)
+                            .foregroundColor(DesignSystem.Colors.accentDanger)
+                            .font(DesignSystem.Typography.listItemCaption)
                     }
                 }
             }

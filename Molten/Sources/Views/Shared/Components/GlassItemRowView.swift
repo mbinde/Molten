@@ -331,8 +331,8 @@ extension GlassItemRowView {
         let isWeightBased = ["frit", "powder", "enamel", "flakes"].contains(type.lowercased())
 
         if isWeightBased {
-            // For weight-based types with jars but no weight, show jars
-            if containerCount > 0 && quantity <= 0 {
+            // For weight-based types with jars, prefer showing jars (more meaningful for frit tracking)
+            if containerCount > 0 {
                 let jarLabel = containerCount == 1 ? "jar" : "jars"
                 let jarText = containerCount.truncatingRemainder(dividingBy: 1) == 0
                     ? String(format: "%.0f", containerCount)
@@ -340,7 +340,7 @@ extension GlassItemRowView {
                 return "\(jarText) \(jarLabel) \(typeName)"
             }
 
-            // Weight-based with weight: convert from grams (storage) to user's preferred unit
+            // Weight-based without jars: convert from grams (storage) to user's preferred unit
             let preferredUnit = WeightUnitPreference.current
             let convertedQuantity = WeightUnit.grams.convert(quantity, to: preferredUnit)
             let quantityText = String(format: "%.1f", convertedQuantity).replacingOccurrences(of: ".0", with: "")
@@ -354,10 +354,15 @@ extension GlassItemRowView {
 
     /// Friend inventory-style row with quantity and location
     static func friendInventory(item: EnrichedFriendInventoryItem) -> GlassItemRowView {
+        // Format quantity without trailing .0
+        let quantityText = item.snapshot.quantity.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", item.snapshot.quantity)
+            : String(format: "%.1f", item.snapshot.quantity)
+
         let badge = AnyView(
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                 HStack(spacing: DesignSystem.Spacing.sm) {
-                    Text("\(item.snapshot.quantity, specifier: "%.1f")")
+                    Text(quantityText)
                         .font(DesignSystem.Typography.listItemCaption)
                         .fontWeight(DesignSystem.FontWeight.semibold)
                         .foregroundColor(DesignSystem.Colors.moltenTeal)
@@ -387,7 +392,7 @@ extension GlassItemRowView {
         )
     }
 
-    /// Shopping list-style row with needed/current quantity
+    /// Shopping list-style row with needed quantity badge on trailing edge
     static func shoppingList(
         item: DetailedShoppingListItemModel,
         showStore: Bool = false,
@@ -464,7 +469,16 @@ extension GlassItemRowView {
             }
         ) : nil
 
-        // Badge and tags: show for normal shopping list, hide for shopping mode
+        // Trailing accessory: prominent "needs" badge (similar to inventory count badge)
+        // Only show when not in shopping mode (shopping mode has its own quantity UI)
+        let trailingAccessory: AnyView? = isShoppingMode ? nil : AnyView(
+            NeededQuantityBadge(
+                quantity: item.shoppingListItem.neededQuantity,
+                type: item.shoppingListItem.type
+            )
+        )
+
+        // Badge content: just store name if showing store (removed "Current" display)
         let badgeContent: AnyView?
         let tags: [String]
 
@@ -473,48 +487,16 @@ extension GlassItemRowView {
             badgeContent = nil
             tags = []
         } else {
-            // Normal shopping list: show Need/Current/Store badge
-            var badgeComponents: [AnyView] = []
-            badgeComponents.append(AnyView(
-                Text("Need: \(item.shoppingListItem.neededQuantity, specifier: "%.1f")")
-                    .font(DesignSystem.Typography.listItemCaption)
-                    .fontWeight(DesignSystem.FontWeight.semibold)
-                    .foregroundColor(DesignSystem.Colors.moltenAmber)
-            ))
-
-            badgeComponents.append(AnyView(
-                Text("•")
-                    .font(DesignSystem.Typography.listItemCaptionSmall)
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-            ))
-
-            badgeComponents.append(AnyView(
-                Text("Current: \(item.shoppingListItem.currentQuantity, specifier: "%.1f")")
-                    .font(DesignSystem.Typography.listItemCaption)
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-            ))
-
+            // Normal shopping list: show store if requested
             if showStore {
-                badgeComponents.append(AnyView(
-                    Text("•")
-                        .font(DesignSystem.Typography.listItemCaptionSmall)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                ))
-
-                badgeComponents.append(AnyView(
+                badgeContent = AnyView(
                     Text(item.shoppingListItem.store)
                         .font(DesignSystem.Typography.listItemCaption)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
-                ))
+                )
+            } else {
+                badgeContent = nil
             }
-
-            badgeContent = AnyView(
-                HStack(spacing: DesignSystem.Spacing.sm) {
-                    ForEach(0..<badgeComponents.count, id: \.self) { index in
-                        badgeComponents[index]
-                    }
-                }
-            )
 
             tags = item.allTags
         }
@@ -532,9 +514,44 @@ extension GlassItemRowView {
                 rating: nil
             ),
             leadingAccessory: leadingAccessory,
+            trailingAccessory: trailingAccessory,
             badgeContent: badgeContent,
             showFullCode: false
         )
+    }
+}
+
+// MARK: - Needed Quantity Badge
+
+/// Displays needed quantity with SF Rounded font in amber color
+/// Used in shopping list rows to highlight items that need to be purchased
+struct NeededQuantityBadge: View {
+    let quantity: Double
+    let type: String
+
+    private var formattedQuantity: String {
+        if quantity.truncatingRemainder(dividingBy: 1) == 0 {
+            return String(format: "%.0f", quantity)
+        } else {
+            return String(format: "%.1f", quantity)
+        }
+    }
+
+    private var displayUnit: String {
+        GlassTerminologySettings.shared.displayName(for: type).lowercased()
+    }
+
+    var body: some View {
+        VStack(alignment: .trailing, spacing: DesignSystem.Spacing.xxs) {
+            Text(formattedQuantity)
+                .font(DesignSystem.Typography.prominentNumber)
+                .fontWeight(DesignSystem.FontWeight.bold)
+                .foregroundColor(DesignSystem.Colors.moltenOrange)
+
+            Text(displayUnit)
+                .font(DesignSystem.Typography.listItemCaption)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+        }
     }
 }
 

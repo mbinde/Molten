@@ -118,6 +118,7 @@ class CatalogDataCache: ObservableObject {
                 }
 
                 // If we have relevant changes, invalidate and reload cache
+                // Use MainActor.run to properly isolate the state updates
                 if hasRelevantChanges {
                     Task { @MainActor [weak self] in
                         guard let self = self else { return }
@@ -168,6 +169,8 @@ class CatalogDataCache: ObservableObject {
     /// Convenience method to load items using the cache
     /// Always use this instead of calling catalogService.getAllGlassItems() directly
     /// to ensure consistent cache usage across the app
+    /// IMPORTANT: Must be @MainActor to ensure thread-safe access to shared instance and items
+    @MainActor
     static func loadItems(using catalogService: CatalogService) async -> [CompleteInventoryItemModel] {
         let cache = CatalogDataCache.shared
         await cache.loadIfNeeded(catalogService: catalogService)

@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import CoreData
+import Combine
 
 enum SearchScope: String, CaseIterable {
     case allFields = "All fields"
@@ -15,12 +17,12 @@ enum SearchScope: String, CaseIterable {
 struct ShoppingListView: View {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data
     @State private var viewModel: ShoppingListViewModel
+    @Environment(EntitlementService.self) private var entitlementService
     private let shoppingListService: ShoppingListService
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
     private let purchaseService: PurchaseRecordService
     private let subscriptionService: SubscriptionServiceProtocol
-    private let entitlementService: EntitlementService
     private let userNotesRepository: UserNotesRepository
     private let userTagsRepository: UserTagsRepository
     private let shoppingListRepository: ShoppingListRepository
@@ -61,6 +63,10 @@ struct ShoppingListView: View {
     @State private var cachedAllStores: [String] = []
     @State private var cachedAllManufacturers: [String] = []
 
+    // Local search text state - isolates TextField from ViewModel to prevent full view re-renders
+    // The ViewModel's searchText setter handles debouncing and triggers filtering
+    @State private var localSearchText = ""
+
     // Accept ViewModel directly (protocol-based pattern)
     #if canImport(UIKit)
     init(viewModel: ShoppingListViewModel,
@@ -69,7 +75,6 @@ struct ShoppingListView: View {
          inventoryTrackingService: InventoryTrackingService,
          purchaseService: PurchaseRecordService,
          subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService,
-         entitlementService: EntitlementService = AppDependencies.shared.entitlementService,
          userNotesRepository: UserNotesRepository,
          userTagsRepository: UserTagsRepository,
          shoppingListRepository: ShoppingListRepository,
@@ -82,7 +87,6 @@ struct ShoppingListView: View {
         self.inventoryTrackingService = inventoryTrackingService
         self.purchaseService = purchaseService
         self.subscriptionService = subscriptionService
-        self.entitlementService = entitlementService
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
@@ -97,7 +101,6 @@ struct ShoppingListView: View {
          inventoryTrackingService: InventoryTrackingService,
          purchaseService: PurchaseRecordService,
          subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService,
-         entitlementService: EntitlementService = AppDependencies.shared.entitlementService,
          userNotesRepository: UserNotesRepository,
          userTagsRepository: UserTagsRepository,
          shoppingListRepository: ShoppingListRepository,
@@ -109,7 +112,6 @@ struct ShoppingListView: View {
         self.inventoryTrackingService = inventoryTrackingService
         self.purchaseService = purchaseService
         self.subscriptionService = subscriptionService
-        self.entitlementService = entitlementService
         self.userNotesRepository = userNotesRepository
         self.userTagsRepository = userTagsRepository
         self.shoppingListRepository = shoppingListRepository
@@ -119,7 +121,7 @@ struct ShoppingListView: View {
     #endif
 
     // Convenience init for production use
-    init(deps: AppDependencies = AppDependencies()) {
+    init(deps: AppDependencies = .shared) {
         let viewModel = ShoppingListViewModel(shoppingListService: deps.shoppingListService)
         #if canImport(UIKit)
         self.init(
@@ -746,6 +748,7 @@ struct ShoppingListView: View {
                                 searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
                                 activeFilters: activeFiltersForEmptyState,
                                 onClearFilters: {
+                                    localSearchText = ""  // Sync local state with ViewModel
                                     viewModel.searchText = ""
                                     viewModel.clearFilters()
                                 }
@@ -763,10 +766,14 @@ struct ShoppingListView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .searchable(
-                text: $viewModel.searchText,
+                text: $localSearchText,
                 placement: .navigationBarDrawer(displayMode: .always),
                 prompt: "Search shopping list..."
             )
+            .onChange(of: localSearchText) { oldValue, newValue in
+                // Sync local state to ViewModel - debouncing happens in ViewModel
+                viewModel.searchText = newValue
+            }
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
             .toolbar {
@@ -824,7 +831,13 @@ struct ShoppingListView: View {
 
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        showingAddItem = true
+                        // Check if at limit before showing add screen
+                        if let limit = entitlementService.getShoppingListLimit(),
+                           shoppingListItemCount >= limit {
+                            showingUpgradePrompt = true
+                        } else {
+                            showingAddItem = true
+                        }
                     } label: {
                         Image(systemName: "plus")
                     }
@@ -879,20 +892,23 @@ struct ShoppingListView: View {
             }) {
                 NavigationStack {
                     AddShoppingListItemView(
-                        deps: AppDependencies()
+                        deps: .shared
                     )
                 }
             }
             .task {
                 await loadShoppingList()
             }
-            .onAppear {
+            // NOTE: Removed .onAppear - it was causing duplicate concurrent calls with .task
+            // .task already handles initial load when view appears
+            .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
                 Task {
                     await loadShoppingList()
                 }
             }
-            .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: .inventoryChanged)) { _ in
                 Task {
+                    // Refresh after QR scan inventory changes
                     await loadShoppingList()
                 }
             }
@@ -904,6 +920,12 @@ struct ShoppingListView: View {
             .onReceive(NotificationCenter.default.publisher(for: .filterShoppingListByStore)) { notification in
                 if let storeName = notification.userInfo?["storeName"] as? String {
                     viewModel.selectedStore = storeName
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .subscriptionStatusChanged)) { _ in
+                // Refresh view when subscription changes (removes limit warnings)
+                Task {
+                    await loadShoppingList()
                 }
             }
             .alert("Keep Basket Items?", isPresented: $showingExitShoppingModeAlert) {
@@ -939,7 +961,7 @@ struct ShoppingListView: View {
             .navigationDestination(for: CompleteInventoryItemModel.self) { item in
                 InventoryDetailView(
                     item: item,
-                    deps: AppDependencies()
+                    deps: .shared
                 )
             }
         }
@@ -1238,6 +1260,7 @@ struct ShoppingListView: View {
 
             // Step 2: Immediately update the view model to remove the deleted item
             // This ensures counters and other UI elements update right away
+            // No full reload needed - just update local state to avoid image flashing
             await MainActor.run {
                 // Remove from the view model's shopping lists by creating new filtered dictionaries
                 // (Custom logic needed because of nested Dictionary<String, DetailedShoppingListModel> structure)
@@ -1249,13 +1272,8 @@ struct ShoppingListView: View {
                         totalItems: filteredItems.count
                     )
                 }
-            }
-
-            // Step 3: Defer full reload to allow .onDelete animation to complete
-            // (Same timing as DeletionHelpers.deleteItem: 0.3 seconds)
-            Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 300_000_000)  // 0.3 seconds
-                await viewModel.loadShoppingLists()
+                // Remove empty stores
+                viewModel.shoppingLists = viewModel.shoppingLists.filter { !$0.value.items.isEmpty }
                 updateCaches()
             }
         } catch {
@@ -1265,7 +1283,6 @@ struct ShoppingListView: View {
 
 
     private func loadShoppingList() async {
-        print("🛒 ShoppingListView: Loading shopping list...")
         await viewModel.loadShoppingLists()
 
         // Update view-specific caches and state
@@ -1278,7 +1295,6 @@ struct ShoppingListView: View {
         expandedManufacturers = Set(cachedAllManufacturers)
 
         refreshTrigger += 1  // Force SwiftUI to refresh the list
-        print("🛒 ShoppingListView: Loaded \(viewModel.shoppingLists.count) stores with \(viewModel.shoppingLists.values.flatMap { $0.items }.count) total items")
     }
 
     private func cancelShoppingMode() {
@@ -1330,6 +1346,10 @@ struct CheckoutSheet: View {
     @State private var shipping: String = ""
     @State private var currency = "USD"
     @State private var notes = ""
+
+    // Error handling
+    @State private var showCheckoutError = false
+    @State private var checkoutErrorMessage = ""
 
     // Helper methods for quantity binding
     private func getQuantity(for item: DetailedShoppingListItemModel) -> Double {
@@ -1556,11 +1576,20 @@ struct CheckoutSheet: View {
                     addToInventory = false
                 }
                 Button("Upgrade to Pro") {
-                    // TODO: Navigate to subscription upgrade screen
                     addToInventory = false
+                    Task {
+                        try? await subscriptionService.presentPaywall()
+                    }
                 }
             } message: {
                 Text("You currently have \(currentInventoryCount) items in your inventory. Free tier users are limited to \(FeatureFlags.FREE_TIER_INVENTORY_LIMIT) items.\n\nIf you complete this checkout, items will not be added to your inventory unless you upgrade to Pro.")
+            }
+            .alert("Checkout Error", isPresented: $showCheckoutError) {
+                Button("OK") {
+                    // User acknowledged the error, they can try again
+                }
+            } message: {
+                Text(checkoutErrorMessage)
             }
         }
     }
@@ -1673,12 +1702,10 @@ struct CheckoutSheet: View {
             }
         } catch {
             print("❌ Checkout error: \(error)")
-            // TODO: Show error alert to user
-            // For now, still exit shopping mode but alert the user
             await MainActor.run {
-                // Don't clear the basket or exit shopping mode on error
-                // so the user can try again
-                dismiss()
+                // Show error alert - don't dismiss so user can try again
+                checkoutErrorMessage = "Checkout failed: \(error.localizedDescription)"
+                showCheckoutError = true
             }
         }
     }

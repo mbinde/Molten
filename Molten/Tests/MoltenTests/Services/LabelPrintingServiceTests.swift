@@ -22,6 +22,41 @@ struct LabelPrintingServiceTests {
     /// See CLAUDE.md "Service Creation Anti-Pattern" - same pattern applies to tests!
     private let deps = AppDependencies(persistenceController: .createTestController())
 
+    // MARK: - Test Geometries
+    // These recreate specific label geometries for testing since formats are now in database
+
+    /// Large shipping label (4" × 2") - for tests requiring larger labels
+    private static let testLargeLabel = LabelGeometry(
+        name: "Test Large Label",
+        labelsPerSheet: 10,
+        columns: 2,
+        rows: 5,
+        labelWidth: 288,  // 4"
+        labelHeight: 144, // 2"
+        leftMargin: 18,
+        topMargin: 36,
+        horizontalGap: 9,
+        verticalGap: 0,
+        defaultFontScale: 1.0,
+        defaultQRSize: 0.6
+    )
+
+    /// Small return address label (1.75" × 0.5") - for tests requiring smaller labels
+    private static let testSmallLabel = LabelGeometry(
+        name: "Test Small Label",
+        labelsPerSheet: 80,
+        columns: 4,
+        rows: 20,
+        labelWidth: 126, // 1.75"
+        labelHeight: 36, // 0.5"
+        leftMargin: 18,
+        topMargin: 36,
+        horizontalGap: 9,
+        verticalGap: 0,
+        defaultFontScale: 0.75,
+        defaultQRSize: 0.7
+    )
+
 
     init() async {
         // Configure repository factory for testing (uses mocks)
@@ -95,6 +130,71 @@ struct LabelPrintingServiceTests {
         #expect(qrImage.size.width > 0)
     }
 
+    // MARK: - QR Code Generation with Inventory Type
+
+    @Test("Generate QR code with inventory type")
+    func testGenerateQRCodeWithInventoryType() async throws {
+        let service = LabelPrintingService()
+
+        let qrImage = service.generateQRCode(for: "abc123", type: "rod", subtype: nil, subsubtype: nil)
+
+        #expect(qrImage.size.width > 0)
+        #expect(qrImage.size.height > 0)
+    }
+
+    @Test("Generate QR code with inventory type and subtype")
+    func testGenerateQRCodeWithInventoryTypeAndSubtype() async throws {
+        let service = LabelPrintingService()
+
+        let qrImage = service.generateQRCode(for: "abc123", type: "frit", subtype: "coarse", subsubtype: nil)
+
+        #expect(qrImage.size.width > 0)
+        #expect(qrImage.size.height > 0)
+    }
+
+    @Test("Generate QR code from LabelData with inventory type")
+    func testGenerateQRCodeFromLabelDataWithInventoryType() async throws {
+        let service = LabelPrintingService()
+
+        let labelData = LabelData(
+            stableId: "abc123",
+            manufacturer: "be",
+            sku: "001",
+            colorName: "Clear",
+            coe: "96",
+            location: nil,
+            owner: nil,
+            inventoryType: "frit",
+            inventorySubtype: "coarse",
+            inventorySubsubtype: nil
+        )
+
+        let qrImage = service.generateQRCode(for: labelData)
+
+        #expect(qrImage.size.width > 0)
+        #expect(qrImage.size.height > 0)
+    }
+
+    @Test("Generate QR code from LabelData without inventory type")
+    func testGenerateQRCodeFromLabelDataWithoutInventoryType() async throws {
+        let service = LabelPrintingService()
+
+        let labelData = LabelData(
+            stableId: "abc123",
+            manufacturer: "be",
+            sku: "001",
+            colorName: "Clear",
+            coe: "96",
+            location: nil,
+            owner: nil
+        )
+
+        let qrImage = service.generateQRCode(for: labelData)
+
+        #expect(qrImage.size.width > 0)
+        #expect(qrImage.size.height > 0)
+    }
+
     // MARK: - Label Builder Configuration Tests
 
     @Test("LabelBuilderConfig default configuration")
@@ -106,8 +206,18 @@ struct LabelPrintingServiceTests {
         #expect(config.textFields.contains(.manufacturer))
         #expect(config.textFields.contains(.sku))
         #expect(config.textFields.contains(.colorName))
-        #expect(config.textFields.contains(.coe))
         #expect(config.textAlignment == .left)
+        // Verify field order: colorName first (item name), then manufacturer, then sku
+        #expect(config.textFields[0] == .colorName)
+        #expect(config.textFields[1] == .manufacturer)
+        #expect(config.textFields[2] == .sku)
+        // Verify formatting: colorName 9pt bold, manufacturer/sku 8pt normal
+        #expect(config.format(for: .colorName).fontSize == 9)
+        #expect(config.format(for: .colorName).bold == true)
+        #expect(config.format(for: .manufacturer).fontSize == 8)
+        #expect(config.format(for: .manufacturer).bold == false)
+        #expect(config.format(for: .sku).fontSize == 8)
+        #expect(config.format(for: .sku).bold == false)
     }
 
     @Test("LabelBuilderConfig preset: Information Dense")
@@ -120,7 +230,10 @@ struct LabelPrintingServiceTests {
         #expect(preset?.config.textFields.contains(.manufacturer) == true)
         #expect(preset?.config.textFields.contains(.sku) == true)
         #expect(preset?.config.textFields.contains(.colorName) == true)
-        #expect(preset?.config.textFields.contains(.coe) == true)
+        // Verify field order: colorName first (item name), then manufacturer, then sku
+        #expect(preset?.config.textFields[0] == .colorName)
+        #expect(preset?.config.textFields[1] == .manufacturer)
+        #expect(preset?.config.textFields[2] == .sku)
     }
 
     @Test("LabelBuilderConfig preset: QR Focused")
@@ -131,15 +244,6 @@ struct LabelPrintingServiceTests {
         #expect(preset?.config.qrPosition == .left)
         #expect(preset?.config.qrSize == nil)
         #expect(preset?.config.textFields.count == 2)
-    }
-
-    @Test("LabelBuilderConfig preset: Dual QR")
-    func testPresetDualQR() async throws {
-        let preset = LabelBuilderConfig.presets.first { $0.name == "Dual QR" }
-
-        #expect(preset != nil)
-        #expect(preset?.config.qrPosition == .both)
-        #expect(preset?.config.textAlignment == .center)
     }
 
     @Test("LabelBuilderConfig preset: Location Labels")
@@ -293,7 +397,7 @@ struct LabelPrintingServiceTests {
             fieldFormats: LabelFieldFormat.defaults
         )
 
-        let legacyTemplate = config.toLegacyTemplate(format: .avery5160)
+        let legacyTemplate = config.toLegacyTemplate(format: .defaultFormat)
 
         #expect(legacyTemplate.includeQRCode == true)
         #expect(legacyTemplate.dualQRCodes == false)
@@ -306,10 +410,10 @@ struct LabelPrintingServiceTests {
 
     // MARK: - Layout Validation Tests
 
-    @Test("Validate layout for Avery 5160")
-    func testValidateLayoutAvery5160() async throws {
+    @Test("Validate layout for default format")
+    func testValidateLayoutDefault() async throws {
         let config = LabelBuilderConfig.default
-        let format = AveryFormat.avery5160
+        let format = LabelGeometry.defaultFormat
 
         let validation = config.validateLayout(for: format)
 
@@ -317,10 +421,10 @@ struct LabelPrintingServiceTests {
         #expect(validation.availableHeight > 0)
     }
 
-    @Test("Validate layout for Avery 5163")
-    func testValidateLayoutAvery5163() async throws {
+    @Test("Validate layout for large labels")
+    func testValidateLayoutLarge() async throws {
         let config = LabelBuilderConfig.default
-        let format = AveryFormat.avery5163
+        let format = Self.testLargeLabel
 
         let validation = config.validateLayout(for: format)
 
@@ -328,21 +432,10 @@ struct LabelPrintingServiceTests {
         #expect(validation.availableHeight > 0)
     }
 
-    @Test("Validate layout for Avery 5167")
-    func testValidateLayoutAvery5167() async throws {
+    @Test("Validate layout for small labels")
+    func testValidateLayoutSmall() async throws {
         let config = LabelBuilderConfig.default
-        let format = AveryFormat.avery5167
-
-        let validation = config.validateLayout(for: format)
-
-        #expect(validation.availableWidth > 0)
-        #expect(validation.availableHeight > 0)
-    }
-
-    @Test("Validate layout for Mr-Label MR184")
-    func testValidateLayoutMrLabel() async throws {
-        let config = LabelBuilderConfig.default
-        let format = AveryFormat.mrLabel184
+        let format = Self.testSmallLabel
 
         let validation = config.validateLayout(for: format)
 
@@ -361,7 +454,7 @@ struct LabelPrintingServiceTests {
             textAlignment: .left,
             fieldFormats: LabelFieldFormat.defaults
         )
-        let format = AveryFormat.avery5167  // Small label
+        let format = Self.testSmallLabel  // Small label
 
         let validation = config.validateLayout(for: format, fontScale: 1.5)
 
@@ -373,7 +466,7 @@ struct LabelPrintingServiceTests {
     func testDetectNarrowTextArea() async throws {
         // Dual QR on very small label leaves very narrow text area
         // Need labelWidth < 120 to trigger warning
-        let verySmallFormat = AveryFormat(
+        let verySmallFormat = LabelGeometry(
             name: "Tiny Label",
             labelsPerSheet: 100,
             columns: 10,
@@ -413,7 +506,7 @@ struct LabelPrintingServiceTests {
             textAlignment: .left,
             fieldFormats: LabelFieldFormat.defaults
         )
-        let format = AveryFormat.avery5167  // Small label (height < 72)
+        let format = Self.testSmallLabel  // Small label (height < 72)
 
         let validation = config.validateLayout(for: format)
 
@@ -424,7 +517,7 @@ struct LabelPrintingServiceTests {
     @Test("Font scale impact on layout validation")
     func testFontScaleImpact() async throws {
         let config = LabelBuilderConfig.default
-        let format = AveryFormat.avery5160
+        let format = LabelGeometry.defaultFormat
 
         let validation1 = config.validateLayout(for: format, fontScale: 0.7)
         let validation2 = config.validateLayout(for: format, fontScale: 1.3)
@@ -433,11 +526,11 @@ struct LabelPrintingServiceTests {
         #expect(validation2.estimatedTextHeight > validation1.estimatedTextHeight)
     }
 
-    // MARK: - Avery Format Specifications Tests
+    // MARK: - LabelGeometry Tests
 
-    @Test("Avery 5160 dimensions")
-    func testAvery5160Dimensions() async throws {
-        let format = AveryFormat.avery5160
+    @Test("Default format (Avery 5160) dimensions")
+    func testDefaultFormatDimensions() async throws {
+        let format = LabelGeometry.defaultFormat
 
         #expect(format.name == "Avery 5160")
         #expect(format.labelsPerSheet == 30)
@@ -447,11 +540,10 @@ struct LabelPrintingServiceTests {
         #expect(format.labelHeight == 72)
     }
 
-    @Test("Avery 5163 dimensions")
-    func testAvery5163Dimensions() async throws {
-        let format = AveryFormat.avery5163
+    @Test("Test large label geometry")
+    func testLargeLabelGeometry() async throws {
+        let format = Self.testLargeLabel
 
-        #expect(format.name == "Avery 5163")
         #expect(format.labelsPerSheet == 10)
         #expect(format.columns == 2)
         #expect(format.rows == 5)
@@ -459,11 +551,10 @@ struct LabelPrintingServiceTests {
         #expect(format.labelHeight == 144)
     }
 
-    @Test("Avery 5167 dimensions")
-    func testAvery5167Dimensions() async throws {
-        let format = AveryFormat.avery5167
+    @Test("Test small label geometry")
+    func testSmallLabelGeometry() async throws {
+        let format = Self.testSmallLabel
 
-        #expect(format.name == "Avery 5167")
         #expect(format.labelsPerSheet == 80)
         #expect(format.columns == 4)
         #expect(format.rows == 20)
@@ -491,7 +582,7 @@ struct LabelPrintingServiceTests {
 
         let pdfURL = await service.generateLabelSheet(
             labels: labels,
-            format: .avery5160,
+            format: .defaultFormat,
             config: .default
         )
 
@@ -521,7 +612,7 @@ struct LabelPrintingServiceTests {
 
         let pdfURL = await service.generateLabelSheet(
             labels: labels,
-            format: .avery5160,
+            format: .defaultFormat,
             config: .default
         )
 
@@ -550,7 +641,7 @@ struct LabelPrintingServiceTests {
         // Start at row 2, column 1 (skip first row)
         let pdfURL = await service.generateLabelSheet(
             labels: labels,
-            format: .avery5160,
+            format: .defaultFormat,
             config: .default,
             startRow: 2,
             startColumn: 1
@@ -577,7 +668,7 @@ struct LabelPrintingServiceTests {
 
         let pdfURL = await service.generateLabelSheet(
             labels: labels,
-            format: .avery5160,
+            format: .defaultFormat,
             config: .default,
             fontScale: 0.8
         )
@@ -585,8 +676,8 @@ struct LabelPrintingServiceTests {
         #expect(pdfURL != nil)
     }
 
-    @Test("Generate PDF with offset adjustments")
-    func testOffsetAdjustments() async throws {
+    @Test("Generate PDF with position adjustments")
+    func testPositionAdjustments() async throws {
         let service = LabelPrintingService()
 
         let labels = [
@@ -601,12 +692,15 @@ struct LabelPrintingServiceTests {
             )
         ]
 
+        // Position adjustments are now in config
+        var config = LabelBuilderConfig.default
+        config.positionHorizontal = 5.0
+        config.positionVertical = -3.0
+
         let pdfURL = await service.generateLabelSheet(
             labels: labels,
-            format: .avery5160,
-            config: .default,
-            offsetX: 5.0,
-            offsetY: -3.0
+            format: .defaultFormat,
+            config: config
         )
 
         #expect(pdfURL != nil)
@@ -630,7 +724,7 @@ struct LabelPrintingServiceTests {
 
         let pdfURL = await service.generateLabelSheet(
             labels: labels,
-            format: .avery5160,
+            format: .defaultFormat,
             config: .default
         )
 
@@ -665,7 +759,7 @@ struct LabelPrintingServiceTests {
 
         let pdfURL = await service.generateLabelSheet(
             labels: labels,
-            format: .avery5163,  // Larger label format
+            format: Self.testLargeLabel,  // Larger label format
             config: config
         )
 
@@ -700,7 +794,7 @@ struct LabelPrintingServiceTests {
 
         let pdfURL = await service.generateLabelSheet(
             labels: labels,
-            format: .avery5160,
+            format: .defaultFormat,
             config: config
         )
 
@@ -735,7 +829,7 @@ struct LabelPrintingServiceTests {
 
         let pdfURL = await service.generateLabelSheet(
             labels: labels,
-            format: .avery5160,
+            format: .defaultFormat,
             config: config
         )
 
@@ -769,305 +863,190 @@ struct LabelPrintingServiceTests {
 
         let pdfURL = await service.generateLabelSheet(
             labels: labels,
-            format: .avery5160,
+            format: .defaultFormat,
             config: config
         )
 
         #expect(pdfURL != nil)
     }
 
-    // MARK: - New Label Format Tests
+    // MARK: - QR Position Display Name Tests
 
-    @Test("Avery 5161 dimensions")
-    func testAvery5161Dimensions() async throws {
-        let format = AveryFormat.avery5161
-
-        #expect(format.name == "Avery 5161")
-        #expect(format.labelsPerSheet == 20)
-        #expect(format.columns == 2)
-        #expect(format.rows == 10)
-        #expect(format.labelWidth == 288)
-        #expect(format.labelHeight == 72)
+    @Test("QR position displayName for landscape labels uses Left/Right")
+    func testQRPositionDisplayNameLandscape() async throws {
+        #expect(QRCodePosition.none.displayName(for: .landscape) == "None")
+        #expect(QRCodePosition.left.displayName(for: .landscape) == "Left side")
+        #expect(QRCodePosition.right.displayName(for: .landscape) == "Right side")
+        #expect(QRCodePosition.both.displayName(for: .landscape) == "Both sides")
     }
 
-    @Test("Avery 5162 dimensions")
-    func testAvery5162Dimensions() async throws {
-        let format = AveryFormat.avery5162
-
-        #expect(format.name == "Avery 5162")
-        #expect(format.labelsPerSheet == 14)
-        #expect(format.columns == 2)
-        #expect(format.rows == 7)
-        #expect(format.labelWidth == 288)
-        #expect(format.labelHeight == 96)
+    @Test("QR position displayName for circular labels uses Top/Bottom")
+    func testQRPositionDisplayNameCircular() async throws {
+        #expect(QRCodePosition.none.displayName(for: .circular) == "None")
+        #expect(QRCodePosition.left.displayName(for: .circular) == "Top")
+        #expect(QRCodePosition.right.displayName(for: .circular) == "Bottom")
+        #expect(QRCodePosition.both.displayName(for: .circular) == "Top & Bottom")
     }
 
-    @Test("Avery 5164 dimensions")
-    func testAvery5164Dimensions() async throws {
-        let format = AveryFormat.avery5164
-
-        #expect(format.name == "Avery 5164")
-        #expect(format.labelsPerSheet == 6)
-        #expect(format.columns == 2)
-        #expect(format.rows == 3)
-        #expect(format.labelWidth == 288)
-        #expect(format.labelHeight == 240)
+    @Test("QR position displayName for portrait labels uses Top/Bottom")
+    func testQRPositionDisplayNamePortrait() async throws {
+        #expect(QRCodePosition.none.displayName(for: .portrait) == "None")
+        #expect(QRCodePosition.left.displayName(for: .portrait) == "Top")
+        #expect(QRCodePosition.right.displayName(for: .portrait) == "Bottom")
+        #expect(QRCodePosition.both.displayName(for: .portrait) == "Top & Bottom")
     }
 
-    @Test("Avery 8160 dimensions")
-    func testAvery8160Dimensions() async throws {
-        let format = AveryFormat.avery8160
-
-        #expect(format.name == "Avery 8160")
-        #expect(format.labelsPerSheet == 30)
-        #expect(format.columns == 3)
-        #expect(format.rows == 10)
-        #expect(format.labelWidth == 189)
-        #expect(format.labelHeight == 72)
+    @Test("QR position displayName for square labels uses Top/Bottom")
+    func testQRPositionDisplayNameSquare() async throws {
+        #expect(QRCodePosition.none.displayName(for: .square) == "None")
+        #expect(QRCodePosition.left.displayName(for: .square) == "Top")
+        #expect(QRCodePosition.right.displayName(for: .square) == "Bottom")
+        #expect(QRCodePosition.both.displayName(for: .square) == "Top & Bottom")
     }
 
-    @Test("Avery 8163 dimensions")
-    func testAvery8163Dimensions() async throws {
-        let format = AveryFormat.avery8163
+    @Test("QR position usesVerticalLayout returns correct values")
+    func testQRPositionUsesVerticalLayout() async throws {
+        // Vertical layout shapes
+        #expect(QRCodePosition.left.usesVerticalLayout(for: .circular) == true)
+        #expect(QRCodePosition.left.usesVerticalLayout(for: .portrait) == true)
+        #expect(QRCodePosition.left.usesVerticalLayout(for: .square) == true)
 
-        #expect(format.name == "Avery 8163")
-        #expect(format.labelsPerSheet == 10)
-        #expect(format.columns == 2)
-        #expect(format.rows == 5)
-        #expect(format.labelWidth == 288)
-        #expect(format.labelHeight == 144)
+        // Horizontal layout shapes
+        #expect(QRCodePosition.left.usesVerticalLayout(for: .landscape) == false)
+        #expect(QRCodePosition.left.usesVerticalLayout(for: .flag) == false)
     }
 
-    @Test("Avery 5168 dimensions (extra large)")
-    func testAvery5168Dimensions() async throws {
-        let format = AveryFormat.avery5168
+    // MARK: - Manufacturer Image Position Display Name Tests
 
-        #expect(format.name == "Avery 5168")
-        #expect(format.labelsPerSheet == 4)
-        #expect(format.columns == 2)
-        #expect(format.rows == 2)
-        #expect(format.labelWidth == 360)
-        #expect(format.labelHeight == 252)
+    @Test("Manufacturer image displayName for landscape labels uses Left/Right")
+    func testManufacturerImageDisplayNameLandscape() async throws {
+        #expect(ManufacturerImagePosition.none.displayName(for: .landscape) == "None")
+        #expect(ManufacturerImagePosition.left.displayName(for: .landscape) == "Left side")
+        #expect(ManufacturerImagePosition.right.displayName(for: .landscape) == "Right side")
+        #expect(ManufacturerImagePosition.both.displayName(for: .landscape) == "Both sides")
     }
 
-    @Test("Avery 5395 name badge dimensions")
-    func testAvery5395Dimensions() async throws {
-        let format = AveryFormat.avery5395
-
-        #expect(format.name == "Avery 5395")
-        #expect(format.labelsPerSheet == 8)
-        #expect(format.columns == 2)
-        #expect(format.rows == 4)
-        #expect(format.labelWidth == 243)
-        #expect(format.labelHeight == 168)
+    @Test("Manufacturer image displayName for circular labels uses Top/Bottom")
+    func testManufacturerImageDisplayNameCircular() async throws {
+        #expect(ManufacturerImagePosition.none.displayName(for: .circular) == "None")
+        #expect(ManufacturerImagePosition.left.displayName(for: .circular) == "Top")
+        #expect(ManufacturerImagePosition.right.displayName(for: .circular) == "Bottom")
+        #expect(ManufacturerImagePosition.both.displayName(for: .circular) == "Top & Bottom")
     }
 
-    @Test("Avery 6870 durable ID dimensions")
-    func testAvery6870Dimensions() async throws {
-        let format = AveryFormat.avery6870
-
-        #expect(format.name == "Avery 6870")
-        #expect(format.labelsPerSheet == 30)
-        #expect(format.columns == 3)
-        #expect(format.rows == 10)
-        #expect(format.labelWidth == 162)
-        #expect(format.labelHeight == 54)
+    @Test("Manufacturer image displayName for portrait labels uses Top/Bottom")
+    func testManufacturerImageDisplayNamePortrait() async throws {
+        #expect(ManufacturerImagePosition.none.displayName(for: .portrait) == "None")
+        #expect(ManufacturerImagePosition.left.displayName(for: .portrait) == "Top")
+        #expect(ManufacturerImagePosition.right.displayName(for: .portrait) == "Bottom")
+        #expect(ManufacturerImagePosition.both.displayName(for: .portrait) == "Top & Bottom")
     }
 
-    @Test("Avery 5165 full sheet dimensions")
-    func testAvery5165Dimensions() async throws {
-        let format = AveryFormat.avery5165
-
-        #expect(format.name == "Avery 5165")
-        #expect(format.labelsPerSheet == 1)
-        #expect(format.columns == 1)
-        #expect(format.rows == 1)
-        #expect(format.labelWidth == 612)
-        #expect(format.labelHeight == 792)
-        #expect(format.leftMargin == 0)
-        #expect(format.topMargin == 0)
+    @Test("Manufacturer image displayName for square labels uses Top/Bottom")
+    func testManufacturerImageDisplayNameSquare() async throws {
+        #expect(ManufacturerImagePosition.none.displayName(for: .square) == "None")
+        #expect(ManufacturerImagePosition.left.displayName(for: .square) == "Top")
+        #expect(ManufacturerImagePosition.right.displayName(for: .square) == "Bottom")
+        #expect(ManufacturerImagePosition.both.displayName(for: .square) == "Top & Bottom")
     }
 
-    @Test("AveryFormat allFormats contains all categories")
-    func testAllFormatsCategories() async throws {
-        let allFormats = AveryFormat.allFormats
+    @Test("Manufacturer image usesVerticalLayout returns correct values")
+    func testManufacturerImageUsesVerticalLayout() async throws {
+        // Vertical layout shapes
+        #expect(ManufacturerImagePosition.left.usesVerticalLayout(for: .circular) == true)
+        #expect(ManufacturerImagePosition.left.usesVerticalLayout(for: .portrait) == true)
+        #expect(ManufacturerImagePosition.left.usesVerticalLayout(for: .square) == true)
 
-        #expect(allFormats.keys.contains("Popular"))
-        #expect(allFormats.keys.contains("Address Labels"))
-        #expect(allFormats.keys.contains("Shipping Labels"))
-        #expect(allFormats.keys.contains("Return Address"))
-        #expect(allFormats.keys.contains("Round/Circle Labels"))
-        #expect(allFormats.keys.contains("File Folder Labels"))
-        #expect(allFormats.keys.contains("Durable/Ultra Duty"))
-        #expect(allFormats.keys.contains("Multipurpose"))
-        #expect(allFormats.keys.contains("Name Badges & Cards"))
-        #expect(allFormats.keys.contains("Full Sheet"))
-        #expect(allFormats.keys.contains("Other Brands"))
+        // Horizontal layout shapes
+        #expect(ManufacturerImagePosition.left.usesVerticalLayout(for: .landscape) == false)
+        #expect(ManufacturerImagePosition.left.usesVerticalLayout(for: .flag) == false)
     }
 
-    @Test("AveryFormat flatList contains all unique formats")
-    func testFlatListUnique() async throws {
-        let flatList = AveryFormat.flatList
+    // MARK: - LabelShape Tests
 
-        // Should have many formats
-        #expect(flatList.count > 20)
-
-        // Should be sorted alphabetically
-        for i in 0..<(flatList.count - 1) {
-            #expect(flatList[i].name <= flatList[i + 1].name)
-        }
-
-        // Should have no duplicates
-        let uniqueNames = Set(flatList.map { $0.name })
-        #expect(uniqueNames.count == flatList.count)
-    }
-
-    @Test("Generate PDF with Avery 5161 format")
-    func testGeneratePDFAvery5161() async throws {
-        let service = LabelPrintingService()
-
-        let labels = [
-            LabelData(
-                stableId: "test1",
-                manufacturer: "Test",
-                sku: "001",
-                colorName: "Color",
-                coe: "90",
-                location: nil,
-                owner: nil
-            )
-        ]
-
-        let pdfURL = await service.generateLabelSheet(
-            labels: labels,
-            format: .avery5161,
-            config: .default
+    @Test("LabelGeometry computes correct shape for various dimensions")
+    func testLabelGeometryShape() async throws {
+        // Landscape (wider than tall)
+        let landscape = LabelGeometry(
+            name: "Landscape", labelsPerSheet: 1, columns: 1, rows: 1,
+            labelWidth: 200, labelHeight: 100, leftMargin: 0, topMargin: 0,
+            horizontalGap: 0, verticalGap: 0, defaultFontScale: 1.0, defaultQRSize: 0.65
         )
+        #expect(landscape.shape == .landscape)
 
-        #expect(pdfURL != nil)
+        // Portrait (taller than wide)
+        let portrait = LabelGeometry(
+            name: "Portrait", labelsPerSheet: 1, columns: 1, rows: 1,
+            labelWidth: 100, labelHeight: 200, leftMargin: 0, topMargin: 0,
+            horizontalGap: 0, verticalGap: 0, defaultFontScale: 1.0, defaultQRSize: 0.65
+        )
+        #expect(portrait.shape == .portrait)
+
+        // Square (equal dimensions)
+        let square = LabelGeometry(
+            name: "Square", labelsPerSheet: 1, columns: 1, rows: 1,
+            labelWidth: 100, labelHeight: 100, leftMargin: 0, topMargin: 0,
+            horizontalGap: 0, verticalGap: 0, defaultFontScale: 1.0, defaultQRSize: 0.65
+        )
+        #expect(square.shape == .square)
+
+        // Circular
+        let circular = LabelGeometry(
+            name: "Circular", labelsPerSheet: 1, columns: 1, rows: 1,
+            labelWidth: 100, labelHeight: 100, leftMargin: 0, topMargin: 0,
+            horizontalGap: 0, verticalGap: 0, defaultFontScale: 1.0, defaultQRSize: 0.65,
+            isCircular: true
+        )
+        #expect(circular.shape == .circular)
+
+        // Barbell/Flag
+        let barbell = LabelGeometry(
+            name: "Barbell", labelsPerSheet: 1, columns: 1, rows: 1,
+            labelWidth: 200, labelHeight: 50, leftMargin: 0, topMargin: 0,
+            horizontalGap: 0, verticalGap: 0, defaultFontScale: 1.0, defaultQRSize: 0.65,
+            isBarbell: true, barbellFlagWidth: 50, barbellWrapHeight: 20
+        )
+        #expect(barbell.shape == .flag)
     }
 
-    @Test("Generate PDF with Avery 5164 format")
-    func testGeneratePDFAvery5164() async throws {
-        let service = LabelPrintingService()
+    // MARK: - Labels Per Sheet Calculation Tests
 
-        let labels = [
-            LabelData(
-                stableId: "test1",
-                manufacturer: "Test",
-                sku: "001",
-                colorName: "Color",
-                coe: "90",
-                location: "Studio A",
-                owner: "Owner Name"
-            )
-        ]
-
-        let config = LabelBuilderConfig(
-            qrPosition: .left,
-            qrSize: 0.5,
-            fontScale: nil,
-            manufacturerImagePosition: .none,
-            manufacturerImageSize: nil,
-            textFields: [.manufacturer, .sku, .colorName, .coe, .location, .owner],
-            textAlignment: .left,
-            fieldFormats: [:]
-        )
-
-        let pdfURL = await service.generateLabelSheet(
-            labels: labels,
-            format: .avery5164,
-            config: config
-        )
-
-        #expect(pdfURL != nil)
-    }
-
-    @Test("Generate PDF with Avery 8167 return address format")
-    func testGeneratePDFAvery8167() async throws {
-        let service = LabelPrintingService()
-
-        let labels = [
-            LabelData(
-                stableId: "test1",
-                manufacturer: "BE",
-                sku: "001",
-                colorName: nil,
-                coe: "90",
-                location: nil,
-                owner: nil
-            )
-        ]
-
-        let config = LabelBuilderConfig(
-            qrPosition: .left,
-            qrSize: 0.7,
-            fontScale: nil,
-            manufacturerImagePosition: .none,
-            manufacturerImageSize: nil,
-            textFields: [.manufacturer, .sku],
-            textAlignment: .left,
-            fieldFormats: [:]
-        )
-
-        let pdfURL = await service.generateLabelSheet(
-            labels: labels,
-            format: .avery8167,
-            config: config
-        )
-
-        #expect(pdfURL != nil)
-    }
-
-    @Test("Validate layout for all new formats")
-    func testValidateLayoutNewFormats() async throws {
-        // Use minimal config for testing - some small formats can't fit QR + manufacturer image
-        let config = LabelBuilderConfig(
-            qrPosition: .left,
-            qrSize: nil,
-            fontScale: nil,
-            manufacturerImagePosition: .none,  // No manufacturer image for small labels
-            manufacturerImageSize: nil,
-            textFields: [.manufacturer, .sku, .colorName],
-            textAlignment: .left,
-            fieldFormats: [:]
-        )
-        let formats: [AveryFormat] = [
-            .avery5161, .avery5162, .avery5164, .avery5168,
-            .avery5260, .avery5261, .avery5262, .avery5263, .avery5264,
-            .avery8160, .avery8161, .avery8162, .avery8163, .avery8164,
-            .avery5395, .avery6870, .avery5165, .avery8165
+    @Test("Labels per sheet equals rows times columns")
+    func testLabelsPerSheetCalculation() async throws {
+        let formats = [
+            LabelGeometry.defaultFormat,
+            Self.testLargeLabel,
+            Self.testSmallLabel
         ]
 
         for format in formats {
-            let validation = config.validateLayout(for: format)
-            #expect(validation.availableWidth > 0, "Failed for \(format.name)")
-            #expect(validation.availableHeight > 0, "Failed for \(format.name)")
+            #expect(format.labelsPerSheet == format.rows * format.columns, "Row×Column mismatch for \(format.name)")
         }
     }
 
-    @Test("Labels per sheet calculation is correct for all formats")
-    func testLabelsPerSheetCalculation() async throws {
-        let formats: [(AveryFormat, Int)] = [
-            (.avery5160, 30),
-            (.avery5161, 20),
-            (.avery5162, 14),
-            (.avery5163, 10),
-            (.avery5164, 6),
-            (.avery5167, 80),
-            (.avery5168, 4),
-            (.avery8160, 30),
-            (.avery8163, 10),
-            (.avery8167, 80),
-            (.avery5165, 1),
-            (.avery8165, 1),
-            (.avery5395, 8),
-            (.avery6870, 30)
-        ]
+    @Test("Custom geometry validates correctly")
+    func testCustomGeometryValidation() async throws {
+        let config = LabelBuilderConfig.default
 
-        for (format, expectedCount) in formats {
-            #expect(format.labelsPerSheet == expectedCount, "Failed for \(format.name)")
-            #expect(format.labelsPerSheet == format.rows * format.columns, "Row×Column mismatch for \(format.name)")
-        }
+        // Create custom geometry
+        let customFormat = LabelGeometry(
+            name: "Custom Test",
+            labelsPerSheet: 12,
+            columns: 3,
+            rows: 4,
+            labelWidth: 180,
+            labelHeight: 100,
+            leftMargin: 20,
+            topMargin: 30,
+            horizontalGap: 10,
+            verticalGap: 10,
+            defaultFontScale: 1.0,
+            defaultQRSize: 0.65
+        )
+
+        let validation = config.validateLayout(for: customFormat)
+
+        #expect(validation.availableWidth > 0)
+        #expect(validation.availableHeight > 0)
     }
 }

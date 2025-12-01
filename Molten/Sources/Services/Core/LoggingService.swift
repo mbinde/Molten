@@ -2,8 +2,8 @@
 //  LoggingService.swift
 //  Molten
 //
-//  Unified logging system with configurable backends (Sentry)
-//  Supports structured logging, pattern detection, and remote error tracking
+//  Unified logging system with configurable backends
+//  Supports structured logging and local error tracking via OSLog
 //
 
 import Foundation
@@ -20,27 +20,6 @@ public enum LogLevel: Int, Comparable, Sendable {
 
     public static func < (lhs: LogLevel, rhs: LogLevel) -> Bool {
         lhs.rawValue < rhs.rawValue
-    }
-
-    /// Whether this level should send to remote logging by default
-    var shouldSendRemotelyByDefault: Bool {
-        switch self {
-        case .debug, .info, .warning:
-            return false
-        case .error, .critical:
-            return true
-        }
-    }
-
-    /// Convert to Sentry level string
-    var sentryLevel: String {
-        switch self {
-        case .debug: return "debug"
-        case .info: return "info"
-        case .warning: return "warning"
-        case .error: return "error"
-        case .critical: return "fatal"
-        }
     }
 
     var description: String {
@@ -91,7 +70,7 @@ public struct LogEntry {
 
 // MARK: - Logger Protocol
 
-/// Protocol for logging backends (OSLog, Sentry, Mock)
+/// Protocol for logging backends (OSLog, Mock)
 public protocol LoggerBackend: Sendable {
     func log(level: LogLevel, message: String, context: [String: Any]?, error: Error?, file: String, function: String, line: Int)
     func logError(_ error: Error, message: String?, context: [String: Any]?, file: String, function: String, line: Int)

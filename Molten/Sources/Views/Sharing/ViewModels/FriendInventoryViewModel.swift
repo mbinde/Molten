@@ -46,7 +46,9 @@ class FriendInventoryViewModel {
     let friend: FriendShare
 
     // State
-    var isLoading = false
+    var isLoading = true  // Start true to show spinner immediately
+    var hasAttemptedLoad = false  // Track if we've completed at least one load attempt
+    var loadTimedOut = false  // Track if loading timed out
     var errorMessage: String?
     var rawInventory: [InventoryItemSnapshot] = []
     private var myInventory: [CompleteInventoryItemModel] = []
@@ -114,7 +116,7 @@ class FriendInventoryViewModel {
     }
 
     /// Convenience init using AppDependencies
-    convenience init(friend: FriendShare, deps: AppDependencies = AppDependencies()) {
+    convenience init(friend: FriendShare, deps: AppDependencies = .shared) {
         let sharedInventoryRepository = CoreDataSharedInventoryRepository(
             context: PersistenceController.shared.container.viewContext,
             catalogRepository: deps.glassItemRepository as! SQLiteGlassItemRepository
@@ -131,31 +133,50 @@ class FriendInventoryViewModel {
 
     /// Load inventory from cache first, then optionally refresh from server
     func loadInventory(forceRefresh: Bool = false) async {
+        // Reset state for new load attempt
+        loadTimedOut = false
+        hasAttemptedLoad = false
+
         // Load my inventory for comparison
         await loadMyInventory()
 
-        // Try to load from Core Data cache first
+        // Try to load from Core Data cache first (unless forcing refresh)
+        var hasCachedData = false
         if !forceRefresh {
             do {
                 let cached = try await sharedInventoryRepository.getSnapshot(shareCode: friend.shareCode)
                 if !cached.isEmpty {
                     rawInventory = cached
                     await enrichInventoryData()
-                } else {
-                    // Show loading state if no cache available
-                    isLoading = true
+                    hasCachedData = true
+                    // We have cached data - show it immediately (no spinner)
+                    isLoading = false
                 }
             } catch {
-                // If cache load fails, show loading state
-                isLoading = true
+                // If cache load fails, continue to server refresh
             }
-        } else {
-            // Show loading state when forcing refresh
+        }
+
+        // If no cached data, show loading spinner
+        if !hasCachedData {
             isLoading = true
         }
 
-        // Always refresh from server to get latest data
+        // Start a timeout task - if loading takes > 10 seconds without data, show timeout state
+        let timeoutTask = Task {
+            try await Task.sleep(nanoseconds: 10_000_000_000)  // 10 seconds
+            // Only timeout if we're still loading and haven't completed a load yet
+            if isLoading && !hasAttemptedLoad {
+                loadTimedOut = true
+                isLoading = false
+            }
+        }
+
+        // Refresh from server to get latest data
         await refreshFromServer()
+
+        // Cancel timeout if we finished loading
+        timeoutTask.cancel()
     }
 
     /// Load user's own inventory for comparison
@@ -187,6 +208,9 @@ class FriendInventoryViewModel {
             // Enrich with catalog data
             await enrichInventoryData()
 
+            // Cache item count for display in friend list
+            await cacheItemCount()
+
         } catch SharingManagerError.shareDeletedByOwner {
             // Share was deleted by owner - clear cached data and show message
             print("🔐 [VIEW] Share was deleted by owner, clearing UI")
@@ -200,7 +224,60 @@ class FriendInventoryViewModel {
             }
         }
 
+        hasAttemptedLoad = true
         isLoading = false
+    }
+
+    /// Cache inventory stats for display in the friend list
+    private func cacheItemCount() async {
+        let itemCount = enrichedInventory.count
+
+        // Define weight-based units
+        let weightUnits: Set<String> = ["oz", "lbs", "grams", "g", "ounces", "pounds"]
+
+        // Sum quantities only for countable units (rods, sheets, jars, etc.)
+        let totalQuantity = enrichedInventory
+            .filter { !weightUnits.contains($0.snapshot.unit.lowercased()) }
+            .reduce(0.0) { $0 + $1.snapshot.quantity }
+
+        // Sum weight-based items, converting to user's preferred unit
+        let preferredUnit = WeightUnitPreference.current
+        var totalWeight = 0.0
+
+        for item in enrichedInventory {
+            let unitLower = item.snapshot.unit.lowercased()
+            guard weightUnits.contains(unitLower) else { continue }
+
+            // Determine source unit and convert to preferred
+            let sourceUnit: WeightUnit
+            switch unitLower {
+            case "oz", "ounces":
+                sourceUnit = .ounces
+            case "lbs", "pounds":
+                // Convert pounds to ounces first (1 lb = 16 oz)
+                let inOunces = item.snapshot.quantity * 16.0
+                totalWeight += WeightUnit.ounces.convert(inOunces, to: preferredUnit)
+                continue
+            case "g", "grams":
+                sourceUnit = .grams
+            default:
+                continue
+            }
+
+            totalWeight += sourceUnit.convert(item.snapshot.quantity, to: preferredUnit)
+        }
+
+        do {
+            try sharingManager.updateFriendInventoryStats(
+                shareCode: friend.shareCode,
+                itemCount: itemCount,
+                totalQuantity: totalQuantity,
+                totalWeight: totalWeight
+            )
+        } catch {
+            // Non-critical error - just log it
+            print("⚠️ Failed to cache inventory stats: \(error)")
+        }
     }
 
     /// Enriches snapshot data with catalog information (name, image, tags, COE)

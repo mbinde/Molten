@@ -18,10 +18,10 @@ struct DataManagementView: View {
     private let inventoryRepository: InventoryRepository
 
     init(
-        catalogService: CatalogService = AppDependencies().catalogService
+        catalogService: CatalogService = AppDependencies.shared.catalogService
     ) {
         self.catalogService = catalogService
-        self.inventoryRepository = AppDependencies().inventoryRepository
+        self.inventoryRepository = AppDependencies.shared.inventoryRepository
     }
 
     var body: some View {

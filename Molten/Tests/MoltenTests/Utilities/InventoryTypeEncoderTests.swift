@@ -66,9 +66,12 @@ struct InventoryTypeEncoderTests {
 
     @Test("Encode sheet subtypes correctly")
     func encodeSheetSubtypes() async throws {
-        #expect(InventoryTypeEncoder.encode(type: "sheet", subtype: "thin") == "st")
-        #expect(InventoryTypeEncoder.encode(type: "sheet", subtype: "standard") == "ss")
-        #expect(InventoryTypeEncoder.encode(type: "sheet", subtype: "thick") == "sk")
+        #expect(InventoryTypeEncoder.encode(type: "sheet", subtype: "full") == "sf")
+        #expect(InventoryTypeEncoder.encode(type: "sheet", subtype: "half") == "sh")
+        #expect(InventoryTypeEncoder.encode(type: "sheet", subtype: "12x12") == "sw")
+        #expect(InventoryTypeEncoder.encode(type: "sheet", subtype: "10x10") == "st")
+        #expect(InventoryTypeEncoder.encode(type: "sheet", subtype: "4x4") == "s4")
+        #expect(InventoryTypeEncoder.encode(type: "sheet", subtype: "other") == "so")
     }
 
     @Test("Encode rod subtypes correctly")
@@ -133,9 +136,13 @@ struct InventoryTypeEncoderTests {
         #expect(fritCoarse?.subtype == "coarse")
         #expect(fritCoarse?.subsubtype == nil)
 
-        let sheetThin = InventoryTypeEncoder.decode("st")
-        #expect(sheetThin?.type == "sheet")
-        #expect(sheetThin?.subtype == "thin")
+        let sheetFull = InventoryTypeEncoder.decode("sf")
+        #expect(sheetFull?.type == "sheet")
+        #expect(sheetFull?.subtype == "full")
+
+        let sheet10x10 = InventoryTypeEncoder.decode("st")
+        #expect(sheet10x10?.type == "sheet")
+        #expect(sheet10x10?.subtype == "10x10")
     }
 
     @Test("Decode unknown code returns nil")
@@ -177,8 +184,12 @@ struct InventoryTypeEncoderTests {
             ("frit", "medium"),
             ("frit", "fine"),
             ("powder", "fine"),
-            ("sheet", "thin"),
-            ("sheet", "standard"),
+            ("sheet", "full"),
+            ("sheet", "half"),
+            ("sheet", "12x12"),
+            ("sheet", "10x10"),
+            ("sheet", "4x4"),
+            ("sheet", "other"),
             ("rod", "solid"),
             ("rod", "hollow"),
             ("stringer", "medium"),
@@ -271,7 +282,8 @@ struct InventoryTypeEncoderTests {
     @Test("Display name with subtype")
     func displayNameWithSubtype() async throws {
         #expect(InventoryTypeEncoder.displayName(type: "frit", subtype: "coarse") == "Coarse Frit")
-        #expect(InventoryTypeEncoder.displayName(type: "sheet", subtype: "thin") == "Thin Sheet")
+        #expect(InventoryTypeEncoder.displayName(type: "sheet", subtype: "full") == "Full Sheet")
+        #expect(InventoryTypeEncoder.displayName(type: "sheet", subtype: "10x10") == "10x10 Sheet")
         #expect(InventoryTypeEncoder.displayName(type: "rod", subtype: "hollow") == "Hollow Rod")
     }
 

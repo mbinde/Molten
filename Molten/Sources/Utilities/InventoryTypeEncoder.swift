@@ -53,9 +53,12 @@ enum InventoryTypeEncoder {
             "fine": "f",
         ],
         "sheet": [
-            "thin": "t",
-            "standard": "s",
-            "thick": "k",
+            "full": "f",
+            "half": "h",
+            "12x12": "w",   // 'w' for twelve
+            "10x10": "t",   // 't' for ten
+            "4x4": "4",
+            "other": "o",
         ],
         "rod": [
             "solid": "s",

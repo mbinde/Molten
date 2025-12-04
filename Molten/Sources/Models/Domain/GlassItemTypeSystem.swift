@@ -94,7 +94,7 @@ nonisolated struct GlassItemTypeSystem {
     static let sheet = GlassItemType(
         name: "sheet",
         displayName: "Sheets",
-        subtypes: ["full", "half", "10x10", "other"],
+        subtypes: ["full", "half", "12x12", "10x10", "4x4", "other"],
         subsubtypes: [:],
         dimensionFields: [
             DimensionField(name: "thickness", displayName: "Thickness", unit: "mm", isRequired: false),

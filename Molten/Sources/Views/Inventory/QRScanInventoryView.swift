@@ -35,6 +35,10 @@ struct QRScanInventoryView: View {
     @State private var isLoading = true
     @State private var actionInProgress = false
 
+    // Sheet breakdown state
+    @State private var showingSheetBreakdown = false
+    @State private var breakdownPieces: [SheetBreakdownPiece] = []
+
     private let newLocationSentinel = "__NEW_LOCATION__"
 
     init(
@@ -152,9 +156,13 @@ struct QRScanInventoryView: View {
     private var quantityControls: some View {
         VStack(spacing: DesignSystem.Spacing.md) {
             HStack(spacing: DesignSystem.Spacing.xl) {
-                // Minus button
+                // Minus button - for sheets, this triggers breakdown UI
                 Button {
-                    Task { await decrementInventory() }
+                    if SheetBreakdownHelper.supportsBreakdown(type: inventoryType, subtype: inventorySubtype) {
+                        initiateSheetBreakdown()
+                    } else {
+                        Task { await decrementInventory() }
+                    }
                 } label: {
                     Image(systemName: "minus")
                         .font(.title2.bold())
@@ -162,7 +170,7 @@ struct QRScanInventoryView: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(DesignSystem.Colors.accentDanger)
-                .disabled(actionInProgress || currentQuantity == 0)
+                .disabled(actionInProgress || currentQuantity == 0 || showingSheetBreakdown)
 
                 // Quantity display
                 Text("\(currentQuantity)")
@@ -180,17 +188,139 @@ struct QRScanInventoryView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(DesignSystem.Colors.accentSuccess)
-                .disabled(actionInProgress)
+                .disabled(actionInProgress || showingSheetBreakdown)
             }
 
             // Net change indicator
-            if netChange != 0 {
+            if netChange != 0 && !showingSheetBreakdown {
                 Text(netChange > 0 ? "+\(netChange)" : "\(netChange)")
                     .font(DesignSystem.Typography.listItemTitle)
                     .foregroundColor(netChange > 0 ? DesignSystem.Colors.accentSuccess : DesignSystem.Colors.accentDanger)
             }
+
+            // Sheet breakdown UI
+            if showingSheetBreakdown {
+                sheetBreakdownView
+            }
         }
         .padding(.vertical, DesignSystem.Spacing.xl)
+    }
+
+    // MARK: - Sheet Breakdown UI
+
+    private var sheetBreakdownView: some View {
+        VStack(spacing: DesignSystem.Spacing.md) {
+            // Header
+            HStack {
+                Text("Break down into:")
+                    .font(DesignSystem.Typography.listItemTitle)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                Spacer()
+                Button("Cancel") {
+                    showingSheetBreakdown = false
+                    breakdownPieces = []
+                }
+                .font(DesignSystem.Typography.listItemCaption)
+            }
+            .padding(.horizontal)
+
+            // Breakdown options
+            ForEach($breakdownPieces) { $piece in
+                SheetBreakdownRow(
+                    piece: $piece,
+                    availableLocations: availableLocations
+                )
+            }
+
+            // Confirm button
+            Button {
+                Task { await confirmSheetBreakdown() }
+            } label: {
+                Text("Confirm Breakdown")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DesignSystem.Spacing.sm)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(DesignSystem.Colors.accentPrimary)
+            .disabled(actionInProgress)
+            .padding(.horizontal)
+        }
+        .padding()
+        .background(DesignSystem.Colors.tintPrimary.opacity(0.3))
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+        .padding(.horizontal)
+    }
+
+    /// Initialize breakdown UI with available smaller sizes
+    private func initiateSheetBreakdown() {
+        let smallerSizes = SheetBreakdownHelper.smallerSubtypes(than: inventorySubtype)
+        breakdownPieces = smallerSizes.map { subtype in
+            SheetBreakdownPiece(
+                subtype: subtype,
+                displayName: SheetBreakdownHelper.displayNames[subtype] ?? subtype.capitalized,
+                quantity: 0,
+                location: selectedLocation  // Default to source location
+            )
+        }
+        showingSheetBreakdown = true
+    }
+
+    /// Execute the sheet breakdown: decrement source and add pieces
+    @MainActor
+    private func confirmSheetBreakdown() async {
+        actionInProgress = true
+        defer { actionInProgress = false }
+
+        // First decrement the source sheet
+        do {
+            let result = try await inventoryService.decrementInventoryLIFO(
+                forItem: item.glassItem.stable_id,
+                type: inventoryType ?? "sheet",
+                subtype: inventorySubtype,
+                subsubtype: inventorySubsubtype,
+                atLocation: selectedLocation
+            )
+
+            // Update local records cache
+            if let updatedRecord = result {
+                if let index = inventoryRecords.firstIndex(where: { $0.id == updatedRecord.id }) {
+                    inventoryRecords[index] = updatedRecord
+                }
+            } else {
+                inventoryRecords = try await inventoryService.fetchInventory(forItem: item.glassItem.stable_id)
+            }
+
+            currentQuantity = max(0, currentQuantity - 1)
+            netChange -= 1
+
+            // Now add the breakdown pieces
+            for piece in breakdownPieces where piece.quantity > 0 {
+                for _ in 0..<piece.quantity {
+                    let newRecord = try await inventoryService.incrementInventory(
+                        forItem: item.glassItem.stable_id,
+                        type: "sheet",
+                        subtype: piece.subtype,
+                        subsubtype: nil,
+                        atLocation: piece.location
+                    )
+
+                    // Update local records
+                    if let index = inventoryRecords.firstIndex(where: { $0.id == newRecord.id }) {
+                        inventoryRecords[index] = newRecord
+                    } else {
+                        inventoryRecords.append(newRecord)
+                    }
+                }
+            }
+
+            // Reset breakdown UI
+            showingSheetBreakdown = false
+            breakdownPieces = []
+
+        } catch {
+            print("❌ QRScanInventoryView: Failed to breakdown sheet: \(error)")
+        }
     }
 
     // MARK: - Location Picker
@@ -477,6 +607,110 @@ struct QRScanInventoryView: View {
         } catch {
             print("❌ QRScanInventoryView: Failed to decrement: \(error)")
         }
+    }
+}
+
+// MARK: - Sheet Breakdown Support
+
+/// Represents a piece in the sheet breakdown UI
+struct SheetBreakdownPiece: Identifiable {
+    let id = UUID()
+    let subtype: String
+    let displayName: String
+    var quantity: Int = 0
+    var location: String?
+}
+
+/// Helper to get smaller sheet subtypes for breakdown
+enum SheetBreakdownHelper {
+    /// All sheet subtypes in size order (largest to smallest)
+    static let sizeOrder = ["full", "half", "12x12", "10x10", "4x4", "other"]
+
+    /// Display names for sheet subtypes
+    static let displayNames: [String: String] = [
+        "full": "Full Sheet",
+        "half": "Half Sheet",
+        "12x12": "12×12",
+        "10x10": "10×10",
+        "4x4": "4×4",
+        "other": "Other"
+    ]
+
+    /// Get subtypes smaller than the given subtype
+    static func smallerSubtypes(than subtype: String?) -> [String] {
+        let normalizedSubtype = subtype?.lowercased() ?? "full"
+        guard let index = sizeOrder.firstIndex(of: normalizedSubtype) else {
+            // Unknown subtype, offer all options
+            return sizeOrder
+        }
+        // Return everything after the current size
+        return Array(sizeOrder.dropFirst(index + 1))
+    }
+
+    /// Check if this is a sheet type that supports breakdown
+    static func supportsBreakdown(type: String?, subtype: String?) -> Bool {
+        guard type?.lowercased() == "sheet" else { return false }
+        let normalizedSubtype = subtype?.lowercased() ?? "full"
+        // "other" can't be broken down further
+        return normalizedSubtype != "other"
+    }
+}
+
+/// Row component for a single breakdown piece option
+struct SheetBreakdownRow: View {
+    @Binding var piece: SheetBreakdownPiece
+    let availableLocations: [String]
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.md) {
+            // Size label
+            Text(piece.displayName)
+                .font(DesignSystem.Typography.listItemTitle)
+                .frame(width: 80, alignment: .leading)
+
+            // Quantity stepper
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                Button {
+                    if piece.quantity > 0 {
+                        piece.quantity -= 1
+                    }
+                } label: {
+                    Image(systemName: "minus.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(piece.quantity > 0 ? DesignSystem.Colors.accentDanger : .gray)
+                }
+                .disabled(piece.quantity == 0)
+
+                Text("\(piece.quantity)")
+                    .font(.system(.title3, design: .rounded).bold())
+                    .frame(minWidth: 30)
+
+                Button {
+                    piece.quantity += 1
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(DesignSystem.Colors.accentSuccess)
+                }
+            }
+
+            Spacer()
+
+            // Location picker (compact)
+            if !availableLocations.isEmpty {
+                Picker("", selection: $piece.location) {
+                    Text("—").tag(nil as String?)
+                    ForEach(availableLocations, id: \.self) { location in
+                        Text(location).tag(location as String?)
+                    }
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .frame(maxWidth: 100)
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, DesignSystem.Spacing.xs)
     }
 }
 

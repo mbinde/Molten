@@ -908,33 +908,10 @@ struct ShoppingListView: View {
             }
             // NOTE: Removed .onAppear - it was causing duplicate concurrent calls with .task
             // .task already handles initial load when view appears
-            .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
-                Task {
-                    await loadShoppingList()
-                }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .inventoryChanged)) { _ in
-                Task {
-                    // Refresh after QR scan inventory changes
-                    await loadShoppingList()
-                }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .shoppingListItemAdded)) { _ in
-                Task {
-                    await loadShoppingList()
-                }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .filterShoppingListByStore)) { notification in
-                if let storeName = notification.userInfo?["storeName"] as? String {
-                    viewModel.selectedStore = storeName
-                }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .subscriptionStatusChanged)) { _ in
-                // Refresh view when subscription changes (removes limit warnings)
-                Task {
-                    await loadShoppingList()
-                }
-            }
+            .onShoppingListNotifications(
+                loadShoppingList: loadShoppingList,
+                setSelectedStore: { viewModel.selectedStore = $0 }
+            )
             .alert("Keep Basket Items?", isPresented: $showingExitShoppingModeAlert) {
                 Button("Keep Items", role: .cancel) {
                     shoppingModeState.disableShoppingMode()
@@ -1322,6 +1299,63 @@ struct ShoppingListView: View {
         case "tool": return "Tools"
         default: return type.capitalized
         }
+    }
+}
+
+// MARK: - Notification Handlers Modifier
+// Extracted to reduce body complexity and help Swift compiler
+
+private struct ShoppingListNotificationHandlersModifier: ViewModifier {
+    let loadShoppingList: () async -> Void
+    let setSelectedStore: (String) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
+                Task {
+                    await loadShoppingList()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .inventoryChanged)) { _ in
+                Task {
+                    // Refresh after QR scan inventory changes
+                    await loadShoppingList()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .shoppingListItemAdded)) { _ in
+                Task {
+                    await loadShoppingList()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .filterShoppingListByStore)) { notification in
+                if let storeName = notification.userInfo?["storeName"] as? String {
+                    setSelectedStore(storeName)
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .subscriptionStatusChanged)) { _ in
+                // Refresh view when subscription changes (removes limit warnings)
+                Task {
+                    await loadShoppingList()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .cloudKitImportCompleted)) { _ in
+                // Refresh shopping list when CloudKit import completes (e.g., after fresh install)
+                Task {
+                    await loadShoppingList()
+                }
+            }
+    }
+}
+
+private extension View {
+    func onShoppingListNotifications(
+        loadShoppingList: @escaping () async -> Void,
+        setSelectedStore: @escaping (String) -> Void
+    ) -> some View {
+        modifier(ShoppingListNotificationHandlersModifier(
+            loadShoppingList: loadShoppingList,
+            setSelectedStore: setSelectedStore
+        ))
     }
 }
 

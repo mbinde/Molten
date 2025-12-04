@@ -156,6 +156,11 @@ class CloudKitSyncMonitor: ObservableObject {
         if currentStatus != .idle {
             currentStatus = .idle
         }
+
+        // Post notification so views can refresh after CloudKit import completes
+        if isImport {
+            NotificationCenter.default.post(name: .cloudKitImportCompleted, object: nil)
+        }
     }
 
     private func handleSyncError(_ error: Error, isImport: Bool) {

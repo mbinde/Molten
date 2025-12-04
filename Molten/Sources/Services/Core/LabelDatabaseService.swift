@@ -196,6 +196,9 @@ final class LabelDatabaseService: @unchecked Sendable {
         return _db
     }
 
+    // Path to currently active database
+    private nonisolated(unsafe) var _currentDatabasePath: String?
+
     // MARK: - Initialization
 
     init() {
@@ -213,21 +216,46 @@ final class LabelDatabaseService: @unchecked Sendable {
     // MARK: - Database Connection
 
     private func openDatabase() {
-        guard let dbPath = Bundle.main.path(forResource: "labels", ofType: "db") else {
-            print("❌ LabelDatabaseService: Could not find labels.db in bundle")
+        // Try downloaded database first, then fall back to bundled
+        let downloadedPath = getDownloadedDatabasePath()
+        let bundledPath = Bundle.main.path(forResource: "labels", ofType: "db")
+
+        let dbPath: String
+        if let downloaded = downloadedPath, FileManager.default.fileExists(atPath: downloaded) {
+            dbPath = downloaded
+            print("✅ LabelDatabaseService: Using downloaded labels.db at \(dbPath)")
+        } else if let bundled = bundledPath {
+            dbPath = bundled
+            print("✅ LabelDatabaseService: Using bundled labels.db at \(dbPath)")
+        } else {
+            print("❌ LabelDatabaseService: Could not find labels.db")
             return
         }
 
-        print("✅ LabelDatabaseService: Found labels.db at \(dbPath)")
+        openDatabaseAt(path: dbPath)
+    }
 
+    private func openDatabaseAt(path: String) {
         lock.lock()
         defer { lock.unlock() }
 
-        if sqlite3_open_v2(dbPath, &_db, SQLITE_OPEN_READONLY, nil) != SQLITE_OK {
-            print("❌ LabelDatabaseService: Failed to open database")
+        // Close existing connection if any
+        if let existingDb = _db {
+            sqlite3_close(existingDb)
+            _db = nil
+        }
+
+        // Clear caches
+        _brands = nil
+        _layouts = [:]
+
+        if sqlite3_open_v2(path, &_db, SQLITE_OPEN_READONLY, nil) != SQLITE_OK {
+            print("❌ LabelDatabaseService: Failed to open database at \(path)")
             _db = nil
             return
         }
+
+        _currentDatabasePath = path
 
         // Verify database has expected tables
         var stmt: OpaquePointer?
@@ -241,6 +269,124 @@ final class LabelDatabaseService: @unchecked Sendable {
             print("❌ LabelDatabaseService: Query failed - \(error)")
         }
         sqlite3_finalize(stmt)
+    }
+
+    /// Get path to downloaded database in Application Support
+    private func getDownloadedDatabasePath() -> String? {
+        guard let appSupport = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first else {
+            return nil
+        }
+        return appSupport
+            .appendingPathComponent("LabelData", isDirectory: true)
+            .appendingPathComponent("labels.db")
+            .path
+    }
+
+    // MARK: - Hot-Swap Support
+
+    /// Replace database with new file (called by LabelUpdateService)
+    /// - Parameter newDatabasePath: Path to the new database file
+    func replaceDatabaseWith(newDatabasePath: String) throws {
+        print("🔄 LabelDatabaseService: Replacing database with \(newDatabasePath)")
+
+        // Verify the new database exists and is valid
+        guard FileManager.default.fileExists(atPath: newDatabasePath) else {
+            throw LabelUpdateError.databaseSwapFailed(
+                underlying: NSError(domain: "LabelDatabase", code: -1,
+                                  userInfo: [NSLocalizedDescriptionKey: "New database file not found"])
+            )
+        }
+
+        // Test opening the new database
+        var testDb: OpaquePointer?
+        if sqlite3_open_v2(newDatabasePath, &testDb, SQLITE_OPEN_READONLY, nil) != SQLITE_OK {
+            throw LabelUpdateError.databaseSwapFailed(
+                underlying: NSError(domain: "LabelDatabase", code: -2,
+                                  userInfo: [NSLocalizedDescriptionKey: "Failed to open new database"])
+            )
+        }
+
+        // Verify it has the expected schema
+        var stmt: OpaquePointer?
+        let hasProducts = sqlite3_prepare_v2(testDb, "SELECT COUNT(*) FROM products", -1, &stmt, nil) == SQLITE_OK
+        sqlite3_finalize(stmt)
+        sqlite3_close(testDb)
+
+        guard hasProducts else {
+            throw LabelUpdateError.databaseSwapFailed(
+                underlying: NSError(domain: "LabelDatabase", code: -3,
+                                  userInfo: [NSLocalizedDescriptionKey: "New database has invalid schema"])
+            )
+        }
+
+        // Swap to the new database
+        openDatabaseAt(path: newDatabasePath)
+        print("✅ LabelDatabaseService: Database replaced successfully")
+    }
+
+    // MARK: - Version Query
+
+    /// Get the schema version from the database metadata table
+    /// Returns nil if no version is set (pre-versioning database)
+    func getSchemaVersion() -> Int? {
+        guard let db = db else { return nil }
+
+        var stmt: OpaquePointer?
+        let sql = "SELECT value FROM metadata WHERE key = 'schema_version'"
+
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
+            // Table might not exist in older databases
+            return nil
+        }
+
+        defer { sqlite3_finalize(stmt) }
+
+        guard sqlite3_step(stmt) == SQLITE_ROW else {
+            return nil
+        }
+
+        guard let valuePtr = sqlite3_column_text(stmt, 0) else {
+            return nil
+        }
+
+        return Int(String(cString: valuePtr))
+    }
+
+    /// Get database statistics (for update result)
+    func getDatabaseStats() -> (layouts: Int, products: Int, brands: Int) {
+        guard let db = db else { return (0, 0, 0) }
+
+        var layouts = 0
+        var products = 0
+        var brands = 0
+
+        var stmt: OpaquePointer?
+
+        if sqlite3_prepare_v2(db, "SELECT COUNT(*) FROM layouts", -1, &stmt, nil) == SQLITE_OK {
+            if sqlite3_step(stmt) == SQLITE_ROW {
+                layouts = Int(sqlite3_column_int(stmt, 0))
+            }
+        }
+        sqlite3_finalize(stmt)
+
+        if sqlite3_prepare_v2(db, "SELECT COUNT(*) FROM products", -1, &stmt, nil) == SQLITE_OK {
+            if sqlite3_step(stmt) == SQLITE_ROW {
+                products = Int(sqlite3_column_int(stmt, 0))
+            }
+        }
+        sqlite3_finalize(stmt)
+
+        if sqlite3_prepare_v2(db, "SELECT COUNT(*) FROM brands", -1, &stmt, nil) == SQLITE_OK {
+            if sqlite3_step(stmt) == SQLITE_ROW {
+                brands = Int(sqlite3_column_int(stmt, 0))
+            }
+        }
+        sqlite3_finalize(stmt)
+
+        return (layouts, products, brands)
     }
 
     // MARK: - Query Methods

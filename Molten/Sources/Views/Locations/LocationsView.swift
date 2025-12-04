@@ -60,7 +60,7 @@ struct LocationsView: View {
                 }
 
                 // List view
-                if viewModel.isLoading {
+                if viewModel.isLoading || !viewModel.hasCompletedInitialLoad {
                     loadingView
                 } else if viewModel.isEmpty {
                     if shouldShowSearchEmptyState {

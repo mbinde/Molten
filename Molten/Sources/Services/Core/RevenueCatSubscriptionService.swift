@@ -10,7 +10,7 @@ import RevenueCat
 @MainActor
 public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, Sendable {
 
-    private let proEntitlementIdentifier = "pro"
+    private let proEntitlementIdentifier = "Pro"
 
     public init() {}
 
@@ -23,12 +23,25 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
 
         do {
             let customerInfo = try await Purchases.shared.customerInfo()
+
+            // Debug logging for entitlements
+            print("🔐 [Subscription] Checking pro access...")
+            print("🔐 [Subscription] All entitlements: \(customerInfo.entitlements.all.keys)")
+            for (key, entitlement) in customerInfo.entitlements.all {
+                print("🔐 [Subscription] Entitlement '\(key)': isActive=\(entitlement.isActive), productId=\(entitlement.productIdentifier), expires=\(String(describing: entitlement.expirationDate))")
+            }
+            print("🔐 [Subscription] Active subscriptions: \(customerInfo.activeSubscriptions)")
+            print("🔐 [Subscription] Non-subscription transactions: \(customerInfo.nonSubscriptions.map { $0.productIdentifier })")
+
             if let proEntitlement = customerInfo.entitlements[proEntitlementIdentifier] {
+                print("🔐 [Subscription] Pro entitlement found: isActive=\(proEntitlement.isActive)")
                 return proEntitlement.isActive
             } else {
+                print("🔐 [Subscription] No 'pro' entitlement found!")
                 return false
             }
         } catch {
+            print("🔐 [Subscription] Error checking pro access: \(error)")
             // Error checking Pro access - fail closed
             return false
         }

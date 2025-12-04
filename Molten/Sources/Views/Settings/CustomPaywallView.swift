@@ -275,7 +275,7 @@ struct CustomPaywallView: View {
 
         do {
             let result = try await Purchases.shared.purchase(package: package)
-            let proActive = result.customerInfo.entitlements["pro"]?.isActive ?? false
+            let proActive = result.customerInfo.entitlements["Pro"]?.isActive ?? false
             #if DEBUG
             print("✅ [Paywall] Purchase completed, pro active: \(proActive), userCancelled: \(result.userCancelled)")
             #endif
@@ -304,7 +304,7 @@ struct CustomPaywallView: View {
         do {
             let customerInfo = try await Purchases.shared.restorePurchases()
 
-            if customerInfo.entitlements["pro"]?.isActive == true {
+            if customerInfo.entitlements["Pro"]?.isActive == true {
                 purchaseSuccess = true
                 NotificationCenter.default.post(name: .subscriptionStatusChanged, object: nil)
 

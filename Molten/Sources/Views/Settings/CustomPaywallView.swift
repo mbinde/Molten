@@ -132,15 +132,27 @@ struct CustomPaywallView: View {
                 .disabled(selectedPackage == nil || isPurchasing)
                 .padding(.horizontal)
 
-                // Restore purchases
-                Button {
-                    Task {
-                        await restorePurchases()
+                // Restore purchases and redeem code
+                HStack(spacing: 20) {
+                    Button {
+                        Task {
+                            await restorePurchases()
+                        }
+                    } label: {
+                        Text("Restore Purchases")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                     }
-                } label: {
-                    Text("Restore Purchases")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+
+                    Button {
+                        Task {
+                            await redeemCode()
+                        }
+                    } label: {
+                        Text("Redeem Code")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 // Legal text
@@ -319,6 +331,50 @@ struct CustomPaywallView: View {
         }
 
         isPurchasing = false
+    }
+
+    private func redeemCode() async {
+        #if os(iOS)
+        // Check if user already has Pro BEFORE showing redemption sheet
+        let hadProBefore: Bool
+        do {
+            let beforeInfo = try await Purchases.shared.customerInfo()
+            hadProBefore = beforeInfo.entitlements["Pro"]?.isActive == true
+        } catch {
+            hadProBefore = false
+        }
+
+        // Present the App Store's promo code redemption sheet
+        // Note: Apple provides no callback to know if user cancelled or redeemed
+        await Purchases.shared.presentCodeRedemptionSheet()
+
+        // Small delay to allow App Store to process
+        try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
+
+        // Skip auto-detection if debug override is active (testing scenario)
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "debugOverrideSubscriptionTier") {
+            return
+        }
+        #endif
+
+        // Check if Pro was newly gained
+        do {
+            let customerInfo = try await Purchases.shared.customerInfo()
+            let hasProNow = customerInfo.entitlements["Pro"]?.isActive == true
+
+            if hasProNow && !hadProBefore {
+                // Newly gained Pro access - show celebration
+                purchaseSuccess = true
+                NotificationCenter.default.post(name: .subscriptionStatusChanged, object: nil)
+            }
+            // If user cancelled or redemption didn't sync yet, do nothing.
+            // They can use "Restore Purchases" if needed, or the foreground
+            // refresh will catch it when they return to the app.
+        } catch {
+            // Error checking - silently fail, user can restore manually
+        }
+        #endif
     }
 }
 

@@ -166,6 +166,12 @@ struct MoltenApp: App {
                 if newPhase == .background {
                     // Opportunistic backup when app goes to background
                     performBackgroundBackup()
+                } else if newPhase == .active && oldPhase != .active {
+                    // Refresh subscription status when app comes to foreground
+                    // This catches promo codes redeemed externally in the App Store
+                    Task {
+                        await subscriptionManager.checkSubscriptionStatus()
+                    }
                 }
             }
         }
@@ -1007,7 +1013,7 @@ final class RevenueCatDelegateHandler: NSObject, PurchasesDelegate {
     }
 
     /// Called whenever customer info is updated (purchases, promo codes, subscription changes)
-    func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
+    func purchases(_ purchases: Purchases, receivedUpdated customerInfo: RevenueCat.CustomerInfo) {
         #if DEBUG
         print("🔐 [RevenueCat] Customer info updated!")
         print("🔐 [RevenueCat] Entitlements: \(customerInfo.entitlements.all.keys)")

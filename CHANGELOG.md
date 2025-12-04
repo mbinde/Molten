@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [1.0.2] - 2025-12-04
+
+### Added
+- Redeem promo codes directly in the app from the subscription screen
+
+### Fixed
+- Minor bug fixes
+
+---
+
+## [1.0.1] - 2025-12-04
+
 ### Added
 - Allow labels definition updates to be downloaded from server
 - Temperature unit setting (Fahrenheit or Celsius) for coating temperature display

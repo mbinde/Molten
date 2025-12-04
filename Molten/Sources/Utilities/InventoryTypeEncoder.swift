@@ -217,15 +217,24 @@ enum InventoryTypeEncoder {
         var parts: [String] = []
 
         if let subsubtype = subsubtype {
-            parts.append(subsubtype.capitalized)
+            parts.append(formatDisplayPart(subsubtype))
         }
 
         if let subtype = subtype {
-            parts.append(subtype.capitalized)
+            parts.append(formatDisplayPart(subtype))
         }
 
         parts.append(type.capitalized)
 
         return parts.joined(separator: " ")
+    }
+
+    /// Format a display part, preserving numeric formats like "10x10"
+    private static func formatDisplayPart(_ value: String) -> String {
+        // Preserve lowercase for dimension-style subtypes (e.g., "10x10", "4x4", "12x12")
+        if value.contains("x") && value.first?.isNumber == true {
+            return value
+        }
+        return value.capitalized
     }
 }

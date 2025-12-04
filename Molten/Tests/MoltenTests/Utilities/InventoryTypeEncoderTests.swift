@@ -284,6 +284,8 @@ struct InventoryTypeEncoderTests {
         #expect(InventoryTypeEncoder.displayName(type: "frit", subtype: "coarse") == "Coarse Frit")
         #expect(InventoryTypeEncoder.displayName(type: "sheet", subtype: "full") == "Full Sheet")
         #expect(InventoryTypeEncoder.displayName(type: "sheet", subtype: "10x10") == "10x10 Sheet")
+        #expect(InventoryTypeEncoder.displayName(type: "sheet", subtype: "4x4") == "4x4 Sheet")
+        #expect(InventoryTypeEncoder.displayName(type: "sheet", subtype: "12x12") == "12x12 Sheet")
         #expect(InventoryTypeEncoder.displayName(type: "rod", subtype: "hollow") == "Hollow Rod")
     }
 

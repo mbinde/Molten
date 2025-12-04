@@ -239,7 +239,7 @@ class CatalogViewModel: CatalogViewModelProtocol {
     var items: [CompleteInventoryItemModel] = []
     var filteredItems: [CompleteInventoryItemModel] = []
     var sortedFilteredItems: [CompleteInventoryItemModel] = []
-    var isLoading = false
+    var isLoading = true  // Start true to show loading state until first load completes
     var errorMessage: String?
 
     // MARK: - Search & Filter State

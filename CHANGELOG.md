@@ -8,26 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Centralized image loading with automatic gradient fallback for items without product photos
-- Color chip display mode settings (Always/No Photo/Never)
 - Allow labels definition updates to be downloaded from server
 - Temperature unit setting (Fahrenheit or Celsius) for coating temperature display
 
 ### Changed
-- Image loading now always returns a usable image (product photo, gradient, or manufacturer logo)
-- Simplified ProductImageView and HeroHeader components
-- Reduced binary upload size
+- Reduced binary download size
 
 ### Fixed
-- Thumbnail fallback when full-size image is unavailable
-- Premium "unlimited" banner no longer wastes space on shopping list
 - Inventory and shopping list now refresh immediately when iCloud syncs after reinstalling the app
+- Improved first-run catalog loading experience
 
 ---
 
 ## [1.0.0] - TBD
 
 Initial App Store release.
+
+### Added
+- Centralized image loading with automatic gradient fallback for items without product photos
+- Color chip display mode settings (Always/No Photo/Never)
+
+### Changed
+- Image loading now always returns a usable image (product photo, gradient, or manufacturer logo)
+- Simplified ProductImageView and HeroHeader components
+
+### Fixed
+- Thumbnail fallback when full-size image is unavailable
+- Premium "unlimited" banner no longer wastes space on shopping list
 
 ### Added
 - Glass catalog with 2,500+ items from major manufacturers

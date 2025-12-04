@@ -275,18 +275,18 @@ struct CustomPaywallView: View {
 
         do {
             let result = try await Purchases.shared.purchase(package: package)
+            let proActive = result.customerInfo.entitlements["pro"]?.isActive ?? false
             #if DEBUG
-            print("✅ [Paywall] Purchase completed, pro active: \(result.customerInfo.entitlements["pro"]?.isActive ?? false)")
+            print("✅ [Paywall] Purchase completed, pro active: \(proActive), userCancelled: \(result.userCancelled)")
             #endif
 
-            // Purchase succeeded - show success and dismiss
+            // Only show success if user didn't cancel
             // (entitlement may take a moment to sync, but purchase is confirmed)
-            purchaseSuccess = true
-            NotificationCenter.default.post(name: .subscriptionStatusChanged, object: nil)
-
-            // Auto-dismiss after brief success display
-            try? await Task.sleep(nanoseconds: 1_500_000_000)  // 1.5 seconds
-            dismiss()
+            if !result.userCancelled {
+                purchaseSuccess = true
+                NotificationCenter.default.post(name: .subscriptionStatusChanged, object: nil)
+            }
+            // If user cancelled, do nothing - they stay on the paywall
         } catch {
             if let rcError = error as? RevenueCat.ErrorCode, rcError == .purchaseCancelledError {
                 // User cancelled - do nothing

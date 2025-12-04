@@ -119,129 +119,125 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
 
     var body: some View {
         VStack(spacing: DesignSystem.Spacing.none) {
-            // Top row: Optional store filter (left) and Sort button (right)
-            // Note: "Search titles only" toggle is in the search bar via .searchScopes() modifier
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: DesignSystem.Spacing.sm) {
-                    // Optional store filter
-                    if let storeConfig = storeFilter {
-                        StoreFilterMenu(
-                            selectedStore: storeConfig.selectedStore,
-                            availableStores: storeConfig.availableStores,
-                            itemCounts: storeConfig.itemCounts,
-                            onClear: storeConfig.onClear
-                        )
-                        .id("store-filter") // Force stable identity
-                    }
-
-                    // Optional location filter
-                    if let locationConfig = locationFilter {
-                        LocationFilterMenu(
-                            selectedLocation: locationConfig.selectedLocation,
-                            availableLocations: locationConfig.availableLocations,
-                            itemCounts: locationConfig.itemCounts,
-                            onClear: locationConfig.onClear
-                        )
-                        .id("location-filter") // Force stable identity
-                    }
-
-                    // Optional inventory type filter (Kind)
-                    if let typeConfig = inventoryTypeFilter {
-                        InventoryTypeFilterMenu(
-                            selectedType: typeConfig.selectedType,
-                            availableTypes: typeConfig.availableTypes,
-                            itemCounts: typeConfig.itemCounts,
-                            displayName: typeConfig.displayName,
-                            onClear: typeConfig.onClear
-                        )
-                        .id("kind-filter") // Force stable identity
-                    }
-
-                    Spacer(minLength: DesignSystem.Spacing.md)
-
-                    // Sort button
-                    Menu {
-                        ForEach(sortOptions, id: \.self) { option in
-                            Button {
-                                sortOption = option
-                                onSortChange?(option)
-                            } label: {
-                                Label(option.rawValue, systemImage: sortOptionIcon(option))
-                            }
-                        }
-                    } label: {
-                        HStack(spacing: DesignSystem.Spacing.xs) {
-                            Image(systemName: "arrow.up.arrow.down")
-                                .font(DesignSystem.Typography.caption)
-                            Text("Sort")
-                                .font(DesignSystem.Typography.caption)
-                                .fontWeight(DesignSystem.FontWeight.medium)
-                        }
-                        .foregroundColor(DesignSystem.Colors.textPrimary)
-                    }
+            // Top row: Optional store/location/kind filters (left) and Sort button (right)
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                // Optional store filter
+                if let storeConfig = storeFilter {
+                    StoreFilterMenu(
+                        selectedStore: storeConfig.selectedStore,
+                        availableStores: storeConfig.availableStores,
+                        itemCounts: storeConfig.itemCounts,
+                        onClear: storeConfig.onClear
+                    )
+                    .id("store-filter")
                 }
-                .padding(.horizontal, DesignSystem.Padding.standard)
+
+                // Optional location filter
+                if let locationConfig = locationFilter {
+                    LocationFilterMenu(
+                        selectedLocation: locationConfig.selectedLocation,
+                        availableLocations: locationConfig.availableLocations,
+                        itemCounts: locationConfig.itemCounts,
+                        onClear: locationConfig.onClear
+                    )
+                    .id("location-filter")
+                }
+
+                // Optional inventory type filter (Kind)
+                if let typeConfig = inventoryTypeFilter {
+                    InventoryTypeFilterMenu(
+                        selectedType: typeConfig.selectedType,
+                        availableTypes: typeConfig.availableTypes,
+                        itemCounts: typeConfig.itemCounts,
+                        displayName: typeConfig.displayName,
+                        onClear: typeConfig.onClear
+                    )
+                    .id("kind-filter")
+                }
+
+                Spacer()
+
+                // Sort button (always on right)
+                Menu {
+                    ForEach(sortOptions, id: \.self) { option in
+                        Button {
+                            sortOption = option
+                            onSortChange?(option)
+                        } label: {
+                            Label(option.rawValue, systemImage: sortOptionIcon(option))
+                        }
+                    }
+                } label: {
+                    HStack(spacing: DesignSystem.Spacing.xs) {
+                        Image(systemName: "arrow.up.arrow.down")
+                            .font(DesignSystem.Typography.caption)
+                        Text("Sort")
+                            .font(DesignSystem.Typography.caption)
+                            .fontWeight(DesignSystem.FontWeight.medium)
+                    }
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                }
             }
+            .padding(.horizontal, DesignSystem.Padding.standard)
             .padding(.top, DesignSystem.Spacing.md)
             .padding(.bottom, DesignSystem.Spacing.xs)
 
-            // Bottom row: Product type (left, optional) and filter chips (right)
-            // Use ScrollView to handle overflow on narrow screens or when filters are active
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: DesignSystem.Spacing.md) {
-                    // Left: Product type filter (optional)
-                    if let productTypeConfig = productTypeFilter {
-                        ProductTypeFilterMenu(
-                            selectedProductTypes: productTypeConfig.selectedProductTypes,
-                            availableTypes: productTypeConfig.availableTypes,
-                            displayName: productTypeConfig.displayName,
-                            typeCounts: productTypeConfig.typeCounts
-                        )
-                    }
-
-                    // Right: Filter chips (COE, Tags, Mfr from left to right)
-                    HStack(spacing: DesignSystem.Spacing.sm) {
-                        // COE filter - use inline menu if coeFilter config provided, otherwise use sheet
-                        if let coeConfig = coeFilter {
-                            COEFilterMenu(
-                                selectedCOEs: coeConfig.selectedCOEs,
-                                availableCOEs: coeConfig.availableCOEs
-                            )
-                        } else {
-                            // Fallback to sheet-based filter chip
-                            FilterChipButton(
-                                title: "COE",
-                                icon: nil,
-                                selectedItems: Array(selectedCOEs).map(String.init).sorted(),
-                                action: { showingCOESheet = true },
-                                onClear: { selectedCOEs.removeAll() },
-                                accessibilityId: "filter_chip_coe"
-                            )
-                        }
-
-                        // Tag filter chip
-                        FilterChipButton(
-                            title: "Tags",
-                            icon: "tag",
-                            selectedItems: Array(selectedTags).sorted(),
-                            action: { showingTagsSheet = true },
-                            onClear: { selectedTags.removeAll() },
-                            accessibilityId: "filter_chip_tags"
-                        )
-
-                        // Manufacturer filter chip
-                        FilterChipButton(
-                            title: "Mfr",
-                            icon: "building.2",
-                            selectedItems: Array(selectedManufacturers).sorted().map { $0.uppercased() },
-                            action: { showingManufacturerSheet = true },
-                            onClear: { selectedManufacturers.removeAll() },
-                            accessibilityId: "filter_chip_manufacturer"
-                        )
-                    }
+            // Bottom row: Product type (left) and filter chips (right)
+            HStack(spacing: DesignSystem.Spacing.md) {
+                // Left: Product type filter (optional)
+                if let productTypeConfig = productTypeFilter {
+                    ProductTypeFilterMenu(
+                        selectedProductTypes: productTypeConfig.selectedProductTypes,
+                        availableTypes: productTypeConfig.availableTypes,
+                        displayName: productTypeConfig.displayName,
+                        typeCounts: productTypeConfig.typeCounts
+                    )
                 }
-                .padding(.horizontal, DesignSystem.Padding.standard)
+
+                Spacer()
+
+                // Right: Filter chips (COE, Tags, Mfr)
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    // COE filter - use inline menu if coeFilter config provided, otherwise use sheet
+                    if let coeConfig = coeFilter {
+                        COEFilterMenu(
+                            selectedCOEs: coeConfig.selectedCOEs,
+                            availableCOEs: coeConfig.availableCOEs
+                        )
+                    } else {
+                        // Fallback to sheet-based filter chip
+                        FilterChipButton(
+                            title: "COE",
+                            icon: nil,
+                            selectedItems: Array(selectedCOEs).map(String.init).sorted(),
+                            action: { showingCOESheet = true },
+                            onClear: { selectedCOEs.removeAll() },
+                            accessibilityId: "filter_chip_coe"
+                        )
+                    }
+
+                    // Tag filter chip
+                    FilterChipButton(
+                        title: "Tags",
+                        icon: "tag",
+                        selectedItems: Array(selectedTags).sorted(),
+                        action: { showingTagsSheet = true },
+                        onClear: { selectedTags.removeAll() },
+                        accessibilityId: "filter_chip_tags"
+                    )
+
+                    // Manufacturer filter chip
+                    FilterChipButton(
+                        title: "Mfr",
+                        icon: "building.2",
+                        selectedItems: Array(selectedManufacturers).sorted().map { $0.uppercased() },
+                        action: { showingManufacturerSheet = true },
+                        onClear: { selectedManufacturers.removeAll() },
+                        accessibilityId: "filter_chip_manufacturer"
+                    )
+                }
             }
+            .padding(.horizontal, DesignSystem.Padding.standard)
             .padding(.bottom, DesignSystem.Spacing.md)
         }
         .background(DesignSystem.Colors.background)

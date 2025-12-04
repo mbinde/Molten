@@ -223,10 +223,9 @@ struct LocationDetailView: View {
     private func openDirections() {
         guard location.hasValidLocation else { return }
 
-        // iOS 26+ API: Use MKMapItem(location:address:) instead of MKPlacemark
         let coordinate = location.coordinate
-        let clLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        let mapItem = MKMapItem(location: clLocation, address: nil)
+        let placemark = MKPlacemark(coordinate: coordinate)
+        let mapItem = MKMapItem(placemark: placemark)
         mapItem.name = location.name
 
         // Open in Apple Maps with directions

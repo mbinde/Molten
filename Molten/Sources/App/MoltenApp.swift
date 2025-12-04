@@ -990,6 +990,34 @@ extension MoltenApp {
                 .with(entitlementVerificationMode: .informational) // Recommended for production
                 .build()
         )
+
+        // Set delegate to listen for customer info changes (promo codes, external purchases, etc.)
+        Purchases.shared.delegate = RevenueCatDelegateHandler.shared
+    }
+}
+
+// MARK: - RevenueCat Delegate
+
+/// Handles RevenueCat delegate callbacks for external purchase events (promo codes, etc.)
+final class RevenueCatDelegateHandler: NSObject, PurchasesDelegate {
+    static let shared = RevenueCatDelegateHandler()
+
+    private override init() {
+        super.init()
+    }
+
+    /// Called whenever customer info is updated (purchases, promo codes, subscription changes)
+    func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
+        #if DEBUG
+        print("🔐 [RevenueCat] Customer info updated!")
+        print("🔐 [RevenueCat] Entitlements: \(customerInfo.entitlements.all.keys)")
+        if let pro = customerInfo.entitlements["Pro"] {
+            print("🔐 [RevenueCat] Pro entitlement: isActive=\(pro.isActive)")
+        }
+        #endif
+
+        // Post notification to refresh subscription status throughout the app
+        NotificationCenter.default.post(name: .subscriptionStatusChanged, object: nil)
     }
 }
 

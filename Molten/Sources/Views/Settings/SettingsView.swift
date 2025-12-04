@@ -32,6 +32,7 @@ struct SettingsView: View {
     private let subscriptionService: SubscriptionServiceProtocol
     @State private var subscriptionViewModel: SubscriptionViewModel
     @State private var catalogUpdateViewModel: CatalogUpdateViewModel
+    @State private var labelUpdateViewModel: LabelUpdateViewModel
     @State private var thumbnailDisplayMode: UserSettings.ThumbnailDisplayMode = UserSettings.shared.thumbnailDisplayMode
     @State private var colorChipDisplayMode: UserSettings.ColorChipDisplayMode = UserSettings.shared.colorChipDisplayMode
     @State private var qrScanBehavior: UserSettings.QRScanBehavior = UserSettings.shared.qrScanBehavior
@@ -53,6 +54,19 @@ struct SettingsView: View {
             networkMonitor: NetworkMonitor.shared
         )
         self._catalogUpdateViewModel = State(initialValue: CatalogUpdateViewModel(updateService: updateService))
+
+        // Initialize label update view model
+        // Create service directly like catalog does, not via AppDependencies
+        var labelService: LabelUpdateService? = nil
+        if let storageService = try? LabelStorageService() {
+            labelService = LabelUpdateService(
+                apiClient: LabelAPIClient(),
+                storageService: storageService,
+                databaseService: LabelDatabaseService(),
+                networkMonitor: NetworkMonitor.shared
+            )
+        }
+        self._labelUpdateViewModel = State(initialValue: LabelUpdateViewModel(updateService: labelService))
     }
 
     private var defaultSortOptionBinding: Binding<SortOption> {
@@ -194,6 +208,27 @@ struct SettingsView: View {
                         }
                     }
                     .accessibilityIdentifier("settings_catalog_updates")
+
+                    NavigationLink {
+                        LabelInfoView(viewModel: labelUpdateViewModel)
+                    } label: {
+                        HStack {
+                            Text("Label Updates")
+
+                            Spacer()
+
+                            if let updateMessage = labelUpdateViewModel.updateAvailableMessage {
+                                Text(updateMessage)
+                                    .font(DesignSystem.Typography.listItemCaption)
+                                    .foregroundColor(DesignSystem.Colors.moltenOrange)
+                            } else {
+                                Text(labelUpdateViewModel.currentVersionDisplay)
+                                    .font(DesignSystem.Typography.listItemCaption)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                            }
+                        }
+                    }
+                    .accessibilityIdentifier("settings_label_updates")
 
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                         Picker("Show Color Chips", selection: colorChipDisplayModeBinding) {
@@ -356,20 +391,23 @@ struct SettingsView: View {
                     }
                 }
 
+                // MARK: - Units
+                Section("Units") {
+                    Picker("Temperature", selection: Binding(
+                        get: { UserSettings.shared.preferredTemperatureUnit },
+                        set: { UserSettings.shared.preferredTemperatureUnit = $0 }
+                    )) {
+                        ForEach(TemperatureUnit.allCases, id: \.self) { unit in
+                            Text(unit.displayName).tag(unit)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .accessibilityIdentifier("settings_temperature_unit")
+                }
+
                 // MARK: - Kiln
                 if FeatureFlags.ENABLE_KILN_SCHEDULES {
                     Section("Kiln") {
-                        Picker("Temperature Unit", selection: Binding(
-                            get: { UserSettings.shared.preferredTemperatureUnit },
-                            set: { UserSettings.shared.preferredTemperatureUnit = $0 }
-                        )) {
-                            ForEach(TemperatureUnit.allCases, id: \.self) { unit in
-                                Text(unit.displayName).tag(unit)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .help("Choose your preferred temperature unit for displaying kiln schedules")
-
                         NavigationLink {
                             KilnRatesSettingsView()
                         } label: {

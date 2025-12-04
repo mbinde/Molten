@@ -3,7 +3,7 @@
 //  Molten
 //
 //  Created by Assistant on 11/9/25.
-//  Background catalog update checking and downloading
+//  Background catalog and label database update checking and downloading
 //
 
 import Foundation
@@ -12,22 +12,34 @@ import UserNotifications
 
 private let log = Logger(subsystem: "com.molten", category: "BackgroundUpdateService")
 
-/// Service for handling automatic catalog updates in the background
+/// Service for handling automatic catalog and label updates in the background
 @MainActor
 final class BackgroundUpdateService {
-    private let updateService: any CatalogUpdateServiceProtocol
+    private let catalogUpdateService: any CatalogUpdateServiceProtocol
+    private let labelUpdateService: LabelUpdateService?
     private let networkMonitor: any NetworkMonitorProtocol
 
     init(
         updateService: any CatalogUpdateServiceProtocol,
+        labelUpdateService: LabelUpdateService? = nil,
         networkMonitor: any NetworkMonitorProtocol
     ) {
-        self.updateService = updateService
+        self.catalogUpdateService = updateService
+        self.labelUpdateService = labelUpdateService
         self.networkMonitor = networkMonitor
     }
 
-    /// Check for updates if conditions are met, and optionally download
+    /// Check for all updates if conditions are met, and optionally download
     func checkForUpdatesIfNeeded() async {
+        // Check catalog updates
+        await checkForCatalogUpdatesIfNeeded()
+
+        // Check label updates
+        await checkForLabelUpdatesIfNeeded()
+    }
+
+    /// Check for catalog updates if conditions are met
+    private func checkForCatalogUpdatesIfNeeded() async {
         let preferences = CatalogUpdatePreferences.shared
 
         // Check if auto-updates are enabled
@@ -60,7 +72,7 @@ final class BackgroundUpdateService {
 
         do {
             // Check for available updates
-            guard let updateInfo = try await updateService.checkForUpdates() else {
+            guard let updateInfo = try await catalogUpdateService.checkForUpdates() else {
                 return
             }
 
@@ -73,7 +85,7 @@ final class BackgroundUpdateService {
             }
 
             // Download and install the update
-            let result = try await updateService.downloadAndInstallUpdate(
+            let result = try await catalogUpdateService.downloadAndInstallUpdate(
                 updateInfo: updateInfo,
                 force: false  // Respect network policy
             )
@@ -98,6 +110,18 @@ final class BackgroundUpdateService {
 
             // Don't throw - background updates should fail gracefully
         }
+    }
+
+    /// Check for label database updates if conditions are met
+    private func checkForLabelUpdatesIfNeeded() async {
+        guard let labelUpdateService = labelUpdateService else {
+            log.debug("🔕 Label update service not configured, skipping")
+            return
+        }
+
+        // Use the label update service's built-in background check
+        // which handles auto-update preferences, timing, and network policy
+        await labelUpdateService.performBackgroundUpdateCheck()
     }
 
     // MARK: - Private Helpers

@@ -25,7 +25,8 @@ class LocationsViewModel {
     var filteredLocations: [AnyLocationModel] = []
     var selectedTypes: Set<LocationType>
     var searchText: String = ""  // What's shown in the search field (zip code for location search)
-    var isLoading: Bool = false
+    var isLoading: Bool = true  // Start true to prevent flash of empty state
+    var hasCompletedInitialLoad: Bool = false  // Track if we've finished first load attempt
     var errorMessage: String?
     var showMap: Bool = true
     var userLocation: CLLocationCoordinate2D?
@@ -72,7 +73,13 @@ class LocationsViewModel {
 
         do {
             // Load all unified locations
-            let unifiedLocations = try await locationService.getAllLocations()
+            var unifiedLocations = try await locationService.getAllLocations()
+
+            // If repository is empty, try loading from bundle/web (fallback for offline or failed startup)
+            if unifiedLocations.isEmpty {
+                _ = try? await locationService.loadLocationsHybrid()
+                unifiedLocations = try await locationService.getAllLocations()
+            }
 
             // Convert to AnyLocationModel and filter by selected types
             var locations: [AnyLocationModel] = []
@@ -92,6 +99,7 @@ class LocationsViewModel {
             errorMessage = "Failed to load locations: \(error.localizedDescription)"
         }
 
+        hasCompletedInitialLoad = true
         isLoading = false
     }
 

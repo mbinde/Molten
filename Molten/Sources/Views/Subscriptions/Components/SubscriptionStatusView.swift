@@ -1,3 +1,4 @@
+// SubscriptionStatusView.swift
 import SwiftUI
 
 /// View displaying subscription status and actions
@@ -124,11 +125,13 @@ struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
                         .padding(.top, DesignSystem.Spacing.lg)
 
                     VStack(spacing: DesignSystem.Spacing.sm) {
-                        ProFeatureRow(icon: "infinity", title: "Unlimited Inventory Items")
-                        ProFeatureRow(icon: "cart.fill", title: "Unlimited Shopping Lists")
-                        ProFeatureRow(icon: "folder.fill", title: "Unlimited Projects")
-                        ProFeatureRow(icon: "book.fill", title: "Unlimited Logbook Entries")
-                        ProFeatureRow(icon: "clock.arrow.circlepath", title: "Versioned Cloud Backups")
+                        ProFeatureRow(icon: "infinity", title: "Unlimited Inventory Items", freeLimit: "Free: 25 items")
+                        ProFeatureRow(icon: "cart.fill", title: "Unlimited Shopping List Items", freeLimit: "Free: 10 items")
+                        if FeatureFlags.ENABLE_PROJECTS {
+                            ProFeatureRow(icon: "folder.fill", title: "Unlimited Projects", freeLimit: "Free: 5 projects")
+                            ProFeatureRow(icon: "book.fill", title: "Unlimited Logbook Entries", freeLimit: "Free: 10 entries")
+                        }
+                        ProFeatureRow(icon: "clock.arrow.circlepath", title: "Versioned Cloud Backups", freeLimit: nil)
                     }
                     .padding(.horizontal)
                 }
@@ -224,6 +227,7 @@ struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
 private struct ProFeatureRow: View {
     let icon: String
     let title: String
+    let freeLimit: String?
 
     var body: some View {
         HStack(spacing: DesignSystem.Spacing.md) {
@@ -232,8 +236,16 @@ private struct ProFeatureRow: View {
                 .foregroundStyle(DesignSystem.Colors.moltenTeal)
                 .frame(width: 28)
 
-            Text(title)
-                .font(.subheadline)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline)
+
+                if let freeLimit = freeLimit {
+                    Text(freeLimit)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
 
             Spacer()
 

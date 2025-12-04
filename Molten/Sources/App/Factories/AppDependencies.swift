@@ -392,6 +392,12 @@ class AppDependencies {
     private var _inventorySharingManager: InventorySharingManager?
     private var _backupService: BackupService?
 
+    // Label update services (created lazily)
+    private var _labelDatabaseService: LabelDatabaseService?
+    private var _labelStorageService: LabelStorageService?
+    private var _labelAPIClient: LabelAPIClient?
+    private var _labelUpdateService: LabelUpdateService?
+
     // MARK: - Initialization
 
     /// Initialize with custom or default persistence controller
@@ -495,6 +501,7 @@ class AppDependencies {
         }
         let service = BackgroundUpdateService(
             updateService: catalogUpdateService,
+            labelUpdateService: labelUpdateService,
             networkMonitor: NetworkMonitor.shared
         )
         _backgroundUpdateService = service
@@ -552,6 +559,61 @@ class AppDependencies {
             inventoryRepository: inventoryRepository
         )
         _backupService = service
+        return service
+    }
+
+    // MARK: - Label Update Services
+
+    /// Label database service (created lazily)
+    var labelDatabaseService: LabelDatabaseService {
+        if let service = _labelDatabaseService {
+            return service
+        }
+        let service = LabelDatabaseService()
+        _labelDatabaseService = service
+        return service
+    }
+
+    /// Label storage service (created lazily)
+    var labelStorageService: LabelStorageService? {
+        if let service = _labelStorageService {
+            return service
+        }
+        do {
+            let service = try LabelStorageService()
+            _labelStorageService = service
+            return service
+        } catch {
+            return nil
+        }
+    }
+
+    /// Label API client (created lazily)
+    var labelAPIClient: LabelAPIClient {
+        if let client = _labelAPIClient {
+            return client
+        }
+        let client = LabelAPIClient()
+        _labelAPIClient = client
+        return client
+    }
+
+    /// Label update service (created lazily)
+    var labelUpdateService: LabelUpdateService? {
+        if let service = _labelUpdateService {
+            return service
+        }
+        guard let storageService = labelStorageService else {
+            return nil
+        }
+        let service = LabelUpdateService(
+            apiClient: labelAPIClient,
+            storageService: storageService,
+            databaseService: labelDatabaseService,
+            networkMonitor: NetworkMonitor.shared,
+            logger: loggingService
+        )
+        _labelUpdateService = service
         return service
     }
 }

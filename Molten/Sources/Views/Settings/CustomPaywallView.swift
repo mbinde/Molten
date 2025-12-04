@@ -87,8 +87,8 @@ struct CustomPaywallView: View {
 
                 // Features list
                 VStack(alignment: .leading, spacing: 16) {
-                    PaywallFeatureRow(icon: "archivebox.fill", title: "Unlimited Inventory", description: "Track as many glass items as you need")
-                    PaywallFeatureRow(icon: "cart.fill", title: "Unlimited Shopping Lists", description: "Never lose track of what you need")
+                    PaywallFeatureRow(icon: "archivebox.fill", title: "Unlimited Inventory", description: "Track unlimited items (free: 25 items)")
+                    PaywallFeatureRow(icon: "cart.fill", title: "Unlimited Shopping Lists", description: "Add unlimited items to your list (free: 10 items)")
                     PaywallFeatureRow(icon: "clock.arrow.circlepath", title: "Cloud Backups", description: "Automatic versioned backups with restore")
                 }
                 .padding(.horizontal)
@@ -144,11 +144,18 @@ struct CustomPaywallView: View {
                 }
 
                 // Legal text
-                Text("Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless it is canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period.")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
+                VStack(spacing: 8) {
+                    Text("Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period.")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Text("To cancel, go to Settings > [Your Name] > Subscriptions on your device.")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.horizontal)
 
                 // Links
                 HStack(spacing: 20) {

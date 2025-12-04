@@ -510,78 +510,22 @@ struct InventoryView: View, CachedDataDeletion {
                 }
             }
             .task {
-                await loadData()
+                await loadDataWithCloudKitRetry()
             }
             .refreshable {
                 // Invalidate cache to force fresh data load on pull-to-refresh
                 await CatalogDataCache.shared.reload(catalogService: catalogService)
                 await loadData()
             }
-            .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
-                Task {
-                    // Invalidate cache to force fresh data load
-                    await CatalogDataCache.shared.reload(catalogService: catalogService)
-                    await loadData()
-                }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .inventoryChanged)) { _ in
-                Task {
-                    // Refresh after QR scan inventory changes
-                    await CatalogDataCache.shared.reload(catalogService: catalogService)
-                    await loadData()
-                }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
-                Task {
-                    let ratingService = AppDependencies.shared.ratingService
-                    let itemId = notification.object as? String
-
-                    // IMPORTANT: Server needs time to rebuild bulk cache after invalidation.
-                    // Retry fetching until we find the new rating or timeout after 3 seconds.
-                    var attempts = 0
-                    let maxAttempts = 6  // 6 attempts × 500ms = 3 seconds max
-
-                    while attempts < maxAttempts {
-                        let freshRatings = try? await ratingService.fetchAllRatingsBulk(forceRefresh: true)
-
-                        // If we're looking for a specific item, check if it's in the results
-                        if let itemId = itemId {
-                            let itemRating = freshRatings?.first(where: { $0.itemStableId == itemId })
-                            if itemRating != nil {
-                                break  // Success! Found the new rating
-                            } else {
-                                attempts += 1
-                                if attempts < maxAttempts {
-                                    try? await Task.sleep(nanoseconds: 500_000_000)  // Wait 500ms before retry
-                                }
-                            }
-                        } else {
-                            break  // No specific item to check for, just use what we got
-                        }
-                    }
-
-                    // Invalidate cache to force fresh data load when ratings change
-                    await CatalogDataCache.shared.reload(catalogService: catalogService)
-                    await loadData()
-                }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .resetInventoryNavigation)) { _ in
-                // Reset navigation when user taps Inventory tab while already on Inventory
-                navigationPath = NavigationPath()
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .navigateToInventorySharingWithCode)) { notification in
-                // Extract share code from notification and show sharing view
-                if let shareCode = notification.userInfo?["shareCode"] as? String {
-                    pendingShareCode = shareCode
-                    showingSharing = true
-                }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
-                // When UserDefaults changes (e.g., COE filter, manufacturer filter, or applyFiltersToInventory in Settings),
-                // increment the trigger to force filteredItems to re-evaluate
-                filterRefreshTrigger += 1
-                updateFilteredItemsCache()
-            }
+            .onInventoryNotifications(
+                catalogService: catalogService,
+                loadData: loadData,
+                updateFilteredItemsCache: updateFilteredItemsCache,
+                filterRefreshTrigger: $filterRefreshTrigger,
+                navigationPath: $navigationPath,
+                pendingShareCode: $pendingShareCode,
+                showingSharing: $showingSharing
+            )
             .onFilterChange(viewModel: viewModel, updateCache: updateFilteredItemsCache)
         }
     }
@@ -758,6 +702,22 @@ struct InventoryView: View, CachedDataDeletion {
         }
     }
 
+    /// Load data with retry logic for CloudKit sync on fresh install
+    private func loadDataWithCloudKitRetry() async {
+        await loadData()
+
+        // If inventory is empty, CloudKit may still be syncing after fresh install.
+        // Poll a few times to catch incoming data.
+        guard viewModel.completeItems.isEmpty else { return }
+
+        for _ in 1...5 {
+            try? await Task.sleep(for: .seconds(1))
+            await CatalogDataCache.shared.reload(catalogService: catalogService)
+            await loadData()
+            if !viewModel.completeItems.isEmpty { break }
+        }
+    }
+
     // MARK: - CachedDataDeletion Protocol Implementation
 
     func performDeletion(for item: CompleteInventoryItemModel) async throws {
@@ -847,9 +807,112 @@ private struct FilterChangeModifier: ViewModifier {
     }
 }
 
+// MARK: - Notification Handlers Modifier
+// Extracted to reduce body complexity and help Swift compiler
+
+private struct NotificationHandlersModifier: ViewModifier {
+    let catalogService: CatalogService
+    let loadData: () async -> Void
+    let updateFilteredItemsCache: () -> Void
+    @Binding var filterRefreshTrigger: Int
+    @Binding var navigationPath: NavigationPath
+    @Binding var pendingShareCode: String?
+    @Binding var showingSharing: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
+                Task {
+                    await CatalogDataCache.shared.reload(catalogService: catalogService)
+                    await loadData()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .inventoryChanged)) { _ in
+                Task {
+                    await CatalogDataCache.shared.reload(catalogService: catalogService)
+                    await loadData()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
+                Task {
+                    let ratingService = AppDependencies.shared.ratingService
+                    let itemId = notification.object as? String
+
+                    // IMPORTANT: Server needs time to rebuild bulk cache after invalidation.
+                    // Retry fetching until we find the new rating or timeout after 3 seconds.
+                    var attempts = 0
+                    let maxAttempts = 6  // 6 attempts × 500ms = 3 seconds max
+
+                    while attempts < maxAttempts {
+                        let freshRatings = try? await ratingService.fetchAllRatingsBulk(forceRefresh: true)
+
+                        // If we're looking for a specific item, check if it's in the results
+                        if let itemId = itemId {
+                            let itemRating = freshRatings?.first(where: { $0.itemStableId == itemId })
+                            if itemRating != nil {
+                                break  // Success! Found the new rating
+                            } else {
+                                attempts += 1
+                                if attempts < maxAttempts {
+                                    try? await Task.sleep(nanoseconds: 500_000_000)  // Wait 500ms before retry
+                                }
+                            }
+                        } else {
+                            break  // No specific item to check for, just use what we got
+                        }
+                    }
+
+                    // Invalidate cache to force fresh data load when ratings change
+                    await CatalogDataCache.shared.reload(catalogService: catalogService)
+                    await loadData()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .resetInventoryNavigation)) { _ in
+                navigationPath = NavigationPath()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .navigateToInventorySharingWithCode)) { notification in
+                if let shareCode = notification.userInfo?["shareCode"] as? String {
+                    pendingShareCode = shareCode
+                    showingSharing = true
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
+                filterRefreshTrigger += 1
+                updateFilteredItemsCache()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .cloudKitImportCompleted)) { _ in
+                // Refresh inventory when CloudKit import completes (e.g., after fresh install)
+                Task {
+                    await CatalogDataCache.shared.reload(catalogService: catalogService)
+                    await loadData()
+                }
+            }
+    }
+}
+
 private extension View {
     func onFilterChange(viewModel: InventoryViewModel, updateCache: @escaping () -> Void) -> some View {
         modifier(FilterChangeModifier(viewModel: viewModel, updateCache: updateCache))
+    }
+
+    func onInventoryNotifications(
+        catalogService: CatalogService,
+        loadData: @escaping () async -> Void,
+        updateFilteredItemsCache: @escaping () -> Void,
+        filterRefreshTrigger: Binding<Int>,
+        navigationPath: Binding<NavigationPath>,
+        pendingShareCode: Binding<String?>,
+        showingSharing: Binding<Bool>
+    ) -> some View {
+        modifier(NotificationHandlersModifier(
+            catalogService: catalogService,
+            loadData: loadData,
+            updateFilteredItemsCache: updateFilteredItemsCache,
+            filterRefreshTrigger: filterRefreshTrigger,
+            navigationPath: navigationPath,
+            pendingShareCode: pendingShareCode,
+            showingSharing: showingSharing
+        ))
     }
 }
 

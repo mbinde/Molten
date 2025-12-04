@@ -154,6 +154,54 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                // MARK: - Subscription
+                Section("Subscription") {
+                    if subscriptionViewModel.hasProAccess {
+                        // Pro users: Navigate to management screen
+                        NavigationLink {
+                            SubscriptionStatusView(viewModel: subscriptionViewModel)
+                        } label: {
+                            HStack {
+                                Text("Manage Subscription")
+                                Spacer()
+                                Text(subscriptionBadge)
+                                    .font(.caption.bold())
+                                    .foregroundColor(subscriptionBadgeColor)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(subscriptionBadgeBackground)
+                                    .cornerRadius(6)
+                            }
+                        }
+                        .accessibilityIdentifier("settings_manage_subscription")
+                    } else {
+                        // Free users: Show paywall directly (same as Inventory/Shopping)
+                        Button {
+                            showingPaywall = true
+                        } label: {
+                            HStack {
+                                Image("AppIconImage")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 28, height: 28)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                                Text("Upgrade to Pro")
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(DesignSystem.Colors.moltenOrange)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.footnote.weight(.semibold))
+                                    .foregroundColor(DesignSystem.Colors.moltenOrange.opacity(0.5))
+                            }
+                        }
+                        .accessibilityIdentifier("settings_upgrade_subscription")
+                    }
+                }
+                .task {
+                    // Load subscription status when settings view appears
+                    await subscriptionViewModel.loadSubscriptionStatus()
+                }
+
                 // MARK: - General
                 Section("General") {
                     Picker("Appearance", selection: selectedAppearanceMode) {
@@ -445,51 +493,6 @@ struct SettingsView: View {
                             }
                         }
                     }
-                }
-
-                // MARK: - Subscription
-                Section("Subscription") {
-                    if subscriptionViewModel.hasProAccess {
-                        // Pro users: Navigate to management screen
-                        NavigationLink {
-                            SubscriptionStatusView(viewModel: subscriptionViewModel)
-                        } label: {
-                            HStack {
-                                Text("Manage Subscription")
-                                Spacer()
-                                Text(subscriptionBadge)
-                                    .font(.caption.bold())
-                                    .foregroundColor(subscriptionBadgeColor)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(subscriptionBadgeBackground)
-                                    .cornerRadius(6)
-                            }
-                        }
-                        .accessibilityIdentifier("settings_manage_subscription")
-                    } else {
-                        // Free users: Show paywall directly (same as Inventory/Shopping)
-                        Button {
-                            showingPaywall = true
-                        } label: {
-                            HStack {
-                                Text("Upgrade to Pro")
-                                Spacer()
-                                Text(subscriptionBadge)
-                                    .font(.caption.bold())
-                                    .foregroundColor(subscriptionBadgeColor)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(subscriptionBadgeBackground)
-                                    .cornerRadius(6)
-                            }
-                        }
-                        .accessibilityIdentifier("settings_upgrade_subscription")
-                    }
-                }
-                .task {
-                    // Load subscription status when settings view appears
-                    await subscriptionViewModel.loadSubscriptionStatus()
                 }
 
                 // MARK: - About

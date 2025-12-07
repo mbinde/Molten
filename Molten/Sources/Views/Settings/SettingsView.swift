@@ -36,6 +36,7 @@ struct SettingsView: View {
     @State private var thumbnailDisplayMode: UserSettings.ThumbnailDisplayMode = UserSettings.shared.thumbnailDisplayMode
     @State private var colorChipDisplayMode: UserSettings.ColorChipDisplayMode = UserSettings.shared.colorChipDisplayMode
     @State private var qrScanBehavior: UserSettings.QRScanBehavior = UserSettings.shared.qrScanBehavior
+    @State private var inventoryQuickAction: UserSettings.InventoryQuickAction = UserSettings.shared.inventoryQuickAction
     @State private var showingPaywall = false
 
     init(
@@ -123,6 +124,16 @@ struct SettingsView: View {
             set: {
                 qrScanBehavior = $0
                 UserSettings.shared.qrScanBehavior = $0
+            }
+        )
+    }
+
+    private var inventoryQuickActionBinding: Binding<UserSettings.InventoryQuickAction> {
+        Binding(
+            get: { inventoryQuickAction },
+            set: {
+                inventoryQuickAction = $0
+                UserSettings.shared.inventoryQuickAction = $0
             }
         )
     }
@@ -322,6 +333,20 @@ struct SettingsView: View {
                             .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     .accessibilityIdentifier("settings_qr_scan_behavior")
+
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        Picker("Inventory Quick Action", selection: inventoryQuickActionBinding) {
+                            ForEach(UserSettings.InventoryQuickAction.allCases, id: \.self) { action in
+                                Label(action.displayName, systemImage: action.systemImage).tag(action)
+                            }
+                        }
+                        .pickerStyle(.menu)
+
+                        Text(inventoryQuickAction.description)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                    .accessibilityIdentifier("settings_inventory_quick_action")
                 }
 
                 // MARK: - Sorting and Filtering

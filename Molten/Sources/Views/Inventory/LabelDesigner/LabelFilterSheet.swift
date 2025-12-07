@@ -47,6 +47,7 @@ enum LabelDateFilter: String, CaseIterable, Sendable {
 struct InventoryFilterRow: Identifiable {
     let item: CompleteInventoryItemModel
     let inventory: InventoryModel
+    let storageLocation: StorageLocationModel?  // Associated storage location (if any)
 
     var id: UUID { inventory.id }
 
@@ -63,6 +64,27 @@ struct InventoryFilterRow: Identifiable {
     /// Short type description
     var typeDescription: String {
         inventory.typeDescription
+    }
+
+    /// Location name (from StorageLocation or fallback to Inventory.location)
+    var locationName: String? {
+        if let loc = storageLocation {
+            return loc.locationName
+        }
+        return inventory.location
+    }
+
+    /// Date added at current location (from StorageLocation or fallback to Inventory.date_added)
+    var dateAddedAtLocation: Date {
+        if let loc = storageLocation {
+            return loc.dateAdded
+        }
+        return inventory.date_added
+    }
+
+    /// Whether this is a transferred inventory (moved from another location)
+    var isTransfer: Bool {
+        storageLocation?.isTransfer ?? false
     }
 }
 
@@ -100,7 +122,9 @@ struct LabelFilterSheet: View {
     private var allInventoryRows: [InventoryFilterRow] {
         items.flatMap { item in
             item.inventory.map { inv in
-                InventoryFilterRow(item: item, inventory: inv)
+                // Find matching StorageLocation for this inventory record
+                let storageLocation = item.storageLocations.first { $0.inventoryId == inv.id }
+                return InventoryFilterRow(item: item, inventory: inv, storageLocation: storageLocation)
             }
         }
     }
@@ -114,21 +138,27 @@ struct LabelFilterSheet: View {
         }
 
         return allInventoryRows.filter { row in
-            // Check location filter
+            // Check location filter (uses StorageLocation.locationName or Inventory.location fallback)
             if let location = localLocation {
-                if row.inventory.location != location {
+                if row.locationName != location {
                     return false
                 }
             }
 
-            // Check date added filter
+            // Check date added filter (uses StorageLocation.dateAdded or Inventory.date_added fallback)
+            // Also filters out transfers when using date filter - transfers shouldn't trigger "new" label printing
             if localDateAdded != .any {
-                if !localDateAdded.matches(date: row.inventory.date_added) {
+                // Exclude transfers when filtering by date added (transfers are not "new" inventory)
+                if row.isTransfer {
+                    return false
+                }
+                let dateToCheck = row.dateAddedAtLocation
+                if !localDateAdded.matches(date: dateToCheck) {
                     return false
                 }
             }
 
-            // Check date modified filter
+            // Check date modified filter (still uses Inventory.date_modified)
             if localDateModified != .any {
                 if !localDateModified.matches(date: row.inventory.date_modified) {
                     return false

@@ -52,9 +52,19 @@ extension CompleteInventoryItemModel {
     /// Example: ["Studio A": 15.0, "Storage Room": 20.0]
     ///
     /// Business rule: Aggregate inventory by physical location
-    /// Performance: O(n) where n = number of inventory records with locations
+    /// Uses StorageLocation records if available, falls back to Inventory.location for legacy data
     nonisolated var inventoryByLocation: [String: Double] {
-        Dictionary(grouping: inventory.filter { $0.location != nil }, by: { $0.location! })
+        // Use StorageLocation if available (new architecture)
+        if !storageLocations.isEmpty {
+            print("📍 [StorageLocation] Using StorageLocation data for inventoryByLocation (\(catalogItem.name))")
+            return Dictionary(grouping: storageLocations.filter { !$0.locationName.isEmpty }, by: { $0.locationName })
+                .mapValues { locations in
+                    locations.reduce(0.0) { $0 + $1.quantity }
+                }
+        }
+        // Fallback to Inventory.location for legacy data
+        print("⚠️ [StorageLocation] Falling back to Inventory.location for inventoryByLocation (\(catalogItem.name))")
+        return Dictionary(grouping: inventory.filter { $0.location != nil }, by: { $0.location! })
             .mapValues { inventoryRecords in
                 inventoryRecords.reduce(0.0) { $0 + $1.quantity }
             }
@@ -68,8 +78,23 @@ extension CompleteInventoryItemModel {
     /// Example: ["Storage Room", "Studio A", "Studio B"]
     ///
     /// Business rule: All distinct locations containing this item
-    /// Performance: O(n log n) where n = number of unique locations
+    /// Uses StorageLocation records if available, falls back to Inventory.location for legacy data
     nonisolated var locations: [String] {
-        Array(Set(inventory.compactMap { $0.location })).sorted()
+        // Use StorageLocation if available (new architecture)
+        if !storageLocations.isEmpty {
+            // Note: Not logging here since this is called frequently (use inventoryByLocation log instead)
+            return Array(Set(storageLocations.map { $0.locationName }.filter { !$0.isEmpty })).sorted()
+        }
+        // Fallback to Inventory.location for legacy data
+        // Note: Not logging here since this is called frequently (use inventoryByLocation log instead)
+        return Array(Set(inventory.compactMap { $0.location })).sorted()
+    }
+
+    /// Storage locations grouped by location definition ID
+    ///
+    /// Returns dictionary mapping storageLocationId → StorageLocationModels
+    /// Used for filtering and location-based operations
+    nonisolated var storageLocationsByDefinition: [UUID: [StorageLocationModel]] {
+        Dictionary(grouping: storageLocations.filter { $0.storageLocationId != nil }, by: { $0.storageLocationId! })
     }
 }

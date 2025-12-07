@@ -19,6 +19,7 @@ import Foundation
 struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     let catalogItem: UnifiedCatalogItem
     let inventory: [InventoryModel]
+    let storageLocations: [StorageLocationModel]  // Where inventory is stored (new architecture)
     let tags: [String]  // Manufacturer/system tags
     let userTags: [String]  // User-created tags
     let allTags: [String]  // Pre-computed combined tags for performance
@@ -29,9 +30,10 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     // MARK: - Initializers
 
     /// Initialize with automatic allTags computation
-    nonisolated init(catalogItem: UnifiedCatalogItem, inventory: [InventoryModel], tags: [String], userTags: [String], rating: AggregatedRatingModel? = nil) {
+    nonisolated init(catalogItem: UnifiedCatalogItem, inventory: [InventoryModel], storageLocations: [StorageLocationModel] = [], tags: [String], userTags: [String], rating: AggregatedRatingModel? = nil) {
         self.catalogItem = catalogItem
         self.inventory = inventory
+        self.storageLocations = storageLocations
         self.tags = tags
         self.userTags = userTags
         self.rating = rating
@@ -40,8 +42,8 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     }
 
     /// Convenience initializer from GlassItemModel (for backward compatibility)
-    nonisolated init(glassItem: GlassItemModel, inventory: [InventoryModel], tags: [String], userTags: [String], rating: AggregatedRatingModel? = nil) {
-        self.init(catalogItem: UnifiedCatalogItem(glassItem: glassItem), inventory: inventory, tags: tags, userTags: userTags, rating: rating)
+    nonisolated init(glassItem: GlassItemModel, inventory: [InventoryModel], storageLocations: [StorageLocationModel] = [], tags: [String], userTags: [String], rating: AggregatedRatingModel? = nil) {
+        self.init(catalogItem: UnifiedCatalogItem(glassItem: glassItem), inventory: inventory, storageLocations: storageLocations, tags: tags, userTags: userTags, rating: rating)
     }
 
     // MARK: - Backward Compatibility
@@ -70,6 +72,7 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     nonisolated static func == (lhs: CompleteInventoryItemModel, rhs: CompleteInventoryItemModel) -> Bool {
         return lhs.catalogItem.stable_id == rhs.catalogItem.stable_id &&
                lhs.inventory == rhs.inventory &&
+               lhs.storageLocations == rhs.storageLocations &&
                lhs.tags == rhs.tags &&
                lhs.userTags == rhs.userTags &&
                lhs.rating?.averageRating == rhs.rating?.averageRating &&
@@ -79,6 +82,7 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(catalogItem.stable_id)
         hasher.combine(inventory)
+        hasher.combine(storageLocations)
         hasher.combine(rating?.averageRating)
         hasher.combine(rating?.totalRatings)
     }

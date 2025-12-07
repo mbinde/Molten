@@ -3,62 +3,85 @@
 //  Molten
 //
 //  Prominent inventory status card with SF Rounded count display
-//  Inspired by the "Luminous Precision" design mockups
+//  Shows inventory grouped by location/type/subtype with +/- controls
 //
 
 import SwiftUI
 
-/// Prominent card showing inventory status with large SF Rounded count
-/// Used in detail views to highlight current stock levels
+/// Key for grouping inventory records
+struct InventoryGroupKey: Hashable {
+    let location: String?
+    let type: String
+    let subtype: String?
+    let subsubtype: String?
+}
+
+/// Prominent card showing inventory status grouped by location/type
+/// Each row shows total quantity with +/- controls and move option
 struct InventoryStatusCard: View {
     let inventory: [InventoryModel]
-    let onTapRecord: ((InventoryModel) -> Void)?
-    let onTapRecordsForType: (([InventoryModel], String) -> Void)?
+    let onIncrement: ((InventoryGroupKey) -> Void)?
+    let onDecrement: ((InventoryGroupKey) -> Void)?
+    let onMove: ((InventoryGroupKey) -> Void)?
     let onTapDetails: (() -> Void)?
 
     init(
         inventory: [InventoryModel],
-        onTapRecord: ((InventoryModel) -> Void)? = nil,
-        onTapRecordsForType: (([InventoryModel], String) -> Void)? = nil,
+        onIncrement: ((InventoryGroupKey) -> Void)? = nil,
+        onDecrement: ((InventoryGroupKey) -> Void)? = nil,
+        onMove: ((InventoryGroupKey) -> Void)? = nil,
         onTapDetails: (() -> Void)? = nil
     ) {
         self.inventory = inventory
-        self.onTapRecord = onTapRecord
-        self.onTapRecordsForType = onTapRecordsForType
+        self.onIncrement = onIncrement
+        self.onDecrement = onDecrement
+        self.onMove = onMove
         self.onTapDetails = onTapDetails
     }
 
-    /// Aggregated data for each inventory type
-    private struct TypeAggregate {
-        var quantity: Double = 0  // Weight in grams for weight-based, count for others
-        var containerCount: Double = 0  // Total jars for weight-based types
-    }
-
-    /// Group inventory by type, summing quantities and container counts
-    private var inventoryByType: [String: TypeAggregate] {
-        var result: [String: TypeAggregate] = [:]
+    /// Group inventory by location/type/subtype/subsubtype, summing quantities
+    private var groupedInventory: [(key: InventoryGroupKey, quantity: Double)] {
+        var result: [InventoryGroupKey: Double] = [:]
         for record in inventory {
-            var aggregate = result[record.type, default: TypeAggregate()]
-            aggregate.quantity += record.quantity
-            if let containers = record.containerCount {
-                aggregate.containerCount += containers
-            }
-            result[record.type] = aggregate
+            let key = InventoryGroupKey(
+                location: record.location,
+                type: record.type,
+                subtype: record.subtype,
+                subsubtype: record.subsubtype
+            )
+            result[key, default: 0] += record.quantity
         }
-        return result
-    }
-
-    /// Get the first record for each type (for editing)
-    private func recordsForType(_ type: String) -> [InventoryModel] {
-        inventory.filter { $0.type == type }
-    }
-
-    private var totalQuantity: Double {
-        inventory.reduce(0) { $0 + $1.quantity }
-    }
-
-    private var primaryType: String? {
-        inventoryByType.max(by: { $0.value.quantity < $1.value.quantity })?.key
+        // Sort: by location (named first, then nil), then by type
+        return result.sorted { lhs, rhs in
+            // Compare locations first
+            switch (lhs.key.location, rhs.key.location) {
+            case (nil, nil): break
+            case (nil, _): return false
+            case (_, nil): return true
+            case (let a?, let b?):
+                if a.isEmpty && !b.isEmpty { return false }
+                if !a.isEmpty && b.isEmpty { return true }
+                if a != b { return a < b }
+            }
+            // Then by type
+            if lhs.key.type != rhs.key.type {
+                return lhs.key.type < rhs.key.type
+            }
+            // Then by subtype
+            switch (lhs.key.subtype, rhs.key.subtype) {
+            case (nil, nil): break
+            case (nil, _): return true
+            case (_, nil): return false
+            case (let a?, let b?): if a != b { return a < b }
+            }
+            // Then by subsubtype
+            switch (lhs.key.subsubtype, rhs.key.subsubtype) {
+            case (nil, nil): return false
+            case (nil, _): return true
+            case (_, nil): return false
+            case (let a?, let b?): return a < b
+            }
+        }.map { (key: $0.key, quantity: $0.value) }
     }
 
     var body: some View {
@@ -72,7 +95,7 @@ struct InventoryStatusCard: View {
 
                 Spacer()
 
-                if onTapDetails != nil && !inventoryByType.isEmpty {
+                if onTapDetails != nil && !inventory.isEmpty {
                     Button(action: { onTapDetails?() }) {
                         Text("Details")
                             .font(DesignSystem.Typography.listItemCaption)
@@ -81,14 +104,13 @@ struct InventoryStatusCard: View {
                 }
             }
 
-            if inventoryByType.isEmpty {
+            if inventory.isEmpty {
                 emptyState
             } else {
-                // Inventory type cards
+                // Inventory rows
                 VStack(spacing: DesignSystem.Spacing.md) {
-                    ForEach(Array(inventoryByType.keys.sorted()), id: \.self) { type in
-                        let aggregate = inventoryByType[type] ?? TypeAggregate()
-                        inventoryTypeRow(type: type, aggregate: aggregate)
+                    ForEach(groupedInventory, id: \.key) { item in
+                        inventoryRow(key: item.key, quantity: item.quantity)
                     }
                 }
             }
@@ -117,74 +139,122 @@ struct InventoryStatusCard: View {
         }
     }
 
-    // MARK: - Inventory Type Row
+    // MARK: - Inventory Row
 
-    @ViewBuilder
-    private func inventoryTypeRow(type: String, aggregate: TypeAggregate) -> some View {
-        let records = recordsForType(type)
+    private func inventoryRow(key: InventoryGroupKey, quantity: Double) -> some View {
+        HStack(alignment: .center, spacing: DesignSystem.Spacing.md) {
+            // Type icon and info
+            HStack(spacing: DesignSystem.Spacing.md) {
+                Image(systemName: iconForType(key.type))
+                    .font(.system(size: 18))
+                    .foregroundColor(DesignSystem.Colors.accentPrimary)
+                    .frame(width: 24)
 
-        Button(action: {
-            // If single record, edit it directly; otherwise show records for this type
-            if records.count == 1, let record = records.first {
-                onTapRecord?(record)
-            } else {
-                // Multiple records - show just this type's records
-                onTapRecordsForType?(records, type)
-            }
-        }) {
-            HStack(alignment: .center) {
-                // Type icon and name
-                HStack(spacing: DesignSystem.Spacing.md) {
-                    Image(systemName: iconForType(type))
-                        .font(.system(size: 20))
-                        .foregroundColor(DesignSystem.Colors.accentPrimary)
-                        .frame(width: 28)
+                VStack(alignment: .leading, spacing: 2) {
+                    // Primary: type name
+                    Text(displayNameForType(key.type))
+                        .font(DesignSystem.Typography.formLabel)
+                        .fontWeight(DesignSystem.FontWeight.medium)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(displayNameForType(type))
-                            .font(DesignSystem.Typography.formLabel)
-                            .fontWeight(DesignSystem.FontWeight.medium)
-                            .foregroundColor(DesignSystem.Colors.textPrimary)
-
-                        // Show location if single record
-                        if records.count == 1, let location = records.first?.location, !location.isEmpty {
-                            Text(location)
-                                .font(DesignSystem.Typography.listItemCaption)
-                                .foregroundColor(DesignSystem.Colors.textSecondary)
-                        } else if records.count > 1 {
-                            Text("\(records.count) locations")
-                                .font(DesignSystem.Typography.listItemCaption)
-                                .foregroundColor(DesignSystem.Colors.textSecondary)
-                        }
+                    // Secondary: location and subtype info
+                    let details = buildDetailsText(key: key)
+                    if !details.isEmpty {
+                        Text(details)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                            .lineLimit(1)
                     }
                 }
-
-                Spacer()
-
-                // Quantity with SF Rounded - use InventoryCountBadge for consistent formatting
-                InventoryCountBadge.forInventory(
-                    type: type,
-                    quantity: aggregate.quantity,
-                    containerCount: aggregate.containerCount > 0 ? aggregate.containerCount : nil,
-                    style: .compact
-                )
-
-                // Chevron if tappable
-                if onTapRecord != nil || onTapDetails != nil {
-                    Image(systemName: "chevron.right")
-                        .font(DesignSystem.Typography.listItemCaption)
-                        .foregroundColor(DesignSystem.Colors.textTertiary)
-                }
             }
-            .padding(DesignSystem.Padding.standard)
-            .background(DesignSystem.Colors.background)
-            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+
+            Spacer()
+
+            // Move button with divider
+            if onMove != nil {
+                // Vertical divider
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 2, height: 28)
+                    .shadow(color: Color.white.opacity(0.5), radius: 1, x: 1, y: 0)
+
+                Button(action: {
+                    onMove?(key)
+                }) {
+                    Image(systemName: "arrow.right.arrow.left")
+                        .font(.system(size: 18))
+                        .foregroundColor(DesignSystem.Colors.accentSecondary)
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, DesignSystem.Spacing.md)
+
+                // Vertical divider
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 2, height: 28)
+                    .shadow(color: Color.white.opacity(0.5), radius: 1, x: 1, y: 0)
+            }
+
+            // +/- controls with quantity
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                // Decrement button
+                Button(action: {
+                    onDecrement?(key)
+                }) {
+                    Image(systemName: "minus.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundColor(quantity > 0 ? DesignSystem.Colors.accentPrimary : DesignSystem.Colors.textTertiary)
+                }
+                .buttonStyle(.plain)
+                .disabled(quantity <= 0 || onDecrement == nil)
+
+                // Quantity display
+                Text(formatQuantity(quantity))
+                    .font(DesignSystem.Typography.prominentNumber)
+                    .fontWeight(DesignSystem.FontWeight.bold)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                    .frame(minWidth: 44)
+                    .multilineTextAlignment(.center)
+
+                // Increment button
+                Button(action: {
+                    onIncrement?(key)
+                }) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundColor(DesignSystem.Colors.accentPrimary)
+                }
+                .buttonStyle(.plain)
+                .disabled(onIncrement == nil)
+            }
         }
-        .buttonStyle(.plain)
-        .disabled(onTapRecord == nil && onTapDetails == nil)
+        .padding(DesignSystem.Padding.standard)
+        .background(DesignSystem.Colors.background)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
     }
 
     // MARK: - Helper Methods
+
+    private func buildDetailsText(key: InventoryGroupKey) -> String {
+        var parts: [String] = []
+
+        // Location
+        if let loc = key.location, !loc.isEmpty {
+            parts.append(loc)
+        }
+
+        // Subtype
+        if let sub = key.subtype, !sub.isEmpty {
+            parts.append(sub.capitalized)
+        }
+
+        // Subsubtype
+        if let subsub = key.subsubtype, !subsub.isEmpty {
+            parts.append(subsub.capitalized)
+        }
+
+        return parts.joined(separator: " · ")
+    }
 
     private func iconForType(_ type: String) -> String {
         switch type.lowercased() {
@@ -202,6 +272,14 @@ struct InventoryStatusCard: View {
     private func displayNameForType(_ type: String) -> String {
         GlassTerminologySettings.shared.displayName(for: type).capitalized
     }
+
+    private func formatQuantity(_ quantity: Double) -> String {
+        if quantity.truncatingRemainder(dividingBy: 1) == 0 {
+            return String(format: "%.0f", quantity)
+        } else {
+            return String(format: "%.1f", quantity)
+        }
+    }
 }
 
 // MARK: - Preview
@@ -209,16 +287,19 @@ struct InventoryStatusCard: View {
 #Preview("With Inventory") {
     let sampleInventory = [
         InventoryModel(id: UUID(), item_stable_id: "test", type: "sheet", quantity: 8, location: "Cabinet 1"),
-        InventoryModel(id: UUID(), item_stable_id: "test", type: "rod", quantity: 5, location: "Studio"),
-        InventoryModel(id: UUID(), item_stable_id: "test", type: "rod", quantity: 7, location: "Garage"),
-        InventoryModel(id: UUID(), item_stable_id: "test", type: "frit", quantity: 250, location: "Cabinet 2")
+        InventoryModel(id: UUID(), item_stable_id: "test", type: "rod", subtype: "stringer", quantity: 5, location: "Studio"),
+        InventoryModel(id: UUID(), item_stable_id: "test", type: "rod", subtype: "standard", quantity: 7, location: "Studio"),
+        InventoryModel(id: UUID(), item_stable_id: "test", type: "frit", subtype: "medium", quantity: 250, location: nil)
     ]
 
     ScrollView {
         InventoryStatusCard(
             inventory: sampleInventory,
-            onTapRecord: { record in
-                print("Tapped record: \(record.type) at \(record.location ?? "unknown")")
+            onIncrement: { key in
+                print("Increment: \(key.type) at \(key.location ?? "no location")")
+            },
+            onDecrement: { key in
+                print("Decrement: \(key.type) at \(key.location ?? "no location")")
             },
             onTapDetails: {
                 print("Tapped details")
@@ -230,20 +311,20 @@ struct InventoryStatusCard: View {
 
 #Preview("Empty") {
     InventoryStatusCard(
-        inventory: [],
-        onTapRecord: nil
+        inventory: []
     )
     .padding()
 }
 
-#Preview("Single Type") {
+#Preview("Single Item") {
     let sampleInventory = [
         InventoryModel(id: UUID(), item_stable_id: "test", type: "sheet", quantity: 8, location: "Cabinet 1")
     ]
 
     InventoryStatusCard(
         inventory: sampleInventory,
-        onTapRecord: { _ in }
+        onIncrement: { _ in },
+        onDecrement: { _ in }
     )
     .padding()
 }

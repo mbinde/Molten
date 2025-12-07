@@ -27,6 +27,7 @@ actor CatalogService {
     private let itemTagsRepository: ItemTagsRepository
     private let userTagsRepository: UserTagsRepository
     private let ratingService: RatingService
+    private let storageLocationRepository: StorageLocationRepository
 
     // MARK: - Initialization
 
@@ -39,7 +40,8 @@ actor CatalogService {
         itemMinimumRepository: ItemMinimumRepository,
         itemTagsRepository: ItemTagsRepository,
         userTagsRepository: UserTagsRepository,
-        ratingService: RatingService
+        ratingService: RatingService,
+        storageLocationRepository: StorageLocationRepository
     ) {
         self.glassItemRepository = glassItemRepository
         self.coatingItemRepository = coatingItemRepository
@@ -49,6 +51,7 @@ actor CatalogService {
         self.itemTagsRepository = itemTagsRepository
         self.userTagsRepository = userTagsRepository
         self.ratingService = ratingService
+        self.storageLocationRepository = storageLocationRepository
     }
     
     // MARK: - GlassItem System Support
@@ -143,6 +146,10 @@ actor CatalogService {
         let allInventory = try await trackingService.fetchAllInventory(matching: nil)
         let inventoryByItem = Dictionary(grouping: allInventory) { $0.item_stable_id }
 
+        // OPTIMIZED: Batch fetch storage locations for all inventory records
+        let allStorageLocations = try await storageLocationRepository.fetchLocations(matching: nil)
+        let storageLocationsByInventory = Dictionary(grouping: allStorageLocations) { $0.inventoryId }
+
         // OPTIMIZED: Batch fetch tags for all items instead of individual calls
         let allItemKeys = filteredItems.map { $0.stable_id }
         let tagsByItem: [String: [String]]
@@ -191,6 +198,11 @@ actor CatalogService {
             let userTags = userTagsByItem[catalogItem.stable_id] ?? []
             let rating = ratingsByItem[catalogItem.stable_id]
 
+            // Collect storage locations from all inventory records for this item
+            let storageLocations = inventory.flatMap { inv in
+                storageLocationsByInventory[inv.id] ?? []
+            }
+
             if rating != nil {
                 attachedCount += 1
             }
@@ -198,6 +210,7 @@ actor CatalogService {
             let completeItem = CompleteInventoryItemModel(
                 catalogItem: catalogItem,
                 inventory: inventory,
+                storageLocations: storageLocations,
                 tags: tags,
                 userTags: userTags,
                 rating: rating
@@ -228,6 +241,10 @@ actor CatalogService {
         let allInventory = try await trackingService.fetchAllInventory(matching: nil)
         let inventoryByItem = Dictionary(grouping: allInventory) { $0.item_stable_id }
 
+        // OPTIMIZED: Batch fetch storage locations for all inventory records
+        let allStorageLocations = try await storageLocationRepository.fetchLocations(matching: nil)
+        let storageLocationsByInventory = Dictionary(grouping: allStorageLocations) { $0.inventoryId }
+
         // OPTIMIZED: Batch fetch tags for all items
         let allItemKeys = candidateItems.map { $0.stable_id }
         let tagsByItem = try await itemTagsRepository.fetchTagsForItems(allItemKeys)
@@ -242,9 +259,15 @@ actor CatalogService {
             let tags = tagsByItem[glassItem.stable_id] ?? []
             let userTags = userTagsByItem[glassItem.stable_id] ?? []
 
+            // Collect storage locations from all inventory records for this item
+            let storageLocations = inventory.flatMap { inv in
+                storageLocationsByInventory[inv.id] ?? []
+            }
+
             let completeItem = CompleteInventoryItemModel(
                 glassItem: glassItem,
                 inventory: inventory,
+                storageLocations: storageLocations,
                 tags: tags,
                 userTags: userTags
             )

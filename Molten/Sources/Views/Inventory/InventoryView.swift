@@ -40,6 +40,9 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
     @State private var showingLabelDesigner = false
     @State private var showingSharing = false
+    @State private var showingQRScanner = false
+    @State private var showingManageLocations = false
+    @State private var scannedQRCode: String? = nil
     @State private var pendingShareCode: String? = nil
     @State private var filterRefreshTrigger = 0  // Force re-evaluation when Settings filters change
 
@@ -48,6 +51,7 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var cachedAllCOEs: [Int32] = []
     @State private var cachedManufacturers: [String] = []
     @State private var cachedLocations: [String] = []
+    @State private var cachedNoLocationCount: Int = 0
 
     // Local search text state - isolates TextField from ViewModel to prevent full view re-renders
     // Debouncing happens here in the View, and we only update ViewModel.debouncedSearchText after delay
@@ -68,6 +72,8 @@ struct InventoryView: View, CachedDataDeletion {
     private let kilnScheduleService: KilnScheduleService
     private let glassItemRepository: GlassItemRepository
     private let storageLocationRepository: StorageLocationRepository
+    private let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
+    private let inventoryRepository: InventoryRepository
 
     private let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Flameworker", category: "InventoryView")
 
@@ -82,7 +88,9 @@ struct InventoryView: View, CachedDataDeletion {
         userImageRepository: UserImageRepository,
         kilnScheduleService: KilnScheduleService,
         glassItemRepository: GlassItemRepository,
-        storageLocationRepository: StorageLocationRepository
+        storageLocationRepository: StorageLocationRepository,
+        storageLocationDefinitionRepository: StorageLocationDefinitionRepository,
+        inventoryRepository: InventoryRepository
     ) {
         self._viewModel = State(initialValue: viewModel)
         self.catalogService = catalogService
@@ -94,6 +102,8 @@ struct InventoryView: View, CachedDataDeletion {
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
         self.storageLocationRepository = storageLocationRepository
+        self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
+        self.inventoryRepository = inventoryRepository
     }
 
     // Convenience init for production use
@@ -112,7 +122,9 @@ struct InventoryView: View, CachedDataDeletion {
             userImageRepository: deps.userImageRepository,
             kilnScheduleService: deps.kilnScheduleService,
             glassItemRepository: deps.glassItemRepository,
-            storageLocationRepository: deps.storageLocationRepository
+            storageLocationRepository: deps.storageLocationRepository,
+            storageLocationDefinitionRepository: deps.storageLocationDefinitionRepository,
+            inventoryRepository: deps.inventoryRepository
         )
     }
     
@@ -128,7 +140,7 @@ struct InventoryView: View, CachedDataDeletion {
 
     private var shouldShowSearchEmptyState: Bool {
         // Use debouncedSearchText to avoid triggering re-renders on every keystroke
-        !viewModel.completeItems.isEmpty && (!viewModel.debouncedSearchText.isEmpty || !viewModel.selectedTags.isEmpty || !viewModel.selectedCOEs.isEmpty || !viewModel.selectedManufacturers.isEmpty || viewModel.selectedLocation != nil)
+        !viewModel.completeItems.isEmpty && (!viewModel.debouncedSearchText.isEmpty || !viewModel.selectedTags.isEmpty || !viewModel.selectedCOEs.isEmpty || !viewModel.selectedManufacturers.isEmpty || !viewModel.selectedLocations.isEmpty)
     }
 
     // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
@@ -149,6 +161,11 @@ struct InventoryView: View, CachedDataDeletion {
     // PERFORMANCE OPTIMIZED: Returns cached value, recomputed only when data changes
     private var allAvailableLocations: [String] {
         return cachedLocations
+    }
+
+    // PERFORMANCE OPTIMIZED: Returns cached value for items with no location
+    private var noLocationCount: Int {
+        return cachedNoLocationCount
     }
 
     // Count of unique items with inventory (for subscription banner)
@@ -206,6 +223,7 @@ struct InventoryView: View, CachedDataDeletion {
         var allCOEsSet = Set<Int32>()
         var manufacturersSet = Set<String>()
         var locationsSet = Set<String>()
+        var itemsWithNoLocation = 0
 
         for item in itemsWithInventory {
             allTagsSet.formUnion(item.tags)
@@ -216,11 +234,20 @@ struct InventoryView: View, CachedDataDeletion {
                 manufacturersSet.insert(mfr)
             }
 
+            // Track if this item has any inventory record with no location
+            var hasNoLocation = false
+
             // Extract locations from inventory records
             for inventoryRecord in item.inventory {
                 if let location = inventoryRecord.location, !location.isEmpty {
                     locationsSet.insert(location)
+                } else {
+                    hasNoLocation = true
                 }
+            }
+
+            if hasNoLocation {
+                itemsWithNoLocation += 1
             }
         }
 
@@ -228,6 +255,7 @@ struct InventoryView: View, CachedDataDeletion {
         cachedAllCOEs = allCOEsSet.sorted()
         cachedManufacturers = manufacturersSet.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
         cachedLocations = locationsSet.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+        cachedNoLocationCount = itemsWithNoLocation
     }
 
     /// Update cached filtered items - call this when filters change, not on every keystroke
@@ -302,10 +330,17 @@ struct InventoryView: View, CachedDataDeletion {
             }
         }
 
-        // Apply location filter
-        if let location = viewModel.selectedLocation {
+        // Apply location filter (multi-select)
+        // Empty set means "show all", empty string in set means "show items with no location"
+        if !viewModel.selectedLocations.isEmpty {
             items = items.filter { item in
-                item.inventory.contains { $0.location == location }
+                item.inventory.contains { inventory in
+                    if let location = inventory.location, !location.isEmpty {
+                        return viewModel.selectedLocations.contains(location)
+                    } else {
+                        return viewModel.selectedLocations.contains(LocationQuickFilterBar.noLocationValue)
+                    }
+                }
             }
         }
 
@@ -360,19 +395,27 @@ struct InventoryView: View, CachedDataDeletion {
                         displayName: displayNameForProductType,
                         typeCounts: viewModel.productTypeCounts
                     ),
-                    locationFilter: .init(
-                        selectedLocation: $viewModel.selectedLocation,
-                        availableLocations: allAvailableLocations,
-                        itemCounts: locationCounts,
-                        onClear: { viewModel.selectedLocation = nil }
-                    ),
                     inventoryTypeFilter: .init(
                         selectedType: $viewModel.selectedInventoryType,
                         availableTypes: viewModel.availableInventoryTypes,
                         itemCounts: viewModel.inventoryTypeCounts,
                         displayName: { GlassTerminologySettings.shared.displayName(for: $0) },
                         onClear: { viewModel.selectedInventoryType = nil }
-                    )
+                    ),
+                    showSort: false  // Sort is in the toolbar instead
+                )
+
+                // Quick location filter bar - horizontal scrolling chips with multi-select
+                // Only shows when there are locations defined
+                LocationQuickFilterBar(
+                    selectedLocations: $viewModel.selectedLocations,
+                    availableLocations: allAvailableLocations,
+                    locationCounts: locationCounts,
+                    noLocationCount: noLocationCount,
+                    totalCount: inventoryItemCount,
+                    onManageTapped: {
+                        showingManageLocations = true
+                    }
                 )
 
                 // Usage banner (only show for free tier)
@@ -488,11 +531,39 @@ struct InventoryView: View, CachedDataDeletion {
             .sheet(isPresented: $showingLabelDesigner) {
                 LabelDesignerView(items: sortedFilteredItems)
             }
+            .sheet(isPresented: $showingQRScanner) {
+                QRCodeScannerView { scannedURL in
+                    // Handle the scanned Molten QR code URL
+                    if let url = URL(string: scannedURL) {
+                        // Process via the app's existing deep link handler
+                        // Post to NotificationCenter so MoltenApp can handle it
+                        NotificationCenter.default.post(
+                            name: .openMoltenDeepLink,
+                            object: nil,
+                            userInfo: ["url": url]
+                        )
+                    }
+                }
+            }
             .sheet(isPresented: $showingUpgradePrompt) {
                 UpgradePromptView(
                     feature: "inventory",
                     currentCount: inventoryItemCount,
                     limit: entitlementService.getInventoryLimit() ?? 0
+                )
+            }
+            .sheet(isPresented: $showingManageLocations) {
+                ManageLocationsView(
+                    storageLocationDefinitionRepository: storageLocationDefinitionRepository,
+                    storageLocationRepository: storageLocationRepository,
+                    inventoryTrackingService: inventoryTrackingService,
+                    onLocationsChanged: {
+                        // Full reload when locations are renamed, merged, deleted, or added
+                        Task {
+                            await CatalogDataCache.shared.reload(catalogService: catalogService)
+                            await loadData()
+                        }
+                    }
                 )
             }
             .fullScreenCover(isPresented: $showingSharing) {
@@ -583,7 +654,7 @@ struct InventoryView: View, CachedDataDeletion {
 
             ForEach(sortedFilteredItems, id: \.id) { item in
                 NavigationLink(value: item) {
-                    GlassItemRowView.inventory(item: item, selectedLocation: viewModel.selectedLocation)
+                    GlassItemRowView.inventory(item: item, selectedLocations: viewModel.selectedLocations)
                 }
                 .id("\(item.id)-\(item.rating?.totalRatings ?? 0)-\(item.rating?.averageRating ?? 0)")  // Force re-render when rating changes
                 .accessibilityIdentifier("inventory.item.\(item.glassItem.stable_id)")
@@ -608,19 +679,42 @@ struct InventoryView: View, CachedDataDeletion {
     
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .primaryAction) {
-            Button {
-                // Check if at limit before showing add screen
-                if let limit = entitlementService.getInventoryLimit(),
-                   inventoryItemCount >= limit {
-                    showingUpgradePrompt = true
-                } else {
-                    showingAddItem = true
+        // Sort button - appears near the search bar
+        ToolbarItem(placement: .cancellationAction) {
+            Menu {
+                ForEach(InventorySortOption.allCases, id: \.self) { option in
+                    Button {
+                        viewModel.sortOption = option
+                        updateFilteredItemsCache()
+                    } label: {
+                        Label(option.rawValue, systemImage: option.icon)
+                    }
                 }
             } label: {
-                Image(systemName: "plus")
+                Image(systemName: "arrow.up.arrow.down")
             }
-            .accessibilityIdentifier("inventory_add_button")
+            .accessibilityIdentifier("inventory_sort_button")
+        }
+
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                // Action depends on user setting
+                switch UserSettings.shared.inventoryQuickAction {
+                case .addInventory:
+                    // Check if at limit before showing add screen
+                    if let limit = entitlementService.getInventoryLimit(),
+                       inventoryItemCount >= limit {
+                        showingUpgradePrompt = true
+                    } else {
+                        showingAddItem = true
+                    }
+                case .scanQRCode:
+                    showingQRScanner = true
+                }
+            } label: {
+                Image(systemName: UserSettings.shared.inventoryQuickAction.systemImage)
+            }
+            .accessibilityIdentifier("inventory_quick_action_button")
         }
 
         ToolbarItem(placement: .confirmationAction) {
@@ -637,6 +731,13 @@ struct InventoryView: View, CachedDataDeletion {
                     Label("Add Inventory", systemImage: "plus")
                 }
                 .accessibilityIdentifier("inventory_menu_add")
+
+                Button {
+                    showingQRScanner = true
+                } label: {
+                    Label("Scan QR Code", systemImage: "camera")
+                }
+                .accessibilityIdentifier("inventory_menu_scan_qr")
 
                 Divider()
 
@@ -801,7 +902,7 @@ private struct FilterChangeModifier: ViewModifier {
             .onChange(of: viewModel.selectedCOEs) { _, _ in updateCache() }
             .onChange(of: viewModel.selectedManufacturers) { _, _ in updateCache() }
             .onChange(of: viewModel.selectedProductTypes) { _, _ in updateCache() }
-            .onChange(of: viewModel.selectedLocation) { _, _ in updateCache() }
+            .onChange(of: viewModel.selectedLocations) { _, _ in updateCache() }
             .onChange(of: viewModel.selectedInventoryType) { _, _ in updateCache() }
             .onChange(of: viewModel.sortOption) { _, _ in updateCache() }
     }

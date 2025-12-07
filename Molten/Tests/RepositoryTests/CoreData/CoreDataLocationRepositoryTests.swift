@@ -14,8 +14,8 @@ import CoreData
 
 /// Tests for CoreDataStorageLocationRepository to verify Core Data operations work correctly
 ///
-/// CRITICAL: These tests verify that the Location entity does NOT have an 'id' field
-/// and that locations are uniquely identified by the composite key (inventory_id + location)
+/// StorageLocation records are uniquely identified by their 'id' field, and are linked to
+/// inventory via 'inventory_id'. Records include 'is_transfer' flag and 'date_added' for audit trails.
 @Suite("CoreDataStorageLocationRepository Tests")
 @MainActor
 struct CoreDataStorageLocationRepositoryTests {
@@ -37,8 +37,8 @@ struct CoreDataStorageLocationRepositoryTests {
 
     // MARK: - Core Data Entity Structure Tests
 
-    @Test("StorageLocation entity does not have 'id' attribute")
-    func testLocationEntityHasNoIdAttribute() async throws {
+    @Test("StorageLocation entity has required attributes")
+    func testLocationEntityHasRequiredAttributes() async throws {
         let context = testController.container.viewContext
 
         guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: context) else {
@@ -46,14 +46,13 @@ struct CoreDataStorageLocationRepositoryTests {
             return
         }
 
-        // Verify the entity does NOT have an 'id' attribute
-        let hasIdAttribute = entity.attributesByName.keys.contains("id")
-        #expect(!hasIdAttribute, "StorageLocation entity should NOT have an 'id' attribute")
-
-        // Verify it has the expected attributes
-        #expect(entity.attributesByName.keys.contains("inventory_id"))
-        #expect(entity.attributesByName.keys.contains("location"))
-        #expect(entity.attributesByName.keys.contains("quantity"))
+        // Verify it has the expected attributes for tracking individual storage records
+        #expect(entity.attributesByName.keys.contains("id"), "Should have id for unique record identification")
+        #expect(entity.attributesByName.keys.contains("inventory_id"), "Should have inventory_id to link to inventory")
+        #expect(entity.attributesByName.keys.contains("location"), "Should have location name")
+        #expect(entity.attributesByName.keys.contains("quantity"), "Should have quantity")
+        #expect(entity.attributesByName.keys.contains("is_transfer"), "Should have is_transfer flag for move tracking")
+        #expect(entity.attributesByName.keys.contains("date_added"), "Should have date_added for audit trail")
     }
 
     // MARK: - CRUD Operations

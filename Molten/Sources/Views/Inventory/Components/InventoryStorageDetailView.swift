@@ -113,7 +113,7 @@ struct InventoryStorageDetailView: View {
             .sheet(item: $editingRecord) { record in
                 InventoryEditView(
                     record: record,
-                    inventoryRepository: inventoryRepository,
+                    inventoryTrackingService: inventoryTrackingService,
                     storageLocationDefinitionRepository: storageLocationDefinitionRepository
                 )
             }
@@ -122,7 +122,7 @@ struct InventoryStorageDetailView: View {
                 QuickAddInventoryView(
                     itemStableId: item.glassItem.stable_id,
                     itemName: item.glassItem.name,
-                    inventoryRepository: inventoryRepository,
+                    inventoryTrackingService: inventoryTrackingService,
                     storageLocationDefinitionRepository: storageLocationDefinitionRepository
                 )
             }

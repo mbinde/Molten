@@ -29,6 +29,7 @@ extension Notification.Name {
     static let navigateToShoppingListForStore = Notification.Name("navigateToShoppingListForStore")
     static let filterShoppingListByStore = Notification.Name("filterShoppingListByStore")
     static let navigateToInventorySharingWithCode = Notification.Name("navigateToInventorySharingWithCode")
+    static let openMoltenDeepLink = Notification.Name("openMoltenDeepLink")
 }
 
 /// Main tab view that provides navigation between the app's primary sections

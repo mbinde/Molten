@@ -261,4 +261,70 @@ struct InventoryTrackingServiceLocationTests {
         #expect(completeItem?.inventory.first?.location == nil)
         #expect(completeItem?.locations.isEmpty == true) // No locations since location is nil
     }
+
+    @Test("addInventory creates StorageLocationDefinition for new location")
+    func testAddInventoryCreatesLocationDefinition() async throws {
+        // Setup
+        let catalogService = deps.catalogService
+        let service = deps.inventoryTrackingService
+        let locationRepo = deps.storageLocationDefinitionRepository
+
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = glassItem.stable_id
+
+        // Verify location doesn't exist yet
+        let uniqueLocation = "Test Location \(UUID().uuidString.prefix(8))"
+        let existingDef = try await locationRepo.fetch(byName: uniqueLocation)
+        #expect(existingDef == nil)
+
+        // Add inventory with location
+        _ = try await service.addInventory(
+            quantity: 5,
+            type: "rod",
+            toItem: stableId,
+            atLocation: uniqueLocation
+        )
+
+        // Verify StorageLocationDefinition was created
+        let createdDef = try await locationRepo.fetch(byName: uniqueLocation)
+        #expect(createdDef != nil)
+        #expect(createdDef?.name == uniqueLocation)
+    }
+
+    @Test("addInventory does not duplicate existing StorageLocationDefinition")
+    func testAddInventoryDoesNotDuplicateLocationDefinition() async throws {
+        // Setup
+        let catalogService = deps.catalogService
+        let service = deps.inventoryTrackingService
+        let locationRepo = deps.storageLocationDefinitionRepository
+
+        // Use real catalog data (catalog is read-only)
+        let catalogItems = try await catalogService.getGlassItemsLightweight()
+        let glassItem = try catalogItems.first(where: { $0.sku != nil })!
+        let stableId = glassItem.stable_id
+
+        let uniqueLocation = "Reused Location \(UUID().uuidString.prefix(8))"
+
+        // Add inventory twice with same location
+        _ = try await service.addInventory(
+            quantity: 5,
+            type: "rod",
+            toItem: stableId,
+            atLocation: uniqueLocation
+        )
+
+        _ = try await service.addInventory(
+            quantity: 3,
+            type: "rod",
+            toItem: stableId,
+            atLocation: uniqueLocation
+        )
+
+        // Verify only one StorageLocationDefinition exists
+        let allDefs = try await locationRepo.fetchAll()
+        let matchingDefs = allDefs.filter { $0.name == uniqueLocation }
+        #expect(matchingDefs.count == 1)
+    }
 }

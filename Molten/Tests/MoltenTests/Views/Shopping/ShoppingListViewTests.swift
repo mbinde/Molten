@@ -476,13 +476,27 @@ struct ShoppingListViewTests {
             let itemTagsRepository = MockItemTagsRepository()
             let coatingItemRepo = MockCoatingItemRepository()
             let toolItemRepo = MockToolItemRepository()
+            let locationDefinitionRepo = MockStorageLocationDefinitionRepository()
+            let moveRecordRepo = MockInventoryMoveRecordRepository()
+            let consumptionRecordRepo = MockInventoryConsumptionRecordRepository()
+
+            // Create StorageLocationService with required repositories
+            let storageLocationService = await StorageLocationService(
+                definitionRepository: locationDefinitionRepo,
+                storageLocationRepository: storageLocationRepository,
+                moveRecordRepository: moveRecordRepo,
+                consumptionRecordRepository: consumptionRecordRepo
+            )
 
             let inventoryTrackingService = InventoryTrackingService(
                 glassItemRepository: glassItemRepository,
                 coatingItemRepository: coatingItemRepo,
                 toolItemRepository: toolItemRepo,
                 inventoryRepository: inventoryRepository,
-                itemTagsRepository: itemTagsRepository
+                itemTagsRepository: itemTagsRepository,
+                storageLocationDefinitionRepository: locationDefinitionRepo,
+                storageLocationRepository: storageLocationRepository,
+                storageLocationService: storageLocationService
             )
 
             // Create test glass item in the repository

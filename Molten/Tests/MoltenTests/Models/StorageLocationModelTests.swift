@@ -136,15 +136,14 @@ struct StorageLocationModelTests {
 
     // MARK: - init Validation Tests
 
-    @Test("Should ensure non-negative quantity in initializer")
-    func testInitEnsuresNonNegativeQuantity() {
+    @Test("Should clamp negative quantity to zero")
+    func testInitClampsNegativeQuantity() {
         let location = StorageLocationModel(
             inventoryId: UUID(),
-            locationName: "Shelf A",
             quantity: -5.0
         )
 
-        // Business rule: Negative quantity becomes 0.0
+        // Quantity is always >= 0; consumption is tracked via InventoryConsumptionRecord
         #expect(location.quantity == 0.0)
     }
 
@@ -152,7 +151,6 @@ struct StorageLocationModelTests {
     func testInitPreservesPositiveQuantity() {
         let location = StorageLocationModel(
             inventoryId: UUID(),
-            locationName: "Shelf A",
             quantity: 10.5
         )
 
@@ -163,7 +161,6 @@ struct StorageLocationModelTests {
     func testInitPreservesZeroQuantity() {
         let location = StorageLocationModel(
             inventoryId: UUID(),
-            locationName: "Shelf A",
             quantity: 0.0
         )
 
@@ -181,14 +178,14 @@ struct StorageLocationModelTests {
         #expect(location.locationName == "Shelf A")
     }
 
-    @Test("Should handle edge case: very negative quantity")
-    func testInitVeryNegativeQuantity() {
+    @Test("Should clamp very negative quantity to zero")
+    func testInitClampsVeryNegativeQuantity() {
         let location = StorageLocationModel(
             inventoryId: UUID(),
-            locationName: "Shelf A",
             quantity: -999999.99
         )
 
+        // Quantity is always >= 0; consumption is tracked via InventoryConsumptionRecord
         #expect(location.quantity == 0.0)
     }
 
@@ -196,11 +193,90 @@ struct StorageLocationModelTests {
     func testInitLargePositiveQuantity() {
         let location = StorageLocationModel(
             inventoryId: UUID(),
-            locationName: "Shelf A",
             quantity: 999999.99
         )
 
         #expect(location.quantity == 999999.99)
+    }
+
+    // MARK: - New Field Tests
+
+    @Test("Should set dateAdded and dateModified")
+    func testInitSetsDateFields() {
+        let now = Date()
+        let location = StorageLocationModel(
+            inventoryId: UUID(),
+            quantity: 5.0,
+            dateAdded: now,
+            dateModified: now
+        )
+
+        #expect(location.dateAdded == now)
+        #expect(location.dateModified == now)
+    }
+
+    @Test("Should default isTransfer to false")
+    func testInitDefaultsIsTransferToFalse() {
+        let location = StorageLocationModel(
+            inventoryId: UUID(),
+            quantity: 5.0
+        )
+
+        #expect(location.isTransfer == false)
+    }
+
+    @Test("Should set isTransfer when specified")
+    func testInitSetsIsTransfer() {
+        let location = StorageLocationModel(
+            inventoryId: UUID(),
+            quantity: 5.0,
+            isTransfer: true
+        )
+
+        #expect(location.isTransfer == true)
+    }
+
+    @Test("Should set containerCount for weight-based types")
+    func testInitSetsContainerCount() {
+        let location = StorageLocationModel(
+            inventoryId: UUID(),
+            quantity: 250.0,
+            containerCount: 3.0
+        )
+
+        #expect(location.containerCount == 3.0)
+    }
+
+    @Test("Should allow nil containerCount")
+    func testInitAllowsNilContainerCount() {
+        let location = StorageLocationModel(
+            inventoryId: UUID(),
+            quantity: 5.0
+        )
+
+        #expect(location.containerCount == nil)
+    }
+
+    @Test("Should set storageLocationId for location definition reference")
+    func testInitSetsStorageLocationId() {
+        let definitionId = UUID()
+        let location = StorageLocationModel(
+            inventoryId: UUID(),
+            storageLocationId: definitionId,
+            quantity: 5.0
+        )
+
+        #expect(location.storageLocationId == definitionId)
+    }
+
+    @Test("Should allow nil storageLocationId for unassigned inventory")
+    func testInitAllowsNilStorageLocationId() {
+        let location = StorageLocationModel(
+            inventoryId: UUID(),
+            quantity: 5.0
+        )
+
+        #expect(location.storageLocationId == nil)
     }
 
     // MARK: - Integration Tests

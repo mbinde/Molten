@@ -37,14 +37,14 @@ struct InventoryDetailView: View {
     @State private var isEditing = false
 
     // State for managing UI interactions
-    @State private var editingInventoryRecord: InventoryModel?
     @State private var showingInventoryDetails = false
-    @State private var selectedTypeRecords: (records: [InventoryModel], type: String)?
     @State private var showingShoppingListOptions = false
     @State private var showingUserNotesEditor = false
     @State private var showingUserTagsEditor = false
     @State private var showingAddInventory = false
     @State private var showingUpgradePrompt = false
+    @State private var showingMoveSheet = false
+    @State private var movingInventoryKey: InventoryGroupKey?
     @State private var inventoryItemCount = 0
     @State private var inventoryItemLimit = 0
     @State private var expandedSections: Set<String> = ["glass-item", "inventory", "shopping-list"]
@@ -158,14 +158,6 @@ struct InventoryDetailView: View {
 
     // MARK: - Computed Properties
 
-    /// Binding for showing type records sheet (converts optional tuple to Bool)
-    private var showingTypeRecordsBinding: Binding<Bool> {
-        Binding(
-            get: { selectedTypeRecords != nil },
-            set: { if !$0 { selectedTypeRecords = nil } }
-        )
-    }
-
     /// Check if we have permission to show manufacturer descriptions for this item
     private var canShowManufacturerDescription: Bool {
         GlassManufacturers.productDescriptionPermissions[currentItem.glassItem.manufacturer] ?? false
@@ -234,11 +226,15 @@ struct InventoryDetailView: View {
                     if !currentItem.inventory.isEmpty {
                         InventoryStatusCard(
                             inventory: currentItem.inventory,
-                            onTapRecord: { record in
-                                editingInventoryRecord = record
+                            onIncrement: { key in
+                                incrementInventory(key: key)
                             },
-                            onTapRecordsForType: { records, type in
-                                selectedTypeRecords = (records, type)
+                            onDecrement: { key in
+                                decrementInventory(key: key)
+                            },
+                            onMove: { key in
+                                movingInventoryKey = key
+                                showingMoveSheet = true
                             },
                             onTapDetails: {
                                 showingInventoryDetails = true
@@ -377,42 +373,14 @@ struct InventoryDetailView: View {
                 existingItem: shoppingListItem  // Pass existing item for edit mode
             )
         }
-        .sheet(isPresented: $showingInventoryDetails) {
+        .sheet(isPresented: $showingInventoryDetails, onDismiss: {
+            // Refresh item data after details might have changed
+            refreshItemData()
+        }) {
             InventoryStorageDetailView(
                 item: currentItem,
                 inventoryType: ""  // Show all types
             )
-            .onDisappear {
-                // Refresh item data after details might have changed
-                refreshItemData()
-            }
-        }
-        .sheet(item: $editingInventoryRecord) { record in
-            if let service = inventoryTrackingService {
-                InventoryEditView(
-                    record: record,
-                    inventoryRepository: service.inventoryRepository,
-                    storageLocationDefinitionRepository: storageLocationDefinitionRepository
-                )
-                .onDisappear {
-                    // Refresh item data after editing
-                    refreshItemData()
-                }
-            }
-        }
-        .sheet(isPresented: showingTypeRecordsBinding, onDismiss: {
-            // Refresh item data after potentially editing records
-            refreshItemData()
-        }) {
-            if let typeRecords = selectedTypeRecords,
-               let service = inventoryTrackingService {
-                InventoryTypeRecordsView(
-                    records: typeRecords.records,
-                    type: typeRecords.type,
-                    itemName: currentItem.glassItem.name,
-                    inventoryRepository: service.inventoryRepository
-                )
-            }
         }
         .sheet(isPresented: $showingUserNotesEditor, onDismiss: {
             // Reload notes after editing
@@ -450,6 +418,24 @@ struct InventoryDetailView: View {
                 currentCount: inventoryItemCount,
                 limit: inventoryItemLimit
             )
+        }
+        .sheet(isPresented: $showingMoveSheet, onDismiss: {
+            // Refresh data when sheet dismisses to ensure UI is in sync
+            // This catches cases where the async move operation completes after dismissal
+            refreshItemData()
+        }) {
+            if let key = movingInventoryKey {
+                let quantity = quantityForKey(key)
+                MoveInventorySheet(
+                    sourceKey: key,
+                    itemName: currentItem.glassItem.name,
+                    availableQuantity: quantity,
+                    storageLocationDefinitionRepository: storageLocationDefinitionRepository,
+                    onMove: { destinationLocation, quantityToMove in
+                        moveInventory(from: key, to: destinationLocation, quantity: quantityToMove)
+                    }
+                )
+            }
         }
         .alert("Error", isPresented: $showingError) {
             Button("OK") { }
@@ -734,11 +720,15 @@ struct InventoryDetailView: View {
 
     private func refreshItemData() {
         guard let service = inventoryTrackingService else {
-            print("⚠️ No inventory tracking service available for refresh")
+            print("⚠️ [REFRESH] No inventory tracking service available for refresh")
             return
         }
 
-        print("🔄 refreshItemData() called for \(item.glassItem.stable_id)")
+        print("🔄 [REFRESH] refreshItemData() called for \(item.glassItem.stable_id)")
+        print("🔄 [REFRESH] Current inventory before refresh:")
+        for inv in currentItem.inventory {
+            print("   - \(inv.type): qty=\(inv.quantity), id=\(inv.id)")
+        }
 
         Task {
             isRefreshing = true
@@ -747,21 +737,127 @@ struct InventoryDetailView: View {
             do {
                 // Fetch the updated complete item
                 if let updatedItem = try await service.getCompleteItem(stableId: item.glassItem.stable_id) {
-                    print("✅ Got updated item with \(updatedItem.inventory.count) inventory records")
+                    print("✅ [REFRESH] Got updated item with \(updatedItem.inventory.count) inventory records")
                     for inv in updatedItem.inventory {
-                        print("   - \(inv.type): qty=\(inv.quantity), containers=\(inv.containerCount ?? 0)")
+                        print("   - \(inv.type): qty=\(inv.quantity), id=\(inv.id)")
                     }
                     await MainActor.run {
                         currentItem = updatedItem
-                        print("✅ Updated currentItem state")
+                        print("✅ [REFRESH] Updated currentItem state on MainActor")
                     }
                 } else {
-                    print("⚠️ getCompleteItem returned nil")
+                    print("⚠️ [REFRESH] getCompleteItem returned nil")
                 }
             } catch {
-                print("❌ Error refreshing item data: \(error)")
+                print("❌ [REFRESH] Error refreshing item data: \(error)")
             }
         }
+    }
+
+    // MARK: - Inventory Adjustment
+
+    private func incrementInventory(key: InventoryGroupKey) {
+        guard let service = inventoryTrackingService else { return }
+
+        Task {
+            do {
+                _ = try await service.incrementInventory(
+                    forItem: item.glassItem.stable_id,
+                    type: key.type,
+                    subtype: key.subtype,
+                    subsubtype: key.subsubtype,
+                    atLocation: key.location
+                )
+                // Update local state immediately
+                await refreshItemDataAsync()
+            } catch {
+                print("❌ Error incrementing inventory: \(error)")
+                await MainActor.run {
+                    errorMessage = "Failed to add inventory: \(error.localizedDescription)"
+                    showingError = true
+                }
+            }
+        }
+    }
+
+    private func decrementInventory(key: InventoryGroupKey) {
+        guard let service = inventoryTrackingService else { return }
+
+        Task {
+            do {
+                _ = try await service.decrementInventoryLIFO(
+                    forItem: item.glassItem.stable_id,
+                    type: key.type,
+                    subtype: key.subtype,
+                    subsubtype: key.subsubtype,
+                    atLocation: key.location
+                )
+                // Update local state immediately
+                await refreshItemDataAsync()
+            } catch {
+                print("❌ Error decrementing inventory: \(error)")
+                await MainActor.run {
+                    errorMessage = "Failed to remove inventory: \(error.localizedDescription)"
+                    showingError = true
+                }
+            }
+        }
+    }
+
+    /// Async version of refreshItemData that can be awaited
+    private func refreshItemDataAsync() async {
+        guard let service = inventoryTrackingService else { return }
+
+        do {
+            if let updatedItem = try await service.getCompleteItem(stableId: item.glassItem.stable_id) {
+                await MainActor.run {
+                    currentItem = updatedItem
+                }
+            }
+        } catch {
+            print("❌ Error refreshing item data: \(error)")
+        }
+    }
+
+    private func moveInventory(from sourceKey: InventoryGroupKey, to destinationLocation: String?, quantity: Int) {
+        guard let service = inventoryTrackingService else { return }
+
+        Task {
+            do {
+                // Move specified quantity from source to destination
+                // Each move decrements from source (LIFO) and increments at destination
+                for _ in 0..<quantity {
+                    try await service.moveInventory(
+                        forItem: item.glassItem.stable_id,
+                        type: sourceKey.type,
+                        subtype: sourceKey.subtype,
+                        subsubtype: sourceKey.subsubtype,
+                        fromLocation: sourceKey.location,
+                        toLocation: destinationLocation
+                    )
+                }
+                // Update local state
+                await refreshItemDataAsync()
+            } catch {
+                print("❌ Error moving inventory: \(error)")
+                await MainActor.run {
+                    errorMessage = "Failed to move inventory: \(error.localizedDescription)"
+                    showingError = true
+                }
+            }
+        }
+    }
+
+    /// Get the total quantity for a given inventory group key
+    private func quantityForKey(_ key: InventoryGroupKey) -> Double {
+        currentItem.inventory
+            .filter { record in
+                record.location == key.location &&
+                record.type == key.type &&
+                record.subtype == key.subtype &&
+                record.subsubtype == key.subsubtype
+            }
+            .reduce(0) { $0 + $1.quantity }
     }
 
     // MARK: - Hero Header Section

@@ -200,6 +200,26 @@ final class MockStorageLocationRepository: StorageLocationRepository {
         return []
     }
 
+    // MARK: - Date and Transfer Operations
+
+    func fetchLocations(addedOn date: Date, excludeTransfers: Bool) async throws -> [StorageLocationModel] {
+        let calendar = Calendar.current
+        return locations.values.filter { location in
+            let sameDay = calendar.isDate(location.dateAdded, inSameDayAs: date)
+            let passesTransferFilter = !excludeTransfers || !location.isTransfer
+            let hasQuantity = location.quantity > 0
+            return sameDay && passesTransferFilter && hasQuantity
+        }
+    }
+
+    func fetchTransferLocations() async throws -> [StorageLocationModel] {
+        return locations.values.filter { $0.isTransfer }
+    }
+
+    func fetchLocations(atLocationDefinition storageLocationId: UUID) async throws -> [StorageLocationModel] {
+        return locations.values.filter { $0.storageLocationId == storageLocationId }
+    }
+
     // MARK: - Test Helpers
 
     /// Populate repository with sample test data

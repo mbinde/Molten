@@ -185,23 +185,27 @@ struct ShoppingListItemCreationTests {
         let glassItem = try await createTestGlassItem(catalogService: catalogService)
 
         // Verify subtypes are appropriate for their types
-        let rodSubtypes = GlassItemTypeSystem.getSubtypes(for: "rod")
-        #expect(rodSubtypes.contains("standard"))
-        #expect(rodSubtypes.contains("cane"))
-        #expect(rodSubtypes.contains("pull"))
+        // Frit has subtypes; rod does not
+        let fritSubtypes = GlassItemTypeSystem.getSubtypes(for: "frit")
+        #expect(fritSubtypes.contains("coarse"))
+        #expect(fritSubtypes.contains("medium"))
+        #expect(fritSubtypes.contains("fine"))
 
-        // Create item with valid type/subtype combination
+        let rodSubtypes = GlassItemTypeSystem.getSubtypes(for: "rod")
+        #expect(rodSubtypes.isEmpty)
+
+        // Create item with valid type (rod has no subtypes now)
         let item = ItemShoppingModel(
             item_stable_id: glassItem.stable_id,
             quantity: 2.0,
             store: nil,
             type: "rod",
-            subtype: "standard",
+            subtype: nil,
             subsubtype: nil
         )
 
         #expect(item.type == "rod")
-        #expect(item.subtype == "standard")
+        #expect(item.subtype == nil)
     }
 
     // MARK: - Test Helpers

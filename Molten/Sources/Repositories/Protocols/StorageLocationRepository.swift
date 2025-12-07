@@ -130,6 +130,24 @@ nonisolated protocol StorageLocationRepository: Sendable {
     /// Find locations with quantities but no corresponding inventory records
     /// - Returns: Array of StorageLocationModel instances that are orphaned
     func findOrphanedLocations() async throws -> [StorageLocationModel]
+
+    // MARK: - Date and Transfer Operations
+
+    /// Fetch locations added on a specific date (for label printing)
+    /// - Parameters:
+    ///   - date: The date to filter by (time component is ignored)
+    ///   - excludeTransfers: If true, exclude records where isTransfer=true
+    /// - Returns: Array of StorageLocationModel instances added on that date
+    func fetchLocations(addedOn date: Date, excludeTransfers: Bool) async throws -> [StorageLocationModel]
+
+    /// Fetch all locations that are transfer records
+    /// - Returns: Array of StorageLocationModel instances where isTransfer=true
+    func fetchTransferLocations() async throws -> [StorageLocationModel]
+
+    /// Fetch locations by storage location definition ID
+    /// - Parameter storageLocationId: The UUID of the StorageLocationDefinition
+    /// - Returns: Array of StorageLocationModel instances at this location
+    func fetchLocations(atLocationDefinition storageLocationId: UUID) async throws -> [StorageLocationModel]
 }
 
 // Note: LocationModel is defined in SharedModels.swift

@@ -176,8 +176,10 @@
 				Tests/MoltenTests/Models/DimensionUnitTests.swift,
 				Tests/MoltenTests/Models/GlassItemSearchRequestTests.swift,
 				Tests/MoltenTests/Models/GlassItemSortOptionTests.swift,
+				Tests/MoltenTests/Models/InventoryConsumptionRecordModelTests.swift,
 				Tests/MoltenTests/Models/InventoryLocationTests.swift,
 				Tests/MoltenTests/Models/InventoryModelValidationTests.swift,
+				Tests/MoltenTests/Models/InventoryMoveRecordModelTests.swift,
 				Tests/MoltenTests/Models/ItemShoppingModelTests.swift,
 				Tests/MoltenTests/Models/KilnScheduleModelTests.swift,
 				Tests/MoltenTests/Models/LabelPresetTests.swift,
@@ -235,6 +237,7 @@
 				Tests/MoltenTests/Services/KilnScheduleServiceTests.swift,
 				Tests/MoltenTests/Services/LabelPrintingServiceTests.swift,
 				Tests/MoltenTests/Services/LabelStorageServiceTests.swift,
+				Tests/MoltenTests/Services/LocationDefinitionMigrationTests.swift,
 				Tests/MoltenTests/Services/LocationServiceTests.swift,
 				Tests/MoltenTests/Services/ManufacturerFilterServiceTests.swift,
 				Tests/MoltenTests/Services/MockCatalogUpdateHelpers.swift,
@@ -307,7 +310,9 @@
 				Tests/MoltenTests/Views/Shared/LabelPrintingOwnerTests.swift,
 				Tests/MoltenTests/Views/Shared/LabelTextAlignmentTests.swift,
 				Tests/MoltenTests/Views/Shared/LabelTextFieldOwnerTests.swift,
+				Tests/MoltenTests/Views/Shared/LocationQuickFilterBarTests.swift,
 				Tests/MoltenTests/Views/Shared/MainTabViewTests.swift,
+				Tests/MoltenTests/Views/Shared/QRCodeScannerViewTests.swift,
 				Tests/MoltenTests/Views/Shared/ShareExtensionImageTests.swift,
 				Tests/MoltenTests/Views/Shared/ShareExtensionTests.swift,
 				Tests/MoltenTests/Views/Shared/TabConfigurationTests.swift,
@@ -394,8 +399,10 @@
 				Tests/MoltenTests/Models/DimensionUnitTests.swift,
 				Tests/MoltenTests/Models/GlassItemSearchRequestTests.swift,
 				Tests/MoltenTests/Models/GlassItemSortOptionTests.swift,
+				Tests/MoltenTests/Models/InventoryConsumptionRecordModelTests.swift,
 				Tests/MoltenTests/Models/InventoryLocationTests.swift,
 				Tests/MoltenTests/Models/InventoryModelValidationTests.swift,
+				Tests/MoltenTests/Models/InventoryMoveRecordModelTests.swift,
 				Tests/MoltenTests/Models/ItemShoppingModelTests.swift,
 				Tests/MoltenTests/Models/KilnScheduleModelTests.swift,
 				Tests/MoltenTests/Models/LabelPresetTests.swift,
@@ -454,6 +461,7 @@
 				Tests/MoltenTests/Services/KilnScheduleServiceTests.swift,
 				Tests/MoltenTests/Services/LabelPrintingServiceTests.swift,
 				Tests/MoltenTests/Services/LabelStorageServiceTests.swift,
+				Tests/MoltenTests/Services/LocationDefinitionMigrationTests.swift,
 				Tests/MoltenTests/Services/LocationServiceTests.swift,
 				Tests/MoltenTests/Services/ManufacturerFilterServiceTests.swift,
 				Tests/MoltenTests/Services/MockCatalogUpdateHelpers.swift,
@@ -526,7 +534,9 @@
 				Tests/MoltenTests/Views/Shared/LabelPrintingOwnerTests.swift,
 				Tests/MoltenTests/Views/Shared/LabelTextAlignmentTests.swift,
 				Tests/MoltenTests/Views/Shared/LabelTextFieldOwnerTests.swift,
+				Tests/MoltenTests/Views/Shared/LocationQuickFilterBarTests.swift,
 				Tests/MoltenTests/Views/Shared/MainTabViewTests.swift,
+				Tests/MoltenTests/Views/Shared/QRCodeScannerViewTests.swift,
 				Tests/MoltenTests/Views/Shared/ShareExtensionImageTests.swift,
 				Tests/MoltenTests/Views/Shared/ShareExtensionTests.swift,
 				Tests/MoltenTests/Views/Shared/TabConfigurationTests.swift,
@@ -1661,7 +1671,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.MotleyWoods.Molten;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -1713,7 +1723,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.MotleyWoods.Molten;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;

@@ -99,7 +99,7 @@ struct LabelDesignerView: View {
             Form {
                 formContent
             }
-            .navigationTitle("Label Designer")
+            .navigationTitle("Labels")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
             .sheet(isPresented: $showingPresetSheet) { presetSheet }
@@ -391,7 +391,6 @@ struct LabelDesignerView: View {
                     dismiss()
                 }
             }
-            .frame(minWidth: 100, alignment: .leading)
             .accessibilityIdentifier("label_designer_done")
         }
 

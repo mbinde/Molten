@@ -94,13 +94,27 @@ struct CoreDataLeakDiagnostic {
         let shoppingListRepository = MockShoppingListRepository()
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
+        let locationDefinitionRepo = MockStorageLocationDefinitionRepository()
+        let moveRecordRepo = MockInventoryMoveRecordRepository()
+        let consumptionRecordRepo = MockInventoryConsumptionRecordRepository()
+
+        // Create StorageLocationService with required repositories
+        let storageLocationService = await StorageLocationService(
+            definitionRepository: locationDefinitionRepo,
+            storageLocationRepository: mockLocationRepo,
+            moveRecordRepository: moveRecordRepo,
+            consumptionRecordRepository: consumptionRecordRepo
+        )
 
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: mockGlassItemRepo,
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryRepository: mockInventoryRepo,
-            itemTagsRepository: mockItemTagsRepo
+            itemTagsRepository: mockItemTagsRepo,
+            storageLocationDefinitionRepository: locationDefinitionRepo,
+            storageLocationRepository: mockLocationRepo,
+            storageLocationService: storageLocationService
         )
 
         let catalogService = CatalogService(
@@ -111,7 +125,8 @@ struct CoreDataLeakDiagnostic {
             itemMinimumRepository: mockItemMinimumRepo,
             itemTagsRepository: mockItemTagsRepo,
             userTagsRepository: mockUserTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: AppDependencies.shared.ratingService,
+            storageLocationRepository: mockLocationRepo
         )
 
         let shoppingListService = ShoppingListService(

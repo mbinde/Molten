@@ -10,7 +10,7 @@ import SwiftUI
 /// Quick edit form for updating an inventory record
 struct InventoryEditView: View {
     let record: InventoryModel
-    let inventoryRepository: InventoryRepository
+    let inventoryTrackingService: InventoryTrackingService
     let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
 
     @Environment(\.dismiss) private var dismiss
@@ -22,9 +22,9 @@ struct InventoryEditView: View {
     @State private var errorMessage = ""
     @State private var showingDeleteConfirmation = false
 
-    init(record: InventoryModel, inventoryRepository: InventoryRepository, storageLocationDefinitionRepository: StorageLocationDefinitionRepository) {
+    init(record: InventoryModel, inventoryTrackingService: InventoryTrackingService, storageLocationDefinitionRepository: StorageLocationDefinitionRepository) {
         self.record = record
-        self.inventoryRepository = inventoryRepository
+        self.inventoryTrackingService = inventoryTrackingService
         self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
         // Format quantity without decimal if it's a whole number
         let quantityString = record.quantity.truncatingRemainder(dividingBy: 1) == 0
@@ -118,7 +118,8 @@ struct InventoryEditView: View {
 
         Task {
             do {
-                try await inventoryRepository.deleteInventory(id: record.id)
+                // Use service to delete - this also handles StorageLocation cleanup
+                try await inventoryTrackingService.deleteInventory(id: record.id)
                 await MainActor.run {
                     dismiss()
                 }
@@ -160,7 +161,8 @@ struct InventoryEditView: View {
                     date_modified: Date()
                 )
 
-                try await inventoryRepository.updateInventory(updatedRecord)
+                // Use service to update - this also syncs StorageLocation record
+                _ = try await inventoryTrackingService.updateInventory(updatedRecord)
 
                 await MainActor.run {
                     dismiss()

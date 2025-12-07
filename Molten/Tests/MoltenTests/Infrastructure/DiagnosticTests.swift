@@ -97,12 +97,27 @@ struct DiagnosticTests: MockOnlyTestSuite {
         let mockLogger = MockLogger()
         let ratingService = RatingService(repository: ratingRepo, logger: LoggingService(backends: [mockLogger]))
 
+        let locationDefinitionRepo = MockStorageLocationDefinitionRepository()
+        let moveRecordRepo = MockInventoryMoveRecordRepository()
+        let consumptionRecordRepo = MockInventoryConsumptionRecordRepository()
+
+        // Create StorageLocationService with required repositories
+        let storageLocationService = await StorageLocationService(
+            definitionRepository: locationDefinitionRepo,
+            storageLocationRepository: repos.location,
+            moveRecordRepository: moveRecordRepo,
+            consumptionRecordRepository: consumptionRecordRepo
+        )
+
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryRepository: repos.inventory,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            storageLocationDefinitionRepository: locationDefinitionRepo,
+            storageLocationRepository: repos.location,
+            storageLocationService: storageLocationService
         )
 
         let catalogService = CatalogService(
@@ -113,7 +128,8 @@ struct DiagnosticTests: MockOnlyTestSuite {
             itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepo,
-            ratingService: ratingService
+            ratingService: ratingService,
+            storageLocationRepository: repos.location
         )
 
         // Test that services use the injected repositories

@@ -715,7 +715,8 @@ struct ShoppingListView: View {
                     coeFilter: .init(
                         selectedCOEs: $viewModel.selectedCOEs,
                         availableCOEs: allAvailableCOEs
-                    )
+                    ),
+                    showSort: false  // Sort is in the toolbar instead
                 )
 
                 // Usage banner (only show for free tier when not in shopping mode)
@@ -821,6 +822,20 @@ struct ShoppingListView: View {
                             Text("Cancel")
                         }
                         .accessibilityIdentifier("shopping_cancel_button")
+                    } else {
+                        // Sort button when not in shopping mode
+                        Menu {
+                            ForEach(ShoppingListSortOption.allCases, id: \.self) { option in
+                                Button {
+                                    viewModel.sortOption = option
+                                } label: {
+                                    Label(option.rawValue, systemImage: option.icon)
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "arrow.up.arrow.down")
+                        }
+                        .accessibilityIdentifier("shopping_sort_button")
                     }
                 }
 

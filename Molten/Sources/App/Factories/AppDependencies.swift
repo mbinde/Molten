@@ -79,6 +79,8 @@ class AppDependencies {
     private var _ratingRepository: RatingRepository?
     private var _workspaceRepository: WorkspaceRepository?
     private var _storageLocationDefinitionRepository: StorageLocationDefinitionRepository?
+    private var _inventoryMoveRecordRepository: InventoryMoveRecordRepository?
+    private var _inventoryConsumptionRecordRepository: InventoryConsumptionRecordRepository?
     #if os(iOS)
     private var _userImageRepository: UserImageRepository?
     #endif
@@ -199,6 +201,20 @@ class AppDependencies {
         return repo
     }
 
+    var inventoryMoveRecordRepository: InventoryMoveRecordRepository {
+        if let repo = _inventoryMoveRecordRepository { return repo }
+        let repo = CoreDataInventoryMoveRecordRepository(context: persistenceController.cloudContext)
+        _inventoryMoveRecordRepository = repo
+        return repo
+    }
+
+    var inventoryConsumptionRecordRepository: InventoryConsumptionRecordRepository {
+        if let repo = _inventoryConsumptionRecordRepository { return repo }
+        let repo = CoreDataInventoryConsumptionRecordRepository(context: persistenceController.cloudContext)
+        _inventoryConsumptionRecordRepository = repo
+        return repo
+    }
+
     #if os(iOS)
     var userImageRepository: UserImageRepository {
         if let repo = _userImageRepository { return repo }
@@ -237,7 +253,10 @@ class AppDependencies {
             coatingItemRepository: coatingItemRepository,
             toolItemRepository: toolItemRepository,
             inventoryRepository: inventoryRepository,
-            itemTagsRepository: itemTagsRepository
+            itemTagsRepository: itemTagsRepository,
+            storageLocationDefinitionRepository: storageLocationDefinitionRepository,
+            storageLocationRepository: storageLocationRepository,
+            storageLocationService: storageLocationService
         )
         _inventoryTrackingService = service
         return service
@@ -266,7 +285,8 @@ class AppDependencies {
             itemMinimumRepository: itemMinimumRepository,
             itemTagsRepository: itemTagsRepository,
             userTagsRepository: userTagsRepository,
-            ratingService: ratingService
+            ratingService: ratingService,
+            storageLocationRepository: storageLocationRepository
         )
         _catalogService = service
         return service
@@ -332,9 +352,25 @@ class AppDependencies {
         }
         let service = StorageLocationService(
             definitionRepository: storageLocationDefinitionRepository,
-            storageLocationRepository: storageLocationRepository
+            storageLocationRepository: storageLocationRepository,
+            moveRecordRepository: inventoryMoveRecordRepository,
+            consumptionRecordRepository: inventoryConsumptionRecordRepository
         )
         _storageLocationService = service
+        return service
+    }
+
+    private var _storageLocationMigrationService: StorageLocationMigrationService?
+    var storageLocationMigrationService: StorageLocationMigrationService {
+        if let service = _storageLocationMigrationService {
+            return service
+        }
+        let service = StorageLocationMigrationService(
+            inventoryRepository: inventoryRepository,
+            storageLocationRepository: storageLocationRepository,
+            storageLocationDefinitionRepository: storageLocationDefinitionRepository
+        )
+        _storageLocationMigrationService = service
         return service
     }
 
@@ -556,7 +592,8 @@ class AppDependencies {
             return service
         }
         let service = BackupService(
-            inventoryRepository: inventoryRepository
+            inventoryRepository: inventoryRepository,
+            storageLocationDefinitionRepository: storageLocationDefinitionRepository
         )
         _backupService = service
         return service
@@ -615,6 +652,23 @@ class AppDependencies {
         )
         _labelUpdateService = service
         return service
+    }
+
+    // MARK: - Migrations
+
+    /// Location definition migration (created lazily)
+    private var _locationDefinitionMigration: LocationDefinitionMigration?
+
+    var locationDefinitionMigration: LocationDefinitionMigration {
+        if let migration = _locationDefinitionMigration {
+            return migration
+        }
+        let migration = LocationDefinitionMigration(
+            inventoryRepository: inventoryRepository,
+            storageLocationDefinitionRepository: storageLocationDefinitionRepository
+        )
+        _locationDefinitionMigration = migration
+        return migration
     }
 }
 

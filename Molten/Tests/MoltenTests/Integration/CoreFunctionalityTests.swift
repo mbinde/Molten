@@ -32,13 +32,27 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
         let userTagsRepo = MockUserTagsRepository()
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
+        let locationDefinitionRepo = MockStorageLocationDefinitionRepository()
+        let moveRecordRepo = MockInventoryMoveRecordRepository()
+        let consumptionRecordRepo = MockInventoryConsumptionRecordRepository()
+
+        // Create StorageLocationService with required repositories
+        let storageLocationService = await StorageLocationService(
+            definitionRepository: locationDefinitionRepo,
+            storageLocationRepository: repos.location,
+            moveRecordRepository: moveRecordRepo,
+            consumptionRecordRepository: consumptionRecordRepo
+        )
 
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: repos.glassItem,
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryRepository: repos.inventory,
-            itemTagsRepository: repos.itemTags
+            itemTagsRepository: repos.itemTags,
+            storageLocationDefinitionRepository: locationDefinitionRepo,
+            storageLocationRepository: repos.location,
+            storageLocationService: storageLocationService
         )
 
         let catalogService = CatalogService(
@@ -49,7 +63,8 @@ struct CoreFunctionalityTests: MockOnlyTestSuite {
             itemMinimumRepository: repos.itemMinimum,
             itemTagsRepository: repos.itemTags,
             userTagsRepository: userTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: AppDependencies.shared.ratingService,
+            storageLocationRepository: repos.location
         )
 
         let shoppingListRepository = MockShoppingListRepository()

@@ -271,7 +271,8 @@ struct CatalogView: View {
             coeFilter: .init(
                 selectedCOEs: $viewModel.selectedCOEs,
                 availableCOEs: allAvailableCOEs
-            )
+            ),
+            showSort: false  // Sort is in the toolbar instead
         )
     }
 
@@ -370,6 +371,24 @@ struct CatalogView: View {
             }
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
+            .toolbar {
+                // Sort button - appears near the search bar
+                ToolbarItem(placement: .cancellationAction) {
+                    Menu {
+                        ForEach(SortOption.allCases, id: \.self) { option in
+                            Button {
+                                viewModel.sortOption = option
+                                updateSorting(option)
+                            } label: {
+                                Label(option.rawValue, systemImage: option.sortIcon)
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                    }
+                    .accessibilityIdentifier("catalog_sort_button")
+                }
+            }
             .modifier(CatalogSheetModifiers(
                 showingAllTags: $showingAllTags,
                 showingCOESelection: $showingCOESelection,

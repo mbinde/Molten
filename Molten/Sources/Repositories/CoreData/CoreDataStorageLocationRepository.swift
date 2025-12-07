@@ -232,13 +232,17 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
             let existingLocations = try self.fetchLocationSync(forInventory: inventory_id, locationName: cleanLocationName)
 
             if let existingLocation = existingLocations.first {
-                // Update existing record
+                // Update existing record - preserve all fields, just update quantity and dateModified
                 let updatedLocation = StorageLocationModel(
                     id: existingLocation.id,
                     inventoryId: existingLocation.inventoryId,
                     storageLocationId: existingLocation.storageLocationId,
                     locationName: existingLocation.locationName,
                     quantity: existingLocation.quantity + quantity,
+                    containerCount: existingLocation.containerCount,
+                    dateAdded: existingLocation.dateAdded,
+                    dateModified: Date(),
+                    isTransfer: existingLocation.isTransfer,
                     workspaceId: existingLocation.workspaceId
                 )
 
@@ -252,10 +256,13 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
                 return updatedLocation
             } else {
                 // Create new record
+                let now = Date()
                 let newLocation = StorageLocationModel(
                     inventoryId: inventory_id,
                     locationName: cleanLocationName,
-                    quantity: quantity
+                    quantity: quantity,
+                    dateAdded: now,
+                    dateModified: now
                 )
 
                 guard let entity = NSEntityDescription.entity(forEntityName: "StorageLocation", in: context) else {
@@ -294,13 +301,17 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
                 try context.save()
                 return nil
             } else {
-                // Update the record with new quantity
+                // Update the record with new quantity - preserve all fields, just update quantity and dateModified
                 let updatedLocation = StorageLocationModel(
                     id: existingLocation.id,
                     inventoryId: existingLocation.inventoryId,
                     storageLocationId: existingLocation.storageLocationId,
                     locationName: existingLocation.locationName,
                     quantity: newQuantity,
+                    containerCount: existingLocation.containerCount,
+                    dateAdded: existingLocation.dateAdded,
+                    dateModified: Date(),
+                    isTransfer: existingLocation.isTransfer,
                     workspaceId: existingLocation.workspaceId
                 )
 
@@ -413,7 +424,50 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
         // be a complex query to find locations with non-existent inventory IDs
         return []
     }
-    
+
+    // MARK: - Date and Transfer Operations
+
+    func fetchLocations(addedOn date: Date, excludeTransfers: Bool) async throws -> [StorageLocationModel] {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let calendar = Calendar.current
+            let startOfDay = calendar.startOfDay(for: date)
+            let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
+
+            var predicates: [NSPredicate] = [
+                NSPredicate(format: "date_added >= %@ AND date_added < %@", startOfDay as NSDate, endOfDay as NSDate),
+                NSPredicate(format: "quantity > 0")  // Only include records with positive quantity
+            ]
+
+            if excludeTransfers {
+                predicates.append(NSPredicate(format: "is_transfer == NO OR is_transfer == nil"))
+            }
+
+            fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+            fetchRequest.sortDescriptors = [
+                NSSortDescriptor(key: "date_added", ascending: true),
+                NSSortDescriptor(key: "location", ascending: true)
+            ]
+
+            let coreDataItems = try context.fetch(fetchRequest)
+            let locationItems = coreDataItems.compactMap { self.convertToStorageLocationModel($0) }
+
+            self.log.info("Fetched \(locationItems.count) location records added on \(date), excludeTransfers=\(excludeTransfers)")
+            return locationItems
+        }
+    }
+
+    func fetchTransferLocations() async throws -> [StorageLocationModel] {
+        let predicate = NSPredicate(format: "is_transfer == YES")
+        return try await fetchLocations(matching: predicate)
+    }
+
+    func fetchLocations(atLocationDefinition storageLocationId: UUID) async throws -> [StorageLocationModel] {
+        let predicate = NSPredicate(format: "storage_location_id == %@", storageLocationId as CVarArg)
+        return try await fetchLocations(matching: predicate)
+    }
+
     // MARK: - Private Helper Methods
     
     private nonisolated func fetchLocationSync(forInventory inventory_id: UUID, locationName: String) throws -> [StorageLocationModel] {
@@ -440,24 +494,39 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
             return nil
         }
 
+        let id = coreDataItem.value(forKey: "id") as? UUID ?? UUID()
         let quantity = coreDataItem.value(forKey: "quantity") as? Double ?? 0.0
         let storageLocationId = coreDataItem.value(forKey: "storage_location_id") as? UUID
+        let containerCount = coreDataItem.value(forKey: "containerCount") as? Double
+        let dateAdded = coreDataItem.value(forKey: "date_added") as? Date ?? Date()
+        let dateModified = coreDataItem.value(forKey: "date_modified") as? Date ?? Date()
+        let isTransfer = coreDataItem.value(forKey: "is_transfer") as? Bool ?? false
         let workspaceId = coreDataItem.value(forKey: "workspace_id") as? UUID
 
         return StorageLocationModel(
+            id: id,
             inventoryId: inventoryId,
             storageLocationId: storageLocationId,
             locationName: locationName,
             quantity: quantity,
+            containerCount: containerCount,
+            dateAdded: dateAdded,
+            dateModified: dateModified,
+            isTransfer: isTransfer,
             workspaceId: workspaceId
         )
     }
 
     private nonisolated func updateCoreDataEntity(_ coreDataItem: NSManagedObject, with location: StorageLocationModel) {
+        coreDataItem.setValue(location.id, forKey: "id")
         coreDataItem.setValue(location.inventoryId, forKey: "inventory_id")
         coreDataItem.setValue(location.locationName, forKey: "location")
-        coreDataItem.setValue(location.quantity, forKey: "quantity")  // Now stored as Double
+        coreDataItem.setValue(location.quantity, forKey: "quantity")
         coreDataItem.setValue(location.storageLocationId, forKey: "storage_location_id")
+        coreDataItem.setValue(location.containerCount, forKey: "containerCount")
+        coreDataItem.setValue(location.dateAdded, forKey: "date_added")
+        coreDataItem.setValue(location.dateModified, forKey: "date_modified")
+        coreDataItem.setValue(location.isTransfer, forKey: "is_transfer")
         coreDataItem.setValue(location.workspaceId, forKey: "workspace_id")
     }
 }

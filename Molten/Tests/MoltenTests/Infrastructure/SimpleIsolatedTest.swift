@@ -90,13 +90,27 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
         // Create services with explicit injection
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
+        let locationDefinitionRepo = MockStorageLocationDefinitionRepository()
+        let moveRecordRepo = MockInventoryMoveRecordRepository()
+        let consumptionRecordRepo = MockInventoryConsumptionRecordRepository()
+
+        // Create StorageLocationService with required repositories
+        let storageLocationService = await StorageLocationService(
+            definitionRepository: locationDefinitionRepo,
+            storageLocationRepository: mockLocationRepo,
+            moveRecordRepository: moveRecordRepo,
+            consumptionRecordRepository: consumptionRecordRepo
+        )
 
         let inventoryService = InventoryTrackingService(
             glassItemRepository: mockGlassItemRepo,
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryRepository: mockInventoryRepo,
-            itemTagsRepository: mockItemTagsRepo
+            itemTagsRepository: mockItemTagsRepo,
+            storageLocationDefinitionRepository: locationDefinitionRepo,
+            storageLocationRepository: mockLocationRepo,
+            storageLocationService: storageLocationService
         )
 
         let catalogService = CatalogService(
@@ -107,7 +121,8 @@ struct SimpleIsolatedTest: MockOnlyTestSuite {
             itemMinimumRepository: mockItemMinimumRepo,
             itemTagsRepository: mockItemTagsRepo,
             userTagsRepository: mockUserTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: AppDependencies.shared.ratingService,
+            storageLocationRepository: mockLocationRepo
         )
 
         let shoppingListRepository = MockShoppingListRepository()

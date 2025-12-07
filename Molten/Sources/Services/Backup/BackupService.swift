@@ -46,6 +46,7 @@ open class BackupService {
     private let keyGenerator: BackupKeyGenerator
     private let preferences: BackupPreferences
     private let inventoryRepository: InventoryRepository
+    private let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
     private let maxConflictRetries = 5
 
     // MARK: - Initialization
@@ -55,13 +56,15 @@ open class BackupService {
         keyPairManager: KeyPairManager = KeyPairManager(),
         keyGenerator: BackupKeyGenerator = BackupKeyGenerator(),
         preferences: BackupPreferences = BackupPreferences(),
-        inventoryRepository: InventoryRepository
+        inventoryRepository: InventoryRepository,
+        storageLocationDefinitionRepository: StorageLocationDefinitionRepository
     ) {
         self.apiClient = apiClient
         self.keyPairManager = keyPairManager
         self.keyGenerator = keyGenerator
         self.preferences = preferences
         self.inventoryRepository = inventoryRepository
+        self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
     }
 
     // MARK: - Setup
@@ -334,9 +337,21 @@ open class BackupService {
         // Restore records
         // Note: This is a simplified implementation. In practice, you'd want to
         // handle merging with existing data, conflicts, etc.
+        var locationsToCreate = Set<String>()
+
         for record in payload.records {
             let model = record.toModel()
             _ = try await inventoryRepository.createInventory(model)
+
+            // Collect unique locations for definition creation
+            if let location = model.location, !location.isEmpty {
+                locationsToCreate.insert(location)
+            }
+        }
+
+        // Create location definitions for autocomplete
+        for locationName in locationsToCreate {
+            await ensureLocationDefinitionExists(name: locationName)
         }
 
         return payload.records.count
@@ -347,6 +362,24 @@ open class BackupService {
     private func computeChecksum(_ data: Data) -> String {
         let hash = SHA256.hash(data: data)
         return hash.compactMap { String(format: "%02x", $0) }.joined()
+    }
+
+    /// Ensures a StorageLocationDefinition exists for the given name.
+    /// Creates one if it doesn't exist. Failures are logged but don't throw.
+    private func ensureLocationDefinitionExists(name: String) async {
+        do {
+            // Check if definition already exists
+            if let _ = try await storageLocationDefinitionRepository.fetch(byName: name) {
+                return // Already exists
+            }
+
+            // Create new definition
+            let newDefinition = StorageLocationDefinitionModel(name: name)
+            _ = try await storageLocationDefinitionRepository.create(newDefinition)
+        } catch {
+            // Log but don't fail - location autocomplete is a convenience feature
+            print("⚠️ BackupService: Failed to create location definition for '\(name)': \(error)")
+        }
     }
 }
 

@@ -139,17 +139,19 @@ struct AddInventoryItemViewTests {
         let fritSubtypes = GlassItemTypeSystem.getSubtypes(for: "frit")
         let sheetSubtypes = GlassItemTypeSystem.getSubtypes(for: "sheet")
         let rodSubtypes = GlassItemTypeSystem.getSubtypes(for: "rod")
+        let tubeSubtypes = GlassItemTypeSystem.getSubtypes(for: "tube")
 
-        // Frit, sheet, and rod have subtypes
+        // Frit and tube have subtypes; sheet and rod do not
         #expect(fritSubtypes.count > 0)
-        #expect(sheetSubtypes.count > 0)
-        #expect(rodSubtypes.count > 0)
-        #expect(fritSubtypes != sheetSubtypes)
+        #expect(tubeSubtypes.count > 0)
+        #expect(sheetSubtypes.isEmpty)
+        #expect(rodSubtypes.isEmpty)
+        #expect(fritSubtypes != tubeSubtypes)
 
-        // Verify rod has expected subtypes
-        #expect(rodSubtypes.contains("standard"))
-        #expect(rodSubtypes.contains("cane"))
-        #expect(rodSubtypes.contains("pull"))
+        // Verify frit has expected subtypes
+        #expect(fritSubtypes.contains("coarse"))
+        #expect(fritSubtypes.contains("medium"))
+        #expect(fritSubtypes.contains("fine"))
     }
 
     @Test("Changing type resets subtype")

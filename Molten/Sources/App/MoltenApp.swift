@@ -322,11 +322,25 @@ extension MoltenApp {
             .onOpenURL { url in
                 handleOpenURL(url)
             }
+            .onReceive(NotificationCenter.default.publisher(for: .openMoltenDeepLink)) { notification in
+                // Handle QR code scanned from in-app scanner
+                if let url = notification.userInfo?["url"] as? URL {
+                    handleOpenURL(url)
+                }
+            }
             .onAppear {
                 // Alpha disclaimer disabled
                 // checkAlphaDisclaimer()
             }
             .task {
+                // Run one-time migrations (with startup delay)
+                // Note: Startup tasks that access dependencies need small delays
+                // to avoid deadlocking with RevenueCat's initialization.
+                // See performBackgroundCatalogUpdate (2s), refreshStaleFriendShares (3s),
+                // performBackupIfNeeded (4s) for the established pattern.
+                try? await Task.sleep(for: .milliseconds(500))
+                await runMigrationsIfNeeded()
+
                 // Perform background catalog update check
                 await performBackgroundCatalogUpdate()
 
@@ -391,6 +405,12 @@ extension MoltenApp {
                     }
                     .onOpenURL { url in
                         handleOpenURL(url)
+                    }
+                    .onReceive(NotificationCenter.default.publisher(for: .openMoltenDeepLink)) { notification in
+                        // Handle QR code scanned from in-app scanner
+                        if let url = notification.userInfo?["url"] as? URL {
+                            handleOpenURL(url)
+                        }
                     }
                     .onAppear {
                         // Alpha disclaimer disabled
@@ -563,6 +583,18 @@ extension MoltenApp {
             // Log error but don't disrupt user experience
             print("⚠️ [Backup] Automatic backup failed: \(error.localizedDescription)")
         }
+    }
+
+    /// Run one-time data migrations on app startup
+    private func runMigrationsIfNeeded() async {
+        // Skip if running tests
+        guard !isRunningTests && !isRunningUITests else {
+            return
+        }
+
+        // Location definition migration: Creates StorageLocationDefinition entries
+        // for existing inventory locations that were created before the autocomplete fix
+        await dependencies.locationDefinitionMigration.runIfNeeded()
     }
 
     /// Perform opportunistic backup when app goes to background

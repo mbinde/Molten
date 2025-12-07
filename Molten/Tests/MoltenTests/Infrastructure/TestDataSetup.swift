@@ -270,13 +270,26 @@ struct TestDataSetup {
         let userTagsRepo = MockUserTagsRepository()
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
+        let locationDefinitionRepo = MockStorageLocationDefinitionRepository()
+        let moveRecordRepo = MockInventoryMoveRecordRepository()
+        let consumptionRecordRepo = MockInventoryConsumptionRecordRepository()
+
+        let storageLocationService = await StorageLocationService(
+            definitionRepository: locationDefinitionRepo,
+            storageLocationRepository: locationRepo,
+            moveRecordRepository: moveRecordRepo,
+            consumptionRecordRepository: consumptionRecordRepo
+        )
 
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryRepository: inventoryRepo,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: itemTagsRepo,
+            storageLocationDefinitionRepository: locationDefinitionRepo,
+            storageLocationRepository: locationRepo,
+            storageLocationService: storageLocationService
         )
 
         let catalogService = await CatalogService(
@@ -287,19 +300,8 @@ struct TestDataSetup {
             itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
-        )
-
-        let shoppingListRepository = MockShoppingListRepository()
-        let shoppingListService = ShoppingListService(
-            itemMinimumRepository: itemMinimumRepo,
-            shoppingListRepository: shoppingListRepository,
-            inventoryRepository: inventoryRepo,
-            glassItemRepository: glassItemRepo,
-            coatingItemRepository: coatingItemRepo,
-            toolItemRepository: toolItemRepo,
-            itemTagsRepository: itemTagsRepo,
-            userTagsRepository: userTagsRepo
+            ratingService: AppDependencies.shared.ratingService,
+            storageLocationRepository: locationRepo
         )
 
         return catalogService
@@ -307,16 +309,29 @@ struct TestDataSetup {
 
     /// Create a complete inventory tracking service with populated test data
     static func createTestInventoryTrackingService() async throws -> InventoryTrackingService {
-        let (glassItemRepo, inventoryRepo, locationRepo, itemTagsRepo, itemMinimumRepo) = try await setupCompleteTestEnvironment()
+        let (glassItemRepo, inventoryRepo, locationRepo, itemTagsRepo, _) = try await setupCompleteTestEnvironment()
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
+        let locationDefinitionRepo = MockStorageLocationDefinitionRepository()
+        let moveRecordRepo = MockInventoryMoveRecordRepository()
+        let consumptionRecordRepo = MockInventoryConsumptionRecordRepository()
+
+        let storageLocationService = await StorageLocationService(
+            definitionRepository: locationDefinitionRepo,
+            storageLocationRepository: locationRepo,
+            moveRecordRepository: moveRecordRepo,
+            consumptionRecordRepository: consumptionRecordRepo
+        )
 
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryRepository: inventoryRepo,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: itemTagsRepo,
+            storageLocationDefinitionRepository: locationDefinitionRepo,
+            storageLocationRepository: locationRepo,
+            storageLocationService: storageLocationService
         )
 
         return inventoryTrackingService

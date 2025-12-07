@@ -75,16 +75,23 @@ class InventoryImportService {
     private let catalogService: CatalogService
     private let inventoryTrackingService: InventoryTrackingService
     private let storageLocationRepository: StorageLocationRepository
+    private let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
 
     /// Maximum import file size (10 MB) - prevents DoS from extremely large files
     static let maxImportFileSize: Int64 = 10 * 1024 * 1024
 
     var delegate: InventoryImportDelegate?
 
-    init(catalogService: CatalogService, inventoryTrackingService: InventoryTrackingService, storageLocationRepository: StorageLocationRepository) {
+    init(
+        catalogService: CatalogService,
+        inventoryTrackingService: InventoryTrackingService,
+        storageLocationRepository: StorageLocationRepository,
+        storageLocationDefinitionRepository: StorageLocationDefinitionRepository
+    ) {
         self.catalogService = catalogService
         self.inventoryTrackingService = inventoryTrackingService
         self.storageLocationRepository = storageLocationRepository
+        self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
     }
 
     /// Import inventory from a JSON file
@@ -253,6 +260,8 @@ class InventoryImportService {
                     [(location: location, quantity: Double(item.quantity))],
                     forInventory: existing.id
                 )
+                // Ensure location definition exists for autocomplete
+                await ensureLocationDefinitionExists(name: location)
             }
             return true
 
@@ -287,6 +296,8 @@ class InventoryImportService {
                         [(location: location, quantity: Double(item.quantity))],
                         forInventory: existing.id
                     )
+                    // Ensure location definition exists for autocomplete
+                    await ensureLocationDefinitionExists(name: location)
                 }
                 return true
             }
@@ -304,6 +315,24 @@ class InventoryImportService {
         )
 
         return true
+    }
+
+    /// Ensures a StorageLocationDefinition exists for the given name.
+    /// Creates one if it doesn't exist. Failures are logged but don't throw.
+    private func ensureLocationDefinitionExists(name: String) async {
+        do {
+            // Check if definition already exists
+            if let _ = try await storageLocationDefinitionRepository.fetch(byName: name) {
+                return // Already exists
+            }
+
+            // Create new definition
+            let newDefinition = StorageLocationDefinitionModel(name: name)
+            _ = try await storageLocationDefinitionRepository.create(newDefinition)
+        } catch {
+            // Log but don't fail - location autocomplete is a convenience feature
+            print("⚠️ InventoryImportService: Failed to create location definition for '\(name)': \(error)")
+        }
     }
 }
 

@@ -243,13 +243,20 @@ extension GlassItemRowView {
     }
 
     /// Inventory-style row with quantity badge
-    static func inventory(item: CompleteInventoryItemModel, selectedLocation: String? = nil) -> GlassItemRowView {
+    static func inventory(item: CompleteInventoryItemModel, selectedLocations: Set<String> = []) -> GlassItemRowView {
         // Calculate quantity based on location filter
         let inventoryToShow: [InventoryModel]
 
-        if let location = selectedLocation {
-            // Filter inventory to only show records at the selected location
-            inventoryToShow = item.inventory.filter { $0.location == location }
+        if !selectedLocations.isEmpty {
+            // Filter inventory to only show records at the selected locations
+            inventoryToShow = item.inventory.filter { inv in
+                if let location = inv.location, !location.isEmpty {
+                    return selectedLocations.contains(location)
+                } else {
+                    // Check if "(none)" / empty string is in selection
+                    return selectedLocations.contains(LocationQuickFilterBar.noLocationValue)
+                }
+            }
         } else {
             // Show all inventory (no location filter)
             inventoryToShow = item.inventory

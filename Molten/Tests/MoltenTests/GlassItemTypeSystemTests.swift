@@ -133,15 +133,13 @@ struct GlassItemTypeSystemTests {
         #expect(bigRodFields.contains { $0.name == "length" })
     }
 
-    @Test("Rod type has expected subtypes")
-    func testRodSubtypes() {
+    @Test("Rod type has no subtypes")
+    func testRodNoSubtypes() {
         // When: Getting subtypes for rod
         let rodSubtypes = GlassItemTypeSystem.getSubtypes(for: "rod")
 
-        // Then: Expected subtypes are present
-        #expect(rodSubtypes.contains("standard"))
-        #expect(rodSubtypes.contains("cane"))
-        #expect(rodSubtypes.contains("pull"))
+        // Then: No subtypes (rods don't have meaningful subtypes)
+        #expect(rodSubtypes.isEmpty)
     }
 
     @Test("Big rod type has no subtypes")

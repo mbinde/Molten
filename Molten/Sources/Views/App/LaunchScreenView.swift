@@ -78,6 +78,10 @@ struct LaunchScreenView: View {
         }
 
         do {
+            // Run data migrations (one-time operations)
+            print("🔄 Running data migrations...")
+            await AppDependencies.shared.storageLocationMigrationService.runMigrationIfNeeded()
+
             // Initialize catalog database (bundled SQLite)
             print("📦 Initializing catalog database from bundle...")
             try await CatalogDatabaseManager.shared.initialize()

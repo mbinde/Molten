@@ -47,7 +47,7 @@ class InventoryViewModel: InventoryViewModelProtocol {
     var selectedTags: Set<String> = []
     var selectedCOEs: Set<Int32> = []
     var selectedManufacturers: Set<String> = []
-    var selectedLocation: String? = nil // Location filter (nil = all locations)
+    var selectedLocations: Set<String> = [] // Location filter (empty = all locations)
     var sortOption: InventorySortOption = .name
     
     init(inventoryTrackingService: InventoryTrackingService, catalogService: CatalogService? = nil) {
@@ -215,11 +215,18 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        // Apply location filter
-        if let location = selectedLocation {
+        // Apply location filter (multi-select)
+        // Empty set means "show all", empty string in set means "show items with no location"
+        // Uses StorageLocation if available, falls back to Inventory.location for legacy data
+        if !selectedLocations.isEmpty {
             filtered = filtered.filter { item in
-                item.inventory.contains { inventory in
-                    inventory.location == location
+                let itemLocations = item.locations  // Uses new aggregation with fallback
+                if itemLocations.isEmpty {
+                    // Item has no locations - check if "(none)" is selected
+                    return selectedLocations.contains(LocationQuickFilterBar.noLocationValue)
+                } else {
+                    // Check if any of the item's locations are in the selected set
+                    return !selectedLocations.isDisjoint(with: Set(itemLocations))
                 }
             }
         }
@@ -427,10 +434,13 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        if let location = selectedLocation {
+        if !selectedLocations.isEmpty {
             items = items.filter { item in
-                item.inventory.contains { inventory in
-                    inventory.location == location
+                let itemLocations = item.locations
+                if itemLocations.isEmpty {
+                    return selectedLocations.contains(LocationQuickFilterBar.noLocationValue)
+                } else {
+                    return !selectedLocations.isDisjoint(with: Set(itemLocations))
                 }
             }
         }
@@ -492,10 +502,13 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        if let location = selectedLocation {
+        if !selectedLocations.isEmpty {
             items = items.filter { item in
-                item.inventory.contains { inventory in
-                    inventory.location == location
+                let itemLocations = item.locations
+                if itemLocations.isEmpty {
+                    return selectedLocations.contains(LocationQuickFilterBar.noLocationValue)
+                } else {
+                    return !selectedLocations.isDisjoint(with: Set(itemLocations))
                 }
             }
         }
@@ -553,10 +566,13 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        if let location = selectedLocation {
+        if !selectedLocations.isEmpty {
             items = items.filter { item in
-                item.inventory.contains { inventory in
-                    inventory.location == location
+                let itemLocations = item.locations
+                if itemLocations.isEmpty {
+                    return selectedLocations.contains(LocationQuickFilterBar.noLocationValue)
+                } else {
+                    return !selectedLocations.isDisjoint(with: Set(itemLocations))
                 }
             }
         }
@@ -638,8 +654,9 @@ class InventoryViewModel: InventoryViewModelProtocol {
 
         var counts: [String: Int] = [:]
         for item in items {
-            // Count each unique item once per location (get distinct locations for this item)
-            let itemLocations = Set(item.inventory.compactMap { $0.location }.filter { !$0.isEmpty })
+            // Count each unique item once per location
+            // Uses StorageLocation if available, falls back to Inventory.location for legacy data
+            let itemLocations = item.locations  // Already returns distinct sorted locations
             for location in itemLocations {
                 counts[location, default: 0] += 1
             }
@@ -676,10 +693,13 @@ class InventoryViewModel: InventoryViewModelProtocol {
             }
         }
 
-        if let location = selectedLocation {
+        if !selectedLocations.isEmpty {
             items = items.filter { item in
-                item.inventory.contains { inventory in
-                    inventory.location == location
+                let itemLocations = item.locations
+                if itemLocations.isEmpty {
+                    return selectedLocations.contains(LocationQuickFilterBar.noLocationValue)
+                } else {
+                    return !selectedLocations.isDisjoint(with: Set(itemLocations))
                 }
             }
         }

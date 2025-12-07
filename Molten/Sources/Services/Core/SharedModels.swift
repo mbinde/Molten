@@ -445,27 +445,42 @@ extension StorageLocationDefinitionModel: Hashable {
 
 /// Storage location model for tracking where inventory is stored (warehouse locations, shelves, bins, etc.)
 /// References a StorageLocationDefinition by ID for the canonical location name.
+///
+/// Quantity is always >= 0. Consumption and moves decrement quantity and create audit records.
+/// When a move creates a new destination record, `isTransfer` is true so label printing can filter it out.
 struct StorageLocationModel: Identifiable, Sendable {
     let id: UUID
     let inventoryId: UUID
-    let storageLocationId: UUID?  // References StorageLocationDefinition
-    let locationName: String       // Cached/denormalized name for display (from definition or legacy string)
-    let quantity: Double
+    let storageLocationId: UUID?  // References StorageLocationDefinition (nil = no location assigned)
+    let locationName: String       // DEPRECATED: cached name, use storageLocationId lookup instead
+    let quantity: Double           // Current amount at this location (>= 0)
+    let containerCount: Double?    // For weight-based types: number of jars at this location
+    let dateAdded: Date            // When this quantity was placed here
+    let dateModified: Date
+    let isTransfer: Bool           // True if created from a move operation (filter out for label printing)
     let workspaceId: UUID?
 
     nonisolated init(
         id: UUID = UUID(),
         inventoryId: UUID,
         storageLocationId: UUID? = nil,
-        locationName: String,
+        locationName: String = "",
         quantity: Double,
+        containerCount: Double? = nil,
+        dateAdded: Date = Date(),
+        dateModified: Date = Date(),
+        isTransfer: Bool = false,
         workspaceId: UUID? = nil
     ) {
         self.id = id
         self.inventoryId = inventoryId
         self.storageLocationId = storageLocationId
         self.locationName = locationName.trimmingCharacters(in: .whitespacesAndNewlines)
-        self.quantity = max(0.0, quantity) // Ensure non-negative quantity
+        self.quantity = max(0.0, quantity)  // Ensure non-negative
+        self.containerCount = containerCount
+        self.dateAdded = dateAdded
+        self.dateModified = dateModified
+        self.isTransfer = isTransfer
         self.workspaceId = workspaceId
     }
 
@@ -500,6 +515,83 @@ extension StorageLocationModel: Equatable {
 }
 
 extension StorageLocationModel: Hashable {
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
+/// Audit log for inventory moves between locations.
+/// Links the source and destination StorageLocation records that represent a move.
+/// Deduplication: Same (fromStorageLocationId, toStorageLocationId, date) increments quantity/containerCount.
+struct InventoryMoveRecordModel: Identifiable, Sendable {
+    let id: UUID
+    let fromStorageLocationId: UUID  // References source StorageLocation
+    let toStorageLocationId: UUID    // References destination StorageLocation
+    let quantity: Double             // Amount moved (weight or count)
+    let containerCount: Double?      // For weight-based types: jars moved
+    let date: Date                   // Date of move (not time)
+
+    nonisolated init(
+        id: UUID = UUID(),
+        fromStorageLocationId: UUID,
+        toStorageLocationId: UUID,
+        quantity: Double,
+        containerCount: Double? = nil,
+        date: Date = Date()
+    ) {
+        self.id = id
+        self.fromStorageLocationId = fromStorageLocationId
+        self.toStorageLocationId = toStorageLocationId
+        self.quantity = quantity
+        self.containerCount = containerCount
+        self.date = date
+    }
+}
+
+extension InventoryMoveRecordModel: Equatable {
+    nonisolated static func == (lhs: InventoryMoveRecordModel, rhs: InventoryMoveRecordModel) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+extension InventoryMoveRecordModel: Hashable {
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
+/// Audit log for consumed inventory (used up, not moved).
+/// Tracks what was consumed from a specific StorageLocation.
+/// Deduplication: Same (storageLocationId, date) increments quantity/containerCount.
+struct InventoryConsumptionRecordModel: Identifiable, Sendable {
+    let id: UUID
+    let storageLocationId: UUID  // References StorageLocation it came from
+    let quantity: Double         // Amount consumed (weight or count)
+    let containerCount: Double?  // For weight-based types: jars consumed
+    let date: Date               // Date of consumption (not time)
+
+    nonisolated init(
+        id: UUID = UUID(),
+        storageLocationId: UUID,
+        quantity: Double,
+        containerCount: Double? = nil,
+        date: Date = Date()
+    ) {
+        self.id = id
+        self.storageLocationId = storageLocationId
+        self.quantity = quantity
+        self.containerCount = containerCount
+        self.date = date
+    }
+}
+
+extension InventoryConsumptionRecordModel: Equatable {
+    nonisolated static func == (lhs: InventoryConsumptionRecordModel, rhs: InventoryConsumptionRecordModel) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+extension InventoryConsumptionRecordModel: Hashable {
     nonisolated func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }

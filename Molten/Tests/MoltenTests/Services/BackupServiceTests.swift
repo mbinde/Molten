@@ -27,7 +27,8 @@ struct BackupServiceTests {
         keyPairManager: KeyPairManager = KeyPairManager(),
         keyGenerator: BackupKeyGenerator = BackupKeyGenerator(),
         preferences: BackupPreferences? = nil,
-        inventoryRepository: InventoryRepository = MockInventoryRepository()
+        inventoryRepository: InventoryRepository = MockInventoryRepository(),
+        storageLocationDefinitionRepository: StorageLocationDefinitionRepository = MockStorageLocationDefinitionRepository()
     ) -> BackupService {
         let prefs = preferences ?? createTestPreferences()
         return BackupService(
@@ -35,7 +36,8 @@ struct BackupServiceTests {
             keyPairManager: keyPairManager,
             keyGenerator: keyGenerator,
             preferences: prefs,
-            inventoryRepository: inventoryRepository
+            inventoryRepository: inventoryRepository,
+            storageLocationDefinitionRepository: storageLocationDefinitionRepository
         )
     }
 

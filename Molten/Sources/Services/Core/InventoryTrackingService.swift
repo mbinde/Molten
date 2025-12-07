@@ -10,6 +10,13 @@ import Foundation
 /// Service for orchestrating inventory operations across multiple repositories
 /// Coordinates GlassItem, Inventory, Location, and ItemTags data
 /// Follows clean architecture: orchestrates repositories, delegates business logic to models
+///
+/// ## Storage Location Operations
+/// This service delegates StorageLocation record operations to `StorageLocationService`,
+/// which is the single source of truth for business rules around:
+/// - `isTransfer` flag (new inventory vs moved inventory)
+/// - `dateAdded` handling
+/// - Audit trail (move and consumption records)
 actor InventoryTrackingService {
 
     // MARK: - Dependencies
@@ -19,6 +26,12 @@ actor InventoryTrackingService {
     private let toolItemRepository: ToolItemRepository
     let inventoryRepository: InventoryRepository
     private let itemTagsRepository: ItemTagsRepository
+    private let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
+    private let storageLocationRepository: StorageLocationRepository
+
+    /// Centralized service for StorageLocation record operations.
+    /// Handles all business rules for isTransfer, dateAdded, and audit records.
+    private let storageLocationService: StorageLocationService
 
     // MARK: - Initialization
 
@@ -27,13 +40,19 @@ actor InventoryTrackingService {
         coatingItemRepository: CoatingItemRepository,
         toolItemRepository: ToolItemRepository,
         inventoryRepository: InventoryRepository,
-        itemTagsRepository: ItemTagsRepository
+        itemTagsRepository: ItemTagsRepository,
+        storageLocationDefinitionRepository: StorageLocationDefinitionRepository,
+        storageLocationRepository: StorageLocationRepository,
+        storageLocationService: StorageLocationService
     ) {
         self.glassItemRepository = glassItemRepository
         self.coatingItemRepository = coatingItemRepository
         self.toolItemRepository = toolItemRepository
         self.inventoryRepository = inventoryRepository
         self.itemTagsRepository = itemTagsRepository
+        self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
+        self.storageLocationRepository = storageLocationRepository
+        self.storageLocationService = storageLocationService
     }
     
     // MARK: - Complete Item Operations
@@ -102,9 +121,17 @@ actor InventoryTrackingService {
         // 3. Get all tags for this item
         let tags = try await itemTagsRepository.fetchTags(forItem: stableId)
 
+        // 4. Get all storage locations for this item's inventory records
+        var storageLocations: [StorageLocationModel] = []
+        for inv in inventory {
+            let locations = try await storageLocationRepository.fetchLocations(forInventory: inv.id)
+            storageLocations.append(contentsOf: locations)
+        }
+
         return CompleteInventoryItemModel(
             glassItem: glassItem,
             inventory: inventory,
+            storageLocations: storageLocations,
             tags: tags,
             userTags: []
         )
@@ -186,14 +213,37 @@ actor InventoryTrackingService {
     /// - Parameter inventory: The inventory model with updated values
     /// - Returns: The updated inventory model
     func updateInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
-        return try await inventoryRepository.updateInventory(inventory)
+        let result = try await inventoryRepository.updateInventory(inventory)
+
+        // Sync StorageLocation record with updated location
+        try await syncStorageLocationForInventory(inventory)
+
+        return result
+    }
+
+    /// Syncs StorageLocation record with the inventory's current location.
+    /// Delegates to StorageLocationService for consistent business logic.
+    private func syncStorageLocationForInventory(_ inventory: InventoryModel) async throws {
+        try await storageLocationService.syncStorageLocationWithInventory(
+            inventoryId: inventory.id,
+            locationName: inventory.location,
+            quantity: inventory.quantity,
+            containerCount: inventory.containerCount
+        )
     }
 
     /// Create a new inventory record
     /// - Parameter inventory: The inventory model to create
     /// - Returns: The created inventory model with generated ID
     func createInventory(_ inventory: InventoryModel) async throws -> InventoryModel {
-        return try await inventoryRepository.createInventory(inventory)
+        let result = try await inventoryRepository.createInventory(inventory)
+
+        // Ensure location definition exists for autocomplete
+        if let locationName = inventory.location, !locationName.isEmpty {
+            await ensureLocationDefinitionExists(name: locationName)
+        }
+
+        return result
     }
 
     // MARK: - Date-Aware Inventory Operations
@@ -241,15 +291,24 @@ actor InventoryTrackingService {
             guard record.location == location else { return false }
 
             // Match subtype if specified
+            // If QR code has a subtype but inventory record has nil subtype, still match
+            // (nil means "I track sheets but not sizes" - it's a valid choice)
             if let sub = subtype {
-                guard record.subtype?.lowercased() == sub.lowercased() else { return false }
+                if let recordSubtype = record.subtype {
+                    guard recordSubtype.lowercased() == sub.lowercased() else { return false }
+                }
+                // record.subtype is nil - user doesn't track sizes, include it
             } else {
                 guard record.subtype == nil else { return false }
             }
 
             // Match subsubtype if specified
+            // Same logic: nil inventory subsubtype matches any QR code subsubtype
             if let subsub = subsubtype {
-                guard record.subsubtype?.lowercased() == subsub.lowercased() else { return false }
+                if let recordSubsubtype = record.subsubtype {
+                    guard recordSubsubtype.lowercased() == subsub.lowercased() else { return false }
+                }
+                // record.subsubtype is nil - user doesn't track this level, include it
             } else {
                 guard record.subsubtype == nil else { return false }
             }
@@ -286,7 +345,14 @@ actor InventoryTrackingService {
                 date_added: today,
                 date_modified: Date()
             )
-            return try await inventoryRepository.createInventory(newRecord)
+            let result = try await inventoryRepository.createInventory(newRecord)
+
+            // Ensure location definition exists for autocomplete
+            if let locationName = location, !locationName.isEmpty {
+                await ensureLocationDefinitionExists(name: locationName)
+            }
+
+            return result
         }
     }
 
@@ -317,15 +383,23 @@ actor InventoryTrackingService {
             guard record.quantity > 0 else { return false }
 
             // Match subtype if specified
+            // If QR code has a subtype but inventory record has nil subtype (legacy data), still match
             if let sub = subtype {
-                guard record.subtype?.lowercased() == sub.lowercased() else { return false }
+                if let recordSubtype = record.subtype {
+                    guard recordSubtype.lowercased() == sub.lowercased() else { return false }
+                }
+                // record.subtype is nil - legacy record without subtype, include it
             } else {
                 guard record.subtype == nil else { return false }
             }
 
             // Match subsubtype if specified
+            // Same logic: nil inventory subsubtype matches any QR code subsubtype
             if let subsub = subsubtype {
-                guard record.subsubtype?.lowercased() == subsub.lowercased() else { return false }
+                if let recordSubsubtype = record.subsubtype {
+                    guard recordSubsubtype.lowercased() == subsub.lowercased() else { return false }
+                }
+                // record.subsubtype is nil - legacy record, include it
             } else {
                 guard record.subsubtype == nil else { return false }
             }
@@ -367,6 +441,77 @@ actor InventoryTrackingService {
         }
     }
 
+    /// Move one unit of inventory from one location to another.
+    /// Decrements from the oldest record at source (LIFO) and increments at destination.
+    ///
+    /// - Parameters:
+    ///   - stableId: Item natural key
+    ///   - type: Inventory type (rod, tube, frit, etc.)
+    ///   - subtype: Optional subtype
+    ///   - subsubtype: Optional sub-subtype
+    ///   - fromLocation: Source location (nil for "no location")
+    ///   - toLocation: Destination location (nil for "no location")
+    func moveInventory(
+        forItem stableId: String,
+        type: String,
+        subtype: String? = nil,
+        subsubtype: String? = nil,
+        fromLocation: String?,
+        toLocation: String?
+    ) async throws {
+        // 1. Find the source StorageLocation by looking up inventory records
+        let allInventory = try await inventoryRepository.fetchInventory(forItem: stableId)
+        let matchingInventory = allInventory.filter { inv in
+            inv.type.lowercased() == type.lowercased() &&
+            inv.location == fromLocation &&
+            inv.subtype == subtype &&
+            inv.subsubtype == subsubtype
+        }
+
+        // Find a StorageLocation from one of the matching inventory records
+        var sourceStorageLocation: StorageLocationModel?
+        for inv in matchingInventory {
+            let locations = try await storageLocationRepository.fetchLocations(forInventory: inv.id)
+            if let loc = locations.first(where: { $0.locationName == fromLocation }) {
+                sourceStorageLocation = loc
+                break
+            }
+        }
+
+        guard let source = sourceStorageLocation else {
+            throw InventoryTrackingServiceError.itemNotFound(
+                "No inventory found for \(stableId) at location '\(fromLocation ?? "no location")'"
+            )
+        }
+
+        // 2. Delegate to StorageLocationService for the actual move
+        // This handles all business logic: decrement source, create destination with isTransfer=true, audit record
+        _ = try await storageLocationService.moveInventoryBetweenLocations(
+            from: source.id,
+            to: toLocation,
+            quantity: 1
+        )
+
+        // 3. Also update the Inventory records (legacy behavior)
+        // Decrement from source
+        _ = try await decrementInventoryLIFO(
+            forItem: stableId,
+            type: type,
+            subtype: subtype,
+            subsubtype: subsubtype,
+            atLocation: fromLocation
+        )
+
+        // Increment at destination
+        _ = try await incrementInventory(
+            forItem: stableId,
+            type: type,
+            subtype: subtype,
+            subsubtype: subsubtype,
+            atLocation: toLocation
+        )
+    }
+
     /// Fetch inventory records added on or after a specific date
     /// Useful for "print labels for items added this week" filtering
     ///
@@ -406,7 +551,8 @@ actor InventoryTrackingService {
         subsubtype: String? = nil,
         dimensions: [String: Double]? = nil,
         containerCount: Double? = nil,
-        atLocation location: String? = nil
+        atLocation location: String? = nil,
+        dateAdded: Date? = nil
     ) async throws -> InventoryModel {
 
         // 1. Verify the catalog item exists (glass, coating, or tool)
@@ -449,6 +595,7 @@ actor InventoryTrackingService {
         }
 
         // 3. Create new inventory record with location, optional subtypes/dimensions, and container count
+        let effectiveDate = dateAdded ?? Date()
         let newInventory = InventoryModel(
             item_stable_id: stableId,
             type: type,
@@ -457,12 +604,28 @@ actor InventoryTrackingService {
             dimensions: dimensions,
             quantity: quantity,
             containerCount: containerCount,
-            location: location
+            location: location,
+            date_added: effectiveDate,
+            date_modified: effectiveDate
         )
 
         // 4. Attempt to save with proper error context
         do {
-            return try await self.inventoryRepository.createInventory(newInventory)
+            let savedInventory = try await self.inventoryRepository.createInventory(newInventory)
+
+            // 5. Create StorageLocation record if location is provided
+            // Delegate to StorageLocationService for consistent business logic
+            if let locationName = location, !locationName.isEmpty {
+                _ = try await storageLocationService.addInventoryToLocation(
+                    inventoryId: savedInventory.id,
+                    locationName: locationName,
+                    quantity: quantity,
+                    containerCount: containerCount,
+                    dateAdded: effectiveDate
+                )
+            }
+
+            return savedInventory
         } catch {
             // Provide context about what failed, including the item name for user clarity
             throw InventoryTrackingServiceError.persistenceFailed(
@@ -470,6 +633,127 @@ actor InventoryTrackingService {
                 underlyingError: error
             )
         }
+    }
+
+    /// Ensures a StorageLocationDefinition exists for the given name.
+    /// Creates one if it doesn't exist. Returns the definition's UUID, or nil if creation failed.
+    private func ensureLocationDefinitionExistsAndGetId(name: String) async -> UUID? {
+        do {
+            // Check if definition already exists
+            if let existing = try await storageLocationDefinitionRepository.fetch(byName: name) {
+                return existing.id
+            }
+
+            // Create new definition
+            let newDefinition = StorageLocationDefinitionModel(name: name)
+            let created = try await storageLocationDefinitionRepository.create(newDefinition)
+            return created.id
+        } catch {
+            // Log but don't fail - location definition is optional
+            print("⚠️ Failed to create location definition for '\(name)': \(error)")
+            return nil
+        }
+    }
+
+    /// Ensures a StorageLocationDefinition exists for the given name.
+    /// Creates one if it doesn't exist. Failures are logged but don't throw.
+    @available(*, deprecated, message: "Use ensureLocationDefinitionExistsAndGetId instead")
+    private func ensureLocationDefinitionExists(name: String) async {
+        _ = await ensureLocationDefinitionExistsAndGetId(name: name)
+    }
+
+    // MARK: - Storage Location Operations (New Architecture)
+    //
+    // These operations use the new StorageLocation-based architecture where:
+    // - StorageLocation tracks where inventory is stored, with quantity >= 0
+    // - InventoryConsumptionRecord tracks consumed inventory (audit log)
+    // - InventoryMoveRecord tracks moves between locations (audit log)
+    //
+    // This enables:
+    // - "Print labels for items added today" with isTransfer=false filter
+    // - Audit trail for all inventory changes
+    // - Multi-location inventory tracking
+
+    /// Consume inventory from a specific storage location.
+    /// Delegates to StorageLocationService for consistent business logic.
+    ///
+    /// - Parameters:
+    ///   - quantity: Amount to consume (weight in grams or count)
+    ///   - containerCount: Optional number of containers consumed (for weight-based types)
+    ///   - storageLocationId: The StorageLocation record to consume from
+    /// - Returns: The updated StorageLocation, or nil if fully consumed (deleted)
+    /// - Throws: If storage location not found or insufficient quantity
+    func consumeFromStorageLocation(
+        quantity: Double,
+        containerCount: Double? = nil,
+        from storageLocationId: UUID
+    ) async throws -> StorageLocationModel? {
+        return try await storageLocationService.consumeFromLocation(
+            storageLocationId: storageLocationId,
+            quantity: quantity,
+            containerCount: containerCount
+        )
+    }
+
+    /// Move inventory from one storage location to another.
+    /// Delegates to StorageLocationService for consistent business logic.
+    ///
+    /// - Parameters:
+    ///   - quantity: Amount to move (weight in grams or count)
+    ///   - containerCount: Optional number of containers to move (for weight-based types)
+    ///   - fromStorageLocationId: Source StorageLocation UUID
+    ///   - toLocationDefinitionId: Destination StorageLocationDefinition UUID
+    /// - Returns: Tuple of (updated source or nil if depleted, destination StorageLocation)
+    /// - Throws: If source not found or insufficient quantity
+    func moveInventory(
+        quantity: Double,
+        containerCount: Double? = nil,
+        from fromStorageLocationId: UUID,
+        to toLocationDefinitionId: UUID
+    ) async throws -> (source: StorageLocationModel?, destination: StorageLocationModel) {
+        // Look up the location name from the definition
+        let locationName: String?
+        if let definition = try await storageLocationDefinitionRepository.fetch(byId: toLocationDefinitionId) {
+            locationName = definition.name
+        } else {
+            locationName = nil
+        }
+
+        // Delegate to StorageLocationService
+        return try await storageLocationService.moveInventoryBetweenLocations(
+            from: fromStorageLocationId,
+            to: locationName,
+            quantity: quantity,
+            containerCount: containerCount
+        )
+    }
+
+    /// Fetch storage locations added on a specific date, excluding transfers.
+    /// Delegates to StorageLocationService for consistent business logic.
+    ///
+    /// - Parameter date: The date to filter by (time component is ignored)
+    /// - Returns: Array of StorageLocationModel instances added on that date (non-transfers only)
+    func fetchStorageLocationsForLabelPrinting(addedOn date: Date) async throws -> [StorageLocationModel] {
+        return try await storageLocationService.fetchStorageLocationsForLabelPrinting(addedOn: date)
+    }
+
+    /// Get total quantity for an inventory record across all storage locations.
+    ///
+    /// - Parameter inventoryId: The UUID of the Inventory record
+    /// - Returns: Total quantity summed across all StorageLocation records
+    func getTotalQuantity(forInventory inventoryId: UUID) async throws -> Double {
+        let locations = try await storageLocationRepository.fetchLocations(forInventory: inventoryId)
+        return locations.reduce(0) { $0 + $1.quantity }
+    }
+
+    /// Get total container count for an inventory record across all storage locations.
+    ///
+    /// - Parameter inventoryId: The UUID of the Inventory record
+    /// - Returns: Total container count summed across all StorageLocation records (nil if no containers)
+    func getTotalContainerCount(forInventory inventoryId: UUID) async throws -> Double? {
+        let locations = try await storageLocationRepository.fetchLocations(forInventory: inventoryId)
+        let counts = locations.compactMap { $0.containerCount }
+        return counts.isEmpty ? nil : counts.reduce(0, +)
     }
     
     /// Get inventory summary for an item

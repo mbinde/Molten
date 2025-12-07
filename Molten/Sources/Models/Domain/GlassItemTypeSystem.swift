@@ -61,7 +61,7 @@ nonisolated struct GlassItemTypeSystem {
     static let rod = GlassItemType(
         name: "rod",
         displayName: "Rods",
-        subtypes: ["standard", "cane", "pull"],
+        subtypes: [],
         subsubtypes: [:],
         dimensionFields: [
             DimensionField(name: "diameter", displayName: "Diameter", unit: "mm", isRequired: false, placeholder: "5-6mm typical"),
@@ -94,7 +94,7 @@ nonisolated struct GlassItemTypeSystem {
     static let sheet = GlassItemType(
         name: "sheet",
         displayName: "Sheets",
-        subtypes: ["full", "half", "12x12", "10x10", "4x4", "other"],
+        subtypes: [],
         subsubtypes: [:],
         dimensionFields: [
             DimensionField(name: "thickness", displayName: "Thickness", unit: "mm", isRequired: false),

@@ -74,13 +74,27 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
 
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
+        let locationDefinitionRepo = MockStorageLocationDefinitionRepository()
+        let moveRecordRepo = MockInventoryMoveRecordRepository()
+        let consumptionRecordRepo = MockInventoryConsumptionRecordRepository()
+
+        // Create StorageLocationService with required repositories
+        let storageLocationService = await StorageLocationService(
+            definitionRepository: locationDefinitionRepo,
+            storageLocationRepository: otherMockRepos.location,
+            moveRecordRepository: moveRecordRepo,
+            consumptionRecordRepository: consumptionRecordRepo
+        )
 
         let inventoryService = InventoryTrackingService(
             glassItemRepository: mockRepo,
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryRepository: otherMockRepos.inventory,
-            itemTagsRepository: otherMockRepos.itemTags
+            itemTagsRepository: otherMockRepos.itemTags,
+            storageLocationDefinitionRepository: locationDefinitionRepo,
+            storageLocationRepository: otherMockRepos.location,
+            storageLocationService: storageLocationService
         )
 
         let catalogService = CatalogService(
@@ -91,7 +105,8 @@ struct RepositoryIdentityTest: MockOnlyTestSuite {
             itemMinimumRepository: otherMockRepos.itemMinimum,
             itemTagsRepository: otherMockRepos.itemTags,
             userTagsRepository: userTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: AppDependencies.shared.ratingService,
+            storageLocationRepository: otherMockRepos.location
         )
 
         let shoppingService = ShoppingListService(

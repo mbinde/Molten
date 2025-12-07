@@ -81,6 +81,9 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
         let availableCOEs: [Int32]
     }
 
+    // MARK: - Sort Visibility
+    var showSort: Bool = true
+
     init(
         searchTitlesOnly: Binding<Bool>,
         sortOption: Binding<SortOption>,
@@ -97,7 +100,8 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
         storeFilter: StoreFilterConfig? = nil,
         locationFilter: LocationFilterConfig? = nil,
         inventoryTypeFilter: InventoryTypeFilterConfig? = nil,
-        coeFilter: COEFilterConfig? = nil
+        coeFilter: COEFilterConfig? = nil,
+        showSort: Bool = true
     ) {
         self._searchTitlesOnly = searchTitlesOnly
         self._sortOption = sortOption
@@ -115,6 +119,7 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
         self.locationFilter = locationFilter
         self.inventoryTypeFilter = inventoryTypeFilter
         self.coeFilter = coeFilter
+        self.showSort = showSort
     }
 
     var body: some View {
@@ -157,25 +162,27 @@ struct ModernFilterHeader<SortOption: RawRepresentable & CaseIterable & Hashable
 
                 Spacer()
 
-                // Sort button (always on right)
-                Menu {
-                    ForEach(sortOptions, id: \.self) { option in
-                        Button {
-                            sortOption = option
-                            onSortChange?(option)
-                        } label: {
-                            Label(option.rawValue, systemImage: sortOptionIcon(option))
+                // Sort button (optional, shown by default)
+                if showSort {
+                    Menu {
+                        ForEach(sortOptions, id: \.self) { option in
+                            Button {
+                                sortOption = option
+                                onSortChange?(option)
+                            } label: {
+                                Label(option.rawValue, systemImage: sortOptionIcon(option))
+                            }
                         }
+                    } label: {
+                        HStack(spacing: DesignSystem.Spacing.xs) {
+                            Image(systemName: "arrow.up.arrow.down")
+                                .font(DesignSystem.Typography.caption)
+                            Text("Sort")
+                                .font(DesignSystem.Typography.caption)
+                                .fontWeight(DesignSystem.FontWeight.medium)
+                        }
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                     }
-                } label: {
-                    HStack(spacing: DesignSystem.Spacing.xs) {
-                        Image(systemName: "arrow.up.arrow.down")
-                            .font(DesignSystem.Typography.caption)
-                        Text("Sort")
-                            .font(DesignSystem.Typography.caption)
-                            .fontWeight(DesignSystem.FontWeight.medium)
-                    }
-                    .foregroundColor(DesignSystem.Colors.textPrimary)
                 }
             }
             .padding(.horizontal, DesignSystem.Padding.standard)

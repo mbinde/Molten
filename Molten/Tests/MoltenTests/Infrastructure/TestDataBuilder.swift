@@ -34,6 +34,9 @@ class TestDataBuilder {
     private var toolItemRepo: MockToolItemRepository
     private var inventoryRepo: MockInventoryRepository
     private var locationRepo: MockStorageLocationRepository
+    private var locationDefinitionRepo: MockStorageLocationDefinitionRepository
+    private var moveRecordRepo: MockInventoryMoveRecordRepository
+    private var consumptionRecordRepo: MockInventoryConsumptionRecordRepository
     private var itemTagsRepo: MockItemTagsRepository
     private var userTagsRepo: MockUserTagsRepository
     private var itemMinimumRepo: MockItemMinimumRepository
@@ -42,6 +45,7 @@ class TestDataBuilder {
     // Services (lazily created)
     private var _catalogService: CatalogService?
     private var _inventoryTrackingService: InventoryTrackingService?
+    private var _storageLocationService: StorageLocationService?
     private var _shoppingListService: ShoppingListService?
 
     // Data to be built
@@ -60,6 +64,9 @@ class TestDataBuilder {
         self.toolItemRepo = MockToolItemRepository()
         self.inventoryRepo = MockInventoryRepository()
         self.locationRepo = MockStorageLocationRepository()
+        self.locationDefinitionRepo = MockStorageLocationDefinitionRepository()
+        self.moveRecordRepo = MockInventoryMoveRecordRepository()
+        self.consumptionRecordRepo = MockInventoryConsumptionRecordRepository()
         self.itemTagsRepo = MockItemTagsRepository()
         self.userTagsRepo = MockUserTagsRepository()
         self.itemMinimumRepo = MockItemMinimumRepository()
@@ -321,10 +328,28 @@ class TestDataBuilder {
             itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: AppDependencies.shared.ratingService,
+            storageLocationRepository: locationRepo
         )
 
         _catalogService = service
+        return service
+    }
+
+    /// Get or create storage location service
+    var storageLocationService: StorageLocationService {
+        if let service = _storageLocationService {
+            return service
+        }
+
+        let service = StorageLocationService(
+            definitionRepository: locationDefinitionRepo,
+            storageLocationRepository: locationRepo,
+            moveRecordRepository: moveRecordRepo,
+            consumptionRecordRepository: consumptionRecordRepo
+        )
+
+        _storageLocationService = service
         return service
     }
 
@@ -339,7 +364,10 @@ class TestDataBuilder {
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryRepository: inventoryRepo,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: itemTagsRepo,
+            storageLocationDefinitionRepository: locationDefinitionRepo,
+            storageLocationRepository: locationRepo,
+            storageLocationService: storageLocationService
         )
 
         _inventoryTrackingService = service

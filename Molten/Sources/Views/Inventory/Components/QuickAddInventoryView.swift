@@ -11,7 +11,7 @@ import SwiftUI
 struct QuickAddInventoryView: View {
     let itemStableId: String
     let itemName: String
-    let inventoryRepository: InventoryRepository
+    let inventoryTrackingService: InventoryTrackingService
     let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
 
     @Environment(\.dismiss) private var dismiss
@@ -88,15 +88,13 @@ struct QuickAddInventoryView: View {
                 let trimmedLocation = location.trimmingCharacters(in: .whitespacesAndNewlines)
                 let finalLocation = trimmedLocation.isEmpty ? nil : trimmedLocation
 
-                // Create new inventory model
-                let newInventory = InventoryModel(
-                    item_stable_id: itemStableId,
-                    type: type,
+                // Use service to add inventory - this also creates StorageLocation record
+                _ = try await inventoryTrackingService.addInventory(
                     quantity: quantityValue,
-                    location: finalLocation
+                    type: type,
+                    toItem: itemStableId,
+                    atLocation: finalLocation
                 )
-
-                _ = try await inventoryRepository.createInventory(newInventory)
 
                 // Remember the type for next time
                 LastUsedInventoryTypePreference.save(type: type, subtype: nil, subsubtype: nil)

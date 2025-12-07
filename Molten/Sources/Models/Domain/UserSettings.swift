@@ -212,6 +212,24 @@ class UserSettings {
         }
     }
 
+    /// Controls what the + button does on the Inventory screen
+    /// - Default: .addInventory (shows Add Inventory form)
+    /// - Options: .addInventory, .scanQRCode
+    var inventoryQuickAction: InventoryQuickAction {
+        get {
+            if let rawValue = UserDefaults.standard.string(forKey: Keys.inventoryQuickAction),
+               let action = InventoryQuickAction(rawValue: rawValue) {
+                return action
+            }
+            return .addInventory
+        }
+        set {
+            withMutation(keyPath: \.inventoryQuickAction) {
+                UserDefaults.standard.set(newValue.rawValue, forKey: Keys.inventoryQuickAction)
+            }
+        }
+    }
+
     // MARK: - Label Settings
 
     /// Inventory owner name (optional)
@@ -482,6 +500,7 @@ class UserSettings {
         static let applyFiltersToInventory = "applyFiltersToInventory"
         static let qrScanBehavior = "qrScanBehavior"
         static let qrScanLastShowedInventory = "qrScanLastShowedInventory"
+        static let inventoryQuickAction = "inventoryQuickAction"
     }
 
     // MARK: - Enums
@@ -633,6 +652,39 @@ class UserSettings {
                 return "doc.text"
             case .rememberLast:
                 return "clock.arrow.circlepath"
+            }
+        }
+    }
+
+    /// Inventory quick action options - what the + button does on the Inventory screen
+    enum InventoryQuickAction: String, CaseIterable {
+        case addInventory = "addInventory"
+        case scanQRCode = "scanQRCode"
+
+        var displayName: String {
+            switch self {
+            case .addInventory:
+                return "Add Inventory"
+            case .scanQRCode:
+                return "Scan QR Code"
+            }
+        }
+
+        var description: String {
+            switch self {
+            case .addInventory:
+                return "Open the Add Inventory form to search and add items"
+            case .scanQRCode:
+                return "Open the camera to scan a QR code label"
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .addInventory:
+                return "plus"
+            case .scanQRCode:
+                return "camera"
             }
         }
     }

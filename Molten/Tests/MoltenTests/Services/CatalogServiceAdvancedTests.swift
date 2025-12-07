@@ -32,13 +32,27 @@ struct CatalogServiceAdvancedTests {
         let itemMinimumRepo = MockItemMinimumRepository()
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
+        let locationDefinitionRepo = MockStorageLocationDefinitionRepository()
+        let moveRecordRepo = MockInventoryMoveRecordRepository()
+        let consumptionRecordRepo = MockInventoryConsumptionRecordRepository()
+
+        // Create StorageLocationService with required repositories
+        let storageLocationService = StorageLocationService(
+            definitionRepository: locationDefinitionRepo,
+            storageLocationRepository: locationRepo,
+            moveRecordRepository: moveRecordRepo,
+            consumptionRecordRepository: consumptionRecordRepo
+        )
 
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryRepository: inventoryRepo,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: itemTagsRepo,
+            storageLocationDefinitionRepository: locationDefinitionRepo,
+            storageLocationRepository: locationRepo,
+            storageLocationService: storageLocationService
         )
 
         let shoppingListRepository = MockShoppingListRepository()
@@ -61,7 +75,8 @@ struct CatalogServiceAdvancedTests {
             itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: AppDependencies.shared.ratingService,
+            storageLocationRepository: locationRepo
         )
     }
     
@@ -569,13 +584,28 @@ struct CatalogServiceAdvancedTests {
         let itemMinimumRepo = MockItemMinimumRepository()
         let coatingItemRepo = MockCoatingItemRepository()
         let toolItemRepo = MockToolItemRepository()
+        let locationRepo = MockStorageLocationRepository()
+        let locationDefinitionRepo = MockStorageLocationDefinitionRepository()
+        let moveRecordRepo = MockInventoryMoveRecordRepository()
+        let consumptionRecordRepo = MockInventoryConsumptionRecordRepository()
+
+        // Create StorageLocationService with required repositories
+        let storageLocationService = await StorageLocationService(
+            definitionRepository: locationDefinitionRepo,
+            storageLocationRepository: locationRepo,
+            moveRecordRepository: moveRecordRepo,
+            consumptionRecordRepository: consumptionRecordRepo
+        )
 
         let inventoryTrackingService = InventoryTrackingService(
             glassItemRepository: glassItemRepo,
             coatingItemRepository: coatingItemRepo,
             toolItemRepository: toolItemRepo,
             inventoryRepository: inventoryRepo,
-            itemTagsRepository: itemTagsRepo
+            itemTagsRepository: itemTagsRepo,
+            storageLocationDefinitionRepository: locationDefinitionRepo,
+            storageLocationRepository: locationRepo,
+            storageLocationService: storageLocationService
         )
 
         let service = CatalogService(
@@ -586,7 +616,8 @@ struct CatalogServiceAdvancedTests {
             itemMinimumRepository: itemMinimumRepo,
             itemTagsRepository: itemTagsRepo,
             userTagsRepository: userTagsRepo,
-            ratingService: AppDependencies.shared.ratingService
+            ratingService: AppDependencies.shared.ratingService,
+            storageLocationRepository: locationRepo
         )
 
         // Create test data with multiple items

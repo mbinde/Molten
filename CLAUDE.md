@@ -1,5 +1,17 @@
 # CLAUDE.md
 
+## 🚨 CRITICAL: Use Beads (`bd`) for Task Management
+
+**The most important thing to know: Use the `bd` tool instead of markdown TODOs or the TodoWrite tool for ALL new work.**
+
+- Track ALL work in beads issues, not markdown files or TodoWrite
+- Run `bd ready` to find available work
+- Run `bd create --title="..." --type=task|bug|feature` to create issues
+- Run `bd close <id>` when done
+- Run `bd sync` at session end
+
+---
+
 Technical reference for working with the Molten codebase.
 
 ---

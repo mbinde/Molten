@@ -233,7 +233,7 @@ struct CoreDataRecoveryView: View {
             
             Text("Use these tools when you encounter 'missing mapping model' or migration errors.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .multilineTextAlignment(.center)
             
             Button("Diagnose Model") {

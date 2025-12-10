@@ -150,6 +150,7 @@ final class KeyPairManager {
     }
 
     /// Delete all keys from the Keychain
+    /// - Warning: This deletes PRODUCTION keys. For tests, use `deleteAllTestKeys()` instead.
     nonisolated static func deleteAllKeys() {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -158,6 +159,96 @@ final class KeyPairManager {
         ]
 
         SecItemDelete(query as CFDictionary)
+    }
+
+    // MARK: - Test Support
+
+    /// Service name used for test keys (separate from production)
+    nonisolated static let testKeychainService = "com.molten.sharing.test"
+
+    /// Delete all TEST keys from the Keychain (safe to call from tests)
+    nonisolated static func deleteAllTestKeys() {
+        // Delete with synchronizable
+        let syncQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: testKeychainService,
+            kSecAttrSynchronizable as String: true
+        ]
+        SecItemDelete(syncQuery as CFDictionary)
+
+        // Also delete without synchronizable (for simulator)
+        let nonSyncQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: testKeychainService
+        ]
+        SecItemDelete(nonSyncQuery as CFDictionary)
+    }
+
+    /// Store a private key in the TEST Keychain (separate from production)
+    func storeTestPrivateKey(_ privateKey: Data, identifier: String) throws {
+        // Delete existing key if present
+        try? deleteTestPrivateKey(identifier: identifier)
+
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.testKeychainService,
+            kSecAttrAccount as String: identifier,
+            kSecValueData as String: privateKey,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        ]
+
+        let status = SecItemAdd(query as CFDictionary, nil)
+        guard status == errSecSuccess else {
+            throw KeyPairError.keychainError("Failed to store test key: \(status)")
+        }
+    }
+
+    /// Retrieve a private key from the TEST Keychain
+    func retrieveTestPrivateKey(identifier: String) throws -> Data {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.testKeychainService,
+            kSecAttrAccount as String: identifier,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+
+        guard status == errSecSuccess else {
+            if status == errSecItemNotFound {
+                throw KeyPairError.keyNotFound
+            }
+            throw KeyPairError.keychainError("Failed to retrieve test key: \(status)")
+        }
+
+        guard let data = result as? Data else {
+            throw KeyPairError.keychainError("Invalid data format")
+        }
+
+        return data
+    }
+
+    /// Delete a private key from the TEST Keychain
+    func deleteTestPrivateKey(identifier: String) throws {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.testKeychainService,
+            kSecAttrAccount as String: identifier
+        ]
+
+        let status = SecItemDelete(query as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else {
+            throw KeyPairError.keychainError("Failed to delete test key: \(status)")
+        }
+    }
+
+    /// Generate and store a new key pair in the TEST Keychain
+    func generateAndStoreTestKeyPair(identifier: String) throws -> KeyPair {
+        let keyPair = try generateKeyPair()
+        try storeTestPrivateKey(keyPair.privateKey, identifier: identifier)
+        return keyPair
     }
 
     // MARK: - Key Management

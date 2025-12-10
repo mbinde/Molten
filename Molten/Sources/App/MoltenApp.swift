@@ -64,17 +64,17 @@ struct MoltenApp: App {
             let prodDeps = AppDependencies.shared
             _dependencies = State(initialValue: prodDeps)
 
-            // MUST initialize subscriptionManager before calling instance methods (Swift 6 requirement)
-            // Initialize with mock first, will be properly set up after SDK configuration
-            _subscriptionManager = State(initialValue: SubscriptionManager(
-                entitlementService: prodDeps.entitlementService,
-                subscriptionService: MockSubscriptionService()
-            ))
+            // Configure RevenueCat FIRST, before creating SubscriptionManager
+            // This ensures the SDK is ready when SubscriptionManager tries to use it
+            Purchases.configure(
+                with: Configuration.Builder(withAPIKey: "appl_FrYVVHssDBIlhEAZreHfEgwBJUH")
+                    .with(entitlementVerificationMode: .informational)
+                    .build()
+            )
+            Purchases.shared.delegate = RevenueCatDelegateHandler.shared
 
-            // Configure SDKs now that all @State properties are initialized
-            configureRevenueCat()
-
-            // Now reinitialize SubscriptionManager with real RevenueCat service
+            // Now create SubscriptionManager with real RevenueCat service
+            // Only create ONE instance to avoid race conditions
             _subscriptionManager = State(initialValue: SubscriptionManager(entitlementService: prodDeps.entitlementService))
         }
 
@@ -1047,21 +1047,6 @@ extension MoltenApp {
         }
 
         return stableId
-    }
-
-    /// Configure RevenueCat SDK with API key and settings
-    private func configureRevenueCat() {
-        // RevenueCat logging disabled - too verbose for debug console
-        // To re-enable: Purchases.logLevel = .debug
-
-        Purchases.configure(
-            with: Configuration.Builder(withAPIKey: "appl_FrYVVHssDBIlhEAZreHfEgwBJUH")
-                .with(entitlementVerificationMode: .informational) // Recommended for production
-                .build()
-        )
-
-        // Set delegate to listen for customer info changes (promo codes, external purchases, etc.)
-        Purchases.shared.delegate = RevenueCatDelegateHandler.shared
     }
 }
 

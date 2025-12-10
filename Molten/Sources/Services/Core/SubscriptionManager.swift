@@ -43,6 +43,9 @@ class SubscriptionManager {
     /// Task handle for monitoring subscription changes
     private var subscriptionTask: Task<Void, Never>?
 
+    /// Flag to prevent concurrent subscription checks (prevents deadlocks)
+    private var isCheckingSubscription = false
+
     // MARK: - Initialization
 
     init(entitlementService: EntitlementService, subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService) {
@@ -54,8 +57,10 @@ class SubscriptionManager {
             await monitorSubscriptionChanges()
         }
 
-        // Load products immediately
+        // Load products with a delay to let RevenueCat fully initialize
+        // This prevents deadlocks when customerInfo() is called too early
         Task {
+            try? await Task.sleep(for: .milliseconds(500))
             await loadProducts()
             await checkSubscriptionStatus()
         }
@@ -144,6 +149,13 @@ class SubscriptionManager {
 
     /// Check current subscription status and update EntitlementService
     func checkSubscriptionStatus() async {
+        // Prevent concurrent calls which can cause RevenueCat deadlocks
+        guard !isCheckingSubscription else {
+            return
+        }
+        isCheckingSubscription = true
+        defer { isCheckingSubscription = false }
+
         // Check RevenueCat for Pro access
         let hasProAccess = await subscriptionService.hasProAccess()
 

@@ -33,10 +33,12 @@
     </entity>
     <entity name="InventoryConsumptionRecord" representedClassName="InventoryConsumptionRecord" syncable="YES" codeGenerationType="class">
         <attribute name="container_count" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="currency" optional="YES" attributeType="String"/>
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="storage_location_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="unit_price" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
     </entity>
     <entity name="InventoryItem" representedClassName="InventoryItem" syncable="YES" codeGenerationType="category">
         <attribute name="catalog_code" optional="YES" attributeType="String"/>
@@ -333,10 +335,13 @@
         <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_purchased" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="deleted_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="email_receipt_id" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="metadata_json" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="order_number" optional="YES" attributeType="String"/>
         <attribute name="owner_user_id" optional="YES" attributeType="String"/>
+        <attribute name="sender_email" optional="YES" attributeType="String"/>
         <attribute name="shipping" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="subtotal" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="supplier" optional="YES" attributeType="String"/>
@@ -345,6 +350,7 @@
         <relationship name="purchaserecorditem" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PurchaseRecordItem" inverseName="purchaserecord" inverseEntity="PurchaseRecordItem"/>
     </entity>
     <entity name="PurchaseRecordItem" representedClassName="PurchaseRecordItem" syncable="YES" codeGenerationType="category">
+        <attribute name="currency" optional="YES" attributeType="String"/>
         <attribute name="deleted_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
@@ -354,6 +360,7 @@
         <attribute name="subtype" optional="YES" attributeType="String"/>
         <attribute name="total_price" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="unit_price" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <relationship name="purchaserecord" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PurchaseRecord" inverseName="purchaserecorditem" inverseEntity="PurchaseRecord"/>
     </entity>
     <entity name="Recipe" representedClassName="Recipe" syncable="YES" codeGenerationType="class">
@@ -410,14 +417,17 @@
     </entity>
     <entity name="StorageLocation" representedClassName="StorageLocation" syncable="YES" codeGenerationType="class">
         <attribute name="containerCount" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="currency" optional="YES" attributeType="String"/>
         <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="inventory_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="is_transfer" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="location" optional="YES" attributeType="String"/>
+        <attribute name="purchase_record_item_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="storage_location_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="unit_price" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
     <entity name="StorageLocationDefinition" representedClassName="StorageLocationDefinition" syncable="YES" codeGenerationType="class">

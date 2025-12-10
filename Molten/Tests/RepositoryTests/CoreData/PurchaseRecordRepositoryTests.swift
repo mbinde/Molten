@@ -504,4 +504,219 @@ struct PurchaseRecordRepositoryTests {
         let count = await repository.getRecordCount()
         #expect(count == 0)
     }
+
+    // MARK: - Receipt Import Deduplication Tests
+
+    @Test("Can fetch record by email receipt ID")
+    func testFetchByEmailReceiptId() async throws {
+        let repository = MockPurchaseRecordRepository()
+
+        let record = PurchaseRecordModel(
+            id: UUID(),
+            supplier: "Bullseye Glass",
+            datePurchased: Date(),
+            emailReceiptId: "receipt-abc-123",
+            senderEmail: "orders@bullseye.com",
+            orderNumber: "ORD-001"
+        )
+        _ = try await repository.createRecord(record)
+
+        let found = try await repository.fetchRecord(byEmailReceiptId: "receipt-abc-123")
+
+        #expect(found != nil)
+        #expect(found?.emailReceiptId == "receipt-abc-123")
+    }
+
+    @Test("Fetch by email receipt ID returns nil when not found")
+    func testFetchByEmailReceiptIdNotFound() async throws {
+        let repository = MockPurchaseRecordRepository()
+
+        let found = try await repository.fetchRecord(byEmailReceiptId: "nonexistent")
+
+        #expect(found == nil)
+    }
+
+    @Test("Can fetch records by order number, supplier, and date")
+    func testFetchByOrderNumberSupplierDate() async throws {
+        let repository = MockPurchaseRecordRepository()
+        let orderDate = Date()
+
+        let record = PurchaseRecordModel(
+            id: UUID(),
+            supplier: "Bullseye Glass",
+            datePurchased: orderDate,
+            emailReceiptId: nil,
+            senderEmail: nil,
+            orderNumber: "ORD-2024-001"
+        )
+        _ = try await repository.createRecord(record)
+
+        let found = try await repository.fetchRecords(
+            byOrderNumber: "ORD-2024-001",
+            supplier: "Bullseye Glass",
+            on: orderDate
+        )
+
+        #expect(found.count == 1)
+        #expect(found.first?.orderNumber == "ORD-2024-001")
+    }
+
+    @Test("Fetch by order number is case insensitive for supplier")
+    func testFetchByOrderNumberCaseInsensitive() async throws {
+        let repository = MockPurchaseRecordRepository()
+        let orderDate = Date()
+
+        let record = PurchaseRecordModel(
+            id: UUID(),
+            supplier: "Bullseye Glass",
+            datePurchased: orderDate,
+            emailReceiptId: nil,
+            senderEmail: nil,
+            orderNumber: "ORD-001"
+        )
+        _ = try await repository.createRecord(record)
+
+        let found = try await repository.fetchRecords(
+            byOrderNumber: "ORD-001",
+            supplier: "bullseye glass",
+            on: orderDate
+        )
+
+        #expect(found.count == 1)
+    }
+
+    @Test("Fetch by order number returns empty when supplier differs")
+    func testFetchByOrderNumberDifferentSupplier() async throws {
+        let repository = MockPurchaseRecordRepository()
+        let orderDate = Date()
+
+        let record = PurchaseRecordModel(
+            id: UUID(),
+            supplier: "Bullseye Glass",
+            datePurchased: orderDate,
+            emailReceiptId: nil,
+            senderEmail: nil,
+            orderNumber: "ORD-001"
+        )
+        _ = try await repository.createRecord(record)
+
+        let found = try await repository.fetchRecords(
+            byOrderNumber: "ORD-001",
+            supplier: "Effetre Glass",
+            on: orderDate
+        )
+
+        #expect(found.isEmpty)
+    }
+
+    @Test("Can fetch records by sender email and date")
+    func testFetchBySenderEmailDate() async throws {
+        let repository = MockPurchaseRecordRepository()
+        let orderDate = Date()
+
+        let record = PurchaseRecordModel(
+            id: UUID(),
+            supplier: "Bullseye Glass",
+            datePurchased: orderDate,
+            emailReceiptId: nil,
+            senderEmail: "orders@bullseyeglass.com",
+            orderNumber: nil
+        )
+        _ = try await repository.createRecord(record)
+
+        let found = try await repository.fetchRecords(
+            bySenderEmail: "orders@bullseyeglass.com",
+            on: orderDate
+        )
+
+        #expect(found.count == 1)
+        #expect(found.first?.senderEmail == "orders@bullseyeglass.com")
+    }
+
+    @Test("Fetch by sender email is case insensitive")
+    func testFetchBySenderEmailCaseInsensitive() async throws {
+        let repository = MockPurchaseRecordRepository()
+        let orderDate = Date()
+
+        let record = PurchaseRecordModel(
+            id: UUID(),
+            supplier: "Bullseye Glass",
+            datePurchased: orderDate,
+            emailReceiptId: nil,
+            senderEmail: "Orders@BullseyeGlass.com",
+            orderNumber: nil
+        )
+        _ = try await repository.createRecord(record)
+
+        let found = try await repository.fetchRecords(
+            bySenderEmail: "orders@bullseyeglass.com",
+            on: orderDate
+        )
+
+        #expect(found.count == 1)
+    }
+
+    @Test("Fetch by sender email returns empty for different date")
+    func testFetchBySenderEmailDifferentDate() async throws {
+        let repository = MockPurchaseRecordRepository()
+        let orderDate = Date()
+        let differentDate = orderDate.addingTimeInterval(-86400 * 7) // 7 days earlier
+
+        let record = PurchaseRecordModel(
+            id: UUID(),
+            supplier: "Bullseye Glass",
+            datePurchased: orderDate,
+            emailReceiptId: nil,
+            senderEmail: "orders@bullseyeglass.com",
+            orderNumber: nil
+        )
+        _ = try await repository.createRecord(record)
+
+        let found = try await repository.fetchRecords(
+            bySenderEmail: "orders@bullseyeglass.com",
+            on: differentDate
+        )
+
+        #expect(found.isEmpty)
+    }
+
+    // MARK: - New Field Tests
+
+    @Test("Can create record with all new receipt import fields")
+    func testCreateRecordWithReceiptImportFields() async throws {
+        let repository = MockPurchaseRecordRepository()
+
+        let record = PurchaseRecordModel(
+            id: UUID(),
+            supplier: "Bullseye Glass",
+            datePurchased: Date(),
+            emailReceiptId: "receipt-123",
+            senderEmail: "orders@bullseye.com",
+            orderNumber: "ORD-2024-001"
+        )
+        let created = try await repository.createRecord(record)
+
+        #expect(created.emailReceiptId == "receipt-123")
+        #expect(created.senderEmail == "orders@bullseye.com")
+        #expect(created.orderNumber == "ORD-2024-001")
+    }
+
+    @Test("Can create record with nil receipt import fields")
+    func testCreateRecordWithNilReceiptImportFields() async throws {
+        let repository = MockPurchaseRecordRepository()
+
+        let record = PurchaseRecordModel(
+            id: UUID(),
+            supplier: "Bullseye Glass",
+            datePurchased: Date(),
+            emailReceiptId: nil,
+            senderEmail: nil,
+            orderNumber: nil
+        )
+        let created = try await repository.createRecord(record)
+
+        #expect(created.emailReceiptId == nil)
+        #expect(created.senderEmail == nil)
+        #expect(created.orderNumber == nil)
+    }
 }

@@ -300,4 +300,122 @@ struct StorageLocationModelTests {
         #expect(cleaned == "")
         #expect(isValid == false)
     }
+
+    // MARK: - Receipt Import Field Tests
+
+    @Test("Should set purchaseRecordItemId for linked inventory")
+    func testInitSetsPurchaseRecordItemId() {
+        let purchaseItemId = UUID()
+        let location = StorageLocationModel(
+            inventoryId: UUID(),
+            quantity: 5.0,
+            purchaseRecordItemId: purchaseItemId
+        )
+
+        #expect(location.purchaseRecordItemId == purchaseItemId)
+    }
+
+    @Test("Should allow nil purchaseRecordItemId for unlinked inventory")
+    func testInitAllowsNilPurchaseRecordItemId() {
+        let location = StorageLocationModel(
+            inventoryId: UUID(),
+            quantity: 5.0,
+            purchaseRecordItemId: nil
+        )
+
+        #expect(location.purchaseRecordItemId == nil)
+    }
+
+    @Test("Should set unitPrice for priced inventory")
+    func testInitSetsUnitPrice() {
+        let location = StorageLocationModel(
+            inventoryId: UUID(),
+            quantity: 5.0,
+            unitPrice: Decimal(12.50)
+        )
+
+        #expect(location.unitPrice == Decimal(12.50))
+    }
+
+    @Test("Should allow nil unitPrice for unpriced inventory")
+    func testInitAllowsNilUnitPrice() {
+        let location = StorageLocationModel(
+            inventoryId: UUID(),
+            quantity: 5.0,
+            unitPrice: nil
+        )
+
+        #expect(location.unitPrice == nil)
+    }
+
+    @Test("Should set currency for priced inventory")
+    func testInitSetsCurrency() {
+        let location = StorageLocationModel(
+            inventoryId: UUID(),
+            quantity: 5.0,
+            currency: "USD"
+        )
+
+        #expect(location.currency == "USD")
+    }
+
+    @Test("Should allow nil currency")
+    func testInitAllowsNilCurrency() {
+        let location = StorageLocationModel(
+            inventoryId: UUID(),
+            quantity: 5.0,
+            currency: nil
+        )
+
+        #expect(location.currency == nil)
+    }
+
+    @Test("Should set all receipt import fields together")
+    func testInitSetsAllReceiptImportFields() {
+        let purchaseItemId = UUID()
+        let location = StorageLocationModel(
+            inventoryId: UUID(),
+            quantity: 10.0,
+            purchaseRecordItemId: purchaseItemId,
+            unitPrice: Decimal(25.99),
+            currency: "USD"
+        )
+
+        #expect(location.purchaseRecordItemId == purchaseItemId)
+        #expect(location.unitPrice == Decimal(25.99))
+        #expect(location.currency == "USD")
+    }
+
+    @Test("Should preserve receipt import fields with other fields")
+    func testReceiptImportFieldsWithOtherFields() {
+        let purchaseItemId = UUID()
+        let inventoryId = UUID()
+        let storageDefId = UUID()
+        let now = Date()
+
+        let location = StorageLocationModel(
+            id: UUID(),
+            inventoryId: inventoryId,
+            storageLocationId: storageDefId,
+            locationName: "Shelf A",
+            quantity: 15.0,
+            containerCount: 3.0,
+            dateAdded: now,
+            dateModified: now,
+            isTransfer: false,
+            workspaceId: nil,
+            purchaseRecordItemId: purchaseItemId,
+            unitPrice: Decimal(8.75),
+            currency: "EUR"
+        )
+
+        #expect(location.inventoryId == inventoryId)
+        #expect(location.storageLocationId == storageDefId)
+        #expect(location.locationName == "Shelf A")
+        #expect(location.quantity == 15.0)
+        #expect(location.containerCount == 3.0)
+        #expect(location.purchaseRecordItemId == purchaseItemId)
+        #expect(location.unitPrice == Decimal(8.75))
+        #expect(location.currency == "EUR")
+    }
 }

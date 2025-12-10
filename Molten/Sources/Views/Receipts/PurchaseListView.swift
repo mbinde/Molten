@@ -24,6 +24,11 @@ struct PurchaseListView: View {
     @State private var isRecovering = false
     @State private var showingRecoveryEmailSent = false
 
+    // Verification polling state (for pending recovery)
+    @State private var isCheckingVerification = false
+    @State private var isResendingVerification = false
+    @State private var verificationMessage: String?
+
     private var receiptService: ReceiptService {
         dependencies.receiptService
     }
@@ -34,6 +39,8 @@ struct PurchaseListView: View {
         Group {
             if isLoading {
                 ProgressView("Loading purchases...")
+            } else if receiptService.isPendingEmailVerification {
+                pendingVerificationView
             } else if let error = errorMessage {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
@@ -217,7 +224,12 @@ struct PurchaseListView: View {
         Task { @MainActor in
             do {
                 _ = try await receiptService.requestAccountRecovery(email: recoveryEmail)
-                showingRecoveryEmailSent = true
+                // Recovery request successful - service is now in pending verification state
+                // Clear error state and reload to show the pending verification UI
+                errorMessage = nil
+                isKeyNotFoundError = false
+                recoveryEmail = ""
+                // Note: The view will now show pendingVerificationSection via receiptService.isPendingEmailVerification
             } catch let apiError as ReceiptAPIError {
                 if case .badRequest(let message) = apiError {
                     recoveryError = message
@@ -391,6 +403,119 @@ struct PurchaseListView: View {
             withAnimation {
                 showCopiedFeedback = false
             }
+        }
+    }
+
+    // MARK: - Pending Verification View
+
+    @ViewBuilder
+    private var pendingVerificationView: some View {
+        List {
+            Section {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: "envelope.badge")
+                            .foregroundColor(.orange)
+                        Text("Verification Pending")
+                            .font(.headline)
+                    }
+
+                    Text("We sent a verification link to \(receiptService.receiptEmail ?? "your email"). Please check your inbox and click the link to complete recovery.")
+                        .font(.subheadline)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                    Text("This may take a few minutes to arrive. Check your spam folder if you don't see it.")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+                .padding(.vertical, 4)
+
+                if let message = verificationMessage {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text(message)
+                            .font(.subheadline)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                }
+
+                Button {
+                    checkVerificationStatus()
+                } label: {
+                    HStack {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                        Text("Check Verification Status")
+                        if isCheckingVerification {
+                            Spacer()
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                        }
+                    }
+                }
+                .disabled(isCheckingVerification)
+
+                Button {
+                    resendVerificationEmail()
+                } label: {
+                    HStack {
+                        Image(systemName: "envelope.arrow.triangle.branch")
+                        Text("Resend Verification Email")
+                        if isResendingVerification {
+                            Spacer()
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                        }
+                    }
+                }
+                .disabled(isResendingVerification)
+
+                Button(role: .destructive) {
+                    receiptService.disableReceipts()
+                } label: {
+                    HStack {
+                        Image(systemName: "xmark.circle")
+                        Text("Cancel Recovery")
+                    }
+                }
+            } header: {
+                Text("Account Recovery")
+            }
+        }
+    }
+
+    private func checkVerificationStatus() {
+        isCheckingVerification = true
+        verificationMessage = nil
+
+        Task { @MainActor in
+            do {
+                let verified = try await receiptService.checkEmailVerificationStatus()
+                if verified {
+                    // Verification complete - reload to show purchases
+                    loadPurchases()
+                } else {
+                    verificationMessage = "Not yet verified. Please click the link in your email."
+                }
+            } catch {
+                verificationMessage = "Could not check status: \(error.localizedDescription)"
+            }
+            isCheckingVerification = false
+        }
+    }
+
+    private func resendVerificationEmail() {
+        isResendingVerification = true
+        verificationMessage = nil
+
+        Task { @MainActor in
+            do {
+                try await receiptService.resendVerificationEmail()
+                verificationMessage = "Verification email sent! Check your inbox."
+            } catch {
+                verificationMessage = "Could not resend: \(error.localizedDescription)"
+            }
+            isResendingVerification = false
         }
     }
 }

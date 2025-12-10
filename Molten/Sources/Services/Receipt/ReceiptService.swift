@@ -428,8 +428,14 @@ open class ReceiptService: ObservableObject {
             throw error
         }
 
-        // Store the email locally so we can restore state when recovery completes
+        // Store the email locally and set pending verification state
+        // This triggers isPendingEmailVerification = true so UI shows verification waiting screen
         preferences.registeredEmail = email.lowercased()
+        preferences.identifierType = .email
+        preferences.emailVerified = false
+
+        // Update published state to trigger UI refresh
+        updatePublishedState()
 
         return response.message
     }

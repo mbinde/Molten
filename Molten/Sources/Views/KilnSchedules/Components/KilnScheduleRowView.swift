@@ -78,14 +78,14 @@ struct KilnScheduleRowView: View {
             // Temperature unit
             Text(displaySchedule.temperatureUnit.symbol)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
     }
 
     private var scheduleNotes: some View {
         Text(displaySchedule.description ?? "")
             .font(.caption)
-            .foregroundColor(.secondary)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
             .lineLimit(2)
     }
 

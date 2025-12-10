@@ -16,7 +16,7 @@ extension Text {
     func secondaryCaption() -> Text {
         self
             .font(.caption)
-            .foregroundColor(.secondary)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
     }
 
     /// Small secondary caption text
@@ -24,7 +24,7 @@ extension Text {
     func secondaryCaptionSmall() -> Text {
         self
             .font(.caption2)
-            .foregroundColor(.secondary)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
     }
 
     /// Secondary subheadline text
@@ -32,7 +32,7 @@ extension Text {
     func secondarySubheadline() -> Text {
         self
             .font(.subheadline)
-            .foregroundColor(.secondary)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
     }
 
     /// Emphasized headline (bold)
@@ -68,7 +68,7 @@ extension View {
     func secondaryCaptionStyle() -> some View {
         self
             .font(.caption)
-            .foregroundColor(.secondary)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
     }
 
     /// Applies small secondary caption styling to any view with text
@@ -76,7 +76,7 @@ extension View {
     func secondaryCaptionSmallStyle() -> some View {
         self
             .font(.caption2)
-            .foregroundColor(.secondary)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
     }
 
     /// Applies secondary subheadline styling to any view with text
@@ -84,7 +84,7 @@ extension View {
     func secondarySubheadlineStyle() -> some View {
         self
             .font(.subheadline)
-            .foregroundColor(.secondary)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
     }
 
     /// Applies emphasized headline styling to any view with text
@@ -137,7 +137,7 @@ extension View {
 
         Divider()
 
-        Text("Before: Text(\"Label\").font(.caption).foregroundColor(.secondary)")
+        Text("Before: Text(\"Label\").font(.caption).foregroundColor(DesignSystem.Colors.textSecondary)")
             .font(.caption2)
             .foregroundStyle(.tertiary)
 

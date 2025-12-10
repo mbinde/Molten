@@ -41,7 +41,7 @@ nonisolated struct EmptyStateView: View {
         VStack(spacing: 20) {
             Image(systemName: icon)
                 .font(.largeTitle)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             
             Text(title)
                 .font(.title2)
@@ -49,7 +49,7 @@ nonisolated struct EmptyStateView: View {
             
             Text(subtitle)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
             
@@ -84,7 +84,7 @@ nonisolated struct SearchEmptyStateView: View {
         VStack(spacing: 16) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 40))
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             
             Text("No Results")
                 .font(.title2)
@@ -92,7 +92,7 @@ nonisolated struct SearchEmptyStateView: View {
             
             Text("No items match '\(searchText)'")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .padding()
@@ -121,7 +121,7 @@ nonisolated struct FeatureListView: View {
                 }
             }
             .font(.caption)
-            .foregroundColor(.secondary)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
         }
         .padding()
         .background(Color.gray.opacity(0.15))

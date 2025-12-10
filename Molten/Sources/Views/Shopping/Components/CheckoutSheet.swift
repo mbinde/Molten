@@ -225,7 +225,7 @@ struct CheckoutSheet: View {
 
                             Text("rod")
                                 .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                     .padding(.vertical, 2)

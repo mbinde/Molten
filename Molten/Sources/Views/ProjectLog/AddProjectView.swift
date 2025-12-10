@@ -77,14 +77,14 @@ struct AddProjectView: View {
                     Spacer()
                     if tags.isEmpty {
                         Text("None")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     } else {
                         Text("\(tags.count) tag\(tags.count == 1 ? "" : "s")")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     Image(systemName: "chevron.right")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -174,7 +174,7 @@ struct AddProjectView: View {
             Section {
                 Text("You can add steps, glass, images, and reference URLs after creating the plan.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         }
         .navigationTitle("New Project")

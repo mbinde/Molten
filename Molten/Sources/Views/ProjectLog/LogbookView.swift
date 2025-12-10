@@ -133,7 +133,7 @@ struct LogbookView: View, CachedDataDeletion {
 
                 Text("Document your completed glass projects, record techniques, and track your creative journey")
                     .font(.body)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
 
@@ -237,7 +237,7 @@ struct LogbookRow: View {
                 if let notes = logEntry.notes, !notes.isEmpty {
                     Text(notes)
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .lineLimit(2)
                 }
 
@@ -246,21 +246,21 @@ struct LogbookRow: View {
                     if let completionDate = logEntry.completionDate {
                         Text(completionDate, style: .date)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     } else {
                         Text(logEntry.dateCreated, style: .date)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
 
                     if !logEntry.tags.isEmpty {
                         Text("•")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
 
                         Text(logEntry.tags.joined(separator: ", "))
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                             .lineLimit(1)
                     }
                 }

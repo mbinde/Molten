@@ -235,7 +235,7 @@ struct AddItemFormView: View {
 
                     Image(systemName: isDimensionsExpanded ? "chevron.up" : "chevron.down")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .contentShape(Rectangle())
             }

@@ -20,7 +20,7 @@ struct SelectedFormatView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .font(.body)
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -35,7 +35,7 @@ struct SelectedFormatView: View {
 
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             .padding(.vertical, 4)
         }

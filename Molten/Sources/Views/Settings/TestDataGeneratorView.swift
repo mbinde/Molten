@@ -43,10 +43,10 @@ struct TestDataGeneratorView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Generate test data for development and testing")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     Text("Each button press adds more data to your database")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .padding(.vertical, 4)
             }

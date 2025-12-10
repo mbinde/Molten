@@ -94,7 +94,7 @@ struct GlassItemCard: View {
                     .frame(width: variant.imageSize, height: variant.imageSize)
                     .overlay {
                         Image(systemName: "photo")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                             .font(.system(size: variant.imageSize * 0.3))
                     }
                 #endif

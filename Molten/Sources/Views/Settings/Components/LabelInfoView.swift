@@ -25,7 +25,7 @@ struct LabelInfoView: View {
                 if let lastUpdate = viewModel.lastSuccessfulUpdate {
                     LabeledContent("Last Updated") {
                         Text(lastUpdate, style: .relative)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
 
@@ -34,7 +34,7 @@ struct LabelInfoView: View {
                 if let lastCheck = viewModel.lastUpdateCheck {
                     LabeledContent("Last Checked") {
                         Text(lastCheck, style: .relative)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             } header: {
@@ -48,14 +48,14 @@ struct LabelInfoView: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.orange)
                         Text("Update service unavailable")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 } else if viewModel.isChecking {
                     HStack {
                         ProgressView()
                             .controlSize(.small)
                         Text("Checking for updates...")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 } else if let updateInfo = viewModel.availableUpdate {
                     // Update available
@@ -187,17 +187,17 @@ struct LabelInfoView: View {
                 if updateInfo.isInitialVersionedUpdate {
                     Text("Version \(updateInfo.availableVersion) (First versioned release)")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 } else {
                     Text("Version \(updateInfo.availableVersion)")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
 
                 if let changelog = updateInfo.changelog, !changelog.isEmpty {
                     Text(changelog)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
 
@@ -207,7 +207,7 @@ struct LabelInfoView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Release Date")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     Text(updateInfo.releaseDate, style: .date)
                         .font(.caption)
                 }
@@ -217,7 +217,7 @@ struct LabelInfoView: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     Text("Download Size")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     Text(ByteCountFormatter.string(fromByteCount: Int64(updateInfo.fileSize), countStyle: .file))
                         .font(.caption)
                 }
@@ -231,13 +231,13 @@ struct LabelInfoView: View {
                     HStack {
                         Text("Downloading...")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
 
                         Spacer()
 
                         Text("\(Int(viewModel.downloadProgress * 100))%")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             } else {

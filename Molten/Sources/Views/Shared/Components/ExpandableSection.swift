@@ -43,7 +43,7 @@ struct ExpandableSection<Content: View>: View {
                         .fontWeight(.semibold)
                     Spacer()
                     Image(systemName: "chevron.down")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .rotationEffect(.degrees(isExpanded ? 180 : 0))
                         .animation(.easeInOut(duration: 0.2), value: isExpanded)
                 }

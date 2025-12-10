@@ -1,216 +1,127 @@
 //
 //  PurchasesView.swift
-//  Flameworker
+//  Molten
 //
-//  Created by Assistant on 9/30/25.
+//  Main view for the Purchases tab - shows purchase import workflow
+//  Either displays setup instructions or the list of imported purchases
 //
 
 import SwiftUI
 
 struct PurchasesView: View {
-    // MIGRATION COMPLETE: All state now managed by ViewModel ✓
-    @State private var showingAddPurchase = false
-    @State private var viewModel: PurchasesViewModel
+    @Environment(\.appDependencies) private var dependencies
+    @State private var showingSettings = false
 
-    // Accept ViewModel directly (follows protocol-based pattern)
-    init(viewModel: PurchasesViewModel) {
-        self._viewModel = State(initialValue: viewModel)
-    }
+    // Observe the receipt service directly to get UI updates
+    @ObservedObject private var receiptService: ReceiptService
 
-    // Convenience init for production use (DI pattern)
-    init(purchaseService: PurchaseRecordService) {
-        let viewModel = PurchasesViewModel(purchaseService: purchaseService)
-        self.init(viewModel: viewModel)
-    }
-
-    // Convenience computed property for cleaner code
-    private var filteredPurchases: [PurchaseRecordModel] {
-        viewModel.filteredPurchases
+    init() {
+        _receiptService = ObservedObject(wrappedValue: AppDependencies.shared.receiptService)
     }
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Search bar
-                HStack {
-                    TextField("Search purchases...", text: $viewModel.searchText)
-                        .textFieldStyle(.roundedBorder)
-                        .autocorrectionDisabled()
-                        #if os(iOS)
-                        .textInputAutocapitalization(.never)
-                        #endif
-
-                    if !viewModel.searchText.isEmpty {
-                        Button("Clear") {
-                            viewModel.clearSearch()
-                        }
-                        .foregroundColor(.secondary)
-                        .accessibilityIdentifier("purchases_clear_search")
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.top, 8)
-
-                if viewModel.isLoading {
-                    LoadingStateView(message: "Loading purchases...")
-                } else if filteredPurchases.isEmpty {
-                    if viewModel.purchases.isEmpty {
-                        // Empty state when no purchases exist
-                        emptyStateView
-                    } else {
-                        // Empty search results
-                        searchEmptyStateView
-                    }
+            Group {
+                if receiptService.isSetUp {
+                    // Purchase import is enabled - show purchases list
+                    PurchaseListView(showingHelp: $showingSettings)
                 } else {
-                    // Purchase list
-                    List {
-                        ForEach(filteredPurchases, id: \.id) { purchase in
-                            PurchaseListRowView(purchase: purchase)
-                                .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
-                                .accessibilityIdentifier("purchases.record.\(purchase.id)")
-                        }
-                        .onDelete(perform: deletePurchases)
-                    }
-                    .accessibilityIdentifier("purchases.list")
-                    .listStyle(.plain)
-                    .refreshable {
-                        // Refresh purchases
-                        await viewModel.refreshPurchases()
-                    }
+                    // Not set up yet - show onboarding
+                    PurchaseOnboardingView(showingSettings: $showingSettings)
                 }
             }
             .navigationTitle("Purchases")
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             #endif
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(action: { showingAddPurchase = true }) {
-                        Image(systemName: "plus")
-                    }
-                    .accessibilityIdentifier("purchases_add_button")
-                }
-
-                #if os(iOS)
-                if !viewModel.purchases.isEmpty && !viewModel.isLoading {
-                    ToolbarItem(placement: .topBarLeading) {
-                        EditButton()
-                            .accessibilityIdentifier("purchases_edit_button")
-                    }
-                }
-                #endif
-            }
-            .task {
-                await viewModel.loadPurchases()
-            }
-            .sheet(isPresented: $showingAddPurchase, onDismiss: {
-                // Reload purchases when sheet is dismissed (after saving)
-                Task {
-                    await viewModel.loadPurchases()
-                }
-            }) {
+            .sheet(isPresented: $showingSettings) {
                 NavigationStack {
-                    AddPurchaseRecordView()
+                    PurchaseImportSettingsView()
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") {
+                                    showingSettings = false
+                                }
+                            }
+                        }
                 }
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .clearPurchasesSearch)) { _ in
-            viewModel.clearSearch()
-        }
-    }
-    
-    private func deletePurchases(offsets: IndexSet) {
-        Task {
-            let idsToDelete = offsets.map { filteredPurchases[$0].id }
-            await viewModel.deletePurchases(ids: idsToDelete)
-        }
-    }
-
-    // MARK: - Empty States
-
-    private var emptyStateView: some View {
-        CustomEmptyStateView(
-            icon: "creditcard",
-            title: "No Purchases Yet",
-            description: "Track your purchase records here",
-            actionButton: .init(
-                title: "Add Purchase",
-                action: { showingAddPurchase = true },
-                style: .prominent
-            )
-        )
-    }
-
-    private var searchEmptyStateView: some View {
-        CustomEmptyStateView.searchResults(
-            searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
-            filters: [],
-            onClearFilters: {
-                viewModel.clearSearch()
-            }
-        )
     }
 }
 
-struct PurchaseListRowView: View {
-    let purchase: PurchaseRecordModel
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            // Icon
-            Image(systemName: "creditcard.fill")
-                .foregroundColor(Color.accentColor)
-                .frame(width: 24, height: 24)
-            
-            // Purchase details
-            VStack(alignment: .leading, spacing: 4) {
-                // Supplier name
-                HStack {
-                    Text(purchase.supplier)
-                        .font(.body)
-                        .fontWeight(.medium)
-                        .lineLimit(1)
-                    
-                    Spacer()
-                }
-                
-                // Purchase details
-                HStack {
-                    // Date
-                    Text(purchase.dateAdded, style: .date)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Spacer()
+// MARK: - Purchase Onboarding View
 
-                    // Total price
-                    if let formattedPrice = purchase.formattedPrice {
-                        Text(formattedPrice)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundColor(.primary)
-                    }
-                }
-                
-                // Notes if available
-                if let notes = purchase.notes, !notes.isEmpty {
-                    Text(notes)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                }
+private struct PurchaseOnboardingView: View {
+    @Binding var showingSettings: Bool
+
+    var body: some View {
+        List {
+            Section {
+                Text("Automatically track your glass purchases by forwarding order confirmation emails.")
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
-            
-            // Chevron
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(Color.secondary)
+
+            Section("How it works") {
+                OnboardingStepRow(
+                    icon: "1.circle.fill",
+                    title: "Get your import email",
+                    description: "Enable purchase imports to get a unique email address"
+                )
+
+                OnboardingStepRow(
+                    icon: "2.circle.fill",
+                    title: "Forward order emails",
+                    description: "Forward order confirmations from glass suppliers"
+                )
+
+                OnboardingStepRow(
+                    icon: "3.circle.fill",
+                    title: "Review & import",
+                    description: "View parsed items and add them to your inventory"
+                )
+            }
+
+            Section {
+                Button {
+                    showingSettings = true
+                } label: {
+                    Text("Get Started")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .listRowBackground(Color.clear)
+            }
         }
-        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Onboarding Step Row
+
+private struct OnboardingStepRow: View {
+    let icon: String
+    let title: String
+    let description: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 16) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundStyle(DesignSystem.Colors.moltenOrange)
+                .frame(width: 32)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline.bold())
+
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+            }
+        }
     }
 }
 
 #Preview {
-    let deps = AppDependencies(persistenceController: .createTestController())
-    return PurchasesView(purchaseService: deps.purchaseRecordService)
+    PurchasesView()
 }

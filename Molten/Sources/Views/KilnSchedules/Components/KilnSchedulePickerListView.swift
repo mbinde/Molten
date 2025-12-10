@@ -24,7 +24,7 @@ struct KilnSchedulePickerListView: View {
                 }
             } else if schedules.isEmpty {
                 Text("No kiln schedules available")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             } else {
                 ForEach(schedules) { schedule in
                     Button {

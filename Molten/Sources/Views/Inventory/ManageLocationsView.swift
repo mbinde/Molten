@@ -201,7 +201,7 @@ struct ManageLocationsView: View {
                     cancelEdit()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .buttonStyle(.plain)
             } else {

@@ -39,7 +39,7 @@ struct ColorRowView: View {
                     .font(.headline)
                 Text(color.code)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             
             Spacer()

@@ -37,15 +37,15 @@ struct KilnSchedulePickerView: View {
                         .scaleEffect(0.8)
                     Text("Loading schedules...")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             } else if schedules.isEmpty {
                 HStack {
                     Image(systemName: "flame")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     Text("No kiln schedules available")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .padding(.vertical, 8)
             } else {
@@ -57,7 +57,7 @@ struct KilnSchedulePickerView: View {
                             Spacer()
                             Text(schedule.formattedDuration)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                         .tag(schedule.id as UUID?)
                     }
@@ -93,13 +93,13 @@ struct KilnSchedulePickerView: View {
                     Text(schedule.formattedDuration)
                         .font(.caption)
                 }
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             }
 
             HStack {
                 Text("\(schedule.segments.count) segments")
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
 
                 Spacer()
 

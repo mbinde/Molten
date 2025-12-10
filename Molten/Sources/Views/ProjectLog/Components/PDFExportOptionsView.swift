@@ -26,7 +26,7 @@ struct PDFExportOptionsView: View {
                         if let summary = plan.summary {
                             Text(summary)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                     .padding(.vertical, 4)
@@ -76,7 +76,7 @@ struct PDFExportOptionsView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("This plan includes author information from the original creator:")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
 
                     AuthorCardView(author: existingAuthor)
                 }
@@ -97,7 +97,7 @@ struct PDFExportOptionsView: View {
                         HStack {
                             Text("Preview:")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
 
                             Spacer()
 

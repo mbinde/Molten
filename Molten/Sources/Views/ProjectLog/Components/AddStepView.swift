@@ -77,14 +77,14 @@ struct AddStepView: View {
                                 if let notes = glass.notes {
                                     Text(notes)
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                 }
                             }
                             Spacer()
                             if glass.quantity > 0 {
                                 Text(verbatim: "\(glass.quantity) \(glass.unit)")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                     }

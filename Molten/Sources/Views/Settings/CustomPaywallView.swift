@@ -79,7 +79,7 @@ struct CustomPaywallView: View {
 
                     Text("Unlock the full potential of your glass studio")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                 }
@@ -141,7 +141,7 @@ struct CustomPaywallView: View {
                     } label: {
                         Text("Restore Purchases")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
 
                     Button {
@@ -151,7 +151,7 @@ struct CustomPaywallView: View {
                     } label: {
                         Text("Redeem Code")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
 
@@ -159,12 +159,12 @@ struct CustomPaywallView: View {
                 VStack(spacing: 8) {
                     Text("Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period.")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .multilineTextAlignment(.center)
 
                     Text("To cancel, go to Settings > [Your Name] > Subscriptions on your device.")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.horizontal)
@@ -194,7 +194,7 @@ struct CustomPaywallView: View {
 
             Text("You now have access to all Pro features.")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
 
             Button {
                 dismiss()
@@ -224,7 +224,7 @@ struct CustomPaywallView: View {
 
             Text(message)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .multilineTextAlignment(.center)
 
             Button {
@@ -397,7 +397,7 @@ private struct PaywallFeatureRow: View {
                     .font(.headline)
                 Text(description)
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
 
             Spacer()
@@ -469,7 +469,7 @@ private struct PackageOptionView: View {
                     if package.packageType == .annual {
                         Text("\(pricePerMonth)/month")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
 
@@ -482,11 +482,11 @@ private struct PackageOptionView: View {
                     if package.packageType == .annual {
                         Text("per year")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     } else if package.packageType == .monthly {
                         Text("per month")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }

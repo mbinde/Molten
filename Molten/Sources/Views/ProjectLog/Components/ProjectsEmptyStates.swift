@@ -24,7 +24,7 @@ struct ProjectsEmptyStates {
 
                 Text("Save notes, photos, recipes, and tutorials to bring your glass art ideas to life")
                     .font(.body)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
 
@@ -51,7 +51,7 @@ struct ProjectsEmptyStates {
             VStack(spacing: 16) {
                 Image(systemName: "magnifyingglass")
                     .font(.largeTitle)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
 
                 Text("No Results Found")
                     .font(.title3)
@@ -59,7 +59,7 @@ struct ProjectsEmptyStates {
 
                 Text("Try adjusting your search")
                     .font(.body)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
 
             Spacer()

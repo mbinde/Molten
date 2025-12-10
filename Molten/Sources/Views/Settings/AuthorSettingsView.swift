@@ -26,7 +26,7 @@ struct AuthorSettingsView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Your author information will be included when you export project plans, helping others know who created them.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .padding(.vertical, 4)
             }

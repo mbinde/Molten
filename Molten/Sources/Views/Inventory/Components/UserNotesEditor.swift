@@ -110,7 +110,7 @@ struct UserNotesEditor: View {
             Text("Your Notes")
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
 
             TextEditor(text: $notesText)
                 .frame(minHeight: 200)

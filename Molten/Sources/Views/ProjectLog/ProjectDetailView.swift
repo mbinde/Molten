@@ -95,7 +95,7 @@ struct ProjectDetailView: View {
                 planDetailContent(for: plan)
             } else {
                 Text("Plan not found")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         }
         .navigationTitle(plan?.title.isEmpty == false && plan!.title != "Untitled" ? plan!.title : "New Plan")
@@ -333,7 +333,7 @@ struct ProjectDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Title")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     TextField("Enter plan title", text: $editTitle)
                         .font(.body)
                 }
@@ -354,7 +354,7 @@ struct ProjectDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Summary")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     TextField("Summary (optional)", text: $editSummary, axis: .vertical)
                         .lineLimit(2...4)
                 }
@@ -371,7 +371,7 @@ struct ProjectDetailView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Summary")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         Text(summary)
                             .font(.body)
                     }
@@ -466,14 +466,14 @@ struct ProjectDetailView: View {
             Spacer()
             if editTags.isEmpty {
                 Text("None")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             } else {
                 Text("\(editTags.count) tag\(editTags.count == 1 ? "" : "s")")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             Image(systemName: "chevron.right")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
         .contentShape(Rectangle())
         .onTapGesture {
@@ -570,7 +570,7 @@ struct ProjectDetailView: View {
             } else {
                 Text("No steps yet")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .padding(.vertical, 4)
             }
         } else {
@@ -603,7 +603,7 @@ struct ProjectDetailView: View {
                 if let description = step.description {
                     Text(description)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
 
@@ -621,7 +621,7 @@ struct ProjectDetailView: View {
             Text("Glass:")
                 .font(.caption)
                 .fontWeight(.semibold)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             ForEach(glassItems) { glass in
                 HStack {
                     Text(glass.isCatalogItem ? (glassItemLookup[glass.stableId!]?.name ?? glass.displayName) : glass.displayName)
@@ -630,7 +630,7 @@ struct ProjectDetailView: View {
                     if glass.quantity > 0 {
                         Text(verbatim: "\(glass.quantity) \(glass.unit)")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }
@@ -663,7 +663,7 @@ struct ProjectDetailView: View {
         if totalGlass.isEmpty {
             Text("No glass items added to steps yet")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .padding(.vertical, 4)
         } else {
             ForEach(totalGlass) { projectGlassItem in
@@ -672,7 +672,7 @@ struct ProjectDetailView: View {
 
             Text("Add glass items to individual steps to see them totaled here")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .padding(.top, 8)
         }
     }
@@ -709,7 +709,7 @@ struct ProjectDetailView: View {
                 if projectGlassItem.quantity > 0 {
                     Text(verbatim: "\(projectGlassItem.quantity) \(projectGlassItem.unit)")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
             .padding(.vertical, 4)
@@ -744,7 +744,7 @@ struct ProjectDetailView: View {
             if !plan.images.isEmpty {
                 Text("Tap an image to set it as the primary image. The primary image appears in PDF exports.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         }
         #endif
@@ -783,7 +783,7 @@ struct ProjectDetailView: View {
             } else {
                 Text("No reference URLs yet")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .padding(.vertical, 4)
             }
         } else {
@@ -799,7 +799,7 @@ struct ProjectDetailView: View {
                     if let description = url.description {
                         Text(description)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
 
                     // Action buttons (only in edit mode)

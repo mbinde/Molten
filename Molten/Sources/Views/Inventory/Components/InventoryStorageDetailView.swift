@@ -43,12 +43,12 @@ struct InventoryStorageDetailView: View {
                     VStack(spacing: 16) {
                         Image(systemName: "cube.box")
                             .font(.system(size: 48))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         Text("No inventory found")
                             .font(.headline)
                         Text("Showing \(item.glassItem.name)")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     .padding()
                 } else {
@@ -199,7 +199,7 @@ struct InventoryStorageDetailView: View {
                     Text(formatQuantity(locationQuantity))
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
         }
@@ -234,7 +234,7 @@ struct InventoryStorageDetailView: View {
                     Text(formatQuantity(typeQuantity))
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
         }

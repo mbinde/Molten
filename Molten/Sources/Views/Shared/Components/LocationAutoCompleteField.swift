@@ -64,7 +64,7 @@ struct LocationAutoCompleteField: View {
                         }) {
                             HStack {
                                 Image(systemName: "location")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                     .font(.caption)
 
                                 Text(suggestion)

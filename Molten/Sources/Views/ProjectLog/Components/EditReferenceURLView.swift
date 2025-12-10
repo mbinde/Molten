@@ -59,12 +59,12 @@ struct EditReferenceURLView: View {
                 if autoFetchTitle {
                     Text("Title will be fetched automatically when you tap Save")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 } else {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Custom Title")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         TextField("e.g., Tutorial video", text: $title)
                     }
                 }

@@ -49,7 +49,7 @@ struct ExportPlanView: View {
                         if let summary = plan.summary {
                             Text(summary)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                         HStack {
                             Label("\(plan.images.count)", systemImage: "photo")
@@ -59,7 +59,7 @@ struct ExportPlanView: View {
                             }
                         }
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     .padding(.vertical, 4)
                 }
@@ -130,7 +130,7 @@ struct ExportPlanView: View {
                         .foregroundColor(.primary)
                     Text(quality.description)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
 
                     // Sharing method compatibility
                     if let sizeInfo = estimatedSizes[quality] {
@@ -142,11 +142,11 @@ struct ExportPlanView: View {
 
                             Text("•")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
 
                             Text(sharingMethodHint(for: sizeInfo.bytes))
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                         .padding(.top, 2)
                     }

@@ -144,12 +144,12 @@ struct CatalogItemSearchField: View {
                         if let sku = selectedItem.glassItem.sku {
                             Text("Code: \(sku.truncatedSKU())")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
 
                         Text("Manufacturer: \(GlassManufacturers.fullName(for: selectedItem.glassItem.manufacturer) ?? selectedItem.glassItem.manufacturer)")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     
                     Spacer()
@@ -207,12 +207,12 @@ struct CatalogItemSearchField: View {
                     } else if isSearching && localSearchText.count == 1 {
                         Text("Type at least 2 characters to search")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                             .padding(.horizontal, 8)
                     } else if isSearching && localSearchText.count >= 2 {
                         Text("No matching catalog items found")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                             .padding(.horizontal, 8)
                     }
                 }
@@ -277,16 +277,16 @@ struct CatalogItemSearchResultRow: View {
                         if let sku = item.glassItem.sku {
                             Text(sku.truncatedSKU())
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
 
                             Text("•")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
 
                         Text(GlassManufacturers.fullName(for: item.glassItem.manufacturer) ?? item.glassItem.manufacturer)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
                 
@@ -294,7 +294,7 @@ struct CatalogItemSearchResultRow: View {
                 
                 Image(systemName: "chevron.right")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)

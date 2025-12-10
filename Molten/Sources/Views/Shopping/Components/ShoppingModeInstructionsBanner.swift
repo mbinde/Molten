@@ -28,10 +28,10 @@ struct ShoppingModeInstructionsBanner: View {
                         .foregroundColor(.primary)
                     Text("•")
                         .font(.headline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     Text("\(itemsInBasketCount)/\(totalItemsInViewCount) in basket")
                         .font(.headline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .secondaryCaptionStyle()
@@ -43,7 +43,7 @@ struct ShoppingModeInstructionsBanner: View {
             if isExpanded {
                 Text("Tap on items to confirm that you've added them to your basket. When you're done, click \"Checkout\" and they'll be removed from your list and added to your inventory.")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }

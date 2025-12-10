@@ -57,7 +57,7 @@ struct ImportPlanView: View {
                     } else {
                         // Fallback view - should never reach here
                         Text("Unexpected state")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }
@@ -101,7 +101,7 @@ struct ImportPlanView: View {
             ProgressView()
             Text("Reading plan file...")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -118,7 +118,7 @@ struct ImportPlanView: View {
 
                 Text(error.localizedDescription)
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
             }
@@ -142,7 +142,7 @@ struct ImportPlanView: View {
                     if let summary = preview.summary, !summary.isEmpty {
                         Text(summary)
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
 
                     HStack(spacing: 16) {
@@ -151,7 +151,7 @@ struct ImportPlanView: View {
                         Label(preview.formattedFileSize, systemImage: "doc")
                     }
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .padding(.vertical, 8)
             }
@@ -164,7 +164,7 @@ struct ImportPlanView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Tags")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
 
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 6) {
@@ -189,7 +189,7 @@ struct ImportPlanView: View {
                         Text("Steps")
                         Spacer()
                         Text("\(preview.stepCount)")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
 
@@ -198,7 +198,7 @@ struct ImportPlanView: View {
                         Text("Images")
                         Spacer()
                         Text("\(preview.imageCount)")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
 
@@ -206,7 +206,7 @@ struct ImportPlanView: View {
                     Text("File Size")
                     Spacer()
                     Text(preview.formattedFileSize)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
 
@@ -215,7 +215,7 @@ struct ImportPlanView: View {
                     HStack {
                         ProgressView()
                         Text("Importing plan and images...")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }
@@ -234,7 +234,7 @@ struct ImportPlanView: View {
 
                 Text("The plan has been added to your library")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .multilineTextAlignment(.center)
             }
 

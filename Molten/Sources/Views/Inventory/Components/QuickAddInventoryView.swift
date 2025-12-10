@@ -29,7 +29,7 @@ struct QuickAddInventoryView: View {
             Form {
                 Section("Item") {
                     Text(itemName)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
 
                 Section("New Inventory") {

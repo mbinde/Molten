@@ -95,7 +95,7 @@ struct UserTagsEditor: View {
             Text("Add New Tag")
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
 
             HStack(spacing: 8) {
                 TextField("Enter tag name", text: $newTagText)
@@ -116,7 +116,7 @@ struct UserTagsEditor: View {
             // Tag validation info
             Text("Tags must be 2-30 characters, alphanumeric, hyphens, or spaces")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
     }
 
@@ -125,7 +125,7 @@ struct UserTagsEditor: View {
             Text("Suggested Tags")
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
 
             LazyVGrid(columns: [
                 GridItem(.adaptive(minimum: 100), spacing: 8)
@@ -160,7 +160,7 @@ struct UserTagsEditor: View {
             Text("Your Tags (\(existingTags.count))")
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
 
             LazyVGrid(columns: [
                 GridItem(.adaptive(minimum: 100), spacing: 8)
@@ -195,13 +195,13 @@ struct UserTagsEditor: View {
         VStack(spacing: 12) {
             Image(systemName: "tag")
                 .font(.system(size: 40))
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             Text("No tags yet")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             Text("Add tags to organize and categorize this item")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .padding()

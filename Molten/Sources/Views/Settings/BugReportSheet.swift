@@ -71,7 +71,7 @@ struct BugReportSheet: View {
                             Text("• iOS: \(iosVersion)")
                                 .font(.caption2)
                         }
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
 

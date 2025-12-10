@@ -34,7 +34,7 @@ struct DebugSettingsView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text("Catalog Version:")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         Spacer()
                         Text("v\(actualCatalogVersion)")
                             .fontWeight(.medium)
@@ -42,21 +42,21 @@ struct DebugSettingsView: View {
 
                     HStack {
                         Text("Source:")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         Spacer()
                         Text(catalogPreferences.catalogSource.rawValue)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
 
                     if let lastUpdate = catalogPreferences.lastSuccessfulUpdate {
                         HStack {
                             Text("Last Update:")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                             Spacer()
                             Text(lastUpdate, style: .relative)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                         .padding(.top, 4)
                     }

@@ -93,7 +93,7 @@ struct AddGlassToStepView: View {
                 Section {
                     Text("Glasses already in this plan")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .textCase(nil)
 
                     ForEach(filteredPlanGlasses.prefix(5)) { glass in
@@ -108,7 +108,7 @@ struct AddGlassToStepView: View {
                                     if glass.quantity > 0 {
                                         Text(verbatim: "\(glass.quantity) \(glass.unit)")
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(DesignSystem.Colors.textSecondary)
                                     }
                                 }
                                 Spacer()
@@ -144,7 +144,7 @@ struct AddGlassToStepView: View {
                 Section {
                     Text("Or add as custom glass: \"\(searchText)\"")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 } footer: {
                     Text("If you can't find the glass in the catalog, we'll add it as a custom entry.")
                         .font(.caption)

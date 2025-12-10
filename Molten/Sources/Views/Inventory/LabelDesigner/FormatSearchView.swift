@@ -19,7 +19,7 @@ struct FormatSearchView: View {
             // Search field
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .font(.body)
 
                 TextField("Search label formats...", text: $searchText)
@@ -31,7 +31,7 @@ struct FormatSearchView: View {
                         searchText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("format_search_clear")
@@ -56,7 +56,7 @@ struct FormatSearchView: View {
         if filteredFormats.isEmpty && !searchText.isEmpty {
             Text("No formats match \"\(searchText)\"")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .padding(.vertical, 8)
         } else {
             ScrollView {

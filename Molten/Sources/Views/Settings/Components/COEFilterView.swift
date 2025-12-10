@@ -14,7 +14,7 @@ struct COEFilterView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Note: COE (Coefficient of Expansion) filtering works alongside the manufacturer filter. Both filters must match for items to appear in the catalog.")
                         .font(.footnote)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .padding(.vertical, 4)
             }
@@ -30,7 +30,7 @@ struct COEFilterView: View {
 
                 } else {
                     Text("COE filtering is not available")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             } footer: {
                 if SettingsViewHelpers.shouldShowCOEFilterSection() {

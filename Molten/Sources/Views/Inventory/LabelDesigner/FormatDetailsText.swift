@@ -20,7 +20,7 @@ struct FormatDetailsText: View {
             Text("\(format.columns)×\(format.rows)")
         }
         .font(.caption)
-        .foregroundColor(.secondary)
+        .foregroundColor(DesignSystem.Colors.textSecondary)
     }
 
     private var formatDimensions: String {

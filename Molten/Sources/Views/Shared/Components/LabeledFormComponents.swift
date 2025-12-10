@@ -132,7 +132,7 @@ struct LabeledDecimalField: View {
                 HStack {
                     DecimalInputField(value: $quantity, width: 80)
                     Text("units")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
         }

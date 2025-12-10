@@ -23,7 +23,7 @@ struct ImageQualitySettingsView: View {
                             .font(.body)
                         Text("Use original high-resolution images instead of thumbnails")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
                 .accessibilityIdentifier("image_quality_full_size_toggle")
@@ -40,7 +40,7 @@ struct ImageQualitySettingsView: View {
                     Text("Cache Size")
                     Spacer()
                     Text(formatBytes(cacheSize))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
 
                 Button(role: .destructive) {

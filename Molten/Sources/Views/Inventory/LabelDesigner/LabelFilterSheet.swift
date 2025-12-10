@@ -238,22 +238,22 @@ struct LabelFilterSheet: View {
                         }
                         Text("\(selectedCount) inventory type\(selectedCount == 1 ? "" : "s") selected")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
 
                         if totalLabelsToPrint > 0 {
                             if totalLabelsToPrint < selectedFormat.labelsPerSheet {
                                 Text("Less than 1 sheet (\(selectedFormat.labelsPerSheet) labels per sheet)")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             } else if totalLabelsToPrint > selectedFormat.labelsPerSheet {
                                 let sheets = Int(ceil(Double(totalLabelsToPrint) / Double(selectedFormat.labelsPerSheet)))
                                 Text("This will create \(sheets) sheets")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             } else {
                                 Text("Exactly 1 full sheet")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                     }
@@ -274,7 +274,7 @@ struct LabelFilterSheet: View {
                                 Spacer()
                                 Text("\(selectedHiddenCount) hidden by filters")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                     }
@@ -514,13 +514,13 @@ private struct ItemWithInventorySection: View {
                             if let mfrName = GlassManufacturers.fullName(for: item.catalogItem.manufacturer) {
                                 Text(mfrName)
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
 
                             if let sku = item.catalogItem.sku {
                                 Text(sku)
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                     }
@@ -608,19 +608,19 @@ private struct SingleInventoryRow: View {
                     if let mfrName = GlassManufacturers.fullName(for: item.catalogItem.manufacturer) {
                         Text(mfrName)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
 
                     // Quantity
                     Text(row.inventory.formattedQuantityDisplay())
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
 
                     // Location
                     if let location = row.inventory.location {
                         Text(location)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }
@@ -669,13 +669,13 @@ private struct LabelInventoryTypeRow: View {
                     // Quantity
                     Text(row.inventory.formattedQuantityDisplay())
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
 
                     // Location
                     if let location = row.inventory.location {
                         Text(location)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }
@@ -736,7 +736,7 @@ private struct LabelCountField: View {
 
             Text("labels")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
         .onAppear {
             text = "\(count)"

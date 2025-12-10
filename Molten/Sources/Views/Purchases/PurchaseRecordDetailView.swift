@@ -67,7 +67,7 @@ struct PurchaseRecordDetailView: View {
                             .font(.headline)
                         Text(notes)
                             .font(.body)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     .padding()
                     .background(Color.gray.opacity(0.05))
@@ -135,7 +135,7 @@ struct PurchaseRecordDetailView: View {
                     ProgressView("Deleting...")
                     Text("Please wait")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color.black.opacity(0.3))

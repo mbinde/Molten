@@ -31,7 +31,7 @@ struct PresetsManagementSection: View {
                     Spacer()
                     Text("\(presetsManager.allPresets.count) available")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
             .accessibilityIdentifier("presets_load")

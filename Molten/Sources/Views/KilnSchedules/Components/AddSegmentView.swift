@@ -64,7 +64,7 @@ struct AddSegmentView: View {
                     .multilineTextAlignment(.trailing)
                     .frame(width: 100)
                 Text(temperatureUnit.symbol)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         } header: {
             Text("Target")
@@ -83,7 +83,7 @@ struct AddSegmentView: View {
                     .multilineTextAlignment(.trailing)
                     .frame(width: 100)
                 Text("\(temperatureUnit.symbol)/hr")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         } header: {
             Text("Rate")
@@ -102,7 +102,7 @@ struct AddSegmentView: View {
                     .multilineTextAlignment(.trailing)
                     .frame(width: 100)
                 Text("min")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         } header: {
             Text("Duration")
@@ -123,7 +123,7 @@ struct AddSegmentView: View {
 
                 Text(segmentExplanation)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             .padding(.vertical, 4)
         }

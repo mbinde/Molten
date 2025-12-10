@@ -64,7 +64,7 @@ struct ImportInventoryView: View {
                         previewView(preview)
                     } else {
                         Text("Unexpected state")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }
@@ -111,7 +111,7 @@ struct ImportInventoryView: View {
             ProgressView()
             Text("Reading import file...")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -128,7 +128,7 @@ struct ImportInventoryView: View {
 
                 Text(error.localizedDescription)
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
             }
@@ -157,7 +157,7 @@ struct ImportInventoryView: View {
 
                             Text("\(preview.itemCount) items")
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
 
@@ -166,7 +166,7 @@ struct ImportInventoryView: View {
                         Label(preview.formattedFileSize, systemImage: "doc")
                     }
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .padding(.vertical, 8)
             }
@@ -184,12 +184,12 @@ struct ImportInventoryView: View {
                                 .foregroundColor(.primary)
                             Text(selectedMode.description)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                         Spacer()
                         Image(systemName: "chevron.right")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
                 .accessibilityIdentifier("import_inventory_mode_button")
@@ -201,7 +201,7 @@ struct ImportInventoryView: View {
                         Text(GlassManufacturers.fullName(for: item.manufacturer) ?? item.manufacturer)
                         Spacer()
                         Text("\(item.count)")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                             .monospacedDigit()
                     }
                 }
@@ -219,7 +219,7 @@ struct ImportInventoryView: View {
 
                     Text("Items will be imported with the specified type, quantity, and storage location.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
 
@@ -228,7 +228,7 @@ struct ImportInventoryView: View {
                     HStack {
                         ProgressView()
                         Text("Importing inventory...")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }
@@ -258,11 +258,11 @@ struct ImportInventoryView: View {
                         if result.skippedCount > 0 {
                             Text("\(result.successCount) imported, \(result.skippedCount) skipped")
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         } else {
                             Text("\(result.successCount) of \(result.totalItems) items imported")
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                 }
@@ -314,7 +314,7 @@ struct ImportInventoryView: View {
 
                                     Text(item.error)
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                 }
                                 .padding(.vertical, 4)
 
@@ -362,7 +362,7 @@ struct ImportInventoryView: View {
 
                 Text(title)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             .frame(maxWidth: .infinity)
         }
@@ -434,7 +434,7 @@ struct ImportInventoryView: View {
 
                                 Text(mode.description)
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
 
@@ -481,7 +481,7 @@ struct ImportInventoryView: View {
 
                         Text(item.name)
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
 
@@ -490,13 +490,13 @@ struct ImportInventoryView: View {
                     VStack(spacing: 8) {
                         Text("Current")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         Text("\(Int(existing.quantity))")
                             .font(.title)
                             .fontWeight(.bold)
                         Text(existing.type ?? "")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -504,18 +504,18 @@ struct ImportInventoryView: View {
                     .cornerRadius(12)
 
                     Image(systemName: "arrow.right")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
 
                     VStack(spacing: 8) {
                         Text("Importing")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         Text("\(item.quantity)")
                             .font(.title)
                             .fontWeight(.bold)
                         Text(item.type)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding()

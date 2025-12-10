@@ -41,13 +41,13 @@ struct CollapsibleSectionHeader: View {
                 // Chevron indicator
                 Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .frame(width: 12)
 
                 // Optional leading icon
                 if let icon = leadingIcon {
                     Image(systemName: icon)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
 
                 // Title
@@ -61,7 +61,7 @@ struct CollapsibleSectionHeader: View {
                 if let count = itemCount {
                     Text(formatCount(count))
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
             .contentShape(Rectangle()) // Makes entire area tappable

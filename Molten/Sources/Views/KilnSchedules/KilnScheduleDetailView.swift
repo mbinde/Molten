@@ -117,7 +117,7 @@ struct KilnScheduleDetailView: View {
             // Duration badge
             HStack(spacing: 8) {
                 Image(systemName: "clock.fill")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 Text(displaySchedule.formattedDuration)
                     .font(.title2)
                     .fontWeight(.bold)
@@ -133,13 +133,13 @@ struct KilnScheduleDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Temperature Settings")
                 .font(.headline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
 
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Temperature Unit")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     Text(displaySchedule.temperatureUnit.symbol)
                         .font(.title3)
                         .fontWeight(.semibold)
@@ -150,7 +150,7 @@ struct KilnScheduleDetailView: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     Text("Peak Temperature")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     if let maxTemp = displaySchedule.segments.map({ $0.targetTemperature }).max() {
                         Text("\(maxTemp.formatted()) \(displaySchedule.temperatureUnit.symbol)")
                             .font(.title3)
@@ -170,11 +170,11 @@ struct KilnScheduleDetailView: View {
             HStack {
                 Text("Firing Schedule")
                     .font(.headline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 Spacer()
                 Text("\(displaySchedule.segments.count) segment\(displaySchedule.segments.count == 1 ? "" : "s")")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
 
             VStack(spacing: 12) {
@@ -198,7 +198,7 @@ struct KilnScheduleDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Description")
                 .font(.headline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
 
             Text(description)
                 .font(.body)
@@ -213,7 +213,7 @@ struct KilnScheduleDetailView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("Created:")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 Spacer()
                 Text(schedule.dateCreated, style: .date)
             }
@@ -222,7 +222,7 @@ struct KilnScheduleDetailView: View {
             if schedule.dateModified != schedule.dateCreated {
                 HStack {
                     Text("Modified:")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     Spacer()
                     Text(schedule.dateModified, style: .date)
                 }
@@ -422,7 +422,7 @@ struct DetailLabel: View {
             Text(text)
                 .font(.caption)
         }
-        .foregroundColor(.secondary)
+        .foregroundColor(DesignSystem.Colors.textSecondary)
     }
 }
 
@@ -481,10 +481,10 @@ struct EditKilnScheduleView: View {
     private var graphSectionHeader: some View {
         HStack {
             Image(systemName: "clock.fill")
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .font(.caption)
             Text("Estimated Duration:")
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .font(.caption)
             Text(calculateEstimatedDuration())
                 .font(.caption)
@@ -540,7 +540,7 @@ struct EditKilnScheduleView: View {
                         if validSegmentCount > 0 {
                             Text("\(validSegmentCount) segment\(validSegmentCount == 1 ? "" : "s")")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                 } footer: {

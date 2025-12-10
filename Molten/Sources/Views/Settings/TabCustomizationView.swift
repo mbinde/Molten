@@ -14,7 +14,7 @@ struct TabCustomizationView: View {
 
     var body: some View {
         List {
-            // Tab bar size section
+            // Tab bar appearance section
             Section {
                 HStack {
                     Text("Tabs in Tab Bar")
@@ -30,6 +30,8 @@ struct TabCustomizationView: View {
                     .font(.caption)
                     .foregroundColor(DesignSystem.Colors.textSecondary)
 
+                Toggle("Show Tab Labels", isOn: $config.showTabLabels)
+
                 // Live preview of tab bar
                 VStack(spacing: 4) {
                     Text("Preview")
@@ -41,7 +43,7 @@ struct TabCustomizationView: View {
                 }
                 .padding(.top, 4)
             } header: {
-                Text("Tab Bar Size")
+                Text("Tab Bar Appearance")
             }
 
             // Tab order section
@@ -50,7 +52,7 @@ struct TabCustomizationView: View {
                     HStack(spacing: DesignSystem.Spacing.md) {
                         // Drag handle
                         Image(systemName: "line.3.horizontal")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                             .font(.caption)
 
                         // Tab icon
@@ -78,7 +80,7 @@ struct TabCustomizationView: View {
                             // In More menu
                             Text("More")
                                 .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
                                 .background(Color.gray.opacity(0.1))
@@ -123,7 +125,7 @@ struct TabCustomizationView: View {
                                 .frame(width: 8, height: 8)
                         }
                     }
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
 
@@ -180,25 +182,29 @@ struct TabBarPreview: View {
     }
 
     private func miniTabButton(for tab: DefaultTab) -> some View {
-        VStack(spacing: 3) {
+        VStack(spacing: config.showTabLabels ? 3 : 0) {
             Image(systemName: tab.systemImage)
-                .font(.system(size: 18, weight: .medium))
+                .font(.system(size: config.showTabLabels ? 18 : 22, weight: .medium))
                 .foregroundColor(Color.accentColor)
-            Text(tab.displayName)
-                .font(.caption2)
-                .foregroundColor(.secondary)
+            if config.showTabLabels {
+                Text(tab.displayName)
+                    .font(.caption2)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var miniMoreButton: some View {
-        VStack(spacing: 3) {
+        VStack(spacing: config.showTabLabels ? 3 : 0) {
             Image(systemName: "ellipsis")
-                .font(.system(size: 18, weight: .medium))
-                .foregroundColor(.secondary)
-            Text("More")
-                .font(.caption2)
-                .foregroundColor(.secondary)
+                .font(.system(size: config.showTabLabels ? 18 : 22, weight: .medium))
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+            if config.showTabLabels {
+                Text("More")
+                    .font(.caption2)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

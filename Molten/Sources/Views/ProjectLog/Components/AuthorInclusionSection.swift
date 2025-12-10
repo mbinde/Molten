@@ -26,7 +26,7 @@ struct AuthorInclusionSection: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("This plan includes author information from the original creator:")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
 
                     AuthorCardView(author: existingAuthor)
                 }
@@ -48,7 +48,7 @@ struct AuthorInclusionSection: View {
                         HStack {
                             Text("Preview:")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
 
                             Spacer()
 

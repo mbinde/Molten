@@ -38,7 +38,7 @@ struct ConsolidatedInventoryDetailView: View {
                     Text("Error loading inventory")
                         .font(.headline)
                     Text(errorMessage)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .multilineTextAlignment(.center)
                     Button("Retry") {
                         loadInventorySummary()
@@ -61,21 +61,21 @@ struct ConsolidatedInventoryDetailView: View {
                             
                             HStack {
                                 Text("Stable ID:")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                 Text(glassItem.stable_id)
                                     .fontWeight(.medium)
                             }
                             
                             HStack {
                                 Text("Manufacturer:")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                 Text(GlassManufacturers.fullName(for: glassItem.manufacturer) ?? glassItem.manufacturer)
                                     .fontWeight(.medium)
                             }
                             
                             HStack {
                                 Text("COE:")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                 Text("\(glassItem.coe)")
                                     .fontWeight(.medium)
                             }
@@ -83,7 +83,7 @@ struct ConsolidatedInventoryDetailView: View {
                             if let mfr_notes = glassItem.mfr_notes, !mfr_notes.isEmpty {
                                 Text(mfr_notes)
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                         .padding(.vertical, 8)
@@ -122,7 +122,7 @@ struct ConsolidatedInventoryDetailView: View {
                     } else {
                         Section("Inventory") {
                             Text("No inventory found")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                                 .italic()
                         }
                     }
@@ -256,7 +256,7 @@ struct InventoryTypeRow: View {
                     if !locations.isEmpty {
                         Text("\(locations.count) location\(locations.count == 1 ? "" : "s")")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
 
@@ -278,11 +278,11 @@ struct InventoryTypeRow: View {
                         HStack {
                             Text("• \(location)")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                             Spacer()
                             Text(formatRecordsQuantity(recordsAtLocation))
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                 }

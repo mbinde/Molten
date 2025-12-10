@@ -52,7 +52,7 @@ struct AdvancedLayoutOptionsSection: View {
                                         Spacer()
                                         Text("\(Int((builderConfig.manufacturerImageSize ?? 0.6) * 100))%")
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(DesignSystem.Colors.textSecondary)
                                             .monospacedDigit()
                                     }
 
@@ -69,11 +69,11 @@ struct AdvancedLayoutOptionsSection: View {
                                     HStack {
                                         Text("Smaller")
                                             .font(.caption2)
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(DesignSystem.Colors.textSecondary)
                                         Spacer()
                                         Text("Larger")
                                             .font(.caption2)
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(DesignSystem.Colors.textSecondary)
                                     }
                                 }
                                 .padding(.top, 8)
@@ -100,7 +100,7 @@ struct AdvancedLayoutOptionsSection: View {
                                     HStack(spacing: 12) {
                                         Text("Style:")
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(DesignSystem.Colors.textSecondary)
 
                                         Button {
                                             var format = builderConfig.format(for: field)
@@ -161,7 +161,7 @@ struct AdvancedLayoutOptionsSection: View {
                                             Spacer()
                                             Text("\(Int(currentFormat.fontSize))pt")
                                                 .font(.caption)
-                                                .foregroundColor(.secondary)
+                                                .foregroundColor(DesignSystem.Colors.textSecondary)
                                                 .monospacedDigit()
                                         }
 
@@ -182,11 +182,11 @@ struct AdvancedLayoutOptionsSection: View {
                                         HStack {
                                             Text("5pt")
                                                 .font(.caption2)
-                                                .foregroundColor(.secondary)
+                                                .foregroundColor(DesignSystem.Colors.textSecondary)
                                             Spacer()
                                             Text("14pt")
                                                 .font(.caption2)
-                                                .foregroundColor(.secondary)
+                                                .foregroundColor(DesignSystem.Colors.textSecondary)
                                         }
                                     }
 

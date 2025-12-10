@@ -103,7 +103,7 @@ struct KilnSchedulesView: View, CachedDataDeletion {
         HStack(spacing: 12) {
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 TextField("Search schedules", text: $viewModel.searchText)
                     .autocorrectionDisabled()
                     #if os(iOS)
@@ -115,7 +115,7 @@ struct KilnSchedulesView: View, CachedDataDeletion {
                         viewModel.searchText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }
@@ -168,7 +168,7 @@ struct KilnSchedulesView: View, CachedDataDeletion {
                 Section {
                     Text("\(viewModel.filteredSchedules.count) schedule\(viewModel.filteredSchedules.count == 1 ? "" : "s")")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
@@ -288,7 +288,7 @@ struct KilnSchedulesView: View, CachedDataDeletion {
 
                 Text("Create your first firing schedule to get started")
                     .font(.body)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .multilineTextAlignment(.center)
             }
 

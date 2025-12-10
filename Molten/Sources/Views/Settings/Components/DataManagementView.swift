@@ -31,14 +31,14 @@ struct DataManagementView: View {
                     Text("Total Catalog Items")
                     Spacer()
                     Text("\(catalogItemsCount)")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
 
                 HStack {
                     Text("Items with Inventory")
                     Spacer()
                     Text("\(inventoryItemsCount)")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             } header: {
                 Text("Database Status")

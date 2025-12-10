@@ -79,7 +79,7 @@ struct AddKilnScheduleView: View {
             ZStack(alignment: .topLeading) {
                 if description.isEmpty {
                     Text("Description and notes")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .padding(.top, 8)
                         .padding(.leading, 4)
                 }
@@ -101,27 +101,27 @@ struct AddKilnScheduleView: View {
                 Text("#")
                     .font(.caption)
                     .fontWeight(.bold)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .frame(width: 24)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Rate °/hr")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Target")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Hold")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
 
@@ -154,7 +154,7 @@ struct AddKilnScheduleView: View {
                 if validSegmentCount > 0 {
                     Text("\(validSegmentCount) segment\(validSegmentCount == 1 ? "" : "s")")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
         } footer: {
@@ -176,10 +176,10 @@ struct AddKilnScheduleView: View {
         } header: {
             HStack {
                 Image(systemName: "clock.fill")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .font(.caption)
                 Text("Estimated Duration:")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .font(.caption)
                 Text(calculateEstimatedDuration())
                     .font(.caption)
@@ -334,7 +334,7 @@ struct InlineSegmentRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Rate °/hr")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     TextField("300", text: $rateText)
                         .keyboardType(.decimalPad)
                         .textFieldStyle(.roundedBorder)
@@ -358,7 +358,7 @@ struct InlineSegmentRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Target")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     TextField("1450", text: $targetText)
                         .keyboardType(.decimalPad)
                         .textFieldStyle(.roundedBorder)
@@ -382,7 +382,7 @@ struct InlineSegmentRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Hold")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     TextField("30m", text: $holdText)
                         .textFieldStyle(.roundedBorder)
                         .onChange(of: holdText) { _, newValue in

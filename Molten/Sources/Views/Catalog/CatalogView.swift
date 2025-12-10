@@ -310,7 +310,7 @@ struct CatalogView: View {
                             }
                             if let count = manufacturerCounts[mfr] {
                                 Text("(\(count))")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                     }
@@ -562,10 +562,10 @@ struct TagFilterView: View {
                     if filteredTags.isEmpty {
                         if searchText.isEmpty {
                             Text("No tags available")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         } else {
                             Text("No tags match '\(searchText)'")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     } else {
                         ForEach(filteredTags, id: \.self) { tag in
@@ -578,7 +578,7 @@ struct TagFilterView: View {
                                         .foregroundColor(Color.accentColor)
                                 } else {
                                     Image(systemName: "circle")
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                 }
                             }
                             .contentShape(Rectangle())
@@ -621,7 +621,7 @@ struct TagFilterView: View {
     private var searchBar: some View {
         HStack {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .font(.body)
             
             TextField("Search tags...", text: $searchText)
@@ -640,7 +640,7 @@ struct TagFilterView: View {
                     isSearchFieldFocused = true
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .font(.body)
                 }
                 .buttonStyle(.plain)

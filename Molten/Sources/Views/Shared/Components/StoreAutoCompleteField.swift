@@ -87,7 +87,7 @@ struct StoreAutoCompleteField: View {
                                 // Show storefront icon for Store entities
                                 if suggestion.isStoreEntity {
                                     Image(systemName: "storefront")
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                         .font(.caption)
                                 }
 

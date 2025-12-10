@@ -35,23 +35,23 @@ struct ProjectRow: View {
                 if let summary = plan.summary, !summary.isEmpty {
                     Text(summary)
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .lineLimit(2)
                 }
 
                 HStack {
                     Text(plan.dateCreated, style: .date)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
 
                     if !tags.isEmpty {
                         Text("•")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
 
                         Text(tags.joined(separator: ", "))
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                             .lineLimit(1)
                     }
                 }

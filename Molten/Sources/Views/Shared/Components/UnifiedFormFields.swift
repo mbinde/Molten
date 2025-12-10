@@ -223,7 +223,7 @@ struct UnifiedPickerField<T>: View where T: CaseIterable, T: Hashable, T: Identi
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         }
     }
@@ -441,7 +441,7 @@ struct PriceInputField: View {
                     .fontWeight(.medium)
                 
                 Text("$")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 
                 UnifiedFormField(
                     config: PriceFieldConfig(title: ""),
@@ -454,7 +454,7 @@ struct PriceInputField: View {
             
             Text("Price per unit (e.g. per rod or per pound)")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
     }
 }

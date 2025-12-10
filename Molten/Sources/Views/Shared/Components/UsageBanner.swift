@@ -54,14 +54,14 @@ struct UsageBanner: View {
 
                         Text(featureName)
                             .font(.headline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
 
                     // Contextual message about Settings filters
                     if let filteredCount = filteredCount, hasSettingsFilters, filteredCount < currentCount {
                         Text("\(filteredCount) shown with Settings filters")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
 

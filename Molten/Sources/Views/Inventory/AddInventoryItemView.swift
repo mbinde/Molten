@@ -275,7 +275,7 @@ struct AddInventoryFormView: View {
                 let unit = viewModel.selectedWeightUnit.symbol
                 Text("(\(String(format: "%.1f", displayWeight))\(unit))")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         } else {
             // Currently in Weight mode - show jars if entered
@@ -283,7 +283,7 @@ struct AddInventoryFormView: View {
                 let jarLabel = jars == 1 ? "jar" : "jars"
                 Text("(\(String(format: "%.1f", jars).replacingOccurrences(of: ".0", with: "")) \(jarLabel))")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         }
     }
@@ -335,7 +335,7 @@ struct AddInventoryFormView: View {
 
                     Image(systemName: viewModel.isDimensionsExpanded ? "chevron.up" : "chevron.down")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .contentShape(Rectangle())
             }
@@ -527,7 +527,7 @@ struct TypeDisplayView: View {
     var body: some View {
         Text(type.capitalized)
             .font(.subheadline)
-            .foregroundColor(.secondary)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
             .background(Color.gray.opacity(0.15))

@@ -1011,7 +1011,7 @@ struct ShoppingListView: View {
                                             Spacer()
                                             Image(systemName: "chevron.right")
                                                 .font(.caption)
-                                                .foregroundColor(.secondary)
+                                                .foregroundColor(DesignSystem.Colors.textSecondary)
                                         }
                                     }
                                     .buttonStyle(.plain)
@@ -1038,7 +1038,7 @@ struct ShoppingListView: View {
                                 Spacer()
                                 Image(systemName: toAddToBasketExpanded ? "chevron.down" : "chevron.right")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                         .buttonStyle(.plain)
@@ -1084,7 +1084,7 @@ struct ShoppingListView: View {
                                         Spacer()
                                         Image(systemName: "chevron.right")
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(DesignSystem.Colors.textSecondary)
                                     }
                                 }
                                 .buttonStyle(.plain)

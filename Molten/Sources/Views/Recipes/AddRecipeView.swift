@@ -157,7 +157,7 @@ struct AddRecipeView: View {
                         showingIngredientResults = false
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     .buttonStyle(.plain)
                 }
@@ -204,7 +204,7 @@ struct AddRecipeView: View {
                 if filteredGlassItems.count > 5 {
                     Text("\(filteredGlassItems.count - 5) more...")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
         } header: {

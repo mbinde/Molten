@@ -23,14 +23,14 @@ struct PresetRow: View {
 
                 Text(preset.description)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
 
                 HStack(spacing: 12) {
                     Label(preset.config.qrPosition.rawValue, systemImage: "qrcode")
                     Label("\(preset.config.textFields.count) fields", systemImage: "list.bullet")
                 }
                 .font(.caption2)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             .padding(.vertical, 4)
         }

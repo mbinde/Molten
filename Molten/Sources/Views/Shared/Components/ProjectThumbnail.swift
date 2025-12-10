@@ -159,7 +159,7 @@ struct ProjectThumbnail: View {
                 .font(.headline)
             Text("Sample description")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
 
         Spacer()
@@ -181,7 +181,7 @@ struct ProjectThumbnail: View {
                 .font(.headline)
             Text("No image")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
 
         Spacer()

@@ -53,11 +53,11 @@ struct BackupSettingsView: View {
                         if isPaused {
                             Text("Automatic backups are paused. Your backup key is still saved and you can resume anytime.")
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         } else {
                             Text("Your inventory is automatically backed up to our servers. No name or other identifyable information is associated with it, just the random backup key.")
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                     .padding(.vertical, 4)
@@ -93,9 +93,9 @@ struct BackupSettingsView: View {
                             Text("Last Backup")
                             Spacer()
                             Text(lastBackup, style: .relative)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                             Text("ago")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                 } else {
@@ -103,14 +103,14 @@ struct BackupSettingsView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Image(systemName: "icloud.slash")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                             Text("Backups Disabled")
                                 .font(.headline)
                         }
 
                         Text("Enable automatic backups to protect your inventory data. Backups are stored securely in the cloud and can be restored on any device.")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     .padding(.vertical, 4)
 
@@ -222,7 +222,7 @@ struct BackupSettingsView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
                         Text(success)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }
@@ -234,7 +234,7 @@ struct BackupSettingsView: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.orange)
                         Text(error)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }
@@ -392,7 +392,7 @@ private struct InfoRow: View {
                 .frame(width: 24)
             Text(text)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
     }
 }

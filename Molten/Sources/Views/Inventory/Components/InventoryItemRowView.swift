@@ -83,11 +83,11 @@ struct InventoryItemRowView: View {
             VStack(alignment: .trailing, spacing: 2) {
                 Text(GlassManufacturers.fullName(for: completeItem.glassItem.manufacturer) ?? completeItem.glassItem.manufacturer)
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
 
                 Text("COE \(completeItem.glassItem.coe)")
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         }
     }
@@ -97,7 +97,7 @@ struct InventoryItemRowView: View {
             if let mfr_notes = completeItem.glassItem.mfr_notes, !mfr_notes.isEmpty {
                 Text(mfr_notes)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .lineLimit(2)
                     .padding(.top, 2)
             }

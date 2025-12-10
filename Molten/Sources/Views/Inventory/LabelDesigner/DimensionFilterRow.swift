@@ -24,7 +24,7 @@ struct DimensionFilterRow: View {
                     .accessibilityIdentifier("dimension_filter_width")
 
                 Text("×")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
 
                 TextField("H", text: $filterHeight)
                     .keyboardType(.decimalPad)
@@ -34,7 +34,7 @@ struct DimensionFilterRow: View {
 
                 Text("in")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
 
             // Clear dimensions button
@@ -44,7 +44,7 @@ struct DimensionFilterRow: View {
                     filterHeight = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .font(.caption)
                 }
                 .buttonStyle(.plain)

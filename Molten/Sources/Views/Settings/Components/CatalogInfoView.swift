@@ -26,7 +26,7 @@ struct CatalogInfoView: View {
                 if let lastUpdate = viewModel.lastSuccessfulUpdate {
                     LabeledContent("Last Updated") {
                         Text(lastUpdate, style: .relative)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
 
@@ -35,7 +35,7 @@ struct CatalogInfoView: View {
                 if let lastCheck = viewModel.lastUpdateCheck {
                     LabeledContent("Last Checked") {
                         Text(lastCheck, style: .relative)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             } header: {
@@ -49,7 +49,7 @@ struct CatalogInfoView: View {
                         ProgressView()
                             .controlSize(.small)
                         Text("Checking for updates...")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 } else if let updateInfo = viewModel.availableUpdate {
                     // Update available
@@ -169,12 +169,12 @@ struct CatalogInfoView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Version \(updateInfo.availableVersion)")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
 
                 if !updateInfo.changelog.isEmpty {
                     Text(updateInfo.changelog)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
 
@@ -184,7 +184,7 @@ struct CatalogInfoView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Release Date")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     Text(updateInfo.releaseDate, style: .date)
                         .font(.caption)
                 }
@@ -194,7 +194,7 @@ struct CatalogInfoView: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     Text("Download Size")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     Text(updateInfo.fileSizeFormatted)
                         .font(.caption)
                 }
@@ -208,13 +208,13 @@ struct CatalogInfoView: View {
                     HStack {
                         Text("Downloading...")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
 
                         Spacer()
 
                         Text("\(Int(viewModel.downloadProgress * 100))%")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             } else {

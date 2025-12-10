@@ -31,7 +31,7 @@ struct SavePresetSheet: View {
                          ? "Update the name and description for this preset."
                          : "This will save your current label configuration (QR position, size, and fields) as a preset for quick access later.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
             .navigationTitle(isEditing ? "Edit Preset" : "Save Preset")

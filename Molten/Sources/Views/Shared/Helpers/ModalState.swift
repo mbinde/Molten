@@ -101,7 +101,7 @@ private struct PreviewViewModel: Identifiable {
 
                 Text("Is Presented: \(modal.isPresented ? "Yes" : "No")")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             .sheet(item: $modal.item) { viewModel in
                 NavigationView {
@@ -140,7 +140,7 @@ private struct PreviewViewModel: Identifiable {
 
                 Text("Is Presented: \(modal.isPresented ? "Yes" : "No")")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             .sheet(isPresented: $modal.isPresented) {
                 NavigationView {
@@ -189,7 +189,7 @@ private struct PreviewViewModel: Identifiable {
                     Text("Delete alert: \(deleteAlert.isPresented ? "shown" : "hidden")")
                 }
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             .sheet(isPresented: $addModal.isPresented) {
                 Text("Add Item Sheet")

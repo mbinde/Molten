@@ -173,7 +173,7 @@ struct KilnScheduleGraphView: View {
             let y = yPosition(temp: temp, maxTemp: maxTemp, minTemp: 0, height: size.height)
             let text = Text("\(Int(truncating: temp as NSNumber))°")
                 .font(.caption2)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             context.draw(text, at: CGPoint(x: 20, y: y))
             temp += tempStep
         }
@@ -187,7 +187,7 @@ struct KilnScheduleGraphView: View {
                 let hours = Int(time / 3600)
                 let text = Text("\(hours)h")
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 context.draw(text, at: CGPoint(x: x, y: size.height - 10))
                 time += timeStep
             }

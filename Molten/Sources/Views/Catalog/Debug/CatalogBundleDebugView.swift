@@ -47,7 +47,7 @@ struct CatalogBundleDebugView: View {
                     let jsonFiles = BundleFileUtilities.filterJSONFiles(from: bundleContents)
                     if jsonFiles.isEmpty {
                         Text("No JSON files found")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     } else {
                         ForEach(jsonFiles, id: \.self) { file in
                             HStack {

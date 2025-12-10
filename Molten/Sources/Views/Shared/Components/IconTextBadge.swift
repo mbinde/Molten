@@ -180,7 +180,7 @@ extension IconTextBadge {
 
         Text("123 Main St, Seattle, WA")
             .font(.caption)
-            .foregroundColor(.secondary)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
 
         IconTextBadge.location("5.2 mi")
 
@@ -216,7 +216,7 @@ extension IconTextBadge {
             VStack(alignment: .leading, spacing: 4) {
                 Text("123 Main St, Seattle, WA")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
 
                 IconTextBadge.location("5.2 mi")
 

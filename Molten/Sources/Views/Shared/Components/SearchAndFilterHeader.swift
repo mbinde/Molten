@@ -436,7 +436,7 @@ struct SearchAndFilterHeader: View {
                         }
                         if let count = coeCounts?[coe] {
                             Text("(\(count))")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                 }
@@ -574,7 +574,7 @@ struct SearchAndFilterHeader: View {
                         }
                         if let count = productTypeCounts?[type] {
                             Text("(\(count))")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                 }

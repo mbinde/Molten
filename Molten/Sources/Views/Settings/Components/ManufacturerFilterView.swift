@@ -90,7 +90,7 @@ struct ManufacturerFilterView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Note: Selecting manufacturers here works alongside the COE filter in Settings. Both filters must match for items to appear in the catalog.")
                         .font(.footnote)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .padding(.vertical, 4)
             }
@@ -101,7 +101,7 @@ struct ManufacturerFilterView: View {
                         .padding()
                 } else if allManufacturers.isEmpty {
                     Text("No manufacturers found")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 } else {
                     // Quick actions for all manufacturers
                     ManufacturerQuickActionsView(

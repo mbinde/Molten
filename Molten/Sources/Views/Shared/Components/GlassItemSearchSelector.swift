@@ -103,7 +103,7 @@ struct GlassItemSearchSelector: View {
                     onClear()
                 }) {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("glass_item_search_clear")
@@ -128,7 +128,7 @@ struct GlassItemSearchSelector: View {
         HStack {
             Text(prefilledNaturalKey != nil ? "Adding for:" : "Selected:")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             Spacer()
         }
     }
@@ -162,7 +162,7 @@ struct GlassItemSearchSelector: View {
                 if filteredGlassItems.count > 50 {
                     Text("Showing \(filteredGlassItems.count) results. Refine search for better results.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .padding(.vertical, 8)
                 }
             }
@@ -186,7 +186,7 @@ struct GlassItemSearchSelector: View {
             if selectedGlassItem == nil && prefilledNaturalKey == nil {
                 Text("Search above to find a glass item")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .padding(.vertical, 8)
             } else {
                 EmptyView()
@@ -221,10 +221,10 @@ struct NotFoundCard: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Glass item not found")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             Text("Stable ID: \(stableId)")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
         .padding()
         .background(DesignSystem.Colors.accentWarning.opacity(0.1))

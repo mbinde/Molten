@@ -35,7 +35,7 @@ struct PurchaseRowView: View {
 
                 Text(purchase.dateAdded, style: .date)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
 
             Spacer()
@@ -52,7 +52,7 @@ struct PurchaseRowView: View {
     private func footerContent(_ notes: String) -> some View {
         Text(notes)
             .font(.caption)
-            .foregroundColor(.secondary)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
             .lineLimit(2)
             .padding(.top, 2)
     }

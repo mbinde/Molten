@@ -108,7 +108,7 @@ struct CatalogTagFilterView: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Color.gray.opacity(0.1))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .clipShape(Capsule())
                         .accessibilityIdentifier("catalog_tags_more")
                     }

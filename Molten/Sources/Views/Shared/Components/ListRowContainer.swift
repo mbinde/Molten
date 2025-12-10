@@ -203,7 +203,7 @@ extension ListRowContainer {
             footer: {
                 Text("Monthly glass rod order")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         )
     }
@@ -231,11 +231,11 @@ extension ListRowContainer {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("123 Main St, Seattle, WA")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
 
                     Text("5.2 mi")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             },
             trailing: {
@@ -287,13 +287,13 @@ extension ListRowContainer {
                         Text("4 segments")
                             .font(.caption)
                     }
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             },
             footer: {
                 Text("Recommended for dichroic glass with base layer")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         )
     }
@@ -333,17 +333,17 @@ extension ListRowContainer {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("Bullseye")
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         Text("COE 90")
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             },
             footer: {
                 Text("Beautiful deep red transparent glass")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         )
     }
@@ -360,14 +360,14 @@ extension ListRowContainer {
         Section("Header + Footer") {
             ListRowContainer(
                 header: { Text("Header").font(.headline) },
-                footer: { Text("Footer").font(.caption).foregroundColor(.secondary) }
+                footer: { Text("Footer").font(.caption).foregroundColor(DesignSystem.Colors.textSecondary) }
             )
         }
 
         Section("Header + Details") {
             ListRowContainer(
                 header: { Text("Header").font(.headline) },
-                details: { Text("Details").font(.caption).foregroundColor(.secondary) }
+                details: { Text("Details").font(.caption).foregroundColor(DesignSystem.Colors.textSecondary) }
             )
         }
 
@@ -378,8 +378,8 @@ extension ListRowContainer {
                         .foregroundColor(.yellow)
                 },
                 header: { Text("Header").font(.headline) },
-                details: { Text("Details").font(.caption).foregroundColor(.secondary) },
-                footer: { Text("Footer").font(.caption).foregroundColor(.secondary) },
+                details: { Text("Details").font(.caption).foregroundColor(DesignSystem.Colors.textSecondary) },
+                footer: { Text("Footer").font(.caption).foregroundColor(DesignSystem.Colors.textSecondary) },
                 trailing: {
                     Image(systemName: "chevron.right")
                         .font(.caption)

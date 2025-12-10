@@ -16,7 +16,7 @@ struct AuthorCardView: View {
             HStack {
                 Image(systemName: "person.circle")
                     .font(.title2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(author.displayName)
@@ -25,7 +25,7 @@ struct AuthorCardView: View {
                     if let email = author.email {
                         Text(email)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
 

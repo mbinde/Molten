@@ -587,21 +587,21 @@ struct LabelDesignerView: View {
 
                         Text("From \(selectedInventoryIds.count) inventory type\(selectedInventoryIds.count == 1 ? "" : "s")")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
 
                         if totalLabelCount > 0 {
                             if totalLabelCount < selectedFormat.labelsPerSheet {
                                 Text("Less than 1 sheet (\(selectedFormat.labelsPerSheet) labels per sheet)")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             } else if totalLabelCount > selectedFormat.labelsPerSheet {
                                 Text("This will create \(numberOfSheets) sheets")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             } else {
                                 Text("Exactly 1 full sheet")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                     }
@@ -624,11 +624,11 @@ struct LabelDesignerView: View {
                 VStack(spacing: 12) {
                     Text("No labels selected")
                         .font(.headline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
 
                     Text("Select which inventory items you want to print labels for")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .multilineTextAlignment(.center)
 
                     Button {
@@ -1128,7 +1128,7 @@ struct WeightBasedLabelCountSheet: View {
 
                     Text("For weight-based items like frit and powder, enter how many labels you want to print (typically one per jar).")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1160,7 +1160,7 @@ struct WeightBasedLabelCountSheet: View {
                                     if let containerCount = item.inventory.containerCount, containerCount > 0 {
                                         Text("\(Int(containerCount)) jar\(containerCount == 1 ? "" : "s") tracked")
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(DesignSystem.Colors.textSecondary)
                                     }
                                 }
                             }
@@ -1184,7 +1184,7 @@ struct WeightBasedLabelCountSheet: View {
 
                                 Text("label\(labelCount(for: item) == 1 ? "" : "s")")
                                     .font(.caption2)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                         .padding(.vertical, 4)

@@ -103,7 +103,7 @@ struct FriendInventoryView: View {
                 .scaleEffect(1.2)
             Text("Loading \(viewModel.friend.friendName)'s inventory...")
                 .font(.headline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -112,14 +112,14 @@ struct FriendInventoryView: View {
         VStack(spacing: DesignSystem.Spacing.lg) {
             Image(systemName: "wifi.exclamationmark")
                 .font(.system(size: 48))
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
 
             Text("Couldn't Load Inventory")
                 .font(.headline)
 
             Text("The request timed out. Check your connection and try again.")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .multilineTextAlignment(.center)
 
             Button {
@@ -140,14 +140,14 @@ struct FriendInventoryView: View {
         VStack(spacing: DesignSystem.Spacing.lg) {
             Image(systemName: "tray")
                 .font(.system(size: 48))
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
 
             Text("\(viewModel.friend.friendName) has no inventory")
                 .font(.headline)
 
             Text("They haven't added any glass to their inventory yet")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -280,7 +280,7 @@ struct FriendInventoryView: View {
         VStack(spacing: DesignSystem.Spacing.lg) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 48))
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
 
             Text("No items match your search")
                 .font(.headline)

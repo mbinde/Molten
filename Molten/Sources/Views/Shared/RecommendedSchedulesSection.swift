@@ -25,14 +25,14 @@ struct RecommendedSchedulesSection: View {
                     ProgressView()
                     Text("Loading schedules...")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             } else if recommendedSchedules.isEmpty {
                 HStack {
                     Image(systemName: "flame")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     Text("No recommended schedules")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .font(.subheadline)
             } else {
@@ -63,7 +63,7 @@ struct RecommendedSchedulesSection: View {
                                         Text(schedule.formattedDuration)
                                             .font(.caption)
                                     }
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                 }
                             }
 
@@ -71,7 +71,7 @@ struct RecommendedSchedulesSection: View {
 
                             Image(systemName: "chevron.right")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                     .buttonStyle(.plain)

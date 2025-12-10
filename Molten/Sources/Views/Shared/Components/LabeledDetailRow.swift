@@ -165,7 +165,7 @@ extension LabeledDetailRow {
         VStack(alignment: .leading, spacing: 12) {
             Text("Left Aligned")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
 
             LabeledDetailRow.prominent(
                 label: "Supplier",
@@ -177,7 +177,7 @@ extension LabeledDetailRow {
         VStack(alignment: .trailing, spacing: 12) {
             Text("Right Aligned")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
 
             LabeledDetailRow.prominent(
                 label: "Total Amount",

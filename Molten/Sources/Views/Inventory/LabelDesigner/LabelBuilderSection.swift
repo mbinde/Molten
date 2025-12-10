@@ -26,7 +26,7 @@ struct LabelBuilderSection: View {
                         HStack {
                             Text("\(Int(fontScale * 100))%")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                                 .monospacedDigit()
                             Spacer()
                         }
@@ -39,11 +39,11 @@ struct LabelBuilderSection: View {
                         HStack {
                             Text("Smaller")
                                 .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                             Spacer()
                             Text("Larger")
                                 .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                 }
@@ -85,7 +85,7 @@ struct LabelBuilderSection: View {
                                 Spacer()
                                 Text("\(Int((builderConfig.qrSize ?? 0.65) * 100))%")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                     .monospacedDigit()
                             }
 
@@ -102,11 +102,11 @@ struct LabelBuilderSection: View {
                             HStack {
                                 Text("Smaller")
                                     .font(.caption2)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                 Spacer()
                                 Text("Larger")
                                     .font(.caption2)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                     }
@@ -126,11 +126,11 @@ struct LabelBuilderSection: View {
                             HStack {
                                 Text("Active Fields")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                 Spacer()
                                 Text("Hold & drag to reorder")
                                     .font(.caption2)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
 
                             ForEach(Array(builderConfig.textFields.enumerated()), id: \.element) { index, field in
@@ -168,7 +168,7 @@ struct LabelBuilderSection: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Available Fields")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                                 .padding(.top, 8)
 
                             ForEach(unusedFields, id: \.self) { field in
@@ -218,7 +218,7 @@ private struct LabelFieldRow: View {
             HStack(spacing: 8) {
                 if isActive {
                     Image(systemName: "line.3.horizontal")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .font(.caption)
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)

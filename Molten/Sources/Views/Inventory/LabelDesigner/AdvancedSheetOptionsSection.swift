@@ -27,7 +27,7 @@ struct AdvancedSheetOptionsSection: View {
 
                             Text("Use this if you're printing on a partially-used label sheet")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
 
                             // Start Row
                             VStack(alignment: .leading, spacing: 4) {
@@ -37,7 +37,7 @@ struct AdvancedSheetOptionsSection: View {
                                     Spacer()
                                     Text("Row \(startRow + 1)")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                         .monospacedDigit()
                                 }
 
@@ -58,7 +58,7 @@ struct AdvancedSheetOptionsSection: View {
                                     Spacer()
                                     Text("Column \(startColumn + 1)")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                         .monospacedDigit()
                                 }
 
@@ -109,7 +109,7 @@ struct AdvancedSheetOptionsSection: View {
                                     Spacer()
                                     Text(builderConfig.positionHorizontal > 0 ? "+\(Int(builderConfig.positionHorizontal))pt" : "\(Int(builderConfig.positionHorizontal))pt")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                         .monospacedDigit()
                                 }
 
@@ -121,11 +121,11 @@ struct AdvancedSheetOptionsSection: View {
                                 HStack {
                                     Text("← Left")
                                         .font(.caption2)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                     Spacer()
                                     Text("Right →")
                                         .font(.caption2)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                 }
                             }
 
@@ -137,7 +137,7 @@ struct AdvancedSheetOptionsSection: View {
                                     Spacer()
                                     Text(builderConfig.positionVertical > 0 ? "+\(Int(builderConfig.positionVertical))pt" : "\(Int(builderConfig.positionVertical))pt")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                         .monospacedDigit()
                                 }
 
@@ -149,11 +149,11 @@ struct AdvancedSheetOptionsSection: View {
                                 HStack {
                                     Text("↑ Up")
                                         .font(.caption2)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                     Spacer()
                                     Text("Down ↓")
                                         .font(.caption2)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                 }
                             }
 
@@ -182,7 +182,7 @@ struct AdvancedSheetOptionsSection: View {
 
                             Text("Add space between label edge and content")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
 
                             // Top padding
                             VStack(alignment: .leading, spacing: 4) {
@@ -192,7 +192,7 @@ struct AdvancedSheetOptionsSection: View {
                                     Spacer()
                                     Text("\(Int(builderConfig.paddingTop))pt")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                         .monospacedDigit()
                                 }
                                 Slider(value: $builderConfig.paddingTop, in: 0...20, step: 1) {
@@ -209,7 +209,7 @@ struct AdvancedSheetOptionsSection: View {
                                     Spacer()
                                     Text("\(Int(builderConfig.paddingBottom))pt")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                         .monospacedDigit()
                                 }
                                 Slider(value: $builderConfig.paddingBottom, in: 0...20, step: 1) {
@@ -226,7 +226,7 @@ struct AdvancedSheetOptionsSection: View {
                                     Spacer()
                                     Text("\(Int(builderConfig.paddingLeft))pt")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                         .monospacedDigit()
                                 }
                                 Slider(value: $builderConfig.paddingLeft, in: 0...20, step: 1) {
@@ -243,7 +243,7 @@ struct AdvancedSheetOptionsSection: View {
                                     Spacer()
                                     Text("\(Int(builderConfig.paddingRight))pt")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                         .monospacedDigit()
                                 }
                                 Slider(value: $builderConfig.paddingRight, in: 0...20, step: 1) {

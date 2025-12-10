@@ -49,7 +49,7 @@ struct RatingSettingsView: View {
                             .controlSize(.small)
                     } else {
                         Text("\(pendingCount)")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
 

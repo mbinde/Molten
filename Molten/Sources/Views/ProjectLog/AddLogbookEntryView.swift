@@ -152,7 +152,7 @@ struct AddLogbookEntryView: View {
                                 if let summary = project.summary, !summary.isEmpty {
                                     Text(summary)
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                         .lineLimit(1)
                                 }
                             }
@@ -163,7 +163,7 @@ struct AddLogbookEntryView: View {
                                 viewModel.toggleProjectSelection(projectId)
                             } label: {
                                 Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                             .buttonStyle(.plain)
                         }
@@ -174,7 +174,7 @@ struct AddLogbookEntryView: View {
             // Inline search field
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 TextField("Search projects to link...", text: Binding(
                     get: { viewModel.projectSearchText },
                     set: { viewModel.projectSearchText = $0 }
@@ -190,7 +190,7 @@ struct AddLogbookEntryView: View {
                         showingProjectSearch = false
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     .buttonStyle(.plain)
                 }
@@ -216,7 +216,7 @@ struct AddLogbookEntryView: View {
                                 if let summary = project.summary, !summary.isEmpty {
                                     Text(summary)
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                         .lineLimit(1)
                                 }
                             }
@@ -235,7 +235,7 @@ struct AddLogbookEntryView: View {
                 if viewModel.filteredProjects.count > 5 {
                     Text("\(viewModel.filteredProjects.count - 5) more...")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
         } header: {
@@ -281,7 +281,7 @@ struct AddLogbookEntryView: View {
                         viewModel.clearStartDate()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     .buttonStyle(.plain)
                 } else {
@@ -293,7 +293,7 @@ struct AddLogbookEntryView: View {
                                 .foregroundColor(.primary)
                             Spacer()
                             Text("Not set")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
                     .buttonStyle(.plain)
@@ -313,7 +313,7 @@ struct AddLogbookEntryView: View {
                             viewModel.clearCompletionDate()
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                         .buttonStyle(.plain)
                     } else {
@@ -325,7 +325,7 @@ struct AddLogbookEntryView: View {
                                     .foregroundColor(.primary)
                                 Spacer()
                                 Text("Not set")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                         .buttonStyle(.plain)
@@ -346,7 +346,7 @@ struct AddLogbookEntryView: View {
                             viewModel.clearSaleDate()
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                         .buttonStyle(.plain)
                     } else {
@@ -358,7 +358,7 @@ struct AddLogbookEntryView: View {
                                     .foregroundColor(.primary)
                                 Spacer()
                                 Text("Not set")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                             }
                         }
                         .buttonStyle(.plain)
@@ -422,14 +422,14 @@ struct AddLogbookEntryView: View {
                     Spacer()
                     if viewModel.tags.isEmpty {
                         Text("None")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     } else {
                         Text("\(viewModel.tags.count)")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     Image(systemName: "chevron.right")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
 

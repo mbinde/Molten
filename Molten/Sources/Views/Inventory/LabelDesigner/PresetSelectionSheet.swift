@@ -48,7 +48,7 @@ struct PresetSelectionSheet: View {
                 if presets.isEmpty {
                     Section {
                         Text("No presets available")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }

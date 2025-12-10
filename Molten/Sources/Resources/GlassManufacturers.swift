@@ -116,40 +116,41 @@ struct GlassManufacturers {
         "Y96": true           // Youghiogheny Glass - permission granted via email
     ]
 
-    /// Tracks whether we have permission to use product-specific descriptions from each manufacturer
-    /// If false, we leave the description blank
-    ///
-    /// DO NOT CHANGE ANYTHING IN THIS SECTION UNLESS YOU KNOW WE HAVE PERMISSIONS
+    /// Controls whether descriptions are shown for each manufacturer.
+    /// All descriptions in the catalog are now our original synthesized content,
+    /// so we can show them for all manufacturers.
     nonisolated static let productDescriptionPermissions: [String: Bool] = [
-        "AB": true,           // Asian (Chinese) Boro - NO permission (no idea who to ask)
-        "BB": true,           // Boro Batch - NO permission (no response via instagram)
-        "BE": true,           // Bullseye Glass - permission granted via email
-        "CiM": false,         // Creation is Messy - NO permission (denied)
-        "DH": true,           // Double Helix - permission granted via email
-        "DS": true,          // Delphi Superior - NO product images (bot-protected site)
-        "EF": true,           // Effetre - permission granted via email
-        "FM": true,          // Fusemaster - NO permission (no product images in catalog)
-        "JET": true,         // JetAgeStudio -- permission granted on Etsy
-        "GA": true,           // Glass Alchemy - permission granted via email
-        "GAF": true,         // Gaffer - NO product images (bot-protected site)
-        "GRE": true,          // Greasy Glass - permission granted via email
-        "KUG": true,          // Kugler - NO permission (no idea who to ask)
-        "MA": true,           // Molten Aura Labs - NO permission (check again)
-        "MOM": true,          // Momka Glass - permission granted via email
-        "MOR": true,          // Moretti (same as Effetre) - permission granted via email
-        "NS": false,           // Northstar Glassworks - NO permission (no response)
-        "OC": true,           // Oceanside Glass - permission granted
-        "OR": true,           // Origin Glass - NO permission (no idea who to ask)
-        "PAR": true,          // Parramore Glass - NO permission (no idea who to ask)
-        "PDX": true,          // PDX Tubing Co - NO permission (no idea who to ask)
-        "RE": true,           // Reichenbach - NO permission (no idea who to ask)
-        "REUSCHE": true,     // Reusche - NO permission (no product images in PDF catalogs)
-        "TAG": true,          // Trautmann Art Glass - NO permission (need to reach Northstar somehow)
-        "THMP": true,         // Thompson Enamel - permission granted via email
-        "UST": true,          // UST Glass - NO permission (no response)
-        "VF": true,           // Vetrofond - permission granted via email
-        "WM": true,           // Wissmach Glass - NO permission (no idea who to ask)
-        "Y96": true           // Youghiogheny Glass - permission granted via email
+        "AB": true,
+        "BB": true,
+        "BE": true,
+        "CIM": true,
+        "DH": true,
+        "DS": true,
+        "EF": true,
+        "FM": true,
+        "JET": true,
+        "GA": true,
+        "GAF": true,
+        "GRE": true,
+        "KAS": true,
+        "KUG": true,
+        "LUN": true,
+        "MA": true,
+        "MOM": true,
+        "MOR": true,
+        "NS": true,
+        "OC": true,
+        "OR": true,
+        "PAR": true,
+        "PDX": true,
+        "RE": true,
+        "REUSCHE": true,
+        "TAG": true,
+        "THMP": true,
+        "UST": true,
+        "VF": true,
+        "WM": true,
+        "Y96": true
     ]
     
     /// Tracks which manufacturers we actually ship with the catalog

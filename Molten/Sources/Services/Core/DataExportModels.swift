@@ -70,7 +70,7 @@ struct ExportGlassItem: Codable, Sendable {
     let name: String
     let sku: String?  // Optional - some manufacturers don't use SKUs
     let manufacturer: String
-    let manufacturerNotes: String?
+    let description: String?
     let coe: Int32
     let url: String?
     let manufacturerStatus: String
@@ -85,7 +85,7 @@ struct ExportGlassItem: Codable, Sendable {
             name: model.name,
             sku: model.sku,
             manufacturer: model.manufacturer,
-            manufacturerNotes: model.mfr_notes,
+            description: model.mfr_notes,
             coe: model.coe,
             url: model.url,
             manufacturerStatus: model.mfr_status,

@@ -76,6 +76,13 @@ final class CatalogDatabaseManager: CatalogDatabaseManagerProtocol {
 
         // Copy bundle to Documents
         try fileManager.copyItem(at: bundleURL, to: documentsDatabaseURL)
+
+        // Update version tracking in UserDefaults
+        let bundleVersion = try await getVersion(from: bundleURL)
+        await MainActor.run {
+            CatalogUpdatePreferences.shared.currentCatalogVersion = bundleVersion
+            CatalogUpdatePreferences.shared.catalogSource = .bundled
+        }
     }
 
     /// Check if update is needed and perform update if necessary
@@ -83,9 +90,21 @@ final class CatalogDatabaseManager: CatalogDatabaseManagerProtocol {
         let documentsVersion = try await getDocumentsVersion()
         let bundleVersion = try await getBundleVersion()
 
-        // For now, only handle bundle updates (OTA updates to be added later)
+        // Handle bundle updates - if bundled version is newer, use it
         if bundleVersion > documentsVersion {
             try await copyBundleToDocuments()
+            // copyBundleToDocuments() already updates UserDefaults
+        } else {
+            // Ensure UserDefaults matches what's actually in Documents
+            // (handles case where UserDefaults got out of sync)
+            let currentStoredVersion = await MainActor.run {
+                CatalogUpdatePreferences.shared.currentCatalogVersion
+            }
+            if currentStoredVersion != documentsVersion {
+                await MainActor.run {
+                    CatalogUpdatePreferences.shared.currentCatalogVersion = documentsVersion
+                }
+            }
         }
     }
 

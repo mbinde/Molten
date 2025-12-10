@@ -302,11 +302,11 @@ struct SettingsView: View {
                             .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
 
-                    Toggle("Expand Manufacturer Descriptions by Default", isOn: Binding(
+                    Toggle("Expand Descriptions by Default", isOn: Binding(
                         get: { UserSettings.shared.expandManufacturerDescriptionsByDefault },
                         set: { UserSettings.shared.expandManufacturerDescriptionsByDefault = $0 }
                     ))
-                    .help("When enabled, manufacturer descriptions in item detail views will be fully expanded by default")
+                    .help("When enabled, descriptions in item detail views will be fully expanded by default")
 
                     Toggle("Expand My Notes by Default", isOn: Binding(
                         get: { UserSettings.shared.expandUserNotesByDefault },

@@ -158,7 +158,7 @@ struct InventoryDetailView: View {
 
     // MARK: - Computed Properties
 
-    /// Check if we have permission to show manufacturer descriptions for this item
+    /// Check if we can show descriptions for this item
     private var canShowManufacturerDescription: Bool {
         GlassManufacturers.productDescriptionPermissions[currentItem.glassItem.manufacturer] ?? false
     }
@@ -270,7 +270,7 @@ struct InventoryDetailView: View {
                     // Rating Words Section
                     RatingWordsSection(itemStableId: currentItem.glassItem.stable_id)
 
-                    // Glass Item Details Section (manufacturer notes, user notes)
+                    // Glass Item Details Section (description, user notes)
                     // Only show if there's content to display
                     if hasGlassItemDetails {
                         glassItemDetailsSection
@@ -1002,20 +1002,20 @@ struct InventoryDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
     }
 
-    // MARK: - Manufacturer Notes Section
+    // MARK: - Description Section
 
     private var glassItemDetailsSection: some View {
         ExpandableSection(
-            title: "Manufacturer Notes",
+            title: "Description",
             systemImage: "info.circle",
             isExpanded: expandedSections.contains("glass-item"),
             onToggle: { toggleSection("glass-item") },
-            accessibilityId: "section_manufacturer_notes"
+            accessibilityId: "section_description"
         ) {
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
                 if canShowManufacturerDescription,
                    let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
-                    expandableNotesCard(title: nil, content: notes, accessibilityId: "expand_manufacturer_notes")
+                    expandableNotesCard(title: nil, content: notes, accessibilityId: "expand_description")
                 }
 
                 // User notes section - only show if notes exist

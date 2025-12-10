@@ -23,7 +23,7 @@ nonisolated protocol CatalogItem: Identifiable, Equatable, Hashable, Sendable wh
     /// Manufacturer identifier (abbreviated, e.g., "be", "cim", "ef")
     var manufacturer: String { get }
 
-    /// Manufacturer notes/description
+    /// Product description
     var mfr_notes: String? { get }
 
     /// Manufacturer URL

@@ -20,7 +20,7 @@ class UserSettings {
 
     // MARK: - Display Settings
 
-    /// Controls whether manufacturer descriptions/notes expand by default in detail views
+    /// Controls whether descriptions expand by default in detail views
     /// - Default: false (collapsed)
     /// - When true, descriptions are fully expanded when detail view opens
     /// - When false, descriptions are limited to 4 lines with "Show More" button

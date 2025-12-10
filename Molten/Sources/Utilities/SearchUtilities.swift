@@ -112,17 +112,17 @@ extension InventoryModel: Searchable {
 
 /**
  Extension to make GlassItemModel searchable across multiple fields.
- 
+
  Searches across:
  - Natural key
  - Name
  - SKU
  - Manufacturer
- - Manufacturer notes
+ - Description
  - COE (converted to string)
  - URL
  - Manufacturer status
- 
+
  Performance: O(1) time complexity, generates searchable fields on-demand.
  */
 extension GlassItemModel: Searchable {

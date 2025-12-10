@@ -20,7 +20,7 @@ enum ReceiptImportMode {
 }
 
 /// Result of attempting to match existing inventory
-struct InventoryMatchResult {
+struct InventoryMatchResult: Sendable {
     /// Total quantity available to match
     let availableQuantity: Double
     /// Total quantity requested from receipt
@@ -28,9 +28,9 @@ struct InventoryMatchResult {
     /// The locations that would be matched/split
     let matchingLocations: [StorageLocationModel]
     /// Whether we have enough inventory to fully match
-    var isFullMatch: Bool { availableQuantity >= requestedQuantity }
+    nonisolated var isFullMatch: Bool { availableQuantity >= requestedQuantity }
     /// Shortfall if not enough inventory
-    var shortfall: Double { max(0, requestedQuantity - availableQuantity) }
+    nonisolated var shortfall: Double { max(0, requestedQuantity - availableQuantity) }
 }
 
 /// Options when inventory is less than receipt quantity
@@ -277,16 +277,28 @@ class ReceiptImportService {
         var inventory = inventories.first
 
         if inventory == nil {
-            // Create new inventory record
+            // Create new inventory record with the imported quantity
             let newInventory = InventoryModel(
                 id: UUID(),
                 item_stable_id: itemStableId,
                 type: itemType,
-                quantity: 0, // Will be updated by storage location
+                quantity: quantity,
                 date_added: Date(),
                 date_modified: Date()
             )
             inventory = try await inventoryRepository.createInventory(newInventory)
+        } else {
+            // Update existing inventory to add the imported quantity
+            let existingQuantity = inventory!.quantity
+            let updatedInventory = InventoryModel(
+                id: inventory!.id,
+                item_stable_id: inventory!.item_stable_id,
+                type: inventory!.type,
+                quantity: existingQuantity + quantity,
+                date_added: inventory!.date_added,
+                date_modified: Date()
+            )
+            inventory = try await inventoryRepository.updateInventory(updatedInventory)
         }
 
         guard let inv = inventory else {

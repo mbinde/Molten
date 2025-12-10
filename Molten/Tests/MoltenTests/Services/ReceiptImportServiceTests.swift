@@ -833,6 +833,9 @@ struct ImportAsNewInventoryTests {
         // Verify inventory was created
         let inventories = try await mockInventoryRepository.fetchInventory(forItem: "bullseye-001-0", type: "rod")
         #expect(inventories.count == 1)
+
+        // BUG CHECK: Verify inventory quantity is set correctly (not 0)
+        #expect(inventories.first?.quantity == 5.0, "Inventory quantity should match imported quantity, not be 0")
     }
 
     @Test("Uses existing inventory record if present")
@@ -840,7 +843,7 @@ struct ImportAsNewInventoryTests {
         let existingInventoryId = UUID()
         let purchaseItemId = UUID()
 
-        // Setup: Create existing inventory
+        // Setup: Create existing inventory with 10 units
         let existingInventory = InventoryModel(
             id: existingInventoryId,
             item_stable_id: "bullseye-001-0",
@@ -851,7 +854,7 @@ struct ImportAsNewInventoryTests {
         )
         _ = try await mockInventoryRepository.createInventory(existingInventory)
 
-        // Test: Import should use existing inventory
+        // Test: Import should use existing inventory and add quantity
         let storageLocation = try await service.importAsNewInventory(
             itemStableId: "bullseye-001-0",
             itemType: "rod",
@@ -866,6 +869,9 @@ struct ImportAsNewInventoryTests {
         // Should not create new inventory record
         let inventories = try await mockInventoryRepository.fetchInventory(forItem: "bullseye-001-0", type: "rod")
         #expect(inventories.count == 1)
+
+        // Quantity should be updated: 10 (existing) + 5 (imported) = 15
+        #expect(inventories.first?.quantity == 15.0, "Inventory quantity should be sum of existing + imported")
     }
 
     @Test("Creates storage location with purchase link")

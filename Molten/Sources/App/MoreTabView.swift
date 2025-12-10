@@ -86,7 +86,7 @@ struct MoreTabView: View {
                     HStack(spacing: DesignSystem.Spacing.md) {
                         Image(systemName: "slider.horizontal.3")
                             .font(.title3)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                             .frame(width: 28)
 
                         Text("Edit Tabs...")

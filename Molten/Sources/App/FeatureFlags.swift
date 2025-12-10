@@ -39,7 +39,7 @@ enum FeatureFlags {
     /// Controls whether the Purchases section is enabled
     /// Set to false to disable purchase tracking for launch
     /// IMPLEMENTED: Tab visibility
-    nonisolated static let ENABLE_PURCHASES = false
+    nonisolated static let ENABLE_PURCHASES = true
 
     /// Controls whether the Shopping Lists section is enabled
     /// Set to false to disable shopping list features for launch

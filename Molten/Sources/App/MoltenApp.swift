@@ -437,7 +437,6 @@ extension MoltenApp {
 
         // Get services from dependencies
         let catalogService = dependencies.catalogService
-        let purchaseService = dependencies.purchaseRecordService
         let inventoryService = dependencies.inventoryTrackingService
         let shoppingListService = dependencies.shoppingListService
         let kilnScheduleService = dependencies.kilnScheduleService
@@ -450,7 +449,6 @@ extension MoltenApp {
         let tabView = MainTabView(
             deps: dependencies,
             catalogService: catalogService,
-            purchaseService: purchaseService,
             inventoryService: inventoryService,
             shoppingListService: shoppingListService,
             kilnScheduleService: kilnScheduleService,
@@ -802,6 +800,16 @@ extension MoltenApp {
             // Navigate to inventory sharing view and trigger add friend flow
             handleShareDeepLink(shareCode: shareCode)
 
+        case "email-verified":
+            // Email verification completed: molten://email-verified
+            // Mark the email as verified and refresh the UI
+            handleEmailVerifiedDeepLink()
+
+        case "account-recovered":
+            // Account recovery completed: molten://account-recovered?user_id=xxx
+            // Complete the recovery process with the returned user ID
+            handleAccountRecoveredDeepLink(url)
+
         default:
             break  // Unknown deep link host, silently ignore
         }
@@ -816,6 +824,29 @@ extension MoltenApp {
             object: nil,
             userInfo: ["shareCode": shareCode]
         )
+    }
+
+    /// Handle email verification deep link from verification success page
+    @MainActor
+    private func handleEmailVerifiedDeepLink() {
+        // Mark the email as verified locally - the server already verified it
+        dependencies.receiptService.markEmailVerified()
+    }
+
+    /// Handle account recovery deep link from recovery success page
+    @MainActor
+    private func handleAccountRecoveredDeepLink(_ url: URL) {
+        // Extract user_id from query parameters
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let userIdItem = components.queryItems?.first(where: { $0.name == "user_id" }),
+              let userId = userIdItem.value, !userId.isEmpty else {
+            print("⚠️ [Recovery] No user_id in recovery deep link")
+            return
+        }
+
+        // Complete the recovery - this restores the user's credentials
+        dependencies.receiptService.completeAccountRecovery(userId: userId)
+        print("✅ [Recovery] Account recovered for user: \(userId)")
     }
 
     /// Detect file type by examining JSON content

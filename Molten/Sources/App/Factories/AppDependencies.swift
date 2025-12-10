@@ -427,6 +427,7 @@ class AppDependencies {
     private var _dataExportService: DataExportService?
     private var _inventorySharingManager: InventorySharingManager?
     private var _backupService: BackupService?
+    private var _receiptService: ReceiptService?
 
     // Label update services (created lazily)
     private var _labelDatabaseService: LabelDatabaseService?
@@ -596,6 +597,16 @@ class AppDependencies {
             storageLocationDefinitionRepository: storageLocationDefinitionRepository
         )
         _backupService = service
+        return service
+    }
+
+    /// Receipt service (created lazily)
+    var receiptService: ReceiptService {
+        if let service = _receiptService {
+            return service
+        }
+        let service = ReceiptService()
+        _receiptService = service
         return service
     }
 

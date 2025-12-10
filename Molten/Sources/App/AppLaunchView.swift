@@ -65,7 +65,7 @@ struct MoltenSplashView: View {
                     
                     Text("Glass Color Catalog")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 
                 Spacer()
@@ -79,7 +79,7 @@ struct MoltenSplashView: View {
                         
                         Text("Loading catalog data...")
                             .font(.headline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     
                     // Animated loading dots

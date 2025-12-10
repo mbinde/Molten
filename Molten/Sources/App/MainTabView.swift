@@ -9,7 +9,6 @@ import SwiftUI
 
 // MARK: - Release Configuration
 // Set to false for simplified release builds
-private let isPurchaseRecordsEnabled = true
 private let isProjectPlansEnabled = true
 private let isLogbookEnabled = true
 private let isRecipesEnabled = true
@@ -45,7 +44,6 @@ struct MainTabView: View {
     // MARK: - Dependency Injection
     private let deps: AppDependencies
     private let catalogService: CatalogService
-    private let purchaseService: PurchaseRecordService?
     private let syncMonitor: CloudKitSyncMonitor?
 
     // Create additional services needed for other views
@@ -57,7 +55,6 @@ struct MainTabView: View {
     init(
         deps: AppDependencies,
         catalogService: CatalogService,
-        purchaseService: PurchaseRecordService? = nil,
         inventoryService: InventoryTrackingService,
         shoppingListService: ShoppingListService,
         kilnScheduleService: KilnScheduleService,
@@ -65,7 +62,6 @@ struct MainTabView: View {
     ) {
         self.deps = deps
         self.catalogService = catalogService
-        self.purchaseService = purchaseService
         self.inventoryTrackingService = inventoryService
         self.shoppingListService = shoppingListService
         self.kilnScheduleService = kilnScheduleService
@@ -103,19 +99,9 @@ struct MainTabView: View {
                 }
 
                 if selectedTab == .purchases || purchasesHasBeenViewed {
-                    if isPurchaseRecordsEnabled {
-                        if let purchaseService = purchaseService {
-                            PurchasesView(purchaseService: purchaseService)
-                                .opacity(selectedTab == .purchases ? 1 : 0)
-                                .id("purchases-view")
-                        } else {
-                            featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
-                                .opacity(selectedTab == .purchases ? 1 : 0)
-                        }
-                    } else {
-                        featureDisabledPlaceholder(title: "Purchase Records", icon: "cart.badge.plus")
-                            .opacity(selectedTab == .purchases ? 1 : 0)
-                    }
+                    PurchasesView()
+                        .opacity(selectedTab == .purchases ? 1 : 0)
+                        .id("purchases-view")
                 }
 
                 // Project Plans tab
@@ -304,7 +290,7 @@ struct MainTabView: View {
             case .recipes:
                 return isRecipesEnabled && FeatureFlags.ENABLE_RECIPES
             case .purchases:
-                return isPurchaseRecordsEnabled && FeatureFlags.ENABLE_PURCHASES
+                return FeatureFlags.ENABLE_PURCHASES
             case .kilnSchedules:
                 return FeatureFlags.ENABLE_KILN_SCHEDULES
             case .settings:
@@ -384,16 +370,16 @@ struct MainTabView: View {
                     Text(title)
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     
                     Text("Available in future update")
                         .font(.title3)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 
                 Text("This feature is temporarily disabled in the current release. It will be available in a future version of the app.")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding()
                 
@@ -440,12 +426,14 @@ struct CustomTabBar: View {
         Button {
             onTabTap(tab)
         } label: {
-            VStack(spacing: 2) {
+            VStack(spacing: tabConfig.showTabLabels ? 2 : 0) {
                 Image(systemName: tab.systemImage)
-                    .font(.system(size: 20, weight: .medium))
-                Text(tab.displayName)
-                    .font(.caption2)
-                    .fontWeight(.medium)
+                    .font(.system(size: tabConfig.showTabLabels ? 20 : 24, weight: .medium))
+                if tabConfig.showTabLabels {
+                    Text(tab.displayName)
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                }
             }
             .foregroundColor(selectedTab == tab ? .primary : .secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -472,12 +460,14 @@ struct CustomTabBar: View {
         Button {
             showingMoreMenu = true
         } label: {
-            VStack(spacing: 2) {
+            VStack(spacing: tabConfig.showTabLabels ? 2 : 0) {
                 Image(systemName: "ellipsis")
-                    .font(.system(size: 20, weight: .medium))
-                Text("More")
-                    .font(.caption2)
-                    .fontWeight(.medium)
+                    .font(.system(size: tabConfig.showTabLabels ? 20 : 24, weight: .medium))
+                if tabConfig.showTabLabels {
+                    Text("More")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                }
             }
             .foregroundColor(tabConfig.moreTabs.contains(selectedTab) ? .primary : .secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -35,10 +35,21 @@ class TabConfiguration {
         }
     }
 
+    /// Whether to show text labels under tab icons
+    /// User-configurable, defaults to true
+    var showTabLabels: Bool = true {
+        didSet {
+            if !isInitializing {
+                saveConfiguration()
+            }
+        }
+    }
+
     // MARK: - Private Properties
 
     private let tabsKey = "userTabOrder"
     private let maxVisibleTabsKey = "userMaxVisibleTabs"
+    private let showTabLabelsKey = "userShowTabLabels"
     private var isInitializing = true
 
     // MARK: - Initialization
@@ -59,6 +70,13 @@ class TabConfiguration {
             self.maxVisibleTabs = Self.defaultMaxVisibleTabs()
         }
 
+        // Load showTabLabels (defaults to true if not set)
+        if UserDefaults.standard.object(forKey: showTabLabelsKey) != nil {
+            self.showTabLabels = UserDefaults.standard.bool(forKey: showTabLabelsKey)
+        } else {
+            self.showTabLabels = true
+        }
+
         isInitializing = false
     }
 
@@ -68,19 +86,19 @@ class TabConfiguration {
     static func defaultTabOrder() -> [DefaultTab] {
         let allAvailableTabs = Self.allAvailableTabs()
 
-        // Default order (major features first: Catalog, Inventory, Shopping, Projects, Logbook, Recipes)
-        // Minor features (Purchases, Stores) come after, with Settings last
+        // Default order: Core features in tab bar (Catalog, Inventory, Shopping, Purchases)
+        // Additional features in More menu (Locations, Projects, Logbook, Recipes, Kiln Schedules, Settings)
         let preferredOrder: [DefaultTab] = [
             .catalog,
             .inventory,
             .shopping,
-            .projectPlans,  // Projects
-            .logbook,
-            .recipes,
-            .kilnSchedules,
-            .purchases,     // Minor feature
-            .locations,     // Minor feature
-            .settings
+            .purchases,     // Core feature - receipt imports
+            .locations,     // In More menu - stores/classes
+            .projectPlans,  // In More menu - Projects
+            .logbook,       // In More menu
+            .recipes,       // In More menu
+            .kilnSchedules, // In More menu
+            .settings       // In More menu
         ]
 
         // Return in preferred order, filtering to only available tabs
@@ -93,12 +111,11 @@ class TabConfiguration {
         // Use UIDevice idiom to determine default
         // Note: UIScreen.main deprecated in iOS 26.0, use trait-based sizing instead
         if UIDevice.current.userInterfaceIdiom == .pad {
-            // iPad
+            // iPad - show more tabs
             return 6
         } else {
-            // iPhone - use conservative default of 5 tabs
-            // Individual views can adjust based on their specific trait collection
-            return 5
+            // iPhone - show 4 tabs (Catalog, Inventory, Shopping, Purchases) + More
+            return 4
         }
         #else
         // macOS
@@ -160,6 +177,7 @@ class TabConfiguration {
     func resetToDefaults() {
         self.tabs = Self.defaultTabOrder()
         self.maxVisibleTabs = Self.defaultMaxVisibleTabs()
+        self.showTabLabels = true
     }
 
     /// Saves current configuration to UserDefaults
@@ -169,6 +187,7 @@ class TabConfiguration {
 
         UserDefaults.standard.set(tabs.map { $0.rawValue }, forKey: tabsKey)
         UserDefaults.standard.set(maxVisibleTabs, forKey: maxVisibleTabsKey)
+        UserDefaults.standard.set(showTabLabels, forKey: showTabLabelsKey)
     }
 
     // MARK: - Tab Management

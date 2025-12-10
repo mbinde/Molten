@@ -977,7 +977,7 @@ struct ProductImageThumbnail: View {
             .frame(width: size, height: size)
             .overlay {
                 Image(systemName: "photo")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .font(.system(size: size * 0.4))
             }
             .overlay(

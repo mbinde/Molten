@@ -148,7 +148,7 @@ struct TagColorCircle: View {
 
                 Image(systemName: "questionmark")
                     .font(.system(size: size * 0.6, weight: .semibold))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         } else if let fill = TagColorMapping.colorFillFromTag(tag) {
             switch fill {

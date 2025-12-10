@@ -30,7 +30,7 @@ struct InventorySharingManagerTests {
     // MARK: - Test Lifecycle
 
     init() {
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
         cleanupUserDefaults()
     }
 

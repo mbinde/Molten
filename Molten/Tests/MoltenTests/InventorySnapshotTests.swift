@@ -25,7 +25,7 @@ struct InventorySnapshotTests {
 
     init() {
         // Clean up any existing test keys
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
     }
 
     // MARK: - Serialization Tests

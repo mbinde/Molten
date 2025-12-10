@@ -30,7 +30,7 @@ struct InventorySharingIntegrationTests {
     // MARK: - Test Lifecycle
 
     init() {
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
         UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.myShareCode")
         UserDefaults.standard.removeObject(forKey: "molten.shareMetadata.friendShares")
     }

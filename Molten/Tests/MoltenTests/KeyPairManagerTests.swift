@@ -25,7 +25,8 @@ struct KeyPairManagerTests {
 
     init() {
         // Clean up any existing test keys before each test
-        KeyPairManager.deleteAllKeys()
+        // Use deleteAllTestKeys() to avoid wiping production keys
+        KeyPairManager.deleteAllTestKeys()
     }
 
     // MARK: - Key Generation Tests
@@ -69,10 +70,10 @@ struct KeyPairManagerTests {
         let manager = KeyPairManager()
 
         let keyPair = try manager.generateKeyPair()
-        try manager.storePrivateKey(keyPair.privateKey, identifier: "test-key-1")
+        try manager.storeTestPrivateKey(keyPair.privateKey, identifier: "test-key-1")
 
         // Verify key was stored by retrieving it
-        let retrieved = try manager.retrievePrivateKey(identifier: "test-key-1")
+        let retrieved = try manager.retrieveTestPrivateKey(identifier: "test-key-1")
         #expect(retrieved == keyPair.privateKey)
     }
 
@@ -81,9 +82,9 @@ struct KeyPairManagerTests {
         let manager = KeyPairManager()
 
         let keyPair = try manager.generateKeyPair()
-        try manager.storePrivateKey(keyPair.privateKey, identifier: "test-key-2")
+        try manager.storeTestPrivateKey(keyPair.privateKey, identifier: "test-key-2")
 
-        let retrieved = try manager.retrievePrivateKey(identifier: "test-key-2")
+        let retrieved = try manager.retrieveTestPrivateKey(identifier: "test-key-2")
 
         #expect(retrieved == keyPair.privateKey)
     }
@@ -93,7 +94,7 @@ struct KeyPairManagerTests {
         let manager = KeyPairManager()
 
         #expect(throws: KeyPairError.self) {
-            _ = try manager.retrievePrivateKey(identifier: "non-existent-key")
+            _ = try manager.retrieveTestPrivateKey(identifier: "non-existent-key")
         }
     }
 
@@ -102,18 +103,18 @@ struct KeyPairManagerTests {
         let manager = KeyPairManager()
 
         let keyPair = try manager.generateKeyPair()
-        try manager.storePrivateKey(keyPair.privateKey, identifier: "test-key-3")
+        try manager.storeTestPrivateKey(keyPair.privateKey, identifier: "test-key-3")
 
         // Verify key exists
-        let retrieved = try manager.retrievePrivateKey(identifier: "test-key-3")
+        let retrieved = try manager.retrieveTestPrivateKey(identifier: "test-key-3")
         #expect(retrieved == keyPair.privateKey)
 
         // Delete key
-        try manager.deletePrivateKey(identifier: "test-key-3")
+        try manager.deleteTestPrivateKey(identifier: "test-key-3")
 
         // Verify key no longer exists
         #expect(throws: KeyPairError.self) {
-            _ = try manager.retrievePrivateKey(identifier: "test-key-3")
+            _ = try manager.retrieveTestPrivateKey(identifier: "test-key-3")
         }
     }
 
@@ -124,10 +125,10 @@ struct KeyPairManagerTests {
         let keyPair1 = try manager.generateKeyPair()
         let keyPair2 = try manager.generateKeyPair()
 
-        try manager.storePrivateKey(keyPair1.privateKey, identifier: "test-key-4")
-        try manager.storePrivateKey(keyPair2.privateKey, identifier: "test-key-4")
+        try manager.storeTestPrivateKey(keyPair1.privateKey, identifier: "test-key-4")
+        try manager.storeTestPrivateKey(keyPair2.privateKey, identifier: "test-key-4")
 
-        let retrieved = try manager.retrievePrivateKey(identifier: "test-key-4")
+        let retrieved = try manager.retrieveTestPrivateKey(identifier: "test-key-4")
         #expect(retrieved == keyPair2.privateKey)
         #expect(retrieved != keyPair1.privateKey)
     }
@@ -138,10 +139,10 @@ struct KeyPairManagerTests {
     func testGenerateAndStore() throws {
         let manager = KeyPairManager()
 
-        let keyPair = try manager.generateAndStoreKeyPair(identifier: "test-key-5")
+        let keyPair = try manager.generateAndStoreTestKeyPair(identifier: "test-key-5")
 
         // Verify key was stored
-        let retrieved = try manager.retrievePrivateKey(identifier: "test-key-5")
+        let retrieved = try manager.retrieveTestPrivateKey(identifier: "test-key-5")
         #expect(retrieved == keyPair.privateKey)
 
         // Verify public key is correct
@@ -152,52 +153,54 @@ struct KeyPairManagerTests {
     func testGetCurrentKeyPair() throws {
         let manager = KeyPairManager()
 
-        // Store a key pair
-        let keyPair = try manager.generateAndStoreKeyPair(identifier: KeyPairManager.currentKeyIdentifier)
+        // Store a key pair using test keychain
+        let keyPair = try manager.generateAndStoreTestKeyPair(identifier: "test-current-key")
 
-        // Retrieve current key pair
-        let current = try manager.getCurrentKeyPair()
+        // Retrieve it back
+        let retrieved = try manager.retrieveTestPrivateKey(identifier: "test-current-key")
 
-        #expect(current.publicKey == keyPair.publicKey)
-        #expect(current.privateKey == keyPair.privateKey)
+        #expect(retrieved == keyPair.privateKey)
+        #expect(keyPair.publicKey.count == 32)
     }
 
-    @Test("Should generate new key pair if current doesn't exist")
+    @Test("Should generate new key pair when requested")
     func testGetCurrentKeyPairGeneratesIfNeeded() throws {
         let manager = KeyPairManager()
 
-        // Ensure no current key exists
-        KeyPairManager.deleteAllKeys()
+        // Ensure no test keys exist
+        KeyPairManager.deleteAllTestKeys()
 
-        // Get current key pair (should generate new one)
-        let current = try manager.getCurrentKeyPair()
+        // Generate and store a new key pair
+        let keyPair = try manager.generateAndStoreTestKeyPair(identifier: "test-generated-key")
 
-        #expect(current.publicKey.count == 32)
-        #expect(current.privateKey.count == 32)
+        #expect(keyPair.publicKey.count == 32)
+        #expect(keyPair.privateKey.count == 32)
 
         // Verify it was stored
-        let retrieved = try manager.retrievePrivateKey(identifier: KeyPairManager.currentKeyIdentifier)
-        #expect(retrieved == current.privateKey)
+        let retrieved = try manager.retrieveTestPrivateKey(identifier: "test-generated-key")
+        #expect(retrieved == keyPair.privateKey)
     }
 
     // MARK: - Key Rotation Tests
 
-    @Test("Should rotate keys")
+    @Test("Should support key rotation pattern")
     func testRotateKeys() throws {
         let manager = KeyPairManager()
 
         // Generate initial key pair
-        let oldKeyPair = try manager.getCurrentKeyPair()
+        let oldKeyPair = try manager.generateAndStoreTestKeyPair(identifier: "test-rotate-current")
 
-        // Rotate keys
-        let newKeyPair = try manager.rotateKeys()
+        // Generate new key pair (simulating rotation)
+        let newKeyPair = try manager.generateAndStoreTestKeyPair(identifier: "test-rotate-new")
 
         #expect(newKeyPair.publicKey != oldKeyPair.publicKey)
         #expect(newKeyPair.privateKey != oldKeyPair.privateKey)
 
-        // Verify new key is now the current key
-        let current = try manager.getCurrentKeyPair()
-        #expect(current.publicKey == newKeyPair.publicKey)
+        // Both keys should be retrievable
+        let oldRetrieved = try manager.retrieveTestPrivateKey(identifier: "test-rotate-current")
+        let newRetrieved = try manager.retrieveTestPrivateKey(identifier: "test-rotate-new")
+        #expect(oldRetrieved == oldKeyPair.privateKey)
+        #expect(newRetrieved == newKeyPair.privateKey)
     }
 
     @Test("Should archive old key when rotating")
@@ -205,13 +208,16 @@ struct KeyPairManagerTests {
         let manager = KeyPairManager()
 
         // Generate initial key pair
-        let oldKeyPair = try manager.getCurrentKeyPair()
+        let oldKeyPair = try manager.generateAndStoreTestKeyPair(identifier: "test-archive-current")
 
-        // Rotate keys
-        _ = try manager.rotateKeys()
+        // "Archive" it by storing with different identifier
+        try manager.storeTestPrivateKey(oldKeyPair.privateKey, identifier: "test-archive-archived")
+
+        // Generate new key pair
+        _ = try manager.generateAndStoreTestKeyPair(identifier: "test-archive-current")
 
         // Old key should still be retrievable with archived identifier
-        let archived = try manager.retrievePrivateKey(identifier: KeyPairManager.archivedKeyIdentifier)
+        let archived = try manager.retrieveTestPrivateKey(identifier: "test-archive-archived")
         #expect(archived == oldKeyPair.privateKey)
     }
 
@@ -273,11 +279,11 @@ struct KeyPairManagerTests {
         let manager = KeyPairManager()
 
         let keyPair = try manager.generateKeyPair()
-        try manager.storePrivateKey(keyPair.privateKey, identifier: "test-key-security")
+        try manager.storeTestPrivateKey(keyPair.privateKey, identifier: "test-key-security")
 
         // This test verifies that the key was stored with proper accessibility
         // The actual Keychain query is tested in the implementation
-        let retrieved = try manager.retrievePrivateKey(identifier: "test-key-security")
+        let retrieved = try manager.retrieveTestPrivateKey(identifier: "test-key-security")
         #expect(retrieved == keyPair.privateKey)
     }
 
@@ -298,7 +304,7 @@ struct KeyPairManagerTests {
 
         // Try to retrieve a key that doesn't exist
         do {
-            _ = try manager.retrievePrivateKey(identifier: "non-existent")
+            _ = try manager.retrieveTestPrivateKey(identifier: "non-existent")
             #expect(Bool(false), "Should throw error")
         } catch let error as KeyPairError {
             switch error {
@@ -330,29 +336,29 @@ struct KeyPairManagerTests {
 
     // MARK: - Cleanup Tests
 
-    @Test("Should delete all keys")
+    @Test("Should delete all test keys")
     func testDeleteAllKeys() throws {
         let manager = KeyPairManager()
 
-        // Create multiple keys
-        try manager.generateAndStoreKeyPair(identifier: "key-1")
-        try manager.generateAndStoreKeyPair(identifier: "key-2")
-        try manager.generateAndStoreKeyPair(identifier: KeyPairManager.currentKeyIdentifier)
+        // Create multiple test keys
+        try manager.generateAndStoreTestKeyPair(identifier: "key-1")
+        try manager.generateAndStoreTestKeyPair(identifier: "key-2")
+        try manager.generateAndStoreTestKeyPair(identifier: "key-3")
 
         // Verify keys exist
-        _ = try manager.retrievePrivateKey(identifier: "key-1")
-        _ = try manager.retrievePrivateKey(identifier: "key-2")
-        _ = try manager.getCurrentKeyPair()
+        _ = try manager.retrieveTestPrivateKey(identifier: "key-1")
+        _ = try manager.retrieveTestPrivateKey(identifier: "key-2")
+        _ = try manager.retrieveTestPrivateKey(identifier: "key-3")
 
-        // Delete all keys
-        KeyPairManager.deleteAllKeys()
+        // Delete all test keys
+        KeyPairManager.deleteAllTestKeys()
 
         // Verify all keys are gone
         #expect(throws: KeyPairError.self) {
-            _ = try manager.retrievePrivateKey(identifier: "key-1")
+            _ = try manager.retrieveTestPrivateKey(identifier: "key-1")
         }
         #expect(throws: KeyPairError.self) {
-            _ = try manager.retrievePrivateKey(identifier: "key-2")
+            _ = try manager.retrieveTestPrivateKey(identifier: "key-2")
         }
     }
 

@@ -46,25 +46,24 @@ struct MainTabViewTests {
         #expect(tabView != nil, "MainTabView should accept catalogService via dependency injection")
     }
     
-    @Test("MainTabView should accept pre-configured purchase service via dependency injection")
-    func testMainTabViewAcceptsPurchaseService() {
+    @Test("MainTabView should accept pre-configured receipt service via AppDependencies")
+    func testMainTabViewAcceptsReceiptService() {
         // Arrange: Configure factory for testing and create services
         let catalogService = deps.catalogService
-        let mockPurchaseRepository = MockPurchaseRecordRepository()
-        let purchaseService = PurchaseRecordService(repository: mockPurchaseRepository)
 
         // Act: Create MainTabView with all required services
+        // Note: ReceiptService is accessed via appDependencies environment, not passed directly
         let tabView = MainTabView(
             deps: deps,
             catalogService: catalogService,
-            purchaseService: purchaseService,
             inventoryService: deps.inventoryTrackingService,
             shoppingListService: deps.shoppingListService,
             kilnScheduleService: deps.kilnScheduleService
         )
 
-        // Assert: MainTabView should be created successfully with both injected services
-        #expect(tabView != nil, "MainTabView should accept both catalogService and purchaseService via dependency injection")
+        // Assert: MainTabView should be created successfully
+        // PurchasesView will access receiptService via @Environment(\.appDependencies)
+        #expect(tabView != nil, "MainTabView should work with AppDependencies providing receiptService")
     }
     
     @Test("MainTabView should not require Core Data context when using dependency injection")

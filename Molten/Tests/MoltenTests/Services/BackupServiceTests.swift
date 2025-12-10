@@ -95,7 +95,7 @@ struct BackupServiceTests {
         let service = createTestService(apiClient: mockAPI, preferences: preferences)
 
         // Clean up any existing keys from previous tests
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         let key = try await service.enableBackups()
 
@@ -112,7 +112,7 @@ struct BackupServiceTests {
         let preferences = createTestPreferences()
         let service = createTestService(apiClient: mockAPI, preferences: preferences)
 
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         let key = try await service.enableBackups()
 
@@ -127,7 +127,7 @@ struct BackupServiceTests {
         let preferences = createTestPreferences()
         let service = createTestService(apiClient: mockAPI, preferences: preferences)
 
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         await #expect(throws: BackupAPIError.self) {
             _ = try await service.enableBackups()
@@ -280,8 +280,8 @@ struct BackupServiceTests {
 
         // Store a key pair for signing
         let keyPairManager = KeyPairManager()
-        KeyPairManager.deleteAllKeys()
-        _ = try keyPairManager.generateAndStoreKeyPair(identifier: "com.molten.backup.key")
+        KeyPairManager.deleteAllTestKeys()
+        _ = try keyPairManager.generateAndStoreTestKeyPair(identifier: "com.molten.backup.test.key")
 
         let service = createTestService(
             apiClient: mockAPI,
@@ -320,8 +320,8 @@ struct BackupServiceTests {
         preferences.isEnabled = true
 
         let keyPairManager = KeyPairManager()
-        KeyPairManager.deleteAllKeys()
-        _ = try keyPairManager.generateAndStoreKeyPair(identifier: "com.molten.backup.key")
+        KeyPairManager.deleteAllTestKeys()
+        _ = try keyPairManager.generateAndStoreTestKeyPair(identifier: "com.molten.backup.test.key")
 
         let service = createTestService(
             apiClient: mockAPI,
@@ -375,8 +375,8 @@ struct BackupServiceTests {
         preferences.lastInventoryChecksum = "oldchecksum"
 
         let keyPairManager = KeyPairManager()
-        KeyPairManager.deleteAllKeys()
-        _ = try keyPairManager.generateAndStoreKeyPair(identifier: "com.molten.backup.key")
+        KeyPairManager.deleteAllTestKeys()
+        _ = try keyPairManager.generateAndStoreTestKeyPair(identifier: "com.molten.backup.test.key")
 
         let service = createTestService(
             apiClient: mockAPI,

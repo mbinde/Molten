@@ -31,7 +31,7 @@ struct InventorySharingViewModelTests {
 
     init() {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
     }
 
     private func cleanupUserDefaults() {
@@ -46,7 +46,7 @@ struct InventorySharingViewModelTests {
     @Test("Should load share data on appear")
     func testLoadShareData() async throws {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         // Setup - create a share first
         let mockManager = createMockSharingManager()
@@ -74,7 +74,7 @@ struct InventorySharingViewModelTests {
     @Test("Should populate form fields from existing metadata")
     func testPopulateFormFields() async throws {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         // Setup
         let mockManager = createMockSharingManager()
@@ -101,7 +101,7 @@ struct InventorySharingViewModelTests {
     @Test("Should create share with metadata")
     func testCreateShareWithMetadata() async throws {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -129,7 +129,7 @@ struct InventorySharingViewModelTests {
     @Test("Should trim whitespace from metadata")
     func testTrimWhitespaceFromMetadata() async throws {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -155,7 +155,7 @@ struct InventorySharingViewModelTests {
     @Test("Should handle empty notes as nil")
     func testEmptyNotesAsNil() async throws {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -180,7 +180,7 @@ struct InventorySharingViewModelTests {
     @Test("Should validate display name is not empty")
     func testValidateDisplayNameNotEmpty() async throws {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -208,7 +208,7 @@ struct InventorySharingViewModelTests {
     @Test("Should update share metadata")
     func testUpdateShareMetadata() async throws {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         // Setup - create initial share
         let mockManager = createMockSharingManager()
@@ -240,7 +240,7 @@ struct InventorySharingViewModelTests {
     @Test("Should validate display name when updating")
     func testValidateDisplayNameWhenUpdating() async throws {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         // Setup
         let mockManager = createMockSharingManager()
@@ -270,7 +270,7 @@ struct InventorySharingViewModelTests {
     @Test("Should add friend with nickname")
     func testAddFriendWithNickname() async throws {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -301,7 +301,7 @@ struct InventorySharingViewModelTests {
     @Test("Should add friend without optional fields")
     func testAddFriendWithoutOptionalFields() async throws {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -327,7 +327,7 @@ struct InventorySharingViewModelTests {
     @Test("Should validate share code is not empty")
     func testValidateShareCodeNotEmpty() async throws {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -352,7 +352,7 @@ struct InventorySharingViewModelTests {
     @Test("Should show warning for invalid signature")
     func testShowWarningForInvalidSignature() async throws {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         let mockManager = createMockSharingManagerWithInvalidSignature()
         let mockCatalogService = createMockCatalogService()
@@ -378,7 +378,7 @@ struct InventorySharingViewModelTests {
     @Test("Should delete share and clear metadata")
     func testDeleteShare() async throws {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         // Setup
         let mockManager = createMockSharingManager()
@@ -409,7 +409,7 @@ struct InventorySharingViewModelTests {
         // Actual clipboard testing would require UI testing
 
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         let mockManager = createMockSharingManager()
         let mockCatalogService = createMockCatalogService()
@@ -433,7 +433,7 @@ struct InventorySharingViewModelTests {
     @Test("Should clear error message")
     func testClearError() async throws {
         cleanupUserDefaults()
-        KeyPairManager.deleteAllKeys()
+        KeyPairManager.deleteAllTestKeys()
 
         let viewModel = InventorySharingViewModel(
             sharingManager: createMockSharingManager(),

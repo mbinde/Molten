@@ -170,16 +170,6 @@ class TabConfiguration {
             return false
         }
 
-        // Check that core tabs (catalog, inventory, shopping) are in the visible tab bar
-        // This prevents old/corrupted configurations from hiding essential tabs
-        let coreTabs: [DefaultTab] = [.catalog, .inventory, .shopping]
-        let visibleTabs = Array(tabs.prefix(maxVisibleTabs))
-        for coreTab in coreTabs {
-            if availableTabs.contains(coreTab) && !visibleTabs.contains(coreTab) {
-                return false
-            }
-        }
-
         return true
     }
 

@@ -220,6 +220,34 @@ final class MockStorageLocationRepository: StorageLocationRepository {
         return locations.values.filter { $0.storageLocationId == storageLocationId }
     }
 
+    // MARK: - Receipt Import Operations
+
+    func fetchLocation(byId id: UUID) async throws -> StorageLocationModel? {
+        return locations[id]
+    }
+
+    func fetchUnlinkedLocations(forInventory inventoryId: UUID, addedOnOrAfter: Date?) async throws -> [StorageLocationModel] {
+        var results = locations.values.filter { location in
+            location.inventoryId == inventoryId &&
+            location.purchaseRecordItemId == nil &&
+            location.quantity > 0
+        }
+
+        if let minDate = addedOnOrAfter {
+            results = results.filter { $0.dateAdded >= minDate }
+        }
+
+        return results.sorted { $0.dateAdded < $1.dateAdded }
+    }
+
+    func updateLocationById(_ location: StorageLocationModel) async throws -> StorageLocationModel {
+        guard locations[location.id] != nil else {
+            throw NSError(domain: "MockLocationRepository", code: 404)
+        }
+        locations[location.id] = location
+        return location
+    }
+
     // MARK: - Test Helpers
 
     /// Populate repository with sample test data

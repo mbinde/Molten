@@ -148,6 +148,25 @@ nonisolated protocol StorageLocationRepository: Sendable {
     /// - Parameter storageLocationId: The UUID of the StorageLocationDefinition
     /// - Returns: Array of StorageLocationModel instances at this location
     func fetchLocations(atLocationDefinition storageLocationId: UUID) async throws -> [StorageLocationModel]
+
+    // MARK: - Receipt Import Operations
+
+    /// Fetch a single location by its ID
+    /// - Parameter id: The UUID of the StorageLocation
+    /// - Returns: The StorageLocationModel if found
+    func fetchLocation(byId id: UUID) async throws -> StorageLocationModel?
+
+    /// Fetch unlinked locations (not yet associated with a purchase) for a given inventory
+    /// - Parameters:
+    ///   - inventoryId: The inventory to search
+    ///   - addedOnOrAfter: Optional minimum dateAdded for filtering
+    /// - Returns: Array of unlinked StorageLocationModel sorted by dateAdded
+    func fetchUnlinkedLocations(forInventory inventoryId: UUID, addedOnOrAfter: Date?) async throws -> [StorageLocationModel]
+
+    /// Update a location by ID (for linking to purchase records)
+    /// - Parameter location: The updated StorageLocationModel
+    /// - Returns: The updated model
+    func updateLocationById(_ location: StorageLocationModel) async throws -> StorageLocationModel
 }
 
 // Note: LocationModel is defined in SharedModels.swift

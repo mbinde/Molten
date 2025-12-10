@@ -56,4 +56,15 @@ nonisolated protocol PurchaseRecordRepository: Sendable {
 
     /// Count total quantity purchased for a specific glass item
     func getTotalPurchasedQuantity(for stableId: String, type: String) async throws -> Double
+
+    // MARK: - Receipt Import Deduplication
+
+    /// Find a purchase record by email receipt ID (for deduplication)
+    func fetchRecord(byEmailReceiptId emailReceiptId: String) async throws -> PurchaseRecordModel?
+
+    /// Find purchase records matching order number, supplier, and date (same day)
+    func fetchRecords(byOrderNumber orderNumber: String, supplier: String, on date: Date) async throws -> [PurchaseRecordModel]
+
+    /// Find purchase records matching sender email and date (same day)
+    func fetchRecords(bySenderEmail senderEmail: String, on date: Date) async throws -> [PurchaseRecordModel]
 }

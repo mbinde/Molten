@@ -460,6 +460,11 @@ struct StorageLocationModel: Identifiable, Sendable {
     let isTransfer: Bool           // True if created from a move operation (filter out for label printing)
     let workspaceId: UUID?
 
+    // Receipt import fields (for linking inventory to purchases)
+    let purchaseRecordItemId: UUID?  // Links to PurchaseRecordItem that created/claimed this inventory
+    let unitPrice: Decimal?          // Cost per unit at time of purchase
+    let currency: String?            // Currency for unitPrice
+
     nonisolated init(
         id: UUID = UUID(),
         inventoryId: UUID,
@@ -470,7 +475,10 @@ struct StorageLocationModel: Identifiable, Sendable {
         dateAdded: Date = Date(),
         dateModified: Date = Date(),
         isTransfer: Bool = false,
-        workspaceId: UUID? = nil
+        workspaceId: UUID? = nil,
+        purchaseRecordItemId: UUID? = nil,
+        unitPrice: Decimal? = nil,
+        currency: String? = nil
     ) {
         self.id = id
         self.inventoryId = inventoryId
@@ -482,6 +490,9 @@ struct StorageLocationModel: Identifiable, Sendable {
         self.dateModified = dateModified
         self.isTransfer = isTransfer
         self.workspaceId = workspaceId
+        self.purchaseRecordItemId = purchaseRecordItemId
+        self.unitPrice = unitPrice
+        self.currency = currency
     }
 
     /// Validates that a location name string is valid
@@ -570,18 +581,26 @@ struct InventoryConsumptionRecordModel: Identifiable, Sendable {
     let containerCount: Double?  // For weight-based types: jars consumed
     let date: Date               // Date of consumption (not time)
 
+    // Receipt import fields (for recording consumed inventory price)
+    let unitPrice: Decimal?      // Cost per unit when consumed
+    let currency: String?        // Currency for unitPrice
+
     nonisolated init(
         id: UUID = UUID(),
         storageLocationId: UUID,
         quantity: Double,
         containerCount: Double? = nil,
-        date: Date = Date()
+        date: Date = Date(),
+        unitPrice: Decimal? = nil,
+        currency: String? = nil
     ) {
         self.id = id
         self.storageLocationId = storageLocationId
         self.quantity = quantity
         self.containerCount = containerCount
         self.date = date
+        self.unitPrice = unitPrice
+        self.currency = currency
     }
 }
 

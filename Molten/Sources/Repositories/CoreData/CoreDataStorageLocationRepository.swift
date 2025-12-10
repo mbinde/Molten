@@ -468,8 +468,64 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
         return try await fetchLocations(matching: predicate)
     }
 
+    // MARK: - Receipt Import Operations
+
+    func fetchLocation(byId id: UUID) async throws -> StorageLocationModel? {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
+            fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+            fetchRequest.fetchLimit = 1
+
+            guard let coreDataItem = try context.fetch(fetchRequest).first else {
+                return nil
+            }
+
+            return self.convertToStorageLocationModel(coreDataItem)
+        }
+    }
+
+    func fetchUnlinkedLocations(forInventory inventoryId: UUID, addedOnOrAfter: Date?) async throws -> [StorageLocationModel] {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
+
+            var predicates: [NSPredicate] = [
+                NSPredicate(format: "inventory_id == %@", inventoryId as CVarArg),
+                NSPredicate(format: "purchase_record_item_id == nil"),
+                NSPredicate(format: "quantity > 0")
+            ]
+
+            if let minDate = addedOnOrAfter {
+                predicates.append(NSPredicate(format: "date_added >= %@", minDate as NSDate))
+            }
+
+            fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "date_added", ascending: true)]
+
+            let coreDataItems = try context.fetch(fetchRequest)
+            return coreDataItems.compactMap { self.convertToStorageLocationModel($0) }
+        }
+    }
+
+    func updateLocationById(_ location: StorageLocationModel) async throws -> StorageLocationModel {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
+            fetchRequest.predicate = NSPredicate(format: "id == %@", location.id as CVarArg)
+            fetchRequest.fetchLimit = 1
+
+            guard let coreDataItem = try context.fetch(fetchRequest).first else {
+                throw CoreDataLocationRepositoryError.itemNotFound(location.id.uuidString)
+            }
+
+            self.updateCoreDataEntity(coreDataItem, with: location)
+            try context.save()
+
+            self.log.info("Updated location by ID: \(location.id)")
+            return location
+        }
+    }
+
     // MARK: - Private Helper Methods
-    
+
     private nonisolated func fetchLocationSync(forInventory inventory_id: UUID, locationName: String) throws -> [StorageLocationModel] {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "StorageLocation")
         fetchRequest.predicate = NSPredicate(format: "inventory_id == %@ AND location == %@", inventory_id as CVarArg, locationName)
@@ -502,6 +558,9 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
         let dateModified = coreDataItem.value(forKey: "date_modified") as? Date ?? Date()
         let isTransfer = coreDataItem.value(forKey: "is_transfer") as? Bool ?? false
         let workspaceId = coreDataItem.value(forKey: "workspace_id") as? UUID
+        let purchaseRecordItemId = coreDataItem.value(forKey: "purchase_record_item_id") as? UUID
+        let unitPrice = (coreDataItem.value(forKey: "unit_price") as? NSDecimalNumber) as Decimal?
+        let currency = coreDataItem.value(forKey: "currency") as? String
 
         return StorageLocationModel(
             id: id,
@@ -513,7 +572,10 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
             dateAdded: dateAdded,
             dateModified: dateModified,
             isTransfer: isTransfer,
-            workspaceId: workspaceId
+            workspaceId: workspaceId,
+            purchaseRecordItemId: purchaseRecordItemId,
+            unitPrice: unitPrice,
+            currency: currency
         )
     }
 
@@ -528,6 +590,9 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
         coreDataItem.setValue(location.dateModified, forKey: "date_modified")
         coreDataItem.setValue(location.isTransfer, forKey: "is_transfer")
         coreDataItem.setValue(location.workspaceId, forKey: "workspace_id")
+        coreDataItem.setValue(location.purchaseRecordItemId, forKey: "purchase_record_item_id")
+        coreDataItem.setValue(location.unitPrice as NSDecimalNumber?, forKey: "unit_price")
+        coreDataItem.setValue(location.currency, forKey: "currency")
     }
 }
 

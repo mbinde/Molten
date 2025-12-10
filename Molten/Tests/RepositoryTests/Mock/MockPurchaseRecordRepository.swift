@@ -233,6 +233,53 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
         return total
     }
 
+    // MARK: - Receipt Import Deduplication
+
+    func fetchRecord(byEmailReceiptId emailReceiptId: String) async throws -> PurchaseRecordModel? {
+        let recordsArray = Array(records.values)
+        for record in recordsArray {
+            if record.emailReceiptId == emailReceiptId {
+                return record
+            }
+        }
+        return nil
+    }
+
+    func fetchRecords(byOrderNumber orderNumber: String, supplier: String, on date: Date) async throws -> [PurchaseRecordModel] {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+
+        let recordsArray = Array(records.values)
+        var filtered: [PurchaseRecordModel] = []
+        for record in recordsArray {
+            if record.orderNumber == orderNumber &&
+               record.supplier.lowercased() == supplier.lowercased() &&
+               record.datePurchased >= startOfDay &&
+               record.datePurchased < endOfDay {
+                filtered.append(record)
+            }
+        }
+        return filtered
+    }
+
+    func fetchRecords(bySenderEmail senderEmail: String, on date: Date) async throws -> [PurchaseRecordModel] {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+
+        let recordsArray = Array(records.values)
+        var filtered: [PurchaseRecordModel] = []
+        for record in recordsArray {
+            if record.senderEmail?.lowercased() == senderEmail.lowercased() &&
+               record.datePurchased >= startOfDay &&
+               record.datePurchased < endOfDay {
+                filtered.append(record)
+            }
+        }
+        return filtered
+    }
+
     // MARK: - Test Helpers
 
     /// Get count of stored records (test helper)

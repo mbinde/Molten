@@ -171,13 +171,17 @@ class CoreDataInventoryConsumptionRecordRepository: @unchecked Sendable, Invento
 
         let quantity = coreDataItem.value(forKey: "quantity") as? Double ?? 0.0
         let containerCount = coreDataItem.value(forKey: "container_count") as? Double
+        let unitPrice = (coreDataItem.value(forKey: "unit_price") as? NSDecimalNumber) as Decimal?
+        let currency = coreDataItem.value(forKey: "currency") as? String
 
         return InventoryConsumptionRecordModel(
             id: id,
             storageLocationId: storageLocationId,
             quantity: quantity,
             containerCount: containerCount,
-            date: date
+            date: date,
+            unitPrice: unitPrice,
+            currency: currency
         )
     }
 
@@ -187,6 +191,8 @@ class CoreDataInventoryConsumptionRecordRepository: @unchecked Sendable, Invento
         coreDataItem.setValue(record.quantity, forKey: "quantity")
         coreDataItem.setValue(record.containerCount, forKey: "container_count")
         coreDataItem.setValue(record.date, forKey: "date")
+        coreDataItem.setValue(record.unitPrice as NSDecimalNumber?, forKey: "unit_price")
+        coreDataItem.setValue(record.currency, forKey: "currency")
     }
 
     /// Helper to add two optional Doubles, returning nil only if both are nil

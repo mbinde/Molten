@@ -24,6 +24,11 @@ struct PurchaseRecordModel: Identifiable, Equatable, Codable, Sendable {
     // Future-proofing fields (added pre-release for easier migrations)
     let workspace_id: UUID?  // For multi-inventory sets: references Workspace entity
 
+    // Receipt import fields (for deduplication when receipts are re-forwarded)
+    let emailReceiptId: String?  // Server receipt ID for exact deduplication
+    let senderEmail: String?     // Original sender email for fallback matching
+    let orderNumber: String?     // Order ID from receipt for fallback matching
+
     /// Initialize with business logic validation
     nonisolated init(
         id: UUID = UUID(),
@@ -36,7 +41,10 @@ struct PurchaseRecordModel: Identifiable, Equatable, Codable, Sendable {
         currency: String = "USD",
         notes: String? = nil,
         items: [PurchaseRecordItemModel] = [],
-        workspace_id: UUID? = nil
+        workspace_id: UUID? = nil,
+        emailReceiptId: String? = nil,
+        senderEmail: String? = nil,
+        orderNumber: String? = nil
     ) {
         self.id = id
         self.supplier = supplier.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -49,6 +57,9 @@ struct PurchaseRecordModel: Identifiable, Equatable, Codable, Sendable {
         self.notes = notes?.isEmpty == true ? nil : notes
         self.items = items
         self.workspace_id = workspace_id
+        self.emailReceiptId = emailReceiptId?.isEmpty == true ? nil : emailReceiptId
+        self.senderEmail = senderEmail?.isEmpty == true ? nil : senderEmail
+        self.orderNumber = orderNumber?.isEmpty == true ? nil : orderNumber
     }
 
     // MARK: - Business Logic
@@ -151,6 +162,10 @@ struct PurchaseRecordItemModel: Identifiable, Equatable, Codable, Sendable {
     let totalPrice: Decimal?
     let orderIndex: Int32
 
+    // Receipt import fields
+    let unitPrice: Decimal?  // Price per unit (weight or container)
+    let currency: String?    // Currency for unitPrice
+
     /// Initialize with business logic validation
     nonisolated init(
         id: UUID = UUID(),
@@ -160,7 +175,9 @@ struct PurchaseRecordItemModel: Identifiable, Equatable, Codable, Sendable {
         subsubtype: String? = nil,
         quantity: Double,
         totalPrice: Decimal? = nil,
-        orderIndex: Int32 = 0
+        orderIndex: Int32 = 0,
+        unitPrice: Decimal? = nil,
+        currency: String? = nil
     ) {
         self.id = id
         self.item_stable_id = item_stable_id.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -170,6 +187,8 @@ struct PurchaseRecordItemModel: Identifiable, Equatable, Codable, Sendable {
         self.quantity = quantity
         self.totalPrice = totalPrice
         self.orderIndex = orderIndex
+        self.unitPrice = unitPrice
+        self.currency = currency?.isEmpty == true ? nil : currency
     }
 
     // MARK: - Business Logic

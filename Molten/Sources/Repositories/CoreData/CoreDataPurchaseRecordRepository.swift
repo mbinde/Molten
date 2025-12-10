@@ -229,7 +229,10 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
             shipping: (entity.value(forKey: "shipping") as? NSDecimalNumber) as Decimal?,
             currency: currency,
             notes: entity.value(forKey: "notes") as? String,
-            items: mappedItems
+            items: mappedItems,
+            emailReceiptId: entity.value(forKey: "email_receipt_id") as? String,
+            senderEmail: entity.value(forKey: "sender_email") as? String,
+            orderNumber: entity.value(forKey: "order_number") as? String
         )
     }
 
@@ -249,9 +252,67 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
             subsubtype: entity.value(forKey: "subsubtype") as? String,
             quantity: (entity.value(forKey: "quantity") as? Double) ?? 0.0,
             totalPrice: (entity.value(forKey: "total_price") as? NSDecimalNumber) as Decimal?,
-            orderIndex: Int32((entity.value(forKey: "order_index") as? Int16) ?? 0)
+            orderIndex: Int32((entity.value(forKey: "order_index") as? Int16) ?? 0),
+            unitPrice: (entity.value(forKey: "unit_price") as? NSDecimalNumber) as Decimal?,
+            currency: entity.value(forKey: "currency") as? String
         )
     }
+
+    // MARK: - Receipt Import Deduplication
+
+    func fetchRecord(byEmailReceiptId emailReceiptId: String) async throws -> PurchaseRecordModel? {
+        return try await self.context.perform {
+            let request = PurchaseRecord.fetchRequest()
+            request.predicate = NSPredicate(format: "email_receipt_id == %@", emailReceiptId)
+            request.fetchLimit = 1
+            request.relationshipKeyPathsForPrefetching = ["purchaserecorditem"]
+
+            guard let entity = try self.context.fetch(request).first else {
+                return nil
+            }
+
+            return self.mapToModel(entity)
+        }
+    }
+
+    func fetchRecords(byOrderNumber orderNumber: String, supplier: String, on date: Date) async throws -> [PurchaseRecordModel] {
+        return try await self.context.perform {
+            let calendar = Calendar.current
+            let startOfDay = calendar.startOfDay(for: date)
+            let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+
+            let request = PurchaseRecord.fetchRequest()
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                NSPredicate(format: "order_number == %@", orderNumber),
+                NSPredicate(format: "supplier ==[cd] %@", supplier),
+                NSPredicate(format: "date_purchased >= %@ AND date_purchased < %@", startOfDay as NSDate, endOfDay as NSDate)
+            ])
+            request.relationshipKeyPathsForPrefetching = ["purchaserecorditem"]
+
+            let entities = try self.context.fetch(request)
+            return entities.compactMap { self.mapToModel($0) }
+        }
+    }
+
+    func fetchRecords(bySenderEmail senderEmail: String, on date: Date) async throws -> [PurchaseRecordModel] {
+        return try await self.context.perform {
+            let calendar = Calendar.current
+            let startOfDay = calendar.startOfDay(for: date)
+            let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+
+            let request = PurchaseRecord.fetchRequest()
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                NSPredicate(format: "sender_email ==[cd] %@", senderEmail),
+                NSPredicate(format: "date_purchased >= %@ AND date_purchased < %@", startOfDay as NSDate, endOfDay as NSDate)
+            ])
+            request.relationshipKeyPathsForPrefetching = ["purchaserecorditem"]
+
+            let entities = try self.context.fetch(request)
+            return entities.compactMap { self.mapToModel($0) }
+        }
+    }
+
+    // MARK: - Mapping Helpers
 
     /// Update Core Data entity using KVC to avoid MainActor isolation issues
     nonisolated private func updateEntity(_ entity: PurchaseRecord, from model: PurchaseRecordModel) {
@@ -264,6 +325,9 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
         entity.setValue(model.shipping as NSDecimalNumber?, forKey: "shipping")
         entity.setValue(model.currency, forKey: "currency")
         entity.setValue(model.notes, forKey: "notes")
+        entity.setValue(model.emailReceiptId, forKey: "email_receipt_id")
+        entity.setValue(model.senderEmail, forKey: "sender_email")
+        entity.setValue(model.orderNumber, forKey: "order_number")
 
         // Remove existing items using KVC
         if let existingItems = entity.value(forKey: "purchaserecorditem") as? NSSet {
@@ -284,6 +348,8 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
             itemEntity.setValue(itemModel.subsubtype, forKey: "subsubtype")
             itemEntity.setValue(itemModel.quantity, forKey: "quantity")
             itemEntity.setValue(itemModel.totalPrice as NSDecimalNumber?, forKey: "total_price")
+            itemEntity.setValue(itemModel.unitPrice as NSDecimalNumber?, forKey: "unit_price")
+            itemEntity.setValue(itemModel.currency, forKey: "currency")
             // Preserve order by using array index
             itemEntity.setValue(Int16(index), forKey: "order_index")
             itemEntity.setValue(entity, forKey: "purchaserecord")

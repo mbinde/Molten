@@ -70,6 +70,18 @@ struct CatalogSearchEmptyState: View {
             }
             .buttonStyle(.bordered)
             .accessibilityIdentifier("catalog_clear_filters")
+
+            // Contact suggestion
+            VStack(spacing: DesignSystem.Spacing.xs) {
+                Text("Can't find what you're looking for?")
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                Link("Contact us at info@moltenglass.app", destination: URL(string: "mailto:info@moltenglass.app")!)
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundColor(DesignSystem.Colors.moltenOrange)
+            }
+            .padding(.top, DesignSystem.Spacing.md)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(DesignSystem.Colors.background)

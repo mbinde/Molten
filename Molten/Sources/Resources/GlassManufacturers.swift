@@ -31,10 +31,12 @@ struct GlassManufacturers {
         "GRE": "Greasy Glass",
         "KAS": "Kashmir Glass",
         "KUG": "Kugler",
+        "LAU": "Lauscha",
         "LUN": "Lunar Glass",
         "MA": "Molten Aura Labs",
         "MOM": "Momka Glass",
         "NS": "Northstar Glassworks",
+        "NSP": "Northstar Precision 104",
         "OC": "Oceanside Glass",
         "OR": "Origin Glass",
         "PAR": "Parramore Glass",
@@ -134,11 +136,13 @@ struct GlassManufacturers {
         "GRE": true,
         "KAS": true,
         "KUG": true,
+        "LAU": true,
         "LUN": true,
         "MA": true,
         "MOM": true,
         "MOR": true,
         "NS": true,
+        "NSP": true,
         "OC": true,
         "OR": true,
         "PAR": true,
@@ -170,9 +174,11 @@ struct GlassManufacturers {
         "GRE": true,           // Greasy Glass
         "JET": true,           // JetAgeStudio
         "KUG": true,           // Kugler
+        "LAU": true,           // Lauscha
         "MA": true,            // Molten Aura Labs
         "MOM": true,           // Momka Glass
         "NS": true,            // Northstar Glassworks
+        "NSP": true,           // Northstar Precision 104
         "OC": true,            // Oceanside Glass
         "OR": true,            // Origin Glass
         "PAR": true,           // Parramore Glass
@@ -275,6 +281,8 @@ struct GlassManufacturers {
         "DH": [104],          // Double Helix makes 104
         "EF": [104],          // Effetre makes 104
         "KUG": [104],         // Kugler makes 104
+        "LAU": [104],         // Lauscha makes 104
+        "NSP": [104],         // Northstar Precision 104 makes 104
         "RE": [104],          // Reichenbach makes 104
         "VF": [104]           // Vetrofond makes 104
     ]
@@ -396,6 +404,8 @@ struct GlassManufacturers {
             return .red
         case "northstar glassworks", "northstar", "ns":
             return .orange
+        case "northstar precision 104", "nsp":
+            return Color(red: 1.0, green: 0.6, blue: 0.2)  // Lighter orange (related to NS)
         case "effetre", "moretti", "ef", "mor":
             return .mint
         case "trautmann art glass", "tag":
@@ -414,6 +424,8 @@ struct GlassManufacturers {
             return Color(red: 0.9, green: 0.5, blue: 0.4)  // Warm saffron/coral
         case "kugler", "kug":
             return .brown
+        case "lauscha", "lau":
+            return Color(red: 0.6, green: 0.5, blue: 0.4)  // Earthy brown (German heritage)
         case "greasy glass", "gre":
             return .teal
         case "lunar glass", "lun":

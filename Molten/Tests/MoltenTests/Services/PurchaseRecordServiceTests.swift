@@ -108,29 +108,6 @@ struct PurchaseRecordServiceTests {
         #expect(result.notes == "Updated notes")
     }
 
-    @Test("Delete purchase record successfully")
-    func testDeleteRecord() async throws {
-        let service = deps.purchaseRecordService
-
-        // Create record
-        let record = PurchaseRecordModel(
-            id: UUID(),
-            supplier: "Test Supplier",
-            datePurchased: Date(),
-            subtotal: Decimal(50.00),
-            notes: nil,
-            items: []
-        )
-        let created = try await service.createRecord(record)
-
-        // Delete it
-        try await service.deleteRecord(id: created.id)
-
-        // Verify deletion
-        let retrieved = try await service.getRecord(byId: created.id)
-        #expect(retrieved == nil)
-    }
-
     @Test("Get all records returns all created records")
     func testGetAllRecords() async throws {
         let service = deps.purchaseRecordService

@@ -6,15 +6,17 @@
 //  Handles server communication for receipt email imports
 //
 
+import CryptoKit
 import Foundation
 
 /// A candidate match from the catalog
-public struct MatchCandidate: Codable, Identifiable {
+public struct MatchCandidate: Codable, Identifiable, Sendable {
     public var id: String { catalogStableId }
     public let catalogStableId: String
     public let catalogName: String
     public let catalogManufacturer: String
     public let catalogType: String
+    public let catalogSubtype: String?
     public let confidence: Double
     public let matchMethod: String
     public let matchDetails: String?
@@ -24,9 +26,31 @@ public struct MatchCandidate: Codable, Identifiable {
         case catalogName = "catalog_name"
         case catalogManufacturer = "catalog_manufacturer"
         case catalogType = "catalog_type"
+        case catalogSubtype = "catalog_subtype"
         case confidence
         case matchMethod = "match_method"
         case matchDetails = "match_details"
+    }
+
+    /// Memberwise initializer for creating matches client-side
+    public nonisolated init(
+        catalogStableId: String,
+        catalogName: String,
+        catalogManufacturer: String,
+        catalogType: String,
+        catalogSubtype: String? = nil,
+        confidence: Double,
+        matchMethod: String,
+        matchDetails: String? = nil
+    ) {
+        self.catalogStableId = catalogStableId
+        self.catalogName = catalogName
+        self.catalogManufacturer = catalogManufacturer
+        self.catalogType = catalogType
+        self.catalogSubtype = catalogSubtype
+        self.confidence = confidence
+        self.matchMethod = matchMethod
+        self.matchDetails = matchDetails
     }
 }
 
@@ -56,6 +80,19 @@ public struct ReceiptItem: Codable, Identifiable {
         case matchConfidence = "match_confidence"
         case matchMethod = "match_method"
         case matchCandidates = "match_candidates"
+    }
+
+    /// Stable hash for identifying this receipt line across re-imports
+    /// Uses rawName + rawSku + totalPrice to create a consistent identifier
+    public var lineHash: String {
+        let components = [
+            rawName,
+            rawSku ?? "",
+            totalPrice.map { String(format: "%.2f", $0) } ?? ""
+        ]
+        let combined = components.joined(separator: "|")
+        let digest = SHA256.hash(data: Data(combined.utf8))
+        return digest.prefix(16).map { String(format: "%02x", $0) }.joined()
     }
 }
 
@@ -459,6 +496,54 @@ class ReceiptAPIClient: NSObject {
         }
     }
 
+    // MARK: - Delete Receipt
+
+    /// Delete a receipt (for dismissing duplicates)
+    /// - Parameters:
+    ///   - receiptId: The receipt ID
+    ///   - userId: The user's ID
+    ///   - ownershipSignature: Ed25519 signature of the user ID
+    open func deleteReceipt(
+        receiptId: String,
+        userId: String,
+        ownershipSignature: Data
+    ) async throws {
+        let url = baseURL.appendingPathComponent("api/v1/receipts/\(receiptId)")
+
+        // Create request
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+
+        // Add auth headers
+        request.setValue(userId, forHTTPHeaderField: "X-User-ID")
+        request.setValue(ownershipSignature.base64EncodedString(), forHTTPHeaderField: "X-Ownership-Signature")
+
+        // Add App Attest assertion
+        try await addAttestation(to: &request)
+
+        // Execute request
+        let (data, response) = try await executeRequest(request)
+
+        // Check status code
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw ReceiptAPIError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 200:
+            return // Success
+        case 404:
+            throw ReceiptAPIError.notFound
+        case 401, 403:
+            throw ReceiptAPIError.unauthorized
+        case 429:
+            let resetAt = parseRateLimitReset(from: data)
+            throw ReceiptAPIError.rateLimitExceeded(resetAt: resetAt)
+        default:
+            throw ReceiptAPIError.serverError(httpResponse.statusCode)
+        }
+    }
+
     // MARK: - Get Receipt Email Body
 
     /// Get the original email body for a receipt
@@ -637,6 +722,13 @@ class ReceiptAPIClient: NSObject {
         public let message: String
     }
 
+    /// Response from recovery status check
+    public struct RecoveryStatusResponse: Codable {
+        public let recovered: Bool
+        public let userId: String?
+        public let reason: String?
+    }
+
     /// Request account recovery via email verification
     /// This sends a recovery email to the registered email address.
     /// When user clicks the link, their public key is rotated to the new one.
@@ -694,6 +786,60 @@ class ReceiptAPIClient: NSObject {
 
         // Parse response
         return try Self.dateDecoder.decode(RecoveryResponse.self, from: data)
+    }
+
+    /// Check if account recovery has completed
+    /// The app calls this with email + public key to see if the user clicked the recovery link
+    /// - Parameters:
+    ///   - email: The registered email address
+    ///   - publicKey: The new public key that was sent during recovery request
+    /// - Returns: RecoveryStatusResponse with recovered status and userId if recovered
+    open func checkRecoveryStatus(
+        email: String,
+        publicKey: Data
+    ) async throws -> RecoveryStatusResponse {
+        let url = baseURL.appendingPathComponent("api/v1/receipts/recover/status")
+
+        // Create request body
+        let requestBody: [String: Any] = [
+            "email": email.lowercased(),
+            "publicKey": publicKey.base64EncodedString()
+        ]
+
+        let bodyData = try JSONSerialization.data(withJSONObject: requestBody)
+
+        // Create request
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = bodyData
+
+        // Add App Attest assertion (no auth headers - this is unauthenticated)
+        try await addAttestation(to: &request)
+
+        // Execute request
+        let (data, response) = try await executeRequest(request)
+
+        // Check status code
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw ReceiptAPIError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 200:
+            break // Success
+        case 400:
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let errorMsg = json["error"] as? String {
+                throw ReceiptAPIError.badRequest(errorMsg)
+            }
+            throw ReceiptAPIError.badRequest("Invalid request")
+        default:
+            throw ReceiptAPIError.serverError(httpResponse.statusCode)
+        }
+
+        // Parse response
+        return try Self.dateDecoder.decode(RecoveryStatusResponse.self, from: data)
     }
 
     // MARK: - Private Helpers

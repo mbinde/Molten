@@ -24,6 +24,18 @@ struct PurchaseDetailView: View {
     @State private var selectedMatches: [Int: String] = [:]
     /// Tracks quantity overrides for each item (item.id -> quantity)
     @State private var itemQuantities: [Int: Int] = [:]
+    /// Client-side catalog match results (item.id -> match result)
+    @State private var clientMatchResults: [Int: ItemMatchResult] = [:]
+    @State private var isMatching = false
+    /// Existing purchase record if this receipt was already imported
+    @State private var existingPurchaseRecord: PurchaseRecordModel?
+    /// Mapping of receipt item index to imported purchase record item (for already-imported items)
+    @State private var importedItemsMap: [Int: PurchaseRecordItemModel] = [:]
+    /// Potential duplicate purchases (for warning the user)
+    @State private var potentialDuplicates: [PotentialDuplicate] = []
+    @State private var showDuplicateWarning = false
+    @State private var duplicateWarningDismissed = false
+    @State private var exactDuplicateDismissed = false
     @State private var showingEmailBody = false
     @State private var emailBody: String?
     @State private var isLoadingEmail = false
@@ -32,6 +44,9 @@ struct PurchaseDetailView: View {
     @State private var recoveryError: String?
     @State private var isRecovering = false
     @State private var showingRecoveryEmailSent = false
+    // Entitlement state
+    @State private var hasProAccess = false
+    @State private var showingPaywall = false
 
     let purchaseId: String
 
@@ -46,6 +61,18 @@ struct PurchaseDetailView: View {
     private var retailerDisplayName: String {
         guard let purchase = purchase else { return "" }
         return purchase.retailerName ?? purchase.retailerId.replacingOccurrences(of: "_", with: " ").capitalized
+    }
+
+    private var canImportReceipts: Bool {
+        receiptService.canImportReceipts(hasProAccess: hasProAccess)
+    }
+
+    private var remainingFreeImports: Int? {
+        receiptService.remainingFreeImports(hasProAccess: hasProAccess)
+    }
+
+    private var subscriptionService: SubscriptionServiceProtocol {
+        dependencies.subscriptionService
     }
 
     var body: some View {
@@ -66,7 +93,7 @@ struct PurchaseDetailView: View {
 
                         Text(error)
                             .font(.body)
-                            .foregroundColor(.primary)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                             .fixedSize(horizontal: false, vertical: true)
 
                         // Show recovery option inline for key-not-found errors when email recovery is possible
@@ -105,7 +132,7 @@ struct PurchaseDetailView: View {
                                 .disabled(isRecovering || !isValidEmail(recoveryEmail))
                             }
                             .padding()
-                            .background(Color(.systemGray6))
+                            .background(DesignSystem.Colors.backgroundInputLight)
                             .cornerRadius(12)
                             .padding(.top, 8)
                         } else {
@@ -136,6 +163,16 @@ struct PurchaseDetailView: View {
                         // Header Information
                         purchaseHeader(purchase)
 
+                        // Exact duplicate banner (already imported)
+                        if existingPurchaseRecord != nil && !exactDuplicateDismissed {
+                            exactDuplicateBanner
+                        }
+
+                        // Potential duplicate warning (similar but not exact)
+                        if existingPurchaseRecord == nil && !potentialDuplicates.isEmpty && !duplicateWarningDismissed {
+                            duplicateWarningBanner
+                        }
+
                         // Items Section
                         itemsSection(purchase)
 
@@ -145,6 +182,7 @@ struct PurchaseDetailView: View {
                         }
                     }
                     .padding()
+                    .padding(.bottom, 40)  // Extra padding for tab bar
                 }
             }
         }
@@ -152,6 +190,10 @@ struct PurchaseDetailView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .task {
+            // Check Pro status for import limits
+            hasProAccess = await subscriptionService.hasProAccess()
+        }
         .onAppear {
             loadPurchase()
         }
@@ -173,10 +215,12 @@ struct PurchaseDetailView: View {
                     purchase: purchase,
                     selectedItemIds: selectedItems,
                     selectedMatches: selectedMatches,
+                    clientMatchResults: clientMatchResults,
                     catalogService: catalogService,
                     receiptService: receiptService,
                     onImportComplete: {
                         isImported = true
+                        dismiss()
                     }
                 )
             }
@@ -208,7 +252,7 @@ struct PurchaseDetailView: View {
                 if isImported {
                     Label("Imported", systemImage: "checkmark.circle.fill")
                         .font(.caption.bold())
-                        .foregroundColor(.green)
+                        .foregroundColor(DesignSystem.Colors.accentSuccess)
                 }
             }
 
@@ -267,14 +311,233 @@ struct PurchaseDetailView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(DesignSystem.Colors.backgroundInputLight)
         .cornerRadius(12)
+    }
+
+    // MARK: - Duplicate Warning Banner
+
+    @ViewBuilder
+    private var duplicateWarningBanner: some View {
+        if let topDuplicate = potentialDuplicates.first {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: topDuplicate.confidence == .high ? "exclamationmark.triangle.fill" : "info.circle.fill")
+                        .foregroundColor(topDuplicate.confidence == .high ? DesignSystem.Colors.accentWarning : DesignSystem.Colors.moltenOrange)
+
+                    Text(topDuplicate.confidence.displayName)
+                        .font(.headline)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                    Spacer()
+
+                    Button {
+                        withAnimation {
+                            duplicateWarningDismissed = true
+                        }
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.caption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                }
+
+                Text("This receipt may be related to an existing purchase:")
+                    .font(.subheadline)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                // Show the top duplicate
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(topDuplicate.existingRecord.supplier)
+                        .font(.subheadline.bold())
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                    Text(topDuplicate.existingRecord.datePurchased, style: .date)
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                    ForEach(topDuplicate.reasons, id: \.self) { reason in
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.caption2)
+                                .foregroundColor(DesignSystem.Colors.accentSuccess)
+                            Text(reason)
+                                .font(.caption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                        }
+                    }
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(DesignSystem.Colors.background)
+                .cornerRadius(8)
+
+                // Show count of other duplicates if any
+                if potentialDuplicates.count > 1 {
+                    Text("\(potentialDuplicates.count - 1) other potential match\(potentialDuplicates.count > 2 ? "es" : "")")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+
+                HStack {
+                    Button {
+                        withAnimation {
+                            duplicateWarningDismissed = true
+                        }
+                    } label: {
+                        Text("Import Anyway")
+                            .font(.subheadline)
+                    }
+                    .buttonStyle(.bordered)
+
+                    Spacer()
+                }
+            }
+            .padding()
+            .background(topDuplicate.confidence == .high
+                ? DesignSystem.Colors.accentWarning.opacity(0.1)
+                : DesignSystem.Colors.moltenOrange.opacity(0.1))
+            .cornerRadius(12)
+        }
+    }
+
+    // MARK: - Exact Duplicate Banner
+
+    @ViewBuilder
+    private var exactDuplicateBanner: some View {
+        if let existing = existingPurchaseRecord {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(DesignSystem.Colors.accentSuccess)
+
+                    Text("Already Imported")
+                        .font(.headline)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                    Spacer()
+
+                    Button {
+                        withAnimation {
+                            exactDuplicateDismissed = true
+                        }
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.caption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                }
+
+                Text("This receipt was already imported to your inventory:")
+                    .font(.subheadline)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                // Show the existing record details
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(existing.supplier)
+                        .font(.subheadline.bold())
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                    Text(existing.datePurchased, style: .date)
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                    if !existing.items.isEmpty {
+                        Text("\(existing.items.count) item\(existing.items.count == 1 ? "" : "s") imported")
+                            .font(.caption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(DesignSystem.Colors.background)
+                .cornerRadius(8)
+
+                // Action buttons
+                HStack(spacing: 12) {
+                    // Dismiss as duplicate - marks as acknowledged and goes back
+                    Button {
+                        dismissAsDuplicate()
+                    } label: {
+                        HStack {
+                            if isMarking {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .controlSize(.small)
+                            }
+                            Text("Dismiss as Duplicate")
+                                .font(.subheadline)
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(DesignSystem.Colors.accentDanger)
+                    .disabled(isMarking)
+
+                    // Re-import option
+                    Button {
+                        withAnimation {
+                            // Clear the existing record to allow re-import
+                            existingPurchaseRecord = nil
+                            importedItemsMap = [:]
+                            exactDuplicateDismissed = true
+                            // Re-select all items with catalog matches
+                            if let purchase = purchase {
+                                let selectableItemIds = selectableItems(purchase.items).map { $0.id }
+                                selectedItems = Set(selectableItemIds)
+                            }
+                        }
+                    } label: {
+                        Text("Re-Import Anyway")
+                            .font(.subheadline)
+                    }
+                    .buttonStyle(.bordered)
+
+                    Spacer()
+                }
+
+                Text("Dismiss removes this from your inbox. Re-import lets you add items again.")
+                    .font(.caption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+            }
+            .padding()
+            .background(DesignSystem.Colors.accentSuccess.opacity(0.1))
+            .cornerRadius(12)
+        }
     }
 
     // MARK: - Items Section
 
+    /// Helper to check if a receipt item has a catalog match (uses client-side matching)
+    private func hasCatalogMatch(_ item: ReceiptItem) -> Bool {
+        // Check client-side match results first
+        if let clientResult = clientMatchResults[item.id] {
+            return !clientResult.candidates.isEmpty
+        }
+        // Fallback to server-provided data (for backwards compatibility during transition)
+        return item.matchCandidates?.isEmpty == false || item.catalogStableId != nil
+    }
+
+    /// Get match candidates for an item (uses client-side matching)
+    private func matchCandidates(for item: ReceiptItem) -> [MatchCandidate] {
+        // Prefer client-side match results
+        if let clientResult = clientMatchResults[item.id] {
+            return clientResult.candidates
+        }
+        // Fallback to server-provided data
+        return item.matchCandidates ?? []
+    }
+
+    /// Items that have catalog matches and can be selected for import
+    private func selectableItems(_ items: [ReceiptItem]) -> [ReceiptItem] {
+        items.filter { hasCatalogMatch($0) }
+    }
+
     @ViewBuilder
     private func itemsSection(_ purchase: ReceiptDetail) -> some View {
+        let selectable = selectableItems(purchase.items)
+        let allSelectableIds = Set(selectable.map { $0.id })
+        let allSelected = !allSelectableIds.isEmpty && selectedItems == allSelectableIds
+
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Items (\(purchase.items.count))")
@@ -282,15 +545,15 @@ struct PurchaseDetailView: View {
 
                 Spacer()
 
-                if !isImported && !purchase.items.isEmpty {
+                if !isImported && !selectable.isEmpty {
                     Button {
-                        if selectedItems.count == purchase.items.count {
+                        if allSelected {
                             selectedItems.removeAll()
                         } else {
-                            selectedItems = Set(purchase.items.map { $0.id })
+                            selectedItems = allSelectableIds
                         }
                     } label: {
-                        Text(selectedItems.count == purchase.items.count ? "Select None" : "Select All")
+                        Text(allSelected ? "Select None" : "Select All")
                             .font(.caption)
                     }
                 }
@@ -307,8 +570,10 @@ struct PurchaseDetailView: View {
                 ForEach(purchase.items) { item in
                     PurchaseItemRow(
                         item: item,
+                        clientMatchCandidates: matchCandidates(for: item),
                         isSelected: selectedItems.contains(item.id),
-                        isSelectable: !isImported,
+                        isSelectable: !isImported && !importedItemsMap.keys.contains(item.id),
+                        importedItem: importedItemsMap[item.id],
                         catalogService: catalogService,
                         selectedCandidateId: selectedMatches[item.id],
                         quantityOverride: itemQuantities[item.id],
@@ -381,9 +646,20 @@ struct PurchaseDetailView: View {
                 let loaded = try await receiptService.getReceipt(receiptId: purchaseId)
                 purchase = loaded
                 isImported = loaded.acknowledged
-                // Select all items by default (unless already imported)
+
+                // Check if this receipt was already imported to local inventory
+                await checkForExistingImport(loaded)
+
+                // Check for potential duplicate purchases (even if not exact match)
+                await checkForPotentialDuplicates(loaded)
+
+                // Run client-side catalog matching only for items not already imported
+                await matchItemsWithCatalog(loaded)
+
+                // Select only items with catalog matches that haven't been imported yet
                 if !loaded.acknowledged {
-                    selectedItems = Set(loaded.items.map { $0.id })
+                    let unimportedSelectableItems = selectableItems(loaded.items).filter { !importedItemsMap.keys.contains($0.id) }
+                    selectedItems = Set(unimportedSelectableItems.map { $0.id })
                 }
             } catch KeyPairError.keyNotFound {
                 // Customize message based on identifier type
@@ -394,6 +670,93 @@ struct PurchaseDetailView: View {
             }
             isLoading = false
         }
+    }
+
+    /// Check if this receipt has already been imported to local inventory
+    private func checkForExistingImport(_ receipt: ReceiptDetail) async {
+        let importService = ReceiptImportService(
+            purchaseRecordRepository: dependencies.purchaseRecordRepository,
+            storageLocationRepository: dependencies.storageLocationRepository,
+            inventoryRepository: dependencies.inventoryRepository,
+            consumptionRepository: dependencies.inventoryConsumptionRecordRepository
+        )
+
+        do {
+            let existing = try await importService.findExistingPurchaseRecord(
+                emailReceiptId: receipt.id,
+                orderNumber: receipt.orderNumber,
+                supplier: receipt.retailerName ?? receipt.retailerId,
+                senderEmail: receipt.senderEmail,
+                orderDate: receipt.orderDate ?? Date(),
+                total: receipt.totalAmount.map { Decimal($0) }
+            )
+
+            if let existing = existing {
+                existingPurchaseRecord = existing
+
+                // Build mapping from receipt items to imported items by matching line hash
+                // This is stable across re-imports since it's based on the receipt line content
+                let importedItemsByHash = Dictionary(
+                    existing.items.compactMap { item -> (String, PurchaseRecordItemModel)? in
+                        guard let hash = item.receiptLineHash else { return nil }
+                        return (hash, item)
+                    },
+                    uniquingKeysWith: { first, _ in first }
+                )
+
+                var mapping: [Int: PurchaseRecordItemModel] = [:]
+                for receiptItem in receipt.items {
+                    if let importedItem = importedItemsByHash[receiptItem.lineHash] {
+                        mapping[receiptItem.id] = importedItem
+                    }
+                }
+                importedItemsMap = mapping
+            }
+        } catch {
+            // If we can't check, just proceed without the existing record info
+            print("Could not check for existing import: \(error)")
+        }
+    }
+
+    /// Check for potential duplicate purchases (not exact matches, but similar)
+    private func checkForPotentialDuplicates(_ receipt: ReceiptDetail) async {
+        let importService = ReceiptImportService(
+            purchaseRecordRepository: dependencies.purchaseRecordRepository,
+            storageLocationRepository: dependencies.storageLocationRepository,
+            inventoryRepository: dependencies.inventoryRepository,
+            consumptionRepository: dependencies.inventoryConsumptionRecordRepository
+        )
+
+        do {
+            let duplicates = try await importService.findPotentialDuplicates(
+                orderNumber: receipt.orderNumber,
+                supplier: receipt.retailerName ?? receipt.retailerId,
+                receiptItems: receipt.items,
+                excludingRecordId: existingPurchaseRecord?.id
+            )
+
+            if !duplicates.isEmpty {
+                potentialDuplicates = duplicates
+                // Auto-show warning for high confidence duplicates
+                if duplicates.contains(where: { $0.confidence == .high }) {
+                    showDuplicateWarning = true
+                }
+            }
+        } catch {
+            print("Could not check for potential duplicates: \(error)")
+        }
+    }
+
+    /// Matches receipt items against the local catalog
+    private func matchItemsWithCatalog(_ receipt: ReceiptDetail) async {
+        isMatching = true
+        let matcher = ReceiptCatalogMatcher(catalogService: catalogService)
+
+        // Only match items that haven't already been imported
+        let itemsToMatch = receipt.items.filter { !importedItemsMap.keys.contains($0.id) }
+        let results = await matcher.matchItems(itemsToMatch, retailerId: receipt.retailerId)
+        clientMatchResults = results
+        isMatching = false
     }
 
     /// Customized error message for key not found, based on how user registered
@@ -459,6 +822,21 @@ struct PurchaseDetailView: View {
         }
     }
 
+    /// Dismiss this receipt as a duplicate - deletes from server and navigates back
+    private func dismissAsDuplicate() {
+        isMarking = true
+
+        Task { @MainActor in
+            do {
+                try await receiptService.deleteReceipt(receiptId: purchaseId)
+                dismiss()  // Go back to the list
+            } catch {
+                errorMessage = error.userFacingMessage
+            }
+            isMarking = false
+        }
+    }
+
     private func loadEmailBody() {
         isLoadingEmail = true
 
@@ -478,8 +856,12 @@ struct PurchaseDetailView: View {
 
 private struct PurchaseItemRow: View {
     let item: ReceiptItem
+    /// Client-side match candidates (from ReceiptCatalogMatcher)
+    let clientMatchCandidates: [MatchCandidate]
     let isSelected: Bool
     let isSelectable: Bool
+    /// If this item was already imported, contains the imported item details
+    let importedItem: PurchaseRecordItemModel?
     let catalogService: CatalogService
     /// The currently selected candidate's stable ID (nil = use original order)
     let selectedCandidateId: String?
@@ -490,14 +872,26 @@ private struct PurchaseItemRow: View {
     let onQuantityChange: (Int) -> Void
 
     @State private var catalogItem: GlassItemModel?
+    @State private var importedCatalogItem: GlassItemModel?  // For showing imported item details
     @State private var isLoadingCatalog = false
     @State private var showingCandidates = false
     @State private var justSwapped = false
     @State private var rodEstimate: RodEstimate?
 
+    /// Whether this item was already imported
+    private var isAlreadyImported: Bool {
+        importedItem != nil
+    }
+
+    /// Whether this item has a catalog match (uses client-side matching)
+    private var hasCatalogMatch: Bool {
+        !clientMatchCandidates.isEmpty || isAlreadyImported
+    }
+
     /// Reorders candidates so the selected one is first
     private var orderedCandidates: [MatchCandidate] {
-        guard let candidates = item.matchCandidates, !candidates.isEmpty else { return [] }
+        guard !clientMatchCandidates.isEmpty else { return [] }
+        let candidates = clientMatchCandidates
         guard let selectedId = selectedCandidateId else { return candidates }
 
         // Find the selected candidate and move it to the front
@@ -560,11 +954,21 @@ private struct PurchaseItemRow: View {
     }
 
     /// The unit name for display - "Rod" or "Rods" for rod estimates, otherwise the catalog type
+    /// For frit, shows "Jar of Frit" or "Jar of #38 Frit" if subtype is known
     private var unitDisplayName: String {
         if rodEstimate != nil {
             return displayQuantity == 1 ? "Rod" : "Rods"
         }
         guard let candidate = topCandidate else { return "item" }
+
+        // Special handling for frit - show as "Jar of Frit" or "Jar of #38 Frit"
+        if candidate.catalogType.lowercased() == "frit" {
+            if let subtype = candidate.catalogSubtype {
+                return displayQuantity == 1 ? "Jar of \(subtype) Frit" : "Jars of \(subtype) Frit"
+            }
+            return displayQuantity == 1 ? "Jar of Frit" : "Jars of Frit"
+        }
+
         // Use the GlassItemTypeSystem to get proper display name
         if let type = GlassItemTypeSystem.getType(named: candidate.catalogType) {
             // displayName is plural (e.g., "Rods", "Frit"), we want singular for quantity 1
@@ -588,26 +992,52 @@ private struct PurchaseItemRow: View {
         return total / Double(displayQuantity)
     }
 
+    /// Row background color - different for already-imported vs selected vs default
+    private var rowBackgroundColor: Color {
+        if isAlreadyImported {
+            // Grayed out for already-imported items
+            return DesignSystem.Colors.backgroundSecondary.opacity(0.5)
+        } else if isSelected {
+            // Orange highlight for selected items
+            return DesignSystem.Colors.moltenOrange.opacity(0.1)
+        } else {
+            // Default background
+            return DesignSystem.Colors.backgroundInputLight
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Main item row
             Button {
-                if isSelectable {
+                if isSelectable && hasCatalogMatch && !isAlreadyImported {
                     onToggle()
                 }
             } label: {
                 HStack(alignment: .top, spacing: 12) {
-                    if isSelectable {
-                        Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(isSelected ? .accentColor : .secondary)
+                    if isAlreadyImported {
+                        // Show "already imported" seal - distinct from selection checkmark
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                             .font(.title3)
+                    } else if isSelectable {
+                        if hasCatalogMatch {
+                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(isSelected ? .accentColor : .secondary)
+                                .font(.title3)
+                        } else {
+                            // Show disabled state for items without catalog match
+                            Image(systemName: "xmark.circle")
+                                .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.5))
+                                .font(.title3)
+                        }
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
                         // Item name
                         Text(item.rawName)
                             .font(.body)
-                            .foregroundColor(.primary)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                             .multilineTextAlignment(.leading)
 
                         // SKU if available
@@ -617,32 +1047,28 @@ private struct PurchaseItemRow: View {
                                 .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
 
-                        // Quantity and unit price row (editable)
-                        if topCandidate != nil {
+                        // Already imported - show what it was imported as
+                        if let imported = importedItem {
+                            AlreadyImportedCard(
+                                importedItem: imported,
+                                catalogItem: importedCatalogItem
+                            )
+                        } else if topCandidate != nil {
+                            // Quantity and unit price row (editable) - only for items not yet imported
                             HStack(spacing: 4) {
-                                // Quantity stepper
-                                Button {
-                                    if displayQuantity > 1 {
-                                        onQuantityChange(displayQuantity - 1)
+                                // Editable quantity field
+                                TextField("", value: Binding(
+                                    get: { displayQuantity },
+                                    set: { newValue in
+                                        if newValue > 0 {
+                                            onQuantityChange(newValue)
+                                        }
                                     }
-                                } label: {
-                                    Image(systemName: "minus.circle.fill")
-                                        .foregroundColor(displayQuantity > 1 ? .accentColor : DesignSystem.Colors.textSecondary)
-                                }
-                                .buttonStyle(.plain)
-                                .disabled(displayQuantity <= 1)
-
-                                Text("\(displayQuantity)")
-                                    .font(.subheadline.bold())
-                                    .frame(minWidth: 24)
-
-                                Button {
-                                    onQuantityChange(displayQuantity + 1)
-                                } label: {
-                                    Image(systemName: "plus.circle.fill")
-                                        .foregroundColor(.accentColor)
-                                }
-                                .buttonStyle(.plain)
+                                ), format: .number)
+                                .keyboardType(.numberPad)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(width: 50)
+                                .multilineTextAlignment(.center)
 
                                 Text(unitDisplayName)
                                     .font(.subheadline)
@@ -658,36 +1084,29 @@ private struct PurchaseItemRow: View {
                                 }
                             }
                             .padding(.top, 4)
-                        }
 
-                        // Catalog match info - show as card if we have a match or candidates
-                        if let candidate = topCandidate {
-                            // Show top match as a nice card with pulse effect on swap
-                            TopMatchCard(candidate: candidate)
-                                .scaleEffect(justSwapped ? 1.03 : 1.0)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .stroke(Color.accentColor, lineWidth: justSwapped ? 2 : 0)
-                                        .opacity(justSwapped ? 1 : 0)
-                                )
-                                .animation(.easeInOut(duration: 0.2), value: justSwapped)
-                        } else if item.catalogStableId != nil, let catalogItem = catalogItem {
-                            // Fallback: show catalog item if loaded but no candidates
-                            HStack(spacing: 4) {
-                                Image(systemName: "link")
-                                    .font(.caption2)
-                                Text(catalogItem.name)
-                                    .font(.caption)
+                            // Catalog match info - show as card if we have a match or candidates
+                            if let candidate = topCandidate {
+                                // Show top match as a nice card with pulse effect on swap
+                                TopMatchCard(candidate: candidate)
+                                    .scaleEffect(justSwapped ? 1.03 : 1.0)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(Color.accentColor, lineWidth: justSwapped ? 2 : 0)
+                                            .opacity(justSwapped ? 1 : 0)
+                                    )
+                                    .animation(.easeInOut(duration: 0.2), value: justSwapped)
                             }
-                            .foregroundColor(matchConfidenceColor)
                         } else {
+                            // No catalog match - cannot be imported
                             HStack(spacing: 4) {
-                                Image(systemName: "questionmark.circle")
+                                Image(systemName: "xmark.circle")
                                     .font(.caption2)
-                                Text("No catalog match")
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                                Text("No catalog match – cannot import")
                                     .font(.caption)
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
                             }
-                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
 
@@ -718,7 +1137,7 @@ private struct PurchaseItemRow: View {
                             .font(.caption)
                         Spacer()
                     }
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(DesignSystem.Colors.moltenOrange)
                     .padding(.horizontal)
                     .padding(.bottom, showingCandidates ? 4 : 12)
                 }
@@ -749,7 +1168,7 @@ private struct PurchaseItemRow: View {
                 }
             }
         }
-        .background(isSelected ? Color.accentColor.opacity(0.1) : Color(.systemGray6))
+        .background(rowBackgroundColor)
         .cornerRadius(8)
         .task {
             await loadCatalogItem()
@@ -763,13 +1182,23 @@ private struct PurchaseItemRow: View {
     }
 
     private func loadCatalogItem() async {
-        // Use the selected candidate if available, otherwise use the top candidate or default match
-        let stableId = selectedCandidateId
-            ?? item.matchCandidates?.first?.catalogStableId
-            ?? item.catalogStableId
-
-        guard let stableId = stableId else { return }
         isLoadingCatalog = true
+
+        // If already imported, load the catalog item it was imported as
+        if let imported = importedItem {
+            importedCatalogItem = try? await catalogService.fetchGlassItem(byStableId: imported.item_stable_id)
+            isLoadingCatalog = false
+            return
+        }
+
+        // Use the selected candidate if available, otherwise use the top client match candidate
+        let stableId = selectedCandidateId
+            ?? clientMatchCandidates.first?.catalogStableId
+
+        guard let stableId = stableId else {
+            isLoadingCatalog = false
+            return
+        }
         catalogItem = try? await catalogService.fetchGlassItem(byStableId: stableId)
         calculateRodEstimate()
         isLoadingCatalog = false
@@ -804,8 +1233,8 @@ private struct TopMatchCard: View {
 
     private var confidenceColor: Color {
         if candidate.confidence >= 0.9 { return .green }
-        if candidate.confidence >= 0.7 { return .orange }
-        if candidate.confidence >= 0.5 { return .yellow }
+        if candidate.confidence >= 0.7 { return .yellow }
+        if candidate.confidence >= 0.5 { return .orange }
         return .red
     }
 
@@ -815,22 +1244,31 @@ private struct TopMatchCard: View {
             ?? candidate.catalogManufacturer
     }
 
+    /// Type display with optional subtype (e.g., "Frit (#38)")
+    private var typeDisplay: String {
+        let baseType = candidate.catalogType.capitalized
+        if let subtype = candidate.catalogSubtype {
+            return "\(baseType) (\(subtype))"
+        }
+        return baseType
+    }
+
     var body: some View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(candidate.catalogName)
                     .font(.subheadline)
-                    .foregroundColor(.primary)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
 
                 HStack(spacing: 4) {
                     Text(manufacturerName)
                         .font(.caption2)
                         .padding(.horizontal, 4)
                         .padding(.vertical, 1)
-                        .background(Color.secondary.opacity(0.2))
+                        .background(DesignSystem.Colors.backgroundSecondary)
                         .cornerRadius(4)
 
-                    Text(candidate.catalogType.capitalized)
+                    Text(typeDisplay)
                         .font(.caption2)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
@@ -841,14 +1279,82 @@ private struct TopMatchCard: View {
             // Confidence badge
             Text("\(Int(candidate.confidence * 100))%")
                 .font(.caption.bold())
-                .foregroundColor(.white)
+                .foregroundColor(DesignSystem.Colors.textPrimary)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(confidenceColor)
                 .cornerRadius(12)
         }
         .padding(8)
-        .background(Color(.systemBackground))
+        .background(DesignSystem.Colors.background)
+        .cornerRadius(6)
+    }
+}
+
+// MARK: - Already Imported Card (shown when item was previously imported)
+
+private struct AlreadyImportedCard: View {
+    let importedItem: PurchaseRecordItemModel
+    let catalogItem: GlassItemModel?
+
+    /// Full manufacturer name from abbreviation
+    private var manufacturerName: String {
+        guard let item = catalogItem else { return "" }
+        return GlassManufacturers.manufacturers[item.manufacturer.uppercased()]
+            ?? item.manufacturer
+    }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                if let item = catalogItem {
+                    Text(item.name)
+                        .font(.subheadline)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                    HStack(spacing: 4) {
+                        Text(manufacturerName)
+                            .font(.caption2)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(DesignSystem.Colors.backgroundSecondary)
+                            .cornerRadius(4)
+
+                        Text(importedItem.type.capitalized)
+                            .font(.caption2)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                        Text("·")
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                        Text("\(Int(importedItem.quantity)) imported")
+                            .font(.caption2)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                } else {
+                    Text(importedItem.item_stable_id)
+                        .font(.subheadline)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                    Text("\(Int(importedItem.quantity)) \(importedItem.type) imported")
+                        .font(.caption2)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+            }
+
+            Spacer()
+
+            // "Already imported" badge - gray to avoid confusion with selection
+            Text("Imported")
+                .font(.caption.bold())
+                .foregroundColor(DesignSystem.Colors.textPrimary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(DesignSystem.Colors.backgroundSecondary)
+                .cornerRadius(12)
+        }
+        .padding(8)
+        .background(DesignSystem.Colors.backgroundSecondary.opacity(0.3))
         .cornerRadius(6)
     }
 }
@@ -861,8 +1367,8 @@ private struct CandidateRow: View {
 
     private var confidenceColor: Color {
         if candidate.confidence >= 0.9 { return .green }
-        if candidate.confidence >= 0.7 { return .orange }
-        if candidate.confidence >= 0.5 { return .yellow }
+        if candidate.confidence >= 0.7 { return .yellow }
+        if candidate.confidence >= 0.5 { return .orange }
         return .red
     }
 
@@ -870,6 +1376,15 @@ private struct CandidateRow: View {
     private var manufacturerName: String {
         GlassManufacturers.manufacturers[candidate.catalogManufacturer.uppercased()]
             ?? candidate.catalogManufacturer
+    }
+
+    /// Type display with optional subtype (e.g., "Frit (#38)")
+    private var typeDisplay: String {
+        let baseType = candidate.catalogType.capitalized
+        if let subtype = candidate.catalogSubtype {
+            return "\(baseType) (\(subtype))"
+        }
+        return baseType
     }
 
     var body: some View {
@@ -880,17 +1395,17 @@ private struct CandidateRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(candidate.catalogName)
                         .font(.subheadline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
 
                     HStack(spacing: 4) {
                         Text(manufacturerName)
                             .font(.caption2)
                             .padding(.horizontal, 4)
                             .padding(.vertical, 1)
-                            .background(Color.secondary.opacity(0.2))
+                            .background(DesignSystem.Colors.backgroundSecondary)
                             .cornerRadius(4)
 
-                        Text(candidate.catalogType.capitalized)
+                        Text(typeDisplay)
                             .font(.caption2)
                             .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
@@ -901,7 +1416,7 @@ private struct CandidateRow: View {
                 // Confidence badge
                 Text("\(Int(candidate.confidence * 100))%")
                     .font(.caption.bold())
-                    .foregroundColor(.white)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(confidenceColor)
@@ -909,11 +1424,11 @@ private struct CandidateRow: View {
 
                 // Indicate it's selectable
                 Image(systemName: "arrow.up.circle")
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(DesignSystem.Colors.moltenOrange)
                     .font(.caption)
             }
             .padding(8)
-            .background(Color(.systemBackground))
+            .background(DesignSystem.Colors.background)
             .cornerRadius(6)
         }
         .buttonStyle(.plain)
@@ -922,6 +1437,19 @@ private struct CandidateRow: View {
 
 // MARK: - Purchase Import Sheet
 
+/// How to record frit quantity - by jar count or by weight
+enum FritQuantityMode: String, CaseIterable {
+    case jars = "jars"
+    case weight = "weight"
+
+    var displayName: String {
+        switch self {
+        case .jars: return "Jars"
+        case .weight: return "Weight"
+        }
+    }
+}
+
 /// Model for an item being imported with its editable quantity
 private struct ReceiptImportItem: Identifiable {
     let id: Int
@@ -929,15 +1457,33 @@ private struct ReceiptImportItem: Identifiable {
     let catalogStableId: String?
     let catalogType: String?  // Type from match candidate (e.g., "rod", "frit")
     var catalogItem: GlassItemModel?
-    var quantity: String  // String for text field binding
+    var quantity: String  // String for text field binding (jars or rods count)
     var rodEstimate: RodEstimate?  // Full estimate with rod count and price per rod
     var cannotEstimateReason: String?  // Reason why we couldn't estimate
+
+    // Frit-specific fields for weight vs jars choice
+    var fritQuantityMode: FritQuantityMode = .jars
+    var fritWeightValue: String = ""  // e.g., "4" for 4 oz
+    var fritWeightUnit: String = ""   // e.g., "oz", "lb"
+    var hasFritWeightOption: Bool = false  // True if receipt has weight info for frit
 
     var quantityInt: Int? {
         Int(quantity)
     }
 
+    var quantityDouble: Double? {
+        Double(quantity)
+    }
+
     var isValid: Bool {
+        // For frit in weight mode, validate the weight value
+        if hasFritWeightOption && fritQuantityMode == .weight {
+            if let weight = Double(fritWeightValue), weight > 0 {
+                return true
+            }
+            return false
+        }
+        // For everything else, validate integer quantity
         if let qty = quantityInt {
             return qty > 0
         }
@@ -946,9 +1492,23 @@ private struct ReceiptImportItem: Identifiable {
 
     /// Calculate the price per unit based on current quantity
     var pricePerUnit: Double? {
-        guard let total = receiptItem.totalPrice,
-              let qty = quantityInt, qty > 0 else { return nil }
+        guard let total = receiptItem.totalPrice else { return nil }
+
+        if hasFritWeightOption && fritQuantityMode == .weight {
+            guard let weight = Double(fritWeightValue), weight > 0 else { return nil }
+            return total / weight
+        }
+
+        guard let qty = quantityInt, qty > 0 else { return nil }
         return total / Double(qty)
+    }
+
+    /// The unit label for display (e.g., "ea", "oz", "lb")
+    var unitLabel: String {
+        if hasFritWeightOption && fritQuantityMode == .weight {
+            return fritWeightUnit.isEmpty ? "oz" : fritWeightUnit
+        }
+        return "ea"
     }
 }
 
@@ -959,6 +1519,7 @@ private struct PurchaseImportSheet: View {
     let purchase: ReceiptDetail
     let selectedItemIds: Set<Int>
     let selectedMatches: [Int: String]  // item.id -> catalogStableId
+    let clientMatchResults: [Int: ItemMatchResult]  // item.id -> client-side match result
     let catalogService: CatalogService
     let receiptService: ReceiptService
     let onImportComplete: () -> Void
@@ -969,6 +1530,20 @@ private struct PurchaseImportSheet: View {
     @State private var errorMessage: String?
     @State private var importMode: ReceiptImportMode = .addNew
     @State private var importProgress: String = ""
+    @State private var hasProAccess = false
+    @State private var showingPaywall = false
+
+    private var subscriptionService: SubscriptionServiceProtocol {
+        dependencies.subscriptionService
+    }
+
+    private var canImportReceipts: Bool {
+        receiptService.canImportReceipts(hasProAccess: hasProAccess)
+    }
+
+    private var remainingFreeImports: Int? {
+        receiptService.remainingFreeImports(hasProAccess: hasProAccess)
+    }
 
     private var selectedItems: [ReceiptItem] {
         purchase.items.filter { selectedItemIds.contains($0.id) }
@@ -998,10 +1573,12 @@ private struct PurchaseImportSheet: View {
                             .pickerStyle(.segmented)
                         } header: {
                             Text("How to Import")
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         } footer: {
                             Text(importMode == .addNew
                                 ? "Creates new inventory entries for each item."
                                 : "Tries to find and link to existing inventory you already added.")
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
 
                         // Items section
@@ -1011,13 +1588,45 @@ private struct PurchaseImportSheet: View {
                             }
                         } header: {
                             Text("Items to Import")
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         } footer: {
                             if invalidItemCount > 0 {
                                 Label(
                                     "\(invalidItemCount) item\(invalidItemCount == 1 ? " needs" : "s need") a quantity and catalog match before importing",
                                     systemImage: "exclamationmark.triangle"
                                 )
-                                .foregroundColor(.orange)
+                                .foregroundColor(DesignSystem.Colors.accentWarning)
+                            }
+                        }
+
+                        // Import limit warning (for free users)
+                        if !canImportReceipts {
+                            Section {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Label("Import Limit Reached", systemImage: "exclamationmark.triangle.fill")
+                                        .foregroundColor(DesignSystem.Colors.accentWarning)
+                                        .font(.headline)
+                                    Text("You've imported \(ReceiptService.freeImportLimit) receipts on the free tier. Upgrade to Pro for unlimited receipt imports.")
+                                        .font(.subheadline)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                                    Button {
+                                        Task {
+                                            try? await subscriptionService.presentPaywall()
+                                            // Refresh Pro status after paywall
+                                            hasProAccess = await subscriptionService.hasProAccess()
+                                        }
+                                    } label: {
+                                        Text("Upgrade to Pro")
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                }
+                            }
+                        } else if let remaining = remainingFreeImports, remaining <= 3 {
+                            Section {
+                                Label("\(remaining) free import\(remaining == 1 ? "" : "s") remaining", systemImage: "info.circle")
+                                    .foregroundColor(DesignSystem.Colors.accentWarning)
+                                    .font(.subheadline)
                             }
                         }
 
@@ -1044,13 +1653,13 @@ private struct PurchaseImportSheet: View {
                                     Spacer()
                                 }
                             }
-                            .disabled(!allItemsValid || isImporting)
+                            .disabled(!allItemsValid || isImporting || !canImportReceipts)
                         }
 
                         if let error = errorMessage {
                             Section {
                                 Label(error, systemImage: "exclamationmark.triangle")
-                                    .foregroundColor(.red)
+                                    .foregroundColor(DesignSystem.Colors.accentDanger)
                             }
                         }
                     }
@@ -1067,6 +1676,8 @@ private struct PurchaseImportSheet: View {
                 }
             }
             .task {
+                // Check Pro status for import limits
+                hasProAccess = await subscriptionService.hasProAccess()
                 await loadCatalogInfo()
             }
         }
@@ -1078,12 +1689,15 @@ private struct PurchaseImportSheet: View {
         var items: [ReceiptImportItem] = []
 
         for receiptItem in selectedItems {
-            // Determine which catalog item to use (user override or default)
-            let selectedCandidateId = selectedMatches[receiptItem.id]
-            let matchCandidate = receiptItem.matchCandidates?.first(where: { $0.catalogStableId == selectedCandidateId })
-                ?? receiptItem.matchCandidates?.first
+            // Get client-side match candidates for this item
+            let clientCandidates = clientMatchResults[receiptItem.id]?.candidates ?? []
 
-            let catalogStableId = matchCandidate?.catalogStableId ?? receiptItem.catalogStableId
+            // Determine which catalog item to use (user override or default from client matching)
+            let selectedCandidateId = selectedMatches[receiptItem.id]
+            let matchCandidate = clientCandidates.first(where: { $0.catalogStableId == selectedCandidateId })
+                ?? clientCandidates.first
+
+            let catalogStableId = matchCandidate?.catalogStableId
             let catalogType = matchCandidate?.catalogType
 
             var importItem = ReceiptImportItem(
@@ -1101,27 +1715,58 @@ private struct PurchaseImportSheet: View {
                 importItem.catalogItem = try? await catalogService.fetchGlassItem(byStableId: stableId)
             }
 
-            // Try to estimate quantity for rods
+            // Determine quantity based on product type
             if let catalogItem = importItem.catalogItem {
-                let estimate = RodEstimator.estimate(
-                    item: receiptItem,
-                    catalogCOE: catalogItem.coe,
-                    catalogManufacturer: catalogItem.manufacturer
-                )
-
-                if let estimate = estimate {
-                    importItem.rodEstimate = estimate
-                    importItem.quantity = String(estimate.rodCount)
-                } else {
-                    // Couldn't estimate - figure out why
-                    if receiptItem.quantityUnit == nil {
-                        importItem.cannotEstimateReason = "No unit info from receipt"
-                    } else if ReceiptWeightUnit.parse(receiptItem.quantityUnit)?.isWeightBased == false {
-                        importItem.cannotEstimateReason = "Sold by count, not weight"
-                    } else if RodEstimator.dimensions(forCOE: catalogItem.coe) == nil {
-                        importItem.cannotEstimateReason = "Unknown COE (\(catalogItem.coe))"
+                // For frit and powder, check if receipt has weight info
+                let fritTypes = ["frit", "powder"]
+                if let type = catalogType?.lowercased(), fritTypes.contains(type) {
+                    // Check if the receipt has weight-based quantity (e.g., "4 oz")
+                    if let unit = receiptItem.quantityUnit,
+                       let parsedUnit = ReceiptWeightUnit.parse(unit),
+                       parsedUnit.isWeightBased,
+                       let qty = receiptItem.quantity {
+                        // Receipt has weight info - offer jars vs weight choice
+                        importItem.hasFritWeightOption = true
+                        importItem.fritWeightValue = String(format: "%.2g", qty)
+                        importItem.fritWeightUnit = parsedUnit.rawValue.lowercased()
+                        // Default to jars mode, user can switch to weight
+                        importItem.fritQuantityMode = .jars
+                        // For jars mode, default to 1 jar (user must specify)
+                        importItem.quantity = "1"
+                        importItem.cannotEstimateReason = "Receipt shows weight - select jars or weight"
                     } else {
-                        importItem.cannotEstimateReason = "Could not calculate"
+                        // No weight info - use receipt quantity as jar count
+                        let qty = Int(receiptItem.quantity ?? 1)
+                        importItem.quantity = String(max(qty, 1))
+                    }
+                } else if let type = catalogType?.lowercased(), ["sheet", "billet", "bar"].contains(type) {
+                    // Other count-based types - use receipt quantity directly
+                    let qty = Int(receiptItem.quantity ?? 1)
+                    importItem.quantity = String(max(qty, 1))
+                } else {
+                    // For rods/stringers, try to estimate from weight
+                    let estimate = RodEstimator.estimate(
+                        item: receiptItem,
+                        catalogCOE: catalogItem.coe,
+                        catalogManufacturer: catalogItem.manufacturer
+                    )
+
+                    if let estimate = estimate {
+                        importItem.rodEstimate = estimate
+                        importItem.quantity = String(estimate.rodCount)
+                    } else {
+                        // Couldn't estimate - figure out why
+                        if receiptItem.quantityUnit == nil {
+                            importItem.cannotEstimateReason = "No unit info from receipt"
+                        } else if ReceiptWeightUnit.parse(receiptItem.quantityUnit)?.isWeightBased == false {
+                            // Sold by count - use receipt quantity
+                            let qty = Int(receiptItem.quantity ?? 1)
+                            importItem.quantity = String(max(qty, 1))
+                        } else if RodEstimator.dimensions(forCOE: catalogItem.coe) == nil {
+                            importItem.cannotEstimateReason = "Unknown COE (\(catalogItem.coe))"
+                        } else {
+                            importItem.cannotEstimateReason = "Could not calculate"
+                        }
                     }
                 }
             } else {
@@ -1162,16 +1807,54 @@ private struct PurchaseImportSheet: View {
                     total: purchase.totalAmount.map { Decimal($0) }
                 )
 
+                // Build purchase record items with receipt line hashes
+                var purchaseRecordItems: [PurchaseRecordItemModel] = []
+                var itemIdMap: [Int: UUID] = [:]  // Map import item index to purchase item ID
+
+                for (index, importItem) in importItems.enumerated() {
+                    guard let catalogItem = importItem.catalogItem,
+                          let catalogType = importItem.catalogType,
+                          importItem.isValid else { continue }
+
+                    // Get quantity based on frit mode
+                    let quantity: Double
+                    if importItem.hasFritWeightOption && importItem.fritQuantityMode == .weight {
+                        guard let weight = Double(importItem.fritWeightValue), weight > 0 else { continue }
+                        quantity = weight
+                    } else {
+                        guard let qty = importItem.quantityInt, qty > 0 else { continue }
+                        quantity = Double(qty)
+                    }
+
+                    let purchaseItemId = UUID()
+                    itemIdMap[index] = purchaseItemId
+
+                    let purchaseItem = PurchaseRecordItemModel(
+                        id: purchaseItemId,
+                        item_stable_id: catalogItem.stable_id,
+                        type: catalogType.lowercased(),
+                        quantity: quantity,
+                        totalPrice: importItem.receiptItem.totalPrice.map { Decimal($0) },
+                        orderIndex: Int32(index),
+                        unitPrice: importItem.pricePerUnit.map { Decimal($0) },
+                        currency: "USD",
+                        receiptLineHash: importItem.receiptItem.lineHash
+                    )
+                    purchaseRecordItems.append(purchaseItem)
+                }
+
                 // Create or update purchase record
                 let purchaseRecordId: UUID
                 if let existing = existingRecord {
                     purchaseRecordId = existing.id
+                    // TODO: Consider updating existing record with new items
                 } else {
                     importProgress = "Creating purchase record..."
                     let newRecord = PurchaseRecordModel(
                         supplier: purchase.retailerName ?? purchase.retailerId,
                         datePurchased: purchase.orderDate ?? Date(),
                         subtotal: purchase.totalAmount.map { Decimal($0) },
+                        items: purchaseRecordItems,
                         emailReceiptId: purchase.id,
                         senderEmail: purchase.senderEmail,
                         orderNumber: purchase.orderNumber
@@ -1180,22 +1863,48 @@ private struct PurchaseImportSheet: View {
                     purchaseRecordId = created.id
                 }
 
-                // Import each item
+                // Import each item to inventory
                 for (index, importItem) in importItems.enumerated() {
                     guard let catalogItem = importItem.catalogItem,
                           let catalogType = importItem.catalogType,
-                          let quantity = importItem.quantityInt,
-                          quantity > 0 else { continue }
+                          importItem.isValid,
+                          let purchaseItemId = itemIdMap[index] else { continue }
+
+                    // Determine quantity and containerCount based on type and mode
+                    let quantity: Double
+                    let containerCount: Double?
+                    let isFritType = ["frit", "powder"].contains(catalogType.lowercased())
+
+                    if isFritType {
+                        if importItem.hasFritWeightOption && importItem.fritQuantityMode == .weight {
+                            // Weight mode: convert to grams for storage
+                            guard let weight = Double(importItem.fritWeightValue), weight > 0 else { continue }
+                            // Convert from receipt unit to grams
+                            if let unit = ReceiptWeightUnit.parse(importItem.fritWeightUnit),
+                               let grams = unit.toGrams(weight) {
+                                quantity = grams
+                            } else {
+                                // Fallback: assume grams if can't parse unit
+                                quantity = weight
+                            }
+                            containerCount = nil
+                        } else {
+                            // Jars mode: quantity is 0, containerCount is the jar count
+                            guard let jars = importItem.quantityInt, jars > 0 else { continue }
+                            quantity = 0  // No weight, just jars
+                            containerCount = Double(jars)
+                        }
+                    } else {
+                        // Non-frit: use quantity directly
+                        guard let qty = importItem.quantityInt, qty > 0 else { continue }
+                        quantity = Double(qty)
+                        containerCount = nil
+                    }
 
                     importProgress = "Importing item \(index + 1) of \(importItems.count)..."
 
-                    let purchaseItemId = UUID()
                     let unitPrice = importItem.pricePerUnit.map { Decimal($0) }
                     let stableId = catalogItem.stable_id
-
-                    // Create purchase record item
-                    // Note: This is handled by the existing record, but we track items separately
-                    // The purchase record item links the receipt line to inventory
 
                     switch importMode {
                     case .addNew:
@@ -1203,7 +1912,8 @@ private struct PurchaseImportSheet: View {
                         _ = try await importService.importAsNewInventory(
                             itemStableId: stableId,
                             itemType: catalogType.lowercased(),
-                            quantity: Double(quantity),
+                            quantity: quantity,
+                            containerCount: containerCount,
                             purchaseRecordItemId: purchaseItemId,
                             unitPrice: unitPrice,
                             currency: "USD"
@@ -1214,7 +1924,7 @@ private struct PurchaseImportSheet: View {
                         let matchResult = try await importService.findMatchingLocations(
                             itemStableId: stableId,
                             orderDate: purchase.orderDate ?? Date(),
-                            requestedQuantity: Double(quantity)
+                            requestedQuantity: quantity
                         )
 
                         if matchResult.isFullMatch || matchResult.availableQuantity > 0 {
@@ -1232,6 +1942,7 @@ private struct PurchaseImportSheet: View {
                                     itemStableId: stableId,
                                     itemType: catalogType.lowercased(),
                                     quantity: matchResult.shortfall,
+                                    containerCount: containerCount,
                                     purchaseRecordItemId: purchaseItemId,
                                     unitPrice: unitPrice,
                                     currency: "USD"
@@ -1242,7 +1953,8 @@ private struct PurchaseImportSheet: View {
                             _ = try await importService.importAsNewInventory(
                                 itemStableId: stableId,
                                 itemType: catalogType.lowercased(),
-                                quantity: Double(quantity),
+                                quantity: quantity,
+                                containerCount: containerCount,
                                 purchaseRecordItemId: purchaseItemId,
                                 unitPrice: unitPrice,
                                 currency: "USD"
@@ -1294,7 +2006,7 @@ private struct ReceiptImportItemRow: View {
                         .font(.caption2)
                         .padding(.horizontal, 4)
                         .padding(.vertical, 1)
-                        .background(Color.secondary.opacity(0.2))
+                        .background(DesignSystem.Colors.backgroundSecondary)
                         .cornerRadius(4)
 
                     Text("COE \(catalogItem.coe)")
@@ -1304,50 +2016,131 @@ private struct ReceiptImportItemRow: View {
             } else {
                 Text("No catalog match")
                     .font(.caption)
-                    .foregroundColor(.orange)
+                    .foregroundColor(DesignSystem.Colors.accentWarning)
             }
 
-            // Quantity input row
+            // Frit/Powder: Jars vs Weight picker when receipt has weight info
+            if item.hasFritWeightOption {
+                fritQuantitySection
+            } else {
+                // Standard quantity input row
+                standardQuantitySection
+            }
+
+            // Warning if we couldn't estimate (only show when no frit option)
+            if !item.hasFritWeightOption, let reason = item.cannotEstimateReason, item.quantity.isEmpty {
+                Label(reason, systemImage: "info.circle")
+                    .font(.caption)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(DesignSystem.Colors.accentWarning.opacity(0.3))
+                    .cornerRadius(4)
+            }
+
+            // Validation error
+            if !item.isValid {
+                let errorMessage = item.hasFritWeightOption && item.fritQuantityMode == .weight
+                    ? "Enter a valid weight"
+                    : "Enter a valid quantity"
+                Label(errorMessage, systemImage: "exclamationmark.triangle")
+                    .font(.caption)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(DesignSystem.Colors.accentDanger.opacity(0.3))
+                    .cornerRadius(4)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    // MARK: - Frit Quantity Section (Jars vs Weight choice)
+
+    @ViewBuilder
+    private var fritQuantitySection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Info about receipt quantity
+            HStack(spacing: 4) {
+                Image(systemName: "info.circle")
+                    .font(.caption)
+                    .foregroundColor(DesignSystem.Colors.moltenOrange)
+                Text("Receipt shows: \(item.fritWeightValue) \(item.fritWeightUnit)")
+                    .font(.caption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+            }
+
+            // Jars vs Weight picker
+            Picker("Record as", selection: $item.fritQuantityMode) {
+                Text("Jars").tag(FritQuantityMode.jars)
+                Text("Weight (\(item.fritWeightUnit))").tag(FritQuantityMode.weight)
+            }
+            .pickerStyle(.segmented)
+
+            // Input row based on mode
             HStack {
-                Text("Quantity:")
-                    .font(.subheadline)
+                if item.fritQuantityMode == .jars {
+                    Text("Jars:")
+                        .font(.subheadline)
 
-                TextField("0", text: $item.quantity)
-                    .keyboardType(.numberPad)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 80)
+                    TextField("0", text: $item.quantity)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 80)
+                } else {
+                    Text("Weight:")
+                        .font(.subheadline)
 
-                if let estimate = item.rodEstimate {
-                    Text("(estimated \(estimate.rodCount))")
-                        .font(.caption)
+                    TextField("0", text: $item.fritWeightValue)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 80)
+
+                    Text(item.fritWeightUnit)
+                        .font(.subheadline)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
 
                 Spacer()
 
-                // Price per unit (calculated from current quantity)
+                // Price per unit
                 if let pricePerUnit = item.pricePerUnit {
-                    Text("\(pricePerUnit, format: .currency(code: "USD"))/ea")
+                    Text("\(pricePerUnit, format: .currency(code: "USD"))/\(item.unitLabel)")
                         .font(.caption)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
+        }
+    }
 
-            // Warning if we couldn't estimate
-            if let reason = item.cannotEstimateReason, item.quantity.isEmpty {
-                Label(reason, systemImage: "info.circle")
+    // MARK: - Standard Quantity Section (for non-frit items)
+
+    @ViewBuilder
+    private var standardQuantitySection: some View {
+        HStack {
+            Text("Quantity:")
+                .font(.subheadline)
+
+            TextField("0", text: $item.quantity)
+                .keyboardType(.numberPad)
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 80)
+
+            if let estimate = item.rodEstimate {
+                Text("(estimated \(estimate.rodCount))")
                     .font(.caption)
-                    .foregroundColor(.orange)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
 
-            // Validation error
-            if !item.quantity.isEmpty && !item.isValid {
-                Label("Enter a valid quantity", systemImage: "exclamationmark.triangle")
+            Spacer()
+
+            // Price per unit (calculated from current quantity)
+            if let pricePerUnit = item.pricePerUnit {
+                Text("\(pricePerUnit, format: .currency(code: "USD"))/ea")
                     .font(.caption)
-                    .foregroundColor(.red)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         }
-        .padding(.vertical, 4)
     }
 }
 

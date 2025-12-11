@@ -12,8 +12,36 @@ import RevenueCat
 import CloudKit
 import OSLog
 
+/// App delegate for RevenueCat configuration
+/// Using UIApplicationDelegate ensures RevenueCat is configured AFTER the run loop starts,
+/// avoiding deadlocks that occur when configuring in SwiftUI App.init()
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        print("🚀 [AppDelegate] didFinishLaunchingWithOptions called")
+
+        // Configure RevenueCat here - this runs after the main run loop starts,
+        // preventing deadlocks from dispatchOnMainActor calls during SDK initialization
+        Purchases.configure(
+            with: Configuration.Builder(withAPIKey: "appl_FrYVVHssDBIlhEAZreHfEgwBJUH")
+                .with(entitlementVerificationMode: .informational)
+                .build()
+        )
+        Purchases.shared.delegate = RevenueCatDelegateHandler.shared
+
+        // Mark the RevenueCat guard as initialized
+        Task {
+            await RevenueCatGuard.shared.markInitialized()
+        }
+
+        return true
+    }
+}
+
 @main
 struct MoltenApp: App {
+
+    // MARK: - App Delegate
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     // MARK: - Dependency Injection
 
@@ -61,21 +89,18 @@ struct MoltenApp: App {
             ))
         } else {
             // Production mode - real Core Data (will init in background during launch screen)
+            print("🚀 [MoltenApp] init() - production mode, creating SubscriptionManager")
             let prodDeps = AppDependencies.shared
             _dependencies = State(initialValue: prodDeps)
 
-            // Configure RevenueCat FIRST, before creating SubscriptionManager
-            // This ensures the SDK is ready when SubscriptionManager tries to use it
-            Purchases.configure(
-                with: Configuration.Builder(withAPIKey: "appl_FrYVVHssDBIlhEAZreHfEgwBJUH")
-                    .with(entitlementVerificationMode: .informational)
-                    .build()
-            )
-            Purchases.shared.delegate = RevenueCatDelegateHandler.shared
-
-            // Now create SubscriptionManager with real RevenueCat service
-            // Only create ONE instance to avoid race conditions
-            _subscriptionManager = State(initialValue: SubscriptionManager(entitlementService: prodDeps.entitlementService))
+            // Create SubscriptionManager with real RevenueCat service
+            // NOTE: didFinishLaunchingWithOptions runs AFTER this init(), so RevenueCat
+            // won't be configured yet. SubscriptionManager has a 500ms delay before
+            // checking subscription, and RevenueCatGuard has a 1s startup delay.
+            _subscriptionManager = State(initialValue: SubscriptionManager(
+                entitlementService: prodDeps.entitlementService,
+                subscriptionService: RevenueCatSubscriptionService()
+            ))
         }
 
         // Note: AppDependencies automatically detects test environment

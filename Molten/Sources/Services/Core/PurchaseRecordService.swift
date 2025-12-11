@@ -43,11 +43,6 @@ actor PurchaseRecordService {
         return try await repository.updateRecord(record)
     }
 
-    /// Delete a purchase record
-    func deleteRecord(id: UUID) async throws {
-        try await repository.deleteRecord(id: id)
-    }
-
     // MARK: - Search & Filter Operations
 
     /// Search purchase records by text

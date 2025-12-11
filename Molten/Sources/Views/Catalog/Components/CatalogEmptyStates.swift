@@ -73,7 +73,7 @@ struct CatalogSearchEmptyState: View {
 
             // Contact suggestion
             VStack(spacing: DesignSystem.Spacing.xs) {
-                Text("Can't find what you're looking for?")
+                Text("Are we missing some glass that you think should be here?")
                     .font(DesignSystem.Typography.caption)
                     .foregroundColor(DesignSystem.Colors.textSecondary)
 

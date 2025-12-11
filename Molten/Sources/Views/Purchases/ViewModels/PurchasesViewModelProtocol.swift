@@ -66,8 +66,4 @@ protocol PurchasesViewModelProtocol {
     /// Clear search filter
     func clearSearch()
 
-    // MARK: - CRUD Operations
-
-    /// Delete purchase records by IDs
-    func deletePurchases(ids: [UUID]) async
 }

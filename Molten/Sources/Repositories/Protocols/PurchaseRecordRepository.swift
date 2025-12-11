@@ -27,9 +27,6 @@ nonisolated protocol PurchaseRecordRepository: Sendable {
     /// Update an existing purchase record
     func updateRecord(_ record: PurchaseRecordModel) async throws -> PurchaseRecordModel
 
-    /// Delete a purchase record (cascades to items)
-    func deleteRecord(id: UUID) async throws
-
     // MARK: - Search & Filter
 
     /// Search records by supplier name or notes
@@ -65,6 +62,12 @@ nonisolated protocol PurchaseRecordRepository: Sendable {
     /// Find purchase records matching order number, supplier, and date (same day)
     func fetchRecords(byOrderNumber orderNumber: String, supplier: String, on date: Date) async throws -> [PurchaseRecordModel]
 
+    /// Find purchase records matching order number only (any date) - for duplicate detection
+    func fetchRecords(byOrderNumber orderNumber: String) async throws -> [PurchaseRecordModel]
+
     /// Find purchase records matching sender email and date (same day)
     func fetchRecords(bySenderEmail senderEmail: String, on date: Date) async throws -> [PurchaseRecordModel]
+
+    /// Find recent purchase records from a supplier (within date range)
+    func fetchRecentRecords(bySupplier supplier: String, within days: Int) async throws -> [PurchaseRecordModel]
 }

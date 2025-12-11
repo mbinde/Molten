@@ -58,7 +58,6 @@ class MockPurchasesViewModel: PurchasesViewModelProtocol {
     var refreshPurchasesCalled = false
     var searchPurchasesCalled = false
     var clearSearchCalled = false
-    var deletePurchasesCalled = false
 
     // MARK: - Initialization
 
@@ -148,15 +147,6 @@ class MockPurchasesViewModel: PurchasesViewModelProtocol {
         clearSearchCalled = true
         searchText = ""
         filteredPurchases = purchases
-    }
-
-    // MARK: - CRUD Operations
-
-    func deletePurchases(ids: [UUID]) async {
-        deletePurchasesCalled = true
-        // Mock implementation - remove from local arrays
-        purchases.removeAll { ids.contains($0.id) }
-        filteredPurchases.removeAll { ids.contains($0.id) }
     }
 
     // MARK: - Mock Data Helpers

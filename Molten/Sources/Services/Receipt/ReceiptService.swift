@@ -22,15 +22,20 @@ open class ReceiptService: ObservableObject {
     /// Keychain identifier for receipt user's private key
     private static let receiptKeyIdentifier = "com.molten.receipts.key"
 
+    /// Free tier limit for imported receipts
+    public static let freeImportLimit = 10
+
     // MARK: - Published Properties
 
     @Published public private(set) var isSetUp: Bool = false
     @Published public private(set) var pendingReceiptCount: Int = 0
+    @Published public private(set) var importedReceiptCount: Int = 0
     @Published public private(set) var receiptEmail: String?
     @Published public private(set) var isSyncing: Bool = false
     @Published public private(set) var lastSyncDate: Date?
     @Published public private(set) var identifierType: ReceiptIdentifierType?
     @Published public private(set) var isPendingEmailVerification: Bool = false
+    @Published public private(set) var isRecoveryPending: Bool = false
 
     // MARK: - Properties
 
@@ -58,10 +63,12 @@ open class ReceiptService: ObservableObject {
     private func updatePublishedState() {
         isSetUp = preferences.isSetUp
         pendingReceiptCount = preferences.pendingReceiptCount
+        importedReceiptCount = preferences.importedReceiptCount
         receiptEmail = preferences.receiptEmail
         lastSyncDate = preferences.lastSyncTimestamp
         identifierType = preferences.identifierType
         isPendingEmailVerification = preferences.isPendingEmailVerification
+        isRecoveryPending = preferences.isRecoveryPending
     }
 
     /// Get the user ID (for display to user)
@@ -72,6 +79,25 @@ open class ReceiptService: ObservableObject {
     /// Get the plus address (for display to user)
     var plusAddress: String? {
         preferences.plusAddress
+    }
+
+    /// Returns remaining free imports (for non-Pro users)
+    /// Returns nil for Pro users (unlimited)
+    func remainingFreeImports(hasProAccess: Bool) -> Int? {
+        if hasProAccess {
+            return nil // Unlimited
+        }
+        return max(0, Self.freeImportLimit - importedReceiptCount)
+    }
+
+    /// Check if the user can import more receipts
+    /// - Parameter hasProAccess: Whether user has Pro subscription
+    /// - Returns: true if user can import, false if they've hit the free limit
+    func canImportReceipts(hasProAccess: Bool) -> Bool {
+        if hasProAccess {
+            return true
+        }
+        return importedReceiptCount < Self.freeImportLimit
     }
 
     // MARK: - Setup
@@ -364,11 +390,42 @@ open class ReceiptService: ObservableObject {
             ownershipSignature: ownershipSignature
         )
 
-        // Update pending count
+        // Update counts
         if preferences.pendingReceiptCount > 0 {
             preferences.pendingReceiptCount -= 1
-            updatePublishedState()
         }
+        // Increment imported count (cumulative, never decreases)
+        preferences.importedReceiptCount += 1
+        updatePublishedState()
+    }
+
+    /// Delete a receipt (for dismissing duplicates)
+    /// - Parameter receiptId: The receipt ID
+    open func deleteReceipt(receiptId: String) async throws {
+        guard let userId = preferences.userId else {
+            throw ReceiptAPIError.unauthorized
+        }
+
+        // Get private key for signing
+        let privateKey = try keyPairManager.retrievePrivateKey(identifier: Self.receiptKeyIdentifier)
+
+        // Create ownership signature
+        let ownershipSignature = try keyPairManager.sign(
+            data: userId.data(using: .utf8)!,
+            privateKey: privateKey
+        )
+
+        try await apiClient.deleteReceipt(
+            receiptId: receiptId,
+            userId: userId,
+            ownershipSignature: ownershipSignature
+        )
+
+        // Update counts - receipt is gone, so decrement pending
+        if preferences.pendingReceiptCount > 0 {
+            preferences.pendingReceiptCount -= 1
+        }
+        updatePublishedState()
     }
 
     /// Get the original email body for a receipt
@@ -428,8 +485,10 @@ open class ReceiptService: ObservableObject {
             throw error
         }
 
-        // Store the email locally and set pending verification state
-        // This triggers isPendingEmailVerification = true so UI shows verification waiting screen
+        // Store the email locally and set pending recovery state
+        // Clear userId so isRecoveryPending returns true - we'll get a new userId when recovery completes
+        // This is critical because the old userId's signature won't work with our new private key
+        preferences.userId = nil
         preferences.registeredEmail = email.lowercased()
         preferences.identifierType = .email
         preferences.emailVerified = false
@@ -460,6 +519,35 @@ open class ReceiptService: ObservableObject {
         Task {
             try? await syncReceipts()
         }
+    }
+
+    /// Check if account recovery has completed by polling the server
+    /// Used when user is in recovery pending state to detect when they clicked the email link
+    /// - Returns: true if recovery completed, false if still pending
+    @discardableResult
+    open func checkRecoveryStatus() async throws -> Bool {
+        guard let email = preferences.registeredEmail else {
+            return false
+        }
+
+        // Get the private key and derive the public key from it
+        let privateKeyData = try keyPairManager.retrievePrivateKey(identifier: Self.receiptKeyIdentifier)
+        let privateKey = try Curve25519.Signing.PrivateKey(rawRepresentation: privateKeyData)
+        let publicKey = privateKey.publicKey.rawRepresentation
+
+        // Check with server if recovery completed
+        let response = try await apiClient.checkRecoveryStatus(
+            email: email,
+            publicKey: publicKey
+        )
+
+        if response.recovered, let userId = response.userId {
+            // Recovery completed! Update local state
+            completeAccountRecovery(userId: userId)
+            return true
+        }
+
+        return false
     }
 
     // MARK: - Helpers

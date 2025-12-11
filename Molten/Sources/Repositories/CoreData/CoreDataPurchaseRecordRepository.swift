@@ -95,21 +95,6 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
         }
     }
 
-    func deleteRecord(id: UUID) async throws {
-        try await self.context.perform {
-            let request = PurchaseRecord.fetchRequest()
-            request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
-            request.fetchLimit = 1
-
-            guard let entity = try self.context.fetch(request).first else {
-                throw PurchaseRecordRepositoryError.recordNotFound(id.uuidString)
-            }
-
-            self.context.delete(entity)
-            try CoreDataErrorHandler.save(context: self.context)
-        }
-    }
-
     // MARK: - Search & Filter
 
     func searchRecords(text: String) async throws -> [PurchaseRecordModel] {
@@ -254,7 +239,8 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
             totalPrice: (entity.value(forKey: "total_price") as? NSDecimalNumber) as Decimal?,
             orderIndex: Int32((entity.value(forKey: "order_index") as? Int16) ?? 0),
             unitPrice: (entity.value(forKey: "unit_price") as? NSDecimalNumber) as Decimal?,
-            currency: entity.value(forKey: "currency") as? String
+            currency: entity.value(forKey: "currency") as? String,
+            receiptLineHash: entity.value(forKey: "receipt_line_hash") as? String
         )
     }
 
@@ -312,6 +298,36 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
         }
     }
 
+    func fetchRecords(byOrderNumber orderNumber: String) async throws -> [PurchaseRecordModel] {
+        return try await self.context.perform {
+            let request = PurchaseRecord.fetchRequest()
+            request.predicate = NSPredicate(format: "order_number == %@", orderNumber)
+            request.sortDescriptors = [NSSortDescriptor(key: "date_purchased", ascending: false)]
+            request.relationshipKeyPathsForPrefetching = ["purchaserecorditem"]
+
+            let entities = try self.context.fetch(request)
+            return entities.compactMap { self.mapToModel($0) }
+        }
+    }
+
+    func fetchRecentRecords(bySupplier supplier: String, within days: Int) async throws -> [PurchaseRecordModel] {
+        return try await self.context.perform {
+            let calendar = Calendar.current
+            let cutoffDate = calendar.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+
+            let request = PurchaseRecord.fetchRequest()
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                NSPredicate(format: "supplier ==[cd] %@", supplier),
+                NSPredicate(format: "date_purchased >= %@", cutoffDate as NSDate)
+            ])
+            request.sortDescriptors = [NSSortDescriptor(key: "date_purchased", ascending: false)]
+            request.relationshipKeyPathsForPrefetching = ["purchaserecorditem"]
+
+            let entities = try self.context.fetch(request)
+            return entities.compactMap { self.mapToModel($0) }
+        }
+    }
+
     // MARK: - Mapping Helpers
 
     /// Update Core Data entity using KVC to avoid MainActor isolation issues
@@ -350,6 +366,7 @@ class CoreDataPurchaseRecordRepository: @unchecked Sendable, PurchaseRecordRepos
             itemEntity.setValue(itemModel.totalPrice as NSDecimalNumber?, forKey: "total_price")
             itemEntity.setValue(itemModel.unitPrice as NSDecimalNumber?, forKey: "unit_price")
             itemEntity.setValue(itemModel.currency, forKey: "currency")
+            itemEntity.setValue(itemModel.receiptLineHash, forKey: "receipt_line_hash")
             // Preserve order by using array index
             itemEntity.setValue(Int16(index), forKey: "order_index")
             itemEntity.setValue(entity, forKey: "purchaserecord")

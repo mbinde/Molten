@@ -19,6 +19,30 @@ enum ReceiptImportMode {
     case matchExisting
 }
 
+/// Confidence level for potential duplicate detection
+enum DuplicateConfidence: Comparable {
+    case high      // Same order number (any date) - very likely duplicate
+    case medium    // Same supplier + significant item overlap (50%+)
+    case low       // Same supplier + some item overlap or same supplier + recent
+
+    var displayName: String {
+        switch self {
+        case .high: return "Likely duplicate"
+        case .medium: return "Possible duplicate"
+        case .low: return "Similar purchase"
+        }
+    }
+}
+
+/// A potential duplicate purchase record with confidence and reasons
+struct PotentialDuplicate: Identifiable {
+    var id: UUID { existingRecord.id }
+    let existingRecord: PurchaseRecordModel
+    let confidence: DuplicateConfidence
+    let reasons: [String]
+    let itemOverlapPercentage: Double?  // nil if not calculated
+}
+
 /// Result of attempting to match existing inventory
 struct InventoryMatchResult: Sendable {
     /// Total quantity available to match
@@ -123,6 +147,108 @@ class ReceiptImportService {
         }
 
         return nil
+    }
+
+    /// Find potential duplicate purchases (for user warning, not automatic deduplication)
+    /// This finds records that might be related to the same order, even if not exact matches
+    func findPotentialDuplicates(
+        orderNumber: String?,
+        supplier: String,
+        receiptItems: [ReceiptItem],
+        excludingRecordId: UUID? = nil
+    ) async throws -> [PotentialDuplicate] {
+        var candidates: [PotentialDuplicate] = []
+        var seenIds = Set<UUID>()
+
+        // Exclude the already-matched exact duplicate if provided
+        if let excludeId = excludingRecordId {
+            seenIds.insert(excludeId)
+        }
+
+        // Strategy 1: Same order number (any date) - HIGH confidence
+        if let orderNumber = orderNumber, !orderNumber.isEmpty {
+            let orderMatches = try await purchaseRecordRepository.fetchRecords(byOrderNumber: orderNumber)
+            for record in orderMatches where !seenIds.contains(record.id) {
+                seenIds.insert(record.id)
+                var reasons = ["Same order number: \(orderNumber)"]
+
+                // Check item overlap for extra context
+                let overlap = calculateItemOverlap(receiptItems: receiptItems, existingRecord: record)
+                if let overlap = overlap, overlap > 0 {
+                    reasons.append("\(Int(overlap * 100))% of items match")
+                }
+
+                candidates.append(PotentialDuplicate(
+                    existingRecord: record,
+                    confidence: .high,
+                    reasons: reasons,
+                    itemOverlapPercentage: overlap
+                ))
+            }
+        }
+
+        // Strategy 2: Same supplier + recent (within 30 days) + item overlap
+        let recentFromSupplier = try await purchaseRecordRepository.fetchRecentRecords(bySupplier: supplier, within: 30)
+        for record in recentFromSupplier where !seenIds.contains(record.id) {
+            let overlap = calculateItemOverlap(receiptItems: receiptItems, existingRecord: record)
+
+            // Require at least some item overlap to flag as potential duplicate
+            guard let overlap = overlap, overlap > 0.3 else { continue }
+
+            seenIds.insert(record.id)
+
+            let confidence: DuplicateConfidence = overlap >= 0.5 ? .medium : .low
+            var reasons = ["\(Int(overlap * 100))% of items match"]
+
+            // Add date context
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            reasons.append("From \(supplier) on \(formatter.string(from: record.datePurchased))")
+
+            candidates.append(PotentialDuplicate(
+                existingRecord: record,
+                confidence: confidence,
+                reasons: reasons,
+                itemOverlapPercentage: overlap
+            ))
+        }
+
+        // Sort by confidence (high first), then by date (most recent first)
+        return candidates.sorted { a, b in
+            if a.confidence != b.confidence {
+                return a.confidence > b.confidence
+            }
+            return a.existingRecord.datePurchased > b.existingRecord.datePurchased
+        }
+    }
+
+    /// Calculate what percentage of receipt items match items in an existing record
+    /// Returns nil if we can't calculate (no items with hashes)
+    private func calculateItemOverlap(receiptItems: [ReceiptItem], existingRecord: PurchaseRecordModel) -> Double? {
+        guard !receiptItems.isEmpty else { return nil }
+        guard !existingRecord.items.isEmpty else { return nil }
+
+        // Get hashes from existing record items
+        let existingHashes = Set(existingRecord.items.compactMap { $0.receiptLineHash })
+
+        // Also match by item_stable_id in case hashes aren't available
+        let existingStableIds = Set(existingRecord.items.map { $0.item_stable_id })
+
+        var matchCount = 0
+        for receiptItem in receiptItems {
+            // Check hash match
+            if existingHashes.contains(receiptItem.lineHash) {
+                matchCount += 1
+                continue
+            }
+
+            // Check stable_id match (if the receipt item has a catalog match)
+            if let stableId = receiptItem.catalogStableId, existingStableIds.contains(stableId) {
+                matchCount += 1
+            }
+        }
+
+        return Double(matchCount) / Double(receiptItems.count)
     }
 
     // MARK: - StorageLocation Matching
@@ -263,10 +389,20 @@ class ReceiptImportService {
     // MARK: - Import Operations
 
     /// Import a single receipt item as new inventory
+    /// - Parameters:
+    ///   - itemStableId: The catalog item's stable ID
+    ///   - itemType: The inventory type (e.g., "rod", "frit")
+    ///   - quantity: The quantity (weight in grams for weight-based types, count for others)
+    ///   - containerCount: Optional number of containers/jars (for frit tracked by jars)
+    ///   - purchaseRecordItemId: ID of the purchase record item
+    ///   - unitPrice: Price per unit
+    ///   - currency: Currency code
+    ///   - locationName: Storage location name
     func importAsNewInventory(
         itemStableId: String,
         itemType: String,
         quantity: Double,
+        containerCount: Double? = nil,
         purchaseRecordItemId: UUID,
         unitPrice: Decimal?,
         currency: String?,
@@ -311,6 +447,7 @@ class ReceiptImportService {
             inventoryId: inv.id,
             locationName: locationName,
             quantity: quantity,
+            containerCount: containerCount,
             dateAdded: Date(),
             dateModified: Date(),
             purchaseRecordItemId: purchaseRecordItemId,

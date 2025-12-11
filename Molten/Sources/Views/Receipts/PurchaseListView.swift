@@ -11,12 +11,17 @@ import SwiftUI
 struct PurchaseListView: View {
     @Environment(\.appDependencies) private var dependencies
     @Binding var showingHelp: Bool
-    @State private var purchases: [ReceiptSummary] = []
+
+    // Server receipts (unacknowledged - the "inbox")
+    @State private var newReceipts: [ReceiptSummary] = []
+
+    // Local purchases (from Core Data - already imported)
+    @State private var importedPurchases: [PurchaseRecordModel] = []
+
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var isKeyNotFoundError = false
-    @State private var showImported = false
-    @State private var totalCount = 0
+    @State private var hasAnyPurchases = false  // Track if user has ANY purchases (new or imported)
     @State private var showCopiedFeedback = false
     @State private var showingRecoverySheet = false
     @State private var recoveryEmail: String = ""
@@ -28,12 +33,49 @@ struct PurchaseListView: View {
     @State private var isCheckingVerification = false
     @State private var isResendingVerification = false
     @State private var verificationMessage: String?
+    @State private var isCheckingForOrders = false
+
+    // Auto-refresh timer
+    @State private var refreshTask: Task<Void, Never>?
+    private let refreshInterval: TimeInterval = 60  // seconds
 
     private var receiptService: ReceiptService {
         dependencies.receiptService
     }
 
-    private let forwardingAddress = "receipts@moltenglass.app"
+    private var purchaseRecordRepository: PurchaseRecordRepository {
+        dependencies.purchaseRecordRepository
+    }
+
+    private let forwardingAddress = "purchases@moltenglass.app"
+
+    private var forwardingEmailAddress: String {
+        if receiptService.identifierType == .plusAddress, let email = receiptService.receiptEmail {
+            return email
+        }
+        return forwardingAddress
+    }
+
+    private var forwardingAddressFooter: String {
+        if receiptService.identifierType == .email, let email = receiptService.receiptEmail {
+            return "Forward order confirmations from \(email)"
+        }
+        return "This email address is unique to you."
+    }
+
+    /// New receipts sorted by date (most recent first)
+    private var sortedNewReceipts: [ReceiptSummary] {
+        newReceipts.sorted { first, second in
+            let date1 = first.orderDate ?? first.receivedAt
+            let date2 = second.orderDate ?? second.receivedAt
+            return date1 > date2
+        }
+    }
+
+    /// Imported purchases sorted by date (most recent first)
+    private var sortedImportedPurchases: [PurchaseRecordModel] {
+        importedPurchases.sorted { $0.datePurchased > $1.datePurchased }
+    }
 
     var body: some View {
         Group {
@@ -119,30 +161,72 @@ struct PurchaseListView: View {
                 } message: {
                     Text("Check your inbox and click the recovery link to restore access to your account.")
                 }
-            } else if purchases.isEmpty {
+            } else if !hasAnyPurchases {
+                // Only show onboarding when user has NO purchases at all
                 emptyStateView
+                    .refreshable {
+                        await refreshPurchases()
+                    }
             } else {
                 List {
-                    ForEach(purchases) { purchase in
-                        NavigationLink {
-                            PurchaseDetailView(purchaseId: purchase.id)
-                        } label: {
-                            PurchaseRow(purchase: purchase)
+                    // New receipts section (from server - unacknowledged)
+                    if !sortedNewReceipts.isEmpty {
+                        Section {
+                            ForEach(sortedNewReceipts) { receipt in
+                                NavigationLink {
+                                    PurchaseDetailView(purchaseId: receipt.id)
+                                } label: {
+                                    PurchaseRow(purchase: receipt)
+                                }
+                            }
+                        } header: {
+                            HStack {
+                                Text("New")
+                                Spacer()
+                                Text("\(sortedNewReceipts.count)")
+                                    .font(.caption)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                            }
                         }
                     }
+
+                    // Imported purchases section (from local Core Data)
+                    if !sortedImportedPurchases.isEmpty {
+                        Section {
+                            ForEach(sortedImportedPurchases) { purchase in
+                                NavigationLink {
+                                    PurchaseRecordDetailView(purchaseRecord: purchase)
+                                } label: {
+                                    ImportedPurchaseRow(purchase: purchase)
+                                }
+                            }
+                        } header: {
+                            HStack {
+                                Text("Imported")
+                                Spacer()
+                                Text("\(sortedImportedPurchases.count)")
+                                    .font(.caption)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                            }
+                        }
+                    }
+                }
+                .refreshable {
+                    await refreshPurchases()
                 }
             }
         }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    Toggle("Show Imported", isOn: $showImported)
                     Button {
                         loadPurchases()
                     } label: {
                         Label("Refresh", systemImage: "arrow.clockwise")
                     }
+
                     Divider()
+
                     Button {
                         showingHelp = true
                     } label: {
@@ -153,14 +237,56 @@ struct PurchaseListView: View {
                 }
             }
         }
-        .onChange(of: showImported) { _, _ in
-            loadPurchases()
-        }
         .onAppear {
             loadPurchases()
+            startAutoRefresh()
         }
-        .refreshable {
-            await refreshPurchases()
+        .onDisappear {
+            stopAutoRefresh()
+        }
+    }
+
+    // MARK: - Auto-Refresh
+
+    private func startAutoRefresh() {
+        stopAutoRefresh()  // Cancel any existing task
+        refreshTask = Task { @MainActor in
+            // Check immediately on tab open
+            await silentRefresh()
+            // Then check every 60 seconds
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(refreshInterval))
+                guard !Task.isCancelled else { break }
+                await silentRefresh()
+            }
+        }
+    }
+
+    private func stopAutoRefresh() {
+        refreshTask?.cancel()
+        refreshTask = nil
+    }
+
+    /// Refresh purchases without showing loading indicator
+    private func silentRefresh() async {
+        do {
+            // Sync to get new receipts from server
+            _ = try await receiptService.syncReceipts()
+
+            // Fetch only unacknowledged receipts from server (the "inbox")
+            let response = try await receiptService.listReceipts(
+                limit: 100,
+                offset: 0,
+                includeAcknowledged: false
+            )
+            newReceipts = response.receipts
+
+            // Fetch imported purchases from local Core Data
+            importedPurchases = try await purchaseRecordRepository.getAllRecords()
+
+            hasAnyPurchases = !newReceipts.isEmpty || !importedPurchases.isEmpty
+        } catch {
+            // Silent refresh - don't show errors for background polling
         }
     }
 
@@ -171,13 +297,18 @@ struct PurchaseListView: View {
 
         Task { @MainActor in
             do {
+                // Fetch only unacknowledged receipts from server (the "inbox")
                 let response = try await receiptService.listReceipts(
                     limit: 100,
                     offset: 0,
-                    includeAcknowledged: showImported
+                    includeAcknowledged: false
                 )
-                purchases = response.receipts
-                totalCount = response.total
+                newReceipts = response.receipts
+
+                // Fetch imported purchases from local Core Data
+                importedPurchases = try await purchaseRecordRepository.getAllRecords()
+
+                hasAnyPurchases = !newReceipts.isEmpty || !importedPurchases.isEmpty
             } catch KeyPairError.keyNotFound {
                 // Customize message based on identifier type
                 errorMessage = keyNotFoundMessage
@@ -245,19 +376,51 @@ struct PurchaseListView: View {
 
     private func refreshPurchases() async {
         do {
-            // First sync to get new purchases from server
+            // First sync to get new receipts from server
             _ = try await receiptService.syncReceipts()
 
-            // Then fetch the list
+            // Fetch only unacknowledged receipts from server
             let response = try await receiptService.listReceipts(
                 limit: 100,
                 offset: 0,
-                includeAcknowledged: showImported
+                includeAcknowledged: false
             )
-            purchases = response.receipts
-            totalCount = response.total
+            newReceipts = response.receipts
+
+            // Fetch imported purchases from local Core Data
+            importedPurchases = try await purchaseRecordRepository.getAllRecords()
+
+            hasAnyPurchases = !newReceipts.isEmpty || !importedPurchases.isEmpty
         } catch {
             errorMessage = error.userFacingMessage
+        }
+    }
+
+    private func checkForOrders() {
+        isCheckingForOrders = true
+        errorMessage = nil
+
+        Task { @MainActor in
+            do {
+                // Sync to get new receipts from server
+                _ = try await receiptService.syncReceipts()
+
+                // Fetch only unacknowledged receipts from server
+                let response = try await receiptService.listReceipts(
+                    limit: 100,
+                    offset: 0,
+                    includeAcknowledged: false
+                )
+                newReceipts = response.receipts
+
+                // Fetch imported purchases from local Core Data
+                importedPurchases = try await purchaseRecordRepository.getAllRecords()
+
+                hasAnyPurchases = !newReceipts.isEmpty || !importedPurchases.isEmpty
+            } catch {
+                errorMessage = error.userFacingMessage
+            }
+            isCheckingForOrders = false
         }
     }
 
@@ -284,105 +447,23 @@ struct PurchaseListView: View {
             }
 
             // Forwarding address section
-            Section {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Forward orders to:")
-                        .font(.caption)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
+            ForwardingAddressCard(
+                email: forwardingEmailAddress,
+                footerText: forwardingAddressFooter,
+                onCopy: copyEmail
+            )
 
-                    Button {
-                        copyEmail()
-                    } label: {
-                        HStack {
-                            if receiptService.identifierType == .plusAddress, let email = receiptService.receiptEmail {
-                                Text(email)
-                                    .font(.system(.body, design: .monospaced))
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.primary)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.7)
-                            } else {
-                                Text(forwardingAddress)
-                                    .font(.system(.body, design: .monospaced))
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.primary)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.8)
-                            }
-
-                            Spacer()
-
-                            Image(systemName: "doc.on.doc")
-                                .foregroundColor(.accentColor)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-            } footer: {
-                if receiptService.identifierType == .email, let email = receiptService.receiptEmail {
-                    Text("Forward order confirmations from \(email)")
-                } else {
-                    Text("This email address is unique to you.")
-                }
-            }
+            // Check for orders button
+            CheckForOrdersButton(isLoading: isCheckingForOrders, action: checkForOrders)
 
             // How it works section
-            Section("Next Steps") {
-                SetupStepRow(
-                    number: "1",
-                    title: "Forward an order confirmation",
-                    description: "Send your glass order emails to the address above"
-                )
-
-                SetupStepRow(
-                    number: "2",
-                    title: "We'll parse your order",
-                    description: "Items, prices, and order details are extracted automatically"
-                )
-
-                SetupStepRow(
-                    number: "3",
-                    title: "Review and import",
-                    description: "Add items to your inventory with one tap"
-                )
-            }
+            PurchaseImportSetupSteps()
 
             // Supported retailers section
-            Section {
-                Text("ABR Imagery, Bullseye Glass, Glass Alchemy, Momka's Glass, Mountain Glass Arts, Frantz Art Glass, and more.")
-                    .font(.caption)
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-            } header: {
-                Text("Supported Retailers")
-            }
-
-            // Show imported toggle if viewing pending
-            if !showImported {
-                Section {
-                    Button {
-                        showImported = true
-                        loadPurchases()
-                    } label: {
-                        Label("Show Imported Purchases", systemImage: "checkmark.circle")
-                    }
-                }
-            }
+            SupportedRetailersSection()
         }
         .overlay(alignment: .bottom) {
-            if showCopiedFeedback {
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Email address copied")
-                        .font(.subheadline.weight(.medium))
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-                .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
-                .padding(.bottom, 20)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
+            CopiedFeedbackOverlay(isVisible: showCopiedFeedback)
         }
         .animation(.spring(response: 0.3), value: showCopiedFeedback)
     }
@@ -411,75 +492,137 @@ struct PurchaseListView: View {
     @ViewBuilder
     private var pendingVerificationView: some View {
         List {
-            Section {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Image(systemName: "envelope.badge")
-                            .foregroundColor(.orange)
-                        Text("Verification Pending")
-                            .font(.headline)
-                    }
+            if receiptService.isRecoveryPending {
+                // Account Recovery - user doesn't have credentials yet, must click email link
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "arrow.counterclockwise")
+                                .foregroundColor(.orange)
+                            Text("Recovery Pending")
+                                .font(.headline)
+                        }
 
-                    Text("We sent a verification link to \(receiptService.receiptEmail ?? "your email"). Please check your inbox and click the link to complete recovery.")
-                        .font(.subheadline)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-
-                    Text("This may take a few minutes to arrive. Check your spam folder if you don't see it.")
-                        .font(.caption)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                }
-                .padding(.vertical, 4)
-
-                if let message = verificationMessage {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                        Text(message)
+                        Text("We sent a recovery link to \(receiptService.receiptEmail ?? "your email"). Please check your inbox and click the link to restore access.")
                             .font(.subheadline)
                             .foregroundColor(DesignSystem.Colors.textSecondary)
-                    }
-                }
 
-                Button {
-                    checkVerificationStatus()
-                } label: {
-                    HStack {
-                        Image(systemName: "arrow.triangle.2.circlepath")
-                        Text("Check Verification Status")
-                        if isCheckingVerification {
-                            Spacer()
-                            ProgressView()
-                                .progressViewStyle(.circular)
+                        Text("This may take a few minutes to arrive. Check your spam folder if you don't see it.")
+                            .font(.caption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                    .padding(.vertical, 4)
+
+                    if let message = verificationMessage {
+                        HStack {
+                            Image(systemName: message.contains("recovered") ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                                .foregroundColor(message.contains("recovered") ? .green : .orange)
+                            Text(message)
+                                .font(.subheadline)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
-                }
-                .disabled(isCheckingVerification)
 
-                Button {
-                    resendVerificationEmail()
-                } label: {
-                    HStack {
-                        Image(systemName: "envelope.arrow.triangle.branch")
-                        Text("Resend Verification Email")
-                        if isResendingVerification {
-                            Spacer()
-                            ProgressView()
-                                .progressViewStyle(.circular)
+                    Button {
+                        checkRecoveryStatus()
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                            Text("Check Recovery Status")
+                            if isCheckingVerification {
+                                Spacer()
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                            }
                         }
                     }
-                }
-                .disabled(isResendingVerification)
+                    .disabled(isCheckingVerification)
 
-                Button(role: .destructive) {
-                    receiptService.disableReceipts()
-                } label: {
-                    HStack {
-                        Image(systemName: "xmark.circle")
-                        Text("Cancel Recovery")
+                    Button(role: .destructive) {
+                        receiptService.disableReceipts()
+                    } label: {
+                        HStack {
+                            Image(systemName: "xmark.circle")
+                            Text("Cancel Recovery")
+                        }
                     }
+                } header: {
+                    Text("Account Recovery")
+                } footer: {
+                    Text("After clicking the link in your email, tap 'Check Recovery Status' to complete the process.")
                 }
-            } header: {
-                Text("Account Recovery")
+            } else {
+                // Normal email verification - user has credentials, can check status
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "envelope.badge")
+                                .foregroundColor(.orange)
+                            Text("Verification Pending")
+                                .font(.headline)
+                        }
+
+                        Text("We sent a verification link to \(receiptService.receiptEmail ?? "your email"). Please check your inbox and click the link to complete setup.")
+                            .font(.subheadline)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                        Text("This may take a few minutes to arrive. Check your spam folder if you don't see it.")
+                            .font(.caption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                    .padding(.vertical, 4)
+
+                    if let message = verificationMessage {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                            Text(message)
+                                .font(.subheadline)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                        }
+                    }
+
+                    Button {
+                        checkVerificationStatus()
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                            Text("Check Verification Status")
+                            if isCheckingVerification {
+                                Spacer()
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                            }
+                        }
+                    }
+                    .disabled(isCheckingVerification)
+
+                    Button {
+                        resendVerificationEmail()
+                    } label: {
+                        HStack {
+                            Image(systemName: "envelope.arrow.triangle.branch")
+                            Text("Resend Verification Email")
+                            if isResendingVerification {
+                                Spacer()
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                            }
+                        }
+                    }
+                    .disabled(isResendingVerification)
+
+                    Button(role: .destructive) {
+                        receiptService.disableReceipts()
+                    } label: {
+                        HStack {
+                            Image(systemName: "xmark.circle")
+                            Text("Cancel Setup")
+                        }
+                    }
+                } header: {
+                    Text("Email Verification")
+                }
             }
         }
     }
@@ -504,6 +647,27 @@ struct PurchaseListView: View {
         }
     }
 
+    private func checkRecoveryStatus() {
+        isCheckingVerification = true
+        verificationMessage = nil
+
+        Task { @MainActor in
+            do {
+                let recovered = try await receiptService.checkRecoveryStatus()
+                if recovered {
+                    // Recovery complete - reload to show purchases
+                    verificationMessage = "Account recovered! Loading your purchases..."
+                    loadPurchases()
+                } else {
+                    verificationMessage = "Recovery not yet complete. Please click the link in your recovery email first."
+                }
+            } catch {
+                verificationMessage = "Could not check recovery status: \(error.localizedDescription)"
+            }
+            isCheckingVerification = false
+        }
+    }
+
     private func resendVerificationEmail() {
         isResendingVerification = true
         verificationMessage = nil
@@ -517,35 +681,6 @@ struct PurchaseListView: View {
             }
             isResendingVerification = false
         }
-    }
-}
-
-// MARK: - Setup Step Row
-
-private struct SetupStepRow: View {
-    let number: String
-    let title: String
-    let description: String
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Text(number)
-                .font(.headline)
-                .foregroundColor(.white)
-                .frame(width: 28, height: 28)
-                .background(DesignSystem.Colors.moltenOrange)
-                .clipShape(Circle())
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.subheadline.bold())
-
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-            }
-        }
-        .padding(.vertical, 4)
     }
 }
 
@@ -617,6 +752,67 @@ private struct PurchaseRow: View {
 
                 if let total = purchase.totalAmount {
                     Text(total, format: .currency(code: "USD"))
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Imported Purchase Row (for local Core Data records)
+
+private struct ImportedPurchaseRow: View {
+    let purchase: PurchaseRecordModel
+
+    private var dateFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(purchase.supplier)
+                    .font(.headline)
+
+                Spacer()
+
+                Image(systemName: "checkmark.seal.fill")
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                    .font(.caption)
+            }
+
+            HStack {
+                if let orderNumber = purchase.orderNumber {
+                    Text("Order #\(orderNumber)")
+                        .font(.subheadline)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+
+                Spacer()
+
+                Text(purchase.datePurchased, formatter: dateFormatter)
+                    .font(.subheadline)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+            }
+
+            HStack {
+                HStack(spacing: 4) {
+                    Image(systemName: "cube.box")
+                        .font(.caption)
+                    Text("\(purchase.itemCount) item\(purchase.itemCount == 1 ? "" : "s")")
+                        .font(.caption)
+                }
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                Spacer()
+
+                if let total = purchase.formattedPrice {
+                    Text(total)
                         .font(.subheadline)
                         .fontWeight(.medium)
                 }

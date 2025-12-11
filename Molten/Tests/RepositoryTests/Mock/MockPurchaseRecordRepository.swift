@@ -77,13 +77,6 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
         return record
     }
 
-    func deleteRecord(id: UUID) async throws {
-        guard records[id] != nil else {
-            throw PurchaseRecordRepositoryError.recordNotFound(id.uuidString)
-        }
-        records.removeValue(forKey: id)
-    }
-
     // MARK: - Search & Filter
 
     func searchRecords(text: String) async throws -> [PurchaseRecordModel] {
@@ -238,7 +231,8 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
     func fetchRecord(byEmailReceiptId emailReceiptId: String) async throws -> PurchaseRecordModel? {
         let recordsArray = Array(records.values)
         for record in recordsArray {
-            if record.emailReceiptId == emailReceiptId {
+            let recordEmailReceiptId = await record.emailReceiptId
+            if recordEmailReceiptId == emailReceiptId {
                 return record
             }
         }
@@ -253,10 +247,13 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
         let recordsArray = Array(records.values)
         var filtered: [PurchaseRecordModel] = []
         for record in recordsArray {
-            if record.orderNumber == orderNumber &&
-               record.supplier.lowercased() == supplier.lowercased() &&
-               record.datePurchased >= startOfDay &&
-               record.datePurchased < endOfDay {
+            let recordOrderNumber = await record.orderNumber
+            let recordSupplier = await record.supplier
+            let recordDate = await record.datePurchased
+            if recordOrderNumber == orderNumber &&
+               recordSupplier.lowercased() == supplier.lowercased() &&
+               recordDate >= startOfDay &&
+               recordDate < endOfDay {
                 filtered.append(record)
             }
         }
@@ -271,13 +268,66 @@ final class MockPurchaseRecordRepository: PurchaseRecordRepository {
         let recordsArray = Array(records.values)
         var filtered: [PurchaseRecordModel] = []
         for record in recordsArray {
-            if record.senderEmail?.lowercased() == senderEmail.lowercased() &&
-               record.datePurchased >= startOfDay &&
-               record.datePurchased < endOfDay {
+            let recordSenderEmail = await record.senderEmail
+            let recordDate = await record.datePurchased
+            if recordSenderEmail?.lowercased() == senderEmail.lowercased() &&
+               recordDate >= startOfDay &&
+               recordDate < endOfDay {
                 filtered.append(record)
             }
         }
         return filtered
+    }
+
+    func fetchRecords(byOrderNumber orderNumber: String) async throws -> [PurchaseRecordModel] {
+        let recordsArray = Array(records.values)
+        var filtered: [PurchaseRecordModel] = []
+        for record in recordsArray {
+            let recordOrderNumber = await record.orderNumber
+            if recordOrderNumber == orderNumber {
+                filtered.append(record)
+            }
+        }
+
+        // Extract dates and pair with records for sorting
+        var recordsWithDates: [(record: PurchaseRecordModel, date: Date)] = []
+        for record in filtered {
+            let date = await record.datePurchased
+            recordsWithDates.append((record, date))
+        }
+
+        // Sort by date descending
+        recordsWithDates.sort { $0.date > $1.date }
+
+        return recordsWithDates.map { $0.record }
+    }
+
+    func fetchRecentRecords(bySupplier supplier: String, within days: Int) async throws -> [PurchaseRecordModel] {
+        let calendar = Calendar.current
+        let cutoffDate = calendar.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+
+        let recordsArray = Array(records.values)
+        var filtered: [PurchaseRecordModel] = []
+        for record in recordsArray {
+            let recordSupplier = await record.supplier
+            let recordDate = await record.datePurchased
+            if recordSupplier.lowercased() == supplier.lowercased() &&
+               recordDate >= cutoffDate {
+                filtered.append(record)
+            }
+        }
+
+        // Extract dates and pair with records for sorting
+        var recordsWithDates: [(record: PurchaseRecordModel, date: Date)] = []
+        for record in filtered {
+            let date = await record.datePurchased
+            recordsWithDates.append((record, date))
+        }
+
+        // Sort by date descending
+        recordsWithDates.sort { $0.date > $1.date }
+
+        return recordsWithDates.map { $0.record }
     }
 
     // MARK: - Test Helpers

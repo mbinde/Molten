@@ -14,7 +14,6 @@ import SwiftUI
 /// Manages presentation logic for:
 /// - Loading purchase records
 /// - Searching and filtering purchases
-/// - Deleting purchases
 /// - Computing UI state
 @MainActor
 @Observable
@@ -99,20 +98,6 @@ class PurchasesViewModel: PurchasesViewModelProtocol {
 
     func clearSearch() {
         searchText = ""
-    }
-
-    // MARK: - CRUD Operations
-
-    func deletePurchases(ids: [UUID]) async {
-        do {
-            for id in ids {
-                try await purchaseService.deleteRecord(id: id)
-            }
-            // Reload after deletion
-            await loadPurchases()
-        } catch {
-            errorMessage = "Failed to delete purchases: \(error.localizedDescription)"
-        }
     }
 
     // MARK: - Private Helpers

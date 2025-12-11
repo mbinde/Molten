@@ -29,6 +29,7 @@ final class ReceiptPreferences {
     private static let keyLastSyncTimestamp = "molten.receipts.lastSyncTimestamp"
     private static let keyEnabled = "molten.receipts.enabled"
     private static let keyPendingReceiptCount = "molten.receipts.pendingCount"
+    private static let keyImportedReceiptCount = "molten.receipts.importedCount"
 
     // MARK: - Properties
 
@@ -277,6 +278,16 @@ final class ReceiptPreferences {
         set { setInt(newValue, forKey: Self.keyPendingReceiptCount) }
     }
 
+    // MARK: - Imported Receipt Count
+
+    /// Number of receipts that have been imported (acted on) - cumulative, never decreases
+    /// This tracks how many receipts the user has "used" for entitlement purposes
+    /// Free tier allows 10, Pro tier allows unlimited
+    var importedReceiptCount: Int {
+        get { getInt(forKey: Self.keyImportedReceiptCount) }
+        set { setInt(newValue, forKey: Self.keyImportedReceiptCount) }
+    }
+
     // MARK: - Setup Status
 
     /// Check if receipts are fully set up
@@ -298,6 +309,12 @@ final class ReceiptPreferences {
     /// Check if we're waiting for email verification
     var isPendingEmailVerification: Bool {
         identifierType == .email && registeredEmail != nil && !emailVerified
+    }
+
+    /// Check if we're waiting for account recovery (no userId means recovery, not normal verification)
+    /// During recovery, user doesn't have credentials yet - they must click the email link
+    var isRecoveryPending: Bool {
+        isPendingEmailVerification && userId == nil
     }
 
     // MARK: - Reset

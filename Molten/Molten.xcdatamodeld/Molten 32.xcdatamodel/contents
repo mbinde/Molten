@@ -356,6 +356,7 @@
         <attribute name="item_stable_id" optional="YES" attributeType="String"/>
         <attribute name="order_index" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="receipt_line_hash" optional="YES" attributeType="String"/>
         <attribute name="subsubtype" optional="YES" attributeType="String"/>
         <attribute name="subtype" optional="YES" attributeType="String"/>
         <attribute name="total_price" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>

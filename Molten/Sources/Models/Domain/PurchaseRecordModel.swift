@@ -165,6 +165,7 @@ struct PurchaseRecordItemModel: Identifiable, Equatable, Codable, Sendable {
     // Receipt import fields
     let unitPrice: Decimal?  // Price per unit (weight or container)
     let currency: String?    // Currency for unitPrice
+    let receiptLineHash: String?  // Hash of receipt line for matching re-imported receipts
 
     /// Initialize with business logic validation
     nonisolated init(
@@ -177,7 +178,8 @@ struct PurchaseRecordItemModel: Identifiable, Equatable, Codable, Sendable {
         totalPrice: Decimal? = nil,
         orderIndex: Int32 = 0,
         unitPrice: Decimal? = nil,
-        currency: String? = nil
+        currency: String? = nil,
+        receiptLineHash: String? = nil
     ) {
         self.id = id
         self.item_stable_id = item_stable_id.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -189,6 +191,7 @@ struct PurchaseRecordItemModel: Identifiable, Equatable, Codable, Sendable {
         self.orderIndex = orderIndex
         self.unitPrice = unitPrice
         self.currency = currency?.isEmpty == true ? nil : currency
+        self.receiptLineHash = receiptLineHash?.isEmpty == true ? nil : receiptLineHash
     }
 
     // MARK: - Business Logic

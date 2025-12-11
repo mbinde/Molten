@@ -7,6 +7,8 @@ import RevenueCatUI
 import RevenueCat
 
 /// Production implementation using RevenueCat SDK
+/// Note: RevenueCat is configured in AppDelegate.didFinishLaunchingWithOptions
+/// to avoid deadlocks that occur when configuring during SwiftUI App.init()
 @MainActor
 public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, Sendable {
 
@@ -22,7 +24,8 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
         }
 
         do {
-            let customerInfo = try await Purchases.shared.customerInfo()
+            // Use guard to serialize RevenueCat operations and prevent deadlocks
+            let customerInfo = try await RevenueCatGuard.shared.getCustomerInfo()
 
             // Debug logging for entitlements
             print("🔐 [Subscription] Checking pro access...")
@@ -62,7 +65,8 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
         }
 
         do {
-            let customerInfo = try await Purchases.shared.customerInfo()
+            // Use guard to serialize RevenueCat operations and prevent deadlocks
+            let customerInfo = try await RevenueCatGuard.shared.getCustomerInfo()
 
             // Check for active subscription
             if let entitlement = customerInfo.entitlements[proEntitlementIdentifier],
@@ -94,7 +98,8 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
     }
 
     public func getCustomerInfo() async throws -> CustomerInfo {
-        let customerInfo = try await Purchases.shared.customerInfo()
+        // Use guard to serialize RevenueCat operations and prevent deadlocks
+        let customerInfo = try await RevenueCatGuard.shared.getCustomerInfo()
         let status = await getSubscriptionStatus()
 
         let entitlements = customerInfo.entitlements.all.values.map { entitlement in
@@ -159,7 +164,8 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
     }
 
     public func restorePurchases() async throws -> CustomerInfo {
-        let customerInfo = try await Purchases.shared.restorePurchases()
+        // Use guard to serialize RevenueCat operations and prevent deadlocks
+        let customerInfo = try await RevenueCatGuard.shared.restorePurchases()
         let status = await getSubscriptionStatus()
 
         let entitlements = customerInfo.entitlements.all.values.map { entitlement in
@@ -178,7 +184,8 @@ public final class RevenueCatSubscriptionService: SubscriptionServiceProtocol, S
 
     public func checkEntitlement(_ identifier: String) async -> Bool {
         do {
-            let customerInfo = try await Purchases.shared.customerInfo()
+            // Use guard to serialize RevenueCat operations and prevent deadlocks
+            let customerInfo = try await RevenueCatGuard.shared.getCustomerInfo()
             return customerInfo.entitlements[identifier]?.isActive == true
         } catch {
             // Error checking entitlement - fail closed

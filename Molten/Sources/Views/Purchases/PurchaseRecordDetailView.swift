@@ -16,8 +16,6 @@ struct PurchaseRecordDetailView: View {
     
     @State private var showingEditSheet = false
     @State private var showingAddItem = false
-    @State private var showingDeleteAlert = false
-    @State private var isDeleting = false
     
     init(purchaseRecord: PurchaseRecordModel, purchaseService: PurchaseRecordService? = nil) {
         self._purchaseRecord = State(initialValue: purchaseRecord)
@@ -113,32 +111,10 @@ struct PurchaseRecordDetailView: View {
         #endif
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Menu {
-                    Button("Edit") {
-                        showingEditSheet = true
-                    }
-                    .accessibilityIdentifier("purchase_detail_edit")
-                    Button("Delete", role: .destructive) {
-                        showingDeleteAlert = true
-                    }
-                    .accessibilityIdentifier("purchase_detail_delete")
-                } label: {
-                    Image(systemName: "ellipsis.circle")
+                Button("Edit") {
+                    showingEditSheet = true
                 }
-                .accessibilityIdentifier("purchase_detail_menu")
-            }
-        }
-        .disabled(isDeleting)
-        .overlay {
-            if isDeleting {
-                VStack {
-                    ProgressView("Deleting...")
-                    Text("Please wait")
-                        .font(.caption)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black.opacity(0.3))
+                .accessibilityIdentifier("purchase_detail_edit")
             }
         }
         .sheet(isPresented: $showingEditSheet) {
@@ -150,38 +126,7 @@ struct PurchaseRecordDetailView: View {
             Text("Add Item - Not Implemented Yet")
                 .navigationTitle("Add Item")
         }
-        .alert("Delete Purchase Record", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
-                deletePurchaseRecord()
-            }
-        } message: {
-            Text("Are you sure you want to delete this purchase record? This action cannot be undone.")
-        }
         .errorAlert(errorState)
-    }
-    
-    // MARK: - Actions
-    
-    private func deletePurchaseRecord() {
-        isDeleting = true
-        
-        Task {
-            let result = await ErrorHandler.shared.executeAsync(context: "Deleting purchase record") {
-                try await purchaseService.deleteRecord(id: purchaseRecord.id)
-            }
-            
-            await MainActor.run {
-                isDeleting = false
-                
-                switch result {
-                case .success:
-                    dismiss()
-                case .failure(let error):
-                    errorState.show(error: error, context: "Failed to delete purchase record")
-                }
-            }
-        }
     }
 }
 

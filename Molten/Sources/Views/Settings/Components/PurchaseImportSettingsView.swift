@@ -95,27 +95,14 @@ struct PurchaseImportSettingsView: View {
             recoverySheet
         }
         .overlay(alignment: .bottom) {
-            if showCopiedFeedback {
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Email address copied")
-                        .font(.subheadline.weight(.medium))
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-                .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
-                .padding(.bottom, 20)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
+            CopiedFeedbackOverlay(isVisible: showCopiedFeedback)
         }
         .animation(.spring(response: 0.3), value: showCopiedFeedback)
     }
 
     // MARK: - Enabled Section
 
-    private let forwardingAddress = "receipts@moltenglass.app"
+    private let forwardingAddress = "purchases@moltenglass.app"
 
     @ViewBuilder
     private var enabledSection: some View {
@@ -143,10 +130,10 @@ struct PurchaseImportSettingsView: View {
             // Show forwarding address for all users
             if receiptService.identifierType == .plusAddress, let email = receiptService.receiptEmail {
                 // Plus-address users: show their unique address
-                copyableEmailRow(email: email)
+                ForwardingAddressRow(email: email) { copyEmail(email) }
             } else if receiptService.identifierType == .email {
                 // Email users: show the forwarding address
-                copyableEmailRow(email: forwardingAddress)
+                ForwardingAddressRow(email: forwardingAddress) { copyEmail(forwardingAddress) }
             }
 
             // Pending Count
@@ -194,72 +181,124 @@ struct PurchaseImportSettingsView: View {
 
     @ViewBuilder
     private var pendingVerificationSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: "envelope.badge")
-                        .foregroundColor(.orange)
-                    Text("Verification Pending")
-                        .font(.headline)
+        if receiptService.isRecoveryPending {
+            // Account Recovery - user doesn't have credentials yet, must click email link
+            Section {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: "arrow.counterclockwise")
+                            .foregroundColor(.orange)
+                        Text("Recovery Pending")
+                            .font(.headline)
+                    }
+
+                    Text("We sent a recovery link to \(receiptService.receiptEmail ?? "your email"). Please check your inbox and click the link to restore access.")
+                        .font(.subheadline)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                    Text("This may take a few minutes to arrive. Check your spam folder if you don't see it.")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
+                .padding(.vertical, 4)
 
-                Text("We sent a verification link to \(receiptService.receiptEmail ?? "your email"). Please check your inbox and click the link to complete setup.")
-                    .font(.subheadline)
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-
-                Text("This may take a few minutes to arrive. Check your spam folder if you don't see it.")
-                    .font(.caption)
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-            }
-            .padding(.vertical, 4)
-
-            Button {
-                checkVerificationStatus()
-            } label: {
-                HStack {
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                    Text("Check Verification Status")
-                    if isCheckingVerification {
-                        Spacer()
-                        ProgressView()
-                            .progressViewStyle(.circular)
+                Button {
+                    checkRecoveryStatus()
+                } label: {
+                    HStack {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                        Text("Check Recovery Status")
+                        if isCheckingVerification {
+                            Spacer()
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                        }
                     }
                 }
-            }
-            .disabled(isCheckingVerification)
+                .disabled(isCheckingVerification)
 
-            Button {
-                resendVerificationEmail()
-            } label: {
-                HStack {
-                    Image(systemName: "envelope.arrow.triangle.branch")
-                    Text("Resend Verification Email")
-                    if isResendingVerification {
-                        Spacer()
-                        ProgressView()
-                            .progressViewStyle(.circular)
+                Button(role: .destructive) {
+                    receiptService.disableReceipts()
+                } label: {
+                    HStack {
+                        Image(systemName: "xmark.circle")
+                        Text("Cancel Recovery")
                     }
                 }
+            } header: {
+                Text("Account Recovery")
+            } footer: {
+                Text("After clicking the link in your email, tap 'Check Recovery Status' to complete the process.")
             }
-            .disabled(isResendingVerification)
+        } else {
+            // Normal email verification - user has credentials, can check status
+            Section {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: "envelope.badge")
+                            .foregroundColor(.orange)
+                        Text("Verification Pending")
+                            .font(.headline)
+                    }
 
-            Button(role: .destructive) {
+                    Text("We sent a verification link to \(receiptService.receiptEmail ?? "your email"). Please check your inbox and click the link to complete setup.")
+                        .font(.subheadline)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                    Text("This may take a few minutes to arrive. Check your spam folder if you don't see it.")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+                .padding(.vertical, 4)
+
+                Button {
+                    checkVerificationStatus()
+                } label: {
+                    HStack {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                        Text("Check Verification Status")
+                        if isCheckingVerification {
+                            Spacer()
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                        }
+                    }
+                }
+                .disabled(isCheckingVerification)
+
+                Button {
+                    resendVerificationEmail()
+                } label: {
+                    HStack {
+                        Image(systemName: "envelope.arrow.triangle.branch")
+                        Text("Resend Verification Email")
+                        if isResendingVerification {
+                            Spacer()
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                        }
+                    }
+                }
+                .disabled(isResendingVerification)
+
+                Button(role: .destructive) {
+                    stopVerificationPolling()
+                    receiptService.disableReceipts()
+                } label: {
+                    HStack {
+                        Image(systemName: "xmark.circle")
+                        Text("Cancel Setup")
+                    }
+                }
+            } header: {
+                Text("Email Verification")
+            }
+            .onAppear {
+                startVerificationPolling()
+            }
+            .onDisappear {
                 stopVerificationPolling()
-                receiptService.disableReceipts()
-            } label: {
-                HStack {
-                    Image(systemName: "xmark.circle")
-                    Text("Cancel Setup")
-                }
             }
-        } header: {
-            Text("Email Verification")
-        }
-        .onAppear {
-            startVerificationPolling()
-        }
-        .onDisappear {
-            stopVerificationPolling()
         }
     }
 
@@ -308,7 +347,7 @@ struct PurchaseImportSettingsView: View {
                                 .cornerRadius(4)
                         }
 
-                        Text("Register your email. Forward orders from that address to receipts@moltenglass.app")
+                        Text("Register your email. Forward orders from that address to purchases@moltenglass.app")
                             .font(.caption)
                             .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
@@ -445,16 +484,7 @@ struct PurchaseImportSettingsView: View {
 
     @ViewBuilder
     private var howItWorksSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 8) {
-                InfoRow(icon: "envelope.arrow.triangle.branch", text: "Forward order confirmation emails")
-                InfoRow(icon: "doc.text.viewfinder", text: "We parse items, prices, and order details")
-                InfoRow(icon: "checkmark.square", text: "Review and import items to your inventory")
-                InfoRow(icon: "lock.shield", text: "Your data stays private and secure")
-            }
-        } header: {
-            Text("How It Works")
-        }
+        HowItWorksSection()
     }
 
     // MARK: - Success/Error Sections
@@ -498,7 +528,7 @@ struct PurchaseImportSettingsView: View {
                 } header: {
                     Text("Enter Your Email")
                 } footer: {
-                    Text("We'll send a verification link to this address. Forward your order confirmations from this email to receipts@moltenglass.app after verification.")
+                    Text("We'll send a verification link to this address. Forward your order confirmations from this email to purchases@moltenglass.app after verification.")
                 }
 
                 if let error = emailSheetError {
@@ -646,19 +676,15 @@ struct PurchaseImportSettingsView: View {
     // MARK: - Private Methods
 
     private func checkEntitlementAndShowEmailEntry() {
-        if entitlementService.canUseVersionedCloudBackups() {
-            showingEmailEntry = true
-        } else {
-            showingUpgradePrompt = true
-        }
+        // Receipt import is available to all users (free: 10 imports, Pro: unlimited)
+        // Entitlement check happens at import time, not at setup time
+        showingEmailEntry = true
     }
 
     private func checkEntitlementAndEnableWithPlusAddress() {
-        if entitlementService.canUseVersionedCloudBackups() {
-            enableWithPlusAddress()
-        } else {
-            showingUpgradePrompt = true
-        }
+        // Receipt import is available to all users (free: 10 imports, Pro: unlimited)
+        // Entitlement check happens at import time, not at setup time
+        enableWithPlusAddress()
     }
 
     private func enableWithPlusAddress() {
@@ -851,6 +877,31 @@ struct PurchaseImportSettingsView: View {
         }
     }
 
+    private func checkRecoveryStatus() {
+        isCheckingVerification = true
+        errorMessage = nil
+        successMessage = nil
+
+        Task { @MainActor in
+            do {
+                let recovered = try await receiptService.checkRecoveryStatus()
+                if recovered {
+                    // Recovery complete! The receiptService already updated its state
+                    successMessage = "Account recovered! You can now use receipt imports."
+                    // Dismiss after a short delay to show the success message
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        dismiss()
+                    }
+                } else {
+                    errorMessage = "Recovery not yet complete. Please click the link in your recovery email first."
+                }
+            } catch {
+                errorMessage = "Could not check recovery status: \(error.localizedDescription)"
+            }
+            isCheckingVerification = false
+        }
+    }
+
     private func startVerificationPolling() {
         stopVerificationPolling()
 
@@ -875,36 +926,6 @@ struct PurchaseImportSettingsView: View {
         verificationCheckTimer = nil
     }
 
-    // MARK: - Copyable Email Row
-
-    @ViewBuilder
-    private func copyableEmailRow(email: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Forward orders to:")
-                .font(.caption)
-                .foregroundColor(DesignSystem.Colors.textSecondary)
-
-            Button {
-                copyEmail(email)
-            } label: {
-                HStack {
-                    Text(email)
-                        .font(.system(.body, design: .monospaced))
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-
-                    Spacer()
-
-                    Image(systemName: "doc.on.doc")
-                        .foregroundColor(.accentColor)
-                }
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
     private func copyEmail(_ email: String) {
         UIPasteboard.general.string = email
         withAnimation {
@@ -914,24 +935,6 @@ struct PurchaseImportSettingsView: View {
             withAnimation {
                 showCopiedFeedback = false
             }
-        }
-    }
-}
-
-// MARK: - Info Row
-
-private struct InfoRow: View {
-    let icon: String
-    let text: String
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundColor(.accentColor)
-                .frame(width: 24)
-            Text(text)
-                .font(.subheadline)
-                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
     }
 }

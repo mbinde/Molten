@@ -130,32 +130,6 @@ struct PurchaseRecordRepositoryTests {
         }
     }
 
-    @Test("Can delete a record")
-    func testDeleteRecord() async throws {
-        let repository = MockPurchaseRecordRepository()
-        let record = createTestRecord(supplier: "Test Supplier")
-
-        let created = try await repository.createRecord(record)
-
-        try await repository.deleteRecord(id: created.id)
-
-        let fetched = try await repository.fetchRecord(byId: created.id)
-        #expect(fetched == nil)
-
-        let count = await repository.getRecordCount()
-        #expect(count == 0)
-    }
-
-    @Test("Delete throws error for non-existent record")
-    func testDeleteNonExistentRecord() async throws {
-        let repository = MockPurchaseRecordRepository()
-        let nonExistentId = UUID()
-
-        await #expect(throws: PurchaseRecordRepositoryError.self) {
-            try await repository.deleteRecord(id: nonExistentId)
-        }
-    }
-
     @Test("Can fetch all records")
     func testGetAllRecords() async throws {
         let repository = MockPurchaseRecordRepository()

@@ -314,7 +314,8 @@ struct CustomPaywallView: View {
         isPurchasing = true
 
         do {
-            let customerInfo = try await Purchases.shared.restorePurchases()
+            // Use guard to serialize RevenueCat operations and prevent deadlocks
+            let customerInfo = try await RevenueCatGuard.shared.restorePurchases()
 
             if customerInfo.entitlements["Pro"]?.isActive == true {
                 purchaseSuccess = true
@@ -338,7 +339,8 @@ struct CustomPaywallView: View {
         // Check if user already has Pro BEFORE showing redemption sheet
         let hadProBefore: Bool
         do {
-            let beforeInfo = try await Purchases.shared.customerInfo()
+            // Use guard to serialize RevenueCat operations and prevent deadlocks
+            let beforeInfo = try await RevenueCatGuard.shared.getCustomerInfo()
             hadProBefore = beforeInfo.entitlements["Pro"]?.isActive == true
         } catch {
             hadProBefore = false
@@ -360,7 +362,8 @@ struct CustomPaywallView: View {
 
         // Check if Pro was newly gained
         do {
-            let customerInfo = try await Purchases.shared.customerInfo()
+            // Use guard to serialize RevenueCat operations and prevent deadlocks
+            let customerInfo = try await RevenueCatGuard.shared.getCustomerInfo()
             let hasProNow = customerInfo.entitlements["Pro"]?.isActive == true
 
             if hasProNow && !hadProBefore {

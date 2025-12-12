@@ -23,9 +23,6 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var viewModel: InventoryViewModel
     @Environment(EntitlementService.self) private var entitlementService
 
-    // Search scope state
-    @State private var searchScope: InventorySearchScope = .allFields
-
     // UI-only state (not in ViewModel)
     @State private var showingAddItem = false
     @State private var showingUpgradePrompt = false
@@ -52,10 +49,6 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var cachedLocations: [String] = []
     @State private var cachedNoLocationCount: Int = 0
 
-    // Local search text state - isolates TextField from ViewModel to prevent full view re-renders
-    // Debouncing happens here in the View, and we only update ViewModel.debouncedSearchText after delay
-    @State private var localSearchText = ""
-    @State private var searchDebounceTask: Task<Void, Never>?
 
     // Cached filtered items - only recomputed when filters/data actually change, not on every keystroke
     @State private var cachedFilteredItems: [CompleteInventoryItemModel] = []
@@ -386,59 +379,19 @@ struct InventoryView: View, CachedDataDeletion {
 
     @ViewBuilder
     private var inventoryContentView: some View {
-        VStack(spacing: 0) {
-            LocationQuickFilterBar(
-                selectedLocations: $viewModel.selectedLocations,
-                availableLocations: allAvailableLocations,
-                locationCounts: locationCounts,
-                noLocationCount: noLocationCount,
-                totalCount: inventoryItemCount,
-                onManageTapped: { showingManageLocations = true }
-            )
-
-            if entitlementService.currentTier == .free {
-                UsageBanner(
-                    featureName: "unique inventory items",
-                    currentCount: inventoryItemCount,
-                    limit: entitlementService.getInventoryLimit(),
-                    onUpgradeTap: { showingUpgradePrompt = true }
-                )
-                .padding(.horizontal)
-                .padding(.top, 8)
+        Group {
+            if isEmpty {
+                if shouldShowSearchEmptyState { searchEmptyStateView }
+                else { inventoryEmptyState }
+            } else {
+                inventoryListView
             }
-
-            Group {
-                if isEmpty {
-                    if shouldShowSearchEmptyState { searchEmptyStateView }
-                    else { inventoryEmptyState }
-                } else {
-                    inventoryListView
-                }
-            }
-            .id(refreshTrigger)
         }
+        .id(refreshTrigger)
         .navigationTitle("Inventory")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
-        .searchable(
-            text: $localSearchText,
-            placement: .navigationBarDrawer(displayMode: .always),
-            prompt: "Search inventory by name, code, manufacturer..."
-        )
-        .searchScopes($searchScope, activation: .onSearchPresentation) {
-            ForEach(InventorySearchScope.allCases, id: \.self) { scope in
-                Text(scope.rawValue)
-            }
-        }
-        .onChange(of: searchScope) { _, newValue in
-            viewModel.searchTitlesOnly = (newValue == .titlesOnly)
-        }
-        .onChange(of: localSearchText) { _, newValue in
-            handleSearchTextChange(newValue)
-        }
-        .autocorrectionDisabled()
-        .textInputAutocapitalization(.never)
         .toolbar { toolbarContent }
     }
 
@@ -497,6 +450,7 @@ struct InventoryView: View, CachedDataDeletion {
                 catalogService: catalogService,
                 loadData: loadData,
                 updateFilteredItemsCache: updateFilteredItemsCache,
+                setSearchText: { viewModel.debouncedSearchText = $0 },
                 filterRefreshTrigger: $filterRefreshTrigger,
                 navigationPath: $navigationPath,
                 pendingShareCode: $pendingShareCode,
@@ -533,8 +487,7 @@ struct InventoryView: View, CachedDataDeletion {
             searchTerm: viewModel.debouncedSearchText.isEmpty ? nil : viewModel.debouncedSearchText,
             filters: activeFilters,
             onClearFilters: {
-                localSearchText = ""  // Clear local search text
-                viewModel.debouncedSearchText = ""  // Clear debounced text directly
+                viewModel.debouncedSearchText = ""  // Clear search text
                 viewModel.selectedTags.removeAll()
                 viewModel.selectedCOEs.removeAll()
                 viewModel.selectedManufacturers.removeAll()
@@ -572,6 +525,9 @@ struct InventoryView: View, CachedDataDeletion {
                 }
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: 80)
+        }
         .accessibilityIdentifier("inventory.list")
         .id(refreshTrigger)  // Force list to refresh when trigger changes
         .navigationDestination(for: CompleteInventoryItemModel.self) { item in
@@ -584,21 +540,69 @@ struct InventoryView: View, CachedDataDeletion {
     
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        // Sort button - appears near the search bar
-        ToolbarItem(placement: .cancellationAction) {
-            Menu {
-                ForEach(InventorySortOption.allCases, id: \.self) { option in
+        // Location filter button (left side) - only show if there are locations defined
+        if !allAvailableLocations.isEmpty {
+            ToolbarItem(placement: .cancellationAction) {
+                Menu {
+                    // "All" option - clears selection
                     Button {
-                        viewModel.sortOption = option
-                        updateFilteredItemsCache()
+                        viewModel.selectedLocations.removeAll()
                     } label: {
-                        Label(option.rawValue, systemImage: option.icon)
+                        if viewModel.selectedLocations.isEmpty {
+                            Label("All Locations (\(inventoryItemCount))", systemImage: "checkmark")
+                        } else {
+                            Text("All Locations (\(inventoryItemCount))")
+                        }
                     }
+
+                    Divider()
+
+                    // "(none)" option - items with no location
+                    Button {
+                        toggleLocation(LocationQuickFilterBar.noLocationValue)
+                    } label: {
+                        if viewModel.selectedLocations.contains(LocationQuickFilterBar.noLocationValue) {
+                            Label("No Location (\(noLocationCount))", systemImage: "checkmark")
+                        } else {
+                            Text("No Location (\(noLocationCount))")
+                        }
+                    }
+
+                    // Location options
+                    ForEach(allAvailableLocations, id: \.self) { location in
+                        Button {
+                            toggleLocation(location)
+                        } label: {
+                            if viewModel.selectedLocations.contains(location) {
+                                Label("\(location) (\(locationCounts[location] ?? 0))", systemImage: "checkmark")
+                            } else {
+                                Text("\(location) (\(locationCounts[location] ?? 0))")
+                            }
+                        }
+                    }
+
+                    Divider()
+
+                    Button {
+                        showingManageLocations = true
+                    } label: {
+                        Label("Manage Locations", systemImage: "gear")
+                    }
+                } label: {
+                    // Combination icon: archivebox with filter lines
+                    ZStack(alignment: .bottomTrailing) {
+                        Image(systemName: "archivebox")
+                        Image(systemName: "line.3.horizontal.decrease")
+                            .font(.system(size: 8, weight: .bold))
+                            .offset(x: 4, y: 4)
+                    }
+                    .foregroundColor(.white)
+                    .padding(8)
+                    .background(DesignSystem.Colors.accentSecondary)
+                    .clipShape(Circle())
                 }
-            } label: {
-                Image(systemName: "arrow.up.arrow.down")
+                .accessibilityIdentifier("inventory_location_filter_button")
             }
-            .accessibilityIdentifier("inventory_sort_button")
         }
 
         ToolbarItem(placement: .primaryAction) {
@@ -694,19 +698,11 @@ struct InventoryView: View, CachedDataDeletion {
         }
     }
 
-    private func handleSearchTextChange(_ newValue: String) {
-        searchDebounceTask?.cancel()
-        if newValue.isEmpty {
-            viewModel.debouncedSearchText = ""
-            updateFilteredItemsCache()
+    private func toggleLocation(_ location: String) {
+        if viewModel.selectedLocations.contains(location) {
+            viewModel.selectedLocations.remove(location)
         } else {
-            searchDebounceTask = Task {
-                try? await Task.sleep(nanoseconds: 300_000_000)
-                if !Task.isCancelled {
-                    viewModel.debouncedSearchText = newValue
-                    updateFilteredItemsCache()
-                }
-            }
+            viewModel.selectedLocations.insert(location)
         }
     }
 
@@ -989,6 +985,7 @@ private struct NotificationHandlersModifier: ViewModifier {
     let catalogService: CatalogService
     let loadData: () async -> Void
     let updateFilteredItemsCache: () -> Void
+    let setSearchText: (String) -> Void
     @Binding var filterRefreshTrigger: Int
     @Binding var navigationPath: NavigationPath
     @Binding var pendingShareCode: String?
@@ -997,6 +994,12 @@ private struct NotificationHandlersModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .onReceive(NotificationCenter.default.publisher(for: .applyInventorySearch)) { notification in
+                if let searchText = notification.userInfo?["searchText"] as? String {
+                    setSearchText(searchText)
+                    updateFilteredItemsCache()
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
                 Task {
                     await CatalogDataCache.shared.reload(catalogService: catalogService)
@@ -1162,6 +1165,7 @@ private extension View {
         catalogService: CatalogService,
         loadData: @escaping () async -> Void,
         updateFilteredItemsCache: @escaping () -> Void,
+        setSearchText: @escaping (String) -> Void,
         filterRefreshTrigger: Binding<Int>,
         navigationPath: Binding<NavigationPath>,
         pendingShareCode: Binding<String?>,
@@ -1172,6 +1176,7 @@ private extension View {
             catalogService: catalogService,
             loadData: loadData,
             updateFilteredItemsCache: updateFilteredItemsCache,
+            setSearchText: setSearchText,
             filterRefreshTrigger: filterRefreshTrigger,
             navigationPath: navigationPath,
             pendingShareCode: pendingShareCode,

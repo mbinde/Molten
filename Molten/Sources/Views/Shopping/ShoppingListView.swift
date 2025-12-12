@@ -33,7 +33,6 @@ struct ShoppingListView: View {
     private let glassItemRepository: GlassItemRepository
 
     // UI-only state (not in ViewModel)
-    @State private var searchScope: SearchScope = .allFields
     @State private var showingAddItem = false
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
     @State private var navigationPath = NavigationPath()
@@ -55,10 +54,6 @@ struct ShoppingListView: View {
     @State private var cachedAllCOEs: [Int32] = []
     @State private var cachedAllStores: [String] = []
     @State private var cachedAllManufacturers: [String] = []
-
-    // Local search text state - isolates TextField from ViewModel to prevent full view re-renders
-    // The ViewModel's searchText setter handles debouncing and triggers filtering
-    @State private var localSearchText = ""
 
     // Filter sheet state (for floating filter button)
     @State private var showingFilterSheet = false
@@ -770,7 +765,6 @@ struct ShoppingListView: View {
                                 searchTerm: viewModel.searchText.isEmpty ? nil : viewModel.searchText,
                                 activeFilters: activeFiltersForEmptyState,
                                 onClearFilters: {
-                                    localSearchText = ""  // Sync local state with ViewModel
                                     viewModel.searchText = ""
                                     viewModel.clearFilters()
                                 }
@@ -787,17 +781,6 @@ struct ShoppingListView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .searchable(
-                text: $localSearchText,
-                placement: .navigationBarDrawer(displayMode: .always),
-                prompt: "Search shopping list..."
-            )
-            .onChange(of: localSearchText) { oldValue, newValue in
-                // Sync local state to ViewModel - debouncing happens in ViewModel
-                viewModel.searchText = newValue
-            }
-            .autocorrectionDisabled()
-            .textInputAutocapitalization(.never)
             .toolbar {
                 // Custom title: "Shopping List" or green "Checkout" button
                 ToolbarItem(placement: .principal) {
@@ -827,29 +810,15 @@ struct ShoppingListView: View {
                     }
                 }
 
-                ToolbarItem(placement: .cancellationAction) {
-                    if shoppingModeState.isShoppingModeEnabled {
-                        // Cancel button when in shopping mode
+                // Cancel button only shown when in shopping mode
+                if shoppingModeState.isShoppingModeEnabled {
+                    ToolbarItem(placement: .cancellationAction) {
                         Button {
                             cancelShoppingMode()
                         } label: {
                             Text("Cancel")
                         }
                         .accessibilityIdentifier("shopping_cancel_button")
-                    } else {
-                        // Sort button when not in shopping mode
-                        Menu {
-                            ForEach(ShoppingListSortOption.allCases, id: \.self) { option in
-                                Button {
-                                    viewModel.sortOption = option
-                                } label: {
-                                    Label(option.rawValue, systemImage: option.icon)
-                                }
-                            }
-                        } label: {
-                            Image(systemName: "arrow.up.arrow.down")
-                        }
-                        .accessibilityIdentifier("shopping_sort_button")
                     }
                 }
 
@@ -907,7 +876,8 @@ struct ShoppingListView: View {
             // .task already handles initial load when view appears
             .onShoppingListNotifications(
                 loadShoppingList: loadShoppingList,
-                setSelectedStore: { viewModel.selectedStore = $0 }
+                setSelectedStore: { viewModel.selectedStore = $0 },
+                setSearchText: { viewModel.searchText = $0 }
             )
             .withShoppingFilterSheet(
                 showingFilterSheet: $showingFilterSheet,
@@ -1174,6 +1144,9 @@ struct ShoppingListView: View {
                 }
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: 80)
+        }
         .accessibilityIdentifier("shopping.list")
     }
 
@@ -1404,9 +1377,15 @@ private struct ShoppingFilterSheetModifier: ViewModifier {
 private struct ShoppingListNotificationHandlersModifier: ViewModifier {
     let loadShoppingList: () async -> Void
     let setSelectedStore: (String) -> Void
+    let setSearchText: (String) -> Void
 
     func body(content: Content) -> some View {
         content
+            .onReceive(NotificationCenter.default.publisher(for: .applyShoppingSearch)) { notification in
+                if let searchText = notification.userInfo?["searchText"] as? String {
+                    setSearchText(searchText)
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
                 Task {
                     await loadShoppingList()
@@ -1446,11 +1425,13 @@ private struct ShoppingListNotificationHandlersModifier: ViewModifier {
 private extension View {
     func onShoppingListNotifications(
         loadShoppingList: @escaping () async -> Void,
-        setSelectedStore: @escaping (String) -> Void
+        setSelectedStore: @escaping (String) -> Void,
+        setSearchText: @escaping (String) -> Void
     ) -> some View {
         modifier(ShoppingListNotificationHandlersModifier(
             loadShoppingList: loadShoppingList,
-            setSelectedStore: setSelectedStore
+            setSelectedStore: setSelectedStore,
+            setSearchText: setSearchText
         ))
     }
 

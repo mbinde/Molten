@@ -48,6 +48,21 @@ struct ShoppingFilterSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                // Clear all filters button (top)
+                if hasActiveFilters {
+                    Section {
+                        Button(role: .destructive) {
+                            clearAllFilters()
+                        } label: {
+                            HStack {
+                                Spacer()
+                                Text("Clear All Filters")
+                                Spacer()
+                            }
+                        }
+                    }
+                }
+
                 // Sort section
                 Section("Sort") {
                     ForEach(ShoppingListSortOption.allCases, id: \.self) { option in
@@ -157,36 +172,25 @@ struct ShoppingFilterSheet: View {
                     }
                 }
 
-                // COE filter
+                // COE filter (horizontal chips)
                 if !allAvailableCOEs.isEmpty {
                     Section("COE") {
-                        ForEach(allAvailableCOEs, id: \.self) { coe in
-                            let count = coeCounts[coe] ?? 0
-                            let isSelected = selectedCOEs.contains(coe)
-                            let isDisabled = count == 0 && !isSelected
-                            Button {
-                                if selectedCOEs.contains(coe) {
-                                    selectedCOEs.remove(coe)
-                                } else {
-                                    selectedCOEs.insert(coe)
-                                }
-                            } label: {
-                                HStack {
-                                    Text("\(coe)")
-                                        .foregroundColor(isDisabled ? .secondary : .primary)
-                                    Spacer()
-                                    Text("\(count)")
-                                        .foregroundColor(.secondary)
-                                        .font(.caption)
-                                    if isSelected {
-                                        Image(systemName: "checkmark")
-                                            .foregroundColor(DesignSystem.Colors.accentPrimary)
+                        HStack(spacing: 10) {
+                            ForEach(allAvailableCOEs, id: \.self) { coe in
+                                COEChip(
+                                    coe: coe,
+                                    count: coeCounts[coe] ?? 0,
+                                    isSelected: selectedCOEs.contains(coe),
+                                    onTap: {
+                                        if selectedCOEs.contains(coe) {
+                                            selectedCOEs.remove(coe)
+                                        } else {
+                                            selectedCOEs.insert(coe)
+                                        }
                                     }
-                                }
-                                .opacity(isDisabled ? 0.5 : 1.0)
+                                )
                             }
-                            .disabled(isDisabled)
-                            .listRowBackground(isSelected ? DesignSystem.Colors.accentPrimary.opacity(0.15) : nil)
+                            Spacer()
                         }
                     }
                 }
@@ -302,6 +306,50 @@ struct ShoppingFilterSheet: View {
     }
 }
 
+// MARK: - COE Chip
+
+private struct COEChip: View {
+    let coe: Int32
+    let count: Int
+    let isSelected: Bool
+    let onTap: () -> Void
+
+    private var isDisabled: Bool {
+        count == 0 && !isSelected
+    }
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 4) {
+                Text("\(coe)")
+                    .lineLimit(1)
+                    .fixedSize()
+                Text("(\(count))")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .fixedSize()
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.accentPrimary)
+                }
+            }
+            .font(.subheadline)
+            .foregroundColor(isDisabled ? .secondary : .primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? DesignSystem.Colors.accentPrimary.opacity(0.15) : Color(.systemGray6))
+            )
+            .opacity(isDisabled ? 0.5 : 1.0)
+        }
+        .buttonStyle(.plain)
+        .disabled(isDisabled)
+    }
+}
+
 // MARK: - Product Type Chip
 
 private struct ProductTypeChip: View {
@@ -319,9 +367,13 @@ private struct ProductTypeChip: View {
         Button(action: onTap) {
             HStack(spacing: 4) {
                 Text(displayName)
+                    .lineLimit(1)
+                    .fixedSize()
                 Text("(\(count))")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .fixedSize()
                 if isSelected {
                     Image(systemName: "checkmark")
                         .font(.caption)

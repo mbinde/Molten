@@ -39,6 +39,8 @@ extension Notification.Name {
     static let inventoryFilterCountChanged = Notification.Name("inventoryFilterCountChanged")
     static let showShoppingFilters = Notification.Name("showShoppingFilters")
     static let shoppingFilterCountChanged = Notification.Name("shoppingFilterCountChanged")
+    static let applyInventorySearch = Notification.Name("applyInventorySearch")
+    static let applyShoppingSearch = Notification.Name("applyShoppingSearch")
 }
 
 /// Main tab view that provides navigation between the app's primary sections
@@ -209,8 +211,8 @@ struct MainTabView: View {
 
                         Spacer()
 
-                        // Floating search button (right side) - only on Catalog tab for now
-                        if selectedTab == .catalog {
+                        // Floating search button (right side) - on Catalog, Inventory, Shopping tabs
+                        if selectedTab == .catalog || selectedTab == .inventory || selectedTab == .shopping {
                             Button {
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     searchBarExpanded = true
@@ -260,10 +262,19 @@ struct MainTabView: View {
                 initialSearchText: globalSearchText,
                 onSearchSubmit: { searchText in
                     globalSearchText = searchText
-                    selectedTab = .catalog
-                    // Post notification to apply search filter to catalog
+                    // Post notification to apply search filter to current tab
+                    let notificationName: Notification.Name
+                    switch selectedTab {
+                    case .inventory:
+                        notificationName = .applyInventorySearch
+                    case .shopping:
+                        notificationName = .applyShoppingSearch
+                    default:
+                        selectedTab = .catalog
+                        notificationName = .applyGlobalSearch
+                    }
                     NotificationCenter.default.post(
-                        name: .applyGlobalSearch,
+                        name: notificationName,
                         object: nil,
                         userInfo: ["searchText": searchText]
                     )

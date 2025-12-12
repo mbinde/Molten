@@ -165,8 +165,8 @@ class TabConfiguration {
             return false
         }
 
-        // Check maxVisibleTabs is reasonable
-        guard maxVisibleTabs >= 3 && maxVisibleTabs <= 8 else {
+        // Check maxVisibleTabs is reasonable (0 means just the More menu)
+        guard maxVisibleTabs >= 0 && maxVisibleTabs <= 8 else {
             return false
         }
 

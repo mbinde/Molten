@@ -66,6 +66,7 @@ struct GlassManufacturers {
         "TAG": "tag",
         "VF": "vf",
         "NS": "ns",
+        "NSP": "nsp",
         "BE": "be",
         "KUG": "kug",
         "MA": "ma",

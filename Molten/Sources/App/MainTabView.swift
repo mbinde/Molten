@@ -41,8 +41,8 @@ extension Notification.Name {
 struct MainTabView: View {
     @AppStorage("lastActiveTab") private var lastActiveTabRawValue = DefaultTab.catalog.rawValue
     @State private var selectedTab: DefaultTab = .catalog
-    @State private var showingSettings = false
     @State private var showingMoreMenu = false
+    @State private var showingTabCustomization = false
     @State private var showingSearch = false
     @State private var globalSearchText = ""
     @State private var searchBarExpanded = false  // Stage 1: bar visible but not focused
@@ -91,9 +91,9 @@ struct MainTabView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Main content area - doesn't change between states
-            ZStack {
+        ZStack(alignment: .bottom) {
+            // Main content area - extends under tab bar
+            Group {
                 switch selectedTab {
                 case .catalog:
                     CatalogView(deps: deps)
@@ -105,12 +105,22 @@ struct MainTabView: View {
                     PurchasesView()
                 case .settings:
                     SettingsView()
-                default:
-                    CatalogView(deps: deps)
+                case .locations:
+                    LocationsView(viewModel: LocationsViewModel(
+                        locationService: dependencies.unifiedLocationService
+                    ))
+                case .projects, .projectPlans:
+                    ProjectsView()
+                case .logbook:
+                    LogbookView(logbookRepository: dependencies.logbookRepository)
+                case .recipes:
+                    RecipesView()
+                case .kilnSchedules:
+                    KilnSchedulesView(kilnScheduleService: kilnScheduleService)
                 }
             }
 
-            // Bottom bar area - switches between tab bar and search bar
+            // Tab bar with glass effect overlaying content
             if searchBarExpanded {
                 // State 2: Search bar expanded (collapsed tabs)
                 ExpandedSearchBar(
@@ -137,21 +147,19 @@ struct MainTabView: View {
                 )
             } else {
                 // State 1: Full tab bar with floating filter and search buttons
-                // Standard tab bar appearance
-                HStack(spacing: 0) {
-                    tabBarButton(for: .catalog)
-                    tabBarButton(for: .inventory)
-                    tabBarButton(for: .shopping)
-                    if isPurchaseRecordsEnabled {
-                        tabBarButton(for: .purchases)
+                // Dynamic tab bar based on TabConfiguration
+                VStack(spacing: 0) {
+                    HStack(spacing: 0) {
+                        if let config = tabConfig {
+                            ForEach(config.tabBarTabs, id: \.self) { tab in
+                                tabBarButton(for: tab)
+                            }
+                        }
+                        moreTabButton
                     }
-                    tabBarButton(for: .settings)
+                    .frame(height: 49)
                 }
-                .frame(height: 49)
-                .background(
-                    Rectangle()
-                        .fill(.ultraThinMaterial)
-                )
+                .background(.ultraThinMaterial)
                 .overlay(alignment: .topLeading) {
                     // Floating filter button (left side) - only show on Catalog tab
                     if selectedTab == .catalog {
@@ -238,20 +246,13 @@ struct MainTabView: View {
                 }
             )
         }
-        .background(DesignSystem.Colors.background)
-        .preferredColorScheme(UserSettings.shared.colorScheme)
-        .sheet(isPresented: $showingSettings) {
+        .sheet(isPresented: $showingTabCustomization) {
             NavigationStack {
-                SettingsView()
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") {
-                                showingSettings = false
-                            }
-                        }
-                    }
+                TabCustomizationView()
             }
         }
+        .background(DesignSystem.Colors.background)
+        .preferredColorScheme(UserSettings.shared.colorScheme)
         .onAppear {
             // Initialize tab configuration (only once, on MainActor)
             if tabConfig == nil {
@@ -265,7 +266,8 @@ struct MainTabView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .showSettings)) { _ in
-            showingSettings = true
+            selectedTab = .settings
+            markTabAsViewed(.settings)
         }
         .onReceive(NotificationCenter.default.publisher(for: .catalogDetailDismissed)) { _ in
             // When back is pressed from detail view, reopen search if we came from search
@@ -368,13 +370,6 @@ struct MainTabView: View {
             return
         }
 
-        // Special handling for Settings - show as sheet (check BEFORE More menu logic)
-        // Settings is always shown in the tab bar but may be in moreTabs according to config
-        if tab == .settings {
-            showingSettings = true
-            return
-        }
-
         // Special handling for More tab - show the More menu
         if !config.tabBarTabs.contains(tab) && config.moreTabs.contains(tab) {
             showingMoreMenu = true
@@ -432,6 +427,41 @@ struct MainTabView: View {
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - More Tab Button
+
+    private var moreTabButton: some View {
+        Menu {
+            // Show all tabs that are in the More menu according to config
+            if let config = tabConfig {
+                ForEach(config.moreTabs, id: \.self) { tab in
+                    Button {
+                        selectedTab = tab
+                        markTabAsViewed(tab)
+                    } label: {
+                        Label(tab.displayName, systemImage: tab.systemImage)
+                    }
+                }
+            }
+
+            Divider()
+
+            Button {
+                showingTabCustomization = true
+            } label: {
+                Label("Customize Tabs", systemImage: "square.grid.2x2")
+            }
+        } label: {
+            VStack(spacing: 2) {
+                Image(systemName: "ellipsis.circle")
+                    .font(.system(size: 20))
+                Text("More")
+                    .font(.caption2)
+            }
+            .foregroundColor(tabConfig?.moreTabs.contains(selectedTab) == true ? DesignSystem.Colors.accentPrimary : .secondary)
+            .frame(maxWidth: .infinity)
+        }
     }
 
     // MARK: - Feature Disabled Placeholder

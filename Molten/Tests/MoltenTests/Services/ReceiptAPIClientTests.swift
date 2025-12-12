@@ -276,6 +276,266 @@ struct ReceiptAPIClientTests {
         }
     }
 
+    // MARK: - Delete Receipt Tests
+
+    @Test("Should delete receipt successfully")
+    func testDeleteReceiptSuccess() async throws {
+        let mockSession = MockReceiptURLSession()
+        mockSession.statusCode = 200
+
+        let client = createTestClient(session: mockSession)
+        let signature = Data([0x01, 0x02])
+
+        // Should not throw
+        try await client.deleteReceipt(
+            receiptId: "receipt-1",
+            userId: "test-user",
+            ownershipSignature: signature
+        )
+    }
+
+    @Test("Should throw not found when deleting nonexistent receipt")
+    func testDeleteReceiptNotFound() async throws {
+        let mockSession = MockReceiptURLSession()
+        mockSession.statusCode = 404
+
+        let client = createTestClient(session: mockSession)
+        let signature = Data([0x01, 0x02])
+
+        await #expect(throws: ReceiptAPIError.self) {
+            try await client.deleteReceipt(
+                receiptId: "nonexistent",
+                userId: "test-user",
+                ownershipSignature: signature
+            )
+        }
+    }
+
+    // MARK: - Get Receipt Email Tests
+
+    @Test("Should get receipt email body successfully")
+    func testGetReceiptEmailSuccess() async throws {
+        let mockSession = MockReceiptURLSession()
+        mockSession.responseData = """
+        {
+            "email_body": "This is the original email body content"
+        }
+        """.data(using: .utf8)!
+        mockSession.statusCode = 200
+
+        let client = createTestClient(session: mockSession)
+        let signature = Data([0x01, 0x02])
+
+        let emailBody = try await client.getReceiptEmail(
+            receiptId: "receipt-1",
+            userId: "test-user",
+            ownershipSignature: signature
+        )
+
+        #expect(emailBody == "This is the original email body content")
+    }
+
+    @Test("Should throw not found when getting email for nonexistent receipt")
+    func testGetReceiptEmailNotFound() async throws {
+        let mockSession = MockReceiptURLSession()
+        mockSession.statusCode = 404
+
+        let client = createTestClient(session: mockSession)
+        let signature = Data([0x01, 0x02])
+
+        await #expect(throws: ReceiptAPIError.self) {
+            _ = try await client.getReceiptEmail(
+                receiptId: "nonexistent",
+                userId: "test-user",
+                ownershipSignature: signature
+            )
+        }
+    }
+
+    // MARK: - Add Email Identifier Tests
+
+    @Test("Should add email identifier successfully")
+    func testAddEmailIdentifierSuccess() async throws {
+        let mockSession = MockReceiptURLSession()
+        mockSession.responseData = """
+        {
+            "type": "email",
+            "identifier": "user@example.com",
+            "verified": false,
+            "message": "Verification email sent"
+        }
+        """.data(using: .utf8)!
+        mockSession.statusCode = 201
+
+        let client = createTestClient(session: mockSession)
+        let signature = Data([0x01, 0x02])
+
+        let response = try await client.addEmailIdentifier(
+            email: "user@example.com",
+            userId: "test-user",
+            ownershipSignature: signature
+        )
+
+        #expect(response.type == "email")
+        #expect(response.identifier == "user@example.com")
+        #expect(response.verified == false)
+    }
+
+    @Test("Should throw conflict when email already registered")
+    func testAddEmailIdentifierConflict() async throws {
+        let mockSession = MockReceiptURLSession()
+        mockSession.statusCode = 409
+
+        let client = createTestClient(session: mockSession)
+        let signature = Data([0x01, 0x02])
+
+        await #expect(throws: ReceiptAPIError.self) {
+            _ = try await client.addEmailIdentifier(
+                email: "existing@example.com",
+                userId: "test-user",
+                ownershipSignature: signature
+            )
+        }
+    }
+
+    // MARK: - Check Email Status Tests
+
+    @Test("Should check email status successfully")
+    func testCheckEmailStatusSuccess() async throws {
+        let mockSession = MockReceiptURLSession()
+        mockSession.responseData = """
+        {
+            "hasEmail": true,
+            "verified": true
+        }
+        """.data(using: .utf8)!
+        mockSession.statusCode = 200
+
+        let client = createTestClient(session: mockSession)
+        let signature = Data([0x01, 0x02])
+
+        let response = try await client.checkEmailStatus(
+            userId: "test-user",
+            ownershipSignature: signature
+        )
+
+        #expect(response.hasEmail == true)
+        #expect(response.verified == true)
+    }
+
+    @Test("Should return not verified when email pending")
+    func testCheckEmailStatusPending() async throws {
+        let mockSession = MockReceiptURLSession()
+        mockSession.responseData = """
+        {
+            "hasEmail": true,
+            "verified": false
+        }
+        """.data(using: .utf8)!
+        mockSession.statusCode = 200
+
+        let client = createTestClient(session: mockSession)
+        let signature = Data([0x01, 0x02])
+
+        let response = try await client.checkEmailStatus(
+            userId: "test-user",
+            ownershipSignature: signature
+        )
+
+        #expect(response.hasEmail == true)
+        #expect(response.verified == false)
+    }
+
+    // MARK: - Account Recovery Tests
+
+    @Test("Should request recovery successfully")
+    func testRequestRecoverySuccess() async throws {
+        let mockSession = MockReceiptURLSession()
+        mockSession.responseData = """
+        {
+            "message": "If the email is registered, a recovery link has been sent."
+        }
+        """.data(using: .utf8)!
+        mockSession.statusCode = 200
+
+        let client = createTestClient(session: mockSession)
+        let newPublicKey = Data([0x01, 0x02, 0x03, 0x04])
+
+        let response = try await client.requestRecovery(
+            email: "user@example.com",
+            newPublicKey: newPublicKey
+        )
+
+        #expect(response.message.contains("recovery"))
+    }
+
+    @Test("Should throw bad request for unverified email")
+    func testRequestRecoveryUnverifiedEmail() async throws {
+        let mockSession = MockReceiptURLSession()
+        mockSession.responseData = """
+        {
+            "error": "Email is not verified"
+        }
+        """.data(using: .utf8)!
+        mockSession.statusCode = 400
+
+        let client = createTestClient(session: mockSession)
+        let newPublicKey = Data([0x01, 0x02, 0x03, 0x04])
+
+        await #expect(throws: ReceiptAPIError.self) {
+            _ = try await client.requestRecovery(
+                email: "unverified@example.com",
+                newPublicKey: newPublicKey
+            )
+        }
+    }
+
+    @Test("Should check recovery status successfully")
+    func testCheckRecoveryStatusSuccess() async throws {
+        let mockSession = MockReceiptURLSession()
+        mockSession.responseData = """
+        {
+            "recovered": true,
+            "userId": "recovered-user-123"
+        }
+        """.data(using: .utf8)!
+        mockSession.statusCode = 200
+
+        let client = createTestClient(session: mockSession)
+        let publicKey = Data([0x01, 0x02, 0x03, 0x04])
+
+        let response = try await client.checkRecoveryStatus(
+            email: "user@example.com",
+            publicKey: publicKey
+        )
+
+        #expect(response.recovered == true)
+        #expect(response.userId == "recovered-user-123")
+    }
+
+    @Test("Should return not recovered when pending")
+    func testCheckRecoveryStatusPending() async throws {
+        let mockSession = MockReceiptURLSession()
+        mockSession.responseData = """
+        {
+            "recovered": false,
+            "reason": "User has not clicked recovery link"
+        }
+        """.data(using: .utf8)!
+        mockSession.statusCode = 200
+
+        let client = createTestClient(session: mockSession)
+        let publicKey = Data([0x01, 0x02, 0x03, 0x04])
+
+        let response = try await client.checkRecoveryStatus(
+            email: "user@example.com",
+            publicKey: publicKey
+        )
+
+        #expect(response.recovered == false)
+        #expect(response.reason == "User has not clicked recovery link")
+    }
+
     // MARK: - Network Error Tests
 
     @Test("Should wrap network errors")
@@ -289,6 +549,111 @@ struct ReceiptAPIClientTests {
         await #expect(throws: ReceiptAPIError.self) {
             _ = try await client.register(publicKey: publicKey)
         }
+    }
+
+    // MARK: - Server Error Tests
+
+    @Test("Should throw server error on 500")
+    func testServerError() async throws {
+        let mockSession = MockReceiptURLSession()
+        mockSession.statusCode = 500
+
+        let client = createTestClient(session: mockSession)
+        let signature = Data([0x01, 0x02])
+
+        await #expect(throws: ReceiptAPIError.self) {
+            _ = try await client.listReceipts(
+                userId: "test-user",
+                ownershipSignature: signature
+            )
+        }
+    }
+
+    @Test("Should throw unauthorized on 403")
+    func testForbiddenError() async throws {
+        let mockSession = MockReceiptURLSession()
+        mockSession.statusCode = 403
+
+        let client = createTestClient(session: mockSession)
+        let signature = Data([0x01, 0x02])
+
+        await #expect(throws: ReceiptAPIError.self) {
+            _ = try await client.getReceipt(
+                receiptId: "receipt-1",
+                userId: "test-user",
+                ownershipSignature: signature
+            )
+        }
+    }
+}
+
+// MARK: - ReceiptItem Tests
+
+@Suite("ReceiptItem Tests")
+@MainActor
+struct ReceiptItemTests {
+
+    @Test("lineHash generates consistent hash for same inputs")
+    func testLineHashConsistent() {
+        let json: [String: Any] = [
+            "id": 1,
+            "raw_name": "Test Item",
+            "raw_sku": "SKU123",
+            "total_price": 20.00
+        ]
+        let data = try! JSONSerialization.data(withJSONObject: json)
+        let item1 = try! JSONDecoder().decode(ReceiptItem.self, from: data)
+        let item2 = try! JSONDecoder().decode(ReceiptItem.self, from: data)
+
+        #expect(item1.lineHash == item2.lineHash)
+        #expect(!item1.lineHash.isEmpty)
+    }
+
+    @Test("lineHash is different for different items")
+    func testLineHashDifferent() {
+        let json1: [String: Any] = [
+            "id": 1,
+            "raw_name": "Test Item 1",
+            "raw_sku": "SKU123",
+            "total_price": 20.00
+        ]
+        let json2: [String: Any] = [
+            "id": 2,
+            "raw_name": "Test Item 2",
+            "raw_sku": "SKU456",
+            "total_price": 30.00
+        ]
+        let item1 = try! JSONDecoder().decode(ReceiptItem.self, from: JSONSerialization.data(withJSONObject: json1))
+        let item2 = try! JSONDecoder().decode(ReceiptItem.self, from: JSONSerialization.data(withJSONObject: json2))
+
+        #expect(item1.lineHash != item2.lineHash)
+    }
+
+    @Test("lineHash handles nil SKU")
+    func testLineHashNilSku() {
+        let json: [String: Any] = [
+            "id": 1,
+            "raw_name": "Test Item",
+            "total_price": 20.00
+        ]
+        let data = try! JSONSerialization.data(withJSONObject: json)
+        let item = try! JSONDecoder().decode(ReceiptItem.self, from: data)
+
+        #expect(!item.lineHash.isEmpty)
+        #expect(item.lineHash.count == 32) // SHA256 truncated to 16 bytes = 32 hex chars
+    }
+
+    @Test("lineHash handles nil total price")
+    func testLineHashNilTotalPrice() {
+        let json: [String: Any] = [
+            "id": 1,
+            "raw_name": "Test Item",
+            "raw_sku": "SKU123"
+        ]
+        let data = try! JSONSerialization.data(withJSONObject: json)
+        let item = try! JSONDecoder().decode(ReceiptItem.self, from: data)
+
+        #expect(!item.lineHash.isEmpty)
     }
 }
 

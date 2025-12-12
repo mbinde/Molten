@@ -289,6 +289,198 @@ struct ReceiptServiceTests {
 
         #expect(service.pendingReceiptCount == 0)
     }
+
+    @Test("Should increment imported count when acknowledging")
+    func testAcknowledgeIncrementsImportedCount() async throws {
+        let mockAPI = MockReceiptAPIClient()
+
+        let preferences = createTestPreferences()
+        preferences.userId = "test-user"
+        preferences.plusAddress = "test"
+        preferences.identifierType = .plusAddress
+        preferences.isEnabled = true
+        preferences.pendingReceiptCount = 5
+        preferences.importedReceiptCount = 3
+
+        let keyPairManager = KeyPairManager()
+        _ = try keyPairManager.generateAndStoreKeyPair(identifier: "com.molten.receipts.key")
+
+        let service = createTestService(
+            apiClient: mockAPI,
+            keyPairManager: keyPairManager,
+            preferences: preferences
+        )
+
+        try await service.acknowledgeReceipt(receiptId: "test-receipt")
+
+        #expect(service.importedReceiptCount == 4)
+    }
+
+    // MARK: - Delete Receipt Tests
+
+    @Test("Should delete receipt and decrement pending count")
+    func testDeleteReceipt() async throws {
+        let mockAPI = MockReceiptAPIClient()
+
+        let preferences = createTestPreferences()
+        preferences.userId = "test-user"
+        preferences.plusAddress = "test"
+        preferences.identifierType = .plusAddress
+        preferences.isEnabled = true
+        preferences.pendingReceiptCount = 5
+
+        let keyPairManager = KeyPairManager()
+        _ = try keyPairManager.generateAndStoreKeyPair(identifier: "com.molten.receipts.key")
+
+        let service = createTestService(
+            apiClient: mockAPI,
+            keyPairManager: keyPairManager,
+            preferences: preferences
+        )
+
+        try await service.deleteReceipt(receiptId: "test-receipt")
+
+        #expect(mockAPI.deleteCalled == true)
+        #expect(service.pendingReceiptCount == 4)
+    }
+
+    // MARK: - Import Limits Tests
+
+    @Test("Should calculate remaining free imports")
+    func testRemainingFreeImports() {
+        let preferences = createTestPreferences()
+        preferences.userId = "test-user"
+        preferences.plusAddress = "test"
+        preferences.identifierType = .plusAddress
+        preferences.isEnabled = true
+        preferences.importedReceiptCount = 3
+
+        let service = createTestService(preferences: preferences)
+
+        // Free limit is 10, so 10 - 3 = 7 remaining
+        let remaining = service.remainingFreeImports(hasProAccess: false)
+        #expect(remaining == 7)
+    }
+
+    @Test("Should return nil for Pro users remaining imports")
+    func testRemainingFreeImportsUnlimited() {
+        let preferences = createTestPreferences()
+        preferences.userId = "test-user"
+        preferences.plusAddress = "test"
+        preferences.identifierType = .plusAddress
+        preferences.isEnabled = true
+        preferences.importedReceiptCount = 100
+
+        let service = createTestService(preferences: preferences)
+
+        let remaining = service.remainingFreeImports(hasProAccess: true)
+        #expect(remaining == nil)  // Unlimited
+    }
+
+    @Test("Should not go negative for remaining imports")
+    func testRemainingFreeImportsNotNegative() {
+        let preferences = createTestPreferences()
+        preferences.userId = "test-user"
+        preferences.plusAddress = "test"
+        preferences.identifierType = .plusAddress
+        preferences.isEnabled = true
+        preferences.importedReceiptCount = 15  // Over the free limit
+
+        let service = createTestService(preferences: preferences)
+
+        let remaining = service.remainingFreeImports(hasProAccess: false)
+        #expect(remaining == 0)
+    }
+
+    @Test("Should allow imports for Pro users")
+    func testCanImportWithPro() {
+        let preferences = createTestPreferences()
+        preferences.userId = "test-user"
+        preferences.plusAddress = "test"
+        preferences.identifierType = .plusAddress
+        preferences.isEnabled = true
+        preferences.importedReceiptCount = 100  // Way over free limit
+
+        let service = createTestService(preferences: preferences)
+
+        #expect(service.canImportReceipts(hasProAccess: true) == true)
+    }
+
+    @Test("Should block imports when at free limit")
+    func testCanNotImportAtLimit() {
+        let preferences = createTestPreferences()
+        preferences.userId = "test-user"
+        preferences.plusAddress = "test"
+        preferences.identifierType = .plusAddress
+        preferences.isEnabled = true
+        preferences.importedReceiptCount = 10  // At the free limit
+
+        let service = createTestService(preferences: preferences)
+
+        #expect(service.canImportReceipts(hasProAccess: false) == false)
+    }
+
+    @Test("Should allow imports under free limit")
+    func testCanImportUnderLimit() {
+        let preferences = createTestPreferences()
+        preferences.userId = "test-user"
+        preferences.plusAddress = "test"
+        preferences.identifierType = .plusAddress
+        preferences.isEnabled = true
+        preferences.importedReceiptCount = 5
+
+        let service = createTestService(preferences: preferences)
+
+        #expect(service.canImportReceipts(hasProAccess: false) == true)
+    }
+
+    // MARK: - Email Verification State Tests
+
+    @Test("Should expose isPendingEmailVerification from preferences")
+    func testIsPendingEmailVerification() {
+        let preferences = createTestPreferences()
+        preferences.userId = "test-user"
+        preferences.registeredEmail = "user@example.com"
+        preferences.identifierType = .email
+        preferences.emailVerified = false
+        preferences.isEnabled = true
+
+        let service = createTestService(preferences: preferences)
+
+        #expect(service.isPendingEmailVerification == true)
+    }
+
+    @Test("Should expose isRecoveryPending from preferences")
+    func testIsRecoveryPending() {
+        let preferences = createTestPreferences()
+        preferences.userId = nil
+        preferences.registeredEmail = "user@example.com"
+        preferences.identifierType = .email
+        preferences.emailVerified = false
+
+        let service = createTestService(preferences: preferences)
+
+        #expect(service.isRecoveryPending == true)
+    }
+
+    // MARK: - Mark Email Verified Tests
+
+    @Test("Should mark email as verified locally")
+    func testMarkEmailVerified() {
+        let preferences = createTestPreferences()
+        preferences.userId = "test-user"
+        preferences.registeredEmail = "user@example.com"
+        preferences.identifierType = .email
+        preferences.emailVerified = false
+
+        let service = createTestService(preferences: preferences)
+
+        #expect(service.isPendingEmailVerification == true)
+
+        service.markEmailVerified()
+
+        #expect(service.isPendingEmailVerification == false)
+    }
 }
 
 // MARK: - Mock Classes
@@ -298,6 +490,7 @@ class MockReceiptAPIClient: ReceiptAPIClient {
     var listReceiptsCalled = false
     var getReceiptCalled = false
     var acknowledgeCalled = false
+    var deleteCalled = false
     var pendingCount = 1
 
     init() {
@@ -377,6 +570,14 @@ class MockReceiptAPIClient: ReceiptAPIClient {
         ownershipSignature: Data
     ) async throws {
         acknowledgeCalled = true
+    }
+
+    override func deleteReceipt(
+        receiptId: String,
+        userId: String,
+        ownershipSignature: Data
+    ) async throws {
+        deleteCalled = true
     }
 }
 

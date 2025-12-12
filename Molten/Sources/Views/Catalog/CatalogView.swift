@@ -31,9 +31,6 @@ struct CatalogView: View {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data ✓
     @State private var viewModel: CatalogViewModel
 
-    // Search scope state - persisted via viewModel.searchTitlesOnly and UserDefaults
-    @State private var searchScope: CatalogSearchScope = .titlesOnly
-
 
     // Use manual UserDefaults handling instead of @AppStorage to prevent test crashes
     @State private var defaultSortOptionRawValue = SortOption.name.rawValue
@@ -346,61 +343,7 @@ struct CatalogView: View {
 
     // Extract modifiers to reduce body complexity
     private var contentWithModifiers: some View {
-        mainContentView
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .navigationTitle("Catalog")
-            .searchable(
-                text: $localSearchText,
-                placement: .navigationBarDrawer(displayMode: .always),
-                prompt: "Search colors, codes, manufacturers..."
-            )
-            .searchScopes($searchScope, activation: .onSearchPresentation) {
-                ForEach(CatalogSearchScope.allCases, id: \.self) { scope in
-                    Text(scope.rawValue)
-                }
-            }
-            .onChange(of: searchScope) { oldValue, newValue in
-                viewModel.searchTitlesOnly = (newValue == .titlesOnly)
-                // Persist to UserDefaults
-                userDefaults.set(newValue == .titlesOnly, forKey: "searchTitlesOnly")
-            }
-            .onChange(of: localSearchText) { oldValue, newValue in
-                // Sync local state to ViewModel - debouncing happens in ViewModel
-                viewModel.searchText = newValue
-            }
-            .autocorrectionDisabled()
-            .textInputAutocapitalization(.never)
-            .toolbar {
-                // Sort button - appears near the search bar
-                ToolbarItem(placement: .cancellationAction) {
-                    Menu {
-                        ForEach(SortOption.allCases, id: \.self) { option in
-                            Button {
-                                viewModel.sortOption = option
-                                updateSorting(option)
-                            } label: {
-                                Label(option.rawValue, systemImage: option.sortIcon)
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "arrow.up.arrow.down")
-                    }
-                    .accessibilityIdentifier("catalog_sort_button")
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button {
-                        showingHelp = true
-                    } label: {
-                        Image(systemName: "questionmark.circle")
-                    }
-                }
-            }
-            .sheet(isPresented: $showingHelp) {
-                CatalogHelpView()
-            }
+        contentWithSearchMode
             .modifier(CatalogSheetModifiers(
                 showingAllTags: $showingAllTags,
                 showingCOESelection: $showingCOESelection,
@@ -422,14 +365,14 @@ struct CatalogView: View {
                 defaultSortOptionRawValue: $defaultSortOptionRawValue,
                 enabledManufacturersData: $enabledManufacturersData,
                 searchTitlesOnly: $viewModel.searchTitlesOnly,
-                searchScope: $searchScope,
                 selectedProductTypes: $selectedProductTypes,
                 sortOption: $viewModel.sortOption,
                 viewModel: viewModel,
                 clearSearch: clearSearch,
                 resetNavigation: resetNavigation,
                 catalogUpdateMessage: $catalogUpdateMessage,
-                showCatalogUpdateToast: $showCatalogUpdateToast
+                showCatalogUpdateToast: $showCatalogUpdateToast,
+                localSearchText: $localSearchText
             ))
             .toast(
                 message: catalogUpdateMessage,
@@ -450,6 +393,37 @@ struct CatalogView: View {
                     )
                 }
             }
+    }
+
+    // Content with toolbar (search is handled by bottom tab bar)
+    private var contentWithSearchMode: some View {
+        mainContentView
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .navigationTitle("Catalog")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    sortMenu
+                }
+            }
+    }
+
+    // Sort menu extracted to avoid duplication
+    private var sortMenu: some View {
+        Menu {
+            ForEach(SortOption.allCases, id: \.self) { option in
+                Button {
+                    viewModel.sortOption = option
+                    updateSorting(option)
+                } label: {
+                    Label(option.rawValue, systemImage: option.sortIcon)
+                }
+            }
+        } label: {
+            Image(systemName: "arrow.up.arrow.down")
+        }
+        .accessibilityIdentifier("catalog_sort_button")
     }
     
     // MARK: - Filter Buttons

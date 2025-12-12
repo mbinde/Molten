@@ -12,7 +12,6 @@ struct CatalogLifecycleModifiers: ViewModifier {
     @Binding var defaultSortOptionRawValue: String
     @Binding var enabledManufacturersData: Data
     @Binding var searchTitlesOnly: Bool
-    @Binding var searchScope: CatalogSearchScope
     @Binding var selectedProductTypes: Set<String>
     @Binding var sortOption: SortOption
     let viewModel: CatalogViewModel
@@ -20,6 +19,7 @@ struct CatalogLifecycleModifiers: ViewModifier {
     let resetNavigation: () -> Void
     @Binding var catalogUpdateMessage: String
     @Binding var showCatalogUpdateToast: Bool
+    @Binding var localSearchText: String
 
     func body(content: Content) -> some View {
         content
@@ -28,6 +28,13 @@ struct CatalogLifecycleModifiers: ViewModifier {
             }
             .onReceive(NotificationCenter.default.publisher(for: .resetCatalogNavigation)) { _ in
                 resetNavigation()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .globalSearchTextChanged)) { notification in
+                // Update local search text from global tab bar search
+                if let searchText = notification.userInfo?["searchText"] as? String {
+                    localSearchText = searchText
+                    viewModel.searchText = searchText
+                }
             }
             .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
                 // Reload catalog data when ratings are submitted or deleted
@@ -87,7 +94,6 @@ struct CatalogLifecycleModifiers: ViewModifier {
                 // Load search titles only setting (default: true)
                 let titlesOnly = userDefaults.bool(forKey: "searchTitlesOnly") != false  // Default to true if not set
                 searchTitlesOnly = titlesOnly
-                searchScope = titlesOnly ? .titlesOnly : .allFields
 
                 // Product types: empty set = show all (new behavior, no need to persist)
 

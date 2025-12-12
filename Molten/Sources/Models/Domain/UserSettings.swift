@@ -20,7 +20,25 @@ class UserSettings {
 
     // MARK: - Display Settings
 
-    /// Controls whether descriptions expand by default in detail views
+    /// Display density preference
+    /// - Default: .compact (current information-dense layout)
+    /// - Options: .comfortable (more whitespace, larger touch targets), .compact (dense layout)
+    var displayDensity: DisplayDensity {
+        get {
+            if let rawValue = UserDefaults.standard.string(forKey: Keys.displayDensity),
+               let density = DisplayDensity(rawValue: rawValue) {
+                return density
+            }
+            return .compact
+        }
+        set {
+            withMutation(keyPath: \.displayDensity) {
+                UserDefaults.standard.set(newValue.rawValue, forKey: Keys.displayDensity)
+            }
+        }
+    }
+
+    /// Controls whether manufacturer descriptions/notes expand by default in detail views
     /// - Default: false (collapsed)
     /// - When true, descriptions are fully expanded when detail view opens
     /// - When false, descriptions are limited to 4 lines with "Show More" button
@@ -478,6 +496,7 @@ class UserSettings {
 
     /// UserDefaults keys for settings
     fileprivate enum Keys {
+        static let displayDensity = "displayDensity"
         static let expandManufacturerDescriptions = "expandManufacturerDescriptionsByDefault"
         static let expandUserNotes = "expandUserNotesByDefault"
         static let appearanceMode = "appearanceMode"
@@ -504,6 +523,39 @@ class UserSettings {
     }
 
     // MARK: - Enums
+
+    /// Display density options for UI layout
+    enum DisplayDensity: String, CaseIterable {
+        case comfortable = "comfortable"
+        case compact = "compact"
+
+        var displayName: String {
+            switch self {
+            case .comfortable:
+                return "Comfortable"
+            case .compact:
+                return "Compact"
+            }
+        }
+
+        var description: String {
+            switch self {
+            case .comfortable:
+                return "Extra spacing and larger touch targets for easier interaction"
+            case .compact:
+                return "Information-dense layout to fit more on screen"
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .comfortable:
+                return "hand.tap"
+            case .compact:
+                return "square.grid.3x3"
+            }
+        }
+    }
 
     /// Appearance mode options
     enum AppearanceMode: String, CaseIterable {

@@ -37,6 +37,7 @@ struct SettingsView: View {
     @State private var colorChipDisplayMode: UserSettings.ColorChipDisplayMode = UserSettings.shared.colorChipDisplayMode
     @State private var qrScanBehavior: UserSettings.QRScanBehavior = UserSettings.shared.qrScanBehavior
     @State private var inventoryQuickAction: UserSettings.InventoryQuickAction = UserSettings.shared.inventoryQuickAction
+    @State private var displayDensity: UserSettings.DisplayDensity = UserSettings.shared.displayDensity
     @State private var showingPaywall = false
 
     init(
@@ -138,6 +139,16 @@ struct SettingsView: View {
         )
     }
 
+    private var displayDensityBinding: Binding<UserSettings.DisplayDensity> {
+        Binding(
+            get: { displayDensity },
+            set: {
+                displayDensity = $0
+                UserSettings.shared.displayDensity = $0
+            }
+        )
+    }
+
     // Subscription computed properties
     private var subscriptionBadge: String {
         subscriptionViewModel.hasProAccess ? "Pro" : "Free"
@@ -231,6 +242,20 @@ struct SettingsView: View {
                         }
                     }
                     .pickerStyle(.segmented)
+
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                        Picker("Display Density", selection: displayDensityBinding) {
+                            ForEach(UserSettings.DisplayDensity.allCases, id: \.self) { density in
+                                Text(density.displayName).tag(density)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+
+                        Text(displayDensity.description)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                    .accessibilityIdentifier("settings_display_density")
 
                     NavigationLink {
                         TabCustomizationView()

@@ -29,6 +29,7 @@ extension Notification.Name {
     static let filterShoppingListByStore = Notification.Name("filterShoppingListByStore")
     static let navigateToInventorySharingWithCode = Notification.Name("navigateToInventorySharingWithCode")
     static let openMoltenDeepLink = Notification.Name("openMoltenDeepLink")
+    static let globalSearchTextChanged = Notification.Name("globalSearchTextChanged")
 }
 
 /// Main tab view that provides navigation between the app's primary sections
@@ -40,6 +41,12 @@ struct MainTabView: View {
     @State private var tabConfig: TabConfiguration? = nil
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.appDependencies) private var dependencies
+
+    // Search state (managed at MainTabView level so it can affect content)
+    @State private var isSearchActive = false
+    @State private var searchText = ""
+    @State private var showSearchOverlay = false
+    @FocusState private var isSearchFocused: Bool
 
     // MARK: - Dependency Injection
     private let deps: AppDependencies
@@ -175,20 +182,44 @@ struct MainTabView: View {
                         tabConfig: tabConfig,
                         showingMoreMenu: $showingMoreMenu,
                         onMoreTabSelect: { tab in
-                        showingMoreMenu = false
+                            showingMoreMenu = false
 
-                        // Special handling for Settings - show as sheet
-                        if tab == .settings {
-                            showingSettings = true
-                            return
+                            // Special handling for Settings - show as sheet
+                            if tab == .settings {
+                                showingSettings = true
+                                return
+                            }
+
+                            // Select the tab directly
+                            selectedTab = tab
+                            markTabAsViewed(tab)
+                        },
+                        isSearchActive: $isSearchActive,
+                        searchText: $searchText,
+                        showSearchOverlay: $showSearchOverlay,
+                        onSearchSubmit: {
+                            // Dismiss keyboard and close overlay when search is submitted
+                            isSearchFocused = false
+                            showSearchOverlay = false
                         }
-
-                        // Select the tab directly
-                        selectedTab = tab
-                        markTabAsViewed(tab)
-                    }
                     )
                 }
+            }
+
+            // Full-screen search overlay (shown when user taps on the search field)
+            if showSearchOverlay {
+                SearchOverlayView(
+                    searchText: $searchText,
+                    isSearchFocused: $isSearchFocused,
+                    onDismiss: {
+                        showSearchOverlay = false
+                    },
+                    onSubmit: {
+                        isSearchFocused = false
+                        showSearchOverlay = false
+                    }
+                )
+                .transition(.opacity)
             }
         }
         .background(DesignSystem.Colors.background)
@@ -261,6 +292,22 @@ struct MainTabView: View {
             case .recipes: recipesHasBeenViewed = true
             default: break
             }
+        }
+        .onChange(of: searchText) { _, newValue in
+            // Broadcast search text changes to the active tab
+            NotificationCenter.default.post(
+                name: .globalSearchTextChanged,
+                object: nil,
+                userInfo: ["searchText": newValue, "isActive": isSearchActive]
+            )
+        }
+        .onChange(of: isSearchActive) { _, newValue in
+            // Notify child views when search state changes
+            NotificationCenter.default.post(
+                name: .globalSearchTextChanged,
+                object: nil,
+                userInfo: ["searchText": newValue ? searchText : "", "isActive": newValue]
+            )
         }
     }
 
@@ -402,16 +449,29 @@ struct CustomTabBar: View {
     @Binding var showingMoreMenu: Bool
     let onMoreTabSelect: (DefaultTab) -> Void
 
+    // Search state
+    @Binding var isSearchActive: Bool
+    @Binding var searchText: String
+    @Binding var showSearchOverlay: Bool
+    let onSearchSubmit: () -> Void
+
     var body: some View {
         HStack(spacing: 0) {
-            // Show tabs from configuration
-            ForEach(tabConfig.tabBarTabs, id: \.self) { tab in
-                tabButton(for: tab)
-            }
+            if isSearchActive {
+                // Collapsed state: show only first tab icon + expanded search bar
+                collapsedTabButton
+                expandedSearchBar
+            } else {
+                // Normal state: show all tabs + search FAB
+                ForEach(tabConfig.tabBarTabs, id: \.self) { tab in
+                    tabButton(for: tab)
+                }
 
-            // Show More button if needed
-            if tabConfig.needsMoreTab {
-                moreButton
+                if tabConfig.needsMoreTab {
+                    moreButton
+                }
+
+                searchFAB
             }
         }
         .frame(height: 49)
@@ -420,6 +480,100 @@ struct CustomTabBar: View {
                 .ignoresSafeArea()
         )
         .overlay(topSeparator, alignment: .top)
+        .animation(.easeInOut(duration: 0.25), value: isSearchActive)
+    }
+
+    // MARK: - Collapsed Tab Button (when search is active)
+
+    private var collapsedTabButton: some View {
+        Button {
+            // When tapped in search mode, collapse search and return to tab
+            withAnimation(.easeInOut(duration: 0.25)) {
+                isSearchActive = false
+                searchText = ""
+            }
+        } label: {
+            Image("AppIconImage")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 28, height: 28)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .frame(width: 50, height: 49)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Expanded Search Bar (when search is active but not typing)
+
+    private var expandedSearchBar: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            // Tappable search field that opens full search overlay
+            Button {
+                showSearchOverlay = true
+            } label: {
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .font(.system(size: 16))
+
+                    Text(searchText.isEmpty ? "Search catalog..." : searchText)
+                        .foregroundColor(searchText.isEmpty ? DesignSystem.Colors.textSecondary : DesignSystem.Colors.textPrimary)
+                        .font(.body)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if !searchText.isEmpty {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                            .font(.system(size: 16))
+                    }
+                }
+                .padding(.horizontal, DesignSystem.Spacing.md)
+                .padding(.vertical, DesignSystem.Spacing.sm)
+                .background(Color(.systemGray5))
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large))
+            }
+            .buttonStyle(.plain)
+
+            // Close button
+            Button {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    isSearchActive = false
+                    searchText = ""
+                }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                    .frame(width: 32, height: 32)
+                    .background(Color(.systemGray5))
+                    .clipShape(Circle())
+            }
+        }
+        .padding(.horizontal, DesignSystem.Spacing.sm)
+        .padding(.trailing, DesignSystem.Spacing.sm)
+    }
+
+    // MARK: - Search FAB (when search is NOT active)
+
+    private var searchFAB: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                isSearchActive = true
+            }
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(DesignSystem.Colors.accentPrimary)
+                    .frame(width: 44, height: 44)
+
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+        }
+        .padding(.horizontal, 8)
+        .accessibilityLabel("Search")
+        .accessibilityIdentifier("tab_bar_search_button")
     }
     
     private func tabButton(for tab: DefaultTab) -> some View {
@@ -517,4 +671,99 @@ struct CustomTabBar: View {
         shoppingListService: deps.shoppingListService,
         kilnScheduleService: deps.kilnScheduleService
     )
+}
+
+// MARK: - Search Overlay View
+
+/// Full-screen search overlay that appears when user taps on the search field
+/// Similar to App Store search experience
+struct SearchOverlayView: View {
+    @Binding var searchText: String
+    @FocusState.Binding var isSearchFocused: Bool
+    let onDismiss: () -> Void
+    let onSubmit: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Search bar at top
+            HStack(spacing: DesignSystem.Spacing.md) {
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .font(.system(size: 16))
+
+                    TextField("Search catalog...", text: $searchText)
+                        .focused($isSearchFocused)
+                        .submitLabel(.search)
+                        .onSubmit {
+                            onSubmit()
+                        }
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                                .font(.system(size: 16))
+                        }
+                    }
+                }
+                .padding(.horizontal, DesignSystem.Spacing.md)
+                .padding(.vertical, DesignSystem.Spacing.sm + 2)
+                .background(Color(.systemGray5))
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large))
+
+                Button("Cancel") {
+                    onDismiss()
+                }
+                .foregroundColor(DesignSystem.Colors.accentPrimary)
+            }
+            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.top, DesignSystem.Spacing.md)
+            .padding(.bottom, DesignSystem.Spacing.sm)
+
+            Divider()
+
+            // Search suggestions / results area
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    // Show search suggestions when typing
+                    if !searchText.isEmpty {
+                        // This area will show filtered results from the catalog
+                        // The actual results are shown in the CatalogView below
+                        Text("Searching for \"\(searchText)\"...")
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                            .padding(.horizontal, DesignSystem.Spacing.md)
+                            .padding(.vertical, DesignSystem.Spacing.lg)
+                    } else {
+                        // Empty state - prompt to search
+                        VStack(spacing: DesignSystem.Spacing.md) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 48))
+                                .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.5))
+
+                            Text("Search colors, codes, manufacturers...")
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 60)
+                    }
+                }
+            }
+
+            Spacer()
+        }
+        .background(DesignSystem.Colors.background)
+        .onAppear {
+            // Auto-focus the search field when overlay appears
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isSearchFocused = true
+            }
+        }
+    }
 }

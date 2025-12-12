@@ -20,6 +20,7 @@ import Foundation
 struct GlassItemModel: CatalogItem {
     let stable_id: String  // PRIMARY KEY: MANDATORY 6-char hash (e.g., "abc123")
     let name: String
+    let full_name: String?  // Full product name from manufacturer (e.g., "CiM Peace Ltd Run" vs just "Peace")
     let sku: String?  // Optional - some manufacturers don't use SKUs
     let manufacturer: String
     let mfr_notes: String?
@@ -35,12 +36,13 @@ struct GlassItemModel: CatalogItem {
     nonisolated var id: String { stable_id }
 
     /// Initialize with computed URI
-    nonisolated init(stable_id: String, name: String, sku: String?, manufacturer: String,
+    nonisolated init(stable_id: String, name: String, full_name: String? = nil, sku: String?, manufacturer: String,
          mfr_notes: String? = nil, coe: Int32, url: String? = nil, mfr_status: String,
          image_url: String? = nil, image_path: String? = nil, image_thumb_path: String? = nil,
          dominant_colors: [String]? = nil) {
         self.stable_id = stable_id
         self.name = name
+        self.full_name = full_name
         self.sku = sku
         self.manufacturer = manufacturer
         self.mfr_notes = mfr_notes

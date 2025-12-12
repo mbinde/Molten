@@ -48,7 +48,17 @@ struct CatalogCodeLookup {
         if let item = searchByNameContains(cleanCode, in: allItems) {
             return item
         }
-        
+
+        // Strategy 6: Search by exact full_name match (for long product names on receipts)
+        if let item = searchByExactFullName(cleanCode, in: allItems) {
+            return item
+        }
+
+        // Strategy 7: Search for items containing the code in full_name
+        if let item = searchByFullNameContains(cleanCode, in: allItems) {
+            return item
+        }
+
         return nil
     }
     
@@ -119,6 +129,16 @@ struct CatalogCodeLookup {
     private static func searchByNameContains(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
         let lowercaseCode = code.lowercased()
         return items.first { $0.name.lowercased().contains(lowercaseCode) }
+    }
+
+    private static func searchByExactFullName(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
+        let lowercaseCode = code.lowercased()
+        return items.first { $0.full_name?.lowercased() == lowercaseCode }
+    }
+
+    private static func searchByFullNameContains(_ code: String, in items: [GlassItemModel]) -> GlassItemModel? {
+        let lowercaseCode = code.lowercased()
+        return items.first { $0.full_name?.lowercased().contains(lowercaseCode) == true }
     }
     
     // DEAD CODE (2025-11-02): Legacy search methods never called, just wrappers. Safe to remove.

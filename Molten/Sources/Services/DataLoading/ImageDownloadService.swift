@@ -40,9 +40,8 @@ final class ImageDownloadService: Sendable {
 
     // MARK: - Configuration
 
-    /// Base URL for product images (served from Cloudflare Pages static assets)
-    // Note: /images/glass/ is served as static assets, not via API
-    nonisolated private static let imageBaseURL = "https://www.moltenglass.app/images/glass"
+    /// Base URL for product images (served from R2 via API route)
+    nonisolated private static let imageBaseURL = "https://www.moltenglass.app/api/v1/images"
 
     /// URL for image manifest (contains all images with their ETags)
     nonisolated private static let manifestURL = "https://www.moltenglass.app/api/v1/images/manifest"

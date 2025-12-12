@@ -34,13 +34,6 @@ struct ShoppingListView: View {
 
     // UI-only state (not in ViewModel)
     @State private var searchScope: SearchScope = .allFields
-    @State private var showingAllTags = false
-    @State private var showingCOESelection = false
-    @State private var selectedProductTypes: Set<String> = []  // Not used in shopping list, but required by SearchAndFilterHeader
-    @State private var showingProductTypeSelection = false
-    @State private var showingManufacturerSelection = false
-    @State private var showingStoreSelection = false
-    @State private var searchClearedFeedback = false
     @State private var showingAddItem = false
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
     @State private var navigationPath = NavigationPath()
@@ -66,6 +59,9 @@ struct ShoppingListView: View {
     // Local search text state - isolates TextField from ViewModel to prevent full view re-renders
     // The ViewModel's searchText setter handles debouncing and triggers filtering
     @State private var localSearchText = ""
+
+    // Filter sheet state (for floating filter button)
+    @State private var showingFilterSheet = false
 
     // Accept ViewModel directly (protocol-based pattern)
     #if canImport(UIKit)
@@ -614,6 +610,62 @@ struct ShoppingListView: View {
         return counts
     }
 
+    private var coeCounts: [Int32: Int] {
+        // Count items per COE based on current filters (excluding COE filter itself)
+        var allItems = viewModel.shoppingLists.values.flatMap { $0.items }
+
+        // Apply all filters EXCEPT COE
+        // Apply search filter
+        if !viewModel.searchText.isEmpty && SearchTextParser.isSearchTextMeaningful(viewModel.searchText) {
+            let searchMode = SearchTextParser.parseSearchText(viewModel.searchText)
+            allItems = allItems.filter { item in
+                let allFields = [
+                    item.catalogItem.name,
+                    item.catalogItem.stable_id,
+                    item.catalogItem.manufacturer
+                ]
+                return SearchTextParser.matchesAnyField(fields: allFields, mode: searchMode)
+            }
+        }
+
+        // Apply product type filter
+        if !viewModel.selectedProductTypes.isEmpty {
+            allItems = allItems.filter { item in
+                viewModel.selectedProductTypes.contains(item.catalogItem.itemType.rawValue)
+            }
+        }
+
+        // Apply tag filter
+        if !viewModel.selectedTags.isEmpty {
+            allItems = allItems.filter { item in
+                !viewModel.selectedTags.isDisjoint(with: Set(item.allTags))
+            }
+        }
+
+        // Apply manufacturer filter
+        if !viewModel.selectedManufacturers.isEmpty {
+            allItems = allItems.filter { item in
+                viewModel.selectedManufacturers.contains(item.catalogItem.manufacturer.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        }
+
+        // Apply store filter
+        if let selectedStore = viewModel.selectedStore {
+            allItems = allItems.filter { item in
+                item.shoppingListItem.store == selectedStore
+            }
+        }
+
+        // Count items per COE
+        var counts: [Int32: Int] = [:]
+        for item in allItems {
+            if let coe = item.catalogItem.coe {
+                counts[coe, default: 0] += 1
+            }
+        }
+        return counts
+    }
+
     private var inventoryTypeCounts: [String: Int] {
         // Count items per inventory type based on current filters (excluding inventory type filter itself)
         var allItems = viewModel.shoppingLists.values.flatMap { $0.items }
@@ -681,44 +733,6 @@ struct ShoppingListView: View {
     var body: some View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
-                // Filter header using reusable ModernFilterHeader component
-                ModernFilterHeader(
-                    searchTitlesOnly: $viewModel.searchTitlesOnly,
-                    sortOption: $viewModel.sortOption,
-                    sortOptions: Array(ShoppingListSortOption.allCases),
-                    sortOptionIcon: { $0.icon },
-                    selectedTags: $viewModel.selectedTags,
-                    selectedCOEs: $viewModel.selectedCOEs,
-                    selectedManufacturers: $viewModel.selectedManufacturers,
-                    showingTagsSheet: $showingAllTags,
-                    showingCOESheet: $showingCOESelection,
-                    showingManufacturerSheet: $showingManufacturerSelection,
-                    productTypeFilter: .init(
-                        selectedProductTypes: $viewModel.selectedProductTypes,
-                        availableTypes: FeatureFlags.availableProductTypes,
-                        displayName: displayNameForProductType,
-                        typeCounts: viewModel.productTypeCounts
-                    ),
-                    storeFilter: .init(
-                        selectedStore: $viewModel.selectedStore,
-                        availableStores: allAvailableStores,
-                        itemCounts: storeCounts,
-                        onClear: { viewModel.selectedStore = nil }
-                    ),
-                    inventoryTypeFilter: .init(
-                        selectedType: $viewModel.selectedInventoryType,
-                        availableTypes: viewModel.availableInventoryTypes,
-                        itemCounts: inventoryTypeCounts,
-                        displayName: { GlassTerminologySettings.shared.displayName(for: $0) },
-                        onClear: { viewModel.selectedInventoryType = nil }
-                    ),
-                    coeFilter: .init(
-                        selectedCOEs: $viewModel.selectedCOEs,
-                        availableCOEs: allAvailableCOEs
-                    ),
-                    showSort: false  // Sort is in the toolbar instead
-                )
-
                 // Usage banner (only show for free tier when not in shopping mode)
                 if entitlementService.currentTier == .free && !shoppingModeState.isShoppingModeEnabled {
                     UsageBanner(
@@ -866,38 +880,6 @@ struct ShoppingListView: View {
                     .accessibilityIdentifier("shopping_add_item_button")
                 }
             }
-            .sheet(isPresented: $showingAllTags) {
-                FilterSelectionSheet.tags(
-                    availableTags: allAvailableTags,
-                    selectedTags: $viewModel.selectedTags,
-                    itemCounts: tagCounts
-                )
-            }
-            .sheet(isPresented: $showingCOESelection) {
-                FilterSelectionSheet.coes(
-                    availableCOEs: allAvailableCOEs,
-                    selectedCOEs: $viewModel.selectedCOEs
-                )
-            }
-            .sheet(isPresented: $showingManufacturerSelection) {
-                FilterSelectionSheet.manufacturers(
-                    availableManufacturers: allAvailableManufacturers,
-                    selectedManufacturers: $viewModel.selectedManufacturers,
-                    manufacturerDisplayName: { code in
-                        GlassManufacturers.fullName(for: code) ?? code
-                    },
-                    itemCounts: manufacturerCounts
-                )
-            }
-            .sheet(isPresented: $showingStoreSelection) {
-                FilterSelectionSheet.stores(
-                    availableStores: allAvailableStores,
-                    selectedStores: Binding(
-                        get: { viewModel.selectedStore.map { Set([$0]) } ?? [] },
-                        set: { viewModel.selectedStore = $0.first }
-                    )
-                )
-            }
             .sheet(isPresented: $showingUpgradePrompt) {
                 UpgradePromptView(
                     feature: "shopping list items",
@@ -926,6 +908,32 @@ struct ShoppingListView: View {
             .onShoppingListNotifications(
                 loadShoppingList: loadShoppingList,
                 setSelectedStore: { viewModel.selectedStore = $0 }
+            )
+            .withShoppingFilterSheet(
+                showingFilterSheet: $showingFilterSheet,
+                sortOption: $viewModel.sortOption,
+                selectedTags: $viewModel.selectedTags,
+                selectedCOEs: $viewModel.selectedCOEs,
+                selectedManufacturers: $viewModel.selectedManufacturers,
+                selectedStore: $viewModel.selectedStore,
+                selectedProductTypes: $viewModel.selectedProductTypes,
+                selectedInventoryType: $viewModel.selectedInventoryType,
+                allAvailableTags: allAvailableTags,
+                allAvailableCOEs: allAvailableCOEs,
+                availableManufacturers: allAvailableManufacturers,
+                availableStores: allAvailableStores,
+                availableProductTypes: FeatureFlags.availableProductTypes,
+                availableInventoryTypes: viewModel.availableInventoryTypes,
+                tagCounts: tagCounts,
+                coeCounts: coeCounts,
+                manufacturerCounts: manufacturerCounts,
+                storeCounts: storeCounts,
+                productTypeCounts: viewModel.productTypeCounts,
+                inventoryTypeCounts: inventoryTypeCounts,
+                notifyFilterCountChanged: { viewModel.notifyFilterCountChanged() },
+                manufacturerDisplayName: { GlassManufacturers.fullName(for: $0) ?? $0 },
+                productTypeDisplayName: displayNameForProductType,
+                inventoryTypeDisplayName: { GlassTerminologySettings.shared.displayName(for: $0) }
             )
             .alert("Keep Basket Items?", isPresented: $showingExitShoppingModeAlert) {
                 Button("Keep Items", role: .cancel) {
@@ -1317,6 +1325,79 @@ struct ShoppingListView: View {
     }
 }
 
+// MARK: - Filter Sheet Modifier
+// Extracted to reduce body complexity and help Swift compiler
+
+private struct ShoppingFilterSheetModifier: ViewModifier {
+    @Binding var showingFilterSheet: Bool
+    @Binding var sortOption: ShoppingListSortOption
+    @Binding var selectedTags: Set<String>
+    @Binding var selectedCOEs: Set<Int32>
+    @Binding var selectedManufacturers: Set<String>
+    @Binding var selectedStore: String?
+    @Binding var selectedProductTypes: Set<String>
+    @Binding var selectedInventoryType: String?
+
+    let allAvailableTags: [String]
+    let allAvailableCOEs: [Int32]
+    let availableManufacturers: [String]
+    let availableStores: [String]
+    let availableProductTypes: [String]
+    let availableInventoryTypes: [String]
+
+    let tagCounts: [String: Int]
+    let coeCounts: [Int32: Int]
+    let manufacturerCounts: [String: Int]
+    let storeCounts: [String: Int]
+    let productTypeCounts: [String: Int]
+    let inventoryTypeCounts: [String: Int]
+
+    let notifyFilterCountChanged: () -> Void
+    let manufacturerDisplayName: (String) -> String
+    let productTypeDisplayName: (String) -> String
+    let inventoryTypeDisplayName: (String) -> String
+
+    func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .showShoppingFilters)) { _ in
+                showingFilterSheet = true
+            }
+            .onChange(of: selectedTags) { _, _ in notifyFilterCountChanged() }
+            .onChange(of: selectedCOEs) { _, _ in notifyFilterCountChanged() }
+            .onChange(of: selectedManufacturers) { _, _ in notifyFilterCountChanged() }
+            .onChange(of: selectedStore) { _, _ in notifyFilterCountChanged() }
+            .onChange(of: selectedProductTypes) { _, _ in notifyFilterCountChanged() }
+            .onChange(of: selectedInventoryType) { _, _ in notifyFilterCountChanged() }
+            .sheet(isPresented: $showingFilterSheet) {
+                ShoppingFilterSheet(
+                    isPresented: $showingFilterSheet,
+                    sortOption: $sortOption,
+                    selectedTags: $selectedTags,
+                    selectedCOEs: $selectedCOEs,
+                    selectedManufacturers: $selectedManufacturers,
+                    selectedStore: $selectedStore,
+                    selectedProductTypes: $selectedProductTypes,
+                    selectedInventoryType: $selectedInventoryType,
+                    allAvailableTags: allAvailableTags,
+                    allAvailableCOEs: allAvailableCOEs,
+                    availableManufacturers: availableManufacturers,
+                    availableStores: availableStores,
+                    availableProductTypes: availableProductTypes,
+                    availableInventoryTypes: availableInventoryTypes,
+                    tagCounts: tagCounts,
+                    coeCounts: coeCounts,
+                    manufacturerCounts: manufacturerCounts,
+                    storeCounts: storeCounts,
+                    productTypeCounts: productTypeCounts,
+                    inventoryTypeCounts: inventoryTypeCounts,
+                    manufacturerDisplayName: manufacturerDisplayName,
+                    productTypeDisplayName: productTypeDisplayName,
+                    inventoryTypeDisplayName: inventoryTypeDisplayName
+                )
+            }
+    }
+}
+
 // MARK: - Notification Handlers Modifier
 // Extracted to reduce body complexity and help Swift compiler
 
@@ -1370,6 +1451,60 @@ private extension View {
         modifier(ShoppingListNotificationHandlersModifier(
             loadShoppingList: loadShoppingList,
             setSelectedStore: setSelectedStore
+        ))
+    }
+
+    func withShoppingFilterSheet(
+        showingFilterSheet: Binding<Bool>,
+        sortOption: Binding<ShoppingListSortOption>,
+        selectedTags: Binding<Set<String>>,
+        selectedCOEs: Binding<Set<Int32>>,
+        selectedManufacturers: Binding<Set<String>>,
+        selectedStore: Binding<String?>,
+        selectedProductTypes: Binding<Set<String>>,
+        selectedInventoryType: Binding<String?>,
+        allAvailableTags: [String],
+        allAvailableCOEs: [Int32],
+        availableManufacturers: [String],
+        availableStores: [String],
+        availableProductTypes: [String],
+        availableInventoryTypes: [String],
+        tagCounts: [String: Int],
+        coeCounts: [Int32: Int],
+        manufacturerCounts: [String: Int],
+        storeCounts: [String: Int],
+        productTypeCounts: [String: Int],
+        inventoryTypeCounts: [String: Int],
+        notifyFilterCountChanged: @escaping () -> Void,
+        manufacturerDisplayName: @escaping (String) -> String,
+        productTypeDisplayName: @escaping (String) -> String,
+        inventoryTypeDisplayName: @escaping (String) -> String
+    ) -> some View {
+        modifier(ShoppingFilterSheetModifier(
+            showingFilterSheet: showingFilterSheet,
+            sortOption: sortOption,
+            selectedTags: selectedTags,
+            selectedCOEs: selectedCOEs,
+            selectedManufacturers: selectedManufacturers,
+            selectedStore: selectedStore,
+            selectedProductTypes: selectedProductTypes,
+            selectedInventoryType: selectedInventoryType,
+            allAvailableTags: allAvailableTags,
+            allAvailableCOEs: allAvailableCOEs,
+            availableManufacturers: availableManufacturers,
+            availableStores: availableStores,
+            availableProductTypes: availableProductTypes,
+            availableInventoryTypes: availableInventoryTypes,
+            tagCounts: tagCounts,
+            coeCounts: coeCounts,
+            manufacturerCounts: manufacturerCounts,
+            storeCounts: storeCounts,
+            productTypeCounts: productTypeCounts,
+            inventoryTypeCounts: inventoryTypeCounts,
+            notifyFilterCountChanged: notifyFilterCountChanged,
+            manufacturerDisplayName: manufacturerDisplayName,
+            productTypeDisplayName: productTypeDisplayName,
+            inventoryTypeDisplayName: inventoryTypeDisplayName
         ))
     }
 }

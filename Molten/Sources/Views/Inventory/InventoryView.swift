@@ -32,9 +32,6 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var prefilledNaturalKey: String = ""
     @State private var navigationPath = NavigationPath()
     @State private var showingAddFromCatalog = false
-    @State private var showingAllTags = false
-    @State private var showingCOESelection = false
-    @State private var showingManufacturerSelection = false
     @State private var showingSuccessToast = false
     @State private var successMessage = ""
     @State private var refreshTrigger = 0  // Force SwiftUI to refresh list
@@ -43,6 +40,7 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var showingQRScanner = false
     @State private var showingManageLocations = false
     @State private var showingHelp = false
+    @State private var showingFilterSheet = false
     @State private var scannedQRCode: String? = nil
     @State private var pendingShareCode: String? = nil
     @State private var filterRefreshTrigger = 0  // Force re-evaluation when Settings filters change
@@ -376,214 +374,117 @@ struct InventoryView: View, CachedDataDeletion {
     }
 
     var body: some View {
+        mainNavigationStack
+    }
+
+    @ViewBuilder
+    private var mainNavigationStack: some View {
         NavigationStack(path: $navigationPath) {
-            VStack(spacing: 0) {
-                // Filter header using reusable ModernFilterHeader component
-                ModernFilterHeader(
-                    searchTitlesOnly: $viewModel.searchTitlesOnly,
-                    sortOption: $viewModel.sortOption,
-                    sortOptions: Array(InventorySortOption.allCases),
-                    sortOptionIcon: { $0.icon },
-                    selectedTags: $viewModel.selectedTags,
-                    selectedCOEs: $viewModel.selectedCOEs,
-                    selectedManufacturers: $viewModel.selectedManufacturers,
-                    showingTagsSheet: $showingAllTags,
-                    showingCOESheet: $showingCOESelection,
-                    showingManufacturerSheet: $showingManufacturerSelection,
-                    productTypeFilter: .init(
-                        selectedProductTypes: $viewModel.selectedProductTypes,
-                        availableTypes: FeatureFlags.availableProductTypes,
-                        displayName: displayNameForProductType,
-                        typeCounts: viewModel.productTypeCounts
-                    ),
-                    inventoryTypeFilter: .init(
-                        selectedType: $viewModel.selectedInventoryType,
-                        availableTypes: viewModel.availableInventoryTypes,
-                        itemCounts: viewModel.inventoryTypeCounts,
-                        displayName: { GlassTerminologySettings.shared.displayName(for: $0) },
-                        onClear: { viewModel.selectedInventoryType = nil }
-                    ),
-                    showSort: false  // Sort is in the toolbar instead
-                )
+            mainContent
+        }
+    }
 
-                // Quick location filter bar - horizontal scrolling chips with multi-select
-                // Only shows when there are locations defined
-                LocationQuickFilterBar(
-                    selectedLocations: $viewModel.selectedLocations,
-                    availableLocations: allAvailableLocations,
-                    locationCounts: locationCounts,
-                    noLocationCount: noLocationCount,
-                    totalCount: inventoryItemCount,
-                    onManageTapped: {
-                        showingManageLocations = true
-                    }
-                )
-
-                // Usage banner (only show for free tier)
-                if entitlementService.currentTier == .free {
-                    UsageBanner(
-                        featureName: "unique inventory items",
-                        currentCount: inventoryItemCount,
-                        limit: entitlementService.getInventoryLimit(),
-                        onUpgradeTap: {
-                            showingUpgradePrompt = true
-                        }
-                    )
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                }
-
-                // Main content
-                Group {
-                    if isEmpty {
-                        if shouldShowSearchEmptyState {
-                            searchEmptyStateView
-                        } else {
-                            inventoryEmptyState
-                        }
-                    } else {
-                        inventoryListView
-                    }
-                }
-                .id(refreshTrigger)
-            }
-            .navigationTitle("Inventory")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .searchable(
-                text: $localSearchText,
-                placement: .navigationBarDrawer(displayMode: .always),
-                prompt: "Search inventory by name, code, manufacturer..."
+    @ViewBuilder
+    private var inventoryContentView: some View {
+        VStack(spacing: 0) {
+            LocationQuickFilterBar(
+                selectedLocations: $viewModel.selectedLocations,
+                availableLocations: allAvailableLocations,
+                locationCounts: locationCounts,
+                noLocationCount: noLocationCount,
+                totalCount: inventoryItemCount,
+                onManageTapped: { showingManageLocations = true }
             )
-            .searchScopes($searchScope, activation: .onSearchPresentation) {
-                ForEach(InventorySearchScope.allCases, id: \.self) { scope in
-                    Text(scope.rawValue)
-                }
-            }
-            .onChange(of: searchScope) { oldValue, newValue in
-                viewModel.searchTitlesOnly = (newValue == .titlesOnly)
-            }
-            .onChange(of: localSearchText) { oldValue, newValue in
-                // Debounce search locally - only update ViewModel after delay
-                // This prevents any ViewModel observation triggers during typing
-                searchDebounceTask?.cancel()
 
-                if newValue.isEmpty {
-                    // Clear immediately when user clears search
-                    viewModel.debouncedSearchText = ""
-                    updateFilteredItemsCache()
-                } else {
-                    // Debounce non-empty searches
-                    searchDebounceTask = Task {
-                        try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
-                        if !Task.isCancelled {
-                            viewModel.debouncedSearchText = newValue
-                            updateFilteredItemsCache()
-                        }
-                    }
-                }
-            }
-            .autocorrectionDisabled()
-            .textInputAutocapitalization(.never)
-            .toolbar {
-                toolbarContent
-            }
-            .sheet(isPresented: $showingAllTags) {
-                FilterSelectionSheet.tags(
-                    availableTags: allAvailableTags,
-                    selectedTags: $viewModel.selectedTags,
-                    itemCounts: tagCounts
-                )
-            }
-            .sheet(isPresented: $showingCOESelection) {
-                FilterSelectionSheet.coes(
-                    availableCOEs: allAvailableCOEs,
-                    selectedCOEs: $viewModel.selectedCOEs,
-                    itemCounts: coeCounts
-                )
-            }
-            .sheet(isPresented: $showingManufacturerSelection) {
-                FilterSelectionSheet.manufacturers(
-                    availableManufacturers: allAvailableManufacturers,
-                    selectedManufacturers: $viewModel.selectedManufacturers,
-                    manufacturerDisplayName: { code in
-                        GlassManufacturers.fullName(for: code) ?? code.uppercased()
-                    },
-                    itemCounts: manufacturerCounts
-                )
-            }
-            .sheet(isPresented: $showingAddItem, onDismiss: {
-                log.info("📋 Add inventory sheet dismissed, waiting for Core Data sync...")
-                // Add a small delay to allow background context save to propagate
-                Task {
-                    // Wait a bit for the background context save to complete and propagate
-                    try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-                    // Invalidate cache to force fresh data load
-                    await CatalogDataCache.shared.reload(catalogService: catalogService)
-                    await loadData()
-                }
-            }) {
-                AddInventoryItemView(
-                    prefilledNaturalKey: prefilledNaturalKey.isEmpty ? nil : prefilledNaturalKey,
-                    deps: .shared
-                )
-            }
-            .sheet(isPresented: $showingLabelDesigner) {
-                LabelDesignerView(items: sortedFilteredItems)
-            }
-            .sheet(isPresented: $showingQRScanner) {
-                QRCodeScannerView { scannedURL in
-                    // Handle the scanned Molten QR code URL
-                    if let url = URL(string: scannedURL) {
-                        // Process via the app's existing deep link handler
-                        // Post to NotificationCenter so MoltenApp can handle it
-                        NotificationCenter.default.post(
-                            name: .openMoltenDeepLink,
-                            object: nil,
-                            userInfo: ["url": url]
-                        )
-                    }
-                }
-            }
-            .sheet(isPresented: $showingUpgradePrompt) {
-                UpgradePromptView(
-                    feature: "inventory",
+            if entitlementService.currentTier == .free {
+                UsageBanner(
+                    featureName: "unique inventory items",
                     currentCount: inventoryItemCount,
-                    limit: entitlementService.getInventoryLimit() ?? 0
+                    limit: entitlementService.getInventoryLimit(),
+                    onUpgradeTap: { showingUpgradePrompt = true }
                 )
+                .padding(.horizontal)
+                .padding(.top, 8)
             }
-            .sheet(isPresented: $showingManageLocations) {
-                ManageLocationsView(
-                    storageLocationDefinitionRepository: storageLocationDefinitionRepository,
-                    storageLocationRepository: storageLocationRepository,
-                    inventoryTrackingService: inventoryTrackingService,
-                    onLocationsChanged: {
-                        // Full reload when locations are renamed, merged, deleted, or added
-                        Task {
-                            await CatalogDataCache.shared.reload(catalogService: catalogService)
-                            await loadData()
-                        }
-                    }
-                )
-            }
-            .fullScreenCover(isPresented: $showingSharing) {
-                NavigationStack {
-                    InventorySharingView(pendingShareCode: pendingShareCode)
-                        .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button("Done") {
-                                    showingSharing = false
-                                    // Clear pending share code after dismissing
-                                    pendingShareCode = nil
-                                }
-                            }
-                        }
+
+            Group {
+                if isEmpty {
+                    if shouldShowSearchEmptyState { searchEmptyStateView }
+                    else { inventoryEmptyState }
+                } else {
+                    inventoryListView
                 }
             }
-            .sheet(isPresented: $showingHelp) {
-                InventoryHelpView()
+            .id(refreshTrigger)
+        }
+        .navigationTitle("Inventory")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .searchable(
+            text: $localSearchText,
+            placement: .navigationBarDrawer(displayMode: .always),
+            prompt: "Search inventory by name, code, manufacturer..."
+        )
+        .searchScopes($searchScope, activation: .onSearchPresentation) {
+            ForEach(InventorySearchScope.allCases, id: \.self) { scope in
+                Text(scope.rawValue)
             }
+        }
+        .onChange(of: searchScope) { _, newValue in
+            viewModel.searchTitlesOnly = (newValue == .titlesOnly)
+        }
+        .onChange(of: localSearchText) { _, newValue in
+            handleSearchTextChange(newValue)
+        }
+        .autocorrectionDisabled()
+        .textInputAutocapitalization(.never)
+        .toolbar { toolbarContent }
+    }
+
+    @ViewBuilder
+    private var mainContent: some View {
+        inventoryContentView
+            .withHelperSheets(
+                showingAddItem: $showingAddItem,
+                showingLabelDesigner: $showingLabelDesigner,
+                showingQRScanner: $showingQRScanner,
+                showingUpgradePrompt: $showingUpgradePrompt,
+                showingHelp: $showingHelp,
+                showingManageLocations: $showingManageLocations,
+                showingSharing: $showingSharing,
+                pendingShareCode: $pendingShareCode,
+                prefilledNaturalKey: prefilledNaturalKey,
+                sortedFilteredItems: sortedFilteredItems,
+                inventoryItemCount: inventoryItemCount,
+                inventoryLimit: entitlementService.getInventoryLimit(),
+                storageLocationDefinitionRepository: storageLocationDefinitionRepository,
+                storageLocationRepository: storageLocationRepository,
+                inventoryTrackingService: inventoryTrackingService,
+                catalogService: catalogService,
+                loadData: loadData
+            )
+            .withInventoryFilterSheet(
+                showingFilterSheet: $showingFilterSheet,
+                sortOption: $viewModel.sortOption,
+                selectedTags: $viewModel.selectedTags,
+                selectedCOEs: $viewModel.selectedCOEs,
+                selectedManufacturers: $viewModel.selectedManufacturers,
+                selectedLocations: $viewModel.selectedLocations,
+                selectedProductTypes: $viewModel.selectedProductTypes,
+                allAvailableTags: cachedAllTags,
+                allAvailableCOEs: cachedAllCOEs,
+                availableManufacturers: cachedManufacturers,
+                availableLocations: cachedLocations,
+                availableProductTypes: ["glass", "coatings"],
+                tagCounts: viewModel.tagCounts,
+                coeCounts: viewModel.coeCounts,
+                manufacturerCounts: viewModel.manufacturerCounts,
+                locationCounts: viewModel.locationCounts,
+                productTypeCounts: viewModel.productTypeCounts,
+                manufacturerDisplayName: { GlassManufacturers.fullName(for: $0) ?? $0 },
+                productTypeDisplayName: { $0 == "glass" ? "Glass" : "Coatings" }
+            )
             .task {
                 await loadDataWithCloudKitRetry()
             }
@@ -599,12 +500,12 @@ struct InventoryView: View, CachedDataDeletion {
                 filterRefreshTrigger: $filterRefreshTrigger,
                 navigationPath: $navigationPath,
                 pendingShareCode: $pendingShareCode,
-                showingSharing: $showingSharing
+                showingSharing: $showingSharing,
+                showingFilterSheet: $showingFilterSheet
             )
             .onFilterChange(viewModel: viewModel, updateCache: updateFilteredItemsCache)
-        }
     }
-    
+
     // MARK: - Views
     
     private var inventoryEmptyState: some View {
@@ -793,6 +694,22 @@ struct InventoryView: View, CachedDataDeletion {
         }
     }
 
+    private func handleSearchTextChange(_ newValue: String) {
+        searchDebounceTask?.cancel()
+        if newValue.isEmpty {
+            viewModel.debouncedSearchText = ""
+            updateFilteredItemsCache()
+        } else {
+            searchDebounceTask = Task {
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                if !Task.isCancelled {
+                    viewModel.debouncedSearchText = newValue
+                    updateFilteredItemsCache()
+                }
+            }
+        }
+    }
+
     private func loadData() async {
         log.info("🔄 InventoryView loadData() called")
 
@@ -910,13 +827,158 @@ private struct FilterChangeModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .onChange(of: viewModel.selectedTags) { _, _ in updateCache() }
-            .onChange(of: viewModel.selectedCOEs) { _, _ in updateCache() }
-            .onChange(of: viewModel.selectedManufacturers) { _, _ in updateCache() }
-            .onChange(of: viewModel.selectedProductTypes) { _, _ in updateCache() }
-            .onChange(of: viewModel.selectedLocations) { _, _ in updateCache() }
+            .onChange(of: viewModel.selectedTags) { _, _ in updateCache(); viewModel.notifyFilterCountChanged() }
+            .onChange(of: viewModel.selectedCOEs) { _, _ in updateCache(); viewModel.notifyFilterCountChanged() }
+            .onChange(of: viewModel.selectedManufacturers) { _, _ in updateCache(); viewModel.notifyFilterCountChanged() }
+            .onChange(of: viewModel.selectedProductTypes) { _, _ in updateCache(); viewModel.notifyFilterCountChanged() }
+            .onChange(of: viewModel.selectedLocations) { _, _ in updateCache(); viewModel.notifyFilterCountChanged() }
             .onChange(of: viewModel.selectedInventoryType) { _, _ in updateCache() }
             .onChange(of: viewModel.sortOption) { _, _ in updateCache() }
+    }
+}
+
+// MARK: - Helper Sheets Modifier
+// Extracted to reduce body complexity and help Swift compiler
+
+private struct InventoryHelperSheetsModifier: ViewModifier {
+    @Binding var showingAddItem: Bool
+    @Binding var showingLabelDesigner: Bool
+    @Binding var showingQRScanner: Bool
+    @Binding var showingUpgradePrompt: Bool
+    @Binding var showingHelp: Bool
+    @Binding var showingManageLocations: Bool
+    @Binding var showingSharing: Bool
+    @Binding var pendingShareCode: String?
+
+    let prefilledNaturalKey: String
+    let sortedFilteredItems: [CompleteInventoryItemModel]
+    let inventoryItemCount: Int
+    let inventoryLimit: Int?
+    let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
+    let storageLocationRepository: StorageLocationRepository
+    let inventoryTrackingService: InventoryTrackingService
+    let catalogService: CatalogService
+    let loadData: () async -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $showingAddItem, onDismiss: {
+                Task {
+                    try? await Task.sleep(nanoseconds: 100_000_000)
+                    await CatalogDataCache.shared.reload(catalogService: catalogService)
+                    await loadData()
+                }
+            }) {
+                AddInventoryItemView(
+                    prefilledNaturalKey: prefilledNaturalKey.isEmpty ? nil : prefilledNaturalKey,
+                    deps: .shared
+                )
+            }
+            .sheet(isPresented: $showingLabelDesigner) {
+                LabelDesignerView(items: sortedFilteredItems)
+            }
+            .sheet(isPresented: $showingQRScanner) {
+                QRCodeScannerView { scannedURL in
+                    if let url = URL(string: scannedURL) {
+                        NotificationCenter.default.post(
+                            name: .openMoltenDeepLink,
+                            object: nil,
+                            userInfo: ["url": url]
+                        )
+                    }
+                }
+            }
+            .sheet(isPresented: $showingUpgradePrompt) {
+                UpgradePromptView(
+                    feature: "inventory",
+                    currentCount: inventoryItemCount,
+                    limit: inventoryLimit ?? 0
+                )
+            }
+            .sheet(isPresented: $showingHelp) {
+                InventoryHelpView()
+            }
+            .sheet(isPresented: $showingManageLocations) {
+                ManageLocationsView(
+                    storageLocationDefinitionRepository: storageLocationDefinitionRepository,
+                    storageLocationRepository: storageLocationRepository,
+                    inventoryTrackingService: inventoryTrackingService,
+                    onLocationsChanged: {
+                        Task {
+                            await CatalogDataCache.shared.reload(catalogService: catalogService)
+                            await loadData()
+                        }
+                    }
+                )
+            }
+            .fullScreenCover(isPresented: $showingSharing) {
+                NavigationStack {
+                    InventorySharingView(pendingShareCode: pendingShareCode)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Done") {
+                                    showingSharing = false
+                                    pendingShareCode = nil
+                                }
+                            }
+                        }
+                }
+            }
+    }
+}
+
+// MARK: - Filter Sheet Modifier
+// Extracted to reduce body complexity and help Swift compiler
+
+private struct InventoryFilterSheetModifier: ViewModifier {
+    @Binding var showingFilterSheet: Bool
+    @Binding var sortOption: InventorySortOption
+    @Binding var selectedTags: Set<String>
+    @Binding var selectedCOEs: Set<Int32>
+    @Binding var selectedManufacturers: Set<String>
+    @Binding var selectedLocations: Set<String>
+    @Binding var selectedProductTypes: Set<String>
+
+    let allAvailableTags: [String]
+    let allAvailableCOEs: [Int32]
+    let availableManufacturers: [String]
+    let availableLocations: [String]
+    let availableProductTypes: [String]
+
+    let tagCounts: [String: Int]
+    let coeCounts: [Int32: Int]
+    let manufacturerCounts: [String: Int]
+    let locationCounts: [String: Int]
+    let productTypeCounts: [String: Int]
+
+    let manufacturerDisplayName: (String) -> String
+    let productTypeDisplayName: (String) -> String
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $showingFilterSheet) {
+                InventoryFilterSheet(
+                    isPresented: $showingFilterSheet,
+                    sortOption: $sortOption,
+                    selectedTags: $selectedTags,
+                    selectedCOEs: $selectedCOEs,
+                    selectedManufacturers: $selectedManufacturers,
+                    selectedLocations: $selectedLocations,
+                    selectedProductTypes: $selectedProductTypes,
+                    allAvailableTags: allAvailableTags,
+                    allAvailableCOEs: allAvailableCOEs,
+                    availableManufacturers: availableManufacturers,
+                    availableLocations: availableLocations,
+                    availableProductTypes: availableProductTypes,
+                    tagCounts: tagCounts,
+                    coeCounts: coeCounts,
+                    manufacturerCounts: manufacturerCounts,
+                    locationCounts: locationCounts,
+                    productTypeCounts: productTypeCounts,
+                    manufacturerDisplayName: manufacturerDisplayName,
+                    productTypeDisplayName: productTypeDisplayName
+                )
+            }
     }
 }
 
@@ -931,6 +993,7 @@ private struct NotificationHandlersModifier: ViewModifier {
     @Binding var navigationPath: NavigationPath
     @Binding var pendingShareCode: String?
     @Binding var showingSharing: Bool
+    @Binding var showingFilterSheet: Bool
 
     func body(content: Content) -> some View {
         content
@@ -983,6 +1046,9 @@ private struct NotificationHandlersModifier: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: .resetInventoryNavigation)) { _ in
                 navigationPath = NavigationPath()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .showInventoryFilters)) { _ in
+                showingFilterSheet = true
+            }
             .onReceive(NotificationCenter.default.publisher(for: .navigateToInventorySharingWithCode)) { notification in
                 if let shareCode = notification.userInfo?["shareCode"] as? String {
                     pendingShareCode = shareCode
@@ -1008,6 +1074,90 @@ private extension View {
         modifier(FilterChangeModifier(viewModel: viewModel, updateCache: updateCache))
     }
 
+    func withHelperSheets(
+        showingAddItem: Binding<Bool>,
+        showingLabelDesigner: Binding<Bool>,
+        showingQRScanner: Binding<Bool>,
+        showingUpgradePrompt: Binding<Bool>,
+        showingHelp: Binding<Bool>,
+        showingManageLocations: Binding<Bool>,
+        showingSharing: Binding<Bool>,
+        pendingShareCode: Binding<String?>,
+        prefilledNaturalKey: String,
+        sortedFilteredItems: [CompleteInventoryItemModel],
+        inventoryItemCount: Int,
+        inventoryLimit: Int?,
+        storageLocationDefinitionRepository: StorageLocationDefinitionRepository,
+        storageLocationRepository: StorageLocationRepository,
+        inventoryTrackingService: InventoryTrackingService,
+        catalogService: CatalogService,
+        loadData: @escaping () async -> Void
+    ) -> some View {
+        modifier(InventoryHelperSheetsModifier(
+            showingAddItem: showingAddItem,
+            showingLabelDesigner: showingLabelDesigner,
+            showingQRScanner: showingQRScanner,
+            showingUpgradePrompt: showingUpgradePrompt,
+            showingHelp: showingHelp,
+            showingManageLocations: showingManageLocations,
+            showingSharing: showingSharing,
+            pendingShareCode: pendingShareCode,
+            prefilledNaturalKey: prefilledNaturalKey,
+            sortedFilteredItems: sortedFilteredItems,
+            inventoryItemCount: inventoryItemCount,
+            inventoryLimit: inventoryLimit,
+            storageLocationDefinitionRepository: storageLocationDefinitionRepository,
+            storageLocationRepository: storageLocationRepository,
+            inventoryTrackingService: inventoryTrackingService,
+            catalogService: catalogService,
+            loadData: loadData
+        ))
+    }
+
+    func withInventoryFilterSheet(
+        showingFilterSheet: Binding<Bool>,
+        sortOption: Binding<InventorySortOption>,
+        selectedTags: Binding<Set<String>>,
+        selectedCOEs: Binding<Set<Int32>>,
+        selectedManufacturers: Binding<Set<String>>,
+        selectedLocations: Binding<Set<String>>,
+        selectedProductTypes: Binding<Set<String>>,
+        allAvailableTags: [String],
+        allAvailableCOEs: [Int32],
+        availableManufacturers: [String],
+        availableLocations: [String],
+        availableProductTypes: [String],
+        tagCounts: [String: Int],
+        coeCounts: [Int32: Int],
+        manufacturerCounts: [String: Int],
+        locationCounts: [String: Int],
+        productTypeCounts: [String: Int],
+        manufacturerDisplayName: @escaping (String) -> String,
+        productTypeDisplayName: @escaping (String) -> String
+    ) -> some View {
+        modifier(InventoryFilterSheetModifier(
+            showingFilterSheet: showingFilterSheet,
+            sortOption: sortOption,
+            selectedTags: selectedTags,
+            selectedCOEs: selectedCOEs,
+            selectedManufacturers: selectedManufacturers,
+            selectedLocations: selectedLocations,
+            selectedProductTypes: selectedProductTypes,
+            allAvailableTags: allAvailableTags,
+            allAvailableCOEs: allAvailableCOEs,
+            availableManufacturers: availableManufacturers,
+            availableLocations: availableLocations,
+            availableProductTypes: availableProductTypes,
+            tagCounts: tagCounts,
+            coeCounts: coeCounts,
+            manufacturerCounts: manufacturerCounts,
+            locationCounts: locationCounts,
+            productTypeCounts: productTypeCounts,
+            manufacturerDisplayName: manufacturerDisplayName,
+            productTypeDisplayName: productTypeDisplayName
+        ))
+    }
+
     func onInventoryNotifications(
         catalogService: CatalogService,
         loadData: @escaping () async -> Void,
@@ -1015,7 +1165,8 @@ private extension View {
         filterRefreshTrigger: Binding<Int>,
         navigationPath: Binding<NavigationPath>,
         pendingShareCode: Binding<String?>,
-        showingSharing: Binding<Bool>
+        showingSharing: Binding<Bool>,
+        showingFilterSheet: Binding<Bool>
     ) -> some View {
         modifier(NotificationHandlersModifier(
             catalogService: catalogService,
@@ -1024,7 +1175,8 @@ private extension View {
             filterRefreshTrigger: filterRefreshTrigger,
             navigationPath: navigationPath,
             pendingShareCode: pendingShareCode,
-            showingSharing: showingSharing
+            showingSharing: showingSharing,
+            showingFilterSheet: showingFilterSheet
         ))
     }
 }

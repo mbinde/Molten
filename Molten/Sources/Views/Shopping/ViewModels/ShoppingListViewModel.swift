@@ -449,4 +449,27 @@ class ShoppingListViewModel: ShoppingListViewModelProtocol {
             return items.sorted { $0.catalogItem.manufacturer.localizedCaseInsensitiveCompare($1.catalogItem.manufacturer) == .orderedAscending }
         }
     }
+
+    // MARK: - Filter Count (for floating filter button badge)
+
+    /// Number of active filters (for badge display on floating filter button)
+    var activeFilterCount: Int {
+        var count = 0
+        if !selectedTags.isEmpty { count += 1 }
+        if !selectedCOEs.isEmpty { count += 1 }
+        if !selectedManufacturers.isEmpty { count += 1 }
+        if selectedStore != nil { count += 1 }
+        if !selectedProductTypes.isEmpty { count += 1 }
+        if selectedInventoryType != nil { count += 1 }
+        return count
+    }
+
+    /// Notify observers that filter count has changed
+    func notifyFilterCountChanged() {
+        NotificationCenter.default.post(
+            name: .shoppingFilterCountChanged,
+            object: nil,
+            userInfo: ["count": activeFilterCount]
+        )
+    }
 }

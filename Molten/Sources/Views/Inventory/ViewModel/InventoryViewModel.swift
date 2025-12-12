@@ -49,7 +49,27 @@ class InventoryViewModel: InventoryViewModelProtocol {
     var selectedManufacturers: Set<String> = []
     var selectedLocations: Set<String> = [] // Location filter (empty = all locations)
     var sortOption: InventorySortOption = .name
-    
+
+    /// Count of active filters (excluding search) for badge display
+    var activeFilterCount: Int {
+        var count = 0
+        if !selectedTags.isEmpty { count += 1 }
+        if !selectedCOEs.isEmpty { count += 1 }
+        if !selectedManufacturers.isEmpty { count += 1 }
+        if !selectedLocations.isEmpty { count += 1 }
+        if !selectedProductTypes.isEmpty { count += 1 }
+        return count
+    }
+
+    /// Post notification to update filter badge count
+    func notifyFilterCountChanged() {
+        NotificationCenter.default.post(
+            name: .inventoryFilterCountChanged,
+            object: nil,
+            userInfo: ["count": activeFilterCount]
+        )
+    }
+
     init(inventoryTrackingService: InventoryTrackingService, catalogService: CatalogService? = nil) {
         self.inventoryTrackingService = inventoryTrackingService
         self.catalogService = catalogService

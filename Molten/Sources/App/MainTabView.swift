@@ -35,6 +35,10 @@ extension Notification.Name {
     static let catalogDetailDismissed = Notification.Name("catalogDetailDismissed")
     static let showCatalogFilters = Notification.Name("showCatalogFilters")
     static let catalogFilterCountChanged = Notification.Name("catalogFilterCountChanged")
+    static let showInventoryFilters = Notification.Name("showInventoryFilters")
+    static let inventoryFilterCountChanged = Notification.Name("inventoryFilterCountChanged")
+    static let showShoppingFilters = Notification.Name("showShoppingFilters")
+    static let shoppingFilterCountChanged = Notification.Name("shoppingFilterCountChanged")
 }
 
 /// Main tab view that provides navigation between the app's primary sections
@@ -49,6 +53,8 @@ struct MainTabView: View {
     @State private var selectedItemForDetail: CompleteInventoryItemModel?
     @State private var returnToSearchAfterDetail = false  // Track if we should reopen search after back
     @State private var catalogActiveFilterCount = 0  // Track active filter count for badge
+    @State private var inventoryActiveFilterCount = 0  // Track active filter count for badge
+    @State private var shoppingActiveFilterCount = 0  // Track active filter count for badge
     @State private var tabConfig: TabConfiguration? = nil
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.appDependencies) private var dependencies
@@ -89,7 +95,17 @@ struct MainTabView: View {
         // Ensure the saved tab is still available with current feature flags
         return MainTabView.availableTabs().contains(savedTab) ? savedTab : .catalog
     }
-    
+
+    /// Returns the active filter count for the currently selected tab
+    private var activeFilterCountForCurrentTab: Int {
+        switch selectedTab {
+        case .catalog: return catalogActiveFilterCount
+        case .inventory: return inventoryActiveFilterCount
+        case .shopping: return shoppingActiveFilterCount
+        default: return 0
+        }
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             // Main content area - extends under tab bar
@@ -150,10 +166,19 @@ struct MainTabView: View {
                 ZStack(alignment: .bottom) {
                     // Floating buttons anchored to screen edges
                     HStack {
-                        // Floating filter button (left side) - only show on Catalog tab
-                        if selectedTab == .catalog {
+                        // Floating filter button (left side) - show on Catalog, Inventory, Shopping tabs
+                        if selectedTab == .catalog || selectedTab == .inventory || selectedTab == .shopping {
                             Button {
-                                NotificationCenter.default.post(name: .showCatalogFilters, object: nil)
+                                switch selectedTab {
+                                case .catalog:
+                                    NotificationCenter.default.post(name: .showCatalogFilters, object: nil)
+                                case .inventory:
+                                    NotificationCenter.default.post(name: .showInventoryFilters, object: nil)
+                                case .shopping:
+                                    NotificationCenter.default.post(name: .showShoppingFilters, object: nil)
+                                default:
+                                    break
+                                }
                             } label: {
                                 ZStack(alignment: .topLeading) {
                                     Image(systemName: "line.3.horizontal.decrease.circle.fill")
@@ -167,8 +192,8 @@ struct MainTabView: View {
                                         .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
 
                                     // Badge showing active filter count
-                                    if catalogActiveFilterCount > 0 {
-                                        Text("\(catalogActiveFilterCount)")
+                                    if activeFilterCountForCurrentTab > 0 {
+                                        Text("\(activeFilterCountForCurrentTab)")
                                             .font(.system(size: 12, weight: .bold))
                                             .foregroundColor(.white)
                                             .frame(minWidth: 18, minHeight: 18)
@@ -184,21 +209,23 @@ struct MainTabView: View {
 
                         Spacer()
 
-                        // Floating search button (right side)
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                searchBarExpanded = true
+                        // Floating search button (right side) - only on Catalog tab for now
+                        if selectedTab == .catalog {
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    searchBarExpanded = true
+                                }
+                            } label: {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 20, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .frame(width: 52, height: 52)
+                                    .background(
+                                        Circle()
+                                            .fill(DesignSystem.Colors.accentPrimary)
+                                    )
+                                    .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
                             }
-                        } label: {
-                            Image(systemName: "magnifyingglass")
-                                .font(.system(size: 20, weight: .medium))
-                                .foregroundColor(.white)
-                                .frame(width: 52, height: 52)
-                                .background(
-                                    Circle()
-                                        .fill(DesignSystem.Colors.accentPrimary)
-                                )
-                                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
                         }
                     }
                     .padding(.horizontal, 16)
@@ -315,6 +342,16 @@ struct MainTabView: View {
             // Update the badge count when filters change
             if let count = notification.userInfo?["count"] as? Int {
                 catalogActiveFilterCount = count
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .inventoryFilterCountChanged)) { notification in
+            if let count = notification.userInfo?["count"] as? Int {
+                inventoryActiveFilterCount = count
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .shoppingFilterCountChanged)) { notification in
+            if let count = notification.userInfo?["count"] as? Int {
+                shoppingActiveFilterCount = count
             }
         }
         .onChange(of: selectedTab) { oldTab, newTab in

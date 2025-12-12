@@ -215,6 +215,7 @@ struct PurchaseDetailView: View {
                     purchase: purchase,
                     selectedItemIds: selectedItems,
                     selectedMatches: selectedMatches,
+                    itemQuantities: itemQuantities,
                     clientMatchResults: clientMatchResults,
                     catalogService: catalogService,
                     receiptService: receiptService,
@@ -1201,6 +1202,15 @@ private struct PurchaseItemRow: View {
         }
         catalogItem = try? await catalogService.fetchGlassItem(byStableId: stableId)
         calculateRodEstimate()
+
+        // If we couldn't estimate rods but have a raw quantity, propagate that
+        if quantityOverride == nil && rodEstimate == nil {
+            let rawQty = Int(item.quantity ?? 1)
+            if rawQty > 0 {
+                onQuantityChange(rawQty)
+            }
+        }
+
         isLoadingCatalog = false
     }
 
@@ -1223,6 +1233,12 @@ private struct PurchaseItemRow: View {
             catalogCOE: catalogItem.coe,
             catalogManufacturer: catalogItem.manufacturer
         )
+
+        // Propagate the calculated quantity to the parent if user hasn't overridden it
+        // This ensures the import sheet gets the estimated value even if user didn't edit the field
+        if quantityOverride == nil, let estimate = rodEstimate {
+            onQuantityChange(estimate.rodCount)
+        }
     }
 }
 
@@ -1519,6 +1535,7 @@ private struct PurchaseImportSheet: View {
     let purchase: ReceiptDetail
     let selectedItemIds: Set<Int>
     let selectedMatches: [Int: String]  // item.id -> catalogStableId
+    let itemQuantities: [Int: Int]  // item.id -> user-specified quantity from previous screen
     let clientMatchResults: [Int: ItemMatchResult]  // item.id -> client-side match result
     let catalogService: CatalogService
     let receiptService: ReceiptService
@@ -1595,7 +1612,11 @@ private struct PurchaseImportSheet: View {
                                     "\(invalidItemCount) item\(invalidItemCount == 1 ? " needs" : "s need") a quantity and catalog match before importing",
                                     systemImage: "exclamationmark.triangle"
                                 )
-                                .foregroundColor(DesignSystem.Colors.accentWarning)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(DesignSystem.Colors.accentWarning.opacity(0.3))
+                                .cornerRadius(4)
                             }
                         }
 
@@ -1716,7 +1737,19 @@ private struct PurchaseImportSheet: View {
             }
 
             // Determine quantity based on product type
-            if let catalogItem = importItem.catalogItem {
+            // FIRST: Check if user already specified a quantity on the previous screen
+            if let userQuantity = itemQuantities[receiptItem.id], userQuantity > 0 {
+                importItem.quantity = String(userQuantity)
+                // Still calculate estimate for display purposes
+                if let catalogItem = importItem.catalogItem {
+                    let estimate = RodEstimator.estimate(
+                        item: receiptItem,
+                        catalogCOE: catalogItem.coe,
+                        catalogManufacturer: catalogItem.manufacturer
+                    )
+                    importItem.rodEstimate = estimate
+                }
+            } else if let catalogItem = importItem.catalogItem {
                 // For frit and powder, check if receipt has weight info
                 let fritTypes = ["frit", "powder"]
                 if let type = catalogType?.lowercased(), fritTypes.contains(type) {
@@ -2014,9 +2047,13 @@ private struct ReceiptImportItemRow: View {
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             } else {
-                Text("No catalog match")
+                Label("No catalog match", systemImage: "exclamationmark.triangle")
                     .font(.caption)
-                    .foregroundColor(DesignSystem.Colors.accentWarning)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(DesignSystem.Colors.accentWarning.opacity(0.3))
+                    .cornerRadius(4)
             }
 
             // Frit/Powder: Jars vs Weight picker when receipt has weight info

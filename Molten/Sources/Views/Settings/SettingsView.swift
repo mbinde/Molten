@@ -213,6 +213,16 @@ struct SettingsView: View {
                     await subscriptionViewModel.loadSubscriptionStatus()
                 }
 
+                // Show warning if subscription cache is expiring soon
+                if subscriptionManager.shouldShowCacheExpiryWarning,
+                   let daysLeft = subscriptionManager.daysUntilCacheExpiry {
+                    Section {
+                        OfflineSubscriptionBanner(daysRemaining: daysLeft)
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                }
+
                 // MARK: - General
                 Section("General") {
                     Picker("Appearance", selection: selectedAppearanceMode) {

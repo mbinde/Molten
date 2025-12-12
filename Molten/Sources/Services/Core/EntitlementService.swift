@@ -49,8 +49,20 @@ class EntitlementService {
 
     /// Initialize with a specific tier (for testing and development)
     /// Production tier is managed by SubscriptionManager via RevenueCat
-    init(tier: SubscriptionTier = .free) {
-        self.tier = tier
+    /// If no tier is specified, checks the local entitlement cache for offline support
+    init(tier: SubscriptionTier? = nil) {
+        if let explicitTier = tier {
+            // Explicit tier provided (testing)
+            self.tier = explicitTier
+        } else {
+            // Check local cache for immediate offline support
+            // This allows premium users to use the app immediately without waiting for RevenueCat
+            let cachedPremium = EntitlementCache.shared.getEffectivePremiumStatus()
+            self.tier = cachedPremium ? .premium : .free
+            if cachedPremium {
+                print("🔐 [EntitlementService] Initialized with cached premium status")
+            }
+        }
     }
 
     // MARK: - Tier Management

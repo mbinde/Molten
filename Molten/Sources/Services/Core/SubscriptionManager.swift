@@ -48,21 +48,34 @@ class SubscriptionManager {
 
     // MARK: - Initialization
 
-    init(entitlementService: EntitlementService, subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService) {
+    /// Initialize SubscriptionManager
+    /// - Parameters:
+    ///   - entitlementService: Service for managing entitlements
+    ///   - subscriptionService: Service for checking subscription status (RevenueCat or mock)
+    ///   - deferInitialCheck: If true, don't automatically check subscription status on init.
+    ///                        Use this in production where RevenueCat isn't configured yet.
+    ///                        The check will happen when the launch screen completes.
+    init(entitlementService: EntitlementService,
+         subscriptionService: SubscriptionServiceProtocol = AppDependencies.shared.subscriptionService,
+         deferInitialCheck: Bool = false) {
         self.entitlementService = entitlementService
         self.subscriptionService = subscriptionService
 
-        // Start monitoring subscription status
+        // Start monitoring subscription status (this just listens for notifications, doesn't call SDK)
         subscriptionTask = Task {
             await monitorSubscriptionChanges()
         }
 
-        // Load products with a delay to let RevenueCat fully initialize
-        // This prevents deadlocks when customerInfo() is called too early
-        Task {
-            try? await Task.sleep(for: .milliseconds(500))
-            await loadProducts()
-            await checkSubscriptionStatus()
+        // Only do automatic subscription check if not deferred
+        // When deferred, the check happens later (after launch screen) when RevenueCat is ready
+        if !deferInitialCheck {
+            Task {
+                // Delay to let RevenueCat fully initialize
+                // This prevents deadlocks when customerInfo() is called too early
+                try? await Task.sleep(for: .milliseconds(500))
+                await loadProducts()
+                await checkSubscriptionStatus()
+            }
         }
     }
 
@@ -148,6 +161,7 @@ class SubscriptionManager {
     // MARK: - Subscription Status
 
     /// Check current subscription status and update EntitlementService
+    /// Uses local cache for immediate response, then refreshes from RevenueCat
     func checkSubscriptionStatus() async {
         // Prevent concurrent calls which can cause RevenueCat deadlocks
         guard !isCheckingSubscription else {
@@ -156,17 +170,61 @@ class SubscriptionManager {
         isCheckingSubscription = true
         defer { isCheckingSubscription = false }
 
-        // Check RevenueCat for Pro access
-        let hasProAccess = await subscriptionService.hasProAccess()
+        // Step 1: Check local cache first for immediate response
+        // This allows offline usage and prevents blocking on network
+        let cache = EntitlementCache.shared
+        let cachedPremium = cache.getEffectivePremiumStatus()
 
-        // Update status based on RevenueCat entitlements
-        if hasProAccess {
+        if cachedPremium {
+            // Use cached premium status immediately
             subscriptionStatus = .subscribed
             entitlementService.updateTier(.premium)
-        } else {
-            subscriptionStatus = .notSubscribed
-            entitlementService.updateTier(.free)
+            print("🔐 [Subscription] Using cached premium status")
         }
+
+        // Step 2: Try to refresh from RevenueCat (updates cache if successful)
+        do {
+            let subscriptionInfo = await subscriptionService.getSubscriptionStatus()
+
+            // Update cache with fresh data
+            cache.updateCache(
+                isPremium: subscriptionInfo.isActive,
+                productIdentifier: subscriptionInfo.productIdentifier,
+                expirationDate: subscriptionInfo.expirationDate
+            )
+
+            // Update UI state with fresh data
+            if subscriptionInfo.isActive {
+                subscriptionStatus = .subscribed
+                entitlementService.updateTier(.premium)
+            } else {
+                subscriptionStatus = .notSubscribed
+                entitlementService.updateTier(.free)
+            }
+
+            print("🔐 [Subscription] Refreshed from RevenueCat: \(subscriptionInfo.isActive ? "Premium" : "Free")")
+
+        } catch {
+            // Network error - rely on cache
+            print("🔐 [Subscription] Failed to refresh from RevenueCat: \(error.localizedDescription)")
+
+            // If we don't have valid cached premium, ensure we're in free tier
+            if !cachedPremium {
+                subscriptionStatus = .notSubscribed
+                entitlementService.updateTier(.free)
+            }
+            // If cachedPremium is true, we already set premium above - keep it
+        }
+    }
+
+    /// Whether the entitlement cache is expiring soon and user should connect to internet
+    var shouldShowCacheExpiryWarning: Bool {
+        EntitlementCache.shared.shouldShowExpiryWarning
+    }
+
+    /// Days until cached entitlement expires (nil if not applicable)
+    var daysUntilCacheExpiry: Int? {
+        EntitlementCache.shared.daysUntilExpiry
     }
 
     /// Monitor subscription status changes in real-time

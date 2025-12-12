@@ -2,7 +2,7 @@
 //  ReceiptCatalogMatcher.swift
 //  Molten
 //
-//  Matches parsed receipt items to catalog entries using SKU codes and fuzzy name matching.
+//  Matches parsed receipt items to catalog entries using SKU codes and smart name matching.
 //  Returns multiple ranked candidates for each item.
 //
 
@@ -23,6 +23,8 @@ public struct ItemMatchResult: Sendable {
 /// Matches receipt items against the local catalog
 public actor ReceiptCatalogMatcher {
     private let catalogService: CatalogService
+
+    // MARK: - Static Configuration
 
     /// Manufacturer abbreviations and aliases
     private static let manufacturerAliases: [String: String] = [
@@ -69,8 +71,6 @@ public actor ReceiptCatalogMatcher {
     ]
 
     /// Product type keywords
-    /// Note: Order matters - more specific matches (like "2mm", "3mm") should be checked
-    /// before generic ones (like "rod") to ensure correct type detection
     private static let productTypeKeywords: [String: String] = [
         // Stringer indicators - check these first as they override rod
         "thins": "stringer",
@@ -97,27 +97,11 @@ public actor ReceiptCatalogMatcher {
     ]
 
     /// Frit subtype mappings (size indicators to mesh sizes)
-    /// NorthStar convention: (L)arge=#25, (S)mall=#38, (F)ine=#70, powder=#100
-    /// Also supports: coarse=#25, medium=#38, fine=#70
     private static let fritSubtypeKeywords: [String: String] = [
-        // NorthStar parenthetical notation
-        "(l)": "#25",
-        "(s)": "#38",
-        "(f)": "#70",
-        // Full words
-        "large": "#25",
-        "small": "#38",
-        "fine": "#70",
-        "powder": "#100",
-        // Alternative names
-        "coarse": "#25",
-        "medium": "#38",
-        // Direct mesh sizes
-        "#25": "#25",
-        "#38": "#38",
-        "#70": "#70",
-        "#82": "#82",
-        "#100": "#100",
+        "(l)": "#25", "(s)": "#38", "(f)": "#70",
+        "large": "#25", "small": "#38", "fine": "#70", "powder": "#100",
+        "coarse": "#25", "medium": "#38",
+        "#25": "#25", "#38": "#38", "#70": "#70", "#82": "#82", "#100": "#100",
     ]
 
     /// Maps retailer IDs to their primary manufacturers
@@ -134,9 +118,41 @@ public actor ReceiptCatalogMatcher {
         "aaeglass": ["BE"],
     ]
 
+    /// Generic glass-related words - these appear in most descriptions and shouldn't drive matching
+    private static let genericWords: Set<String> = [
+        // Product forms
+        "glass", "rod", "rods", "frit", "sheet", "sheets", "tube", "tubing",
+        "strips", "strip", "stringer", "stringers",
+        // Generic modifiers
+        "on", "transparent", "opaque", "opalescent", "the", "and", "with", "for",
+        // Size/quantity words
+        "large", "small", "medium", "fine", "coarse", "thin", "thick",
+        // Edition/run markers - these describe availability, not the glass
+        "ltd", "run", "limited", "edition", "special", "new", "exclusive",
+        // Common glass descriptors that don't distinguish products
+        "intense", "dark", "light", "bright", "soft", "deep", "rich", "pale"
+    ]
+
+    /// Category modifiers that indicate fundamentally different product types
+    /// If receipt has "dichroic" but catalog doesn't, they're different products
+    private static let categoryModifiers: Set<String> = [
+        "dichroic", "reactive", "striking", "encased", "coated"
+    ]
+
+    /// Common color words - matching only these gives low confidence
+    private static let colorWords: Set<String> = [
+        "black", "white", "clear", "silver", "gold", "copper", "red", "blue",
+        "green", "yellow", "orange", "purple", "pink", "brown", "grey", "gray",
+        "teal", "amber", "ruby", "cobalt", "ivory", "cream", "turquoise"
+    ]
+
+    // MARK: - Initialization
+
     init(catalogService: CatalogService) {
         self.catalogService = catalogService
     }
+
+    // MARK: - Public API
 
     /// Match all items in a receipt against the catalog
     public func matchItems(
@@ -145,16 +161,12 @@ public actor ReceiptCatalogMatcher {
     ) async -> [Int: ItemMatchResult] {
         var results: [Int: ItemMatchResult] = [:]
 
-        // Get likely manufacturers for this retailer
         let manufacturers = Self.retailerManufacturerMap[retailerId] ?? []
-
-        // Fetch catalog items for matching
         let catalogItems = await fetchCatalogItems(manufacturers: manufacturers)
 
         for item in items {
             let result = await matchSingleItem(
                 item,
-                retailerId: retailerId,
                 relevantCatalog: catalogItems.relevant,
                 fullCatalog: catalogItems.full
             )
@@ -167,7 +179,6 @@ public actor ReceiptCatalogMatcher {
     // MARK: - Private Methods
 
     private func fetchCatalogItems(manufacturers: [String]) async -> (relevant: [GlassItemModel], full: [GlassItemModel]) {
-        // Fetch all items using the lightweight method
         let allItems = (try? await catalogService.getGlassItemsLightweight()) ?? []
 
         if manufacturers.isEmpty {
@@ -180,44 +191,29 @@ public actor ReceiptCatalogMatcher {
 
     private func matchSingleItem(
         _ item: ReceiptItem,
-        retailerId: String,
         relevantCatalog: [GlassItemModel],
         fullCatalog: [GlassItemModel]
     ) async -> ItemMatchResult {
         var allCandidates: [MatchCandidate] = []
 
-        // First, detect the product type from the receipt line (rod, frit, sheet, etc.)
         let detectedProductType = detectProductType(item.rawName)
-
-        // Detect subtype (e.g., frit mesh size like #38 for "Small")
         let detectedSubtype = detectFritSubtype(item.rawName, productType: detectedProductType)
 
-        // 1. Try SKU-based matching first (highest confidence)
+        // 1. SKU matching (highest confidence)
         if let sku = item.rawSku, !sku.isEmpty {
-            let skuCandidates = matchBySku(sku, retailerId: retailerId, catalog: relevantCatalog + fullCatalog, productType: detectedProductType, subtype: detectedSubtype)
+            let skuCandidates = matchBySku(sku, catalog: relevantCatalog + fullCatalog, productType: detectedProductType, subtype: detectedSubtype)
             allCandidates.append(contentsOf: skuCandidates)
         }
 
-        // 2. Try exact name match
-        let exactNameCandidates = matchByExactName(item.rawName, catalog: relevantCatalog, productType: detectedProductType, subtype: detectedSubtype)
-        allCandidates.append(contentsOf: exactNameCandidates)
+        // 2. Smart name matching (single unified algorithm)
+        let nameCandidates = matchByName(item.rawName, relevantCatalog: relevantCatalog, fullCatalog: fullCatalog, productType: detectedProductType, subtype: detectedSubtype)
+        allCandidates.append(contentsOf: nameCandidates)
 
-        // 3. Try component-based matching (manufacturer + color name + type)
-        let componentCandidates = matchByComponents(item.rawName, relevantCatalog: relevantCatalog, fullCatalog: fullCatalog, productType: detectedProductType, subtype: detectedSubtype)
-        allCandidates.append(contentsOf: componentCandidates)
-
-        // 4. Try fuzzy name match for additional candidates
-        let fuzzyCandidates = matchByFuzzyName(item.rawName, catalog: relevantCatalog, productType: detectedProductType, subtype: detectedSubtype)
-        allCandidates.append(contentsOf: fuzzyCandidates)
-
-        // Deduplicate and sort by confidence
+        // Deduplicate and sort
         let uniqueCandidates = deduplicateCandidates(allCandidates)
         let sortedCandidates = uniqueCandidates.sorted { $0.confidence > $1.confidence }
-
-        // Limit to top 5 candidates
         let topCandidates = Array(sortedCandidates.prefix(5))
 
-        // Return the best match as primary
         if let best = topCandidates.first, best.confidence >= 0.5 {
             return ItemMatchResult(
                 catalogStableId: best.catalogStableId,
@@ -227,7 +223,6 @@ public actor ReceiptCatalogMatcher {
             )
         }
 
-        // No confident match found
         return ItemMatchResult(
             catalogStableId: nil,
             confidence: 0,
@@ -236,67 +231,39 @@ public actor ReceiptCatalogMatcher {
         )
     }
 
-    /// Detect product type (rod, frit, sheet, etc.) from the raw name
+    // MARK: - Product Type Detection
+
     private func detectProductType(_ rawName: String) -> String {
         let name = rawName.lowercased()
 
-        // Check for stringer indicators first (2mm, 3mm, thins)
-        // These override other types since they're more specific
-        let stringerIndicators = ["2mm", "3mm", "thins", "thin", "stringer", "stringers"]
-        for indicator in stringerIndicators {
-            let pattern = "\\b\(indicator)\\b"
-            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-               regex.firstMatch(in: name, range: NSRange(name.startIndex..., in: name)) != nil {
+        // Check stringers first (more specific)
+        for indicator in ["2mm", "3mm", "thins", "thin", "stringer", "stringers"] {
+            if Self.stringContainsWord(name, word: indicator) {
                 return "stringer"
             }
         }
 
-        // Check for other product type keywords
-        for (keyword, type) in Self.productTypeKeywords {
-            // Skip stringer keywords since we already checked them
-            if type == "stringer" { continue }
-
-            let pattern = "\\b\(keyword)\\b"
-            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-               regex.firstMatch(in: name, range: NSRange(name.startIndex..., in: name)) != nil {
+        // Check other types
+        for (keyword, type) in Self.productTypeKeywords where type != "stringer" {
+            if Self.stringContainsWord(name, word: keyword) {
                 return type
             }
         }
 
-        // Default to rod if no type detected (most common)
-        return "rod"
+        return "rod" // Default
     }
 
-    /// Detect frit subtype (mesh size) from the raw name
-    /// Returns nil if no subtype detected or if not a frit type
     private func detectFritSubtype(_ rawName: String, productType: String) -> String? {
-        // Only detect subtypes for frit
         guard productType == "frit" else { return nil }
 
         let name = rawName.lowercased()
-
-        // Check for frit subtype keywords (check parenthetical first, then words)
-        // Sort by key length descending to match longer patterns first
         let sortedKeywords = Self.fritSubtypeKeywords.sorted { $0.key.count > $1.key.count }
 
         for (keyword, subtype) in sortedKeywords {
-            // For parenthetical notation like (S), (L), (F), match exactly
-            if keyword.hasPrefix("(") {
-                if name.contains(keyword) {
-                    return subtype
-                }
-            } else if keyword.hasPrefix("#") {
-                // Direct mesh size references
-                if name.contains(keyword) {
-                    return subtype
-                }
-            } else {
-                // Word-based matching with word boundaries
-                let pattern = "\\b\(keyword)\\b"
-                if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-                   regex.firstMatch(in: name, range: NSRange(name.startIndex..., in: name)) != nil {
-                    return subtype
-                }
+            if keyword.hasPrefix("(") || keyword.hasPrefix("#") {
+                if name.contains(keyword) { return subtype }
+            } else if Self.stringContainsWord(name, word: keyword) {
+                return subtype
             }
         }
 
@@ -305,11 +272,10 @@ public actor ReceiptCatalogMatcher {
 
     // MARK: - SKU Matching
 
-    private func matchBySku(_ rawSku: String, retailerId: String, catalog: [GlassItemModel], productType: String, subtype: String?) -> [MatchCandidate] {
+    private func matchBySku(_ rawSku: String, catalog: [GlassItemModel], productType: String, subtype: String?) -> [MatchCandidate] {
         var candidates: [MatchCandidate] = []
         let upperSku = rawSku.uppercased()
 
-        // Direct SKU match
         for item in catalog {
             guard let itemSku = item.sku else { continue }
             let upperItemSku = itemSku.uppercased()
@@ -323,7 +289,7 @@ public actor ReceiptCatalogMatcher {
                     catalogSubtype: subtype,
                     confidence: 0.95,
                     matchMethod: "sku_exact",
-                    matchDetails: "SKU: \(rawSku) → \(itemSku)"
+                    matchDetails: "SKU: \(rawSku)"
                 ))
             } else if upperItemSku.contains(upperSku) || upperSku.contains(upperItemSku) {
                 candidates.append(MatchCandidate(
@@ -334,7 +300,7 @@ public actor ReceiptCatalogMatcher {
                     catalogSubtype: subtype,
                     confidence: 0.85,
                     matchMethod: "sku_partial",
-                    matchDetails: "Partial SKU: \(rawSku) in \(itemSku)"
+                    matchDetails: "Partial SKU: \(rawSku)"
                 ))
             }
         }
@@ -342,176 +308,169 @@ public actor ReceiptCatalogMatcher {
         return candidates
     }
 
-    // MARK: - Name Matching
+    // MARK: - Name Matching (Unified Algorithm)
 
-    private func matchByExactName(_ rawName: String, catalog: [GlassItemModel], productType: String, subtype: String?) -> [MatchCandidate] {
-        var candidates: [MatchCandidate] = []
-        let normalizedName = normalizeProductName(rawName)
+    /// Parsed receipt name with extracted components
+    private struct ParsedName {
+        let manufacturer: String?          // Detected manufacturer code (e.g., "EF")
+        let categoryModifiers: Set<String> // e.g., {"dichroic"}
+        let distinctiveWords: [String]     // Unique identifying words (e.g., "cherry", "crinkle")
+        let colorWords: [String]           // Basic colors (e.g., "black", "silver")
+        let allSignificantWords: [String]  // distinctiveWords + colorWords
+    }
 
-        for item in catalog {
-            if normalizeProductName(item.name) == normalizedName {
-                candidates.append(MatchCandidate(
-                    catalogStableId: item.stable_id,
-                    catalogName: item.name,
-                    catalogManufacturer: item.manufacturer,
-                    catalogType: productType,
-                    catalogSubtype: subtype,
-                    confidence: 0.90,
-                    matchMethod: "name_exact",
-                    matchDetails: "Exact name match: \"\(item.name)\""
-                ))
+    private func parseName(_ rawName: String) -> ParsedName {
+        var name = rawName.lowercased()
+        var manufacturer: String?
+
+        // Extract manufacturer
+        let sortedAliases = Self.manufacturerAliases.sorted { $0.key.count > $1.key.count }
+        for (alias, code) in sortedAliases {
+            if Self.stringContainsWord(name, word: alias) {
+                manufacturer = code
+                name = Self.stringReplacingWord(name, word: alias, with: "")
+                break
             }
         }
 
-        return candidates
-    }
-
-    private func matchByFuzzyName(_ rawName: String, catalog: [GlassItemModel], productType: String, subtype: String?) -> [MatchCandidate] {
-        var candidates: [MatchCandidate] = []
-        let normalizedName = normalizeProductName(rawName)
-        let keywords = extractKeywords(normalizedName)
-
-        guard !keywords.isEmpty else { return candidates }
-
-        var scores: [(item: GlassItemModel, score: Double)] = []
-
-        for item in catalog {
-            let catalogName = normalizeProductName(item.name)
-            let catalogKeywords = extractKeywords(catalogName)
-
-            // Calculate keyword overlap
-            let matchingKeywords = keywords.filter { kw in
-                catalogKeywords.contains { ckw in
-                    kw == ckw || levenshteinDistance(kw, ckw) <= 1
-                }
-            }
-
-            let keywordScore = Double(matchingKeywords.count) / Double(max(keywords.count, catalogKeywords.count))
-
-            // Also check Levenshtein distance on full normalized name
-            let distance = levenshteinDistance(normalizedName, catalogName)
-            let lengthNormalized = 1.0 - (Double(distance) / Double(max(normalizedName.count, catalogName.count)))
-
-            // Combine scores
-            let combinedScore = (keywordScore * 0.6) + (lengthNormalized * 0.4)
-
-            if combinedScore >= 0.5 {
-                scores.append((item, combinedScore))
-            }
+        // Remove product type words
+        for keyword in Self.productTypeKeywords.keys {
+            name = Self.stringReplacingWord(name, word: keyword, with: "")
         }
 
-        // Sort by score and take top 5
-        scores.sort { $0.score > $1.score }
+        // Extract words (min 3 chars)
+        let words = name
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .map { $0.lowercased() }
+            .filter { $0.count >= 3 }
 
-        for (item, score) in scores.prefix(5) {
-            candidates.append(MatchCandidate(
-                catalogStableId: item.stable_id,
-                catalogName: item.name,
-                catalogManufacturer: item.manufacturer,
-                catalogType: productType,
-                catalogSubtype: subtype,
-                confidence: round(score * 100) / 100,
-                matchMethod: "name_fuzzy",
-                matchDetails: "Fuzzy match: \"\(rawName)\" ≈ \"\(item.name)\""
-            ))
+        // Categorize words
+        let categoryMods = Set(words.filter { Self.categoryModifiers.contains($0) })
+        let colors = words.filter { Self.colorWords.contains($0) && !Self.categoryModifiers.contains($0) }
+        let distinctive = words.filter {
+            !Self.genericWords.contains($0) &&
+            !Self.categoryModifiers.contains($0) &&
+            !Self.colorWords.contains($0)
         }
 
-        return candidates
+        return ParsedName(
+            manufacturer: manufacturer,
+            categoryModifiers: categoryMods,
+            distinctiveWords: distinctive,
+            colorWords: colors,
+            allSignificantWords: distinctive + colors
+        )
     }
 
-    // MARK: - Component Matching
-
-    private struct ParsedProductName {
-        let manufacturer: String?
-        let manufacturerConfidence: Double
-        let productType: String?
-        let colorName: String
-    }
-
-    private func matchByComponents(
+    private func matchByName(
         _ rawName: String,
         relevantCatalog: [GlassItemModel],
         fullCatalog: [GlassItemModel],
         productType: String,
         subtype: String?
     ) -> [MatchCandidate] {
-        let parsed = parseProductName(rawName)
+        let receipt = parseName(rawName)
         var candidates: [MatchCandidate] = []
 
-        // Determine which catalog to search
+        // Determine search catalog
         var searchCatalog = relevantCatalog
-
-        // If we detected a manufacturer, filter by it
-        if let manufacturer = parsed.manufacturer {
-            let filtered = fullCatalog.filter { $0.manufacturer.uppercased() == manufacturer }
+        if let mfr = receipt.manufacturer {
+            let filtered = fullCatalog.filter { $0.manufacturer.uppercased() == mfr }
             if !filtered.isEmpty {
                 searchCatalog = filtered
             }
         }
 
-        // Search for items matching the color name
-        let colorWords = parsed.colorName.split(separator: " ").map(String.init).filter { $0.count >= 3 }
-
-        guard !colorWords.isEmpty else { return candidates }
+        // Need at least some words to match
+        guard !receipt.allSignificantWords.isEmpty else { return candidates }
 
         for catalogItem in searchCatalog {
-            let catalogNameLower = catalogItem.name.lowercased()
-            let catalogNameWords = catalogNameLower.split(separator: " ").map(String.init)
+            let catalog = parseName(catalogItem.name)
 
-            // Calculate word overlap score
-            var matchingWords = 0
-            for word in colorWords {
-                if catalogNameWords.contains(where: { cw in
-                    cw == word || cw.contains(word) || word.contains(cw)
-                }) {
-                    matchingWords += 1
-                }
+            // Rule 1: Category modifier mismatch = no match
+            // "Dichroic X" cannot match "X" (non-dichroic)
+            if !receipt.categoryModifiers.isEmpty && catalog.categoryModifiers.isEmpty {
+                continue
+            }
+            if receipt.categoryModifiers.isEmpty && !catalog.categoryModifiers.isEmpty {
+                continue
+            }
+            if !receipt.categoryModifiers.isEmpty && receipt.categoryModifiers != catalog.categoryModifiers {
+                continue
             }
 
-            guard matchingWords > 0 else { continue }
-
-            // Base confidence from word overlap (how many receipt words matched)
-            let receiptMatchRatio = Double(matchingWords) / Double(max(colorWords.count, 1))
-
-            // Penalize catalog items that have extra unmatched words
-            // e.g., "Blue Moon" should rank higher than "Blue Moon Fore" when searching for "Blue Moon"
-            let catalogMatchRatio = Double(matchingWords) / Double(max(catalogNameWords.count, 1))
-
-            // Combined score: favor items where both ratios are high
-            // An exact match (all receipt words match AND all catalog words are accounted for) scores highest
-            var confidence = (receiptMatchRatio * 0.6) + (catalogMatchRatio * 0.4)
-
-            // Boost confidence if manufacturer matches
-            if let manufacturer = parsed.manufacturer, catalogItem.manufacturer.uppercased() == manufacturer {
-                confidence += 0.2 * parsed.manufacturerConfidence
+            // Rule 2: If receipt has distinctive words, at least one must match
+            // "Black Cherry" matching "Black X" is wrong - "Cherry" must match something
+            let distinctiveMatches = receipt.distinctiveWords.filter { catalog.allSignificantWords.contains($0) }
+            if !receipt.distinctiveWords.isEmpty && distinctiveMatches.isEmpty {
+                continue
             }
 
-            // Boost confidence if product type matches
-            // Note: GlassItemModel doesn't have a type field, so we skip type matching
-            // All items are glass, so product type from receipt (rod, frit, etc.) is form factor
-            if parsed.productType != nil {
-                // Product type detected but we can't verify against catalog
-                // Don't boost or penalize
-            }
+            // Rule 3: Count color matches
+            let colorMatches = receipt.colorWords.filter { catalog.allSignificantWords.contains($0) }
 
-            // Cap confidence based on match quality
-            let hasGoodManufacturerMatch = parsed.manufacturer != nil && catalogItem.manufacturer.uppercased() == parsed.manufacturer
-            let hasGoodTypeMatch = parsed.productType != nil  // Can't verify, assume OK if detected
-            let hasGoodNameMatch = matchingWords >= Int(Double(colorWords.count) * 0.8)
-            let isExactNameMatch = catalogMatchRatio >= 0.99  // All catalog words are matched
+            // Must have some match
+            let totalMatches = distinctiveMatches.count + colorMatches.count
+            guard totalMatches > 0 else { continue }
 
-            if hasGoodManufacturerMatch && hasGoodTypeMatch && hasGoodNameMatch && isExactNameMatch {
-                // Perfect match: manufacturer + type + all name words match exactly
-                confidence = min(confidence, 0.98)
-            } else if hasGoodManufacturerMatch && hasGoodTypeMatch && hasGoodNameMatch {
-                // Good match but catalog has extra words
-                confidence = min(confidence, 0.92)
+            // Rule 4: Calculate bilateral match ratios
+            // How much of the receipt did we match?
+            let receiptMatchRatio = Double(totalMatches) / Double(receipt.allSignificantWords.count)
+
+            // How much of the catalog did we cover?
+            let catalogDistinctiveMatches = catalog.distinctiveWords.filter { receipt.distinctiveWords.contains($0) }
+            let catalogColorMatches = catalog.colorWords.filter { receipt.colorWords.contains($0) }
+            let catalogTotalMatches = catalogDistinctiveMatches.count + catalogColorMatches.count
+            let catalogMatchRatio = catalog.allSignificantWords.isEmpty ? 0.0 :
+                Double(catalogTotalMatches) / Double(catalog.allSignificantWords.count)
+
+            // Rule 5: Require reasonable coverage on BOTH sides
+            // This prevents "Silver" matching "Silver #1" at high confidence
+            // because the catalog has more content we didn't match
+            guard receiptMatchRatio >= 0.5 else { continue }
+            guard catalogMatchRatio >= 0.5 else { continue }
+
+            // Calculate confidence score
+            var confidence: Double
+
+            if !receipt.distinctiveWords.isEmpty {
+                // Have distinctive words - weight them heavily
+                let distinctiveRatio = Double(distinctiveMatches.count) / Double(receipt.distinctiveWords.count)
+                let colorRatio = receipt.colorWords.isEmpty ? 1.0 :
+                    Double(colorMatches.count) / Double(receipt.colorWords.count)
+                confidence = (distinctiveRatio * 0.6) + (colorRatio * 0.2) + (catalogMatchRatio * 0.2)
             } else {
-                confidence = min(confidence, 0.85)
+                // Only colors - bilateral average
+                confidence = (receiptMatchRatio + catalogMatchRatio) / 2.0
             }
 
-            // Only include if above minimum threshold
-            if confidence >= 0.4 {
+            // Manufacturer match bonus
+            if let mfr = receipt.manufacturer, catalogItem.manufacturer.uppercased() == mfr {
+                confidence += 0.1
+            }
+
+            // Apply confidence caps based on match quality
+            let onlyColorMatch = receipt.distinctiveWords.isEmpty && catalog.distinctiveWords.isEmpty
+
+            if onlyColorMatch {
+                // Color-only matches (e.g., "Silver" → "Silver #1") cap at 60%
+                confidence = min(confidence, 0.60)
+            } else if !distinctiveMatches.isEmpty &&
+                      catalogDistinctiveMatches.count == catalog.distinctiveWords.count {
+                // All distinctive words matched on both sides - high quality
+                confidence = min(confidence, 0.90)
+            } else {
+                // Partial match
+                confidence = min(confidence, 0.75)
+            }
+
+            // Final bounds
+            confidence = min(max(confidence, 0), 1.0)
+
+            if confidence >= 0.5 {
+                let details = "Matched: \(distinctiveMatches.joined(separator: ", "))" +
+                    (colorMatches.isEmpty ? "" : " + colors: \(colorMatches.joined(separator: ", "))")
+
                 candidates.append(MatchCandidate(
                     catalogStableId: catalogItem.stable_id,
                     catalogName: catalogItem.name,
@@ -519,8 +478,8 @@ public actor ReceiptCatalogMatcher {
                     catalogType: productType,
                     catalogSubtype: subtype,
                     confidence: round(confidence * 100) / 100,
-                    matchMethod: "component_match",
-                    matchDetails: "Component match: \"\(parsed.colorName)\" → \"\(catalogItem.name)\""
+                    matchMethod: "name_match",
+                    matchDetails: details
                 ))
             }
         }
@@ -528,101 +487,7 @@ public actor ReceiptCatalogMatcher {
         return candidates
     }
 
-    private func parseProductName(_ rawName: String) -> ParsedProductName {
-        var name = rawName.lowercased().trimmingCharacters(in: .whitespaces)
-        var manufacturer: String?
-        var manufacturerConfidence: Double = 0
-        var productType: String?
-
-        // Check for manufacturer names (full names first, then abbreviations)
-        // Sort by length descending to match longer names first
-        let sortedAliases = Self.manufacturerAliases.sorted { $0.key.count > $1.key.count }
-
-        for (alias, code) in sortedAliases {
-            let pattern = "\\b\(NSRegularExpression.escapedPattern(for: alias))\\b"
-            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-               regex.firstMatch(in: name, range: NSRange(name.startIndex..., in: name)) != nil {
-                manufacturer = code
-                manufacturerConfidence = alias.count > 3 ? 1.0 : 0.7
-                name = name.replacingOccurrences(of: alias, with: " ", options: .caseInsensitive)
-                    .replacingOccurrences(of: "  ", with: " ")
-                    .trimmingCharacters(in: .whitespaces)
-                break
-            }
-        }
-
-        // Check for product type
-        for (keyword, type) in Self.productTypeKeywords {
-            let pattern = "\\b\(keyword)\\b"
-            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-               regex.firstMatch(in: name, range: NSRange(name.startIndex..., in: name)) != nil {
-                productType = type
-                name = name.replacingOccurrences(of: keyword, with: " ", options: .caseInsensitive)
-                    .replacingOccurrences(of: "  ", with: " ")
-                    .trimmingCharacters(in: .whitespaces)
-                break
-            }
-        }
-
-        // Clean up the remaining name
-        let colorName = name
-            .components(separatedBy: CharacterSet.alphanumerics.inverted)
-            .joined(separator: " ")
-            .replacingOccurrences(of: "  ", with: " ")
-            .trimmingCharacters(in: .whitespaces)
-
-        return ParsedProductName(
-            manufacturer: manufacturer,
-            manufacturerConfidence: manufacturerConfidence,
-            productType: productType,
-            colorName: colorName
-        )
-    }
-
     // MARK: - Helpers
-
-    private func normalizeProductName(_ name: String) -> String {
-        var result = name.lowercased()
-
-        // Remove common suffixes
-        let patterns = [
-            "\\s*(rod|rods|glass|tube|frit|sheet|powder)\\s*",
-            "\\s*(transparent|opaque|opalescent|pastel|special)\\s*",
-            "\\s*(coe\\s*\\d+|104\\s*coe|90\\s*coe|33\\s*coe)\\s*",
-            "\\s*(effetre|moretti|bullseye|northstar|creation is messy|cim)\\s*",
-            "\\s*(genuine|genuine moretti|ltd run|limited run)\\s*",
-            "\\s*(italy|italian)\\s*",
-            "\\s*\\d+\\s*oz\\.?\\s*",
-            "\\s*\\d+\\s*lb\\.?\\s*",
-            "\\s*\\d+-?\\d*mm\\s*",
-        ]
-
-        for pattern in patterns {
-            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) {
-                result = regex.stringByReplacingMatches(in: result, range: NSRange(result.startIndex..., in: result), withTemplate: " ")
-            }
-        }
-
-        // Remove non-alphanumeric characters and normalize whitespace
-        result = result
-            .components(separatedBy: CharacterSet.alphanumerics.inverted)
-            .joined(separator: " ")
-            .replacingOccurrences(of: "  ", with: " ")
-            .trimmingCharacters(in: .whitespaces)
-
-        return result
-    }
-
-    private func extractKeywords(_ name: String) -> [String] {
-        let stopwords: Set<String> = ["the", "a", "an", "and", "or", "of", "in", "on", "for", "with"]
-
-        return name
-            .split(separator: " ")
-            .map(String.init)
-            .filter { $0.count >= 3 && !stopwords.contains($0) }
-            .prefix(5)
-            .map { $0 }
-    }
 
     private func deduplicateCandidates(_ candidates: [MatchCandidate]) -> [MatchCandidate] {
         var seen: [String: MatchCandidate] = [:]
@@ -639,37 +504,28 @@ public actor ReceiptCatalogMatcher {
 
         return Array(seen.values)
     }
+}
 
-    private func levenshteinDistance(_ a: String, _ b: String) -> Int {
-        if a.isEmpty { return b.count }
-        if b.isEmpty { return a.count }
+// MARK: - String Helpers
 
-        let aChars = Array(a)
-        let bChars = Array(b)
-
-        var matrix = [[Int]](repeating: [Int](repeating: 0, count: a.count + 1), count: b.count + 1)
-
-        for i in 0...b.count {
-            matrix[i][0] = i
+extension ReceiptCatalogMatcher {
+    /// Check if string contains a word (with word boundaries)
+    private nonisolated static func stringContainsWord(_ string: String, word: String) -> Bool {
+        let pattern = "\\b\(NSRegularExpression.escapedPattern(for: word))\\b"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else {
+            return false
         }
-        for j in 0...a.count {
-            matrix[0][j] = j
-        }
+        return regex.firstMatch(in: string, range: NSRange(string.startIndex..., in: string)) != nil
+    }
 
-        for i in 1...b.count {
-            for j in 1...a.count {
-                if bChars[i - 1] == aChars[j - 1] {
-                    matrix[i][j] = matrix[i - 1][j - 1]
-                } else {
-                    matrix[i][j] = min(
-                        matrix[i - 1][j - 1] + 1,  // substitution
-                        matrix[i][j - 1] + 1,      // insertion
-                        matrix[i - 1][j] + 1       // deletion
-                    )
-                }
-            }
+    /// Replace a word (with word boundaries)
+    private nonisolated static func stringReplacingWord(_ string: String, word: String, with replacement: String) -> String {
+        let pattern = "\\b\(NSRegularExpression.escapedPattern(for: word))\\b"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else {
+            return string
         }
-
-        return matrix[b.count][a.count]
+        return regex.stringByReplacingMatches(in: string, range: NSRange(string.startIndex..., in: string), withTemplate: replacement)
+            .replacingOccurrences(of: "  ", with: " ")
+            .trimmingCharacters(in: .whitespaces)
     }
 }

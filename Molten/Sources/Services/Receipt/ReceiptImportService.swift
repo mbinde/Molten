@@ -122,29 +122,10 @@ class ReceiptImportService {
             }
         }
 
-        // Strategy 3: Match by sender email + same day + approximate total
-        if let senderEmail = senderEmail {
-            let matches = try await purchaseRecordRepository.fetchRecords(
-                bySenderEmail: senderEmail,
-                on: orderDate
-            )
-            // If we have a total, try to match approximately
-            if let total = total {
-                for match in matches {
-                    if let matchTotal = match.totalPrice {
-                        // Allow 1% tolerance for rounding differences
-                        let tolerance = abs(matchTotal) * Decimal(0.01)
-                        if abs(matchTotal - total) <= tolerance {
-                            return match
-                        }
-                    }
-                }
-            }
-            // If no total or no total match, return first match by sender/date
-            if let existing = matches.first {
-                return existing
-            }
-        }
+        // Note: We intentionally don't use sender_email for matching because when
+        // users forward receipts, the sender_email is always THEIR email (the forwarder),
+        // not the retailer's email. This would incorrectly match all receipts forwarded
+        // on the same day.
 
         return nil
     }

@@ -89,17 +89,24 @@ struct MoltenApp: App {
             ))
         } else {
             // Production mode - real Core Data (will init in background during launch screen)
-            print("🚀 [MoltenApp] init() - production mode, creating SubscriptionManager")
+            print("🚀 [MoltenApp] init() - production mode")
             let prodDeps = AppDependencies.shared
             _dependencies = State(initialValue: prodDeps)
 
-            // Create SubscriptionManager with real RevenueCat service
-            // NOTE: didFinishLaunchingWithOptions runs AFTER this init(), so RevenueCat
-            // won't be configured yet. SubscriptionManager has a 500ms delay before
-            // checking subscription, and RevenueCatGuard has a 1s startup delay.
+            // Create SubscriptionManager with a DEFERRED RevenueCat service
+            // IMPORTANT: RevenueCat.configure() runs in AppDelegate.didFinishLaunchingWithOptions
+            // which happens AFTER this init(). Creating RevenueCatSubscriptionService here
+            // is safe (it doesn't call the SDK), but SubscriptionManager will wait for
+            // RevenueCatGuard.markInitialized() before making any SDK calls.
+            //
+            // The SubscriptionManager's internal 500ms delay + RevenueCatGuard's initialization
+            // wait should be sufficient, but we add an extra safety margin by NOT triggering
+            // any subscription checks here. The first check happens in SubscriptionManager.init()
+            // with its own delay.
             _subscriptionManager = State(initialValue: SubscriptionManager(
                 entitlementService: prodDeps.entitlementService,
-                subscriptionService: RevenueCatSubscriptionService()
+                subscriptionService: RevenueCatSubscriptionService(),
+                deferInitialCheck: true  // Don't check subscription until SDK is ready
             ))
         }
 
@@ -195,6 +202,20 @@ struct MoltenApp: App {
                     // Refresh subscription status when app comes to foreground
                     // This catches promo codes redeemed externally in the App Store
                     Task {
+                        await subscriptionManager.checkSubscriptionStatus()
+                    }
+                }
+            }
+            .onChange(of: isLaunching) { wasLaunching, nowLaunching in
+                // When launch screen completes (isLaunching goes from true to false),
+                // trigger the deferred subscription check. By this point, RevenueCat
+                // has been configured in AppDelegate.didFinishLaunchingWithOptions.
+                if wasLaunching && !nowLaunching {
+                    Task {
+                        // Small delay to ensure RevenueCat is fully ready
+                        // (markInitialized is called in didFinishLaunchingWithOptions)
+                        try? await Task.sleep(for: .milliseconds(100))
+                        await subscriptionManager.loadProducts()
                         await subscriptionManager.checkSubscriptionStatus()
                     }
                 }

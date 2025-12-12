@@ -46,6 +46,13 @@ class SubscriptionManager {
     /// Flag to prevent concurrent subscription checks (prevents deadlocks)
     private var isCheckingSubscription = false
 
+    /// Timestamp of last successful RevenueCat refresh
+    private var lastRevenueCatRefresh: Date?
+
+    /// Minimum interval between RevenueCat refreshes (30 seconds)
+    /// This prevents blocking calls during rapid view redraws
+    private let minimumRefreshInterval: TimeInterval = 30
+
     // MARK: - Initialization
 
     /// Initialize SubscriptionManager
@@ -182,38 +189,58 @@ class SubscriptionManager {
             print("🔐 [Subscription] Using cached premium status")
         }
 
-        // Step 2: Try to refresh from RevenueCat (updates cache if successful)
-        do {
-            let subscriptionInfo = await subscriptionService.getSubscriptionStatus()
-
-            // Update cache with fresh data
-            cache.updateCache(
-                isPremium: subscriptionInfo.isActive,
-                productIdentifier: subscriptionInfo.productIdentifier,
-                expirationDate: subscriptionInfo.expirationDate
-            )
-
-            // Update UI state with fresh data
-            if subscriptionInfo.isActive {
-                subscriptionStatus = .subscribed
-                entitlementService.updateTier(.premium)
-            } else {
-                subscriptionStatus = .notSubscribed
-                entitlementService.updateTier(.free)
+        // Step 2: Check if we should skip RevenueCat refresh
+        // Skip if we refreshed recently (prevents blocking during rapid view redraws)
+        if let lastRefresh = lastRevenueCatRefresh {
+            let timeSinceRefresh = Date().timeIntervalSince(lastRefresh)
+            if timeSinceRefresh < minimumRefreshInterval {
+                print("🔐 [Subscription] Skipping RevenueCat refresh (last refresh \(Int(timeSinceRefresh))s ago)")
+                return
             }
+        }
 
-            print("🔐 [Subscription] Refreshed from RevenueCat: \(subscriptionInfo.isActive ? "Premium" : "Free")")
+        // Step 3: Refresh from RevenueCat in a non-blocking task
+        // Mark refresh time now to prevent concurrent attempts
+        lastRevenueCatRefresh = Date()
 
-        } catch {
-            // Network error - rely on cache
-            print("🔐 [Subscription] Failed to refresh from RevenueCat: \(error.localizedDescription)")
+        // Use a regular Task (not detached) so RevenueCat's internal observers
+        // stay on the main actor and don't trigger "publishing from background thread" warnings.
+        // The 30-second debounce above should prevent the mutex contention that caused deadlocks.
+        // NOTE: If deadlocks return, try Task.detached(priority: .utility) here instead,
+        // but that will trigger RevenueCat warnings about publishing from background threads.
+        Task {
+            do {
+                let subscriptionInfo = await subscriptionService.getSubscriptionStatus()
 
-            // If we don't have valid cached premium, ensure we're in free tier
-            if !cachedPremium {
-                subscriptionStatus = .notSubscribed
-                entitlementService.updateTier(.free)
+                // Update cache with fresh data
+                cache.updateCache(
+                    isPremium: subscriptionInfo.isActive,
+                    productIdentifier: subscriptionInfo.productIdentifier,
+                    expirationDate: subscriptionInfo.expirationDate
+                )
+
+                // Update UI state with fresh data
+                if subscriptionInfo.isActive {
+                    subscriptionStatus = .subscribed
+                    entitlementService.updateTier(.premium)
+                } else {
+                    subscriptionStatus = .notSubscribed
+                    entitlementService.updateTier(.free)
+                }
+
+                print("🔐 [Subscription] Refreshed from RevenueCat: \(subscriptionInfo.isActive ? "Premium" : "Free")")
+
+            } catch {
+                // Network error - rely on cache
+                print("🔐 [Subscription] Failed to refresh from RevenueCat: \(error.localizedDescription)")
+
+                // If we don't have valid cached premium, ensure we're in free tier
+                if !cachedPremium {
+                    subscriptionStatus = .notSubscribed
+                    entitlementService.updateTier(.free)
+                }
+                // If cachedPremium is true, we already set premium above - keep it
             }
-            // If cachedPremium is true, we already set premium above - keep it
         }
     }
 

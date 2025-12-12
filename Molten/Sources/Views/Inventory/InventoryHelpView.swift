@@ -48,13 +48,13 @@ struct InventoryHelpView: View {
                     HelpRow(
                         icon: "arrow.up.arrow.down",
                         title: "Sort options",
-                        description: "Sort by name, quantity, date added, or recently used"
+                        description: "Sort by name, total quantity, manufacturer, or date added"
                     )
 
                     HelpRow(
                         icon: "line.3.horizontal.decrease.circle",
                         title: "Filter",
-                        description: "Filter by manufacturer, COE, or only show items with inventory"
+                        description: "Filter by manufacturer, COE, tags, or storage location"
                     )
                 }
 

@@ -36,13 +36,19 @@ struct CatalogHelpView: View {
                         title: "Filter by tags",
                         description: "Use tags to find items by category like 'transparent', 'opal', or 'striker'"
                     )
+
+                    HelpRow(
+                        icon: "thermometer.medium",
+                        title: "Filter by COE",
+                        description: "Filter by coefficient of expansion (COE 90, COE 96, etc.) to find compatible glass"
+                    )
                 }
 
                 Section("Sorting") {
                     HelpRow(
                         icon: "arrow.up.arrow.down",
                         title: "Sort options",
-                        description: "Tap the sort button to arrange items by name, SKU, manufacturer, or recently viewed"
+                        description: "Tap the sort button to arrange items by name, code (SKU), manufacturer, or rating"
                     )
                 }
 

@@ -16,7 +16,6 @@ struct PurchaseDetailView: View {
     @State private var errorMessage: String?
     @State private var isKeyNotFoundError = false
     @State private var isMarking = false
-    @State private var showingMarkConfirmation = false
     @State private var selectedItems: Set<Int> = []
     @State private var showingImportSheet = false
     @State private var isImported = false
@@ -175,11 +174,6 @@ struct PurchaseDetailView: View {
 
                         // Items Section
                         itemsSection(purchase)
-
-                        // Actions
-                        if !isImported {
-                            actionsSection(purchase)
-                        }
                     }
                     .padding()
                     .padding(.bottom, 40)  // Extra padding for tab bar
@@ -196,18 +190,6 @@ struct PurchaseDetailView: View {
         }
         .onAppear {
             loadPurchase()
-        }
-        .confirmationDialog(
-            "Mark as Imported?",
-            isPresented: $showingMarkConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Mark as Imported") {
-                markAsImported()
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This will mark the order as imported. You can still view it in your purchase history.")
         }
         .sheet(isPresented: $showingImportSheet) {
             if let purchase = purchase {
@@ -406,13 +388,16 @@ struct PurchaseDetailView: View {
 
     @ViewBuilder
     private var exactDuplicateBanner: some View {
-        if let existing = existingPurchaseRecord {
+        if let existing = existingPurchaseRecord, let purchase = purchase {
+            let categories = categorizeItems(purchase.items)
+            let hasMoreToImport = !categories.readyToImport.isEmpty
+
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(DesignSystem.Colors.accentSuccess)
+                    Image(systemName: hasMoreToImport ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
+                        .foregroundColor(hasMoreToImport ? DesignSystem.Colors.accentWarning : DesignSystem.Colors.accentSuccess)
 
-                    Text("Already Imported")
+                    Text(hasMoreToImport ? "Partially Imported" : "Already Imported")
                         .font(.headline)
                         .foregroundColor(DesignSystem.Colors.textPrimary)
 
@@ -429,7 +414,8 @@ struct PurchaseDetailView: View {
                     }
                 }
 
-                Text("This receipt was already imported to your inventory:")
+                // Dynamic summary based on categories
+                Text(importSummaryText(categories: categories, existing: existing))
                     .font(.subheadline)
                     .foregroundColor(DesignSystem.Colors.textSecondary)
 
@@ -443,66 +429,151 @@ struct PurchaseDetailView: View {
                         .font(.caption)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
 
-                    if !existing.items.isEmpty {
-                        Text("\(existing.items.count) item\(existing.items.count == 1 ? "" : "s") imported")
-                            .font(.caption)
-                            .foregroundColor(DesignSystem.Colors.textSecondary)
-                    }
+                    // Show breakdown of item status
+                    importStatusBreakdown(categories: categories)
                 }
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(DesignSystem.Colors.background)
                 .cornerRadius(8)
 
-                // Action buttons
+                // Action buttons - different based on whether there's more to import
                 HStack(spacing: 12) {
-                    // Dismiss as duplicate - marks as acknowledged and goes back
-                    Button {
-                        dismissAsDuplicate()
-                    } label: {
-                        HStack {
-                            if isMarking {
-                                ProgressView()
-                                    .progressViewStyle(.circular)
-                                    .controlSize(.small)
+                    if hasMoreToImport {
+                        // Primary action: Import the remaining items
+                        Button {
+                            withAnimation {
+                                exactDuplicateDismissed = true
+                                // Select only the items that are ready to import
+                                selectedItems = Set(categories.readyToImport.map { $0.id })
                             }
-                            Text("Dismiss as Duplicate")
-                                .font(.subheadline)
+                        } label: {
+                            HStack {
+                                Image(systemName: "arrow.down.circle")
+                                Text("Import \(categories.readyToImport.count) More")
+                                    .font(.subheadline)
+                            }
                         }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(DesignSystem.Colors.accentDanger)
-                    .disabled(isMarking)
+                        .buttonStyle(.borderedProminent)
 
-                    // Re-import option
-                    Button {
-                        withAnimation {
-                            // Clear the existing record to allow re-import
-                            existingPurchaseRecord = nil
-                            importedItemsMap = [:]
-                            exactDuplicateDismissed = true
-                            // Re-select all items with catalog matches
-                            if let purchase = purchase {
+                        // Dismiss as done
+                        Button {
+                            dismissAsDuplicate()
+                        } label: {
+                            HStack {
+                                if isMarking {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                        .controlSize(.small)
+                                }
+                                Text("Dismiss")
+                                    .font(.subheadline)
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(isMarking)
+                    } else {
+                        // All done - primary action is dismiss
+                        Button {
+                            dismissAsDuplicate()
+                        } label: {
+                            HStack {
+                                if isMarking {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                        .controlSize(.small)
+                                }
+                                Text("Dismiss as Done")
+                                    .font(.subheadline)
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(DesignSystem.Colors.accentSuccess)
+                        .disabled(isMarking)
+
+                        // Re-import option
+                        Button {
+                            withAnimation {
+                                // Clear the existing record to allow re-import
+                                existingPurchaseRecord = nil
+                                importedItemsMap = [:]
+                                exactDuplicateDismissed = true
+                                // Re-select all items with catalog matches
                                 let selectableItemIds = selectableItems(purchase.items).map { $0.id }
                                 selectedItems = Set(selectableItemIds)
                             }
+                        } label: {
+                            Text("Re-Import Anyway")
+                                .font(.subheadline)
                         }
-                    } label: {
-                        Text("Re-Import Anyway")
-                            .font(.subheadline)
+                        .buttonStyle(.bordered)
                     }
-                    .buttonStyle(.bordered)
 
                     Spacer()
                 }
 
-                Text("Dismiss removes this from your inbox. Re-import lets you add items again.")
+                Text(hasMoreToImport
+                    ? "You can import additional items or dismiss this receipt."
+                    : "Dismiss removes this from your inbox. Re-import lets you add items again.")
                     .font(.caption)
                     .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             .padding()
-            .background(DesignSystem.Colors.accentSuccess.opacity(0.1))
+            .background((hasMoreToImport ? DesignSystem.Colors.accentWarning : DesignSystem.Colors.accentSuccess).opacity(0.1))
             .cornerRadius(12)
+        }
+    }
+
+    /// Generate summary text based on import status
+    private func importSummaryText(categories: ItemCategories, existing: PurchaseRecordModel) -> String {
+        let total = categories.readyToImport.count + categories.cannotImport.count + categories.alreadyImported.count
+
+        if categories.readyToImport.isEmpty && categories.cannotImport.isEmpty {
+            // All items were imported
+            return "All \(total) items from this receipt were imported to your inventory."
+        } else if categories.readyToImport.isEmpty {
+            // All importable items were imported, some couldn't be matched
+            return "All importable items were imported. \(categories.cannotImport.count) item\(categories.cannotImport.count == 1 ? " has" : "s have") no catalog match."
+        } else {
+            // Some items can still be imported
+            return "\(categories.readyToImport.count) item\(categories.readyToImport.count == 1 ? "" : "s") can still be imported."
+        }
+    }
+
+    /// Show breakdown of item import status
+    @ViewBuilder
+    private func importStatusBreakdown(categories: ItemCategories) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            if !categories.alreadyImported.isEmpty {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.caption2)
+                        .foregroundColor(DesignSystem.Colors.accentSuccess)
+                    Text("\(categories.alreadyImported.count) imported")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+            }
+            if !categories.readyToImport.isEmpty {
+                HStack(spacing: 4) {
+                    Image(systemName: "arrow.down.circle")
+                        .font(.caption2)
+                        .foregroundColor(DesignSystem.Colors.accentWarning)
+                    Text("\(categories.readyToImport.count) ready to import")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+            }
+            if !categories.cannotImport.isEmpty {
+                HStack(spacing: 4) {
+                    Image(systemName: "xmark.circle")
+                        .font(.caption2)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                    Text("\(categories.cannotImport.count) no catalog match")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+            }
         }
     }
 
@@ -533,20 +604,50 @@ struct PurchaseDetailView: View {
         items.filter { hasCatalogMatch($0) }
     }
 
+    /// Categorize items into three groups for display
+    private struct ItemCategories {
+        let readyToImport: [ReceiptItem]    // Has catalog match, not yet imported
+        let cannotImport: [ReceiptItem]      // No catalog match
+        let alreadyImported: [ReceiptItem]   // Previously imported
+    }
+
+    private func categorizeItems(_ items: [ReceiptItem]) -> ItemCategories {
+        var readyToImport: [ReceiptItem] = []
+        var cannotImport: [ReceiptItem] = []
+        var alreadyImported: [ReceiptItem] = []
+
+        for item in items {
+            if importedItemsMap.keys.contains(item.id) {
+                alreadyImported.append(item)
+            } else if hasCatalogMatch(item) {
+                readyToImport.append(item)
+            } else {
+                cannotImport.append(item)
+            }
+        }
+
+        return ItemCategories(
+            readyToImport: readyToImport,
+            cannotImport: cannotImport,
+            alreadyImported: alreadyImported
+        )
+    }
+
     @ViewBuilder
     private func itemsSection(_ purchase: ReceiptDetail) -> some View {
-        let selectable = selectableItems(purchase.items)
-        let allSelectableIds = Set(selectable.map { $0.id })
+        let categories = categorizeItems(purchase.items)
+        let allSelectableIds = Set(categories.readyToImport.map { $0.id })
         let allSelected = !allSelectableIds.isEmpty && selectedItems == allSelectableIds
 
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
+            // Header with select all
             HStack {
                 Text("Items (\(purchase.items.count))")
                     .font(.headline)
 
                 Spacer()
 
-                if !isImported && !selectable.isEmpty {
+                if !isImported && !categories.readyToImport.isEmpty {
                     Button {
                         if allSelected {
                             selectedItems.removeAll()
@@ -568,72 +669,110 @@ struct PurchaseDetailView: View {
                 }
                 .frame(height: 150)
             } else {
-                ForEach(purchase.items) { item in
-                    PurchaseItemRow(
-                        item: item,
-                        clientMatchCandidates: matchCandidates(for: item),
-                        isSelected: selectedItems.contains(item.id),
-                        isSelectable: !isImported && !importedItemsMap.keys.contains(item.id),
-                        importedItem: importedItemsMap[item.id],
-                        catalogService: catalogService,
-                        selectedCandidateId: selectedMatches[item.id],
-                        quantityOverride: itemQuantities[item.id],
-                        onToggle: {
-                            if selectedItems.contains(item.id) {
-                                selectedItems.remove(item.id)
-                            } else {
-                                selectedItems.insert(item.id)
+                // Section 1: Ready to Import (has catalog match, not imported)
+                if !categories.readyToImport.isEmpty {
+                    itemGroupSection(
+                        title: "Ready to Import",
+                        subtitle: "\(categories.readyToImport.count) item\(categories.readyToImport.count == 1 ? "" : "s")",
+                        items: categories.readyToImport,
+                        icon: "arrow.down.circle",
+                        iconColor: DesignSystem.Colors.accentSuccess
+                    )
+
+                    // Import button right after importable items
+                    if !selectedItems.isEmpty && !isImported {
+                        Button {
+                            showingImportSheet = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "square.and.arrow.down")
+                                Text("Import \(selectedItems.count) Item\(selectedItems.count == 1 ? "" : "s")")
                             }
-                        },
-                        onSelectCandidate: { candidateId in
-                            selectedMatches[item.id] = candidateId
-                        },
-                        onQuantityChange: { newQuantity in
-                            itemQuantities[item.id] = newQuantity
+                            .frame(maxWidth: .infinity)
                         }
+                        .buttonStyle(.borderedProminent)
+                        .padding(.top, 4)
+                    }
+                }
+
+                // Section 2: Cannot Import (no catalog match)
+                if !categories.cannotImport.isEmpty {
+                    itemGroupSection(
+                        title: "No Catalog Match",
+                        subtitle: "\(categories.cannotImport.count) item\(categories.cannotImport.count == 1 ? "" : "s")",
+                        items: categories.cannotImport,
+                        icon: "xmark.circle",
+                        iconColor: DesignSystem.Colors.textSecondary
+                    )
+                }
+
+                // Section 3: Already Imported
+                if !categories.alreadyImported.isEmpty {
+                    itemGroupSection(
+                        title: "Already Imported",
+                        subtitle: "\(categories.alreadyImported.count) item\(categories.alreadyImported.count == 1 ? "" : "s")",
+                        items: categories.alreadyImported,
+                        icon: "checkmark.circle.fill",
+                        iconColor: DesignSystem.Colors.textSecondary
                     )
                 }
             }
         }
     }
 
-    // MARK: - Actions Section
-
     @ViewBuilder
-    private func actionsSection(_ purchase: ReceiptDetail) -> some View {
-        VStack(spacing: 12) {
-            if !selectedItems.isEmpty {
-                Button {
-                    showingImportSheet = true
-                } label: {
-                    HStack {
-                        Image(systemName: "square.and.arrow.down")
-                        Text("Import \(selectedItems.count) Item\(selectedItems.count == 1 ? "" : "s") to Inventory")
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
+    private func itemGroupSection(
+        title: String,
+        subtitle: String,
+        items: [ReceiptItem],
+        icon: String,
+        iconColor: Color
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Section header
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.caption)
+                    .foregroundColor(iconColor)
+                Text(title)
+                    .font(.subheadline.bold())
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                Text("·")
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
 
-            Button {
-                showingMarkConfirmation = true
-            } label: {
-                HStack {
-                    if isMarking {
-                        ProgressView()
-                            .progressViewStyle(.circular)
-                    } else {
-                        Image(systemName: "checkmark.circle")
-                        Text("Mark as Imported")
+            // Items
+            ForEach(items) { item in
+                PurchaseItemRow(
+                    item: item,
+                    clientMatchCandidates: matchCandidates(for: item),
+                    isSelected: selectedItems.contains(item.id),
+                    isSelectable: !isImported && !importedItemsMap.keys.contains(item.id),
+                    importedItem: importedItemsMap[item.id],
+                    catalogService: catalogService,
+                    selectedCandidateId: selectedMatches[item.id],
+                    quantityOverride: itemQuantities[item.id],
+                    onToggle: {
+                        if selectedItems.contains(item.id) {
+                            selectedItems.remove(item.id)
+                        } else {
+                            selectedItems.insert(item.id)
+                        }
+                    },
+                    onSelectCandidate: { candidateId in
+                        selectedMatches[item.id] = candidateId
+                    },
+                    onQuantityChange: { newQuantity in
+                        itemQuantities[item.id] = newQuantity
                     }
-                }
-                .frame(maxWidth: .infinity)
+                )
             }
-            .buttonStyle(.bordered)
-            .disabled(isMarking)
         }
-        .padding(.top)
     }
+
 
     // MARK: - Actions
 
@@ -806,20 +945,6 @@ struct PurchaseDetailView: View {
                 recoveryError = error.localizedDescription
             }
             isRecovering = false
-        }
-    }
-
-    private func markAsImported() {
-        isMarking = true
-
-        Task { @MainActor in
-            do {
-                try await receiptService.acknowledgeReceipt(receiptId: purchaseId)
-                isImported = true
-            } catch {
-                errorMessage = error.userFacingMessage
-            }
-            isMarking = false
         }
     }
 
@@ -1581,21 +1706,32 @@ private struct PurchaseImportSheet: View {
                     ProgressView("Loading catalog info...")
                 } else {
                     List {
-                        // Import mode picker
+                        // Import mode picker - custom cards for clarity
                         Section {
-                            Picker("Import Mode", selection: $importMode) {
-                                Text("Add as new inventory").tag(ReceiptImportMode.addNew)
-                                Text("Match to existing inventory").tag(ReceiptImportMode.matchExisting)
+                            VStack(spacing: 8) {
+                                Text("Select one:")
+                                    .font(.caption)
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                // Option 1: Add as new inventory
+                                ImportModeCard(
+                                    title: "Create New",
+                                    description: "Add these as new items in your inventory",
+                                    isSelected: importMode == .addNew,
+                                    action: { importMode = .addNew }
+                                )
+
+                                // Option 2: Match to existing
+                                ImportModeCard(
+                                    title: "Add to Existing",
+                                    description: "Find items you've already added and add price and purchase date information.",
+                                    isSelected: importMode == .matchExisting,
+                                    action: { importMode = .matchExisting }
+                                )
                             }
-                            .pickerStyle(.segmented)
-                        } header: {
-                            Text("How to Import")
-                                .foregroundColor(DesignSystem.Colors.textSecondary)
-                        } footer: {
-                            Text(importMode == .addNew
-                                ? "Creates new inventory entries for each item."
-                                : "Tries to find and link to existing inventory you already added.")
-                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                            .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                            .listRowBackground(Color.clear)
                         }
 
                         // Items section
@@ -1878,9 +2014,52 @@ private struct PurchaseImportSheet: View {
 
                 // Create or update purchase record
                 let purchaseRecordId: UUID
+                let shouldDeleteCurrentReceipt: Bool
                 if let existing = existingRecord {
+                    // Merge new items into existing purchase record
+                    importProgress = "Merging with existing purchase record..."
+
+                    // Combine existing items with new items, adjusting order indices
+                    let existingMaxIndex = existing.items.map { $0.orderIndex }.max() ?? -1
+                    let adjustedNewItems = purchaseRecordItems.enumerated().map { offset, item in
+                        PurchaseRecordItemModel(
+                            id: item.id,
+                            item_stable_id: item.item_stable_id,
+                            type: item.type,
+                            subtype: item.subtype,
+                            subsubtype: item.subsubtype,
+                            quantity: item.quantity,
+                            totalPrice: item.totalPrice,
+                            orderIndex: existingMaxIndex + 1 + Int32(offset),
+                            unitPrice: item.unitPrice,
+                            currency: item.currency,
+                            receiptLineHash: item.receiptLineHash
+                        )
+                    }
+
+                    let mergedItems = existing.items + adjustedNewItems
+
+                    // Create updated record with merged items
+                    let updatedRecord = PurchaseRecordModel(
+                        id: existing.id,
+                        supplier: existing.supplier,
+                        datePurchased: existing.datePurchased,
+                        dateAdded: existing.dateAdded,
+                        subtotal: existing.subtotal,
+                        tax: existing.tax,
+                        shipping: existing.shipping,
+                        currency: existing.currency,
+                        notes: existing.notes,
+                        items: mergedItems,
+                        workspace_id: existing.workspace_id,
+                        emailReceiptId: existing.emailReceiptId,
+                        senderEmail: existing.senderEmail,
+                        orderNumber: existing.orderNumber
+                    )
+
+                    _ = try await dependencies.purchaseRecordRepository.updateRecord(updatedRecord)
                     purchaseRecordId = existing.id
-                    // TODO: Consider updating existing record with new items
+                    shouldDeleteCurrentReceipt = true  // Delete this duplicate after import
                 } else {
                     importProgress = "Creating purchase record..."
                     let newRecord = PurchaseRecordModel(
@@ -1894,6 +2073,7 @@ private struct PurchaseImportSheet: View {
                     )
                     let created = try await dependencies.purchaseRecordRepository.createRecord(newRecord)
                     purchaseRecordId = created.id
+                    shouldDeleteCurrentReceipt = false  // This is a new record, don't delete receipt
                 }
 
                 // Import each item to inventory
@@ -1996,9 +2176,16 @@ private struct PurchaseImportSheet: View {
                     }
                 }
 
-                // Mark receipt as acknowledged on server
+                // Handle receipt cleanup on server
                 importProgress = "Finishing up..."
-                try await receiptService.acknowledgeReceipt(receiptId: purchase.id)
+                if shouldDeleteCurrentReceipt {
+                    // This was a duplicate receipt merged into an existing purchase record
+                    // Delete it from the server to avoid showing it again
+                    try await receiptService.deleteReceipt(receiptId: purchase.id)
+                } else {
+                    // Normal import - just acknowledge the receipt
+                    try await receiptService.acknowledgeReceipt(receiptId: purchase.id)
+                }
 
                 onImportComplete()
                 dismiss()
@@ -2178,6 +2365,48 @@ private struct ReceiptImportItemRow: View {
                     .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         }
+    }
+}
+
+// MARK: - Import Mode Card
+
+/// A selectable card for choosing import mode
+private struct ImportModeCard: View {
+    let title: String
+    let description: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                // Selection indicator
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundColor(isSelected ? DesignSystem.Colors.moltenOrange : DesignSystem.Colors.textSecondary)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline.bold())
+                        .foregroundColor(isSelected ? DesignSystem.Colors.textPrimary : DesignSystem.Colors.textSecondary)
+
+                    Text(description)
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .lineLimit(2)
+                }
+
+                Spacer()
+            }
+            .padding(12)
+            .background(isSelected ? DesignSystem.Colors.moltenOrange.opacity(0.15) : DesignSystem.Colors.background)
+            .cornerRadius(10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(isSelected ? DesignSystem.Colors.moltenOrange : DesignSystem.Colors.textSecondary.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 

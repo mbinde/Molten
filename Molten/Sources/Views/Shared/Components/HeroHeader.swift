@@ -48,6 +48,9 @@ struct HeroHeader: View {
                         .onTapGesture {
                             showingFullScreen = true
                         }
+                        .accessibilityLabel("Product image for \(item.name)")
+                        .accessibilityHint("Double tap to view full screen")
+                        .accessibilityAddTraits(.isButton)
                 } else {
                     // Loading or placeholder
                     Rectangle()
@@ -77,6 +80,8 @@ struct HeroHeader: View {
                             .foregroundColor(.white)
                             .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
                     }
+                    .accessibilityLabel("Color approximation info")
+                    .accessibilityHint("This image shows an approximated color. Double tap for more information.")
                     .popover(isPresented: $showingColorApproximationInfo) {
                         colorApproximationPopover
                     }
@@ -107,10 +112,13 @@ struct HeroHeader: View {
                                     Text(manufacturerName)
                                     Image(systemName: "arrow.up.forward")
                                         .font(.caption)
+                                        .accessibilityHidden(true)
                                 }
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.8))
                             }
+                            .accessibilityLabel("Visit \(manufacturerName) website")
+                            .accessibilityHint("Opens in browser")
                         } else {
                             Text(manufacturerName)
                                 .font(.subheadline)
@@ -133,6 +141,7 @@ struct HeroHeader: View {
                                 .clipShape(Circle())
                         }
                         .accessibilityLabel("Add custom photo")
+                        .accessibilityHint("Double tap to add your own photo of this product")
                         .accessibilityIdentifier("hero_add_photo")
                     }
                 }
@@ -239,6 +248,7 @@ private struct FullScreenImageView: View {
                             .background(Color.black.opacity(0.3))
                             .clipShape(Circle())
                     }
+                    .accessibilityLabel("Close full screen image")
                     .padding()
                 }
                 Spacer()

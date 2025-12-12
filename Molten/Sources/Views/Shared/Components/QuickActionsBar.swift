@@ -58,6 +58,8 @@ private struct QuickActionButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("quick_action_\(title.lowercased().replacingOccurrences(of: " ", with: "_"))")
+        .accessibilityLabel(title)
+        .accessibilityHint("Double tap to \(title.lowercased())")
     }
 }
 

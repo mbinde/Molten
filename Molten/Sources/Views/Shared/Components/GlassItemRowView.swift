@@ -152,18 +152,22 @@ struct GlassItemRowView: View {
                     Text("•")
                         .font(DesignSystem.Typography.listItemCaption)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .accessibilityHidden(true)
 
                     Image(systemName: "star.fill")
                         .font(DesignSystem.Typography.listItemCaption)
                         .foregroundStyle(DesignSystem.Colors.moltenAmber)
+                        .accessibilityHidden(true)
 
                     Text(rating.formattedAverageRating)
                         .font(DesignSystem.Typography.listItemSubtitle)
                         .fontWeight(DesignSystem.FontWeight.medium)
+                        .accessibilityLabel("\(rating.formattedAverageRating) stars")
 
                     Text("(\(rating.totalRatings))")
                         .font(DesignSystem.Typography.listItemCaptionSmall)
                         .foregroundStyle(DesignSystem.Colors.textSecondary)
+                        .accessibilityLabel("from \(rating.totalRatings) ratings")
                 }
             }
             .lineLimit(1)
@@ -175,10 +179,12 @@ struct GlassItemRowView: View {
                     Text(showFullCode ? item.stableId : (item.sku ?? ""))
                         .font(DesignSystem.Typography.listItemSubtitle)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .accessibilityLabel("SKU \(showFullCode ? item.stableId : (item.sku ?? ""))")
 
                     Text("•")
                         .font(DesignSystem.Typography.listItemSubtitle)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .accessibilityHidden(true)
                 }
 
                 // Manufacturer after SKU
@@ -421,6 +427,8 @@ extension GlassItemRowView {
                             .foregroundColor(isInBasket ? DesignSystem.Colors.moltenOrange : DesignSystem.Colors.textSecondary)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(isInBasket ? "Remove from basket" : "Add to basket")
+                    .accessibilityHint("Double tap to toggle item in shopping basket")
 
                     // Show quantity difference if user adjusted from needed amount
                     if let quantityBinding = quantity {
@@ -447,9 +455,13 @@ extension GlassItemRowView {
                         }
                         .buttonStyle(.plain)
                         .frame(height: 12)
+                        .accessibilityLabel("Increase quantity")
+                        .accessibilityHint("Double tap to add one")
 
                         // Editable number field in middle
                         TextField("Qty", value: quantityBinding, format: .number)
+                            .accessibilityLabel("Quantity")
+                            .accessibilityValue("\(Int(quantityBinding.wrappedValue))")
                             .multilineTextAlignment(.center)
                             .font(DesignSystem.Typography.listItemSubtitle)
                             .fontWeight(DesignSystem.FontWeight.medium)
@@ -471,6 +483,8 @@ extension GlassItemRowView {
                         }
                         .buttonStyle(.plain)
                         .frame(height: 12)
+                        .accessibilityLabel("Decrease quantity")
+                        .accessibilityHint("Double tap to subtract one")
                     }
                 }
             }
@@ -559,6 +573,8 @@ struct NeededQuantityBadge: View {
                 .font(DesignSystem.Typography.listItemCaption)
                 .foregroundColor(DesignSystem.Colors.textSecondary)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Need \(formattedQuantity) \(displayUnit)")
     }
 }
 

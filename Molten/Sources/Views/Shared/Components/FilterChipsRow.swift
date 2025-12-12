@@ -117,10 +117,13 @@ struct FilterChipsRow: View {
                     Toggle("", isOn: $searchTitlesOnly)
                         .labelsHidden()
                         .tint(DesignSystem.Colors.accentPrimary)
+                        .accessibilityLabel("Search titles only")
+                        .accessibilityHint("When enabled, searches only item titles instead of all fields")
                     Text("Search titles only")
                         .font(DesignSystem.Typography.caption)
                         .fontWeight(DesignSystem.FontWeight.medium)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .accessibilityHidden(true)
                 }
 
                 Spacer()
@@ -188,10 +191,14 @@ struct FilterChipsRow: View {
                         .onTapGesture {
                             selectedManufacturers.removeAll()
                         }
+                        .accessibilityLabel("Clear manufacturer filter")
+                        .accessibilityHint("Double tap to remove all manufacturer filters")
+                        .accessibilityAddTraits(.isButton)
                 }
                 if selectedManufacturers.isEmpty {
                     Image(systemName: "chevron.down")
                         .font(.caption2)
+                        .accessibilityHidden(true)
                 }
             }
             .foregroundColor(selectedManufacturers.isEmpty ? .secondary : .white)
@@ -200,6 +207,8 @@ struct FilterChipsRow: View {
             .background(selectedManufacturers.isEmpty ? Color(.systemGray6) : DesignSystem.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
+        .accessibilityLabel(selectedManufacturers.isEmpty ? "Manufacturer filter" : "Manufacturer filter, \(selectedManufacturers.count) selected")
+        .accessibilityHint("Double tap to select manufacturers")
     }
 
     private var compactCOEFilterButton: some View {
@@ -230,10 +239,14 @@ struct FilterChipsRow: View {
                         .onTapGesture {
                             selectedCOEs.removeAll()
                         }
+                        .accessibilityLabel("Clear COE filter")
+                        .accessibilityHint("Double tap to remove all COE filters")
+                        .accessibilityAddTraits(.isButton)
                 }
                 if selectedCOEs.isEmpty {
                     Image(systemName: "chevron.down")
                         .font(.caption2)
+                        .accessibilityHidden(true)
                 }
             }
             .foregroundColor(selectedCOEs.isEmpty ? .secondary : .white)
@@ -242,6 +255,8 @@ struct FilterChipsRow: View {
             .background(selectedCOEs.isEmpty ? Color(.systemGray6) : DesignSystem.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
+        .accessibilityLabel(selectedCOEs.isEmpty ? "COE filter" : "COE filter, \(selectedCOEs.count) selected")
+        .accessibilityHint("Double tap to select COE values")
     }
 
     private var compactTagFilterButton: some View {
@@ -275,10 +290,14 @@ struct FilterChipsRow: View {
                         .onTapGesture {
                             selectedTags.removeAll()
                         }
+                        .accessibilityLabel("Clear tags filter")
+                        .accessibilityHint("Double tap to remove all tag filters")
+                        .accessibilityAddTraits(.isButton)
                 }
                 if selectedTags.isEmpty {
                     Image(systemName: "chevron.down")
                         .font(.caption2)
+                        .accessibilityHidden(true)
                 }
             }
             .foregroundColor(selectedTags.isEmpty ? .secondary : .white)
@@ -287,6 +306,8 @@ struct FilterChipsRow: View {
             .background(selectedTags.isEmpty ? Color(.systemGray6) : DesignSystem.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
+        .accessibilityLabel(selectedTags.isEmpty ? "Tags filter" : "Tags filter, \(selectedTags.count) selected")
+        .accessibilityHint("Double tap to select tags")
     }
 
     private var compactProductTypeFilterButton: some View {
@@ -337,6 +358,8 @@ struct FilterChipsRow: View {
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
         }
         .accessibilityIdentifier("productTypeFilterButton")
+        .accessibilityLabel("Product type filter, \(selectedProductTypes.first.map { displayNameForProductType($0) } ?? "All")")
+        .accessibilityHint("Double tap to change product type")
     }
 
     private func displayNameForProductType(_ type: String) -> String {

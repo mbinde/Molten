@@ -44,6 +44,9 @@ struct ConfirmationDialog: View {
                 .onTapGesture {
                     onCancel()
                 }
+                .accessibilityLabel("Close dialog")
+                .accessibilityHint("Double tap to dismiss")
+                .accessibilityAddTraits(.isButton)
 
             // Dialog card
             VStack(spacing: 0) {
@@ -79,9 +82,12 @@ struct ConfirmationDialog: View {
                     .buttonStyle(.plain)
                     .foregroundColor(.primary)
                     .accessibilityIdentifier("confirmation_dialog_cancel")
+                    .accessibilityLabel("Cancel")
+                    .accessibilityHint("Double tap to dismiss without taking action")
 
                     Divider()
                         .frame(height: 44)
+                        .accessibilityHidden(true)
 
                     // Confirm button
                     Button(action: {
@@ -96,6 +102,8 @@ struct ConfirmationDialog: View {
                     .buttonStyle(.plain)
                     .foregroundColor(confirmRole == .destructive ? .red : .blue)
                     .accessibilityIdentifier("confirmation_dialog_confirm")
+                    .accessibilityLabel(confirmTitle)
+                    .accessibilityHint("Double tap to confirm \(confirmRole == .destructive ? "this destructive action" : "this action")")
                 }
             }
             .background(

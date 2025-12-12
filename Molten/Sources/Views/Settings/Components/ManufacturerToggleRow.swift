@@ -42,6 +42,8 @@ struct ManufacturerToggleRow: View {
             ))
             .labelsHidden()
             .accessibilityIdentifier("manufacturer_toggle_\(manufacturer.lowercased())")
+            .accessibilityLabel("Show \(displayText) products")
+            .accessibilityHint(isEnabled ? "Double tap to hide \(displayText) products from catalog" : "Double tap to show \(displayText) products in catalog")
         }
     }
 }

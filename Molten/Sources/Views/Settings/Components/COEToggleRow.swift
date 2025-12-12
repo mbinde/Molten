@@ -27,6 +27,8 @@ struct COEToggleRow: View {
                     }
                 }
                 .accessibilityIdentifier("coe_toggle_\(coeType.displayName.lowercased().replacingOccurrences(of: " ", with: "_"))")
+                .accessibilityLabel("Show \(coeType.displayName) glass")
+                .accessibilityHint(isSelected ? "Double tap to hide \(coeType.displayName) glass from catalog" : "Double tap to show \(coeType.displayName) glass in catalog")
         }
         .onAppear {
             isSelected = COEGlassPreference.selectedCOETypes.contains(coeType)

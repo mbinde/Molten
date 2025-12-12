@@ -60,6 +60,8 @@ struct BadgeLabel: View {
             RoundedRectangle(cornerRadius: 6)
                 .strokeBorder(borderColor, lineWidth: style == .outlined ? 1 : 0)
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(text)
     }
 
     private var backgroundColor: Color {

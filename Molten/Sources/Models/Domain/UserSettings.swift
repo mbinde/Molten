@@ -712,6 +712,7 @@ class UserSettings {
     enum InventoryQuickAction: String, CaseIterable {
         case addInventory = "addInventory"
         case scanQRCode = "scanQRCode"
+        case none = "none"
 
         var displayName: String {
             switch self {
@@ -719,6 +720,8 @@ class UserSettings {
                 return "Add Inventory"
             case .scanQRCode:
                 return "Scan QR Code"
+            case .none:
+                return "No Button"
             }
         }
 
@@ -728,6 +731,8 @@ class UserSettings {
                 return "Open the Add Inventory form to search and add items"
             case .scanQRCode:
                 return "Open the camera to scan a QR code label"
+            case .none:
+                return "Hide the quick action button"
             }
         }
 
@@ -737,6 +742,8 @@ class UserSettings {
                 return "plus"
             case .scanQRCode:
                 return "camera"
+            case .none:
+                return ""
             }
         }
     }

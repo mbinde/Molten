@@ -375,6 +375,103 @@ struct InventoryView: View, CachedDataDeletion {
         NavigationStack(path: $navigationPath) {
             mainContent
         }
+        .overlay(alignment: .topLeading) {
+            // Floating location filter button (upper left) - only show if there are locations defined
+            if !allAvailableLocations.isEmpty {
+                Menu {
+                    // "All" option - clears selection
+                    Button {
+                        viewModel.selectedLocations.removeAll()
+                    } label: {
+                        if viewModel.selectedLocations.isEmpty {
+                            Label("All Locations (\(inventoryItemCount))", systemImage: "checkmark")
+                        } else {
+                            Text("All Locations (\(inventoryItemCount))")
+                        }
+                    }
+
+                    Divider()
+
+                    // "(none)" option - items with no location
+                    Button {
+                        toggleLocation(LocationQuickFilterBar.noLocationValue)
+                    } label: {
+                        if viewModel.selectedLocations.contains(LocationQuickFilterBar.noLocationValue) {
+                            Label("No Location (\(noLocationCount))", systemImage: "checkmark")
+                        } else {
+                            Text("No Location (\(noLocationCount))")
+                        }
+                    }
+
+                    // Location options
+                    ForEach(allAvailableLocations, id: \.self) { location in
+                        Button {
+                            toggleLocation(location)
+                        } label: {
+                            if viewModel.selectedLocations.contains(location) {
+                                Label("\(location) (\(locationCounts[location] ?? 0))", systemImage: "checkmark")
+                            } else {
+                                Text("\(location) (\(locationCounts[location] ?? 0))")
+                            }
+                        }
+                    }
+
+                    Divider()
+
+                    Button {
+                        showingManageLocations = true
+                    } label: {
+                        Label("Manage Locations", systemImage: "gear")
+                    }
+                } label: {
+                    ZStack(alignment: .topLeading) {
+                        // Teal outer circle, white inner circle, teal icon
+                        ZStack {
+                            // Outer teal circle
+                            Circle()
+                                .fill(DesignSystem.Colors.accentSecondary)
+                                .frame(width: 50, height: 50)
+
+                            // Inner white circle
+                            Circle()
+                                .fill(.white)
+                                .frame(width: 36, height: 36)
+
+                            // Combination icon: archivebox with filter lines (overlapping)
+                            ZStack(alignment: .bottomTrailing) {
+                                Image(systemName: "archivebox")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .offset(x: -2, y: -2)
+                                    .foregroundColor(DesignSystem.Colors.accentSecondary)
+                                Image(systemName: "line.3.horizontal.decrease")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .shadow(color: .white, radius: 3, x: 0, y: 0)
+                                    .offset(x: 3, y: 3)
+                                    .foregroundColor(DesignSystem.Colors.accentSecondary)
+                            }
+//                            .foregroundColor(DesignSystem.Colors.accentSecondary)
+                        }
+                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+
+                        // Badge showing selected location count
+                        if !viewModel.selectedLocations.isEmpty {
+                            Text("\(viewModel.selectedLocations.count)")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                                .frame(minWidth: 16, minHeight: 16)
+                                .background(
+                                    Circle()
+                                        .fill(DesignSystem.Colors.accentPrimary)
+                                )
+                                .offset(x: -2, y: -2)
+                        }
+                    }
+                }
+                .padding(.leading, 16)
+                .padding(.top, 4)
+                .accessibilityIdentifier("inventory_location_filter_button")
+            }
+        }
     }
 
     @ViewBuilder
@@ -540,90 +637,30 @@ struct InventoryView: View, CachedDataDeletion {
     
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        // Location filter button (left side) - only show if there are locations defined
-        if !allAvailableLocations.isEmpty {
-            ToolbarItem(placement: .cancellationAction) {
-                Menu {
-                    // "All" option - clears selection
-                    Button {
-                        viewModel.selectedLocations.removeAll()
-                    } label: {
-                        if viewModel.selectedLocations.isEmpty {
-                            Label("All Locations (\(inventoryItemCount))", systemImage: "checkmark")
+        // Quick action button - only show if not set to "none"
+        if UserSettings.shared.inventoryQuickAction != .none {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    // Action depends on user setting
+                    switch UserSettings.shared.inventoryQuickAction {
+                    case .addInventory:
+                        // Check if at limit before showing add screen
+                        if let limit = entitlementService.getInventoryLimit(),
+                           inventoryItemCount >= limit {
+                            showingUpgradePrompt = true
                         } else {
-                            Text("All Locations (\(inventoryItemCount))")
+                            showingAddItem = true
                         }
-                    }
-
-                    Divider()
-
-                    // "(none)" option - items with no location
-                    Button {
-                        toggleLocation(LocationQuickFilterBar.noLocationValue)
-                    } label: {
-                        if viewModel.selectedLocations.contains(LocationQuickFilterBar.noLocationValue) {
-                            Label("No Location (\(noLocationCount))", systemImage: "checkmark")
-                        } else {
-                            Text("No Location (\(noLocationCount))")
-                        }
-                    }
-
-                    // Location options
-                    ForEach(allAvailableLocations, id: \.self) { location in
-                        Button {
-                            toggleLocation(location)
-                        } label: {
-                            if viewModel.selectedLocations.contains(location) {
-                                Label("\(location) (\(locationCounts[location] ?? 0))", systemImage: "checkmark")
-                            } else {
-                                Text("\(location) (\(locationCounts[location] ?? 0))")
-                            }
-                        }
-                    }
-
-                    Divider()
-
-                    Button {
-                        showingManageLocations = true
-                    } label: {
-                        Label("Manage Locations", systemImage: "gear")
+                    case .scanQRCode:
+                        showingQRScanner = true
+                    case .none:
+                        break
                     }
                 } label: {
-                    // Combination icon: archivebox with filter lines
-                    ZStack(alignment: .bottomTrailing) {
-                        Image(systemName: "archivebox")
-                        Image(systemName: "line.3.horizontal.decrease")
-                            .font(.system(size: 8, weight: .bold))
-                            .offset(x: 4, y: 4)
-                    }
-                    .foregroundColor(.white)
-                    .padding(8)
-                    .background(DesignSystem.Colors.accentSecondary)
-                    .clipShape(Circle())
+                    Image(systemName: UserSettings.shared.inventoryQuickAction.systemImage)
                 }
-                .accessibilityIdentifier("inventory_location_filter_button")
+                .accessibilityIdentifier("inventory_quick_action_button")
             }
-        }
-
-        ToolbarItem(placement: .primaryAction) {
-            Button {
-                // Action depends on user setting
-                switch UserSettings.shared.inventoryQuickAction {
-                case .addInventory:
-                    // Check if at limit before showing add screen
-                    if let limit = entitlementService.getInventoryLimit(),
-                       inventoryItemCount >= limit {
-                        showingUpgradePrompt = true
-                    } else {
-                        showingAddItem = true
-                    }
-                case .scanQRCode:
-                    showingQRScanner = true
-                }
-            } label: {
-                Image(systemName: UserSettings.shared.inventoryQuickAction.systemImage)
-            }
-            .accessibilityIdentifier("inventory_quick_action_button")
         }
 
         ToolbarItem(placement: .confirmationAction) {

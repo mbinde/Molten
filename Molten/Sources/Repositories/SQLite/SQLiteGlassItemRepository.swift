@@ -38,10 +38,10 @@ final class SQLiteGlassItemRepository: BaseSQLiteCatalogItemRepository<GlassItem
     nonisolated override func parseItem(from statement: OpaquePointer) throws -> GlassItemModel {
         // Column indices (match schema from build script):
         // 0=stable_id, 1=status, 2=added_date, 3=last_seen, 4=discontinued_date,
-        // 5=manufacturer, 6=code, 7=name, 8=start_date, 9=end_date,
-        // 10=manufacturer_description, 11=tags, 12=synonyms, 13=coe, 14=type,
-        // 15=manufacturer_url, 16=image_path, 17=image_thumb_path, 18=image_url,
-        // 19=stock_type, 20=dominant_colors
+        // 5=manufacturer, 6=code, 7=name, 8=full_name, 9=start_date, 10=end_date,
+        // 11=manufacturer_description, 12=tags, 13=synonyms, 14=coe, 15=type,
+        // 16=manufacturer_url, 17=image_path, 18=image_thumb_path, 19=image_url,
+        // 20=stock_type, 21=dominant_colors
 
         guard let stable_id = getText(from: statement, column: 0) else {
             throw SQLiteError.invalidData("Missing stable_id")
@@ -55,26 +55,27 @@ final class SQLiteGlassItemRepository: BaseSQLiteCatalogItemRepository<GlassItem
             throw SQLiteError.invalidData("Missing manufacturer")
         }
 
+        let full_name = getText(from: statement, column: 8)  // Full manufacturer product name
         let sku = getText(from: statement, column: 6)  // code -> sku
-        let mfr_notes = getText(from: statement, column: 10)  // manufacturer_description -> mfr_notes
+        let mfr_notes = getText(from: statement, column: 11)  // manufacturer_description -> mfr_notes
 
         // Parse COE (required field, default to 90 if missing)
         let coe: Int32
-        if let coeText = getText(from: statement, column: 13), let coeValue = Int32(coeText) {
+        if let coeText = getText(from: statement, column: 14), let coeValue = Int32(coeText) {
             coe = coeValue
         } else {
             coe = 90  // Default COE
         }
 
-        let url = getText(from: statement, column: 15)  // manufacturer_url -> url
+        let url = getText(from: statement, column: 16)  // manufacturer_url -> url
         let mfr_status = getText(from: statement, column: 1) ?? "available"  // status -> mfr_status
-        let image_path = getText(from: statement, column: 16)
-        let image_thumb_path = getText(from: statement, column: 17)
-        let image_url = getText(from: statement, column: 18)
+        let image_path = getText(from: statement, column: 17)
+        let image_thumb_path = getText(from: statement, column: 18)
+        let image_url = getText(from: statement, column: 19)
 
         // Parse dominant_colors from JSON array format: ["#2E5E41", "#1D4030", "#0C2219"]
         let dominant_colors: [String]?
-        if let colorsJSON = getText(from: statement, column: 20), !colorsJSON.isEmpty {
+        if let colorsJSON = getText(from: statement, column: 21), !colorsJSON.isEmpty {
             // Parse JSON array of hex color strings
             if let data = colorsJSON.data(using: .utf8),
                let colors = try? JSONDecoder().decode([String].self, from: data) {
@@ -89,6 +90,7 @@ final class SQLiteGlassItemRepository: BaseSQLiteCatalogItemRepository<GlassItem
         return GlassItemModel(
             stable_id: stable_id,
             name: name,
+            full_name: full_name,
             sku: sku,
             manufacturer: manufacturer,
             mfr_notes: mfr_notes,
@@ -120,12 +122,12 @@ final class SQLiteGlassItemRepository: BaseSQLiteCatalogItemRepository<GlassItem
         let searchPattern = "%\(text)%"
         let query = """
             SELECT * FROM glass_items
-            WHERE name LIKE ? OR manufacturer LIKE ? OR code LIKE ?
+            WHERE name LIKE ? OR manufacturer LIKE ? OR code LIKE ? OR full_name LIKE ?
             ORDER BY manufacturer, code
             """
 
         let items = try databaseManager.performDatabaseOperation { db in
-            try executeQuery(db: db, query: query, parameters: [searchPattern, searchPattern, searchPattern])
+            try executeQuery(db: db, query: query, parameters: [searchPattern, searchPattern, searchPattern, searchPattern])
         }
         return filterByShippedManufacturers(items)
     }

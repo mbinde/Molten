@@ -31,6 +31,9 @@ struct CatalogView: View {
     // MIGRATION COMPLETE: ViewModel manages search, filters, sorting, loading, and data ✓
     @State private var viewModel: CatalogViewModel
 
+    // Search scope state - persisted via viewModel.searchTitlesOnly and UserDefaults
+    @State private var searchScope: CatalogSearchScope = .titlesOnly
+
 
     // Use manual UserDefaults handling instead of @AppStorage to prevent test crashes
     @State private var defaultSortOptionRawValue = SortOption.name.rawValue
@@ -52,7 +55,7 @@ struct CatalogView: View {
     @State private var showingAllTags = false
     @State private var showingCOESelection = false
     @State private var showingManufacturerFilterSelection = false
-    @State private var showingHelp = false
+    @State private var showingFilterSheet = false
     @State private var navigationPath = NavigationPath()
     @State private var isRefreshing = false
     @State private var lastRefreshTime: Date = Date.distantPast
@@ -227,21 +230,16 @@ struct CatalogView: View {
     }
 
     private var mainContentView: some View {
-        VStack(spacing: 0) {
-            // Filter controls (using SearchAndFilterHeader but without built-in search)
-            filterHeader
-
-            // Main content
-            Group {
-                if viewModel.isLoading && catalogItems.isEmpty {
-                    catalogLoadingState
-                } else if catalogItems.isEmpty {
-                    catalogEmptyState
-                } else if filteredItems.isEmpty && viewModel.hasActiveFilters {
-                    searchEmptyStateView
-                } else {
-                    catalogListView
-                }
+        // Main content - filters moved to floating button sheet
+        Group {
+            if viewModel.isLoading && catalogItems.isEmpty {
+                catalogLoadingState
+            } else if catalogItems.isEmpty {
+                catalogEmptyState
+            } else if filteredItems.isEmpty && viewModel.hasActiveFilters {
+                searchEmptyStateView
+            } else {
+                catalogListView
             }
         }
     }
@@ -308,7 +306,7 @@ struct CatalogView: View {
                             }
                             if let count = manufacturerCounts[mfr] {
                                 Text("(\(count))")
-                                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                                    .foregroundColor(.secondary)
                             }
                         }
                     }
@@ -365,6 +363,7 @@ struct CatalogView: View {
                 defaultSortOptionRawValue: $defaultSortOptionRawValue,
                 enabledManufacturersData: $enabledManufacturersData,
                 searchTitlesOnly: $viewModel.searchTitlesOnly,
+                searchScope: $searchScope,
                 selectedProductTypes: $selectedProductTypes,
                 sortOption: $viewModel.sortOption,
                 viewModel: viewModel,
@@ -372,7 +371,9 @@ struct CatalogView: View {
                 resetNavigation: resetNavigation,
                 catalogUpdateMessage: $catalogUpdateMessage,
                 showCatalogUpdateToast: $showCatalogUpdateToast,
-                localSearchText: $localSearchText
+                localSearchText: $localSearchText,
+                navigationPath: $navigationPath,
+                showingFilterSheet: $showingFilterSheet
             ))
             .toast(
                 message: catalogUpdateMessage,
@@ -393,6 +394,28 @@ struct CatalogView: View {
                     )
                 }
             }
+            .sheet(isPresented: $showingFilterSheet) {
+                CatalogFilterSheet(
+                    isPresented: $showingFilterSheet,
+                    sortOption: $viewModel.sortOption,
+                    onSortChange: updateSorting,
+                    selectedTags: $viewModel.selectedTags,
+                    selectedCOEs: $viewModel.selectedCOEs,
+                    selectedManufacturers: $viewModel.selectedManufacturers,
+                    selectedProductTypes: $viewModel.selectedProductTypes,
+                    allAvailableTags: allAvailableTags,
+                    allAvailableCOEs: allAvailableCOEs,
+                    availableManufacturers: availableManufacturers,
+                    availableProductTypes: FeatureFlags.availableProductTypes,
+                    tagCounts: tagCounts,
+                    coeCounts: coeCounts,
+                    manufacturerCounts: manufacturerCounts,
+                    productTypeCounts: viewModel.productTypeCounts,
+                    manufacturerDisplayName: manufacturerDisplayName,
+                    productTypeDisplayName: displayNameForProductType
+                )
+                .presentationDetents([.medium, .large])
+            }
     }
 
     // Content with toolbar (search is handled by bottom tab bar)
@@ -407,23 +430,6 @@ struct CatalogView: View {
                     sortMenu
                 }
             }
-    }
-
-    // Sort menu extracted to avoid duplication
-    private var sortMenu: some View {
-        Menu {
-            ForEach(SortOption.allCases, id: \.self) { option in
-                Button {
-                    viewModel.sortOption = option
-                    updateSorting(option)
-                } label: {
-                    Label(option.rawValue, systemImage: option.sortIcon)
-                }
-            }
-        } label: {
-            Image(systemName: "arrow.up.arrow.down")
-        }
-        .accessibilityIdentifier("catalog_sort_button")
     }
     
     // MARK: - Filter Buttons
@@ -548,10 +554,10 @@ struct TagFilterView: View {
                     if filteredTags.isEmpty {
                         if searchText.isEmpty {
                             Text("No tags available")
-                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                                .foregroundColor(.secondary)
                         } else {
                             Text("No tags match '\(searchText)'")
-                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                                .foregroundColor(.secondary)
                         }
                     } else {
                         ForEach(filteredTags, id: \.self) { tag in
@@ -564,7 +570,7 @@ struct TagFilterView: View {
                                         .foregroundColor(Color.accentColor)
                                 } else {
                                     Image(systemName: "circle")
-                                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                                        .foregroundColor(.secondary)
                                 }
                             }
                             .contentShape(Rectangle())
@@ -607,7 +613,7 @@ struct TagFilterView: View {
     private var searchBar: some View {
         HStack {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(DesignSystem.Colors.textSecondary)
+                .foregroundColor(.secondary)
                 .font(.body)
             
             TextField("Search tags...", text: $searchText)
@@ -626,7 +632,7 @@ struct TagFilterView: View {
                     isSearchFieldFocused = true
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .foregroundColor(.secondary)
                         .font(.body)
                 }
                 .buttonStyle(.plain)

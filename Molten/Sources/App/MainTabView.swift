@@ -9,6 +9,7 @@ import SwiftUI
 
 // MARK: - Release Configuration
 // Set to false for simplified release builds
+private let isPurchaseRecordsEnabled = true
 private let isProjectPlansEnabled = true
 private let isLogbookEnabled = true
 private let isRecipesEnabled = true
@@ -29,7 +30,11 @@ extension Notification.Name {
     static let filterShoppingListByStore = Notification.Name("filterShoppingListByStore")
     static let navigateToInventorySharingWithCode = Notification.Name("navigateToInventorySharingWithCode")
     static let openMoltenDeepLink = Notification.Name("openMoltenDeepLink")
-    static let globalSearchTextChanged = Notification.Name("globalSearchTextChanged")
+    static let applyGlobalSearch = Notification.Name("applyGlobalSearch")
+    static let navigateToItemDetail = Notification.Name("navigateToItemDetail")
+    static let catalogDetailDismissed = Notification.Name("catalogDetailDismissed")
+    static let showCatalogFilters = Notification.Name("showCatalogFilters")
+    static let catalogFilterCountChanged = Notification.Name("catalogFilterCountChanged")
 }
 
 /// Main tab view that provides navigation between the app's primary sections
@@ -38,19 +43,20 @@ struct MainTabView: View {
     @State private var selectedTab: DefaultTab = .catalog
     @State private var showingSettings = false
     @State private var showingMoreMenu = false
+    @State private var showingSearch = false
+    @State private var globalSearchText = ""
+    @State private var searchBarExpanded = false  // Stage 1: bar visible but not focused
+    @State private var selectedItemForDetail: CompleteInventoryItemModel?
+    @State private var returnToSearchAfterDetail = false  // Track if we should reopen search after back
+    @State private var catalogActiveFilterCount = 0  // Track active filter count for badge
     @State private var tabConfig: TabConfiguration? = nil
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.appDependencies) private var dependencies
 
-    // Search state (managed at MainTabView level so it can affect content)
-    @State private var isSearchActive = false
-    @State private var searchText = ""
-    @State private var showSearchOverlay = false
-    @FocusState private var isSearchFocused: Bool
-
     // MARK: - Dependency Injection
     private let deps: AppDependencies
     private let catalogService: CatalogService
+    private let purchaseService: PurchaseRecordService?
     private let syncMonitor: CloudKitSyncMonitor?
 
     // Create additional services needed for other views
@@ -62,6 +68,7 @@ struct MainTabView: View {
     init(
         deps: AppDependencies,
         catalogService: CatalogService,
+        purchaseService: PurchaseRecordService? = nil,
         inventoryService: InventoryTrackingService,
         shoppingListService: ShoppingListService,
         kilnScheduleService: KilnScheduleService,
@@ -69,6 +76,7 @@ struct MainTabView: View {
     ) {
         self.deps = deps
         self.catalogService = catalogService
+        self.purchaseService = purchaseService
         self.inventoryTrackingService = inventoryService
         self.shoppingListService = shoppingListService
         self.kilnScheduleService = kilnScheduleService
@@ -83,144 +91,152 @@ struct MainTabView: View {
     }
     
     var body: some View {
-        ZStack {
-            // Main content area - use ZStack with opacity to preserve view state
-            VStack(spacing: 0) {
-                ZStack {
-                if selectedTab == .catalog || catalogHasBeenViewed {
+        VStack(spacing: 0) {
+            // Main content area - doesn't change between states
+            ZStack {
+                switch selectedTab {
+                case .catalog:
                     CatalogView(deps: deps)
-                        .opacity(selectedTab == .catalog ? 1 : 0)
-                        .id("catalog-view")
-                }
-
-                if selectedTab == .inventory || inventoryHasBeenViewed {
+                case .inventory:
                     InventoryView(deps: deps)
-                    .opacity(selectedTab == .inventory ? 1 : 0)
-                    .id("inventory-view")
-                }
-
-                if selectedTab == .shopping || shoppingHasBeenViewed {
+                case .shopping:
                     ShoppingListView(deps: deps)
-                        .opacity(selectedTab == .shopping ? 1 : 0)
-                        .id("shopping-view")
-                }
-
-                if selectedTab == .purchases || purchasesHasBeenViewed {
+                case .purchases:
                     PurchasesView()
-                        .opacity(selectedTab == .purchases ? 1 : 0)
-                        .id("purchases-view")
-                }
-
-                // Project Plans tab
-                if selectedTab == .projectPlans {
-                    if isProjectPlansEnabled {
-                        ProjectsView()
-                    } else {
-                        featureDisabledPlaceholder(title: "Plans", icon: "pencil.and.list.clipboard")
-                    }
-                }
-
-                // Logbook tab
-                if selectedTab == .logbook {
-                    if isLogbookEnabled {
-                        LogbookView(logbookRepository: dependencies.logbookRepository)
-                    } else {
-                        featureDisabledPlaceholder(title: "Logs", icon: "book.pages")
-                    }
-                }
-
-                // Recipes tab
-                if selectedTab == .recipes || recipesHasBeenViewed {
-                    if isRecipesEnabled {
-                        RecipesView()
-                            .opacity(selectedTab == .recipes ? 1 : 0)
-                            .id("recipes-view")
-                    } else {
-                        featureDisabledPlaceholder(title: "Recipes", icon: "book.closed")
-                            .opacity(selectedTab == .recipes ? 1 : 0)
-                    }
-                }
-
-                // Locations tab (stores, classes, workshops)
-                if selectedTab == .locations || locationsHasBeenViewed {
-                    LocationsView(viewModel: LocationsViewModel(
-                        locationService: dependencies.unifiedLocationService
-                    ))
-                    .opacity(selectedTab == .locations ? 1 : 0)
-                    .id("locations-view")
-                }
-
-                // Kiln Schedules tab
-                if selectedTab == .kilnSchedules || kilnSchedulesHasBeenViewed {
-                    KilnSchedulesView(kilnScheduleService: kilnScheduleService)
-                        .opacity(selectedTab == .kilnSchedules ? 1 : 0)
-                        .id("kiln-schedules-view")
-                }
-
-                // Legacy tabs (kept for backwards compatibility but not shown in tab bar)
-                Group {
-                    switch selectedTab {
-                    case .settings:
-                        // Settings moved to top nav
-                        EmptyView()
-                    default:
-                        EmptyView()
-                    }
-                }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-
-            // Custom tab bar overlaid at bottom
-            VStack {
-                Spacer()
-                if let tabConfig = tabConfig {
-                    CustomTabBar(
-                        selectedTab: $selectedTab,
-                        onTabTap: handleTabTap,
-                        syncMonitor: syncMonitor,
-                        tabConfig: tabConfig,
-                        showingMoreMenu: $showingMoreMenu,
-                        onMoreTabSelect: { tab in
-                            showingMoreMenu = false
-
-                            // Special handling for Settings - show as sheet
-                            if tab == .settings {
-                                showingSettings = true
-                                return
-                            }
-
-                            // Select the tab directly
-                            selectedTab = tab
-                            markTabAsViewed(tab)
-                        },
-                        isSearchActive: $isSearchActive,
-                        searchText: $searchText,
-                        showSearchOverlay: $showSearchOverlay,
-                        onSearchSubmit: {
-                            // Dismiss keyboard and close overlay when search is submitted
-                            isSearchFocused = false
-                            showSearchOverlay = false
-                        }
-                    )
+                case .settings:
+                    SettingsView()
+                default:
+                    CatalogView(deps: deps)
                 }
             }
 
-            // Full-screen search overlay (shown when user taps on the search field)
-            if showSearchOverlay {
-                SearchOverlayView(
-                    searchText: $searchText,
-                    isSearchFocused: $isSearchFocused,
-                    onDismiss: {
-                        showSearchOverlay = false
+            // Bottom bar area - switches between tab bar and search bar
+            if searchBarExpanded {
+                // State 2: Search bar expanded (collapsed tabs)
+                ExpandedSearchBar(
+                    searchText: globalSearchText,
+                    onTap: {
+                        // Go to state 3: open search sheet
+                        showingSearch = true
                     },
-                    onSubmit: {
-                        isSearchFocused = false
-                        showSearchOverlay = false
+                    onCollapse: {
+                        // Go back to state 1: full tabs
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            searchBarExpanded = false
+                        }
+                    },
+                    onClear: {
+                        // Clear search and apply to catalog
+                        globalSearchText = ""
+                        NotificationCenter.default.post(
+                            name: .applyGlobalSearch,
+                            object: nil,
+                            userInfo: ["searchText": ""]
+                        )
                     }
                 )
-                .transition(.opacity)
+            } else {
+                // State 1: Full tab bar with floating filter and search buttons
+                // Standard tab bar appearance
+                HStack(spacing: 0) {
+                    tabBarButton(for: .catalog)
+                    tabBarButton(for: .inventory)
+                    tabBarButton(for: .shopping)
+                    if isPurchaseRecordsEnabled {
+                        tabBarButton(for: .purchases)
+                    }
+                    tabBarButton(for: .settings)
+                }
+                .frame(height: 49)
+                .background(
+                    Rectangle()
+                        .fill(.ultraThinMaterial)
+                )
+                .overlay(alignment: .topLeading) {
+                    // Floating filter button (left side) - only show on Catalog tab
+                    if selectedTab == .catalog {
+                        Button {
+                            NotificationCenter.default.post(name: .showCatalogFilters, object: nil)
+                        } label: {
+                            ZStack(alignment: .topLeading) {
+                                Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                                    .font(.system(size: 20, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .frame(width: 52, height: 52)
+                                    .background(
+                                        Circle()
+                                            .fill(DesignSystem.Colors.accentSecondary)
+                                    )
+                                    .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+
+                                // Badge showing active filter count
+                                if catalogActiveFilterCount > 0 {
+                                    Text("\(catalogActiveFilterCount)")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .frame(minWidth: 18, minHeight: 18)
+                                        .background(
+                                            Circle()
+                                                .fill(DesignSystem.Colors.accentPrimary)
+                                        )
+                                        .offset(x: -4, y: -4)
+                                }
+                            }
+                        }
+                        .offset(x: 16, y: -52)
+                    }
+                }
+                .overlay(alignment: .topTrailing) {
+                    // Floating search button (right side)
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            searchBarExpanded = true
+                        }
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 20, weight: .medium))
+                            .foregroundColor(.white)
+                            .frame(width: 52, height: 52)
+                            .background(
+                                Circle()
+                                    .fill(DesignSystem.Colors.accentPrimary)
+                            )
+                            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                    }
+                    .offset(x: -16, y: -52)
+                }
             }
+        }
+        .sheet(isPresented: $showingSearch) {
+            GlobalSearchOverlay(
+                isPresented: $showingSearch,
+                deps: deps,
+                initialSearchText: globalSearchText,
+                onSearchSubmit: { searchText in
+                    globalSearchText = searchText
+                    selectedTab = .catalog
+                    // Post notification to apply search filter to catalog
+                    NotificationCenter.default.post(
+                        name: .applyGlobalSearch,
+                        object: nil,
+                        userInfo: ["searchText": searchText]
+                    )
+                },
+                onItemSelected: { item in
+                    // Navigate to catalog tab and show detail for this item
+                    selectedTab = .catalog
+                    selectedItemForDetail = item
+                    returnToSearchAfterDetail = true  // Remember to reopen search when back is pressed
+                    // Post notification to navigate to item detail
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        NotificationCenter.default.post(
+                            name: .navigateToItemDetail,
+                            object: nil,
+                            userInfo: ["item": item]
+                        )
+                    }
+                }
+            )
         }
         .background(DesignSystem.Colors.background)
         .preferredColorScheme(UserSettings.shared.colorScheme)
@@ -251,6 +267,13 @@ struct MainTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .showSettings)) { _ in
             showingSettings = true
         }
+        .onReceive(NotificationCenter.default.publisher(for: .catalogDetailDismissed)) { _ in
+            // When back is pressed from detail view, reopen search if we came from search
+            if returnToSearchAfterDetail {
+                returnToSearchAfterDetail = false
+                showingSearch = true
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .navigateToShoppingListForStore)) { notification in
             // Switch to shopping tab and filter by store
             if let storeName = notification.userInfo?["storeName"] as? String {
@@ -275,6 +298,12 @@ struct MainTabView: View {
             // Forward notification to InventoryView to show sharing sheet
             // The notification is already posted, InventoryView will receive it
         }
+        .onReceive(NotificationCenter.default.publisher(for: .catalogFilterCountChanged)) { notification in
+            // Update the badge count when filters change
+            if let count = notification.userInfo?["count"] as? Int {
+                catalogActiveFilterCount = count
+            }
+        }
         .onChange(of: selectedTab) { oldTab, newTab in
             // Save the selected tab whenever it changes (but only if it actually changed)
             if oldTab != newTab {
@@ -292,22 +321,6 @@ struct MainTabView: View {
             case .recipes: recipesHasBeenViewed = true
             default: break
             }
-        }
-        .onChange(of: searchText) { _, newValue in
-            // Broadcast search text changes to the active tab
-            NotificationCenter.default.post(
-                name: .globalSearchTextChanged,
-                object: nil,
-                userInfo: ["searchText": newValue, "isActive": isSearchActive]
-            )
-        }
-        .onChange(of: isSearchActive) { _, newValue in
-            // Notify child views when search state changes
-            NotificationCenter.default.post(
-                name: .globalSearchTextChanged,
-                object: nil,
-                userInfo: ["searchText": newValue ? searchText : "", "isActive": newValue]
-            )
         }
     }
 
@@ -337,7 +350,7 @@ struct MainTabView: View {
             case .recipes:
                 return isRecipesEnabled && FeatureFlags.ENABLE_RECIPES
             case .purchases:
-                return FeatureFlags.ENABLE_PURCHASES
+                return isPurchaseRecordsEnabled && FeatureFlags.ENABLE_PURCHASES
             case .kilnSchedules:
                 return FeatureFlags.ENABLE_KILN_SCHEDULES
             case .settings:
@@ -355,6 +368,13 @@ struct MainTabView: View {
             return
         }
 
+        // Special handling for Settings - show as sheet (check BEFORE More menu logic)
+        // Settings is always shown in the tab bar but may be in moreTabs according to config
+        if tab == .settings {
+            showingSettings = true
+            return
+        }
+
         // Special handling for More tab - show the More menu
         if !config.tabBarTabs.contains(tab) && config.moreTabs.contains(tab) {
             showingMoreMenu = true
@@ -363,14 +383,6 @@ struct MainTabView: View {
 
         // Only handle tabs that are currently available
         guard MainTabView.availableTabs().contains(tab) else { return }
-
-        // Special handling for Settings - show as sheet
-        if tab == .settings {
-            // Don't change selectedTab - just show Settings sheet over current tab
-            // This prevents blank screen when sheet is dismissed
-            showingSettings = true
-            return
-        }
 
         if selectedTab == tab {
             // Same tab tapped, reset navigation only (preserve search state)
@@ -403,7 +415,25 @@ struct MainTabView: View {
         default: break
         }
     }
-    
+
+    // MARK: - Tab Bar Button
+
+    private func tabBarButton(for tab: DefaultTab) -> some View {
+        Button {
+            handleTabTap(tab)
+        } label: {
+            VStack(spacing: 2) {
+                Image(systemName: tab.systemImage)
+                    .font(.system(size: 20))
+                Text(tab.displayName)
+                    .font(.caption2)
+            }
+            .foregroundColor(selectedTab == tab ? DesignSystem.Colors.accentPrimary : .secondary)
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+    }
+
     // MARK: - Feature Disabled Placeholder
     
     private func featureDisabledPlaceholder(title: String, icon: String) -> some View {
@@ -417,16 +447,16 @@ struct MainTabView: View {
                     Text(title)
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .foregroundColor(.secondary)
                     
                     Text("Available in future update")
                         .font(.title3)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .foregroundColor(.secondary)
                 }
                 
                 Text("This feature is temporarily disabled in the current release. It will be available in a future version of the app.")
                     .font(.subheadline)
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                    .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding()
                 
@@ -449,29 +479,16 @@ struct CustomTabBar: View {
     @Binding var showingMoreMenu: Bool
     let onMoreTabSelect: (DefaultTab) -> Void
 
-    // Search state
-    @Binding var isSearchActive: Bool
-    @Binding var searchText: String
-    @Binding var showSearchOverlay: Bool
-    let onSearchSubmit: () -> Void
-
     var body: some View {
         HStack(spacing: 0) {
-            if isSearchActive {
-                // Collapsed state: show only first tab icon + expanded search bar
-                collapsedTabButton
-                expandedSearchBar
-            } else {
-                // Normal state: show all tabs + search FAB
-                ForEach(tabConfig.tabBarTabs, id: \.self) { tab in
-                    tabButton(for: tab)
-                }
+            // Show tabs from configuration
+            ForEach(tabConfig.tabBarTabs, id: \.self) { tab in
+                tabButton(for: tab)
+            }
 
-                if tabConfig.needsMoreTab {
-                    moreButton
-                }
-
-                searchFAB
+            // Show More button if needed
+            if tabConfig.needsMoreTab {
+                moreButton
             }
         }
         .frame(height: 49)
@@ -480,114 +497,18 @@ struct CustomTabBar: View {
                 .ignoresSafeArea()
         )
         .overlay(topSeparator, alignment: .top)
-        .animation(.easeInOut(duration: 0.25), value: isSearchActive)
-    }
-
-    // MARK: - Collapsed Tab Button (when search is active)
-
-    private var collapsedTabButton: some View {
-        Button {
-            // When tapped in search mode, collapse search and return to tab
-            withAnimation(.easeInOut(duration: 0.25)) {
-                isSearchActive = false
-                searchText = ""
-            }
-        } label: {
-            Image("AppIconImage")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 28, height: 28)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .frame(width: 50, height: 49)
-        }
-        .buttonStyle(.plain)
-    }
-
-    // MARK: - Expanded Search Bar (when search is active but not typing)
-
-    private var expandedSearchBar: some View {
-        HStack(spacing: DesignSystem.Spacing.sm) {
-            // Tappable search field that opens full search overlay
-            Button {
-                showSearchOverlay = true
-            } label: {
-                HStack(spacing: DesignSystem.Spacing.sm) {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                        .font(.system(size: 16))
-
-                    Text(searchText.isEmpty ? "Search catalog..." : searchText)
-                        .foregroundColor(searchText.isEmpty ? DesignSystem.Colors.textSecondary : DesignSystem.Colors.textPrimary)
-                        .font(.body)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    if !searchText.isEmpty {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(DesignSystem.Colors.textSecondary)
-                            .font(.system(size: 16))
-                    }
-                }
-                .padding(.horizontal, DesignSystem.Spacing.md)
-                .padding(.vertical, DesignSystem.Spacing.sm)
-                .background(Color(.systemGray5))
-                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large))
-            }
-            .buttonStyle(.plain)
-
-            // Close button
-            Button {
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    isSearchActive = false
-                    searchText = ""
-                }
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-                    .frame(width: 32, height: 32)
-                    .background(Color(.systemGray5))
-                    .clipShape(Circle())
-            }
-        }
-        .padding(.horizontal, DesignSystem.Spacing.sm)
-        .padding(.trailing, DesignSystem.Spacing.sm)
-    }
-
-    // MARK: - Search FAB (when search is NOT active)
-
-    private var searchFAB: some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.25)) {
-                isSearchActive = true
-            }
-        } label: {
-            ZStack {
-                Circle()
-                    .fill(DesignSystem.Colors.accentPrimary)
-                    .frame(width: 44, height: 44)
-
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
-            }
-        }
-        .padding(.horizontal, 8)
-        .accessibilityLabel("Search")
-        .accessibilityIdentifier("tab_bar_search_button")
     }
     
     private func tabButton(for tab: DefaultTab) -> some View {
         Button {
             onTabTap(tab)
         } label: {
-            VStack(spacing: tabConfig.showTabLabels ? 2 : 0) {
+            VStack(spacing: 2) {
                 Image(systemName: tab.systemImage)
-                    .font(.system(size: tabConfig.showTabLabels ? 20 : 24, weight: .medium))
-                if tabConfig.showTabLabels {
-                    Text(tab.displayName)
-                        .font(.caption2)
-                        .fontWeight(.medium)
-                }
+                    .font(.system(size: 20, weight: .medium))
+                Text(tab.displayName)
+                    .font(.caption2)
+                    .fontWeight(.medium)
             }
             .foregroundColor(selectedTab == tab ? .primary : .secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -614,14 +535,12 @@ struct CustomTabBar: View {
         Button {
             showingMoreMenu = true
         } label: {
-            VStack(spacing: tabConfig.showTabLabels ? 2 : 0) {
+            VStack(spacing: 2) {
                 Image(systemName: "ellipsis")
-                    .font(.system(size: tabConfig.showTabLabels ? 20 : 24, weight: .medium))
-                if tabConfig.showTabLabels {
-                    Text("More")
-                        .font(.caption2)
-                        .fontWeight(.medium)
-                }
+                    .font(.system(size: 20, weight: .medium))
+                Text("More")
+                    .font(.caption2)
+                    .fontWeight(.medium)
             }
             .foregroundColor(tabConfig.moreTabs.contains(selectedTab) ? .primary : .secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -660,6 +579,67 @@ struct CustomTabBar: View {
     }
 }
 
+// MARK: - Expanded Search Bar (State 2)
+
+/// Search bar that replaces the tab bar when expanded
+/// Tapping it opens the full search sheet (State 3)
+struct ExpandedSearchBar: View {
+    let searchText: String
+    let onTap: () -> Void
+    let onCollapse: () -> Void
+    let onClear: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // App icon - tap to expand tabs
+            Button(action: onCollapse) {
+                Image("AppIconImage")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 44, height: 44)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+
+            // Search bar - tap to open search sheet
+            Button(action: onTap) {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+
+                    if searchText.isEmpty {
+                        Text("Search catalog...")
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text(searchText)
+                            .foregroundColor(.primary)
+                    }
+
+                    Spacer()
+
+                    if !searchText.isEmpty {
+                        Button(action: onClear) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemGray6))
+                )
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(
+            Rectangle()
+                .fill(.ultraThinMaterial)
+        )
+    }
+}
+
 #Preview {
     // Use test dependencies for preview
     let deps = AppDependencies(persistenceController: .createTestController())
@@ -671,99 +651,4 @@ struct CustomTabBar: View {
         shoppingListService: deps.shoppingListService,
         kilnScheduleService: deps.kilnScheduleService
     )
-}
-
-// MARK: - Search Overlay View
-
-/// Full-screen search overlay that appears when user taps on the search field
-/// Similar to App Store search experience
-struct SearchOverlayView: View {
-    @Binding var searchText: String
-    @FocusState.Binding var isSearchFocused: Bool
-    let onDismiss: () -> Void
-    let onSubmit: () -> Void
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // Search bar at top
-            HStack(spacing: DesignSystem.Spacing.md) {
-                HStack(spacing: DesignSystem.Spacing.sm) {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                        .font(.system(size: 16))
-
-                    TextField("Search catalog...", text: $searchText)
-                        .focused($isSearchFocused)
-                        .submitLabel(.search)
-                        .onSubmit {
-                            onSubmit()
-                        }
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
-
-                    if !searchText.isEmpty {
-                        Button {
-                            searchText = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(DesignSystem.Colors.textSecondary)
-                                .font(.system(size: 16))
-                        }
-                    }
-                }
-                .padding(.horizontal, DesignSystem.Spacing.md)
-                .padding(.vertical, DesignSystem.Spacing.sm + 2)
-                .background(Color(.systemGray5))
-                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large))
-
-                Button("Cancel") {
-                    onDismiss()
-                }
-                .foregroundColor(DesignSystem.Colors.accentPrimary)
-            }
-            .padding(.horizontal, DesignSystem.Spacing.md)
-            .padding(.top, DesignSystem.Spacing.md)
-            .padding(.bottom, DesignSystem.Spacing.sm)
-
-            Divider()
-
-            // Search suggestions / results area
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    // Show search suggestions when typing
-                    if !searchText.isEmpty {
-                        // This area will show filtered results from the catalog
-                        // The actual results are shown in the CatalogView below
-                        Text("Searching for \"\(searchText)\"...")
-                            .font(DesignSystem.Typography.listItemCaption)
-                            .foregroundColor(DesignSystem.Colors.textSecondary)
-                            .padding(.horizontal, DesignSystem.Spacing.md)
-                            .padding(.vertical, DesignSystem.Spacing.lg)
-                    } else {
-                        // Empty state - prompt to search
-                        VStack(spacing: DesignSystem.Spacing.md) {
-                            Image(systemName: "magnifyingglass")
-                                .font(.system(size: 48))
-                                .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.5))
-
-                            Text("Search colors, codes, manufacturers...")
-                                .font(DesignSystem.Typography.listItemCaption)
-                                .foregroundColor(DesignSystem.Colors.textSecondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 60)
-                    }
-                }
-            }
-
-            Spacer()
-        }
-        .background(DesignSystem.Colors.background)
-        .onAppear {
-            // Auto-focus the search field when overlay appears
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isSearchFocused = true
-            }
-        }
-    }
 }

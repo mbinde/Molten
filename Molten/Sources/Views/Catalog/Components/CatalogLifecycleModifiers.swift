@@ -12,6 +12,7 @@ struct CatalogLifecycleModifiers: ViewModifier {
     @Binding var defaultSortOptionRawValue: String
     @Binding var enabledManufacturersData: Data
     @Binding var searchTitlesOnly: Bool
+    @Binding var searchScope: CatalogSearchScope
     @Binding var selectedProductTypes: Set<String>
     @Binding var sortOption: SortOption
     let viewModel: CatalogViewModel
@@ -20,6 +21,8 @@ struct CatalogLifecycleModifiers: ViewModifier {
     @Binding var catalogUpdateMessage: String
     @Binding var showCatalogUpdateToast: Bool
     @Binding var localSearchText: String
+    @Binding var navigationPath: NavigationPath
+    @Binding var showingFilterSheet: Bool
 
     func body(content: Content) -> some View {
         content
@@ -29,12 +32,22 @@ struct CatalogLifecycleModifiers: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: .resetCatalogNavigation)) { _ in
                 resetNavigation()
             }
-            .onReceive(NotificationCenter.default.publisher(for: .globalSearchTextChanged)) { notification in
-                // Update local search text from global tab bar search
+            .onReceive(NotificationCenter.default.publisher(for: .applyGlobalSearch)) { notification in
+                // Apply search text from global search overlay
                 if let searchText = notification.userInfo?["searchText"] as? String {
                     localSearchText = searchText
                     viewModel.searchText = searchText
                 }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .navigateToItemDetail)) { notification in
+                // Navigate to item detail from global search
+                if let item = notification.userInfo?["item"] as? CompleteInventoryItemModel {
+                    navigationPath.append(CatalogNavigationDestination.catalogItemDetail(itemModel: item))
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .showCatalogFilters)) { _ in
+                // Show filter sheet when floating filter button is tapped
+                showingFilterSheet = true
             }
             .onReceive(NotificationCenter.default.publisher(for: .ratingSubmitted)) { notification in
                 // Reload catalog data when ratings are submitted or deleted
@@ -94,6 +107,7 @@ struct CatalogLifecycleModifiers: ViewModifier {
                 // Load search titles only setting (default: true)
                 let titlesOnly = userDefaults.bool(forKey: "searchTitlesOnly") != false  // Default to true if not set
                 searchTitlesOnly = titlesOnly
+                searchScope = titlesOnly ? .titlesOnly : .allFields
 
                 // Product types: empty set = show all (new behavior, no need to persist)
 
@@ -103,6 +117,12 @@ struct CatalogLifecycleModifiers: ViewModifier {
             .task {
                 // MIGRATION: Load data from ViewModel
                 await viewModel.loadData()
+            }
+            .onChange(of: navigationPath) { oldPath, newPath in
+                // When navigating back to root (path becomes empty), notify MainTabView
+                if newPath.isEmpty && !oldPath.isEmpty {
+                    NotificationCenter.default.post(name: .catalogDetailDismissed, object: nil)
+                }
             }
     }
 }

@@ -333,18 +333,22 @@ class CatalogViewModel: CatalogViewModelProtocol {
     // Observer for UserDefaults changes
     nonisolated(unsafe) private var userDefaultsObserver: NSObjectProtocol?
 
+    // Flag to prevent cascading updates during initialization
+    private var isInitializing = true
+
     // MARK: - Initialization
 
     init(catalogService: CatalogService) {
         self.catalogService = catalogService
 
         // Load saved product type filter from UserDefaults, default to "all"
+        // Note: We set the backing storage directly to avoid triggering didSet during init
         if let savedData = UserDefaults.standard.data(forKey: Self.productTypeFilterKey),
            let savedTypes = try? JSONDecoder().decode(Set<String>.self, from: savedData) {
-            self.selectedProductTypes = savedTypes
+            self._selectedProductTypes = savedTypes
         } else {
             // Default to "all" (empty set) if no saved filter
-            self.selectedProductTypes = []
+            self._selectedProductTypes = []
         }
 
         // Set up debouncing for search text (300ms delay)
@@ -353,6 +357,9 @@ class CatalogViewModel: CatalogViewModelProtocol {
 
         // Set up observer for COE and manufacturer preference changes
         setupUserDefaultsObserver()
+
+        // Mark initialization complete
+        isInitializing = false
     }
 
     nonisolated deinit {
@@ -378,17 +385,19 @@ class CatalogViewModel: CatalogViewModelProtocol {
             object: nil,
             queue: .main
         ) { [weak self] _ in
+            guard let self = self, !self.isInitializing else { return }
             // When UserDefaults changes, reapply filters
             // This catches changes made in Settings view for COE and manufacturer filters
-            self?.applyFilters()
+            self.applyFilters()
         }
     }
 
     // MARK: - Computed Properties
 
     var allAvailableTags: [String] {
-        // Return only tags that have items in the current filtered view
-        return Array(tagCounts.keys).sorted()
+        // Return ALL tags from the catalog (not just filtered ones)
+        // The filter sheet will grey out ones with 0 count
+        return cachedAllTags
     }
 
     var allUserTags: Set<String> {
@@ -396,13 +405,15 @@ class CatalogViewModel: CatalogViewModelProtocol {
     }
 
     var allAvailableCOEs: [Int32] {
-        // Return only COEs that have items in the current filtered view
-        return Array(coeCounts.keys).sorted()
+        // Return ALL COEs from the catalog (not just filtered ones)
+        // The filter sheet will grey out ones with 0 count
+        return cachedAllCOEs
     }
 
     var availableManufacturers: [String] {
-        // Return only manufacturers that have items in the current filtered view
-        return Array(manufacturerCounts.keys).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+        // Return ALL manufacturers from the catalog (not just filtered ones)
+        // The filter sheet will grey out ones with 0 count
+        return cachedManufacturers
     }
 
     // PERFORMANCE: Cached counts - recomputed only in applyFilters(), not on every view render
@@ -425,6 +436,16 @@ class CatalogViewModel: CatalogViewModelProtocol {
         !selectedCOEs.isEmpty ||
         !selectedManufacturers.isEmpty ||
         !selectedProductTypes.isEmpty
+    }
+
+    /// Count of active filters (excluding search) for badge display
+    var activeFilterCount: Int {
+        var count = 0
+        if !selectedTags.isEmpty { count += 1 }
+        if !selectedCOEs.isEmpty { count += 1 }
+        if !selectedManufacturers.isEmpty { count += 1 }
+        if !selectedProductTypes.isEmpty { count += 1 }
+        return count
     }
 
     // MARK: - Actions
@@ -532,11 +553,23 @@ class CatalogViewModel: CatalogViewModelProtocol {
         applySorting()
 
         // PERFORMANCE: Update cached counts after filtering
-        // This avoids expensive recomputation on every view render
+        // Only recompute counts for filter types that CAN be affected by other filters
+        // COE counts affected by: manufacturer, product type (not by COE selection itself)
+        // Manufacturer counts affected by: COE, product type (not by manufacturer selection itself)
+        // Tag counts affected by: all other filters (not by tag selection itself)
+        // Product type counts: always show total counts (not affected by filters)
+        // This prevents infinite loops where selecting a filter triggers its own count recomputation
         manufacturerCounts = computeManufacturerCounts()
         coeCounts = computeCOECounts()
         tagCounts = computeTagCounts()
-        productTypeCounts = computeProductTypeCounts()
+        // productTypeCounts always shows totals, computed once when items load
+
+        // Notify MainTabView of filter count change for badge display
+        NotificationCenter.default.post(
+            name: .catalogFilterCountChanged,
+            object: nil,
+            userInfo: ["count": activeFilterCount]
+        )
     }
 
     // MARK: - Private Helpers
@@ -603,6 +636,9 @@ class CatalogViewModel: CatalogViewModelProtocol {
         cachedUserTags = userTagsSet
         cachedAllCOEs = allCOEsSet.sorted()
         cachedManufacturers = manufacturersSet.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+
+        // Compute product type counts once from all items (not affected by filters)
+        productTypeCounts = computeProductTypeCounts()
     }
 
     /// Save product type filter to UserDefaults for persistence across sessions

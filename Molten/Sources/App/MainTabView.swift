@@ -98,6 +98,18 @@ struct MainTabView: View {
         return MainTabView.availableTabs().contains(savedTab) ? savedTab : .catalog
     }
 
+    /// Determine search scope based on current tab
+    private var searchScopeForCurrentTab: GlobalSearchScope {
+        switch selectedTab {
+        case .inventory:
+            return .inventory
+        case .shopping:
+            return .shopping
+        default:
+            return .catalog
+        }
+    }
+
     /// Returns the active filter count for the currently selected tab
     private var activeFilterCountForCurrentTab: Int {
         switch selectedTab {
@@ -154,13 +166,16 @@ struct MainTabView: View {
                         }
                     },
                     onClear: {
-                        // Clear search and apply to catalog
+                        // Clear search and collapse the bar
                         globalSearchText = ""
                         NotificationCenter.default.post(
                             name: .applyGlobalSearch,
                             object: nil,
                             userInfo: ["searchText": ""]
                         )
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            searchBarExpanded = false
+                        }
                     }
                 )
             } else {
@@ -260,6 +275,7 @@ struct MainTabView: View {
                 isPresented: $showingSearch,
                 deps: deps,
                 initialSearchText: globalSearchText,
+                searchScope: searchScopeForCurrentTab,
                 onSearchSubmit: { searchText in
                     globalSearchText = searchText
                     // Post notification to apply search filter to current tab
@@ -717,11 +733,10 @@ struct ExpandedSearchBar: View {
 
                     Spacer()
 
-                    if !searchText.isEmpty {
-                        Button(action: onClear) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.secondary)
-                        }
+                    // Always show X button to dismiss/clear
+                    Button(action: onClear) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
                     }
                 }
                 .padding(12)

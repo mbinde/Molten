@@ -22,7 +22,7 @@ struct TabCustomizationView: View {
 
                     Spacer()
 
-                    Stepper("\(config.maxVisibleTabs)", value: $config.maxVisibleTabs, in: 0...8)
+                    Stepper("\(config.maxVisibleTabs)", value: $config.maxVisibleTabs, in: 0...TabConfiguration.maxTabsThatFit)
                         .labelsHidden()
                 }
 

@@ -52,6 +52,29 @@ class TabConfiguration {
     private let showTabLabelsKey = "userShowTabLabels"
     private var isInitializing = true
 
+    // MARK: - Screen-Based Limits
+
+    /// Width of each tab button (including the More button)
+    static let tabButtonWidth: CGFloat = 76 + 4  // button width + spacing
+
+    /// Minimum horizontal padding for the tab bar
+    static let tabBarHorizontalPadding: CGFloat = 32
+
+    /// Maximum number of tabs that can fit on the current screen
+    /// This includes the More button, so actual tabs = this value - 1
+    static var maxTabsThatFit: Int {
+        #if os(iOS)
+        let screenWidth = UIScreen.main.bounds.width
+        let availableWidth = screenWidth - tabBarHorizontalPadding
+        // We need at least 1 slot for the More button
+        let maxSlots = Int(availableWidth / tabButtonWidth)
+        // Return max tabs (not counting More), minimum of 1
+        return max(1, maxSlots - 1)
+        #else
+        return 8
+        #endif
+    }
+
     // MARK: - Initialization
 
     init() {
@@ -192,19 +215,24 @@ class TabConfiguration {
 
     // MARK: - Tab Management
 
-    /// Returns tabs to show in the tab bar (respects maxVisibleTabs limit)
+    /// Effective max tabs, capped by what fits on screen
+    var effectiveMaxVisibleTabs: Int {
+        return min(maxVisibleTabs, Self.maxTabsThatFit)
+    }
+
+    /// Returns tabs to show in the tab bar (respects both user setting and screen limit)
     var tabBarTabs: [DefaultTab] {
-        return Array(tabs.prefix(maxVisibleTabs))
+        return Array(tabs.prefix(effectiveMaxVisibleTabs))
     }
 
     /// Returns tabs to show in the More menu
     var moreTabs: [DefaultTab] {
-        return Array(tabs.dropFirst(maxVisibleTabs))
+        return Array(tabs.dropFirst(effectiveMaxVisibleTabs))
     }
 
     /// Checks if we need to show the More tab
     var needsMoreTab: Bool {
-        return tabs.count > maxVisibleTabs
+        return tabs.count > effectiveMaxVisibleTabs
     }
 
     /// Reorders tabs

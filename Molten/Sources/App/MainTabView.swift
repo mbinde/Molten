@@ -147,9 +147,66 @@ struct MainTabView: View {
                 )
             } else {
                 // State 1: Full tab bar with floating filter and search buttons
-                // Dynamic tab bar based on TabConfiguration
-                VStack(spacing: 0) {
-                    HStack(spacing: 0) {
+                ZStack(alignment: .bottom) {
+                    // Floating buttons anchored to screen edges
+                    HStack {
+                        // Floating filter button (left side) - only show on Catalog tab
+                        if selectedTab == .catalog {
+                            Button {
+                                NotificationCenter.default.post(name: .showCatalogFilters, object: nil)
+                            } label: {
+                                ZStack(alignment: .topLeading) {
+                                    Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                                        .font(.system(size: 20, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .frame(width: 52, height: 52)
+                                        .background(
+                                            Circle()
+                                                .fill(DesignSystem.Colors.accentSecondary)
+                                        )
+                                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+
+                                    // Badge showing active filter count
+                                    if catalogActiveFilterCount > 0 {
+                                        Text("\(catalogActiveFilterCount)")
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundColor(.white)
+                                            .frame(minWidth: 18, minHeight: 18)
+                                            .background(
+                                                Circle()
+                                                    .fill(DesignSystem.Colors.accentPrimary)
+                                            )
+                                            .offset(x: -4, y: -4)
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer()
+
+                        // Floating search button (right side)
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                searchBarExpanded = true
+                            }
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(.white)
+                                .frame(width: 52, height: 52)
+                                .background(
+                                    Circle()
+                                        .fill(DesignSystem.Colors.accentPrimary)
+                                )
+                                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 76)  // Position above tab bar
+                    .allowsHitTesting(true)
+
+                    // Dynamic tab bar based on TabConfiguration
+                    HStack(spacing: 4) {
                         if let config = tabConfig {
                             ForEach(config.tabBarTabs, id: \.self) { tab in
                                 tabBarButton(for: tab)
@@ -157,61 +214,15 @@ struct MainTabView: View {
                         }
                         moreTabButton
                     }
-                    .frame(height: 49)
-                }
-                .background(.ultraThinMaterial)
-                .overlay(alignment: .topLeading) {
-                    // Floating filter button (left side) - only show on Catalog tab
-                    if selectedTab == .catalog {
-                        Button {
-                            NotificationCenter.default.post(name: .showCatalogFilters, object: nil)
-                        } label: {
-                            ZStack(alignment: .topLeading) {
-                                Image(systemName: "line.3.horizontal.decrease.circle.fill")
-                                    .font(.system(size: 20, weight: .medium))
-                                    .foregroundColor(.white)
-                                    .frame(width: 52, height: 52)
-                                    .background(
-                                        Circle()
-                                            .fill(DesignSystem.Colors.accentSecondary)
-                                    )
-                                    .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
-
-                                // Badge showing active filter count
-                                if catalogActiveFilterCount > 0 {
-                                    Text("\(catalogActiveFilterCount)")
-                                        .font(.system(size: 12, weight: .bold))
-                                        .foregroundColor(.white)
-                                        .frame(minWidth: 18, minHeight: 18)
-                                        .background(
-                                            Circle()
-                                                .fill(DesignSystem.Colors.accentPrimary)
-                                        )
-                                        .offset(x: -4, y: -4)
-                                }
-                            }
-                        }
-                        .offset(x: 16, y: -52)
-                    }
-                }
-                .overlay(alignment: .topTrailing) {
-                    // Floating search button (right side)
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            searchBarExpanded = true
-                        }
-                    } label: {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 20, weight: .medium))
-                            .foregroundColor(.white)
-                            .frame(width: 52, height: 52)
-                            .background(
-                                Circle()
-                                    .fill(DesignSystem.Colors.accentPrimary)
-                            )
-                            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
-                    }
-                    .offset(x: -16, y: -52)
+                    .padding(.horizontal, 4)
+                    .frame(height: 61)  // 49 * 1.25 = ~61
+                    .background(
+                        RoundedRectangle(cornerRadius: 31)
+                            .fill(Color(.systemBackground).opacity(0.95))
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 31))
+                    .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 2)
+                    .padding(.bottom, 8)
                 }
             }
         }
@@ -414,17 +425,22 @@ struct MainTabView: View {
     // MARK: - Tab Bar Button
 
     private func tabBarButton(for tab: DefaultTab) -> some View {
-        Button {
+        let isSelected = selectedTab == tab
+        return Button {
             handleTabTap(tab)
         } label: {
-            VStack(spacing: 2) {
+            VStack(spacing: 3) {
                 Image(systemName: tab.systemImage)
-                    .font(.system(size: 20))
+                    .font(.system(size: 25))  // 20 * 1.25 = 25
                 Text(tab.displayName)
-                    .font(.caption2)
+                    .font(.caption)  // Slightly larger than caption2
             }
-            .foregroundColor(selectedTab == tab ? DesignSystem.Colors.accentPrimary : .secondary)
-            .frame(maxWidth: .infinity)
+            .foregroundColor(isSelected ? DesignSystem.Colors.accentPrimary : .primary)
+            .frame(width: 76, height: 53)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(isSelected ? DesignSystem.Colors.accentPrimary.opacity(0.15) : Color.clear)
+            )
         }
         .buttonStyle(.plain)
     }
@@ -441,6 +457,7 @@ struct MainTabView: View {
                         markTabAsViewed(tab)
                     } label: {
                         Label(tab.displayName, systemImage: tab.systemImage)
+                            .font(.title3)
                     }
                 }
             }
@@ -451,16 +468,22 @@ struct MainTabView: View {
                 showingTabCustomization = true
             } label: {
                 Label("Customize Tabs", systemImage: "square.grid.2x2")
+                    .font(.title3)
             }
         } label: {
-            VStack(spacing: 2) {
+            let isSelected = tabConfig?.moreTabs.contains(selectedTab) == true
+            VStack(spacing: 3) {
                 Image(systemName: "ellipsis.circle")
-                    .font(.system(size: 20))
+                    .font(.system(size: 25))  // 20 * 1.25 = 25
                 Text("More")
-                    .font(.caption2)
+                    .font(.caption)  // Slightly larger than caption2
             }
-            .foregroundColor(tabConfig?.moreTabs.contains(selectedTab) == true ? DesignSystem.Colors.accentPrimary : .secondary)
-            .frame(maxWidth: .infinity)
+            .foregroundColor(isSelected ? DesignSystem.Colors.accentPrimary : .primary)
+            .frame(width: 76, height: 53)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(isSelected ? DesignSystem.Colors.accentPrimary.opacity(0.15) : Color.clear)
+            )
         }
     }
 

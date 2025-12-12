@@ -55,6 +55,7 @@ struct CatalogView: View {
     @State private var showingAllTags = false
     @State private var showingCOESelection = false
     @State private var showingManufacturerFilterSelection = false
+    @State private var showingHelp = false
     @State private var navigationPath = NavigationPath()
     @State private var isRefreshing = false
     @State private var lastRefreshTime: Date = Date.distantPast
@@ -388,6 +389,17 @@ struct CatalogView: View {
                     }
                     .accessibilityIdentifier("catalog_sort_button")
                 }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        showingHelp = true
+                    } label: {
+                        Image(systemName: "questionmark.circle")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingHelp) {
+                CatalogHelpView()
             }
             .modifier(CatalogSheetModifiers(
                 showingAllTags: $showingAllTags,

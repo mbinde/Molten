@@ -217,23 +217,18 @@ struct PurchaseListView: View {
             }
         }
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button {
-                        loadPurchases()
-                    } label: {
-                        Label("Refresh", systemImage: "arrow.clockwise")
-                    }
-
-                    Divider()
-
-                    Button {
-                        showingHelp = true
-                    } label: {
-                        Label("Help", systemImage: "questionmark.circle")
-                    }
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    loadPurchases()
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    Image(systemName: "arrow.clockwise")
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showingHelp = true
+                } label: {
+                    Image(systemName: "questionmark.circle")
                 }
             }
         }

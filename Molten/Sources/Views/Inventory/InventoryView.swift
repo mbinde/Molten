@@ -42,6 +42,7 @@ struct InventoryView: View, CachedDataDeletion {
     @State private var showingSharing = false
     @State private var showingQRScanner = false
     @State private var showingManageLocations = false
+    @State private var showingHelp = false
     @State private var scannedQRCode: String? = nil
     @State private var pendingShareCode: String? = nil
     @State private var filterRefreshTrigger = 0  // Force re-evaluation when Settings filters change
@@ -580,6 +581,9 @@ struct InventoryView: View, CachedDataDeletion {
                         }
                 }
             }
+            .sheet(isPresented: $showingHelp) {
+                InventoryHelpView()
+            }
             .task {
                 await loadDataWithCloudKitRetry()
             }
@@ -762,6 +766,14 @@ struct InventoryView: View, CachedDataDeletion {
                         await CatalogDataCache.shared.reload(catalogService: catalogService)
                         await loadData()
                     }
+                }
+
+                Divider()
+
+                Button {
+                    showingHelp = true
+                } label: {
+                    Label("Help", systemImage: "questionmark.circle")
                 }
             } label: {
                 Image(systemName: "ellipsis.circle")

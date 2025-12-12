@@ -387,7 +387,8 @@ class ReceiptImportService {
         purchaseRecordItemId: UUID,
         unitPrice: Decimal?,
         currency: String?,
-        locationName: String = ""
+        locationName: String = "",
+        purchaseDate: Date? = nil
     ) async throws -> StorageLocationModel {
         // Find or create inventory record
         let inventories = try await inventoryRepository.fetchInventory(forItem: itemStableId, type: itemType)
@@ -423,13 +424,15 @@ class ReceiptImportService {
         }
 
         // Create storage location linked to purchase
+        // Use purchase date if provided, otherwise fall back to current date
+        let locationDate = purchaseDate ?? Date()
         let storageLocation = StorageLocationModel(
             id: UUID(),
             inventoryId: inv.id,
             locationName: locationName,
             quantity: quantity,
             containerCount: containerCount,
-            dateAdded: Date(),
+            dateAdded: locationDate,
             dateModified: Date(),
             purchaseRecordItemId: purchaseRecordItemId,
             unitPrice: unitPrice,

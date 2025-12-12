@@ -1141,12 +1141,8 @@ private struct PurchaseItemRow: View {
                 }
             } label: {
                 HStack(alignment: .top, spacing: 12) {
-                    if isAlreadyImported {
-                        // Show "already imported" seal - distinct from selection checkmark
-                        Image(systemName: "checkmark.seal.fill")
-                            .foregroundColor(DesignSystem.Colors.textSecondary)
-                            .font(.title3)
-                    } else if isSelectable {
+                    // No checkbox for already-imported items - it's clear from the section header
+                    if !isAlreadyImported && isSelectable {
                         if hasCatalogMatch {
                             Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(isSelected ? .accentColor : .secondary)
@@ -2129,7 +2125,8 @@ private struct PurchaseImportSheet: View {
                             containerCount: containerCount,
                             purchaseRecordItemId: purchaseItemId,
                             unitPrice: unitPrice,
-                            currency: "USD"
+                            currency: "USD",
+                            purchaseDate: purchase.orderDate
                         )
 
                     case .matchExisting:
@@ -2158,7 +2155,8 @@ private struct PurchaseImportSheet: View {
                                     containerCount: containerCount,
                                     purchaseRecordItemId: purchaseItemId,
                                     unitPrice: unitPrice,
-                                    currency: "USD"
+                                    currency: "USD",
+                                    purchaseDate: purchase.orderDate
                                 )
                             }
                         } else {
@@ -2170,7 +2168,8 @@ private struct PurchaseImportSheet: View {
                                 containerCount: containerCount,
                                 purchaseRecordItemId: purchaseItemId,
                                 unitPrice: unitPrice,
-                                currency: "USD"
+                                currency: "USD",
+                                purchaseDate: purchase.orderDate
                             )
                         }
                     }

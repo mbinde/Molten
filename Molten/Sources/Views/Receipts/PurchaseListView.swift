@@ -775,16 +775,9 @@ private struct ImportedPurchaseRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(purchase.supplier)
-                    .font(.headline)
-
-                Spacer()
-
-                Image(systemName: "checkmark.seal.fill")
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-                    .font(.caption)
-            }
+            // No checkmark badge needed - being in the "Imported" section is clear enough
+            Text(purchase.supplier)
+                .font(.headline)
 
             HStack {
                 if let orderNumber = purchase.orderNumber {

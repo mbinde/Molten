@@ -316,7 +316,7 @@ struct DataExportServiceTests {
         #expect(exportItem.name == "Clear Rod")
         #expect(exportItem.sku == "001")
         #expect(exportItem.manufacturer == "bullseye")
-        #expect(exportItem.manufacturerNotes == "Test notes")
+        #expect(exportItem.description == "Test notes")
         #expect(exportItem.coe == 90)
         #expect(exportItem.url == "https://example.com")
         #expect(exportItem.manufacturerStatus == "available")

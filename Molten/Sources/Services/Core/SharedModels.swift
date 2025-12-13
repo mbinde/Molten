@@ -466,6 +466,7 @@ struct StorageLocationModel: Identifiable, Sendable {
     let purchaseRecordItemId: UUID?  // Links to PurchaseRecordItem that created/claimed this inventory
     let unitPrice: Decimal?          // Cost per unit at time of purchase
     let currency: String?            // Currency for unitPrice
+    let purchaseDate: Date?          // Date of purchase (from parent PurchaseRecord)
 
     nonisolated init(
         id: UUID = UUID(),
@@ -480,7 +481,8 @@ struct StorageLocationModel: Identifiable, Sendable {
         workspaceId: UUID? = nil,
         purchaseRecordItemId: UUID? = nil,
         unitPrice: Decimal? = nil,
-        currency: String? = nil
+        currency: String? = nil,
+        purchaseDate: Date? = nil
     ) {
         self.id = id
         self.inventoryId = inventoryId
@@ -495,6 +497,7 @@ struct StorageLocationModel: Identifiable, Sendable {
         self.purchaseRecordItemId = purchaseRecordItemId
         self.unitPrice = unitPrice
         self.currency = currency
+        self.purchaseDate = purchaseDate
     }
 
     /// Validates that a location name string is valid

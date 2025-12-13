@@ -241,9 +241,14 @@ class ReceiptImportService {
         orderDate: Date,
         requestedQuantity: Double
     ) async throws -> InventoryMatchResult {
+        print("[Import] findMatchingLocations called for itemStableId=\(itemStableId), orderDate=\(orderDate), requestedQuantity=\(requestedQuantity)")
+
         // Find the inventory record for this item
         let inventories = try await inventoryRepository.fetchInventory(forItem: itemStableId)
+        print("[Import] Found \(inventories.count) inventory records for item \(itemStableId)")
+
         guard let inventory = inventories.first else {
+            print("[Import] No inventory found for item, returning empty match result")
             return InventoryMatchResult(
                 availableQuantity: 0,
                 requestedQuantity: requestedQuantity,
@@ -251,21 +256,35 @@ class ReceiptImportService {
             )
         }
 
+        print("[Import] Using inventory id=\(inventory.id), type=\(inventory.type), quantity=\(inventory.quantity)")
+
         // Get unlinked locations for this inventory
         // First try locations added on or after the order date
         var locations = try await storageLocationRepository.fetchUnlinkedLocations(
             forInventory: inventory.id,
             addedOnOrAfter: orderDate
         )
+        print("[Import] Found \(locations.count) unlinked locations added on/after order date")
+        for loc in locations {
+            print("[Import]   - Location id=\(loc.id), qty=\(loc.quantity), dateAdded=\(loc.dateAdded), purchaseRecordItemId=\(String(describing: loc.purchaseRecordItemId))")
+        }
 
         // If not enough, also get locations from before order date (sorted by date descending)
         let availableAfter = locations.reduce(0.0) { $0 + $1.quantity }
+        print("[Import] Available from after-order locations: \(availableAfter)")
+
         if availableAfter < requestedQuantity {
+            print("[Import] Not enough, fetching older locations...")
             let olderLocations = try await storageLocationRepository.fetchUnlinkedLocations(
                 forInventory: inventory.id,
                 addedOnOrAfter: nil
             ).filter { $0.dateAdded < orderDate }
             .sorted { $0.dateAdded > $1.dateAdded } // Most recent first
+
+            print("[Import] Found \(olderLocations.count) older unlinked locations")
+            for loc in olderLocations {
+                print("[Import]   - Older location id=\(loc.id), qty=\(loc.quantity), dateAdded=\(loc.dateAdded), purchaseRecordItemId=\(String(describing: loc.purchaseRecordItemId))")
+            }
 
             locations.append(contentsOf: olderLocations)
         }
@@ -278,6 +297,7 @@ class ReceiptImportService {
         }
 
         let totalAvailable = locations.reduce(0.0) { $0 + $1.quantity }
+        print("[Import] Final result: totalAvailable=\(totalAvailable), requestedQuantity=\(requestedQuantity), locationCount=\(locations.count)")
 
         return InventoryMatchResult(
             availableQuantity: totalAvailable,
@@ -294,15 +314,21 @@ class ReceiptImportService {
         matchResult: InventoryMatchResult,
         purchaseRecordItemId: UUID,
         unitPrice: Decimal?,
-        currency: String?
+        currency: String?,
+        purchaseDate: Date?
     ) async throws -> [StorageLocationModel] {
+        print("[Import] linkAndSplitLocations called: requestedQty=\(matchResult.requestedQuantity), availableQty=\(matchResult.availableQuantity), locations=\(matchResult.matchingLocations.count)")
+
         var linkedLocations: [StorageLocationModel] = []
         var remainingToLink = matchResult.requestedQuantity
 
         for location in matchResult.matchingLocations {
             guard remainingToLink > 0 else { break }
 
+            print("[Import] Processing location id=\(location.id), qty=\(location.quantity), remainingToLink=\(remainingToLink)")
+
             if location.quantity <= remainingToLink {
+                print("[Import] Linking entire location (qty \(location.quantity) <= remaining \(remainingToLink))")
                 // Link entire location
                 let linked = StorageLocationModel(
                     id: location.id,
@@ -317,12 +343,15 @@ class ReceiptImportService {
                     workspaceId: location.workspaceId,
                     purchaseRecordItemId: purchaseRecordItemId,
                     unitPrice: unitPrice,
-                    currency: currency
+                    currency: currency,
+                    purchaseDate: purchaseDate
                 )
                 _ = try await storageLocationRepository.updateLocationById(linked)
                 linkedLocations.append(linked)
                 remainingToLink -= location.quantity
+                print("[Import] Linked entire location, remainingToLink now=\(remainingToLink)")
             } else {
+                print("[Import] Splitting location (qty \(location.quantity) > remaining \(remainingToLink))")
                 // Split: reduce original, create new linked portion
                 // 1. Update original to have reduced quantity (unlinked remainder)
                 let remainder = StorageLocationModel(
@@ -356,14 +385,17 @@ class ReceiptImportService {
                     workspaceId: location.workspaceId,
                     purchaseRecordItemId: purchaseRecordItemId,
                     unitPrice: unitPrice,
-                    currency: currency
+                    currency: currency,
+                    purchaseDate: purchaseDate
                 )
                 _ = try await storageLocationRepository.createLocation(linked)
                 linkedLocations.append(linked)
                 remainingToLink = 0
+                print("[Import] Split complete, created new linked location")
             }
         }
 
+        print("[Import] linkAndSplitLocations complete: linked \(linkedLocations.count) locations")
         return linkedLocations
     }
 
@@ -390,11 +422,15 @@ class ReceiptImportService {
         locationName: String = "",
         purchaseDate: Date? = nil
     ) async throws -> StorageLocationModel {
+        print("[Import] importAsNewInventory called: stableId=\(itemStableId), type=\(itemType), qty=\(quantity)")
+
         // Find or create inventory record
         let inventories = try await inventoryRepository.fetchInventory(forItem: itemStableId, type: itemType)
+        print("[Import] Found \(inventories.count) existing inventory records for item/type")
         var inventory = inventories.first
 
         if inventory == nil {
+            print("[Import] No existing inventory, creating new")
             // Create new inventory record with the imported quantity
             let newInventory = InventoryModel(
                 id: UUID(),
@@ -408,6 +444,7 @@ class ReceiptImportService {
         } else {
             // Update existing inventory to add the imported quantity
             let existingQuantity = inventory!.quantity
+            print("[Import] Existing inventory found, updating quantity from \(existingQuantity) to \(existingQuantity + quantity)")
             let updatedInventory = InventoryModel(
                 id: inventory!.id,
                 item_stable_id: inventory!.item_stable_id,
@@ -426,6 +463,7 @@ class ReceiptImportService {
         // Create storage location linked to purchase
         // Use purchase date if provided, otherwise fall back to current date
         let locationDate = purchaseDate ?? Date()
+        print("[Import] Creating new storage location with date=\(locationDate), qty=\(quantity)")
         let storageLocation = StorageLocationModel(
             id: UUID(),
             inventoryId: inv.id,
@@ -436,10 +474,13 @@ class ReceiptImportService {
             dateModified: Date(),
             purchaseRecordItemId: purchaseRecordItemId,
             unitPrice: unitPrice,
-            currency: currency
+            currency: currency,
+            purchaseDate: purchaseDate
         )
 
-        return try await storageLocationRepository.createLocation(storageLocation)
+        let created = try await storageLocationRepository.createLocation(storageLocation)
+        print("[Import] Created storage location id=\(created.id)")
+        return created
     }
 
     /// Handle partial match by recording shortfall as consumed

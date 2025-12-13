@@ -561,6 +561,7 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
         let purchaseRecordItemId = coreDataItem.value(forKey: "purchase_record_item_id") as? UUID
         let unitPrice = (coreDataItem.value(forKey: "unit_price") as? NSDecimalNumber) as Decimal?
         let currency = coreDataItem.value(forKey: "currency") as? String
+        let purchaseDate = coreDataItem.value(forKey: "purchase_date") as? Date
 
         return StorageLocationModel(
             id: id,
@@ -575,7 +576,8 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
             workspaceId: workspaceId,
             purchaseRecordItemId: purchaseRecordItemId,
             unitPrice: unitPrice,
-            currency: currency
+            currency: currency,
+            purchaseDate: purchaseDate
         )
     }
 
@@ -593,6 +595,7 @@ class CoreDataStorageLocationRepository: @unchecked Sendable, StorageLocationRep
         coreDataItem.setValue(location.purchaseRecordItemId, forKey: "purchase_record_item_id")
         coreDataItem.setValue(location.unitPrice as NSDecimalNumber?, forKey: "unit_price")
         coreDataItem.setValue(location.currency, forKey: "currency")
+        coreDataItem.setValue(location.purchaseDate, forKey: "purchase_date")
     }
 }
 

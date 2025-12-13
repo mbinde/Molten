@@ -425,6 +425,7 @@
         <attribute name="inventory_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="is_transfer" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="location" optional="YES" attributeType="String"/>
+        <attribute name="purchase_date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="purchase_record_item_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="quantity" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="storage_location_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>

@@ -41,6 +41,8 @@ extension Notification.Name {
     static let shoppingFilterCountChanged = Notification.Name("shoppingFilterCountChanged")
     static let applyInventorySearch = Notification.Name("applyInventorySearch")
     static let applyShoppingSearch = Notification.Name("applyShoppingSearch")
+    static let detailViewAppeared = Notification.Name("detailViewAppeared")
+    static let detailViewDisappeared = Notification.Name("detailViewDisappeared")
 }
 
 /// Main tab view that provides navigation between the app's primary sections
@@ -58,6 +60,7 @@ struct MainTabView: View {
     @State private var inventoryActiveFilterCount = 0  // Track active filter count for badge
     @State private var shoppingActiveFilterCount = 0  // Track active filter count for badge
     @State private var tabConfig: TabConfiguration? = nil
+    @State private var isShowingDetailView = false  // Track if a detail view is showing (hide search/filter buttons)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.appDependencies) private var dependencies
 
@@ -183,8 +186,8 @@ struct MainTabView: View {
                 ZStack(alignment: .bottom) {
                     // Floating buttons anchored to screen edges
                     HStack {
-                        // Floating filter button (left side) - show on Catalog, Inventory, Shopping tabs
-                        if selectedTab == .catalog || selectedTab == .inventory || selectedTab == .shopping {
+                        // Floating filter button (left side) - show on Catalog, Inventory, Shopping tabs (but not on detail views)
+                        if (selectedTab == .catalog || selectedTab == .inventory || selectedTab == .shopping) && !isShowingDetailView {
                             Button {
                                 switch selectedTab {
                                 case .catalog:
@@ -226,8 +229,8 @@ struct MainTabView: View {
 
                         Spacer()
 
-                        // Floating search button (right side) - on Catalog, Inventory, Shopping tabs
-                        if selectedTab == .catalog || selectedTab == .inventory || selectedTab == .shopping {
+                        // Floating search button (right side) - on Catalog, Inventory, Shopping tabs (but not on detail views)
+                        if (selectedTab == .catalog || selectedTab == .inventory || selectedTab == .shopping) && !isShowingDetailView {
                             Button {
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     searchBarExpanded = true
@@ -246,7 +249,7 @@ struct MainTabView: View {
                         }
                     }
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 76)  // Position above tab bar
+                    .padding(.bottom, 70)  // Position above tab bar (reduced from 76)
                     .allowsHitTesting(true)
 
                     // Dynamic tab bar based on TabConfiguration
@@ -259,12 +262,12 @@ struct MainTabView: View {
                         moreTabButton
                     }
                     .padding(.horizontal, 4)
-                    .frame(height: 61)  // 49 * 1.25 = ~61
+                    .frame(height: 55)  // Reduced from 61
                     .background(
-                        RoundedRectangle(cornerRadius: 31)
+                        RoundedRectangle(cornerRadius: 28)
                             .fill(Color(.systemBackground).opacity(0.95))
                     )
-                    .clipShape(RoundedRectangle(cornerRadius: 31))
+                    .clipShape(RoundedRectangle(cornerRadius: 28))
                     .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 2)
                     .padding(.bottom, 8)
                 }
@@ -381,6 +384,12 @@ struct MainTabView: View {
                 shoppingActiveFilterCount = count
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .detailViewAppeared)) { _ in
+            isShowingDetailView = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .detailViewDisappeared)) { _ in
+            isShowingDetailView = false
+        }
         .onChange(of: selectedTab) { oldTab, newTab in
             // Save the selected tab whenever it changes (but only if it actually changed)
             if oldTab != newTab {
@@ -493,16 +502,16 @@ struct MainTabView: View {
         return Button {
             handleTabTap(tab)
         } label: {
-            VStack(spacing: 3) {
+            VStack(spacing: 2) {
                 Image(systemName: tab.systemImage)
-                    .font(.system(size: 25))  // 20 * 1.25 = 25
+                    .font(.system(size: 22))  // Reduced from 25
                 Text(tab.displayName)
-                    .font(.caption)  // Slightly larger than caption2
+                    .font(.caption2)  // Reduced from caption
             }
             .foregroundColor(isSelected ? DesignSystem.Colors.accentPrimary : .primary)
-            .frame(width: 76, height: 53)
+            .frame(width: 68, height: 48)  // Reduced from 76x53
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 14)  // Reduced from 16
                     .fill(isSelected ? DesignSystem.Colors.accentPrimary.opacity(0.15) : Color.clear)
             )
         }
@@ -513,6 +522,16 @@ struct MainTabView: View {
 
     private var moreTabButton: some View {
         Menu {
+            // Customize Tabs at bottom of menu (listed first because Menu renders in reverse)
+            Button {
+                showingTabCustomization = true
+            } label: {
+                Label("Customize Tabs", systemImage: "square.grid.2x2")
+                    .font(.title3)
+            }
+
+            Divider()
+
             // Show all tabs that are in the More menu according to config
             if let config = tabConfig {
                 ForEach(config.moreTabs, id: \.self) { tab in
@@ -525,27 +544,18 @@ struct MainTabView: View {
                     }
                 }
             }
-
-            Divider()
-
-            Button {
-                showingTabCustomization = true
-            } label: {
-                Label("Customize Tabs", systemImage: "square.grid.2x2")
-                    .font(.title3)
-            }
         } label: {
             let isSelected = tabConfig?.moreTabs.contains(selectedTab) == true
-            VStack(spacing: 3) {
+            VStack(spacing: 2) {
                 Image(systemName: "ellipsis.circle")
-                    .font(.system(size: 25))  // 20 * 1.25 = 25
+                    .font(.system(size: 22))  // Reduced from 25
                 Text("More")
-                    .font(.caption)  // Slightly larger than caption2
+                    .font(.caption2)  // Reduced from caption
             }
             .foregroundColor(isSelected ? DesignSystem.Colors.accentPrimary : .primary)
-            .frame(width: 76, height: 53)
+            .frame(width: 68, height: 48)  // Reduced from 76x53
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 14)  // Reduced from 16
                     .fill(isSelected ? DesignSystem.Colors.accentPrimary.opacity(0.15) : Color.clear)
             )
         }

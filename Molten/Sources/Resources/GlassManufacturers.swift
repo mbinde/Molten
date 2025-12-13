@@ -20,10 +20,13 @@ struct GlassManufacturers {
         "AB": "Asian (Chinese) Boro",
         "BB": "Boro Batch",
         "BE": "Bullseye Glass",
+        "BG": "BoroGlow",
         "CiM": "Creation is Messy",
+        "CGW": "Competitive Glassworks",
         "DH": "Double Helix",
         "DS": "Delphi Superior",
         "EF": "Effetre",
+        "GTRON": "Glasstronics",
         "JET": "JetAgeStudio",
         "FM": "Fusemaster",
         "GA": "Glass Alchemy",
@@ -53,14 +56,17 @@ struct GlassManufacturers {
     
     nonisolated static let manufacturerImages: [String: String] = [
         "AB": "ab",
+        "BG": "bg",
         "EF": "ef",
         "DH": "dh",
         "BB": "bb",
         "CiM": "cim",
+        "CGW": "cgw",
         "DS": "ds",
         "FM": "fm",
         "GA": "ga",
         "GAF": "gaf",
+        "GTRON": "gtron",
         "RE": "re",
         "REUSCHE": "reusche",
         "TAG": "tag",
@@ -91,7 +97,9 @@ struct GlassManufacturers {
         "AB": false,           // Asian (Chinese) Boro - NO permission (no idea who to ask)
         "BB": false,           // Boro Batch - NO permission (no response via instagram)
         "BE": true,           // Bullseye Glass - permission granted via email
+        "BG": false,          // BoroGlow - NO permission (haven't asked yet)
         "CiM": false,         // Creation is Messy - NO permission (denied)
+        "CGW": false,         // compettitive glassworks -- haven't asked yet TODO
         "DH": true,           // Double Helix - permission granted via email
         "DS": false,          // Delphi Superior - NO product images (bot-protected site)
         "EF": true,           // Effetre - permission granted via email
@@ -100,6 +108,7 @@ struct GlassManufacturers {
         "GA": true,           // Glass Alchemy - permission granted via email
         "GAF": false,         // Gaffer - NO product images (bot-protected site)
         "GRE": true,          // Greasy Glass - permission granted via email
+        "GTRON": false,       // Glasstronics -- haven't asked yet TODO
         "KUG": false,          // Kugler - NO permission (no idea who to ask)
         "MA": true,           // Molten Aura Labs - NO permission (check again)
         "MOM": true,          // Momka Glass - permission granted via email
@@ -127,7 +136,9 @@ struct GlassManufacturers {
         "AB": true,
         "BB": true,
         "BE": true,
+        "BG": true,
         "CIM": true,
+        "CGW": true,
         "DH": true,
         "DS": true,
         "EF": true,
@@ -136,6 +147,7 @@ struct GlassManufacturers {
         "GA": true,
         "GAF": true,
         "GRE": true,
+        "GTRON":  true,
         "KAS": true,
         "KUG": true,
         "LAU": true,
@@ -166,7 +178,9 @@ struct GlassManufacturers {
         "AB": true,            // Asian (Chinese) Boro
         "BB": true,            // Boro Batch
         "BE": true,            // Bullseye Glass
+        "BG": true,            // BoroGlow
         "CiM": true,           // Creation is Messy
+        "CGW": true,           // Competitive Glassworks
         "DH": true,            // Double Helix
         "DS": true,            // Delphi Superior
         "EF": true,            // Effetre
@@ -174,6 +188,7 @@ struct GlassManufacturers {
         "GA": true,            // Glass Alchemy
         "GAF": true,           // Gaffer
         "GRE": true,           // Greasy Glass
+        "GTRON": true,         // Glasstronics
         "JET": true,           // JetAgeStudio
         "KUG": true,           // Kugler
         "LAU": true,           // Lauscha
@@ -261,7 +276,9 @@ struct GlassManufacturers {
     nonisolated static let manufacturerCOEs: [String: [Int]] = [
         "AB": [33],           // Asian (Chinese) Boro makes 33
         "BB": [33],           // Boro Batch makes 33
+        "BG": [33],           // BoroGlow makes 33
         "CiM": [33],          // Creation is Messy makes 33
+        "CGW": [33],          // Competitive Glassworks
         "GA": [33],           // Glass Alchemy makes 33
         "GRE": [33],          // Greasy Glass makes 33
         "KAS": [33],          // Kashmir Glass makes 33
@@ -416,6 +433,8 @@ struct GlassManufacturers {
             return .pink
         case "boro batch", "bb":
             return .cyan
+        case "boroglow", "bg":
+            return Color(red: 0.4, green: 1.0, blue: 0.6)  // Bright green (glow-in-the-dark)
         case "bullseye glass", "bullseye", "be":
             return .indigo
         case "delphi superior", "ds":

@@ -82,6 +82,10 @@ struct InventoryDetailView: View {
     // Kiln schedules state
     @State private var recommendedScheduleIds: [UUID] = []
 
+    // Price per rod state (from storage locations with unit prices)
+    @State private var averagePricePerRod: Decimal?
+    @State private var latestPricePerRod: Decimal?
+
     // State for refreshing item data
     @State private var currentItem: CompleteInventoryItemModel
     @State private var isRefreshing = false
@@ -454,12 +458,17 @@ struct InventoryDetailView: View {
             }
         }
         .onAppear {
+            NotificationCenter.default.post(name: .detailViewAppeared, object: nil)
             loadInitialData()
             loadUserNotes()
             loadUserTags()
             loadShoppingList()
             loadUserImages()
             loadRecommendedSchedules()
+            loadPricePerRod()
+        }
+        .onDisappear {
+            NotificationCenter.default.post(name: .detailViewDisappeared, object: nil)
         }
         .onReceive(NotificationCenter.default.publisher(for: .inventoryItemAdded)) { _ in
             // Refresh when inventory is added (e.g., from three-dots menu)
@@ -577,6 +586,36 @@ struct InventoryDetailView: View {
                 recommendedScheduleIds = []
             }
         }
+    }
+
+    private func loadPricePerRod() {
+        // Get rod inventory IDs from current item
+        let rodInventoryIds = Set(currentItem.inventory
+            .filter { $0.type.lowercased() == "rod" }
+            .map { $0.id })
+
+        // Filter storage locations for rod inventory with unit prices
+        let rodLocationsWithPrice = currentItem.storageLocations
+            .filter { rodInventoryIds.contains($0.inventoryId) && $0.unitPrice != nil }
+            .sorted { loc1, loc2 in
+                // Sort by purchaseDate (most recent first), fall back to dateAdded
+                let date1 = loc1.purchaseDate ?? loc1.dateAdded
+                let date2 = loc2.purchaseDate ?? loc2.dateAdded
+                return date1 > date2
+            }
+
+        guard !rodLocationsWithPrice.isEmpty else { return }
+
+        // Calculate average price
+        let prices = rodLocationsWithPrice.compactMap { $0.unitPrice }
+        let sum = prices.reduce(Decimal(0)) { $0 + $1 }
+        let average = sum / Decimal(prices.count)
+
+        // Get latest price (most recent by purchaseDate)
+        let latest = rodLocationsWithPrice.first?.unitPrice
+
+        averagePricePerRod = average
+        latestPricePerRod = latest
     }
 
     /// Check inventory limit and show either the add form or upgrade prompt
@@ -898,7 +937,42 @@ struct InventoryDetailView: View {
                 .foregroundColor(DesignSystem.Colors.textPrimary)
 
             SpecificationTileGrid(tiles: specificationTiles)
+
+            // Price per rod (from storage locations)
+            if let avgPrice = averagePricePerRod {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                    HStack {
+                        Text("Your average price per rod:")
+                            .font(DesignSystem.Typography.formLabel)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                        Text(formatPrice(avgPrice))
+                            .font(DesignSystem.Typography.formLabel)
+                            .fontWeight(DesignSystem.FontWeight.semibold)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
+                    }
+
+                    // Show latest price if different from average
+                    if let latestPrice = latestPricePerRod, latestPrice != avgPrice {
+                        HStack {
+                            Text("Your latest price per rod:")
+                                .font(DesignSystem.Typography.formLabel)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                            Text(formatPrice(latestPrice))
+                                .font(DesignSystem.Typography.formLabel)
+                                .fontWeight(DesignSystem.FontWeight.semibold)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    private func formatPrice(_ price: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "USD"
+        return formatter.string(from: price as NSDecimalNumber) ?? "$\(price)"
     }
 
     private var specificationTiles: [SpecificationTileGrid.TileData] {

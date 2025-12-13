@@ -19,6 +19,7 @@ enum DefaultTab: Int, CaseIterable {
     case settings = 8
     case locations = 9
     case kilnSchedules = 10
+    case caneMaker = 11
 
     var displayName: String {
         switch self {
@@ -44,6 +45,8 @@ enum DefaultTab: Int, CaseIterable {
             return "Locations"
         case .kilnSchedules:
             return "Kiln"
+        case .caneMaker:
+            return "Twist"
         }
     }
 
@@ -71,6 +74,8 @@ enum DefaultTab: Int, CaseIterable {
             return "map" // Unified locations view for stores, classes, workshops
         case .kilnSchedules:
             return "fireplace.fill" // Matches Hot Shop terminology
+        case .caneMaker:
+            return "arrow.triangle.swap" // Represents twisting motion
         }
     }
 }

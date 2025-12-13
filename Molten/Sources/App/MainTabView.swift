@@ -150,6 +150,8 @@ struct MainTabView: View {
                     RecipesView()
                 case .kilnSchedules:
                     KilnSchedulesView(kilnScheduleService: kilnScheduleService)
+                case .caneMaker:
+                    CaneBuilderView()
                 }
             }
 

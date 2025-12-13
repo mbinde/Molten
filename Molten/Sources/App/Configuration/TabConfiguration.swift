@@ -121,6 +121,7 @@ class TabConfiguration {
             .logbook,       // In More menu
             .recipes,       // In More menu
             .kilnSchedules, // In More menu
+            .caneMaker,     // In More menu - Cane twist visualizer
             .settings       // In More menu
         ]
 

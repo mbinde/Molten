@@ -99,7 +99,7 @@ public struct ReceiptItem: Codable, Identifiable {
 /// Summary of a receipt (for list view)
 public struct ReceiptSummary: Codable, Identifiable {
     public let id: String
-    public let retailerId: String
+    public let retailerId: String?  // Can be null for unparsed/failed receipts
     public let retailerName: String?
     public let orderNumber: String?
     public let orderDate: Date?
@@ -109,6 +109,16 @@ public struct ReceiptSummary: Codable, Identifiable {
     public let acknowledged: Bool
     public let receivedAt: Date
     public let parsedAt: Date?
+
+    /// Whether this receipt failed to parse or is still pending
+    public var isParseFailed: Bool {
+        retailerId == nil && status != "pending"
+    }
+
+    /// Whether this receipt is still being processed
+    public var isPending: Bool {
+        status == "pending"
+    }
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -128,7 +138,7 @@ public struct ReceiptSummary: Codable, Identifiable {
 /// Full receipt detail (for detail view)
 public struct ReceiptDetail: Codable, Identifiable {
     public let id: String
-    public let retailerId: String
+    public let retailerId: String?  // Can be null for unparsed/failed receipts
     public let retailerName: String?
     public let senderEmail: String
     public let subject: String?
@@ -140,6 +150,16 @@ public struct ReceiptDetail: Codable, Identifiable {
     public let receivedAt: Date
     public let parsedAt: Date?
     public let items: [ReceiptItem]
+
+    /// Whether this receipt failed to parse or is still pending
+    public var isParseFailed: Bool {
+        retailerId == nil && status != "pending"
+    }
+
+    /// Whether this receipt is still being processed
+    public var isPending: Bool {
+        status == "pending"
+    }
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -536,6 +556,66 @@ class ReceiptAPIClient: NSObject {
             throw ReceiptAPIError.notFound
         case 401, 403:
             throw ReceiptAPIError.unauthorized
+        case 429:
+            let resetAt = parseRateLimitReset(from: data)
+            throw ReceiptAPIError.rateLimitExceeded(resetAt: resetAt)
+        default:
+            throw ReceiptAPIError.serverError(httpResponse.statusCode)
+        }
+    }
+
+    // MARK: - Report Parse Issue
+
+    /// Report a receipt parse issue for developer review
+    /// - Parameters:
+    ///   - receiptId: The receipt ID
+    ///   - userId: The user's ID
+    ///   - ownershipSignature: Ed25519 signature of the user ID
+    ///   - notes: Optional user notes about the issue
+    open func reportParseIssue(
+        receiptId: String,
+        userId: String,
+        ownershipSignature: Data,
+        notes: String? = nil
+    ) async throws {
+        let url = baseURL.appendingPathComponent("api/v1/receipts/\(receiptId)/report")
+
+        // Create request
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        // Add auth headers
+        request.setValue(userId, forHTTPHeaderField: "X-User-ID")
+        request.setValue(ownershipSignature.base64EncodedString(), forHTTPHeaderField: "X-Ownership-Signature")
+
+        // Add body if notes provided
+        if let notes = notes {
+            let body = ["notes": notes]
+            request.httpBody = try JSONEncoder().encode(body)
+        }
+
+        // Add App Attest assertion
+        try await addAttestation(to: &request)
+
+        // Execute request
+        let (data, response) = try await executeRequest(request)
+
+        // Check status code
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw ReceiptAPIError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 200, 201:
+            return // Success
+        case 404:
+            throw ReceiptAPIError.notFound
+        case 401, 403:
+            throw ReceiptAPIError.unauthorized
+        case 409:
+            // Already reported - treat as success
+            return
         case 429:
             let resetAt = parseRateLimitReset(from: data)
             throw ReceiptAPIError.rateLimitExceeded(resetAt: resetAt)

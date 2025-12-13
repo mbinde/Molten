@@ -37,6 +37,7 @@ public enum ReceiptWeightUnit: String, CaseIterable, Sendable {
     case each = "EA"  // Not a weight unit, but we need to handle it
 
     /// Parse a quantity unit string into a ReceiptWeightUnit
+    /// Handles both simple units ("1/4 LB") and variant strings ("5-7mm / 1/4lb")
     public static func parse(_ string: String?) -> ReceiptWeightUnit? {
         guard let string = string?.uppercased().trimmingCharacters(in: .whitespaces) else {
             return nil
@@ -47,7 +48,7 @@ public enum ReceiptWeightUnit: String, CaseIterable, Sendable {
             return direct
         }
 
-        // Common variations
+        // Common variations - exact match
         switch string {
         case "GRAM", "GRAMS":
             return .grams
@@ -64,8 +65,39 @@ public enum ReceiptWeightUnit: String, CaseIterable, Sendable {
         case "EACH", "UNIT", "UNITS", "PC", "PCS", "PIECE", "PIECES":
             return .each
         default:
-            return nil
+            break
         }
+
+        // Try to extract weight unit from variant strings like "5-7mm / 1/4lb" or "4-7mm / 1oz"
+        // Look for patterns containing weight units anywhere in the string
+
+        // Check for quarter pound patterns
+        if string.contains("1/4LB") || string.contains("1/4 LB") || string.contains("1/4 POUND") {
+            return .quarterPound
+        }
+
+        // Check for half pound patterns
+        if string.contains("1/2LB") || string.contains("1/2 LB") || string.contains("1/2 POUND") {
+            return .halfPound
+        }
+
+        // Check for ounce patterns (e.g., "1oz", "1 oz", "4oz")
+        if string.range(of: #"\d+\s*OZ"#, options: .regularExpression) != nil {
+            return .ounces
+        }
+
+        // Check for pound patterns (e.g., "1lb", "1 lb", but not "1/4lb")
+        if string.range(of: #"(?<!/)\d+\s*LB"#, options: .regularExpression) != nil {
+            return .pounds
+        }
+
+        // Check for gram patterns
+        if string.range(of: #"\d+\s*G\b"#, options: .regularExpression) != nil ||
+           string.range(of: #"\d+\s*GRAM"#, options: .regularExpression) != nil {
+            return .grams
+        }
+
+        return nil
     }
 
     /// Convert a quantity in this unit to grams

@@ -26,6 +26,7 @@ struct PurchaseDetailView: View {
     /// Client-side catalog match results (item.id -> match result)
     @State private var clientMatchResults: [Int: ItemMatchResult] = [:]
     @State private var isMatching = false
+    @State private var matchingProgress: (completed: Int, total: Int) = (0, 0)
     /// Existing purchase record if this receipt was already imported
     @State private var existingPurchaseRecord: PurchaseRecordModel?
     /// Mapping of receipt item index to imported purchase record item (for already-imported items)
@@ -46,6 +47,25 @@ struct PurchaseDetailView: View {
     // Entitlement state
     @State private var hasProAccess = false
     @State private var showingPaywall = false
+    // Report/Delete state
+    @State private var isReporting = false
+    @State private var isDeleting = false
+    @State private var showingDeleteConfirmation = false
+    @State private var actionAlert: ActionAlert?
+
+    private enum ActionAlert: Identifiable {
+        case reportSuccess
+        case reportError(String)
+        case deleteError(String)
+
+        var id: String {
+            switch self {
+            case .reportSuccess: return "reportSuccess"
+            case .reportError(let msg): return "reportError-\(msg)"
+            case .deleteError(let msg): return "deleteError-\(msg)"
+            }
+        }
+    }
 
     let purchaseId: String
 
@@ -59,7 +79,13 @@ struct PurchaseDetailView: View {
 
     private var retailerDisplayName: String {
         guard let purchase = purchase else { return "" }
-        return purchase.retailerName ?? purchase.retailerId.replacingOccurrences(of: "_", with: " ").capitalized
+        if let name = purchase.retailerName {
+            return name
+        }
+        if let retailerId = purchase.retailerId {
+            return retailerId.replacingOccurrences(of: "_", with: " ").capitalized
+        }
+        return "Unknown retailer"
     }
 
     private var canImportReceipts: Bool {
@@ -77,7 +103,7 @@ struct PurchaseDetailView: View {
     var body: some View {
         Group {
             if isLoading {
-                ProgressView("Loading order...")
+                loadingView
             } else if let error = errorMessage {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
@@ -162,6 +188,11 @@ struct PurchaseDetailView: View {
                         // Header Information
                         purchaseHeader(purchase)
 
+                        // Failed receipt actions
+                        if purchase.isParseFailed {
+                            failedReceiptActionsSection
+                        }
+
                         // Exact duplicate banner (already imported)
                         if existingPurchaseRecord != nil && !exactDuplicateDismissed {
                             exactDuplicateBanner
@@ -176,7 +207,6 @@ struct PurchaseDetailView: View {
                         itemsSection(purchase)
                     }
                     .padding()
-                    .padding(.bottom, 40)  // Extra padding for tab bar
                 }
             }
         }
@@ -211,6 +241,103 @@ struct PurchaseDetailView: View {
         .sheet(isPresented: $showingEmailBody) {
             EmailBodySheet(emailBody: emailBody ?? "", retailerName: retailerDisplayName)
         }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    // Report Issue - for failed receipts
+                    if purchase?.isParseFailed == true {
+                        Button {
+                            reportAndHideReceipt()
+                        } label: {
+                            Label("Report Issue", systemImage: "envelope.badge")
+                        }
+                        .disabled(isReporting)
+                    }
+
+                    // Delete - for any receipt
+                    Button(role: .destructive) {
+                        showingDeleteConfirmation = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                    .disabled(isDeleting)
+                } label: {
+                    if isReporting || isDeleting {
+                        ProgressView()
+                    } else {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
+            }
+        }
+        .confirmationDialog(
+            "Delete Receipt",
+            isPresented: $showingDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                deleteReceipt()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This receipt will be hidden from your list. You can re-import it by forwarding the email again.")
+        }
+        .alert(item: $actionAlert) { alert in
+            switch alert {
+            case .reportSuccess:
+                return Alert(
+                    title: Text("Report Submitted"),
+                    message: Text("Thank you for reporting this issue. We'll investigate and improve our parser."),
+                    dismissButton: .default(Text("OK")) {
+                        // Only dismiss if this was a failed receipt (it gets hidden)
+                        if purchase?.isParseFailed == true {
+                            dismiss()
+                        }
+                    }
+                )
+            case .reportError(let message):
+                return Alert(
+                    title: Text("Could Not Submit Report"),
+                    message: Text(message),
+                    dismissButton: .default(Text("OK"))
+                )
+            case .deleteError(let message):
+                return Alert(
+                    title: Text("Could Not Delete"),
+                    message: Text(message),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
+        }
+    }
+
+    // MARK: - Loading View
+
+    @ViewBuilder
+    private var loadingView: some View {
+        VStack(spacing: 16) {
+            if isMatching && matchingProgress.total > 0 {
+                // Show progress when matching items
+                VStack(spacing: 8) {
+                    Text("Matching items to catalog...")
+                        .font(.subheadline)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                    ProgressView(value: Double(matchingProgress.completed), total: Double(matchingProgress.total))
+                        .progressViewStyle(.linear)
+                        .tint(DesignSystem.Colors.moltenOrange)
+
+                    Text("\(matchingProgress.completed) of \(matchingProgress.total)")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+                .padding(.horizontal, 40)
+            } else {
+                // Initial loading spinner
+                ProgressView("Loading order...")
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Header Section
@@ -295,6 +422,66 @@ struct PurchaseDetailView: View {
         }
         .padding()
         .background(DesignSystem.Colors.backgroundInputLight)
+        .cornerRadius(12)
+    }
+
+    // MARK: - Failed Receipt Actions Section
+
+    @ViewBuilder
+    private var failedReceiptActionsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 8) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(DesignSystem.Colors.accentWarning)
+                Text("Unable to Parse")
+                    .font(.headline)
+            }
+
+            Text("We couldn't recognize this email as an order confirmation. You can report this issue so we can improve our parser, or delete it from your list.")
+                .font(.subheadline)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+
+            HStack(spacing: 12) {
+                Button {
+                    reportAndHideReceipt()
+                } label: {
+                    HStack {
+                        if isReporting {
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                                .controlSize(.small)
+                        } else {
+                            Image(systemName: "envelope.badge")
+                        }
+                        Text("Report Issue")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(DesignSystem.Colors.moltenOrange)
+                .disabled(isReporting || isDeleting)
+
+                Button(role: .destructive) {
+                    showingDeleteConfirmation = true
+                } label: {
+                    HStack {
+                        if isDeleting {
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                                .controlSize(.small)
+                        } else {
+                            Image(systemName: "trash")
+                        }
+                        Text("Delete")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .disabled(isReporting || isDeleting)
+            }
+        }
+        .padding()
+        .background(DesignSystem.Colors.accentWarning.opacity(0.1))
         .cornerRadius(12)
     }
 
@@ -716,7 +903,100 @@ struct PurchaseDetailView: View {
                         iconColor: DesignSystem.Colors.textSecondary
                     )
                 }
+
+                // Report Issue button for parsed receipts
+                reportIssueSection
+
+                // Delete button - only show if NO items can be imported
+                // (all items either have no catalog match or are already imported)
+                if categories.readyToImport.isEmpty {
+                    deleteReceiptSection
+                }
             }
+
+            // Extra padding to keep content above tab bar
+            Spacer()
+                .frame(height: 60)
+        }
+    }
+
+    // MARK: - Delete Receipt Section (for receipts with no importable items)
+
+    @ViewBuilder
+    private var deleteReceiptSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Divider()
+                .padding(.top, 8)
+
+            Button(role: .destructive) {
+                showingDeleteConfirmation = true
+            } label: {
+                HStack {
+                    if isDeleting {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .controlSize(.small)
+                    } else {
+                        Image(systemName: "trash")
+                    }
+                    Text("Delete Receipt")
+                }
+                .font(.subheadline)
+            }
+            .disabled(isDeleting)
+            .padding(.top, 4)
+
+            Text("Remove this receipt from your inbox")
+                .font(.caption)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+        }
+    }
+
+    // MARK: - Report Issue Section (for parsed receipts)
+
+    @ViewBuilder
+    private var reportIssueSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Divider()
+                .padding(.top, 16)
+
+            Button {
+                reportParseIssue()
+            } label: {
+                HStack {
+                    if isReporting {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .controlSize(.small)
+                    } else {
+                        Image(systemName: "flag")
+                    }
+                    Text("Report Issue with Parse")
+                }
+                .font(.subheadline)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+            }
+            .disabled(isReporting)
+            .padding(.top, 8)
+
+            Text("Let us know if items are missing or incorrectly parsed")
+                .font(.caption)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+        }
+    }
+
+    /// Report a parse issue (without hiding - for successfully parsed receipts)
+    private func reportParseIssue() {
+        isReporting = true
+
+        Task { @MainActor in
+            do {
+                try await receiptService.reportParseIssue(receiptId: purchaseId)
+                actionAlert = .reportSuccess
+            } catch {
+                actionAlert = .reportError(error.localizedDescription)
+            }
+            isReporting = false
         }
     }
 
@@ -825,7 +1105,7 @@ struct PurchaseDetailView: View {
             let existing = try await importService.findExistingPurchaseRecord(
                 emailReceiptId: receipt.id,
                 orderNumber: receipt.orderNumber,
-                supplier: receipt.retailerName ?? receipt.retailerId,
+                supplier: receipt.retailerName ?? receipt.retailerId ?? "Unknown",
                 senderEmail: receipt.senderEmail,
                 orderDate: receipt.orderDate ?? Date(),
                 total: receipt.totalAmount.map { Decimal($0) }
@@ -836,12 +1116,12 @@ struct PurchaseDetailView: View {
 
                 // Build mapping from receipt items to imported items by matching line hash
                 // This is stable across re-imports since it's based on the receipt line content
-                let importedItemsByHash = Dictionary(
+                let importedItemsByHash: [String: PurchaseRecordItemModel] = Dictionary(
                     existing.items.compactMap { item -> (String, PurchaseRecordItemModel)? in
                         guard let hash = item.receiptLineHash else { return nil }
                         return (hash, item)
                     },
-                    uniquingKeysWith: { first, _ in first }
+                    uniquingKeysWith: { (first: PurchaseRecordItemModel, _: PurchaseRecordItemModel) in first }
                 )
 
                 var mapping: [Int: PurchaseRecordItemModel] = [:]
@@ -870,7 +1150,7 @@ struct PurchaseDetailView: View {
         do {
             let duplicates = try await importService.findPotentialDuplicates(
                 orderNumber: receipt.orderNumber,
-                supplier: receipt.retailerName ?? receipt.retailerId,
+                supplier: receipt.retailerName ?? receipt.retailerId ?? "Unknown",
                 receiptItems: receipt.items,
                 excludingRecordId: existingPurchaseRecord?.id
             )
@@ -888,13 +1168,26 @@ struct PurchaseDetailView: View {
     }
 
     /// Matches receipt items against the local catalog
+    @MainActor
     private func matchItemsWithCatalog(_ receipt: ReceiptDetail) async {
         isMatching = true
+        matchingProgress = (0, 0)
         let matcher = ReceiptCatalogMatcher(catalogService: catalogService)
 
         // Only match items that haven't already been imported
         let itemsToMatch = receipt.items.filter { !importedItemsMap.keys.contains($0.id) }
-        let results = await matcher.matchItems(itemsToMatch, retailerId: receipt.retailerId)
+
+        // Capture a reference to update progress on main actor
+        let updateProgress: @Sendable (Int, Int) async -> Void = { @MainActor completed, total in
+            self.matchingProgress = (completed, total)
+        }
+
+        let results = await matcher.matchItems(
+            itemsToMatch,
+            retailerId: receipt.retailerId ?? "",
+            onProgress: updateProgress
+        )
+
         clientMatchResults = results
         isMatching = false
     }
@@ -974,6 +1267,36 @@ struct PurchaseDetailView: View {
                 errorMessage = "Could not load email: \(error.userFacingMessage)"
             }
             isLoadingEmail = false
+        }
+    }
+
+    /// Report a parse issue and hide the receipt locally
+    private func reportAndHideReceipt() {
+        isReporting = true
+
+        Task { @MainActor in
+            do {
+                // Report the issue to the server
+                try await receiptService.reportParseIssue(receiptId: purchaseId)
+                // Hide locally so it doesn't show in the list
+                receiptService.hideReceipt(id: purchaseId)
+                actionAlert = .reportSuccess
+            } catch {
+                actionAlert = .reportError(error.localizedDescription)
+            }
+            isReporting = false
+        }
+    }
+
+    /// Delete (hide) the receipt locally
+    private func deleteReceipt() {
+        isDeleting = true
+
+        Task { @MainActor in
+            // Just hide locally - don't need server interaction
+            receiptService.hideReceipt(id: purchaseId)
+            isDeleting = false
+            dismiss()
         }
     }
 }
@@ -1966,7 +2289,7 @@ private struct PurchaseImportSheet: View {
                 let existingRecord = try await importService.findExistingPurchaseRecord(
                     emailReceiptId: purchase.id,
                     orderNumber: purchase.orderNumber,
-                    supplier: purchase.retailerName ?? purchase.retailerId,
+                    supplier: purchase.retailerName ?? purchase.retailerId ?? "Unknown",
                     senderEmail: purchase.senderEmail,
                     orderDate: purchase.orderDate ?? Date(),
                     total: purchase.totalAmount.map { Decimal($0) }
@@ -2059,7 +2382,7 @@ private struct PurchaseImportSheet: View {
                 } else {
                     importProgress = "Creating purchase record..."
                     let newRecord = PurchaseRecordModel(
-                        supplier: purchase.retailerName ?? purchase.retailerId,
+                        supplier: purchase.retailerName ?? purchase.retailerId ?? "Unknown",
                         datePurchased: purchase.orderDate ?? Date(),
                         subtotal: purchase.totalAmount.map { Decimal($0) },
                         items: purchaseRecordItems,
@@ -2115,8 +2438,11 @@ private struct PurchaseImportSheet: View {
                     let unitPrice = importItem.pricePerUnit.map { Decimal($0) }
                     let stableId = catalogItem.stable_id
 
+                    print("[Import] Processing item \(index): stableId=\(stableId), type=\(catalogType), quantity=\(quantity), mode=\(importMode)")
+
                     switch importMode {
                     case .addNew:
+                        print("[Import] Mode is addNew, creating new inventory")
                         // Add as new inventory
                         _ = try await importService.importAsNewInventory(
                             itemStableId: stableId,
@@ -2130,6 +2456,7 @@ private struct PurchaseImportSheet: View {
                         )
 
                     case .matchExisting:
+                        print("[Import] Mode is matchExisting, searching for existing inventory")
                         // Try to match existing inventory
                         let matchResult = try await importService.findMatchingLocations(
                             itemStableId: stableId,
@@ -2137,17 +2464,22 @@ private struct PurchaseImportSheet: View {
                             requestedQuantity: quantity
                         )
 
+                        print("[Import] matchResult: isFullMatch=\(matchResult.isFullMatch), availableQty=\(matchResult.availableQuantity), shortfall=\(matchResult.shortfall)")
+
                         if matchResult.isFullMatch || matchResult.availableQuantity > 0 {
+                            print("[Import] Found existing inventory, linking and splitting")
                             // Link and split as needed
                             _ = try await importService.linkAndSplitLocations(
                                 matchResult: matchResult,
                                 purchaseRecordItemId: purchaseItemId,
                                 unitPrice: unitPrice,
-                                currency: "USD"
+                                currency: "USD",
+                                purchaseDate: purchase.orderDate
                             )
 
                             // If partial match, add new for the remainder
                             if matchResult.shortfall > 0 {
+                                print("[Import] Partial match, adding \(matchResult.shortfall) as new inventory")
                                 _ = try await importService.importAsNewInventory(
                                     itemStableId: stableId,
                                     itemType: catalogType.lowercased(),
@@ -2160,6 +2492,7 @@ private struct PurchaseImportSheet: View {
                                 )
                             }
                         } else {
+                            print("[Import] No existing inventory found, falling back to addNew")
                             // No existing inventory found, add as new
                             _ = try await importService.importAsNewInventory(
                                 itemStableId: stableId,

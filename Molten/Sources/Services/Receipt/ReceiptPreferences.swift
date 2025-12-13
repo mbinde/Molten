@@ -30,6 +30,7 @@ final class ReceiptPreferences {
     private static let keyEnabled = "molten.receipts.enabled"
     private static let keyPendingReceiptCount = "molten.receipts.pendingCount"
     private static let keyImportedReceiptCount = "molten.receipts.importedCount"
+    private static let keyHiddenReceiptIds = "molten.receipts.hiddenReceiptIds"
 
     // MARK: - Properties
 
@@ -317,6 +318,40 @@ final class ReceiptPreferences {
         isPendingEmailVerification && userId == nil
     }
 
+    // MARK: - Hidden Receipts
+
+    /// Receipt IDs that have been hidden on this device (not synced to iCloud)
+    /// Hidden receipts are not shown in the list but can be re-imported if forwarded again
+    var hiddenReceiptIds: Set<String> {
+        get {
+            // Only use local store - hidden receipts are device-specific
+            let array = localStore.stringArray(forKey: Self.keyHiddenReceiptIds) ?? []
+            return Set(array)
+        }
+        set {
+            localStore.set(Array(newValue), forKey: Self.keyHiddenReceiptIds)
+        }
+    }
+
+    /// Hide a receipt so it doesn't show in the list
+    func hideReceipt(id: String) {
+        var hidden = hiddenReceiptIds
+        hidden.insert(id)
+        hiddenReceiptIds = hidden
+    }
+
+    /// Check if a receipt is hidden
+    func isReceiptHidden(id: String) -> Bool {
+        hiddenReceiptIds.contains(id)
+    }
+
+    /// Unhide a receipt (e.g., when it's successfully re-parsed and re-forwarded)
+    func unhideReceipt(id: String) {
+        var hidden = hiddenReceiptIds
+        hidden.remove(id)
+        hiddenReceiptIds = hidden
+    }
+
     // MARK: - Reset
 
     /// Clear all receipt preferences (for disabling receipts or testing)
@@ -336,6 +371,9 @@ final class ReceiptPreferences {
             cloudStore.removeObject(forKey: key)
             localStore.removeObject(forKey: key)
         }
+
+        // Also clear hidden receipts (local only)
+        localStore.removeObject(forKey: Self.keyHiddenReceiptIds)
 
         cloudStore.synchronize()
     }

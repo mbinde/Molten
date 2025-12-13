@@ -129,6 +129,8 @@ public actor ReceiptCatalogMatcher {
         "large", "small", "medium", "fine", "coarse", "thin", "thick",
         // Edition/run markers - these describe availability, not the glass
         "ltd", "run", "limited", "edition", "special", "new", "exclusive",
+        // Quality/grade markers - describe condition, not the glass color/type
+        "first", "second", "odd", "quality", "seconds", "odds",
         // Common glass descriptors that don't distinguish products
         "intense", "dark", "light", "bright", "soft", "deep", "rich", "pale"
     ]
@@ -155,22 +157,31 @@ public actor ReceiptCatalogMatcher {
     // MARK: - Public API
 
     /// Match all items in a receipt against the catalog
+    /// - Parameters:
+    ///   - items: Receipt items to match
+    ///   - retailerId: The retailer ID for manufacturer hints
+    ///   - onProgress: Optional callback reporting progress (completed, total)
     public func matchItems(
         _ items: [ReceiptItem],
-        retailerId: String
+        retailerId: String,
+        onProgress: (@Sendable (Int, Int) async -> Void)? = nil
     ) async -> [Int: ItemMatchResult] {
         var results: [Int: ItemMatchResult] = [:]
 
         let manufacturers = Self.retailerManufacturerMap[retailerId] ?? []
         let catalogItems = await fetchCatalogItems(manufacturers: manufacturers)
 
-        for item in items {
+        let total = items.count
+        for (index, item) in items.enumerated() {
             let result = await matchSingleItem(
                 item,
                 relevantCatalog: catalogItems.relevant,
                 fullCatalog: catalogItems.full
             )
             results[item.id] = result
+
+            // Report progress after each item
+            await onProgress?(index + 1, total)
         }
 
         return results

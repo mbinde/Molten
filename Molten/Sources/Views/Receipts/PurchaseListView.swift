@@ -23,13 +23,12 @@ struct PurchaseListView: View {
     @State private var isKeyNotFoundError = false
     @State private var hasAnyPurchases = false  // Track if user has ANY purchases (new or imported)
     @State private var showCopiedFeedback = false
-    @State private var showingRecoverySheet = false
     @State private var recoveryEmail: String = ""
     @State private var recoveryError: String?
     @State private var isRecovering = false
-    @State private var showingRecoveryEmailSent = false
 
     // Verification polling state (for pending recovery)
+    @State private var isPendingVerification = false  // Local state to trigger view updates
     @State private var isCheckingVerification = false
     @State private var isResendingVerification = false
     @State private var verificationMessage: String?
@@ -38,6 +37,23 @@ struct PurchaseListView: View {
     // Auto-refresh timer
     @State private var refreshTask: Task<Void, Never>?
     private let refreshInterval: TimeInterval = 60  // seconds
+
+    // Report issue state
+    @State private var reportedReceiptIds: Set<String> = []
+    @State private var reportingReceiptId: String?
+    @State private var reportAlert: ReportAlert?
+
+    private enum ReportAlert: Identifiable {
+        case success
+        case error(String)
+
+        var id: String {
+            switch self {
+            case .success: return "success"
+            case .error(let msg): return "error-\(msg)"
+            }
+        }
+    }
 
     private var receiptService: ReceiptService {
         dependencies.receiptService
@@ -63,13 +79,16 @@ struct PurchaseListView: View {
         return "This email address is unique to you."
     }
 
-    /// New receipts sorted by date (most recent first)
+    /// New receipts sorted by date (most recent first), excluding hidden ones
     private var sortedNewReceipts: [ReceiptSummary] {
-        newReceipts.sorted { first, second in
-            let date1 = first.orderDate ?? first.receivedAt
-            let date2 = second.orderDate ?? second.receivedAt
-            return date1 > date2
-        }
+        let hiddenIds = receiptService.hiddenReceiptIds
+        return newReceipts
+            .filter { !hiddenIds.contains($0.id) }
+            .sorted { first, second in
+                let date1 = first.orderDate ?? first.receivedAt
+                let date2 = second.orderDate ?? second.receivedAt
+                return date1 > date2
+            }
     }
 
     /// Imported purchases sorted by date (most recent first)
@@ -81,9 +100,11 @@ struct PurchaseListView: View {
         Group {
             if isLoading {
                 ProgressView("Loading purchases...")
-            } else if receiptService.isPendingEmailVerification {
+            } else if isPendingVerification || receiptService.isPendingEmailVerification {
                 pendingVerificationView
-            } else if let error = errorMessage {
+            } else if let error = errorMessage, !isKeyNotFoundError, !hasAnyPurchases {
+                // Show blocking error ONLY when user has NO local purchases
+                // If they have purchases, errors are shown inline in the list
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         HStack(spacing: 12) {
@@ -100,68 +121,19 @@ struct PurchaseListView: View {
                             .foregroundColor(.primary)
                             .fixedSize(horizontal: false, vertical: true)
 
-                        // Show recovery option inline for key-not-found errors when email recovery is possible
-                        if isKeyNotFoundError && canRecoverAccount {
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Enter your registered email to recover:")
-                                    .font(.subheadline)
-
-                                TextField("Email address", text: $recoveryEmail)
-                                    .textFieldStyle(.roundedBorder)
-                                    .textContentType(.emailAddress)
-                                    .keyboardType(.emailAddress)
-                                    .autocapitalization(.none)
-                                    .autocorrectionDisabled()
-
-                                if let recoveryError = recoveryError {
-                                    Text(recoveryError)
-                                        .font(.caption)
-                                        .foregroundColor(DesignSystem.Colors.accentDanger)
-                                }
-
-                                Button {
-                                    requestRecovery()
-                                } label: {
-                                    HStack {
-                                        if isRecovering {
-                                            ProgressView()
-                                                .progressViewStyle(.circular)
-                                                .scaleEffect(0.8)
-                                        }
-                                        Text("Recover Account")
-                                            .font(.body.weight(.medium))
-                                    }
-                                }
-                                .buttonStyle(.borderedProminent)
-                                .disabled(isRecovering || !isValidEmail(recoveryEmail))
-                            }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
-                            .padding(.top, 8)
-                        } else {
-                            Button {
-                                loadPurchases()
-                            } label: {
-                                Text("Retry")
-                                    .font(.body.weight(.medium))
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .padding(.top, 8)
+                        Button {
+                            loadPurchases()
+                        } label: {
+                            Text("Retry")
+                                .font(.body.weight(.medium))
                         }
+                        .buttonStyle(.borderedProminent)
+                        .padding(.top, 8)
                     }
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .alert("Recovery Email Sent", isPresented: $showingRecoveryEmailSent) {
-                    Button("OK") {
-                        recoveryEmail = ""
-                        recoveryError = nil
-                    }
-                } message: {
-                    Text("Check your inbox and click the recovery link to restore access to your account.")
-                }
-            } else if !hasAnyPurchases {
+            } else if !hasAnyPurchases && !isKeyNotFoundError {
                 // Only show onboarding when user has NO purchases at all
                 emptyStateView
                     .refreshable {
@@ -169,6 +141,63 @@ struct PurchaseListView: View {
                     }
             } else {
                 List {
+                    // Inline error section (shown when there's an error but user has purchases)
+                    if let error = errorMessage, !isKeyNotFoundError {
+                        Section {
+                            NavigationLink {
+                                ErrorDetailView(
+                                    errorMessage: error,
+                                    onRetry: loadPurchases
+                                )
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .font(.title2)
+                                        .foregroundColor(DesignSystem.Colors.accentWarning)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Connection Error")
+                                            .font(.subheadline.weight(.semibold))
+                                        Text("Tap to view details and retry")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.vertical, 4)
+                            }
+                        }
+                    }
+
+                    // Account recovery section (shown when security key is missing)
+                    if isKeyNotFoundError {
+                        Section {
+                            NavigationLink {
+                                AccountRecoveryView(
+                                    recoveryEmail: $recoveryEmail,
+                                    recoveryError: $recoveryError,
+                                    isRecovering: $isRecovering,
+                                    isPendingVerification: $isPendingVerification,
+                                    onRecovery: requestRecovery
+                                )
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .font(.title2)
+                                        .foregroundColor(DesignSystem.Colors.accentWarning)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Account Recovery Needed")
+                                            .font(.subheadline.weight(.semibold))
+                                        Text("Tap to recover your account or start fresh")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.vertical, 4)
+                            }
+                        }
+                    }
+
                     // New receipts section (from server - unacknowledged)
                     if !sortedNewReceipts.isEmpty {
                         Section {
@@ -176,7 +205,22 @@ struct PurchaseListView: View {
                                 NavigationLink {
                                     PurchaseDetailView(purchaseId: receipt.id)
                                 } label: {
-                                    PurchaseRow(purchase: receipt)
+                                    PurchaseRow(
+                                        purchase: receipt,
+                                        isReported: reportedReceiptIds.contains(receipt.id),
+                                        isReporting: reportingReceiptId == receipt.id
+                                    )
+                                }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    // Show report action for failed receipts that haven't been reported
+                                    if receipt.isParseFailed && !reportedReceiptIds.contains(receipt.id) {
+                                        Button {
+                                            reportParseIssue(receiptId: receipt.id)
+                                        } label: {
+                                            Label("Report", systemImage: "envelope.badge")
+                                        }
+                                        .tint(.orange)
+                                    }
                                 }
                             }
                         } header: {
@@ -233,11 +277,48 @@ struct PurchaseListView: View {
             }
         }
         .onAppear {
+            // Sync local pending state from service (in case it was set in a previous session)
+            isPendingVerification = receiptService.isPendingEmailVerification
             loadPurchases()
             startAutoRefresh()
         }
         .onDisappear {
             stopAutoRefresh()
+        }
+        .alert(item: $reportAlert) { alert in
+            switch alert {
+            case .success:
+                return Alert(
+                    title: Text("Report Submitted"),
+                    message: Text("Thank you for reporting this issue. We'll investigate and improve our parser."),
+                    dismissButton: .default(Text("OK"))
+                )
+            case .error(let message):
+                return Alert(
+                    title: Text("Could Not Submit Report"),
+                    message: Text(message),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
+        }
+    }
+
+    // MARK: - Report Issue
+
+    private func reportParseIssue(receiptId: String) {
+        reportingReceiptId = receiptId
+
+        Task { @MainActor in
+            do {
+                try await receiptService.reportParseIssue(receiptId: receiptId)
+                // Hide the receipt locally so it doesn't show in the list
+                receiptService.hideReceipt(id: receiptId)
+                reportedReceiptIds.insert(receiptId)
+                reportAlert = .success
+            } catch {
+                reportAlert = .error(error.localizedDescription)
+            }
+            reportingReceiptId = nil
         }
     }
 
@@ -291,49 +372,37 @@ struct PurchaseListView: View {
         isKeyNotFoundError = false
 
         Task { @MainActor in
+            // Always fetch imported purchases from local Core Data first - this never fails due to key issues
             do {
-                // Fetch only unacknowledged receipts from server (the "inbox")
+                importedPurchases = try await purchaseRecordRepository.getAllRecords()
+            } catch {
+                // Local fetch failed - rare, but show error
+                errorMessage = error.userFacingMessage
+                isLoading = false
+                return
+            }
+
+            // Try to fetch server receipts (may fail if key is missing)
+            do {
                 let response = try await receiptService.listReceipts(
                     limit: 100,
                     offset: 0,
                     includeAcknowledged: false
                 )
                 newReceipts = response.receipts
-
-                // Fetch imported purchases from local Core Data
-                importedPurchases = try await purchaseRecordRepository.getAllRecords()
-
-                hasAnyPurchases = !newReceipts.isEmpty || !importedPurchases.isEmpty
             } catch KeyPairError.keyNotFound {
-                // Customize message based on identifier type
-                errorMessage = keyNotFoundMessage
+                // Key not found - mark it but don't block showing local purchases
                 isKeyNotFoundError = true
+                newReceipts = []
             } catch {
+                // Other server error - mark it but don't block showing local purchases
                 errorMessage = error.userFacingMessage
+                newReceipts = []
             }
+
+            hasAnyPurchases = !newReceipts.isEmpty || !importedPurchases.isEmpty
             isLoading = false
         }
-    }
-
-    /// Customized error message for key not found, based on how user registered
-    private var keyNotFoundMessage: String {
-        let baseMessage = "Your security key was not found.\n\nThis can happen on a new device if iCloud Keychain sync is disabled, or after a factory reset."
-
-        switch receiptService.identifierType {
-        case .email:
-            // Recovery form shown inline, so keep message short
-            return baseMessage
-        case .plusAddress:
-            return baseMessage + "\n\nSince you used the anonymous option, there is no way to recover your account. You'll need to set up a new account in Settings → Purchase Import. Previously imported receipts cannot be recovered."
-        case nil:
-            // Unknown - show both options to be safe, recovery form shown inline
-            return baseMessage + "\n\nIf you used the anonymous option, you'll need to set up a new account in Settings → Purchase Import. Previously imported receipts cannot be recovered."
-        }
-    }
-
-    /// Whether account recovery is possible (email or unknown identifier type)
-    private var canRecoverAccount: Bool {
-        receiptService.identifierType != .plusAddress
     }
 
     private func isValidEmail(_ email: String) -> Bool {
@@ -351,11 +420,11 @@ struct PurchaseListView: View {
             do {
                 _ = try await receiptService.requestAccountRecovery(email: recoveryEmail)
                 // Recovery request successful - service is now in pending verification state
-                // Clear error state and reload to show the pending verification UI
+                // Clear error state and set local pending flag to trigger view update
                 errorMessage = nil
                 isKeyNotFoundError = false
                 recoveryEmail = ""
-                // Note: The view will now show pendingVerificationSection via receiptService.isPendingEmailVerification
+                isPendingVerification = true  // Trigger view update to show pending verification UI
             } catch let apiError as ReceiptAPIError {
                 if case .badRequest(let message) = apiError {
                     recoveryError = message
@@ -683,9 +752,23 @@ struct PurchaseListView: View {
 
 private struct PurchaseRow: View {
     let purchase: ReceiptSummary
+    var isReported: Bool = false
+    var isReporting: Bool = false
 
     private var retailerDisplayName: String {
-        purchase.retailerName ?? purchase.retailerId.replacingOccurrences(of: "_", with: " ").capitalized
+        if purchase.isParseFailed {
+            return "Unable to parse"
+        }
+        if purchase.isPending {
+            return "Processing..."
+        }
+        if let name = purchase.retailerName {
+            return name
+        }
+        if let retailerId = purchase.retailerId {
+            return retailerId.replacingOccurrences(of: "_", with: " ").capitalized
+        }
+        return "Unknown retailer"
     }
 
     private var dateFormatter: DateFormatter {
@@ -698,12 +781,44 @@ private struct PurchaseRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
+                // Show warning icon for failed receipts
+                if purchase.isParseFailed {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(DesignSystem.Colors.accentWarning)
+                        .font(.headline)
+                }
+
                 Text(retailerDisplayName)
                     .font(.headline)
+                    .foregroundColor(purchase.isParseFailed ? DesignSystem.Colors.textSecondary : .primary)
 
                 Spacer()
 
-                if purchase.acknowledged {
+                if purchase.isParseFailed {
+                    if isReporting {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                    } else if isReported {
+                        Text("Reported")
+                            .font(.caption.bold())
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(DesignSystem.Colors.accentSuccess)
+                            .cornerRadius(8)
+                    } else {
+                        Text("Failed")
+                            .font(.caption.bold())
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(DesignSystem.Colors.accentDanger)
+                            .cornerRadius(8)
+                    }
+                } else if purchase.isPending {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                } else if purchase.acknowledged {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
                         .font(.caption)
@@ -718,37 +833,50 @@ private struct PurchaseRow: View {
                 }
             }
 
-            HStack {
-                if let orderNumber = purchase.orderNumber {
-                    Text("Order #\(orderNumber)")
-                        .font(.subheadline)
+            // Show helpful message for failed receipts
+            if purchase.isParseFailed {
+                if isReported {
+                    Text("Thanks for reporting! We'll look into this and improve our parser.")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                } else {
+                    Text("This email couldn't be recognized. Swipe left to report this issue.")
+                        .font(.caption)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
+            } else {
+                HStack {
+                    if let orderNumber = purchase.orderNumber {
+                        Text("Order #\(orderNumber)")
+                            .font(.subheadline)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
 
-                Spacer()
+                    Spacer()
 
-                if let orderDate = purchase.orderDate {
-                    Text(orderDate, formatter: dateFormatter)
-                        .font(.subheadline)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                    if let orderDate = purchase.orderDate {
+                        Text(orderDate, formatter: dateFormatter)
+                            .font(.subheadline)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
                 }
-            }
 
-            HStack {
-                HStack(spacing: 4) {
-                    Image(systemName: "cube.box")
-                        .font(.caption)
-                    Text("\(purchase.itemCount) item\(purchase.itemCount == 1 ? "" : "s")")
-                        .font(.caption)
-                }
-                .foregroundColor(DesignSystem.Colors.textSecondary)
+                HStack {
+                    HStack(spacing: 4) {
+                        Image(systemName: "cube.box")
+                            .font(.caption)
+                        Text("\(purchase.itemCount) item\(purchase.itemCount == 1 ? "" : "s")")
+                            .font(.caption)
+                    }
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
 
-                Spacer()
+                    Spacer()
 
-                if let total = purchase.totalAmount {
-                    Text(total, format: .currency(code: "USD"))
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                    if let total = purchase.totalAmount {
+                        Text(total, format: .currency(code: "USD"))
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
                 }
             }
         }
@@ -807,6 +935,60 @@ private struct ImportedPurchaseRow: View {
             }
         }
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Error Detail View
+
+private struct ErrorDetailView: View {
+    let errorMessage: String
+    let onRetry: () -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.title)
+                        .foregroundColor(DesignSystem.Colors.accentWarning)
+                    Text("Connection Error")
+                        .font(.title2.bold())
+                }
+                .padding(.bottom, 4)
+
+                Text("There was a problem connecting to the server. Your imported purchases are still available below.")
+                    .font(.body)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                Divider()
+
+                Text("Error Details")
+                    .font(.headline)
+
+                Text(errorMessage)
+                    .font(.body)
+                    .foregroundColor(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+
+                Button {
+                    onRetry()
+                } label: {
+                    Text("Retry Connection")
+                        .font(.body.weight(.medium))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .padding(.top, 8)
+            }
+            .padding()
+        }
+        .navigationTitle("Error Details")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 }
 

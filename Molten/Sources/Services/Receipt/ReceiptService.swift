@@ -452,6 +452,53 @@ open class ReceiptService: ObservableObject {
         )
     }
 
+    /// Report a parse issue for a receipt so developers can fix the parser
+    /// - Parameters:
+    ///   - receiptId: The receipt ID
+    ///   - notes: Optional user notes about what went wrong
+    open func reportParseIssue(receiptId: String, notes: String? = nil) async throws {
+        guard let userId = preferences.userId else {
+            throw ReceiptAPIError.unauthorized
+        }
+
+        // Get private key for signing
+        let privateKey = try keyPairManager.retrievePrivateKey(identifier: Self.receiptKeyIdentifier)
+
+        // Create ownership signature
+        let ownershipSignature = try keyPairManager.sign(
+            data: userId.data(using: .utf8)!,
+            privateKey: privateKey
+        )
+
+        try await apiClient.reportParseIssue(
+            receiptId: receiptId,
+            userId: userId,
+            ownershipSignature: ownershipSignature,
+            notes: notes
+        )
+    }
+
+    // MARK: - Hide Receipts
+
+    /// Hide a receipt locally so it doesn't appear in the list
+    /// The receipt remains on the server but won't be shown on this device
+    /// - Parameter receiptId: The receipt ID to hide
+    func hideReceipt(id: String) {
+        preferences.hideReceipt(id: id)
+    }
+
+    /// Check if a receipt is hidden on this device
+    /// - Parameter receiptId: The receipt ID to check
+    /// - Returns: true if the receipt is hidden
+    func isReceiptHidden(id: String) -> Bool {
+        preferences.isReceiptHidden(id: id)
+    }
+
+    /// Get all hidden receipt IDs (for filtering)
+    var hiddenReceiptIds: Set<String> {
+        preferences.hiddenReceiptIds
+    }
+
     // MARK: - Account Recovery
 
     /// Request account recovery via email

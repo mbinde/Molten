@@ -39,6 +39,9 @@ struct CatalogFilterSheet: View {
     // State for tags sub-sheet
     @State private var showingTagsSheet = false
 
+    // Manufacturer sort (persisted, defaults to count)
+    @AppStorage("catalogFilterManufacturerSortByCount") private var manufacturerSortByCount = true
+
     var body: some View {
         NavigationStack {
             List {
@@ -150,8 +153,8 @@ struct CatalogFilterSheet: View {
 
                 // Manufacturer filter
                 if !availableManufacturers.isEmpty {
-                    Section("Manufacturer") {
-                        ForEach(availableManufacturers, id: \.self) { manufacturer in
+                    Section {
+                        ForEach(sortedManufacturers, id: \.self) { manufacturer in
                             let count = manufacturerCounts[manufacturer] ?? 0
                             let isSelected = selectedManufacturers.contains(manufacturer)
                             let isDisabled = count == 0 && !isSelected
@@ -178,6 +181,17 @@ struct CatalogFilterSheet: View {
                             }
                             .disabled(isDisabled)
                             .listRowBackground(isSelected ? DesignSystem.Colors.accentPrimary.opacity(0.15) : nil)
+                        }
+                    } header: {
+                        HStack {
+                            Text("Manufacturer")
+                            Spacer()
+                            Picker("Sort", selection: $manufacturerSortByCount) {
+                                Text("A-Z").tag(false)
+                                Text("Count").tag(true)
+                            }
+                            .pickerStyle(.segmented)
+                            .frame(width: 120)
                         }
                     }
                 }
@@ -220,6 +234,26 @@ struct CatalogFilterSheet: View {
     private var hasActiveFilters: Bool {
         !selectedTags.isEmpty || !selectedCOEs.isEmpty ||
         !selectedManufacturers.isEmpty || !selectedProductTypes.isEmpty
+    }
+
+    private var sortedManufacturers: [String] {
+        if manufacturerSortByCount {
+            return availableManufacturers.sorted { manufacturer1, manufacturer2 in
+                let count1 = manufacturerCounts[manufacturer1] ?? 0
+                let count2 = manufacturerCounts[manufacturer2] ?? 0
+                if count1 != count2 {
+                    return count1 > count2
+                }
+                // Secondary sort by name when counts are equal
+                return manufacturerDisplayName(manufacturer1)
+                    .localizedCaseInsensitiveCompare(manufacturerDisplayName(manufacturer2)) == .orderedAscending
+            }
+        } else {
+            return availableManufacturers.sorted {
+                manufacturerDisplayName($0)
+                    .localizedCaseInsensitiveCompare(manufacturerDisplayName($1)) == .orderedAscending
+            }
+        }
     }
 
     private var availableSortOptions: [SortOption] {

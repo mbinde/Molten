@@ -105,6 +105,7 @@ struct GlassManufacturers {
         "MOM": true,          // Momka Glass - permission granted via email
         "MOR": true,          // Moretti (same as Effetre) - permission granted via email
         "NS": false,           // Northstar Glassworks - NO permission (no response)
+        "NSP": false,          // same as Northstar
         "OC": true,           // Oceanside Glass - permission granted
         "OR": false,           // Origin Glass - NO permission (no idea who to ask)
         "PAR": false,          // Parramore Glass - NO permission (no idea who to ask)

@@ -55,10 +55,10 @@ class TabConfiguration {
     // MARK: - Screen-Based Limits
 
     /// Width of each tab button (including the More button)
-    static let tabButtonWidth: CGFloat = 76 + 4  // button width + spacing
+    static let tabButtonWidth: CGFloat = 70 + 4  // button width + spacing
 
     /// Minimum horizontal padding for the tab bar
-    static let tabBarHorizontalPadding: CGFloat = 32
+    static let tabBarHorizontalPadding: CGFloat = 30
 
     /// Maximum number of tabs that can fit on the current screen
     /// This includes the More button, so actual tabs = this value - 1

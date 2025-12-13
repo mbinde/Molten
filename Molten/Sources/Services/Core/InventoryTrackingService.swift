@@ -613,17 +613,16 @@ actor InventoryTrackingService {
         do {
             let savedInventory = try await self.inventoryRepository.createInventory(newInventory)
 
-            // 5. Create StorageLocation record if location is provided
-            // Delegate to StorageLocationService for consistent business logic
-            if let locationName = location, !locationName.isEmpty {
-                _ = try await storageLocationService.addInventoryToLocation(
-                    inventoryId: savedInventory.id,
-                    locationName: locationName,
-                    quantity: quantity,
-                    containerCount: containerCount,
-                    dateAdded: effectiveDate
-                )
-            }
+            // 5. Always create StorageLocation record for receipt import matching
+            // Even if no location is specified, we need a StorageLocation record
+            // so that receipt import can find and link to this inventory
+            _ = try await storageLocationService.addInventoryToLocation(
+                inventoryId: savedInventory.id,
+                locationName: location ?? "",
+                quantity: quantity,
+                containerCount: containerCount,
+                dateAdded: effectiveDate
+            )
 
             return savedInventory
         } catch {

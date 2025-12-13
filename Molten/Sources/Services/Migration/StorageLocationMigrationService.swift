@@ -22,7 +22,8 @@ actor StorageLocationMigrationService {
     // MARK: - Migration Key
 
     /// UserDefaults key to track migration completion
-    private static let migrationCompletedKey = "molten.storageLocation.migrationCompleted"
+    /// v2: Now handles ALL inventory (including those without location)
+    private static let migrationCompletedKey = "molten.storageLocation.migrationCompleted.v2"
 
     // MARK: - Dependencies
 
@@ -95,22 +96,21 @@ actor StorageLocationMigrationService {
     private func performMigration() async throws -> MigrationStats {
         var stats = MigrationStats()
 
-        // 1. Fetch all inventory records with non-nil location
+        // 1. Fetch ALL inventory records (not just those with locations!)
+        // v2 change: We need StorageLocation records for ALL inventory so receipt import works
         let allInventory = try await inventoryRepository.fetchInventory(matching: nil)
-        let inventoryWithLocation = allInventory.filter { $0.location != nil && !$0.location!.isEmpty }
 
-        print("   Found \(inventoryWithLocation.count) inventory records with locations to migrate")
+        print("   Found \(allInventory.count) inventory records to check")
 
         // 2. Cache location definitions for efficiency
         var definitionCache: [String: UUID] = [:]  // locationName -> definitionId
 
         // 3. Process each inventory record
-        for inventory in inventoryWithLocation {
+        for inventory in allInventory {
             stats.processedCount += 1
 
-            guard let locationName = inventory.location, !locationName.isEmpty else {
-                continue
-            }
+            // v2: Get location name, defaulting to empty string for inventory without location
+            let locationName = inventory.location ?? ""
 
             do {
                 // Check if StorageLocation already exists for this inventory
@@ -120,22 +120,32 @@ actor StorageLocationMigrationService {
                     continue  // Already migrated
                 }
 
-                // Get or create the location definition
+                // Skip if quantity is 0 (no point creating a StorageLocation for empty inventory)
+                guard inventory.quantity > 0 else {
+                    stats.skippedCount += 1
+                    continue
+                }
+
+                // Get or create the location definition (only if location name is non-empty)
                 let definitionId: UUID?
-                if let cachedId = definitionCache[locationName.lowercased()] {
-                    definitionId = cachedId
-                } else {
-                    definitionId = try await getOrCreateLocationDefinition(name: locationName)
-                    if let id = definitionId {
-                        definitionCache[locationName.lowercased()] = id
+                if !locationName.isEmpty {
+                    if let cachedId = definitionCache[locationName.lowercased()] {
+                        definitionId = cachedId
+                    } else {
+                        definitionId = try await getOrCreateLocationDefinition(name: locationName)
+                        if let id = definitionId {
+                            definitionCache[locationName.lowercased()] = id
+                        }
                     }
+                } else {
+                    definitionId = nil  // No location definition for inventory without location
                 }
 
                 // Create StorageLocation record
                 let storageLocation = StorageLocationModel(
                     inventoryId: inventory.id,
                     storageLocationId: definitionId,
-                    locationName: locationName,  // Cache the name for backward compatibility
+                    locationName: locationName,  // Empty string if no location
                     quantity: inventory.quantity,
                     containerCount: inventory.containerCount,
                     dateAdded: inventory.date_added,  // Preserve original date

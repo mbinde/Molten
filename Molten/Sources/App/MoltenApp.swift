@@ -639,6 +639,11 @@ extension MoltenApp {
         // Location definition migration: Creates StorageLocationDefinition entries
         // for existing inventory locations that were created before the autocomplete fix
         await dependencies.locationDefinitionMigration.runIfNeeded()
+
+        // StorageLocation migration v2: Creates StorageLocation records for ALL Inventory
+        // records (not just those with locations). This is required for receipt import's
+        // "match existing" mode to find unlinked inventory.
+        await dependencies.storageLocationMigrationService.runMigrationIfNeeded()
     }
 
     /// Perform opportunistic backup when app goes to background

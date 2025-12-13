@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.5] - 2025-12-13
+
+### Added
+- Receipt import system with email parsing, duplicate handling, and inventory integration
+- Redesigned UI with floating tab bar, bottom search bar, and unified filter/search UX across Catalog, Inventory, and Shopping views
+- Price tracking based on your receipts: average and latest price per rod in inventory detail
+- Help screens for Catalog, Inventory, and Purchases
+- Offline caching for subscriptions for low/no internet access
+
+### Changed
+- Better accessibility labels and hints
+- Catalog updated with custom glass descriptions and color data
+
+---
+
 ## [1.0.4] - 2025-12-06
 
 ### Added

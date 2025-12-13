@@ -56,6 +56,7 @@ struct CatalogView: View {
     @State private var showingCOESelection = false
     @State private var showingManufacturerFilterSelection = false
     @State private var showingFilterSheet = false
+    @State private var showingHelp = false
     @State private var navigationPath = NavigationPath()
     @State private var isRefreshing = false
     @State private var lastRefreshTime: Date = Date.distantPast
@@ -418,6 +419,23 @@ struct CatalogView: View {
             }
     }
 
+    // Sort menu extracted to avoid duplication
+    private var sortMenu: some View {
+        Menu {
+            ForEach(SortOption.allCases, id: \.self) { option in
+                Button {
+                    viewModel.sortOption = option
+                    updateSorting(option)
+                } label: {
+                    Label(option.rawValue, systemImage: option.sortIcon)
+                }
+            }
+        } label: {
+            Image(systemName: "arrow.up.arrow.down")
+        }
+        .accessibilityIdentifier("catalog_sort_button")
+    }
+
     // Content with toolbar (search is handled by bottom tab bar)
     private var contentWithSearchMode: some View {
         mainContentView
@@ -429,6 +447,16 @@ struct CatalogView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     sortMenu
                 }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        showingHelp = true
+                    } label: {
+                        Image(systemName: "questionmark.circle")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingHelp) {
+                CatalogHelpView()
             }
     }
     

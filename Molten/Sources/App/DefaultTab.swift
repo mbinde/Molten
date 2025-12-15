@@ -20,6 +20,7 @@ enum DefaultTab: Int, CaseIterable {
     case locations = 9
     case kilnSchedules = 10
     case caneMaker = 11
+    case wigWag = 12
 
     var displayName: String {
         switch self {
@@ -47,6 +48,8 @@ enum DefaultTab: Int, CaseIterable {
             return "Kiln"
         case .caneMaker:
             return "Twist"
+        case .wigWag:
+            return "Wig Wag"
         }
     }
 
@@ -76,6 +79,8 @@ enum DefaultTab: Int, CaseIterable {
             return "fireplace.fill" // Matches Hot Shop terminology
         case .caneMaker:
             return "arrow.triangle.swap" // Represents twisting motion
+        case .wigWag:
+            return "arrow.left.arrow.right" // Represents back-and-forth motion
         }
     }
 }

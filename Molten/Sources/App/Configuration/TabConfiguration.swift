@@ -83,10 +83,8 @@ class TabConfiguration {
             self.tabs = savedTabs.compactMap { DefaultTab(rawValue: $0) }
             self.maxVisibleTabs = UserDefaults.standard.object(forKey: maxVisibleTabsKey) as? Int ?? Self.defaultMaxVisibleTabs()
 
-            // Validate loaded configuration
-            if !isConfigurationValid() {
-                resetToDefaults()
-            }
+            // Add any new tabs and remove any disabled tabs
+            reconcileTabs()
         } else {
             // First launch - use defaults
             self.tabs = Self.defaultTabOrder()
@@ -122,6 +120,7 @@ class TabConfiguration {
             .recipes,       // In More menu
             .kilnSchedules, // In More menu
             .caneMaker,     // In More menu - Cane twist visualizer
+            .wigWag,        // In More menu - Wigwag cane visualizer
             .settings       // In More menu
         ]
 
@@ -163,7 +162,7 @@ class TabConfiguration {
                 return FeatureFlags.ENABLE_RECIPES
             case .purchases:
                 return FeatureFlags.ENABLE_PURCHASES
-            case .caneMaker:
+            case .caneMaker, .wigWag:
                 return FeatureFlags.ENABLE_CANE_MAKER
             default:
                 // Include all other tabs: catalog, inventory, shopping, settings, locations
@@ -174,29 +173,30 @@ class TabConfiguration {
 
     // MARK: - Configuration Management
 
-    /// Validates that current configuration is valid
-    private func isConfigurationValid() -> Bool {
-        let allTabs = Self.allAvailableTabs()
+    /// Reconciles saved tabs with currently available tabs.
+    /// - Adds new tabs (inserted before Settings to preserve user's tab order)
+    /// - Removes tabs that are no longer available (feature flags disabled)
+    private func reconcileTabs() {
+        let availableTabs = Set(Self.allAvailableTabs())
+        let currentTabs = Set(tabs)
 
-        // Check that all available tabs are present
-        let configuredTabs = Set(tabs)
-        let availableTabs = Set(allTabs)
+        // Remove tabs that are no longer available
+        tabs = tabs.filter { availableTabs.contains($0) }
 
-        guard configuredTabs == availableTabs else {
-            return false
+        // Find new tabs that need to be added
+        let newTabs = availableTabs.subtracting(currentTabs)
+
+        if !newTabs.isEmpty {
+            // Insert new tabs before Settings (or at end if Settings not found)
+            let settingsIndex = tabs.firstIndex(of: .settings) ?? tabs.endIndex
+            for newTab in newTabs.sorted(by: { $0.rawValue < $1.rawValue }) {
+                tabs.insert(newTab, at: settingsIndex)
+            }
         }
 
-        // Check no duplicates
-        guard Set(tabs).count == tabs.count else {
-            return false
-        }
-
-        // Check maxVisibleTabs is reasonable (0 means just the More menu)
-        guard maxVisibleTabs >= 0 && maxVisibleTabs <= 8 else {
-            return false
-        }
-
-        return true
+        // Remove duplicates while preserving order
+        var seen = Set<DefaultTab>()
+        tabs = tabs.filter { seen.insert($0).inserted }
     }
 
     /// Resets configuration to defaults

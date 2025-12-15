@@ -10,6 +10,11 @@ import SwiftUI
 struct CaneBuilderView: View {
     @State private var design = CaneDesign()
     @State private var selectedSegmentIndex: Int?
+    @State private var showingCatalogSearch = false
+    @State private var catalogItems: [UnifiedCatalogItem] = []
+    @State private var isLoadingCatalog = false
+
+    private let catalogService = AppDependencies.shared.catalogService
 
     var body: some View {
         NavigationStack {
@@ -32,6 +37,53 @@ struct CaneBuilderView: View {
             }
             .navigationTitle("Twist")
             .background(DesignSystem.Colors.background)
+            .sheet(isPresented: $showingCatalogSearch) {
+                CatalogColorPickerSheet(
+                    catalogItems: $catalogItems,
+                    isLoading: $isLoadingCatalog,
+                    onSelect: { item in
+                        addCatalogItem(item)
+                        showingCatalogSearch = false
+                    }
+                )
+            }
+            .task {
+                await loadCatalogItems()
+            }
+        }
+    }
+
+    private func loadCatalogItems() async {
+        guard catalogItems.isEmpty else { return }
+        isLoadingCatalog = true
+        print("DEBUG: Starting catalog load...")
+        do {
+            catalogItems = try await catalogService.getAllCatalogItemsLightweight()
+            print("DEBUG: Loaded \(catalogItems.count) catalog items")
+        } catch {
+            print("DEBUG ERROR loading catalog items: \(error)")
+        }
+        isLoadingCatalog = false
+    }
+
+    private func addCatalogItem(_ item: UnifiedCatalogItem) {
+        let segment = CaneSegment.fromCatalogItem(item)
+        withAnimation {
+            if let index = selectedSegmentIndex {
+                // Replace selected segment
+                design.segments[index] = CaneSegment(
+                    id: design.segments[index].id,  // Keep the same ID
+                    color: segment.color,
+                    angularWidth: design.segments[index].angularWidth,
+                    catalogItemId: segment.catalogItemId,
+                    catalogItemName: segment.catalogItemName
+                )
+                selectedSegmentIndex = nil
+            } else {
+                // Add new segment
+                design.segments.append(segment)
+                design.redistributeWidths()
+            }
         }
     }
 
@@ -213,6 +265,26 @@ struct CaneBuilderView: View {
             }
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 44))], spacing: DesignSystem.Spacing.md) {
+                // "+" button to search catalog
+                Button {
+                    showingCatalogSearch = true
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(DesignSystem.Colors.backgroundTertiary)
+                            .frame(width: 44, height: 44)
+                        Image(systemName: "plus")
+                            .font(.system(size: 20, weight: .medium))
+                            .foregroundStyle(DesignSystem.Colors.accentPrimary)
+                    }
+                    .overlay {
+                        Circle()
+                            .stroke(DesignSystem.Colors.accentPrimary, lineWidth: 2)
+                    }
+                }
+                .accessibilityLabel("Search catalog for glass color")
+
+                // Preset colors
                 ForEach(GlassColor.allCases, id: \.name) { glassColor in
                     colorButton(for: glassColor)
                 }

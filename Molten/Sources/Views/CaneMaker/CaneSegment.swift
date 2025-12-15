@@ -13,11 +13,34 @@ struct CaneSegment: Identifiable, Equatable {
     var color: Color
     /// The angular width of this segment (in radians, relative to total circumference)
     var angularWidth: Double
+    /// Optional reference to a catalog item (stable_id) if this segment came from the catalog
+    var catalogItemId: String?
+    /// Optional name from catalog item for display
+    var catalogItemName: String?
 
-    init(id: UUID = UUID(), color: Color, angularWidth: Double = .pi / 4) {
+    init(id: UUID = UUID(), color: Color, angularWidth: Double = .pi / 4, catalogItemId: String? = nil, catalogItemName: String? = nil) {
         self.id = id
         self.color = color
         self.angularWidth = angularWidth
+        self.catalogItemId = catalogItemId
+        self.catalogItemName = catalogItemName
+    }
+
+    /// Create a segment from a catalog item using its dominant color
+    /// Falls back to a gray color if no color data is available
+    static func fromCatalogItem(_ item: UnifiedCatalogItem) -> CaneSegment {
+        let color: Color
+        if let dominantColors = item.dominant_colors, let firstColor = dominantColors.first {
+            color = Color(hex: firstColor)
+        } else {
+            // Fallback to a neutral gray for items without color data
+            color = Color(hex: "888888")
+        }
+        return CaneSegment(
+            color: color,
+            catalogItemId: item.stable_id,
+            catalogItemName: item.name
+        )
     }
 }
 

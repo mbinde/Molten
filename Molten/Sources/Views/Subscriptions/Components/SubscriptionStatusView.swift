@@ -125,13 +125,9 @@ struct SubscriptionStatusView<ViewModel: SubscriptionViewModelProtocol>: View {
                         .padding(.top, DesignSystem.Spacing.lg)
 
                     VStack(spacing: DesignSystem.Spacing.sm) {
-                        ProFeatureRow(icon: "infinity", title: "Unlimited Inventory Items", freeLimit: "Free: 25 items")
-                        ProFeatureRow(icon: "cart.fill", title: "Unlimited Shopping List Items", freeLimit: "Free: 10 items")
-                        if FeatureFlags.ENABLE_PROJECTS {
-                            ProFeatureRow(icon: "folder.fill", title: "Unlimited Projects", freeLimit: "Free: 5 projects")
-                            ProFeatureRow(icon: "book.fill", title: "Unlimited Logbook Entries", freeLimit: "Free: 10 entries")
+                        ForEach(ProFeaturesList.all) { feature in
+                            ProFeatureRow(icon: feature.icon, title: feature.title, freeLimit: feature.freeLimit)
                         }
-                        ProFeatureRow(icon: "clock.arrow.circlepath", title: "Versioned Cloud Backups", freeLimit: nil)
                     }
                     .padding(.horizontal)
                 }

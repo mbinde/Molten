@@ -87,9 +87,9 @@ struct CustomPaywallView: View {
 
                 // Features list
                 VStack(alignment: .leading, spacing: 16) {
-                    PaywallFeatureRow(icon: "archivebox.fill", title: "Unlimited Inventory", description: "Track unlimited items (free: 25 items)")
-                    PaywallFeatureRow(icon: "cart.fill", title: "Unlimited Shopping Lists", description: "Add unlimited items to your list (free: 10 items)")
-                    PaywallFeatureRow(icon: "clock.arrow.circlepath", title: "Cloud Backups", description: "Automatic versioned backups with restore")
+                    ForEach(ProFeaturesList.all) { feature in
+                        PaywallFeatureRow(icon: feature.icon, title: feature.title, description: feature.paywallDescription)
+                    }
                 }
                 .padding(.horizontal)
 

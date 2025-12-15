@@ -7,22 +7,46 @@
 
 import SwiftUI
 
+/// Scope for filtering color picker results
+enum ColorPickerScope: String, CaseIterable {
+    case catalog = "Catalog"
+    case inventory = "Inventory"
+}
+
 /// Sheet view for searching catalog items and selecting one for its color
 struct CatalogColorPickerSheet: View {
     @Binding var catalogItems: [UnifiedCatalogItem]
     @Binding var isLoading: Bool
+    let selectedCOE: Int
     let onSelect: (UnifiedCatalogItem) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appDependencies) private var dependencies
     @State private var searchText = ""
+    @State private var selectedScope: ColorPickerScope = .inventory
+    @State private var itemsWithInventory: Set<String> = []
+    @State private var isLoadingInventory = false
 
-    /// Items that have color data
+    /// Items that have color data and match the selected COE
     private var itemsWithColors: [UnifiedCatalogItem] {
         catalogItems.filter { item in
-            if let colors = item.dominant_colors, !colors.isEmpty {
-                return true
+            // Must be glass (not coatings or tools)
+            guard item.itemType == .glass else {
+                return false
             }
-            return false
+            // Must have color data
+            guard let colors = item.dominant_colors, !colors.isEmpty else {
+                return false
+            }
+            // Must match selected COE
+            guard let itemCOE = item.coe, Int(itemCOE) == selectedCOE else {
+                return false
+            }
+            // If inventory scope, must have inventory
+            if selectedScope == .inventory {
+                return itemsWithInventory.contains(item.stable_id)
+            }
+            return true
         }
     }
 
@@ -43,7 +67,7 @@ struct CatalogColorPickerSheet: View {
     var body: some View {
         NavigationStack {
             Group {
-                if isLoading {
+                if isLoading || isLoadingInventory {
                     loadingView
                 } else if itemsWithColors.isEmpty {
                     // No items have color data
@@ -51,7 +75,7 @@ struct CatalogColorPickerSheet: View {
                         Image(systemName: "paintpalette")
                             .font(.system(size: 40))
                             .foregroundStyle(DesignSystem.Colors.textTertiary)
-                        Text("No items with color data")
+                        Text(selectedScope == .inventory ? "No inventory items with color data" : "No items with color data")
                             .font(DesignSystem.Typography.formValue)
                             .foregroundStyle(DesignSystem.Colors.textSecondary)
                     }
@@ -62,7 +86,7 @@ struct CatalogColorPickerSheet: View {
                     resultsList
                 }
             }
-            .navigationTitle("Find Glass Color")
+            .navigationTitle("COE \(selectedCOE) Glass")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $searchText, prompt: "Search glass colors...")
             .toolbar {
@@ -71,10 +95,47 @@ struct CatalogColorPickerSheet: View {
                         dismiss()
                     }
                 }
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        ForEach(ColorPickerScope.allCases, id: \.self) { scope in
+                            Button {
+                                selectedScope = scope
+                            } label: {
+                                HStack {
+                                    Text(scope.rawValue)
+                                    if scope == selectedScope {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(selectedScope.rawValue)
+                                .font(DesignSystem.Typography.listItemCaption)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.system(size: 10, weight: .semibold))
+                        }
+                    }
+                }
             }
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .task {
+            await loadInventoryItems()
+        }
+    }
+
+    private func loadInventoryItems() async {
+        isLoadingInventory = true
+        do {
+            let items = try await dependencies.inventoryTrackingService.getItemsWithInventory()
+            itemsWithInventory = Set(items)
+        } catch {
+            print("Error loading inventory items: \(error)")
+        }
+        isLoadingInventory = false
     }
 
     // MARK: - Views
@@ -122,6 +183,15 @@ struct CatalogColorRow: View {
     let item: UnifiedCatalogItem
     let onTap: () -> Void
 
+    /// Threshold for high color variance warning
+    private static let highVarianceThreshold: Double = 50.0
+
+    /// Whether this item has high color variance
+    private var hasHighVariance: Bool {
+        guard let spread = item.color_spread else { return false }
+        return spread > Self.highVarianceThreshold
+    }
+
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: DesignSystem.Spacing.md) {
@@ -131,10 +201,18 @@ struct CatalogColorRow: View {
 
                 // Item info
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.name)
-                        .font(DesignSystem.Typography.formValue)
-                        .foregroundStyle(DesignSystem.Colors.textPrimary)
-                        .lineLimit(1)
+                    HStack(spacing: 4) {
+                        Text(item.name)
+                            .font(DesignSystem.Typography.formValue)
+                            .foregroundStyle(DesignSystem.Colors.textPrimary)
+                            .lineLimit(1)
+
+                        if hasHighVariance {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(DesignSystem.Colors.accentWarning)
+                        }
+                    }
 
                     Text(item.manufacturer)
                         .font(DesignSystem.Typography.listItemCaption)
@@ -163,7 +241,7 @@ struct CatalogColorRow: View {
                             .stroke(DesignSystem.Colors.textTertiary.opacity(0.3), lineWidth: 1)
                     }
             } else {
-                // Multiple colors - show gradient or segments
+                // Multiple colors - show layered circles to indicate variance
                 ZStack {
                     ForEach(Array(colors.prefix(3).enumerated()), id: \.offset) { index, hex in
                         Circle()
@@ -192,6 +270,7 @@ struct CatalogColorRow: View {
     CatalogColorPickerSheet(
         catalogItems: .constant([]),
         isLoading: .constant(false),
+        selectedCOE: 96,
         onSelect: { _ in }
     )
 }

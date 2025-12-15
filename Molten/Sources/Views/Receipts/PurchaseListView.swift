@@ -43,6 +43,10 @@ struct PurchaseListView: View {
     @State private var reportingReceiptId: String?
     @State private var reportAlert: ReportAlert?
 
+    // Pro status for free tier banner
+    @State private var hasProAccess = false
+    @State private var showingPaywall = false
+
     private enum ReportAlert: Identifiable {
         case success
         case error(String)
@@ -61,6 +65,10 @@ struct PurchaseListView: View {
 
     private var purchaseRecordRepository: PurchaseRecordRepository {
         dependencies.purchaseRecordRepository
+    }
+
+    private var subscriptionService: SubscriptionServiceProtocol {
+        dependencies.subscriptionService
     }
 
     private let forwardingAddress = "purchases@moltenglass.app"
@@ -141,6 +149,17 @@ struct PurchaseListView: View {
                     }
             } else {
                 List {
+                    // Free tier usage banner (shown when not Pro)
+                    if !hasProAccess {
+                        Section {
+                            FreeTierPurchaseBanner(
+                                importedCount: receiptService.importedReceiptCount,
+                                limit: ReceiptService.freeImportLimit,
+                                onUpgradeTap: { showingPaywall = true }
+                            )
+                        }
+                    }
+
                     // Inline error section (shown when there's an error but user has purchases)
                     if let error = errorMessage, !isKeyNotFoundError {
                         Section {
@@ -300,6 +319,13 @@ struct PurchaseListView: View {
                     dismissButton: .default(Text("OK"))
                 )
             }
+        }
+        .task {
+            // Check Pro status for free tier banner
+            hasProAccess = await subscriptionService.hasProAccess()
+        }
+        .sheet(isPresented: $showingPaywall) {
+            CustomPaywallView()
         }
     }
 
@@ -989,6 +1015,64 @@ private struct ErrorDetailView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+    }
+}
+
+// MARK: - Free Tier Purchase Banner
+
+private struct FreeTierPurchaseBanner: View {
+    let importedCount: Int
+    let limit: Int
+    let onUpgradeTap: () -> Void
+
+    private var isAtLimit: Bool {
+        importedCount >= limit
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Progress indicator
+            ZStack {
+                Circle()
+                    .stroke(Color(.systemGray4), lineWidth: 3)
+                    .frame(width: 44, height: 44)
+
+                Circle()
+                    .trim(from: 0, to: CGFloat(min(importedCount, limit)) / CGFloat(limit))
+                    .stroke(
+                        isAtLimit ? DesignSystem.Colors.accentWarning : DesignSystem.Colors.accentPrimary,
+                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                    )
+                    .frame(width: 44, height: 44)
+                    .rotationEffect(.degrees(-90))
+
+                Text("\(importedCount)")
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundColor(isAtLimit ? DesignSystem.Colors.accentWarning : .primary)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(isAtLimit ? "Free limit reached" : "Free tier")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(isAtLimit ? DesignSystem.Colors.accentWarning : .primary)
+
+                Text("\(importedCount) of \(limit) imports used")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Button {
+                onUpgradeTap()
+            } label: {
+                Text("Upgrade")
+                    .font(.subheadline.weight(.medium))
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+        }
+        .padding(.vertical, 4)
     }
 }
 

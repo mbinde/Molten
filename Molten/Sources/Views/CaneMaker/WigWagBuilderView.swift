@@ -44,6 +44,9 @@ struct WigWagBuilderView: View {
                     // End view - the main visualization
                     endViewSection
 
+                    // Flattened view - sphere "poked and flattened"
+                    flattenedViewSection
+
                     // Twist history visualization
                     twistHistorySection
 
@@ -336,6 +339,27 @@ struct WigWagBuilderView: View {
                 )
 
             Text("Drag left/right to twist")
+                .font(DesignSystem.Typography.listItemCaption)
+                .foregroundStyle(DesignSystem.Colors.textTertiary)
+        }
+        .padding(DesignSystem.Padding.standard)
+        .background(DesignSystem.Colors.backgroundSecondary)
+        .cornerRadius(DesignSystem.CornerRadius.medium)
+    }
+
+    // MARK: - Flattened View Section
+
+    private var flattenedViewSection: some View {
+        VStack(spacing: DesignSystem.Spacing.md) {
+            Text("Marble View")
+                .font(DesignSystem.Typography.subsectionTitle)
+                .fontWeight(DesignSystem.FontWeight.semibold)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            WigWagFlattenedView(design: design)
+                .frame(width: 280, height: 280)
+
+            Text("Flattened sphere projection")
                 .font(DesignSystem.Typography.listItemCaption)
                 .foregroundStyle(DesignSystem.Colors.textTertiary)
         }
@@ -641,6 +665,132 @@ struct TwistHistoryGraph: View {
         }
         .background(DesignSystem.Colors.backgroundTertiary.opacity(0.5))
         .cornerRadius(DesignSystem.CornerRadius.small)
+    }
+}
+
+// MARK: - Flattened Sphere View (Stereographic Projection)
+
+/// Visualizes the wigwag as if you poked a hole at one pole and flattened it out.
+/// The center is one pole, the outer edge is the opposite pole, and the twist
+/// reverses in the middle creating the classic wigwag marble pattern.
+struct WigWagFlattenedView: View {
+    let design: WigWagDesign
+
+    /// Number of rings to render - more for smoother appearance
+    private var renderRingCount: Int {
+        min(200, max(80, design.twistHistory.count * 3))
+    }
+
+    var body: some View {
+        Canvas { context, size in
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let maxRadius = min(size.width, size.height) / 2 - 4
+            let ringCount = renderRingCount
+            let ringWidth = maxRadius / CGFloat(ringCount)
+
+            // Build the full twist sequence:
+            // - First half: twist history from start to current (outer to middle)
+            // - Second half: mirror/reverse of twist history (middle to inner)
+            let allTwists = design.twistHistory + [design.currentTwist]
+
+            // Draw from outside in
+            for ringIndex in 0..<ringCount {
+                let outerRadius = maxRadius - CGFloat(ringIndex) * ringWidth
+                let innerRadius = outerRadius - ringWidth
+
+                // Map ring index to position (0 = outer edge = one pole, 1 = center = opposite pole)
+                // We go: pole A -> equator (halfway) -> pole B
+                // The twist goes forward then reverses
+                let t = Double(ringIndex) / Double(ringCount - 1)
+                let twist = interpolateMirroredTwist(allTwists, at: t)
+
+                drawRing(
+                    context: context,
+                    center: center,
+                    innerRadius: max(0, innerRadius),
+                    outerRadius: outerRadius,
+                    twist: twist,
+                    segments: design.segments
+                )
+            }
+
+            // Draw outline
+            context.stroke(
+                Path(ellipseIn: CGRect(
+                    x: center.x - maxRadius,
+                    y: center.y - maxRadius,
+                    width: maxRadius * 2,
+                    height: maxRadius * 2
+                )),
+                with: .color(DesignSystem.Colors.textTertiary.opacity(0.5)),
+                lineWidth: 1
+            )
+        }
+    }
+
+    /// Interpolates twist with mirroring - the twist goes forward from 0 to 0.5,
+    /// then reverses from 0.5 to 1.0, creating the symmetrical wigwag pattern
+    private func interpolateMirroredTwist(_ twists: [Double], at t: Double) -> Double {
+        guard twists.count > 1 else {
+            return twists.first ?? 0
+        }
+
+        // t goes from 0 (outer) to 1 (center)
+        // We want: 0->0.5 follows twist forward, 0.5->1.0 follows twist backward (mirror)
+        let mirroredT: Double
+        if t <= 0.5 {
+            // First half: go through twist history forward (0 -> 1)
+            mirroredT = t * 2.0  // Maps 0-0.5 to 0-1
+        } else {
+            // Second half: go through twist history backward (1 -> 0)
+            mirroredT = (1.0 - t) * 2.0  // Maps 0.5-1.0 to 1-0
+        }
+
+        // Now interpolate through the twist history
+        let position = mirroredT * Double(twists.count - 1)
+        let lowerIndex = Int(position)
+        let upperIndex = min(lowerIndex + 1, twists.count - 1)
+        let fraction = position - Double(lowerIndex)
+
+        let lower = twists[lowerIndex]
+        let upper = twists[upperIndex]
+        return lower + (upper - lower) * fraction
+    }
+
+    private func drawRing(
+        context: GraphicsContext,
+        center: CGPoint,
+        innerRadius: CGFloat,
+        outerRadius: CGFloat,
+        twist: Double,
+        segments: [WigWagSegment]
+    ) {
+        var startAngle: Double = twist
+
+        for segment in segments {
+            let endAngle = startAngle + segment.angularWidth
+
+            var path = Path()
+            path.addArc(
+                center: center,
+                radius: outerRadius,
+                startAngle: .radians(startAngle),
+                endAngle: .radians(endAngle),
+                clockwise: false
+            )
+            path.addArc(
+                center: center,
+                radius: innerRadius,
+                startAngle: .radians(endAngle),
+                endAngle: .radians(startAngle),
+                clockwise: true
+            )
+            path.closeSubpath()
+
+            context.fill(path, with: .color(segment.color))
+
+            startAngle = endAngle
+        }
     }
 }
 

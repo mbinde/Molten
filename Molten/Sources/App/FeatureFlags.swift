@@ -50,6 +50,11 @@ enum FeatureFlags {
     /// IMPLEMENTED: Tab visibility
     nonisolated static let ENABLE_RECIPES = false
 
+    /// Controls whether the Cane Maker (Twist) section is enabled
+    /// Set to false to disable cane twist visualizer for launch
+    /// IMPLEMENTED: Tab visibility
+    nonisolated static let ENABLE_CANE_MAKER = false
+
     /// Controls whether the Ratings feature is enabled
     /// Set to false to disable ratings management for launch
     /// IMPLEMENTED: Settings menu visibility

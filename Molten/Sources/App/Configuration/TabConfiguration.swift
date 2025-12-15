@@ -163,6 +163,8 @@ class TabConfiguration {
                 return FeatureFlags.ENABLE_RECIPES
             case .purchases:
                 return FeatureFlags.ENABLE_PURCHASES
+            case .caneMaker:
+                return FeatureFlags.ENABLE_CANE_MAKER
             default:
                 // Include all other tabs: catalog, inventory, shopping, settings, locations
                 return true

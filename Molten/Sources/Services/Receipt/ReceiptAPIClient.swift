@@ -112,12 +112,18 @@ public struct ReceiptSummary: Codable, Identifiable {
 
     /// Whether this receipt failed to parse or is still pending
     public var isParseFailed: Bool {
-        retailerId == nil && status != "pending"
+        // Don't mark as failed if still pending or very recently received (parsing may still be in progress)
+        guard !isPending else { return false }
+        return retailerId == nil
     }
 
     /// Whether this receipt is still being processed
+    /// Includes receipts with "pending" status OR very recently received (within 3 seconds)
     public var isPending: Bool {
-        status == "pending"
+        if status == "pending" { return true }
+        // Treat very recent receipts as pending to avoid showing "failed" during parsing
+        let secondsSinceReceived = Date().timeIntervalSince(receivedAt)
+        return secondsSinceReceived < 3 && retailerId == nil
     }
 
     enum CodingKeys: String, CodingKey {
@@ -153,12 +159,18 @@ public struct ReceiptDetail: Codable, Identifiable {
 
     /// Whether this receipt failed to parse or is still pending
     public var isParseFailed: Bool {
-        retailerId == nil && status != "pending"
+        // Don't mark as failed if still pending or very recently received (parsing may still be in progress)
+        guard !isPending else { return false }
+        return retailerId == nil
     }
 
     /// Whether this receipt is still being processed
+    /// Includes receipts with "pending" status OR very recently received (within 3 seconds)
     public var isPending: Bool {
-        status == "pending"
+        if status == "pending" { return true }
+        // Treat very recent receipts as pending to avoid showing "failed" during parsing
+        let secondsSinceReceived = Date().timeIntervalSince(receivedAt)
+        return secondsSinceReceived < 3 && retailerId == nil
     }
 
     enum CodingKeys: String, CodingKey {

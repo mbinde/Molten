@@ -2,11 +2,147 @@
 //  CoreDataWigWagRepository.swift
 //  Molten
 //
-//  Core Data implementation of wigwag twist pattern and glass palette repositories
+//  Core Data implementation of cane pattern repositories - twist canes, wigwag patterns, and glass palettes
 //
 
 import Foundation
 @preconcurrency import CoreData
+
+// MARK: - TwistCane Repository
+
+/// Core Data implementation of TwistCaneRepository
+class CoreDataTwistCaneRepository: @unchecked Sendable, TwistCaneRepository {
+    private let context: NSManagedObjectContext
+
+    nonisolated init(context: NSManagedObjectContext) {
+        self.context = context
+    }
+
+    // MARK: - CRUD Operations
+
+    func create(_ cane: TwistCaneModel) async throws -> TwistCaneModel {
+        return try await context.perform {
+            guard let entity = NSEntityDescription.insertNewObject(
+                forEntityName: "TwistCane",
+                into: self.context
+            ) as? NSManagedObject else {
+                throw WigWagRepositoryError.invalidData("Failed to create TwistCane entity")
+            }
+
+            self.mapModelToEntity(cane, entity: entity)
+            try CoreDataErrorHandler.save(context: self.context)
+            return cane
+        }
+    }
+
+    func get(id: UUID) async throws -> TwistCaneModel? {
+        return try await context.perform {
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "TwistCane")
+            fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+
+            guard let entity = try self.context.fetch(fetchRequest).first else {
+                return nil
+            }
+
+            return self.mapEntityToModel(entity)
+        }
+    }
+
+    func getAll() async throws -> [TwistCaneModel] {
+        return try await context.perform {
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "TwistCane")
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
+
+            let entities = try self.context.fetch(fetchRequest)
+            return entities.compactMap { self.mapEntityToModel($0) }
+        }
+    }
+
+    func update(_ cane: TwistCaneModel) async throws {
+        try await context.perform {
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "TwistCane")
+            fetchRequest.predicate = NSPredicate(format: "id == %@", cane.id as CVarArg)
+
+            guard let entity = try self.context.fetch(fetchRequest).first else {
+                throw WigWagRepositoryError.caneNotFound
+            }
+
+            self.mapModelToEntity(cane.withUpdatedTimestamp(), entity: entity)
+            try CoreDataErrorHandler.save(context: self.context)
+        }
+    }
+
+    func delete(id: UUID) async throws {
+        try await context.perform {
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "TwistCane")
+            fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+
+            guard let entity = try self.context.fetch(fetchRequest).first else {
+                throw WigWagRepositoryError.caneNotFound
+            }
+
+            self.context.delete(entity)
+            try CoreDataErrorHandler.save(context: self.context)
+        }
+    }
+
+    // MARK: - Queries
+
+    func getAllSortedByName() async throws -> [TwistCaneModel] {
+        return try await context.perform {
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "TwistCane")
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+
+            let entities = try self.context.fetch(fetchRequest)
+            return entities.compactMap { self.mapEntityToModel($0) }
+        }
+    }
+
+    func getAllSortedByDate() async throws -> [TwistCaneModel] {
+        return try await context.perform {
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "TwistCane")
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
+
+            let entities = try self.context.fetch(fetchRequest)
+            return entities.compactMap { self.mapEntityToModel($0) }
+        }
+    }
+
+    // MARK: - Mapping
+
+    private func mapModelToEntity(_ model: TwistCaneModel, entity: NSManagedObject) {
+        entity.setValue(model.id, forKey: "id")
+        entity.setValue(model.name, forKey: "name")
+        entity.setValue(model.createdAt, forKey: "created_at")
+        entity.setValue(model.updatedAt, forKey: "updated_at")
+        entity.setValue(model.glassPaletteId, forKey: "glass_palette_id")
+        entity.setValue(model.twist, forKey: "twist")
+        entity.setValue(model.width, forKey: "width")
+    }
+
+    private func mapEntityToModel(_ entity: NSManagedObject) -> TwistCaneModel? {
+        guard let id = entity.value(forKey: "id") as? UUID,
+              let name = entity.value(forKey: "name") as? String,
+              let createdAt = entity.value(forKey: "created_at") as? Date,
+              let updatedAt = entity.value(forKey: "updated_at") as? Date,
+              let glassPaletteId = entity.value(forKey: "glass_palette_id") as? UUID else {
+            return nil
+        }
+
+        let twist = entity.value(forKey: "twist") as? Double ?? 1.0
+        let width = entity.value(forKey: "width") as? Double ?? 1.0
+
+        return TwistCaneModel(
+            id: id,
+            name: name,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            glassPaletteId: glassPaletteId,
+            twist: twist,
+            width: width
+        )
+    }
+}
 
 // MARK: - TwistPattern Repository
 

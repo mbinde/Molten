@@ -2,10 +2,30 @@
 //  WigWagRepository.swift
 //  Molten
 //
-//  Protocols for wigwag twist pattern and glass palette persistence
+//  Protocols for cane pattern persistence - twist canes, wigwag patterns, and glass palettes
 //
 
 import Foundation
+
+// MARK: - TwistCaneRepository
+
+nonisolated protocol TwistCaneRepository: Sendable {
+    // MARK: - CRUD Operations
+
+    func create(_ cane: TwistCaneModel) async throws -> TwistCaneModel
+    func get(id: UUID) async throws -> TwistCaneModel?
+    func getAll() async throws -> [TwistCaneModel]
+    func update(_ cane: TwistCaneModel) async throws
+    func delete(id: UUID) async throws
+
+    // MARK: - Queries
+
+    /// Get canes sorted by name
+    func getAllSortedByName() async throws -> [TwistCaneModel]
+
+    /// Get canes sorted by most recently updated
+    func getAllSortedByDate() async throws -> [TwistCaneModel]
+}
 
 // MARK: - TwistPatternRepository
 
@@ -56,12 +76,15 @@ nonisolated protocol GlassPaletteRepository: Sendable {
 // MARK: - Errors
 
 enum WigWagRepositoryError: LocalizedError {
+    case caneNotFound
     case patternNotFound
     case paletteNotFound
     case invalidData(String)
 
     var errorDescription: String? {
         switch self {
+        case .caneNotFound:
+            return "Twist cane not found"
         case .patternNotFound:
             return "Twist pattern not found"
         case .paletteNotFound:

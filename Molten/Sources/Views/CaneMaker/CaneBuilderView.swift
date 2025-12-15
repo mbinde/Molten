@@ -13,6 +13,13 @@ struct CaneBuilderView: View {
     @State private var showingCatalogSearch = false
     @State private var catalogItems: [UnifiedCatalogItem] = []
     @State private var isLoadingCatalog = false
+    @AppStorage("caneMakerSelectedCOE") private var selectedCOE: Int = 33
+    /// Palette of catalog items the user has added for quick access
+    @State private var paletteItems: [UnifiedCatalogItem] = []
+    @State private var showingVarianceInfo = false
+
+    /// Available COE values for filtering
+    private static let coeOptions: [Int] = [33, 90, 96, 104]
 
     private let catalogService = AppDependencies.shared.catalogService
 
@@ -41,11 +48,17 @@ struct CaneBuilderView: View {
                 CatalogColorPickerSheet(
                     catalogItems: $catalogItems,
                     isLoading: $isLoadingCatalog,
+                    selectedCOE: selectedCOE,
                     onSelect: { item in
                         addCatalogItem(item)
                         showingCatalogSearch = false
                     }
                 )
+            }
+            .alert("Color Variance", isPresented: $showingVarianceInfo) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("Some colors in your palette have significant color variation and may produce unexpected results when used in a twisted cane. The color shown here is the approximate average color.")
             }
             .task {
                 await loadCatalogItems()
@@ -67,12 +80,21 @@ struct CaneBuilderView: View {
     }
 
     private func addCatalogItem(_ item: UnifiedCatalogItem) {
+        withAnimation {
+            // Add to palette if not already there
+            if !paletteItems.contains(where: { $0.stable_id == item.stable_id }) {
+                paletteItems.append(item)
+            }
+        }
+    }
+
+    private func addPaletteItem(_ item: UnifiedCatalogItem) {
         let segment = CaneSegment.fromCatalogItem(item)
         withAnimation {
             if let index = selectedSegmentIndex {
                 // Replace selected segment
                 design.segments[index] = CaneSegment(
-                    id: design.segments[index].id,  // Keep the same ID
+                    id: design.segments[index].id,
                     color: segment.color,
                     angularWidth: design.segments[index].angularWidth,
                     catalogItemId: segment.catalogItemId,
@@ -84,6 +106,12 @@ struct CaneBuilderView: View {
                 design.segments.append(segment)
                 design.redistributeWidths()
             }
+        }
+    }
+
+    private func removePaletteItem(_ item: UnifiedCatalogItem) {
+        withAnimation {
+            paletteItems.removeAll { $0.stable_id == item.stable_id }
         }
     }
 
@@ -172,6 +200,8 @@ struct CaneBuilderView: View {
                                 }
                             }
                         }
+                        .padding(.top, 8)  // Space for X button overflow
+                        .padding(.trailing, 8)  // Space for last X button
                     }
                 }
 
@@ -249,7 +279,41 @@ struct CaneBuilderView: View {
                     .font(DesignSystem.Typography.subsectionTitle)
                     .fontWeight(DesignSystem.FontWeight.semibold)
 
+                if paletteHasHighVarianceItems {
+                    Button {
+                        showingVarianceInfo = true
+                    } label: {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(DesignSystem.Colors.accentWarning)
+                    }
+                }
+
                 Spacer()
+
+                // COE picker
+                Menu {
+                    ForEach(Self.coeOptions, id: \.self) { coe in
+                        Button {
+                            selectedCOE = coe
+                        } label: {
+                            HStack {
+                                Text("COE \(coe)")
+                                if coe == selectedCOE {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text("COE \(selectedCOE)")
+                            .font(DesignSystem.Typography.listItemCaption)
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.system(size: 10, weight: .semibold))
+                    }
+                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+                }
 
                 if selectedSegmentIndex != nil {
                     Button {
@@ -284,13 +348,18 @@ struct CaneBuilderView: View {
                 }
                 .accessibilityLabel("Search catalog for glass color")
 
-                // Preset colors
-                ForEach(GlassColor.allCases, id: \.name) { glassColor in
-                    colorButton(for: glassColor)
+                // Palette colors from catalog
+                ForEach(paletteItems, id: \.stable_id) { item in
+                    paletteColorButton(for: item)
                 }
             }
 
-            if selectedSegmentIndex != nil {
+            if paletteItems.isEmpty {
+                Text("Tap + to add glass colors to your palette")
+                    .font(DesignSystem.Typography.listItemCaptionSmall)
+                    .foregroundStyle(DesignSystem.Colors.textTertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else if selectedSegmentIndex != nil {
                 Text("Tap a color to change the selected segment")
                     .font(DesignSystem.Typography.listItemCaptionSmall)
                     .foregroundStyle(DesignSystem.Colors.accentPrimary)
@@ -302,28 +371,82 @@ struct CaneBuilderView: View {
         .cornerRadius(DesignSystem.CornerRadius.medium)
     }
 
-    private func colorButton(for glassColor: GlassColor) -> some View {
-        Button {
-            withAnimation {
-                if let index = selectedSegmentIndex {
-                    // Change the selected segment's color
-                    design.segments[index].color = glassColor.color
-                    selectedSegmentIndex = nil  // Deselect after changing
+    /// Threshold for high color variance warning
+    private static let highVarianceThreshold: Double = 50.0
+
+    /// Check if an item has high color variance
+    private func hasHighVariance(_ item: UnifiedCatalogItem) -> Bool {
+        guard let spread = item.color_spread else { return false }
+        return spread > Self.highVarianceThreshold
+    }
+
+    /// Check if any palette item has high color variance
+    private var paletteHasHighVarianceItems: Bool {
+        paletteItems.contains { hasHighVariance($0) }
+    }
+
+    private func paletteColorButton(for item: UnifiedCatalogItem) -> some View {
+        let isHighVariance = hasHighVariance(item)
+
+        return Button {
+            addPaletteItem(item)
+        } label: {
+            ZStack(alignment: .topTrailing) {
+                // Color swatch - show layered circles for multiple colors
+                if let colors = item.dominant_colors, !colors.isEmpty {
+                    if colors.count == 1 {
+                        Circle()
+                            .fill(Color(hex: colors[0]))
+                            .frame(width: 44, height: 44)
+                            .overlay {
+                                Circle()
+                                    .stroke(DesignSystem.Colors.textTertiary.opacity(0.3), lineWidth: 1)
+                            }
+                    } else {
+                        ZStack {
+                            ForEach(Array(colors.prefix(3).enumerated()), id: \.offset) { index, hex in
+                                Circle()
+                                    .fill(Color(hex: hex))
+                                    .frame(width: 44, height: 44)
+                                    .scaleEffect(1.0 - Double(index) * 0.2)
+                            }
+                        }
+                        .overlay {
+                            Circle()
+                                .stroke(DesignSystem.Colors.textTertiary.opacity(0.3), lineWidth: 1)
+                        }
+                    }
                 } else {
-                    // Add a new segment
-                    design.addSegment(color: glassColor.color)
+                    Circle()
+                        .fill(Color(hex: "888888"))
+                        .frame(width: 44, height: 44)
+                        .overlay {
+                            Circle()
+                                .stroke(DesignSystem.Colors.textTertiary.opacity(0.3), lineWidth: 1)
+                        }
+                }
+
+                if isHighVariance {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(DesignSystem.Colors.accentWarning)
+                        .background(
+                            Circle()
+                                .fill(DesignSystem.Colors.background)
+                                .frame(width: 16, height: 16)
+                        )
+                        .offset(x: 4, y: -4)
                 }
             }
-        } label: {
-            Circle()
-                .fill(glassColor.color)
-                .frame(width: 44, height: 44)
-                .overlay {
-                    Circle()
-                        .stroke(DesignSystem.Colors.textTertiary.opacity(0.3), lineWidth: 1)
-                }
         }
-        .accessibilityLabel(glassColor.name)
+        .accessibilityLabel(item.name + (isHighVariance ? ", high color variance" : ""))
+        .contextMenu {
+            Button(role: .destructive) {
+                removePaletteItem(item)
+            } label: {
+                Label("Remove from Palette", systemImage: "trash")
+            }
+        }
     }
 
     // MARK: - Twist Control Section
@@ -349,16 +472,6 @@ struct CaneBuilderView: View {
                 step: 0.5
             )
             .tint(DesignSystem.Colors.accentPrimary)
-
-            HStack {
-                Text("No twist")
-                    .font(DesignSystem.Typography.listItemCaption)
-                    .foregroundStyle(DesignSystem.Colors.textTertiary)
-                Spacer()
-                Text("Tight twist")
-                    .font(DesignSystem.Typography.listItemCaption)
-                    .foregroundStyle(DesignSystem.Colors.textTertiary)
-            }
         }
         .padding(DesignSystem.Padding.standard)
         .background(DesignSystem.Colors.backgroundSecondary)
@@ -370,7 +483,7 @@ struct CaneBuilderView: View {
     private var stretchControlSection: some View {
         VStack(spacing: DesignSystem.Spacing.md) {
             HStack {
-                Text("Stretch")
+                Text("Width")
                     .font(DesignSystem.Typography.subsectionTitle)
                     .fontWeight(DesignSystem.FontWeight.semibold)
 
@@ -388,16 +501,6 @@ struct CaneBuilderView: View {
                 step: 0.05
             )
             .tint(DesignSystem.Colors.accentPrimary)
-
-            HStack {
-                Text("Stretched thin")
-                    .font(DesignSystem.Typography.listItemCaption)
-                    .foregroundStyle(DesignSystem.Colors.textTertiary)
-                Spacer()
-                Text("Original")
-                    .font(DesignSystem.Typography.listItemCaption)
-                    .foregroundStyle(DesignSystem.Colors.textTertiary)
-            }
         }
         .padding(DesignSystem.Padding.standard)
         .background(DesignSystem.Colors.backgroundSecondary)

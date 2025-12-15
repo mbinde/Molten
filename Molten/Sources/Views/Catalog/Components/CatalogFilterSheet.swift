@@ -45,7 +45,7 @@ struct CatalogFilterSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                // Clear all filters button (top)
+                // Clear all filters button and summary (top)
                 if hasActiveFilters {
                     Section {
                         Button(role: .destructive) {
@@ -57,6 +57,9 @@ struct CatalogFilterSheet: View {
                                 Spacer()
                             }
                         }
+
+                        // Active filters summary
+                        activeFiltersSummary
                     }
                 }
 
@@ -234,6 +237,60 @@ struct CatalogFilterSheet: View {
     private var hasActiveFilters: Bool {
         !selectedTags.isEmpty || !selectedCOEs.isEmpty ||
         !selectedManufacturers.isEmpty || !selectedProductTypes.isEmpty
+    }
+
+    @ViewBuilder
+    private var activeFiltersSummary: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Product types
+            if !selectedProductTypes.isEmpty {
+                HStack(spacing: 4) {
+                    Text("Type:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text(selectedProductTypes.map { productTypeDisplayName($0) }.sorted().joined(separator: ", "))
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+            }
+
+            // Manufacturers
+            if !selectedManufacturers.isEmpty {
+                HStack(spacing: 4) {
+                    Text("Manufacturer:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text(selectedManufacturers.map { manufacturerDisplayName($0) }.sorted().joined(separator: ", "))
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+            }
+
+            // COEs
+            if !selectedCOEs.isEmpty {
+                HStack(spacing: 4) {
+                    Text("COE:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text(selectedCOEs.sorted().map { String($0) }.joined(separator: ", "))
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+            }
+
+            // Tags
+            if !selectedTags.isEmpty {
+                HStack(spacing: 4) {
+                    Text("Tags:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text(selectedTags.sorted().joined(separator: ", "))
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var sortedManufacturers: [String] {

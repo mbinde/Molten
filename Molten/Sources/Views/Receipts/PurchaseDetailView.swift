@@ -2268,6 +2268,9 @@ private struct PurchaseImportSheet: View {
 
                 await loadCatalogInfo()
             }
+            .sheet(isPresented: $showingPaywall) {
+                CustomPaywallView()
+            }
         }
     }
 

@@ -441,6 +441,8 @@ struct MainTabView: View {
                 return isPurchaseRecordsEnabled && FeatureFlags.ENABLE_PURCHASES
             case .kilnSchedules:
                 return FeatureFlags.ENABLE_KILN_SCHEDULES
+            case .caneMaker:
+                return FeatureFlags.ENABLE_CANE_MAKER
             case .settings:
                 return true // Allow Settings in tab bar if user customizes
             default:

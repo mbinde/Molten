@@ -33,13 +33,21 @@ struct GlassItemModel: CatalogItem {
     let image_thumb_path: String?
     let dominant_colors: [String]?  // Optional array of hex color strings (e.g., ["#2E5E41", "#1D4030", "#0C2219"])
 
+    // Color analysis fields
+    let representative_color: String?  // Single representative hex color (e.g., "#1d3f2e")
+    let color_spread: Double?  // Color distance/spread value indicating color variation
+    let color_clusters: Int?  // Number of distinct color clusters detected
+    let color_confidence: String?  // Confidence level: "low", "medium", "high"
+
     nonisolated var id: String { stable_id }
 
     /// Initialize with computed URI
     nonisolated init(stable_id: String, name: String, full_name: String? = nil, sku: String?, manufacturer: String,
          mfr_notes: String? = nil, coe: Int32, url: String? = nil, mfr_status: String,
          image_url: String? = nil, image_path: String? = nil, image_thumb_path: String? = nil,
-         dominant_colors: [String]? = nil) {
+         dominant_colors: [String]? = nil,
+         representative_color: String? = nil, color_spread: Double? = nil,
+         color_clusters: Int? = nil, color_confidence: String? = nil) {
         self.stable_id = stable_id
         self.name = name
         self.full_name = full_name
@@ -54,6 +62,10 @@ struct GlassItemModel: CatalogItem {
         self.image_path = image_path
         self.image_thumb_path = image_thumb_path
         self.dominant_colors = dominant_colors
+        self.representative_color = representative_color
+        self.color_spread = color_spread
+        self.color_clusters = color_clusters
+        self.color_confidence = color_confidence
     }
 
     // Equatable conformance - based on business key (manufacturer + SKU when available, else stable_id)
@@ -650,6 +662,12 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
     let temperatureRangeHigh: Int?  // Only for coatings (°F)
     let inlineTags: [String]?  // Tags stored inline in catalog (coatings/tools)
 
+    // Color analysis fields (only for glass items)
+    let representative_color: String?  // Single representative hex color
+    let color_spread: Double?  // Color distance/spread value
+    let color_clusters: Int?  // Number of distinct color clusters
+    let color_confidence: String?  // Confidence level: "low", "medium", "high"
+
     nonisolated var id: String { stable_id }
 
     /// Initialize from GlassItemModel
@@ -671,6 +689,10 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.temperatureRangeLow = nil  // Glass items don't have temperature range
         self.temperatureRangeHigh = nil
         self.inlineTags = nil  // Glass items get tags from ItemTags repository
+        self.representative_color = glassItem.representative_color
+        self.color_spread = glassItem.color_spread
+        self.color_clusters = glassItem.color_clusters
+        self.color_confidence = glassItem.color_confidence
     }
 
     /// Initialize from CoatingItemModel
@@ -695,6 +717,11 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.temperatureRangeHigh = coatingItem.temperatureRangeHigh
         // Parse inline tags from coating catalog
         self.inlineTags = Self.parseCommaSeparatedQuotedString(coatingItem.tags)
+        // Coatings don't have color analysis fields
+        self.representative_color = nil
+        self.color_spread = nil
+        self.color_clusters = nil
+        self.color_confidence = nil
     }
 
     /// Initialize from ToolItemModel
@@ -716,6 +743,11 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.temperatureRangeLow = nil  // Tools don't have temperature range
         self.temperatureRangeHigh = nil
         self.inlineTags = nil  // Tools don't have tags yet
+        // Tools don't have color analysis fields
+        self.representative_color = nil
+        self.color_spread = nil
+        self.color_clusters = nil
+        self.color_confidence = nil
     }
 
     // MARK: - Helper Methods

@@ -41,7 +41,8 @@ final class SQLiteGlassItemRepository: BaseSQLiteCatalogItemRepository<GlassItem
         // 5=manufacturer, 6=code, 7=name, 8=full_name, 9=start_date, 10=end_date,
         // 11=manufacturer_description, 12=tags, 13=synonyms, 14=coe, 15=type,
         // 16=manufacturer_url, 17=image_path, 18=image_thumb_path, 19=image_url,
-        // 20=stock_type, 21=dominant_colors
+        // 20=stock_type, 21=dominant_colors, 22=representative_color, 23=color_spread,
+        // 24=color_clusters, 25=color_confidence, 26=color_flags
 
         guard let stable_id = getText(from: statement, column: 0) else {
             throw SQLiteError.invalidData("Missing stable_id")
@@ -87,6 +88,22 @@ final class SQLiteGlassItemRepository: BaseSQLiteCatalogItemRepository<GlassItem
             dominant_colors = nil
         }
 
+        // Parse color analysis fields
+        let representative_color = getText(from: statement, column: 22)
+        let color_spread: Double?
+        if sqlite3_column_type(statement, 23) != SQLITE_NULL {
+            color_spread = sqlite3_column_double(statement, 23)
+        } else {
+            color_spread = nil
+        }
+        let color_clusters: Int?
+        if sqlite3_column_type(statement, 24) != SQLITE_NULL {
+            color_clusters = Int(sqlite3_column_int(statement, 24))
+        } else {
+            color_clusters = nil
+        }
+        let color_confidence = getText(from: statement, column: 25)
+
         return GlassItemModel(
             stable_id: stable_id,
             name: name,
@@ -100,7 +117,11 @@ final class SQLiteGlassItemRepository: BaseSQLiteCatalogItemRepository<GlassItem
             image_url: image_url,
             image_path: image_path,
             image_thumb_path: image_thumb_path,
-            dominant_colors: dominant_colors
+            dominant_colors: dominant_colors,
+            representative_color: representative_color,
+            color_spread: color_spread,
+            color_clusters: color_clusters,
+            color_confidence: color_confidence
         )
     }
 

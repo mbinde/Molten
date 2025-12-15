@@ -10,6 +10,16 @@
         <attribute name="share_notes" optional="YES" attributeType="String"/>
         <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
+    <entity name="GlassPalette" representedClassName="GlassPalette" syncable="YES" codeGenerationType="class">
+        <attribute name="all_catalog_item_ids" optional="YES" attributeType="String"/>
+        <attribute name="catalog_item_ids" optional="YES" attributeType="String"/>
+        <attribute name="coe" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="created_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="updated_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
     <entity name="Inventory" representedClassName="Inventory" syncable="YES" codeGenerationType="category">
         <attribute name="container_count" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="date_added" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -471,6 +481,13 @@
         <attribute name="tag" optional="YES" attributeType="String"/>
         <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
+    <entity name="WigWagTwistPattern" representedClassName="WigWagTwistPattern" syncable="YES" codeGenerationType="class">
+        <attribute name="created_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="twist_history" optional="YES" attributeType="String"/>
+        <attribute name="updated_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
     <entity name="Workspace" representedClassName="Workspace" syncable="YES" codeGenerationType="class">
         <attribute name="date_created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date_modified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -514,6 +531,8 @@
         <memberEntity name="SharedUserTags"/>
         <memberEntity name="StorageLocationDefinition"/>
         <memberEntity name="Workspace"/>
+        <memberEntity name="GlassPalette"/>
+        <memberEntity name="WigWagTwistPattern"/>
     </configuration>
     <configuration name="Local">
         <memberEntity name="Location"/>

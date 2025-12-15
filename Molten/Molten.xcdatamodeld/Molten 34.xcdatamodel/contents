@@ -451,6 +451,15 @@
         <attribute name="notes" optional="YES" attributeType="String"/>
         <attribute name="workspace_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
+    <entity name="TwistCane" representedClassName="TwistCane" syncable="YES" codeGenerationType="class">
+        <attribute name="created_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="glass_palette_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="twist" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="updated_at" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="width" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    </entity>
     <entity name="UserImage" representedClassName="UserImage" syncable="YES" codeGenerationType="category">
         <attribute name="dateCreated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="dateModified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -533,6 +542,7 @@
         <memberEntity name="Workspace"/>
         <memberEntity name="GlassPalette"/>
         <memberEntity name="WigWagTwistPattern"/>
+        <memberEntity name="TwistCane"/>
     </configuration>
     <configuration name="Local">
         <memberEntity name="Location"/>

@@ -2,10 +2,61 @@
 //  WigWagModels.swift
 //  Molten
 //
-//  Domain models for wigwag cane designs - twist patterns and glass palettes
+//  Domain models for cane designs - twist canes, wigwag patterns, and glass palettes
 //
 
 import Foundation
+
+// MARK: - TwistCaneModel
+
+/// A saved twist cane design with palette reference and twist/width settings
+/// Named TwistCaneModel to avoid collision with Core Data entity TwistCane
+nonisolated struct TwistCaneModel: Identifiable, Codable, Hashable, Sendable {
+    let id: UUID
+    let name: String
+    let createdAt: Date
+    let updatedAt: Date
+
+    /// Reference to the glass palette used for this cane
+    let glassPaletteId: UUID
+
+    /// Twist amount in rotations
+    let twist: Double
+
+    /// Width/stretch factor (1.0 = original, smaller = stretched thinner)
+    let width: Double
+
+    nonisolated init(
+        id: UUID = UUID(),
+        name: String,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date(),
+        glassPaletteId: UUID,
+        twist: Double = 1.0,
+        width: Double = 1.0
+    ) {
+        self.id = id
+        self.name = name
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.glassPaletteId = glassPaletteId
+        self.twist = twist
+        self.width = width
+    }
+
+    /// Create a copy with updated timestamp
+    nonisolated func withUpdatedTimestamp() -> TwistCaneModel {
+        TwistCaneModel(
+            id: id,
+            name: name,
+            createdAt: createdAt,
+            updatedAt: Date(),
+            glassPaletteId: glassPaletteId,
+            twist: twist,
+            width: width
+        )
+    }
+}
 
 // MARK: - TwistPatternModel
 

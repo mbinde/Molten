@@ -536,18 +536,26 @@ class CatalogViewModel: CatalogViewModelProtocol {
         // 1. Create a new struct conforming to Filterable (see ManufacturerFilter, etc.)
         // 2. Add it to this allFilters array
         // 3. Add it to the allFilters array in computeAvailableValues() as well
-        let allFilters: [any Filterable] = [
+        let filtersWithoutSearch: [any Filterable] = [
             ProductTypeFilter(),
             ManufacturerFilter(),
             COEFilter(),
-            TagFilter(),
-            SearchFilter()
+            TagFilter()
         ]
 
-        // Apply all filters in sequence
-        for filter in allFilters {
+        // Apply all filters EXCEPT search first
+        for filter in filtersWithoutSearch {
             filtered = filter.applyFilter(to: filtered, viewModel: self)
         }
+
+        // Update cache with filtered items (before search) so GlobalSearchOverlay can use them
+        // Only update if we have items - prevents empty ViewModels from clobbering valid data
+        if !items.isEmpty {
+            CatalogDataCache.shared.filteredItemsWithoutSearch = filtered
+        }
+
+        // Now apply search filter
+        filtered = SearchFilter().applyFilter(to: filtered, viewModel: self)
 
         filteredItems = filtered
         applySorting()

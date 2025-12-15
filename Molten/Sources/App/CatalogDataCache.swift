@@ -22,6 +22,11 @@ class CatalogDataCache: ObservableObject {
     @Published private(set) var isLoaded: Bool = false
     @Published private(set) var isLoading: Bool = false
 
+    /// Items after applying filters (manufacturer, COE, tags, product type) but BEFORE search.
+    /// Used by GlobalSearchOverlay to constrain search to filtered results.
+    /// Updated by CatalogViewModel when filters change.
+    @Published var filteredItemsWithoutSearch: [CompleteInventoryItemModel]?
+
     private var loadTask: Task<Void, Never>?
     private weak var catalogService: CatalogService?
 

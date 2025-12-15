@@ -169,11 +169,15 @@ private struct SearchResultsView: View {
 
         Task {
             // Get items based on search scope
+            // For catalog scope, use filteredItemsWithoutSearch from cache if available
+            // This ensures search respects active filters (manufacturer, COE, tags, product type)
             let allItems: [CompleteInventoryItemModel]
             switch searchScope {
             case .catalog:
-                // Search all catalog items
-                allItems = await MainActor.run { CatalogDataCache.shared.items }
+                // Use filtered items if available, otherwise fall back to all items
+                allItems = await MainActor.run {
+                    CatalogDataCache.shared.filteredItemsWithoutSearch ?? CatalogDataCache.shared.items
+                }
             case .inventory:
                 // Only search items that are in inventory (have inventory records)
                 allItems = await MainActor.run {
@@ -233,11 +237,15 @@ private struct SearchResultRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Color swatch
-            ColorSwatchView(
-                colors: item.catalogItem.dominant_colors ?? [],
-                size: .small,
-                showGradientFrame: false
+            // Product thumbnail using standard image loading
+            ProductImageThumbnail(
+                itemCode: item.catalogItem.stable_id,
+                manufacturer: item.catalogItem.manufacturer,
+                stableId: item.catalogItem.stable_id,
+                imagePath: item.catalogItem.image_path,
+                imageThumbPath: item.catalogItem.image_thumb_path,
+                dominantColors: item.catalogItem.dominant_colors,
+                size: 44
             )
 
             VStack(alignment: .leading, spacing: 2) {

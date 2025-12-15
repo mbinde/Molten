@@ -549,13 +549,25 @@ struct PurchaseDetailView: View {
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
 
+                // Calculate how many new items would be imported
+                let totalItems = purchase?.items.count ?? 0
+                let overlapPercent = topDuplicate.itemOverlapPercentage ?? 0
+                let matchedItems = Int(Double(totalItems) * overlapPercent)
+                let newItems = totalItems - matchedItems
+
+                if newItems > 0 {
+                    Text("You can import \(newItems) additional item\(newItems == 1 ? "" : "s") below.")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+
                 HStack {
                     Button {
                         withAnimation {
                             duplicateWarningDismissed = true
                         }
                     } label: {
-                        Text("Import Anyway")
+                        Text(newItems > 0 ? "Continue to Import" : "View Items")
                             .font(.subheadline)
                     }
                     .buttonStyle(.bordered)
@@ -1068,10 +1080,8 @@ struct PurchaseDetailView: View {
                 isImported = loaded.acknowledged
 
                 // Check if this receipt was already imported to local inventory
+                // This also checks for potential duplicates and uses their data to populate importedItemsMap
                 await checkForExistingImport(loaded)
-
-                // Check for potential duplicate purchases (even if not exact match)
-                await checkForPotentialDuplicates(loaded)
 
                 // Run client-side catalog matching only for items not already imported
                 await matchItemsWithCatalog(loaded)
@@ -1093,6 +1103,7 @@ struct PurchaseDetailView: View {
     }
 
     /// Check if this receipt has already been imported to local inventory
+    /// Also checks for potential duplicates and uses them to populate importedItemsMap
     private func checkForExistingImport(_ receipt: ReceiptDetail) async {
         let importService = ReceiptImportService(
             purchaseRecordRepository: dependencies.purchaseRecordRepository,
@@ -1102,7 +1113,8 @@ struct PurchaseDetailView: View {
         )
 
         do {
-            let existing = try await importService.findExistingPurchaseRecord(
+            // First, try to find an exact match by receipt ID or order details
+            var matchedRecord = try await importService.findExistingPurchaseRecord(
                 emailReceiptId: receipt.id,
                 orderNumber: receipt.orderNumber,
                 supplier: receipt.retailerName ?? receipt.retailerId ?? "Unknown",
@@ -1111,26 +1123,35 @@ struct PurchaseDetailView: View {
                 total: receipt.totalAmount.map { Decimal($0) }
             )
 
-            if let existing = existing {
+            // Also check for potential duplicates (for warning banner)
+            let duplicates = try await importService.findPotentialDuplicates(
+                orderNumber: receipt.orderNumber,
+                supplier: receipt.retailerName ?? receipt.retailerId ?? "Unknown",
+                receiptItems: receipt.items,
+                excludingRecordId: matchedRecord?.id
+            )
+
+            if !duplicates.isEmpty {
+                potentialDuplicates = duplicates
+                // Auto-show warning for high confidence duplicates
+                if duplicates.contains(where: { $0.confidence == .high }) {
+                    showDuplicateWarning = true
+                }
+
+                // If we didn't find an exact match but we have a high-confidence duplicate,
+                // use that duplicate's record to populate the imported items map
+                // This handles re-forwarded receipts where the receipt ID changed
+                if matchedRecord == nil, let bestDuplicate = duplicates.first, bestDuplicate.confidence == .high {
+                    matchedRecord = bestDuplicate.existingRecord
+                }
+            }
+
+            if let existing = matchedRecord {
                 existingPurchaseRecord = existing
 
                 // Build mapping from receipt items to imported items by matching line hash
                 // This is stable across re-imports since it's based on the receipt line content
-                let importedItemsByHash: [String: PurchaseRecordItemModel] = Dictionary(
-                    existing.items.compactMap { item -> (String, PurchaseRecordItemModel)? in
-                        guard let hash = item.receiptLineHash else { return nil }
-                        return (hash, item)
-                    },
-                    uniquingKeysWith: { (first: PurchaseRecordItemModel, _: PurchaseRecordItemModel) in first }
-                )
-
-                var mapping: [Int: PurchaseRecordItemModel] = [:]
-                for receiptItem in receipt.items {
-                    if let importedItem = importedItemsByHash[receiptItem.lineHash] {
-                        mapping[receiptItem.id] = importedItem
-                    }
-                }
-                importedItemsMap = mapping
+                populateImportedItemsMap(from: existing, receipt: receipt)
             }
         } catch {
             // If we can't check, just proceed without the existing record info
@@ -1138,7 +1159,27 @@ struct PurchaseDetailView: View {
         }
     }
 
+    /// Build mapping from receipt items to already-imported items by matching line hash
+    private func populateImportedItemsMap(from existingRecord: PurchaseRecordModel, receipt: ReceiptDetail) {
+        let importedItemsByHash: [String: PurchaseRecordItemModel] = Dictionary(
+            existingRecord.items.compactMap { item -> (String, PurchaseRecordItemModel)? in
+                guard let hash = item.receiptLineHash else { return nil }
+                return (hash, item)
+            },
+            uniquingKeysWith: { (first: PurchaseRecordItemModel, _: PurchaseRecordItemModel) in first }
+        )
+
+        var mapping: [Int: PurchaseRecordItemModel] = [:]
+        for receiptItem in receipt.items {
+            if let importedItem = importedItemsByHash[receiptItem.lineHash] {
+                mapping[receiptItem.id] = importedItem
+            }
+        }
+        importedItemsMap = mapping
+    }
+
     /// Check for potential duplicate purchases (not exact matches, but similar)
+    /// NOTE: This is now called from checkForExistingImport - keeping this method for reference
     private func checkForPotentialDuplicates(_ receipt: ReceiptDetail) async {
         let importService = ReceiptImportService(
             purchaseRecordRepository: dependencies.purchaseRecordRepository,

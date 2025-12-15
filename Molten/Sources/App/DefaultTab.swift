@@ -80,7 +80,7 @@ enum DefaultTab: Int, CaseIterable {
         case .caneMaker:
             return "arrow.triangle.swap" // Represents twisting motion
         case .wigWag:
-            return "arrow.left.arrow.right" // Represents back-and-forth motion
+            return "scribble.variable" // Represents the wavy wigwag pattern
         }
     }
 }

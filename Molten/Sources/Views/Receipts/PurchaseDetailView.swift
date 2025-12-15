@@ -2035,8 +2035,16 @@ private struct PurchaseImportSheet: View {
     @State private var hasProAccess = false
     @State private var showingPaywall = false
 
+    // Inventory limit tracking
+    @State private var currentInventoryItemCount = 0
+    @State private var existingInventoryStableIds: Set<String> = []
+
     private var subscriptionService: SubscriptionServiceProtocol {
         dependencies.subscriptionService
+    }
+
+    private var inventoryRepository: InventoryRepository {
+        dependencies.inventoryRepository
     }
 
     private var canImportReceipts: Bool {
@@ -2045,6 +2053,24 @@ private struct PurchaseImportSheet: View {
 
     private var remainingFreeImports: Int? {
         receiptService.remainingFreeImports(hasProAccess: hasProAccess)
+    }
+
+    /// Number of NEW unique items that would be added to inventory (not already in inventory)
+    private var newUniqueItemCount: Int {
+        let newStableIds = Set(importItems.compactMap { $0.catalogItem?.stable_id })
+        return newStableIds.subtracting(existingInventoryStableIds).count
+    }
+
+    /// Whether importing these items would exceed the free tier inventory limit
+    private var wouldExceedInventoryLimit: Bool {
+        guard !hasProAccess else { return false }
+        return currentInventoryItemCount + newUniqueItemCount > FeatureFlags.FREE_TIER_INVENTORY_LIMIT
+    }
+
+    /// How many more unique items can be added before hitting the limit
+    private var remainingInventorySlots: Int {
+        guard !hasProAccess else { return Int.max }
+        return max(0, FeatureFlags.FREE_TIER_INVENTORY_LIMIT - currentInventoryItemCount)
     }
 
     private var selectedItems: [ReceiptItem] {
@@ -2147,6 +2173,39 @@ private struct PurchaseImportSheet: View {
                             }
                         }
 
+                        // Inventory limit warning (for free tier users)
+                        if wouldExceedInventoryLimit {
+                            Section {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Label("Inventory limit reached", systemImage: "exclamationmark.triangle.fill")
+                                        .foregroundColor(DesignSystem.Colors.accentWarning)
+                                        .font(.subheadline.bold())
+
+                                    Text("You have \(currentInventoryItemCount) of \(FeatureFlags.FREE_TIER_INVENTORY_LIMIT) unique glass colors in your inventory. This import would add \(newUniqueItemCount) new color\(newUniqueItemCount == 1 ? "" : "s").")
+                                        .font(.caption)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                                    if remainingInventorySlots > 0 {
+                                        Text("You can import up to \(remainingInventorySlots) new color\(remainingInventorySlots == 1 ? "" : "s"), or upgrade to Pro for unlimited inventory.")
+                                            .font(.caption)
+                                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                                    } else {
+                                        Text("Upgrade to Pro for unlimited inventory.")
+                                            .font(.caption)
+                                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                                    }
+
+                                    Button {
+                                        showingPaywall = true
+                                    } label: {
+                                        Text("Upgrade to Pro")
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                }
+                            }
+                        }
+
                         // Import button section
                         Section {
                             Button {
@@ -2170,7 +2229,7 @@ private struct PurchaseImportSheet: View {
                                     Spacer()
                                 }
                             }
-                            .disabled(!allItemsValid || isImporting || !canImportReceipts)
+                            .disabled(!allItemsValid || isImporting || !canImportReceipts || wouldExceedInventoryLimit)
                         }
 
                         if let error = errorMessage {
@@ -2195,6 +2254,18 @@ private struct PurchaseImportSheet: View {
             .task {
                 // Check Pro status for import limits
                 hasProAccess = await subscriptionService.hasProAccess()
+
+                // Load current inventory count for free tier limit check
+                if !hasProAccess {
+                    do {
+                        let inventoryStableIds = try await inventoryRepository.getItemsWithInventory()
+                        existingInventoryStableIds = Set(inventoryStableIds)
+                        currentInventoryItemCount = inventoryStableIds.count
+                    } catch {
+                        print("Could not load inventory count: \(error)")
+                    }
+                }
+
                 await loadCatalogInfo()
             }
         }

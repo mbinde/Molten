@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.7] - 2025-12-14
+
+### Added
+- Twist tab for visualizing twisted glass cane designs
+- Color palette system: add glass colors from your catalog or inventory
+- COE filter (33, 90, 96, 104) for color selection
+- High color variance warnings for glass with significant color variation
+
+---
+
 ## [1.0.6] - 2025-12-14
 
 ### Fixed

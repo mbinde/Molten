@@ -23,6 +23,9 @@ struct WigWagBuilderView: View {
     /// Selected point index for revert (nil = no selection)
     @State private var selectedRevertIndex: Int?
 
+    /// Toggle between Sphere View and Flattened View
+    @State private var showFlattenedView = false
+
     // MARK: - Save/Load State
 
     @State private var showingSavePatternSheet = false
@@ -41,11 +44,8 @@ struct WigWagBuilderView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: DesignSystem.Spacing.xl) {
-                    // End view - the main visualization
-                    endViewSection
-
-                    // Flattened view - sphere "poked and flattened"
-                    flattenedViewSection
+                    // Sphere view / Flattened view - toggleable visualization
+                    visualizationSection
 
                     // Twist history visualization
                     twistHistorySection
@@ -292,74 +292,84 @@ struct WigWagBuilderView: View {
         }
     }
 
-    // MARK: - End View Section
+    // MARK: - Visualization Section (Sphere View / Flattened View toggle)
+    //
+    // NOTE: Flattened view is a work in progress. The goal is to show a stereographic
+    // projection of the sphere as if you poked a hole on the equator and flattened it.
+    // The two poles should appear as spiral centers on opposite sides of the disk.
+    //
+    // References for future work:
+    // - https://en.wikipedia.org/wiki/Stereographic_projection
+    // - https://mathworld.wolfram.com/StereographicProjection.html
+    //
+    // Key insight: All color regions must remain connected after projection
+    // (continuous transformation preserves connectivity).
+    //
+    // To re-enable: change showFlattenedViewEnabled to true
 
-    private var endViewSection: some View {
+    /// Set to true to show the Sphere/Flattened picker (work in progress)
+    private let showFlattenedViewEnabled = false
+
+    private var visualizationSection: some View {
         VStack(spacing: DesignSystem.Spacing.md) {
             HStack {
-                Text("End View")
-                    .font(DesignSystem.Typography.subsectionTitle)
-                    .fontWeight(DesignSystem.FontWeight.semibold)
+                // Toggle between Sphere View and Flattened View (hidden until projection is fixed)
+                if showFlattenedViewEnabled {
+                    Picker("View", selection: $showFlattenedView) {
+                        Text("Sphere").tag(false)
+                        Text("Flattened").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 160)
+                }
 
                 Spacer()
 
-                HStack(spacing: DesignSystem.Spacing.sm) {
-                    Image(systemName: "tortoise")
-                        .font(.caption)
-                        .foregroundStyle(DesignSystem.Colors.textTertiary)
-                    Slider(value: $twistSensitivity, in: 0.02...0.12)
-                        .frame(width: 80)
-                    Image(systemName: "hare")
-                        .font(.caption)
-                        .foregroundStyle(DesignSystem.Colors.textTertiary)
+                // Sensitivity slider (only for Sphere View since that's where drag works)
+                if !showFlattenedView {
+                    HStack(spacing: DesignSystem.Spacing.sm) {
+                        Image(systemName: "tortoise")
+                            .font(.caption)
+                            .foregroundStyle(DesignSystem.Colors.textTertiary)
+                        Slider(value: $twistSensitivity, in: 0.02...0.12)
+                            .frame(width: 80)
+                        Image(systemName: "hare")
+                            .font(.caption)
+                            .foregroundStyle(DesignSystem.Colors.textTertiary)
+                    }
                 }
             }
 
-            // The circular end view with drag gesture
-            WigWagEndView(design: design)
-                .frame(width: 280, height: 280)
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            if dragStartX == 0 {
-                                dragStartX = value.startLocation.x
-                                twistAtDragStart = design.currentTwist
-                                startRecordingTimer()
-                            }
+            // The visualization with drag gesture
+            Group {
+                if showFlattenedView && showFlattenedViewEnabled {
+                    WigWagFlattenedView(design: design)
+                } else {
+                    WigWagSphereView(design: design)
+                }
+            }
+            .frame(width: 280, height: 280)
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        if dragStartX == 0 {
+                            dragStartX = value.startLocation.x
+                            twistAtDragStart = design.currentTwist
+                            startRecordingTimer()
+                        }
 
-                            let deltaX = value.location.x - dragStartX
-                            design.currentTwist = twistAtDragStart + deltaX * twistSensitivity
-                        }
-                        .onEnded { _ in
-                            dragStartX = 0
-                            stopRecordingTimer()
-                            // Record final position
-                            design.recordTwist()
-                        }
-                )
+                        let deltaX = value.location.x - dragStartX
+                        design.currentTwist = twistAtDragStart + deltaX * twistSensitivity
+                    }
+                    .onEnded { _ in
+                        dragStartX = 0
+                        stopRecordingTimer()
+                        // Record final position
+                        design.recordTwist()
+                    }
+            )
 
             Text("Drag left/right to twist")
-                .font(DesignSystem.Typography.listItemCaption)
-                .foregroundStyle(DesignSystem.Colors.textTertiary)
-        }
-        .padding(DesignSystem.Padding.standard)
-        .background(DesignSystem.Colors.backgroundSecondary)
-        .cornerRadius(DesignSystem.CornerRadius.medium)
-    }
-
-    // MARK: - Flattened View Section
-
-    private var flattenedViewSection: some View {
-        VStack(spacing: DesignSystem.Spacing.md) {
-            Text("Marble View")
-                .font(DesignSystem.Typography.subsectionTitle)
-                .fontWeight(DesignSystem.FontWeight.semibold)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            WigWagFlattenedView(design: design)
-                .frame(width: 280, height: 280)
-
-            Text("Flattened sphere projection")
                 .font(DesignSystem.Typography.listItemCaption)
                 .foregroundStyle(DesignSystem.Colors.textTertiary)
         }
@@ -472,15 +482,15 @@ struct WigWagBuilderView: View {
     }
 }
 
-// MARK: - End View Visualization
+// MARK: - Sphere View Visualization
 
-struct WigWagEndView: View {
+struct WigWagSphereView: View {
     let design: WigWagDesign
 
     /// Number of rings scales with twist history - more history = more rings needed
-    /// Minimum of 50 for smooth appearance, max of 150 to avoid Moiré patterns
+    /// Minimum of 75 for smooth appearance, max of 150 to avoid Moiré patterns
     private var renderRingCount: Int {
-        min(150, max(50, design.twistHistory.count * 2))
+        min(150, max(75, design.twistHistory.count * 2))
     }
 
     var body: some View {
@@ -668,129 +678,210 @@ struct TwistHistoryGraph: View {
     }
 }
 
-// MARK: - Flattened Sphere View (Stereographic Projection)
+// MARK: - Flattened Sphere View (Equator Poke Projection)
 
-/// Visualizes the wigwag as if you poked a hole at one pole and flattened it out.
-/// The center is one pole, the outer edge is the opposite pole, and the twist
-/// reverses in the middle creating the classic wigwag marble pattern.
+/// Visualizes the wigwag as if you poked a hole on the equator of the sphere and flattened it.
+/// - The poke point becomes the outer rim of the flattened image
+/// - The two poles (north and south spirals) appear on opposite sides (left and right)
+/// - The equator stretches between them as wavy lines
 struct WigWagFlattenedView: View {
     let design: WigWagDesign
 
-    /// Number of rings to render - more for smoother appearance
-    private var renderRingCount: Int {
-        min(200, max(80, design.twistHistory.count * 3))
+    /// Generate the flattened pendant image using stereographic projection
+    /// Physical model: poke a hole at one point on the equator, stretch it to become the rim
+    ///
+    /// Key insight: The color bands on the sphere run from north pole to south pole
+    /// like lines of longitude. The twist pattern determines how these bands spiral.
+    /// When we flatten, these bands should remain connected - they just get distorted.
+    private var marbleImage: CGImage? {
+        let size = 300  // Fixed render size for performance
+        let allTwists = design.twistHistory + [design.currentTwist]
+
+        // Create bitmap context
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(
+            data: nil,
+            width: size,
+            height: size,
+            bitsPerComponent: 8,
+            bytesPerRow: size * 4,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        let center = Double(size) / 2
+        let maxRadius = center - 2
+
+        // Stereographic projection from point P on equator.
+        // We project from P = (1, 0, 0) onto the plane tangent at (-1, 0, 0).
+        //
+        // For a point (x, y, z) on the unit sphere, the stereographic projection
+        // from P = (1, 0, 0) onto plane x = -1 is:
+        //   X_proj = -2y / (1 - x)
+        //   Y_proj = -2z / (1 - x)
+        //
+        // Inverse (from plane back to sphere):
+        // Given (X, Y) in the plane where X corresponds to -y direction, Y to -z:
+        //   Let r² = X² + Y²
+        //   x = (r² - 4) / (r² + 4)
+        //   y = -4X / (r² + 4)
+        //   z = -4Y / (r² + 4)
+        //
+        // At center of image (X=Y=0): x = -4/4 = -1, y = 0, z = 0 ✓ (antipodal to projection point)
+        // As r → ∞: x → 1, approaching the projection point
+
+        let scale = 4.0  // Scale factor for the projection plane (larger = see more of sphere)
+
+        for py in 0..<size {
+            for px in 0..<size {
+                let dx = Double(px) - center
+                let dy = Double(py) - center
+                let dist = sqrt(dx * dx + dy * dy)
+
+                // Skip pixels outside the circle
+                guard dist <= maxRadius else { continue }
+
+                // Map pixel to projection plane coordinates
+                // Scale so that the edge of our circle corresponds to a reasonable portion of sphere
+                let X = (dx / maxRadius) * scale
+                let Y = (dy / maxRadius) * scale
+
+                let rSq = X * X + Y * Y
+                let denom = rSq + 4
+
+                // Inverse stereographic from (1,0,0)
+                let sx = (rSq - 4) / denom
+                let sy = -4 * X / denom
+                let sz = -4 * Y / denom
+
+                // Now (sx, sy, sz) is a point on the unit sphere
+                // sx: -1 at center (antipodal to projection), approaches 1 at edge (projection point)
+                // sz: +1 is north pole, -1 is south pole
+
+                // Convert to spherical coordinates
+                // sz is the "up" direction (toward north pole)
+                let lat = asin(max(-1, min(1, sz)))  // latitude: -π/2 to π/2
+                let colatitude = .pi / 2 - lat        // 0 at north pole, π at south pole
+
+                // Longitude in the equatorial plane (sx-sy plane)
+                // atan2(sy, sx) gives angle from positive-x axis
+                let lon = atan2(sy, sx)
+
+                // Get the twist at this colatitude
+                let twist = calculateTwistAtColatitude(colat: colatitude, allTwists: allTwists)
+
+                // The color is determined by longitude + twist
+                // This gives us the "stripe" that this point belongs to
+                var angle = lon + twist
+
+                // Normalize to 0..2π
+                angle = angle.truncatingRemainder(dividingBy: 2 * .pi)
+                if angle < 0 { angle += 2 * .pi }
+
+                let rgba = colorComponentsForAngle(angle, segments: design.segments)
+
+                context.setFillColor(red: rgba.r, green: rgba.g, blue: rgba.b, alpha: 1.0)
+                context.fill(CGRect(x: px, y: py, width: 1, height: 1))
+            }
+        }
+
+        return context.makeImage()
     }
 
     var body: some View {
-        Canvas { context, size in
-            let center = CGPoint(x: size.width / 2, y: size.height / 2)
-            let maxRadius = min(size.width, size.height) / 2 - 4
-            let ringCount = renderRingCount
-            let ringWidth = maxRadius / CGFloat(ringCount)
+        GeometryReader { geometry in
+            let dimension = min(geometry.size.width, geometry.size.height)
 
-            // Build the full twist sequence:
-            // - First half: twist history from start to current (outer to middle)
-            // - Second half: mirror/reverse of twist history (middle to inner)
-            let allTwists = design.twistHistory + [design.currentTwist]
+            ZStack {
+                if let image = marbleImage {
+                    Image(decorative: image, scale: 1.0)
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: dimension, height: dimension)
+                } else {
+                    Circle()
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: dimension, height: dimension)
+                }
 
-            // Draw from outside in
-            for ringIndex in 0..<ringCount {
-                let outerRadius = maxRadius - CGFloat(ringIndex) * ringWidth
-                let innerRadius = outerRadius - ringWidth
-
-                // Map ring index to position (0 = outer edge = one pole, 1 = center = opposite pole)
-                // We go: pole A -> equator (halfway) -> pole B
-                // The twist goes forward then reverses
-                let t = Double(ringIndex) / Double(ringCount - 1)
-                let twist = interpolateMirroredTwist(allTwists, at: t)
-
-                drawRing(
-                    context: context,
-                    center: center,
-                    innerRadius: max(0, innerRadius),
-                    outerRadius: outerRadius,
-                    twist: twist,
-                    segments: design.segments
-                )
+                // Draw outline
+                Circle()
+                    .stroke(DesignSystem.Colors.textTertiary.opacity(0.5), lineWidth: 1)
+                    .frame(width: dimension - 8, height: dimension - 8)
             }
-
-            // Draw outline
-            context.stroke(
-                Path(ellipseIn: CGRect(
-                    x: center.x - maxRadius,
-                    y: center.y - maxRadius,
-                    width: maxRadius * 2,
-                    height: maxRadius * 2
-                )),
-                with: .color(DesignSystem.Colors.textTertiary.opacity(0.5)),
-                lineWidth: 1
-            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .aspectRatio(1, contentMode: .fit)
     }
 
-    /// Interpolates twist with mirroring - the twist goes forward from 0 to 0.5,
-    /// then reverses from 0.5 to 1.0, creating the symmetrical wigwag pattern
-    private func interpolateMirroredTwist(_ twists: [Double], at t: Double) -> Double {
-        guard twists.count > 1 else {
-            return twists.first ?? 0
+    /// Calculate the accumulated twist at a given colatitude (angle from north pole).
+    /// colat=0 is the north pole, colat=π is the south pole.
+    ///
+    /// Physical model: The cane runs from north pole to south pole.
+    /// - At north pole (colat=0): twist = first twist value (center of cane)
+    /// - At equator (colat=π/2): twist = last twist value (one end of cane)
+    /// - At south pole (colat=π): twist = first twist value again (back to center)
+    ///
+    /// The twist history records the profile from pole to equator.
+    /// The south hemisphere mirrors the north (same cane, viewed from the other side).
+    private func calculateTwistAtColatitude(colat: Double, allTwists: [Double]) -> Double {
+        guard allTwists.count > 1 else {
+            return allTwists.first ?? 0
         }
 
-        // t goes from 0 (outer) to 1 (center)
-        // We want: 0->0.5 follows twist forward, 0.5->1.0 follows twist backward (mirror)
-        let mirroredT: Double
-        if t <= 0.5 {
-            // First half: go through twist history forward (0 -> 1)
-            mirroredT = t * 2.0  // Maps 0-0.5 to 0-1
+        // Map colatitude to a parameter t ∈ [0, 1] through the twist history
+        // North hemisphere (colat 0→π/2): t goes 0→1
+        // South hemisphere (colat π/2→π): t goes 1→0 (mirror)
+        let t: Double
+        if colat <= .pi / 2 {
+            t = colat / (.pi / 2)
         } else {
-            // Second half: go through twist history backward (1 -> 0)
-            mirroredT = (1.0 - t) * 2.0  // Maps 0.5-1.0 to 1-0
+            t = 1.0 - (colat - .pi / 2) / (.pi / 2)
         }
 
-        // Now interpolate through the twist history
-        let position = mirroredT * Double(twists.count - 1)
+        // Interpolate through twist history
+        let position = t * Double(allTwists.count - 1)
         let lowerIndex = Int(position)
-        let upperIndex = min(lowerIndex + 1, twists.count - 1)
+        let upperIndex = min(lowerIndex + 1, allTwists.count - 1)
         let fraction = position - Double(lowerIndex)
 
-        let lower = twists[lowerIndex]
-        let upper = twists[upperIndex]
+        let lower = allTwists[lowerIndex]
+        let upper = allTwists[upperIndex]
         return lower + (upper - lower) * fraction
     }
 
-    private func drawRing(
-        context: GraphicsContext,
-        center: CGPoint,
-        innerRadius: CGFloat,
-        outerRadius: CGFloat,
-        twist: Double,
-        segments: [WigWagSegment]
-    ) {
-        var startAngle: Double = twist
+    /// Get RGB components for the color at a given angle
+    private func colorComponentsForAngle(_ angle: Double, segments: [WigWagSegment]) -> (r: CGFloat, g: CGFloat, b: CGFloat) {
+        guard !segments.isEmpty else { return (0.5, 0.5, 0.5) }
 
+        // Normalize angle to 0-2π
+        var normalizedAngle = angle.truncatingRemainder(dividingBy: 2 * .pi)
+        if normalizedAngle < 0 { normalizedAngle += 2 * .pi }
+
+        var accumulated = 0.0
         for segment in segments {
-            let endAngle = startAngle + segment.angularWidth
-
-            var path = Path()
-            path.addArc(
-                center: center,
-                radius: outerRadius,
-                startAngle: .radians(startAngle),
-                endAngle: .radians(endAngle),
-                clockwise: false
-            )
-            path.addArc(
-                center: center,
-                radius: innerRadius,
-                startAngle: .radians(endAngle),
-                endAngle: .radians(startAngle),
-                clockwise: true
-            )
-            path.closeSubpath()
-
-            context.fill(path, with: .color(segment.color))
-
-            startAngle = endAngle
+            accumulated += segment.angularWidth
+            if normalizedAngle < accumulated {
+                return extractRGB(from: segment.color)
+            }
         }
+        return extractRGB(from: segments.last?.color ?? .gray)
+    }
+
+    /// Extract RGB components from a SwiftUI Color
+    private func extractRGB(from color: Color) -> (r: CGFloat, g: CGFloat, b: CGFloat) {
+        #if os(iOS)
+        let uiColor = UIColor(color)
+        var r: CGFloat = 0
+        var g: CGFloat = 0
+        var b: CGFloat = 0
+        var a: CGFloat = 0
+        uiColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return (r, g, b)
+        #else
+        let nsColor = NSColor(color)
+        return (nsColor.redComponent, nsColor.greenComponent, nsColor.blueComponent)
+        #endif
     }
 }
 

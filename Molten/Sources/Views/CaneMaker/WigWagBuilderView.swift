@@ -23,29 +23,269 @@ struct WigWagBuilderView: View {
     /// Selected point index for revert (nil = no selection)
     @State private var selectedRevertIndex: Int?
 
+    // MARK: - Save/Load State
+
+    @State private var showingSavePatternSheet = false
+    @State private var showingLoadPatternSheet = false
+    @State private var showingSavePaletteSheet = false
+    @State private var showingLoadPaletteSheet = false
+    @State private var savePatternName = ""
+    @State private var savePaletteName = ""
+
+    /// All catalog items in the palette (for saving allCatalogItemIds)
+    @State private var paletteItems: [UnifiedCatalogItem] = []
+
+    @Environment(\.appDependencies) private var dependencies
+
     var body: some View {
         NavigationStack {
-            VStack(spacing: DesignSystem.Spacing.xl) {
-                // End view - the main visualization
-                endViewSection
+            ScrollView {
+                VStack(spacing: DesignSystem.Spacing.xl) {
+                    // End view - the main visualization
+                    endViewSection
 
-                // Twist history visualization
-                twistHistorySection
+                    // Twist history visualization
+                    twistHistorySection
 
-                Spacer()
+                    // Color pattern - shows current segments
+                    colorPatternSection
+
+                    // Color palette for selecting segment colors
+                    GlassColorPalette(
+                        title: "Colors",
+                        onColorSelected: { item in
+                            addColorFromCatalog(item)
+                        },
+                        onPaletteChanged: { items in
+                            paletteItems = items
+                        }
+                    )
+                }
+                .padding(DesignSystem.Padding.generous)
+                .padding(.bottom, 100) // Extra space for tab bar
             }
-            .padding(DesignSystem.Padding.generous)
             .navigationTitle("Wig Wag")
+            .navigationBarTitleDisplayMode(.inline)
             .background(DesignSystem.Colors.background)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Reset") {
-                        withAnimation {
-                            design.reset()
+            .sheet(isPresented: $showingSavePatternSheet) {
+                SavePatternSheet(
+                    name: $savePatternName,
+                    onSave: { name in
+                        Task {
+                            await savePattern(name: name)
                         }
                     }
+                )
+            }
+            .sheet(isPresented: $showingLoadPatternSheet) {
+                LoadPatternSheet(
+                    onSelect: { pattern in
+                        loadPattern(pattern)
+                    }
+                )
+            }
+            .sheet(isPresented: $showingSavePaletteSheet) {
+                SavePaletteSheet(
+                    name: $savePaletteName,
+                    onSave: { name in
+                        Task {
+                            await savePalette(name: name)
+                        }
+                    }
+                )
+            }
+            .sheet(isPresented: $showingLoadPaletteSheet) {
+                LoadPaletteSheet(
+                    onSelect: { palette in
+                        loadPalette(palette)
+                    }
+                )
+            }
+        }
+    }
+
+    // MARK: - Save/Load Methods
+
+    private func savePattern(name: String) async {
+        let pattern = TwistPatternModel(
+            name: name,
+            twistHistory: design.twistHistory + [design.currentTwist]
+        )
+        do {
+            _ = try await dependencies.twistPatternRepository.create(pattern)
+            showingSavePatternSheet = false
+            savePatternName = ""
+        } catch {
+            print("Error saving pattern: \(error)")
+        }
+    }
+
+    private func loadPattern(_ pattern: TwistPatternModel) {
+        withAnimation {
+            design.twistHistory = pattern.twistHistory
+            design.currentTwist = pattern.twistHistory.last ?? 0.0
+            selectedRevertIndex = nil
+        }
+        showingLoadPatternSheet = false
+    }
+
+    private func savePalette(name: String) async {
+        // Extract hex colors from current segments
+        let hexColors = design.segments.map { segment -> String in
+            segment.color.toHex() ?? "000000"
+        }
+
+        // Get all catalog item IDs from the palette (even those not used in the pattern)
+        let allItemIds = paletteItems.map { $0.stable_id }
+
+        let palette = GlassPaletteModel(
+            name: name,
+            type: "wigwag",
+            coe: 0, // We don't track COE for wigwag palettes since colors are already selected
+            catalogItemIds: hexColors, // Store hex colors directly since we don't have catalog IDs
+            allCatalogItemIds: allItemIds
+        )
+        do {
+            _ = try await dependencies.glassPaletteRepository.create(palette)
+            showingSavePaletteSheet = false
+            savePaletteName = ""
+        } catch {
+            print("Error saving palette: \(error)")
+        }
+    }
+
+    private func loadPalette(_ palette: GlassPaletteModel) {
+        withAnimation {
+            // Convert stored hex colors back to segments
+            let segments = palette.catalogItemIds.map { hex in
+                WigWagSegment(color: Color(hex: hex), angularWidth: .pi)
+            }
+            if !segments.isEmpty {
+                design.segments = segments
+                design.redistributeWidths()
+            }
+        }
+        showingLoadPaletteSheet = false
+    }
+
+    private func addColorFromCatalog(_ item: UnifiedCatalogItem) {
+        guard let hex = item.representative_color ?? item.dominant_colors?.first else { return }
+        let color = Color(hex: hex)
+        withAnimation {
+            design.segments.append(WigWagSegment(color: color, angularWidth: .pi / 2))
+            design.redistributeWidths()
+        }
+    }
+
+    // MARK: - Color Pattern Section
+
+    @State private var selectedSegmentIndex: Int?
+
+    private var colorPatternSection: some View {
+        VStack(spacing: DesignSystem.Spacing.md) {
+            HStack {
+                Text("Color Pattern")
+                    .font(DesignSystem.Typography.subsectionTitle)
+                    .fontWeight(DesignSystem.FontWeight.semibold)
+
+                Spacer()
+
+                Menu {
+                    Button {
+                        showingSavePaletteSheet = true
+                    } label: {
+                        Label("Save Palette", systemImage: "square.and.arrow.down")
+                    }
+                    Button {
+                        showingLoadPaletteSheet = true
+                    } label: {
+                        Label("Load Palette", systemImage: "square.and.arrow.up")
+                    }
+                    Divider()
+                    Button(role: .destructive) {
+                        withAnimation {
+                            design.resetColors()
+                        }
+                    } label: {
+                        Label("Reset", systemImage: "arrow.counterclockwise")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .font(.system(size: 20))
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
                 }
             }
+
+            // Horizontal scrolling color chips
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    ForEach(Array(design.segments.enumerated()), id: \.element.id) { index, segment in
+                        colorChip(segment: segment, index: index)
+                    }
+                }
+                .padding(.top, 8)
+                .padding(.trailing, 8)
+            }
+
+            Text("Tap to select • Long press to delete")
+                .font(DesignSystem.Typography.listItemCaptionSmall)
+                .foregroundStyle(DesignSystem.Colors.textTertiary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(DesignSystem.Padding.standard)
+        .background(DesignSystem.Colors.backgroundSecondary)
+        .cornerRadius(DesignSystem.CornerRadius.medium)
+    }
+
+    private func colorChip(segment: WigWagSegment, index: Int) -> some View {
+        let isSelected = selectedSegmentIndex == index
+
+        return Button {
+            withAnimation(.easeInOut(duration: 0.15)) {
+                if selectedSegmentIndex == index {
+                    selectedSegmentIndex = nil
+                } else {
+                    selectedSegmentIndex = index
+                }
+            }
+        } label: {
+            ZStack(alignment: .topTrailing) {
+                Circle()
+                    .fill(segment.color)
+                    .frame(width: 44, height: 44)
+                    .overlay {
+                        Circle()
+                            .stroke(
+                                isSelected ? DesignSystem.Colors.accentPrimary : DesignSystem.Colors.textTertiary.opacity(0.3),
+                                lineWidth: isSelected ? 3 : 1
+                            )
+                    }
+                    .shadow(color: isSelected ? DesignSystem.Colors.accentPrimary.opacity(0.3) : .clear, radius: 4)
+
+                if isSelected {
+                    Button {
+                        deleteSegment(at: index)
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 18))
+                            .foregroundStyle(.white, DesignSystem.Colors.accentDanger)
+                    }
+                    .offset(x: 6, y: -6)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func deleteSegment(at index: Int) {
+        withAnimation {
+            if selectedSegmentIndex == index {
+                selectedSegmentIndex = nil
+            } else if let selected = selectedSegmentIndex, selected > index {
+                selectedSegmentIndex = selected - 1
+            }
+            design.segments.remove(at: index)
+            design.redistributeWidths()
         }
     }
 
@@ -143,6 +383,32 @@ struct WigWagBuilderView: View {
                         .foregroundStyle(DesignSystem.Colors.accentPrimary)
                     }
                 }
+
+                Menu {
+                    Button {
+                        showingSavePatternSheet = true
+                    } label: {
+                        Label("Save Pattern", systemImage: "square.and.arrow.down")
+                    }
+                    Button {
+                        showingLoadPatternSheet = true
+                    } label: {
+                        Label("Load Pattern", systemImage: "square.and.arrow.up")
+                    }
+                    Divider()
+                    Button(role: .destructive) {
+                        withAnimation {
+                            design.resetTwist()
+                            selectedRevertIndex = nil
+                        }
+                    } label: {
+                        Label("Reset", systemImage: "arrow.counterclockwise")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .font(.system(size: 20))
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+                }
             }
 
             // Visual representation of twist history
@@ -187,25 +453,29 @@ struct WigWagBuilderView: View {
 struct WigWagEndView: View {
     let design: WigWagDesign
 
-    /// Number of rings to render for smooth appearance
-    private let renderRingCount = 200
+    /// Number of rings scales with twist history - more history = more rings needed
+    /// Minimum of 50 for smooth appearance, max of 150 to avoid Moiré patterns
+    private var renderRingCount: Int {
+        min(150, max(50, design.twistHistory.count * 2))
+    }
 
     var body: some View {
         Canvas { context, size in
             let center = CGPoint(x: size.width / 2, y: size.height / 2)
             let maxRadius = min(size.width, size.height) / 2 - 4
-            let ringWidth = maxRadius / CGFloat(renderRingCount)
+            let ringCount = renderRingCount
+            let ringWidth = maxRadius / CGFloat(ringCount)
 
             // Build the full twist data including current position
             let allTwists = design.twistHistory + [design.currentTwist]
 
             // Draw from outside in with interpolated twist values
-            for ringIndex in 0..<renderRingCount {
+            for ringIndex in 0..<ringCount {
                 let outerRadius = maxRadius - CGFloat(ringIndex) * ringWidth
                 let innerRadius = outerRadius - ringWidth
 
                 // Map ring index to position in twist history (0 = oldest/outer, 1 = newest/inner)
-                let t = Double(ringIndex) / Double(renderRingCount - 1)
+                let t = Double(ringIndex) / Double(ringCount - 1)
                 let twist = interpolateTwist(allTwists, at: t)
 
                 drawRing(
@@ -371,6 +641,186 @@ struct TwistHistoryGraph: View {
         }
         .background(DesignSystem.Colors.backgroundTertiary.opacity(0.5))
         .cornerRadius(DesignSystem.CornerRadius.small)
+    }
+}
+
+// MARK: - Save/Load Sheets
+
+struct SavePatternSheet: View {
+    @Binding var name: String
+    let onSave: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Pattern Name", text: $name)
+                }
+            }
+            .navigationTitle("Save Pattern")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        onSave(name)
+                    }
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+}
+
+struct LoadPatternSheet: View {
+    let onSelect: (TwistPatternModel) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.appDependencies) private var dependencies
+    @State private var patterns: [TwistPatternModel] = []
+    @State private var isLoading = true
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if isLoading {
+                    ProgressView()
+                } else if patterns.isEmpty {
+                    ContentUnavailableView(
+                        "No Saved Patterns",
+                        systemImage: "waveform.path",
+                        description: Text("Save a twist pattern to see it here.")
+                    )
+                } else {
+                    List(patterns) { pattern in
+                        Button {
+                            onSelect(pattern)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(pattern.name)
+                                    .font(DesignSystem.Typography.formValue)
+                                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+                                Text("\(pattern.twistHistory.count) points")
+                                    .font(DesignSystem.Typography.listItemCaption)
+                                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Load Pattern")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .task {
+            do {
+                patterns = try await dependencies.twistPatternRepository.getAllSortedByDate()
+            } catch {
+                print("Error loading patterns: \(error)")
+            }
+            isLoading = false
+        }
+        .presentationDetents([.medium, .large])
+    }
+}
+
+struct SavePaletteSheet: View {
+    @Binding var name: String
+    let onSave: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Palette Name", text: $name)
+                }
+            }
+            .navigationTitle("Save Palette")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        onSave(name)
+                    }
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+}
+
+struct LoadPaletteSheet: View {
+    let onSelect: (GlassPaletteModel) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.appDependencies) private var dependencies
+    @State private var palettes: [GlassPaletteModel] = []
+    @State private var isLoading = true
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if isLoading {
+                    ProgressView()
+                } else if palettes.isEmpty {
+                    ContentUnavailableView(
+                        "No Saved Palettes",
+                        systemImage: "paintpalette",
+                        description: Text("Save a color palette to see it here.")
+                    )
+                } else {
+                    List(palettes) { palette in
+                        Button {
+                            onSelect(palette)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(palette.name)
+                                    .font(DesignSystem.Typography.formValue)
+                                    .foregroundStyle(DesignSystem.Colors.textPrimary)
+                                Text("\(palette.catalogItemIds.count) colors")
+                                    .font(DesignSystem.Typography.listItemCaption)
+                                    .foregroundStyle(DesignSystem.Colors.textSecondary)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Load Palette")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .task {
+            do {
+                palettes = try await dependencies.glassPaletteRepository.getByType("wigwag")
+            } catch {
+                print("Error loading palettes: \(error)")
+            }
+            isLoading = false
+        }
+        .presentationDetents([.medium, .large])
     }
 }
 

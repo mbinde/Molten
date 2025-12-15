@@ -46,11 +46,24 @@ class WigWagDesign {
         }
     }
 
-    /// Reset the design
+    /// Reset the entire design
     func reset() {
+        resetTwist()
+        resetColors()
+    }
+
+    /// Reset only the twist history
+    func resetTwist() {
         twistHistory = [0.0]
         currentTwist = 0.0
         stretchFactor = 1.0
+        undoHistory = nil
+        undoTwist = nil
+    }
+
+    /// Reset only the colors to default
+    func resetColors() {
+        segments = WigWagDesign.defaultSegments()
     }
 
     /// Revert to a specific point in the twist history
@@ -72,6 +85,15 @@ class WigWagDesign {
         currentTwist = twist
         undoHistory = nil
         undoTwist = nil
+    }
+
+    /// Redistribute segment widths equally
+    func redistributeWidths() {
+        guard !segments.isEmpty else { return }
+        let width = (2.0 * .pi) / Double(segments.count)
+        for i in segments.indices {
+            segments[i].angularWidth = width
+        }
     }
 
     /// Default starting segments - simple two-color split

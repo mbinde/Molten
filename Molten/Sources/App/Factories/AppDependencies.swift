@@ -83,6 +83,7 @@ class AppDependencies {
     private var _inventoryConsumptionRecordRepository: InventoryConsumptionRecordRepository?
     private var _twistPatternRepository: TwistPatternRepository?
     private var _glassPaletteRepository: GlassPaletteRepository?
+    private var _twistCaneRepository: TwistCaneRepository?
     #if os(iOS)
     private var _userImageRepository: UserImageRepository?
     #endif
@@ -228,6 +229,13 @@ class AppDependencies {
         if let repo = _glassPaletteRepository { return repo }
         let repo = CoreDataGlassPaletteRepository(context: persistenceController.cloudContext)
         _glassPaletteRepository = repo
+        return repo
+    }
+
+    var twistCaneRepository: TwistCaneRepository {
+        if let repo = _twistCaneRepository { return repo }
+        let repo = CoreDataTwistCaneRepository(context: persistenceController.cloudContext)
+        _twistCaneRepository = repo
         return repo
     }
 

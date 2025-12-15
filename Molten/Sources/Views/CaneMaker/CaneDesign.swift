@@ -50,16 +50,9 @@ class CaneDesign {
         totalTwistRadians / displayLength
     }
 
-    /// Default starting design: 4 alternating color segments
+    /// Default starting design: empty (user adds colors from their palette)
     static func defaultSegments() -> [CaneSegment] {
-        let colors: [Color] = [
-            GlassColor.white.color,
-            GlassColor.blue.color,
-            GlassColor.white.color,
-            GlassColor.blue.color
-        ]
-        let angularWidth = (2 * .pi) / Double(colors.count)
-        return colors.map { CaneSegment(color: $0, angularWidth: angularWidth) }
+        []
     }
 
     /// Add a new segment, redistributing angular widths equally

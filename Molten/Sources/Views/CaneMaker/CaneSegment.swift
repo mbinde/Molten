@@ -26,11 +26,13 @@ struct CaneSegment: Identifiable, Equatable {
         self.catalogItemName = catalogItemName
     }
 
-    /// Create a segment from a catalog item using its dominant color
-    /// Falls back to a gray color if no color data is available
+    /// Create a segment from a catalog item using its representative color
+    /// Falls back to first dominant color, then gray if no color data is available
     static func fromCatalogItem(_ item: UnifiedCatalogItem) -> CaneSegment {
         let color: Color
-        if let dominantColors = item.dominant_colors, let firstColor = dominantColors.first {
+        if let repColor = item.representative_color {
+            color = Color(hex: repColor)
+        } else if let dominantColors = item.dominant_colors, let firstColor = dominantColors.first {
             color = Color(hex: firstColor)
         } else {
             // Fallback to a neutral gray for items without color data

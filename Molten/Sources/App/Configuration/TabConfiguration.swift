@@ -188,6 +188,7 @@ class TabConfiguration {
 
         if !newTabs.isEmpty {
             // Insert new tabs before Settings (or at end if Settings not found)
+            // Note: Settings has rawValue 99 so it's always sorted last
             let settingsIndex = tabs.firstIndex(of: .settings) ?? tabs.endIndex
             for newTab in newTabs.sorted(by: { $0.rawValue < $1.rawValue }) {
                 tabs.insert(newTab, at: settingsIndex)

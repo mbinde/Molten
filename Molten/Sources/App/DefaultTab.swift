@@ -16,11 +16,11 @@ enum DefaultTab: Int, CaseIterable {
     case projectPlans = 5 // Deprecated - now accessed through projects menu
     case logbook = 6 // Deprecated - now accessed through projects menu
     case recipes = 7
-    case settings = 8
-    case locations = 9
-    case kilnSchedules = 10
-    case caneMaker = 11
-    case wigWag = 12
+    case locations = 8
+    case kilnSchedules = 9
+    case caneMaker = 10
+    case wigWag = 11
+    case settings = 99 // Always sorted last in tab reconciliation
 
     var displayName: String {
         switch self {

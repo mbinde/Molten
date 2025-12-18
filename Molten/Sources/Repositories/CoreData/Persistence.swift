@@ -317,6 +317,14 @@ class PersistenceController {
                 // Create separate contexts for local and cloud stores after successful load
                 self.configureContexts()
 
+                // Initialize CloudKit schema (DEBUG builds only)
+                // This sets up proper indexes for CloudKit sync to work correctly.
+                // Must be called after stores are loaded. Only needs to run once during
+                // development, but safe to call multiple times.
+                #if DEBUG
+                self.initializeCloudKitSchemaIfNeeded()
+                #endif
+
                 // Run Transformable migration (only on cloud context for user data)
                 // Do this asynchronously after contexts are configured
                 Task { @MainActor in
@@ -359,6 +367,77 @@ class PersistenceController {
             $0.cloudContext = cloud
         }
     }
+
+    /// Initialize CloudKit schema with proper indexes for sync to work
+    /// This must be called once during development to set up queryable fields.
+    /// Safe to call multiple times - it's a no-op if schema is already initialized.
+    #if DEBUG
+    private func initializeCloudKitSchemaIfNeeded() {
+        guard let cloudKitContainer = container as? NSPersistentCloudKitContainer else {
+            log.warning("⚠️ Cannot initialize CloudKit schema - not using NSPersistentCloudKitContainer")
+            return
+        }
+
+        // Find the cloud store (the one with CloudKit options)
+        guard let cloudStore = container.persistentStoreCoordinator.persistentStores.first(where: { store in
+            container.persistentStoreDescriptions.first(where: { $0.url == store.url })?.cloudKitContainerOptions != nil
+        }) else {
+            log.warning("⚠️ Cannot initialize CloudKit schema - no cloud store found")
+            return
+        }
+
+        log.info("🔄 Initializing CloudKit schema...")
+
+        do {
+            // This creates the CloudKit schema and sets up proper indexes
+            // It only affects the Development environment - Production requires
+            // deploying the schema from the CloudKit Dashboard
+            try cloudKitContainer.initializeCloudKitSchema(options: [])
+            log.info("✅ CloudKit schema initialized successfully")
+        } catch {
+            // This is expected to fail if schema is already initialized or
+            // if there are schema conflicts. Log but don't crash.
+            log.warning("⚠️ CloudKit schema initialization: \(error.localizedDescription)")
+        }
+
+        // Set up verbose CloudKit event logging
+        setupCloudKitEventLogging()
+    }
+
+    /// Log all CloudKit sync events for debugging
+    private func setupCloudKitEventLogging() {
+        NotificationCenter.default.addObserver(
+            forName: NSPersistentCloudKitContainer.eventChangedNotification,
+            object: container,
+            queue: nil
+        ) { [weak self] notification in
+            guard let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey] as? NSPersistentCloudKitContainer.Event else {
+                return
+            }
+
+            let eventType: String
+            switch event.type {
+            case .setup: eventType = "setup"
+            case .import: eventType = "import"
+            case .export: eventType = "export"
+            @unknown default: eventType = "unknown"
+            }
+
+            if let endDate = event.endDate {
+                // Event completed
+                if let error = event.error {
+                    self?.log.error("☁️ CloudKit \(eventType) FAILED: \(error.localizedDescription)")
+                } else {
+                    self?.log.info("☁️ CloudKit \(eventType) completed successfully")
+                }
+            } else {
+                // Event started
+                self?.log.info("☁️ CloudKit \(eventType) started...")
+            }
+        }
+        log.info("☁️ CloudKit event logging enabled")
+    }
+    #endif
 
     /// Synchronous store loading for tests only (in-memory stores are fast)
     nonisolated private func loadStoresSynchronously() {

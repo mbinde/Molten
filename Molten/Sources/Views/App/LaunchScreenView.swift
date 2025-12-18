@@ -82,6 +82,11 @@ struct LaunchScreenView: View {
             print("🔄 Running data migrations...")
             await AppDependencies.shared.storageLocationMigrationService.runMigrationIfNeeded()
 
+            // CloudKit resync migration - forces all existing records to sync
+            // This is needed for records created before CloudKit schema was properly initialized
+            print("☁️ Checking CloudKit resync migration...")
+            await CloudKitResyncMigration.runIfNeeded(context: PersistenceController.shared.cloudContext)
+
             // Initialize catalog database (bundled SQLite)
             print("📦 Initializing catalog database from bundle...")
             try await CatalogDatabaseManager.shared.initialize()

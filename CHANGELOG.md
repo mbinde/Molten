@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.7] - 2025-12-17
+
+### Fixed
+- Fixed CloudKit sync not working across devices (inventory, shopping, etc. now syncs between iPhone and iPad)
+
+---
+
 ## [1.0.6] - 2025-12-14
 
 ### Fixed

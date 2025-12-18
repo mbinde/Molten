@@ -142,7 +142,7 @@ struct PurchaseImportSettingsView: View {
                     PurchaseListView(showingHelp: .constant(false))
                 } label: {
                     HStack {
-                        Text("Pending Orders")
+                        Text("Ready for Import")
                         Spacer()
                         Text("\(receiptService.pendingReceiptCount)")
                             .font(.body.bold())

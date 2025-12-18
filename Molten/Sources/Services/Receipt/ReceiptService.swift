@@ -485,6 +485,11 @@ open class ReceiptService: ObservableObject {
     /// - Parameter receiptId: The receipt ID to hide
     func hideReceipt(id: String) {
         preferences.hideReceipt(id: id)
+        // Decrement pending count since this receipt is now hidden
+        if preferences.pendingReceiptCount > 0 {
+            preferences.pendingReceiptCount -= 1
+        }
+        updatePublishedState()
     }
 
     /// Check if a receipt is hidden on this device

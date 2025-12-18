@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fixed CloudKit sync not working across devices (inventory, shopping, etc. now syncs between iPhone and iPad)
+- Fixed receipt import count not updating when dismissing receipts
 
 ---
 

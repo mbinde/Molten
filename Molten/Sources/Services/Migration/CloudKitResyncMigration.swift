@@ -123,6 +123,13 @@ enum CloudKitResyncMigration {
     ///   - context: The managed object context
     /// - Returns: Number of records touched
     nonisolated private static func touchAllRecords(entityName: String, context: NSManagedObjectContext) throws -> Int {
+        // Check if entity exists in the model before attempting fetch
+        // This prevents crashes on older model versions that don't have newer entities
+        guard let model = context.persistentStoreCoordinator?.managedObjectModel,
+              model.entitiesByName[entityName] != nil else {
+            return 0
+        }
+
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: entityName)
         let records = try context.fetch(fetchRequest)
 

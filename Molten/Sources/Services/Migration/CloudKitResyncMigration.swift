@@ -21,6 +21,8 @@ enum CloudKitResyncMigration {
     nonisolated private static let migrationKey = "cloudkit-resync-migration-v1"
 
     /// All entity names in the Cloud configuration that need to be resynced
+    /// NOTE: Only include entities from the "Cloud" configuration, not "Local"
+    /// Local entities (Location*, ItemRating*) are not synced via CloudKit
     nonisolated private static let cloudEntities: [String] = [
         "Inventory",
         "InventoryConsumptionRecord",
@@ -59,13 +61,10 @@ enum CloudKitResyncMigration {
         "Workspace",
         "GlassPalette",
         "WigWagTwistPattern",
-        "TwistCane",
-        "Location",
-        "LocationEducation",
-        "LocationRetail",
-        "LocationServices",
-        "ItemRating",
-        "ItemRatingWord"
+        "TwistCane"
+        // NOT included (these are in Local configuration, not Cloud):
+        // "Location", "LocationEducation", "LocationRetail", "LocationServices",
+        // "ItemRating", "ItemRatingWord"
     ]
 
     /// Run the migration if it hasn't been run before

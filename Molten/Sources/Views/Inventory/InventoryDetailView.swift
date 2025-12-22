@@ -28,6 +28,9 @@ struct InventoryDetailView: View {
     let kilnScheduleService: KilnScheduleService
     let glassItemRepository: GlassItemRepository
     let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
+    #if DEBUG
+    let catalogFlagAdminRepository: CatalogFlagAdminRepository
+    #endif
 
     /// Optional callback for QR scan workflow - shows "Manage Inventory" button near inventory section
     let onManageInventory: (() -> Void)?
@@ -99,6 +102,10 @@ struct InventoryDetailView: View {
     @State private var errorMessage: String?
     @State private var showingShareSheet = false
 
+    #if DEBUG
+    @State private var isProcessed = false
+    #endif
+
     // MARK: - Initializers
 
     /// Initialize with complete inventory model and service
@@ -114,6 +121,7 @@ struct InventoryDetailView: View {
         kilnScheduleService: KilnScheduleService,
         glassItemRepository: GlassItemRepository,
         storageLocationDefinitionRepository: StorageLocationDefinitionRepository,
+        catalogFlagAdminRepository: CatalogFlagAdminRepository,
         onManageInventory: (() -> Void)? = nil
     ) {
         self.item = item
@@ -127,6 +135,9 @@ struct InventoryDetailView: View {
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
         self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
+        #if DEBUG
+        self.catalogFlagAdminRepository = catalogFlagAdminRepository
+        #endif
         self.onManageInventory = onManageInventory
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
@@ -152,6 +163,9 @@ struct InventoryDetailView: View {
         self.kilnScheduleService = deps.kilnScheduleService
         self.glassItemRepository = deps.glassItemRepository
         self.storageLocationDefinitionRepository = deps.storageLocationDefinitionRepository
+        #if DEBUG
+        self.catalogFlagAdminRepository = deps.catalogFlagAdminRepository
+        #endif
         self.onManageInventory = onManageInventory
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
@@ -308,6 +322,48 @@ struct InventoryDetailView: View {
                         customImagesSection
                             .id("your-photos")
                     }
+
+                    // Debug: Catalog Flag Editor (only in DEBUG builds)
+                    #if DEBUG
+                    // Processed checkbox - always visible, not in a dropdown
+                    HStack {
+                        Button {
+                            isProcessed.toggle()
+                            Task {
+                                await saveProcessedState()
+                            }
+                        } label: {
+                            HStack(spacing: DesignSystem.Spacing.sm) {
+                                Image(systemName: isProcessed ? "checkmark.square.fill" : "square")
+                                    .foregroundColor(isProcessed ? DesignSystem.Colors.accentSuccess : DesignSystem.Colors.textSecondary)
+                                    .font(.title2)
+                                Text("Done")
+                                    .font(DesignSystem.Typography.formLabel)
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        Spacer()
+                    }
+                    .padding(DesignSystem.Padding.standard)
+                    .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.1) : DesignSystem.Colors.backgroundSecondary.opacity(0.5))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large))
+
+                    CatalogFlagEditorView(
+                        itemStableId: currentItem.glassItem.stable_id,
+                        catalogFlagAdminRepository: catalogFlagAdminRepository
+                    )
+
+                    CatalogDescriptionEditorView(
+                        itemStableId: currentItem.glassItem.stable_id,
+                        currentDescription: currentItem.glassItem.mfr_notes,
+                        catalogFlagAdminRepository: catalogFlagAdminRepository
+                    )
+
+                    CatalogOriginalDescriptionView(
+                        itemStableId: currentItem.glassItem.stable_id
+                    )
+                    #endif
 
                     Spacer(minLength: 100)
                 }
@@ -466,6 +522,9 @@ struct InventoryDetailView: View {
             loadUserImages()
             loadRecommendedSchedules()
             loadPricePerRod()
+            #if DEBUG
+            Task { await loadProcessedState() }
+            #endif
         }
         .onDisappear {
             NotificationCenter.default.post(name: .detailViewDisappeared, object: nil)
@@ -573,6 +632,43 @@ struct InventoryDetailView: View {
             excludeUserImages: true
         )
     }
+
+    #if DEBUG
+    @MainActor
+    private func loadProcessedState() async {
+        do {
+            let flags = try await catalogFlagAdminRepository.fetchFlags(for: currentItem.glassItem.stable_id)
+            isProcessed = flags.contains { $0.flag_key == kProcessedKey && $0.flag_value }
+        } catch {
+            print("Error loading processed state: \(error)")
+        }
+    }
+
+    @MainActor
+    private func saveProcessedState() async {
+        do {
+            if isProcessed {
+                // Save the processed flag
+                let flag = CatalogFlagAdminModel(
+                    item_stable_id: currentItem.glassItem.stable_id,
+                    flag_key: kProcessedKey,
+                    flag_value: true
+                )
+                try await catalogFlagAdminRepository.saveFlag(flag)
+            } else {
+                // Remove the processed flag
+                try await catalogFlagAdminRepository.removeFlag(
+                    item_stable_id: currentItem.glassItem.stable_id,
+                    flag_key: kProcessedKey
+                )
+            }
+            // Notify catalog list to update row styling
+            NotificationCenter.default.post(name: .catalogFlagChanged, object: nil)
+        } catch {
+            print("Error saving processed state: \(error)")
+        }
+    }
+    #endif
 
     private func loadRecommendedSchedules() {
         Task {

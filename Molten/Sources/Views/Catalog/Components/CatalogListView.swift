@@ -10,12 +10,23 @@ import SwiftUI
 struct CatalogListView: View {
     let items: [CompleteInventoryItemModel]
 
+    #if DEBUG
+    let processedItemIds: Set<String>
+    #endif
+
     var body: some View {
         List {
             ForEach(items, id: \.id) { item in
                 NavigationLink(value: CatalogNavigationDestination.catalogItemDetail(itemModel: item)) {
                     GlassItemRowView.catalog(item: item)
                 }
+                #if DEBUG
+                .listRowBackground(
+                    processedItemIds.contains(item.glassItem.stable_id)
+                        ? DesignSystem.Colors.accentSuccess.opacity(0.15)
+                        : nil
+                )
+                #endif
                 .accessibilityIdentifier("catalog.item.\(item.glassItem.stable_id)")
             }
 

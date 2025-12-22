@@ -1,0 +1,504 @@
+//
+//  CatalogFlagEditorView.swift
+//  Molten
+//
+//  Created on 2025-12-21.
+//
+//  Debug-only view for editing catalog flags on glass items
+//  Appears at the bottom of InventoryDetailView in DEBUG builds
+//
+
+import SwiftUI
+
+#if DEBUG
+
+/// Debug-only editor for catalog flags
+/// Allows adding/editing flags that will be exported for catalog updates
+struct CatalogFlagEditorView: View {
+    let itemStableId: String
+    let catalogFlagAdminRepository: CatalogFlagAdminRepository
+
+    @State private var adminFlags: [CatalogFlagAdminModel] = []
+    @State private var isLoading = false
+    @State private var showingAddFlag = false
+    @State private var exportedJSON: ExportedJSONWrapper? = nil
+    @State private var isExpanded = false
+    @State private var totalItemsWithData: Int = 0
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            // Header with expand/collapse
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                HStack {
+                    Image(systemName: "wrench.and.screwdriver.fill")
+                        .foregroundColor(DesignSystem.Colors.moltenOrange)
+                    Text("Catalog Flags (Debug)")
+                        .font(DesignSystem.Typography.subsectionTitle)
+                        .fontWeight(DesignSystem.FontWeight.semibold)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                    Spacer()
+
+                    if !adminFlags.isEmpty {
+                        Text("\(adminFlags.count)")
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(DesignSystem.Colors.moltenOrange)
+                            .clipShape(Capsule())
+                    }
+
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                expandedContent
+            }
+        }
+        .padding(DesignSystem.Padding.standard)
+        .background(DesignSystem.Colors.tintWarning.opacity(0.3))
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large)
+                .stroke(DesignSystem.Colors.moltenOrange.opacity(0.5), lineWidth: 2)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large))
+        .task {
+            await loadFlags()
+        }
+    }
+
+    @ViewBuilder
+    private var expandedContent: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            // Current flags
+            if isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+            } else if adminFlags.isEmpty {
+                Text("No flags set")
+                    .font(DesignSystem.Typography.formLabel)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DesignSystem.Spacing.md)
+            } else {
+                ForEach(adminFlags) { flag in
+                    FlagRow(
+                        flag: flag,
+                        onToggle: { toggleFlag(flag) },
+                        onDelete: { deleteFlag(flag) }
+                    )
+                }
+            }
+
+            Divider()
+
+            // Add flag button
+            Button {
+                showingAddFlag = true
+            } label: {
+                Label("Add Flag", systemImage: "plus.circle.fill")
+                    .font(DesignSystem.Typography.formLabel)
+                    .foregroundColor(DesignSystem.Colors.moltenOrange)
+            }
+            .buttonStyle(.plain)
+
+            // Export button
+            if totalItemsWithData > 0 {
+                Button {
+                    Task {
+                        await exportFlags()
+                    }
+                } label: {
+                    HStack {
+                        Label("Export All", systemImage: "square.and.arrow.up")
+                        Text("(\(totalItemsWithData) \(totalItemsWithData == 1 ? "item" : "items"))")
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                    .font(DesignSystem.Typography.formLabel)
+                    .foregroundColor(DesignSystem.Colors.accentPrimary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .sheet(isPresented: $showingAddFlag) {
+            AddFlagSheet(
+                itemStableId: itemStableId,
+                existingFlags: Set(adminFlags.map { $0.flag_key }),
+                onSave: { flags in
+                    Task {
+                        for flag in flags {
+                            try? await catalogFlagAdminRepository.saveFlag(flag)
+                        }
+                        await loadFlags()
+                    }
+                }
+            )
+        }
+        .sheet(item: $exportedJSON) { wrapper in
+            ExportSheet(json: wrapper.json)
+        }
+    }
+
+    private func loadFlags() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let allFlags = try await catalogFlagAdminRepository.fetchFlags(for: itemStableId)
+            // Filter out hidden flags (handled by separate UI elements)
+            adminFlags = allFlags.filter { $0.flag_key != kDescriptionReplacementKey && $0.flag_key != kProcessedKey }
+
+            // Count total unique items with any data
+            let allAdminFlags = try await catalogFlagAdminRepository.fetchAllFlags()
+            let uniqueItems = Set(allAdminFlags.map { $0.item_stable_id })
+            totalItemsWithData = uniqueItems.count
+        } catch {
+            print("Error loading admin flags: \(error)")
+        }
+    }
+
+    private func toggleFlag(_ flag: CatalogFlagAdminModel) {
+        Task {
+            let updatedFlag = CatalogFlagAdminModel(
+                id: flag.id,
+                item_stable_id: flag.item_stable_id,
+                flag_key: flag.flag_key,
+                flag_value: !flag.flag_value,
+                flag_numeric: flag.flag_numeric,
+                created_at: flag.created_at,
+                updated_at: Date()
+            )
+            try? await catalogFlagAdminRepository.saveFlag(updatedFlag)
+            await loadFlags()
+        }
+    }
+
+    private func deleteFlag(_ flag: CatalogFlagAdminModel) {
+        Task {
+            try? await catalogFlagAdminRepository.removeFlag(flag.id)
+            await loadFlags()
+        }
+    }
+
+    @MainActor
+    private func exportFlags() async {
+        do {
+            let allFlags = try await catalogFlagAdminRepository.fetchAllFlags()
+            print("DEBUG: fetchAllFlags returned \(allFlags.count) flags")
+
+            // Separate flags from description replacements
+            let regularFlags = allFlags.filter { $0.flag_key != kDescriptionReplacementKey }
+            let descriptionReplacements = allFlags.filter { $0.flag_key == kDescriptionReplacementKey }
+            print("DEBUG: regularFlags=\(regularFlags.count), descReplacements=\(descriptionReplacements.count)")
+
+            // Build JSON manually to avoid Codable actor isolation issues
+            var json = "{\n"
+            json += "  \"version\": \"1.0\",\n"
+
+            let formatter = ISO8601DateFormatter()
+            json += "  \"exported_at\": \"\(formatter.string(from: Date()))\",\n"
+
+            // Flags array
+            json += "  \"flags\": [\n"
+            for (index, flag) in regularFlags.enumerated() {
+                let comma = index < regularFlags.count - 1 ? "," : ""
+                let numericStr = flag.flag_numeric.map { String($0) } ?? "null"
+                json += "    { \"item_stable_id\": \"\(flag.item_stable_id)\", \"flag_key\": \"\(flag.flag_key)\", \"flag_value\": \(flag.flag_value), \"flag_numeric\": \(numericStr) }\(comma)\n"
+            }
+            json += "  ],\n"
+
+            // Description replacements array
+            json += "  \"description_replacements\": [\n"
+            let validReplacements = descriptionReplacements.filter { $0.description_replacement != nil }
+            for (index, flag) in validReplacements.enumerated() {
+                let comma = index < validReplacements.count - 1 ? "," : ""
+                let escapedDesc = (flag.description_replacement ?? "")
+                    .replacingOccurrences(of: "\\", with: "\\\\")
+                    .replacingOccurrences(of: "\"", with: "\\\"")
+                    .replacingOccurrences(of: "\n", with: "\\n")
+                json += "    { \"item_stable_id\": \"\(flag.item_stable_id)\", \"description\": \"\(escapedDesc)\" }\(comma)\n"
+            }
+            json += "  ]\n"
+            json += "}"
+
+            print("DEBUG: Built JSON with \(json.count) characters")
+            exportedJSON = ExportedJSONWrapper(json: json)
+        } catch {
+            print("ERROR exporting flags: \(error)")
+            exportedJSON = ExportedJSONWrapper(json: "Error: \(error.localizedDescription)")
+        }
+    }
+}
+
+// MARK: - Flag Row
+
+private struct FlagRow: View {
+    let flag: CatalogFlagAdminModel
+    let onToggle: () -> Void
+    let onDelete: () -> Void
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.md) {
+            // Toggle button
+            Button {
+                onToggle()
+            } label: {
+                Image(systemName: flag.flag_value ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(flag.flag_value ? DesignSystem.Colors.accentSuccess : DesignSystem.Colors.textTertiary)
+                    .font(.title3)
+            }
+            .buttonStyle(.plain)
+
+            // Flag info
+            VStack(alignment: .leading, spacing: 2) {
+                if let key = flag.typedFlagKey {
+                    Text(key.displayName)
+                        .font(DesignSystem.Typography.formLabel)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                    if let numeric = flag.flag_numeric, let unit = key.valueUnit {
+                        Text("\(Int(numeric))\(unit)")
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                } else {
+                    Text(flag.flag_key)
+                        .font(DesignSystem.Typography.formLabel)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+                }
+            }
+
+            Spacer()
+
+            // Delete button
+            Button(role: .destructive) {
+                onDelete()
+            } label: {
+                Image(systemName: "trash")
+                    .font(.caption)
+                    .foregroundColor(DesignSystem.Colors.accentDanger)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.vertical, DesignSystem.Spacing.xs)
+    }
+}
+
+// MARK: - Add Flag Sheet
+
+private struct AddFlagSheet: View {
+    let itemStableId: String
+    let existingFlags: Set<String>
+    let onSave: ([CatalogFlagAdminModel]) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedFlagKeys: Set<GlassFlagKey> = []
+    @State private var numericValues: [GlassFlagKey: String] = [:]
+
+    private var availableFlags: [GlassFlagKey] {
+        GlassFlagKey.allCases.filter { !existingFlags.contains($0.rawValue) }
+    }
+
+    private var selectedNumericFlags: [GlassFlagKey] {
+        selectedFlagKeys.filter { $0.requiresNumericValue }.sorted { $0.displayName < $1.displayName }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Select Flags") {
+                    ForEach(availableFlags, id: \.rawValue) { flagKey in
+                        Button {
+                            if selectedFlagKeys.contains(flagKey) {
+                                selectedFlagKeys.remove(flagKey)
+                                numericValues.removeValue(forKey: flagKey)
+                            } else {
+                                selectedFlagKeys.insert(flagKey)
+                            }
+                        } label: {
+                            HStack {
+                                Image(systemName: selectedFlagKeys.contains(flagKey) ? "checkmark.square.fill" : "square")
+                                    .foregroundColor(selectedFlagKeys.contains(flagKey) ? DesignSystem.Colors.accentPrimary : DesignSystem.Colors.textSecondary)
+                                Text(flagKey.displayName)
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                                Spacer()
+                                if flagKey.requiresNumericValue {
+                                    Text(flagKey.valueUnit ?? "")
+                                        .font(.caption)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if !selectedNumericFlags.isEmpty {
+                    Section("Numeric Values") {
+                        ForEach(selectedNumericFlags, id: \.rawValue) { flagKey in
+                            HStack {
+                                Text(flagKey.displayName)
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                                Spacer()
+                                TextField("Value", text: Binding(
+                                    get: { numericValues[flagKey] ?? "" },
+                                    set: { numericValues[flagKey] = $0 }
+                                ))
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 80)
+                                if let unit = flagKey.valueUnit {
+                                    Text(unit)
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Add Flags")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save \(selectedFlagKeys.count > 0 ? "(\(selectedFlagKeys.count))" : "")") {
+                        saveFlags()
+                    }
+                    .disabled(selectedFlagKeys.isEmpty || !isValid)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private var isValid: Bool {
+        // Check that all selected numeric flags have valid values
+        for flagKey in selectedNumericFlags {
+            guard let valueStr = numericValues[flagKey], Double(valueStr) != nil else {
+                return false
+            }
+        }
+        return true
+    }
+
+    private func saveFlags() {
+        var flags: [CatalogFlagAdminModel] = []
+
+        for flagKey in selectedFlagKeys {
+            let numeric: Double?
+            if flagKey.requiresNumericValue {
+                numeric = Double(numericValues[flagKey] ?? "")
+            } else {
+                numeric = nil
+            }
+
+            let flag = CatalogFlagAdminModel(
+                item_stable_id: itemStableId,
+                flagKey: flagKey,
+                flag_value: true,
+                flag_numeric: numeric
+            )
+            flags.append(flag)
+        }
+
+        onSave(flags)
+        dismiss()
+    }
+}
+
+// MARK: - Export Wrapper
+
+struct ExportedJSONWrapper: Identifiable {
+    let id = UUID()
+    let json: String
+}
+
+// MARK: - Export Sheet
+
+private struct ExportSheet: View {
+    let json: String
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var showCopied = false
+    @State private var fileURL: URL? = nil
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                Text(json)
+                    .font(.system(.caption, design: .monospaced))
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
+            }
+            .navigationTitle("Export (\(json.count) chars)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    if let url = fileURL {
+                        ShareLink(item: url) {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                        }
+                    } else {
+                        Button {
+                            UIPasteboard.general.string = json
+                            showCopied = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                showCopied = false
+                            }
+                        } label: {
+                            if showCopied {
+                                Label("Copied!", systemImage: "checkmark")
+                            } else {
+                                Label("Copy", systemImage: "doc.on.doc")
+                            }
+                        }
+                    }
+                }
+            }
+            .task {
+                // Write JSON to a temp file for sharing
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd-HHmmss"
+                let filename = "catalog-flags-\(formatter.string(from: Date())).json"
+                let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+                do {
+                    try json.write(to: tempURL, atomically: true, encoding: .utf8)
+                    fileURL = tempURL
+                } catch {
+                    print("Failed to write temp file: \(error)")
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Preview
+
+#Preview {
+    let deps = AppDependencies(persistenceController: .createTestController())
+    return CatalogFlagEditorView(
+        itemStableId: "bullseye-0001-0",
+        catalogFlagAdminRepository: deps.catalogFlagAdminRepository
+    )
+    .padding()
+}
+
+#endif

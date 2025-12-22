@@ -21,6 +21,39 @@ enum CatalogSearchScope: String, CaseIterable {
     case titlesOnly = "Only titles"
 }
 
+#if DEBUG
+/// Filter for processed/unprocessed items (debug only)
+enum ProcessedFilter: CaseIterable {
+    case all
+    case unprocessedOnly
+    case processedOnly
+
+    var nextFilter: ProcessedFilter {
+        switch self {
+        case .all: return .unprocessedOnly
+        case .unprocessedOnly: return .processedOnly
+        case .processedOnly: return .all
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .all: return "line.3.horizontal.decrease.circle"
+        case .unprocessedOnly: return "circle"
+        case .processedOnly: return "checkmark.circle.fill"
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .all: return "All"
+        case .unprocessedOnly: return "Unprocessed"
+        case .processedOnly: return "Processed"
+        }
+    }
+}
+#endif
+
 // Navigation destinations for CatalogView NavigationStack - NEW: Updated for GlassItem architecture
 enum CatalogNavigationDestination: Hashable {
     case addInventoryItem(stableId: String)
@@ -66,6 +99,12 @@ struct CatalogView: View {
     // Local search text state - isolates TextField from ViewModel to prevent full view re-renders
     // The ViewModel's searchText setter handles debouncing and triggers filtering
     @State private var localSearchText = ""
+
+    #if DEBUG
+    // Debug-only: filter by processed state
+    @State private var processedFilter: ProcessedFilter = .all
+    @State private var processedItemIds: Set<String> = []
+    #endif
 
     // Repository pattern - single source of truth for data
     private let catalogService: CatalogService
@@ -147,7 +186,19 @@ struct CatalogView: View {
 
     // MIGRATION: Get sorted filtered items from ViewModel instead of manual cache
     private var sortedFilteredItems: [CompleteInventoryItemModel] {
-        return viewModel.sortedFilteredItems
+        let items = viewModel.sortedFilteredItems
+        #if DEBUG
+        switch processedFilter {
+        case .all:
+            return items
+        case .unprocessedOnly:
+            return items.filter { !processedItemIds.contains($0.glassItem.stable_id) }
+        case .processedOnly:
+            return items.filter { processedItemIds.contains($0.glassItem.stable_id) }
+        }
+        #else
+        return items
+        #endif
     }
 
     // Simplified sorting without Core Data dependencies
@@ -417,6 +468,14 @@ struct CatalogView: View {
                 )
                 .presentationDetents([.medium, .large])
             }
+            #if DEBUG
+            .task {
+                await loadProcessedItems()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .catalogFlagChanged)) { _ in
+                Task { await loadProcessedItems() }
+            }
+            #endif
     }
 
     // Sort menu extracted to avoid duplication
@@ -436,6 +495,40 @@ struct CatalogView: View {
         .accessibilityIdentifier("catalog_sort_button")
     }
 
+    #if DEBUG
+    // Debug-only: Button to cycle through processed filter states
+    private var processedFilterButton: some View {
+        Button {
+            processedFilter = processedFilter.nextFilter
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: processedFilter.icon)
+                if processedFilter != .all {
+                    Text(processedFilter.label)
+                        .font(.caption)
+                }
+            }
+            .foregroundColor(processedFilter == .all ? .primary : DesignSystem.Colors.accentSuccess)
+        }
+        .accessibilityLabel("Filter: \(processedFilter.label)")
+        .accessibilityHint("Tap to cycle through filter options")
+    }
+
+    @MainActor
+    private func loadProcessedItems() async {
+        do {
+            let repo = AppDependencies.shared.catalogFlagAdminRepository
+            let allFlags = try await repo.fetchAllFlags()
+            let processed = allFlags
+                .filter { $0.flag_key == kProcessedKey && $0.flag_value }
+                .map { $0.item_stable_id }
+            processedItemIds = Set(processed)
+        } catch {
+            print("Error loading processed items: \(error)")
+        }
+    }
+    #endif
+
     // Content with toolbar (search is handled by bottom tab bar)
     private var contentWithSearchMode: some View {
         mainContentView
@@ -445,7 +538,12 @@ struct CatalogView: View {
             .navigationTitle("Catalog")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    sortMenu
+                    HStack(spacing: DesignSystem.Spacing.sm) {
+                        sortMenu
+                        #if DEBUG
+                        processedFilterButton
+                        #endif
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
@@ -494,7 +592,11 @@ struct CatalogView: View {
     }
     
     private var catalogListView: some View {
+        #if DEBUG
+        CatalogListView(items: sortedFilteredItems, processedItemIds: processedItemIds)
+        #else
         CatalogListView(items: sortedFilteredItems)
+        #endif
     }
 }
 

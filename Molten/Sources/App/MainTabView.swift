@@ -43,6 +43,7 @@ extension Notification.Name {
     static let applyShoppingSearch = Notification.Name("applyShoppingSearch")
     static let detailViewAppeared = Notification.Name("detailViewAppeared")
     static let detailViewDisappeared = Notification.Name("detailViewDisappeared")
+    static let catalogFlagChanged = Notification.Name("catalogFlagChanged")  // Posted when catalog flag is added/removed
 }
 
 /// Main tab view that provides navigation between the app's primary sections

@@ -1,0 +1,203 @@
+{
+  "batch_num": 24,
+  "timestamp": "2026-01-11T13:42:30.248428",
+  "items_processed": 20,
+  "flags_found": 24,
+  "results": [
+    {
+      "stable_id": "0yPUFy",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0b0EY6",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5hPEeZ",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0tmem2",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4fE2D8",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1vFqwK",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0ZZQFQ",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1vxnpy",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3dmHUS",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1KHWdj",
+      "flags": []
+    },
+    {
+      "stable_id": "5Sy2yQ",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2y2A9h",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3f0xqw",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3hsZha",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "611B81",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0nxzUc",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "color_matures_in_kiln",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6LuYqY",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "color_matures_in_kiln",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0bySwy",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1HuLWP",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "46MYwn",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

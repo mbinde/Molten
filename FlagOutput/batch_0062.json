@@ -1,0 +1,254 @@
+{
+  "batch_num": 62,
+  "timestamp": "2026-01-11T13:49:21.860549",
+  "items_processed": 20,
+  "flags_found": 37,
+  "results": [
+    {
+      "stable_id": "5TapDv",
+      "flags": []
+    },
+    {
+      "stable_id": "3nQ7M3",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0dc1F3",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        },
+        {
+          "key": "reacts_with_silver",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1c9K2b",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        },
+        {
+          "key": "reacts_with_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1TVBCj",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        },
+        {
+          "key": "reacts_with_silver",
+          "value": true
+        },
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3Eh7YJ",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        },
+        {
+          "key": "reacts_with_silver",
+          "value": true
+        },
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5p0Kf7",
+      "flags": []
+    },
+    {
+      "stable_id": "3YNjcA",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2Rmthm",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3BsFhD",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0mSBhN",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "18Vzyx",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4RfuPR",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2bkurQ",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "51dxux",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "16r6BW",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5UqXfh",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "beginner_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "63CFUt",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5qWZJN",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "68CrsZ",
+      "flags": [
+        {
+          "key": "contains_silver",
+          "value": true
+        },
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

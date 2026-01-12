@@ -1,0 +1,143 @@
+{
+  "batch_num": 184,
+  "timestamp": "2026-01-11T14:28:30.315055",
+  "items_processed": 20,
+  "flags_found": 12,
+  "results": [
+    {
+      "stable_id": "3tdwb7",
+      "flags": []
+    },
+    {
+      "stable_id": "2GRpXK",
+      "flags": []
+    },
+    {
+      "stable_id": "59PJmX",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "052Mju",
+      "flags": []
+    },
+    {
+      "stable_id": "5WFfhn",
+      "flags": []
+    },
+    {
+      "stable_id": "2Hej4g",
+      "flags": []
+    },
+    {
+      "stable_id": "1L5a2E",
+      "flags": []
+    },
+    {
+      "stable_id": "1jsgx3",
+      "flags": []
+    },
+    {
+      "stable_id": "1tcgYu",
+      "flags": [
+        {
+          "key": "beginner_color",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        },
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5eJJxu",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2vuk2D",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4GaCdj",
+      "flags": []
+    },
+    {
+      "stable_id": "0JCVDP",
+      "flags": []
+    },
+    {
+      "stable_id": "5ctJNm",
+      "flags": [
+        {
+          "key": "beginner_color",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        },
+        {
+          "key": "cadmium",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1vUqAd",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "64YSge",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        },
+        {
+          "key": "cadmium",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "18408E",
+      "flags": []
+    },
+    {
+      "stable_id": "4G2czy",
+      "flags": []
+    },
+    {
+      "stable_id": "4vzeFs",
+      "flags": []
+    },
+    {
+      "stable_id": "2smvEF",
+      "flags": []
+    }
+  ]
+}

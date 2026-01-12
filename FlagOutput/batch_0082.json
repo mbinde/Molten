@@ -1,0 +1,262 @@
+{
+  "batch_num": 82,
+  "timestamp": "2026-01-11T14:12:17.098450",
+  "items_processed": 20,
+  "flags_found": 39,
+  "results": [
+    {
+      "stable_id": "3gsFvF",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4K5CCX",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "color_matures_in_kiln",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2642gW",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4N7xLy",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4ccqYY",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "42sZDZ",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1Rv2eq",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "589YZ3",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0HRmSP",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2GeV6A",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "melts_smoothly",
+          "value": true
+        },
+        {
+          "key": "beginner_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5XGthv",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5wkrfW",
+      "flags": []
+    },
+    {
+      "stable_id": "4bTnHQ",
+      "flags": []
+    },
+    {
+      "stable_id": "5eGDVE",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "45eK55",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2yxCBP",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3X4mVS",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "70TAGU",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "melts_smoothly",
+          "value": true
+        },
+        {
+          "key": "beginner_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2s3RVr",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5SZeAv",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

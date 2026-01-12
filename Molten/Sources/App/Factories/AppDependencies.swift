@@ -56,6 +56,7 @@ class AppDependencies {
     let coatingItemRepository: CoatingItemRepository
     let toolItemRepository: ToolItemRepository
     let itemTagsRepository: ItemTagsRepository
+    let catalogFlagBundledRepository: CatalogFlagBundledRepository
 
     // MARK: - UserDefaults Repository (always available)
 
@@ -506,6 +507,7 @@ class AppDependencies {
             self.itemTagsRepository = SQLiteItemTagsRepository(databaseManager: testDbManager)
             self.coatingItemRepository = SQLiteCoatingItemRepository(databaseManager: testDbManager)
             self.toolItemRepository = SQLiteToolItemRepository(databaseManager: testDbManager)
+            self.catalogFlagBundledRepository = SQLiteCatalogFlagRepository(databaseManager: testDbManager)
         } else {
             // Production: Use CatalogDatabaseManager (copies to Documents, handles OTA updates)
             // Note: CatalogDatabaseManager will be initialized lazily on first use
@@ -513,6 +515,7 @@ class AppDependencies {
             self.itemTagsRepository = SQLiteItemTagsRepository(databaseManager: CatalogDatabaseManager.shared)
             self.coatingItemRepository = SQLiteCoatingItemRepository(databaseManager: CatalogDatabaseManager.shared)
             self.toolItemRepository = SQLiteToolItemRepository(databaseManager: CatalogDatabaseManager.shared)
+            self.catalogFlagBundledRepository = SQLiteCatalogFlagRepository(databaseManager: CatalogDatabaseManager.shared)
         }
 
         // UserDefaults repository (no Core Data dependency)

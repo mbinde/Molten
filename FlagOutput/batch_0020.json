@@ -1,0 +1,236 @@
+{
+  "batch_num": 20,
+  "timestamp": "2026-01-11T13:41:44.735050",
+  "items_processed": 20,
+  "flags_found": 32,
+  "results": [
+    {
+      "stable_id": "35j7uh",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1mv6tz",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1JGLcr",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6AKe65",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "40KG33",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2pBtRe",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0FFPVh",
+      "flags": [
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3KZSXq",
+      "flags": [
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6VBkNE",
+      "flags": [
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "17aEXx",
+      "flags": [
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1sxMGj",
+      "flags": [
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2Dyfwj",
+      "flags": [
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1fJKSP",
+      "flags": [
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5sqMX2",
+      "flags": [
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1DS6CU",
+      "flags": [
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "56DZxV",
+      "flags": [
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0CrF0D",
+      "flags": [
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        },
+        {
+          "key": "heat_slowly",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2nm29W",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6aQRZm",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2safQA",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        },
+        {
+          "key": "heat_slowly",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

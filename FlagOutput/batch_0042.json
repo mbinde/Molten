@@ -1,0 +1,232 @@
+{
+  "batch_num": 42,
+  "timestamp": "2026-01-11T13:45:39.646558",
+  "items_processed": 20,
+  "flags_found": 31,
+  "results": [
+    {
+      "stable_id": "4mtmbX",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5nyhy0",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0HX4GE",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        },
+        {
+          "key": "reacts_with_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4Jmx92",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "29qHV5",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3Fdhqy",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5xEvdv",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1Qb2nM",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "52kDzE",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3NCH5M",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0DafAA",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "boils_easily",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "21b29v",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        },
+        {
+          "key": "reacts_with_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1NzsC2",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5CF4cS",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "boils_easily",
+          "value": true
+        },
+        {
+          "key": "heat_slowly",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3CJNCy",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3PUpWm",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6PM9cD",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0fcybG",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5qbbN0",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "striking_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0TbqUZ",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

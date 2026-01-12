@@ -1,0 +1,226 @@
+{
+  "batch_num": 52,
+  "timestamp": "2026-01-11T13:47:24.319728",
+  "items_processed": 20,
+  "flags_found": 30,
+  "results": [
+    {
+      "stable_id": "2dFz9S",
+      "flags": []
+    },
+    {
+      "stable_id": "0bn7nG",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2MrCP2",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "30FCeL",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        },
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1wHFjD",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4tJRZx",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1HKFN4",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2vMuku",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5Bmn5K",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6LQJ7q",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "melts_smoothly",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "24BKRa",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4jUAVK",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3BP9um",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0KL6BV",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5MxHWG",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3n2J1r",
+      "flags": []
+    },
+    {
+      "stable_id": "6KfaDg",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "52YnKS",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "reacts_with_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4garLs",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3AN0hc",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

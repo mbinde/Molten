@@ -1,0 +1,265 @@
+{
+  "batch_num": 80,
+  "timestamp": "2026-01-11T14:11:54.291748",
+  "items_processed": 20,
+  "flags_found": 40,
+  "results": [
+    {
+      "stable_id": "5H2uL5",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "color_matures_in_kiln",
+          "value": true
+        },
+        {
+          "key": "needs_short_anneal",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5cM8Br",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4rzeXr",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6BcpyV",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        },
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "47HVnR",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        },
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5PuGhy",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        },
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3hv2uw",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0cJxxJ",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2Gh43N",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1wPmcz",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "74QwnE",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        },
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3b2HvY",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3eGYtJ",
+      "flags": [
+        {
+          "key": "color_matures_in_kiln",
+          "value": true
+        },
+        {
+          "key": "melts_smoothly",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4pXPBx",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5Q4Ukg",
+      "flags": [
+        {
+          "key": "color_matures_in_kiln",
+          "value": true
+        },
+        {
+          "key": "melts_smoothly",
+          "value": true
+        },
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5vfHRb",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1tqnCb",
+      "flags": []
+    },
+    {
+      "stable_id": "4d1b3T",
+      "flags": []
+    },
+    {
+      "stable_id": "48s68b",
+      "flags": []
+    },
+    {
+      "stable_id": "0HvaD0",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "color_matures_in_kiln",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

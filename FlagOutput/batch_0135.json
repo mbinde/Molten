@@ -1,0 +1,193 @@
+{
+  "batch_num": 135,
+  "timestamp": "2026-01-11T14:20:53.032363",
+  "items_processed": 20,
+  "flags_found": 22,
+  "results": [
+    {
+      "stable_id": "574GT2",
+      "flags": [
+        {
+          "key": "beginner_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6gGMD4",
+      "flags": [
+        {
+          "key": "beginner_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4EKWgH",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5DPXP8",
+      "flags": []
+    },
+    {
+      "stable_id": "4LLwrJ",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3y1cTJ",
+      "flags": [
+        {
+          "key": "beginner_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5vkw7X",
+      "flags": []
+    },
+    {
+      "stable_id": "0ry8u4",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2vBeN3",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6YyE62",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "25wK6w",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5tUWCa",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6TjAqL",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "11pa0h",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2UFZ2k",
+      "flags": []
+    },
+    {
+      "stable_id": "30z8UF",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0tNyyz",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5xeULW",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0KFYX6",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "beginner_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6rhuut",
+      "flags": [
+        {
+          "key": "beginner_color",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

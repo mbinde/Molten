@@ -1,0 +1,223 @@
+{
+  "batch_num": 148,
+  "timestamp": "2026-01-11T14:23:10.687742",
+  "items_processed": 20,
+  "flags_found": 30,
+  "results": [
+    {
+      "stable_id": "1WmxWQ",
+      "flags": []
+    },
+    {
+      "stable_id": "5LLsZK",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "good_for_stringers",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        },
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5bPfx0",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1eUbmH",
+      "flags": [
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0kXNS1",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1RC4A7",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        },
+        {
+          "key": "good_for_stringers",
+          "value": true
+        },
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3NrG2J",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "73FPw7",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3JQpJC",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3rLyDk",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "reduction_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "32N4WQ",
+      "flags": []
+    },
+    {
+      "stable_id": "0p9eFf",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "sensitive_to_cooling_rate",
+          "value": true
+        },
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6FCR7H",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0SgfPF",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2JCF9u",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        },
+        {
+          "key": "heat_slowly",
+          "value": true
+        },
+        {
+          "key": "boils_easily",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0WLjRH",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3EZ0Mk",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2jWpzV",
+      "flags": []
+    },
+    {
+      "stable_id": "3JurUr",
+      "flags": []
+    },
+    {
+      "stable_id": "5qX9s9",
+      "flags": []
+    }
+  ]
+}

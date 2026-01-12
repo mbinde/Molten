@@ -47,6 +47,37 @@ nonisolated protocol CatalogFlagAdminRepository: Sendable {
     func findItems(withFlagKey flag_key: String, value: Bool) async throws -> [String]
 }
 
+// MARK: - Bundled Flag Repository
+
+/// Repository for bundled catalog flags (read-only)
+/// These flags ship with the app in catalog.sqlite and cannot be modified by users
+nonisolated protocol CatalogFlagBundledRepository: Sendable {
+
+    // MARK: - Single Item Operations
+
+    /// Fetch all bundled flags for a specific item
+    func fetchFlags(for item_stable_id: String) async throws -> [CatalogFlagBundledModel]
+
+    // MARK: - Batch Operations
+
+    /// Fetch flags for multiple items
+    func fetchFlags(for item_stable_ids: [String]) async throws -> [String: [CatalogFlagBundledModel]]
+
+    /// Fetch all bundled flags
+    func fetchAllFlags() async throws -> [CatalogFlagBundledModel]
+
+    // MARK: - Discovery Operations
+
+    /// Find all items that have a specific flag
+    func findItems(withFlagKey flag_key: String) async throws -> [String]
+
+    /// Get all available flag keys in the bundled data
+    func getAllFlagKeys() async throws -> [String]
+
+    /// Get flag counts by key
+    func getFlagCounts() async throws -> [String: Int]
+}
+
 // MARK: - User Flag Repository
 
 /// Repository for user-created catalog flags

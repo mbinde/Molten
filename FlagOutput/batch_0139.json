@@ -1,0 +1,268 @@
+{
+  "batch_num": 139,
+  "timestamp": "2026-01-11T14:21:32.034798",
+  "items_processed": 20,
+  "flags_found": 40,
+  "results": [
+    {
+      "stable_id": "471D4A",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4qMZty",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5cF7fb",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0rQW2k",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3nATxY",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        },
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4AG6AC",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        },
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5pwYMn",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        },
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6FRpnN",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "contains_silver",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        },
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4bPbR0",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0dNT74",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "36Fg7w",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6an2w9",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4dRZXV",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2bdpZ6",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "63Vb93",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "04eEuC",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4ZWqsP",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4VtBVa",
+      "flags": [
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3CJZZW",
+      "flags": [
+        {
+          "key": "advanced_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2ETUC8",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

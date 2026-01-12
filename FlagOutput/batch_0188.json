@@ -1,0 +1,127 @@
+{
+  "batch_num": 188,
+  "timestamp": "2026-01-11T14:29:00.608369",
+  "items_processed": 20,
+  "flags_found": 8,
+  "results": [
+    {
+      "stable_id": "4tDvdR",
+      "flags": []
+    },
+    {
+      "stable_id": "1UgCd2",
+      "flags": []
+    },
+    {
+      "stable_id": "2DWBtN",
+      "flags": []
+    },
+    {
+      "stable_id": "196Hm0",
+      "flags": []
+    },
+    {
+      "stable_id": "0J75nd",
+      "flags": []
+    },
+    {
+      "stable_id": "22WeWN",
+      "flags": []
+    },
+    {
+      "stable_id": "3ReMxE",
+      "flags": []
+    },
+    {
+      "stable_id": "0HgLb7",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0ktb8N",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2d5VSt",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2Yb7A4",
+      "flags": []
+    },
+    {
+      "stable_id": "2w2VRh",
+      "flags": []
+    },
+    {
+      "stable_id": "1Aq9UU",
+      "flags": []
+    },
+    {
+      "stable_id": "0EGDK2",
+      "flags": [
+        {
+          "key": "cadmium",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0b8Bxa",
+      "flags": []
+    },
+    {
+      "stable_id": "5nQ4Qn",
+      "flags": [
+        {
+          "key": "cadmium",
+          "value": true
+        },
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6fvcGm",
+      "flags": [
+        {
+          "key": "cadmium",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5ydk28",
+      "flags": []
+    },
+    {
+      "stable_id": "5kx6R2",
+      "flags": []
+    },
+    {
+      "stable_id": "4AABtk",
+      "flags": [
+        {
+          "key": "cadmium",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

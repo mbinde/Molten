@@ -1,0 +1,93 @@
+{
+  "batch_num": 176,
+  "timestamp": "2026-01-11T14:27:30.439312",
+  "items_processed": 20,
+  "flags_found": 1,
+  "results": [
+    {
+      "stable_id": "49JEkJ",
+      "flags": []
+    },
+    {
+      "stable_id": "6mnMmV",
+      "flags": []
+    },
+    {
+      "stable_id": "39US6q",
+      "flags": []
+    },
+    {
+      "stable_id": "0EWfpD",
+      "flags": []
+    },
+    {
+      "stable_id": "0uYhtW",
+      "flags": []
+    },
+    {
+      "stable_id": "0eRTFc",
+      "flags": []
+    },
+    {
+      "stable_id": "2xcLaC",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0qsNrZ",
+      "flags": []
+    },
+    {
+      "stable_id": "0aeCB6",
+      "flags": []
+    },
+    {
+      "stable_id": "5ZNynQ",
+      "flags": []
+    },
+    {
+      "stable_id": "4b0W4P",
+      "flags": []
+    },
+    {
+      "stable_id": "5T7WMf",
+      "flags": []
+    },
+    {
+      "stable_id": "1MUGBX",
+      "flags": []
+    },
+    {
+      "stable_id": "6Ew2Gf",
+      "flags": []
+    },
+    {
+      "stable_id": "0X6xNU",
+      "flags": []
+    },
+    {
+      "stable_id": "4S2c0Z",
+      "flags": []
+    },
+    {
+      "stable_id": "3MK0mU",
+      "flags": []
+    },
+    {
+      "stable_id": "4BEfpV",
+      "flags": []
+    },
+    {
+      "stable_id": "2fRGZ2",
+      "flags": []
+    },
+    {
+      "stable_id": "1h8Pq7",
+      "flags": []
+    }
+  ]
+}

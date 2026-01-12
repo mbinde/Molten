@@ -1,0 +1,103 @@
+{
+  "batch_num": 182,
+  "timestamp": "2026-01-11T14:28:15.586802",
+  "items_processed": 20,
+  "flags_found": 3,
+  "results": [
+    {
+      "stable_id": "3ZxWeB",
+      "flags": []
+    },
+    {
+      "stable_id": "3SqeX5",
+      "flags": []
+    },
+    {
+      "stable_id": "3SZdrT",
+      "flags": []
+    },
+    {
+      "stable_id": "6jNMHN",
+      "flags": []
+    },
+    {
+      "stable_id": "6TVbEA",
+      "flags": []
+    },
+    {
+      "stable_id": "1K9gga",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0h1ph9",
+      "flags": []
+    },
+    {
+      "stable_id": "0ALwPy",
+      "flags": []
+    },
+    {
+      "stable_id": "56PBAP",
+      "flags": []
+    },
+    {
+      "stable_id": "5aPACh",
+      "flags": []
+    },
+    {
+      "stable_id": "5s5FW2",
+      "flags": []
+    },
+    {
+      "stable_id": "0M3ULg",
+      "flags": []
+    },
+    {
+      "stable_id": "1rjKWj",
+      "flags": []
+    },
+    {
+      "stable_id": "0hYZmH",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3QvMTD",
+      "flags": []
+    },
+    {
+      "stable_id": "671FU1",
+      "flags": []
+    },
+    {
+      "stable_id": "6Z0GG4",
+      "flags": []
+    },
+    {
+      "stable_id": "65hW4s",
+      "flags": []
+    },
+    {
+      "stable_id": "3KRSFt",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6HgHRU",
+      "flags": []
+    }
+  ]
+}

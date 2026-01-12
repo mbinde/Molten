@@ -1,0 +1,142 @@
+{
+  "batch_num": 215,
+  "timestamp": "2026-01-11T14:32:41.553410",
+  "items_processed": 20,
+  "flags_found": 11,
+  "results": [
+    {
+      "stable_id": "3BPtHv",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0eFZ7b",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5Dtf3g",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5K1pM5",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1Ktgwk",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6KMGbA",
+      "flags": []
+    },
+    {
+      "stable_id": "4ZrjpC",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3XQhBF",
+      "flags": []
+    },
+    {
+      "stable_id": "31M02Y",
+      "flags": []
+    },
+    {
+      "stable_id": "5Z13sC",
+      "flags": []
+    },
+    {
+      "stable_id": "76r9sH",
+      "flags": []
+    },
+    {
+      "stable_id": "0ps5QF",
+      "flags": []
+    },
+    {
+      "stable_id": "4d7ZJz",
+      "flags": []
+    },
+    {
+      "stable_id": "58P8XT",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0je9nR",
+      "flags": []
+    },
+    {
+      "stable_id": "3garSq",
+      "flags": []
+    },
+    {
+      "stable_id": "0KHRsx",
+      "flags": []
+    },
+    {
+      "stable_id": "4xFTWG",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0gLKb9",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        },
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "68Ww8h",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

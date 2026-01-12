@@ -1,0 +1,209 @@
+{
+  "batch_num": 21,
+  "timestamp": "2026-01-11T13:41:54.887595",
+  "items_processed": 20,
+  "flags_found": 28,
+  "results": [
+    {
+      "stable_id": "3hAR7c",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "boils_easily",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        },
+        {
+          "key": "heat_slowly",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "59e08G",
+      "flags": [
+        {
+          "key": "boils_easily",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        },
+        {
+          "key": "heat_slowly",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4VhR1S",
+      "flags": []
+    },
+    {
+      "stable_id": "2PPBhc",
+      "flags": []
+    },
+    {
+      "stable_id": "44TuPf",
+      "flags": [
+        {
+          "key": "boils_easily",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        },
+        {
+          "key": "heat_slowly",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "65UzFb",
+      "flags": [
+        {
+          "key": "boils_easily",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        },
+        {
+          "key": "heat_slowly",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5Bkqhe",
+      "flags": [
+        {
+          "key": "boils_easily",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        },
+        {
+          "key": "heat_slowly",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3043GF",
+      "flags": []
+    },
+    {
+      "stable_id": "5RYGTg",
+      "flags": []
+    },
+    {
+      "stable_id": "2xne2u",
+      "flags": []
+    },
+    {
+      "stable_id": "1CTDC5",
+      "flags": []
+    },
+    {
+      "stable_id": "6qJxaS",
+      "flags": []
+    },
+    {
+      "stable_id": "37u3na",
+      "flags": []
+    },
+    {
+      "stable_id": "4ADyvv",
+      "flags": []
+    },
+    {
+      "stable_id": "1T5KNN",
+      "flags": []
+    },
+    {
+      "stable_id": "1SYcHZ",
+      "flags": [
+        {
+          "key": "boils_easily",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        },
+        {
+          "key": "heat_slowly",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2BtHDD",
+      "flags": [
+        {
+          "key": "boils_easily",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        },
+        {
+          "key": "heat_slowly",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "06cs8L",
+      "flags": []
+    },
+    {
+      "stable_id": "2fCwkR",
+      "flags": [
+        {
+          "key": "boils_easily",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        },
+        {
+          "key": "heat_slowly",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3DmVQ7",
+      "flags": [
+        {
+          "key": "boils_easily",
+          "value": true
+        },
+        {
+          "key": "melt_neutral_oxidizing",
+          "value": true
+        },
+        {
+          "key": "heat_slowly",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

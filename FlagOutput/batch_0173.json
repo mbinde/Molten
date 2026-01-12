@@ -1,0 +1,128 @@
+{
+  "batch_num": 173,
+  "timestamp": "2026-01-11T14:27:09.821873",
+  "items_processed": 20,
+  "flags_found": 8,
+  "results": [
+    {
+      "stable_id": "4nB2Ws",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5UU9QY",
+      "flags": []
+    },
+    {
+      "stable_id": "6sUHjH",
+      "flags": []
+    },
+    {
+      "stable_id": "1N8SnM",
+      "flags": []
+    },
+    {
+      "stable_id": "2F8EZZ",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3Dd47R",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5uJza5",
+      "flags": []
+    },
+    {
+      "stable_id": "2LMdLz",
+      "flags": []
+    },
+    {
+      "stable_id": "2Samvg",
+      "flags": []
+    },
+    {
+      "stable_id": "5fGGcb",
+      "flags": []
+    },
+    {
+      "stable_id": "75tBCB",
+      "flags": []
+    },
+    {
+      "stable_id": "1mwDqW",
+      "flags": []
+    },
+    {
+      "stable_id": "5v9Jf1",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "148mtd",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4uspjr",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "67zyFY",
+      "flags": []
+    },
+    {
+      "stable_id": "5Ew2EA",
+      "flags": []
+    },
+    {
+      "stable_id": "5ZL8CV",
+      "flags": []
+    },
+    {
+      "stable_id": "6Enc5L",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5vVBWD",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

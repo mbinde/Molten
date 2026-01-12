@@ -282,6 +282,53 @@ struct CatalogFlagUserModel: Identifiable, Equatable, Hashable, Sendable {
     }
 }
 
+// MARK: - Bundled Flag Model
+
+/// Bundled catalog flag (read-only, ships with the app)
+/// These are AI-generated flags stored in catalog.sqlite
+struct CatalogFlagBundledModel: Identifiable, Equatable, Hashable, Sendable {
+    nonisolated let id: Int  // SQLite row ID
+    nonisolated let item_stable_id: String
+    nonisolated let flag_key: String
+    nonisolated let flag_value: Bool
+    nonisolated let flag_numeric: Double?
+
+    nonisolated init(
+        id: Int,
+        item_stable_id: String,
+        flag_key: String,
+        flag_value: Bool = true,
+        flag_numeric: Double? = nil
+    ) {
+        self.id = id
+        self.item_stable_id = item_stable_id
+        self.flag_key = flag_key
+        self.flag_value = flag_value
+        self.flag_numeric = flag_numeric
+    }
+
+    /// Get typed flag key if it matches a known key
+    nonisolated var typedFlagKey: GlassFlagKey? {
+        GlassFlagKey(rawValue: flag_key)
+    }
+
+    /// Display value for the flag
+    nonisolated var displayValue: String {
+        guard let key = typedFlagKey else {
+            return flag_key
+        }
+
+        if let numeric = flag_numeric, let unit = key.valueUnit {
+            let formattedValue = numeric.truncatingRemainder(dividingBy: 1) == 0
+                ? String(format: "%.0f", numeric)
+                : String(format: "%.1f", numeric)
+            return "\(key.displayName): \(formattedValue)\(unit)"
+        }
+
+        return key.displayName
+    }
+}
+
 // MARK: - Export Models
 
 /// Export format for admin flags (for molten-data pipeline)

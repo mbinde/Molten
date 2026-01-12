@@ -1,0 +1,118 @@
+{
+  "batch_num": 190,
+  "timestamp": "2026-01-11T14:29:15.051892",
+  "items_processed": 20,
+  "flags_found": 6,
+  "results": [
+    {
+      "stable_id": "6hWHar",
+      "flags": []
+    },
+    {
+      "stable_id": "463G4r",
+      "flags": []
+    },
+    {
+      "stable_id": "58kG1T",
+      "flags": []
+    },
+    {
+      "stable_id": "158mtr",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6sBwqw",
+      "flags": []
+    },
+    {
+      "stable_id": "6Adfky",
+      "flags": []
+    },
+    {
+      "stable_id": "5PTP6N",
+      "flags": []
+    },
+    {
+      "stable_id": "65B2m7",
+      "flags": []
+    },
+    {
+      "stable_id": "1QABmv",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5mkeV6",
+      "flags": []
+    },
+    {
+      "stable_id": "5VQdzc",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4Pzyq5",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6mSSus",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1n3bAU",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4tVf9D",
+      "flags": []
+    },
+    {
+      "stable_id": "3sfrfM",
+      "flags": []
+    },
+    {
+      "stable_id": "6WEG2u",
+      "flags": []
+    },
+    {
+      "stable_id": "1WPg4j",
+      "flags": []
+    },
+    {
+      "stable_id": "48Rgbe",
+      "flags": []
+    },
+    {
+      "stable_id": "1QrEEW",
+      "flags": []
+    }
+  ]
+}

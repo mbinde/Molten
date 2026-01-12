@@ -1,0 +1,126 @@
+{
+  "batch_num": 186,
+  "timestamp": "2026-01-11T14:28:44.393244",
+  "items_processed": 20,
+  "flags_found": 8,
+  "results": [
+    {
+      "stable_id": "1hmhgV",
+      "flags": []
+    },
+    {
+      "stable_id": "5jbEur",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "14bNqa",
+      "flags": [
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5zBE6s",
+      "flags": []
+    },
+    {
+      "stable_id": "48tRag",
+      "flags": []
+    },
+    {
+      "stable_id": "4kbuYd",
+      "flags": []
+    },
+    {
+      "stable_id": "30Qcaf",
+      "flags": []
+    },
+    {
+      "stable_id": "5M2Wd8",
+      "flags": []
+    },
+    {
+      "stable_id": "4axCUu",
+      "flags": []
+    },
+    {
+      "stable_id": "5fCgar",
+      "flags": []
+    },
+    {
+      "stable_id": "5EzGDu",
+      "flags": []
+    },
+    {
+      "stable_id": "2mvMwk",
+      "flags": [
+        {
+          "key": "striking_color",
+          "value": true
+        },
+        {
+          "key": "can_deep_encase",
+          "value": true
+        },
+        {
+          "key": "cadmium",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3CFsCp",
+      "flags": []
+    },
+    {
+      "stable_id": "5x26L4",
+      "flags": []
+    },
+    {
+      "stable_id": "4tebwk",
+      "flags": []
+    },
+    {
+      "stable_id": "0qpq9s",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3XJGmz",
+      "flags": []
+    },
+    {
+      "stable_id": "2MYWCF",
+      "flags": []
+    },
+    {
+      "stable_id": "2t3jJz",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3MmRUW",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

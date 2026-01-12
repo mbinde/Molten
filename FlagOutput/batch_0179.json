@@ -1,0 +1,160 @@
+{
+  "batch_num": 179,
+  "timestamp": "2026-01-11T14:27:52.485462",
+  "items_processed": 20,
+  "flags_found": 15,
+  "results": [
+    {
+      "stable_id": "0PxQ5p",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3cFxvK",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6b3Q4a",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1aTycd",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2sDxPj",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5srmMH",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "55YFAs",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0xYMNC",
+      "flags": []
+    },
+    {
+      "stable_id": "2V0JdL",
+      "flags": []
+    },
+    {
+      "stable_id": "6t1ng5",
+      "flags": []
+    },
+    {
+      "stable_id": "3CcaQ7",
+      "flags": []
+    },
+    {
+      "stable_id": "23sg4e",
+      "flags": []
+    },
+    {
+      "stable_id": "6MHASG",
+      "flags": []
+    },
+    {
+      "stable_id": "4ggNm3",
+      "flags": []
+    },
+    {
+      "stable_id": "5E1xdE",
+      "flags": []
+    },
+    {
+      "stable_id": "3vyHyW",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2M35h4",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6mCJ2p",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0x9Nn9",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "212mhw",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "batch_num": 216,
+  "timestamp": "2026-01-11T14:32:49.541472",
+  "items_processed": 20,
+  "flags_found": 10,
+  "results": [
+    {
+      "stable_id": "6Lwb9F",
+      "flags": []
+    },
+    {
+      "stable_id": "1aWAep",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "56S2jp",
+      "flags": []
+    },
+    {
+      "stable_id": "6KKG7z",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0aGAGp",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2vvCca",
+      "flags": []
+    },
+    {
+      "stable_id": "4Rx00b",
+      "flags": []
+    },
+    {
+      "stable_id": "6yfVBt",
+      "flags": []
+    },
+    {
+      "stable_id": "1X7xJy",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3pMTNY",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "34BQRC",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "39yrJQ",
+      "flags": []
+    },
+    {
+      "stable_id": "0pjBRU",
+      "flags": []
+    },
+    {
+      "stable_id": "0FABRE",
+      "flags": []
+    },
+    {
+      "stable_id": "3VDf0R",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1hKHEz",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "60SY8f",
+      "flags": []
+    },
+    {
+      "stable_id": "3HbDUU",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3qbTkK",
+      "flags": []
+    },
+    {
+      "stable_id": "2xTxnx",
+      "flags": []
+    }
+  ]
+}

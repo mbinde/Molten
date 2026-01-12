@@ -1,0 +1,158 @@
+{
+  "batch_num": 165,
+  "timestamp": "2026-01-11T14:26:04.313183",
+  "items_processed": 20,
+  "flags_found": 14,
+  "results": [
+    {
+      "stable_id": "6TQv4E",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2GaNJn",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1SFnP7",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2mDTZk",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5xhpkX",
+      "flags": []
+    },
+    {
+      "stable_id": "4p0kgh",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "1d80nw",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "2G8vwC",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "62BvqV",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0us47S",
+      "flags": []
+    },
+    {
+      "stable_id": "3qR9SV",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "62cZv2",
+      "flags": []
+    },
+    {
+      "stable_id": "0w2eLX",
+      "flags": []
+    },
+    {
+      "stable_id": "1egTv8",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4LKUfw",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3Mmfyg",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4Rr6gA",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "13ga5U",
+      "flags": []
+    },
+    {
+      "stable_id": "6ZWcuc",
+      "flags": []
+    },
+    {
+      "stable_id": "5gB3xv",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

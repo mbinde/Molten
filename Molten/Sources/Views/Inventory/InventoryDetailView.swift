@@ -30,6 +30,7 @@ struct InventoryDetailView: View {
     let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
     #if DEBUG
     let catalogFlagAdminRepository: CatalogFlagAdminRepository
+    let catalogFlagBundledRepository: CatalogFlagBundledRepository
     #endif
 
     /// Optional callback for QR scan workflow - shows "Manage Inventory" button near inventory section
@@ -122,6 +123,7 @@ struct InventoryDetailView: View {
         glassItemRepository: GlassItemRepository,
         storageLocationDefinitionRepository: StorageLocationDefinitionRepository,
         catalogFlagAdminRepository: CatalogFlagAdminRepository,
+        catalogFlagBundledRepository: CatalogFlagBundledRepository,
         onManageInventory: (() -> Void)? = nil
     ) {
         self.item = item
@@ -137,6 +139,7 @@ struct InventoryDetailView: View {
         self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
         #if DEBUG
         self.catalogFlagAdminRepository = catalogFlagAdminRepository
+        self.catalogFlagBundledRepository = catalogFlagBundledRepository
         #endif
         self.onManageInventory = onManageInventory
         // Initialize from user settings
@@ -165,6 +168,7 @@ struct InventoryDetailView: View {
         self.storageLocationDefinitionRepository = deps.storageLocationDefinitionRepository
         #if DEBUG
         self.catalogFlagAdminRepository = deps.catalogFlagAdminRepository
+        self.catalogFlagBundledRepository = deps.catalogFlagBundledRepository
         #endif
         self.onManageInventory = onManageInventory
         // Initialize from user settings
@@ -351,7 +355,8 @@ struct InventoryDetailView: View {
 
                     CatalogFlagEditorView(
                         itemStableId: currentItem.glassItem.stable_id,
-                        catalogFlagAdminRepository: catalogFlagAdminRepository
+                        catalogFlagAdminRepository: catalogFlagAdminRepository,
+                        catalogFlagBundledRepository: catalogFlagBundledRepository
                     )
 
                     CatalogDescriptionEditorView(

@@ -14,16 +14,24 @@ import SwiftUI
 
 /// Debug-only editor for catalog flags
 /// Allows adding/editing flags that will be exported for catalog updates
+/// Also displays bundled flags (read-only) from the catalog SQLite database
 struct CatalogFlagEditorView: View {
     let itemStableId: String
     let catalogFlagAdminRepository: CatalogFlagAdminRepository
+    let catalogFlagBundledRepository: CatalogFlagBundledRepository
 
     @State private var adminFlags: [CatalogFlagAdminModel] = []
+    @State private var bundledFlags: [CatalogFlagBundledModel] = []
     @State private var isLoading = false
     @State private var showingAddFlag = false
     @State private var exportedJSON: ExportedJSONWrapper? = nil
     @State private var isExpanded = false
     @State private var totalItemsWithData: Int = 0
+
+    /// Total flags count (admin + bundled)
+    private var totalFlagsCount: Int {
+        adminFlags.count + bundledFlags.count
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
@@ -43,8 +51,8 @@ struct CatalogFlagEditorView: View {
 
                     Spacer()
 
-                    if !adminFlags.isEmpty {
-                        Text("\(adminFlags.count)")
+                    if totalFlagsCount > 0 {
+                        Text("\(totalFlagsCount)")
                             .font(DesignSystem.Typography.listItemCaption)
                             .foregroundColor(.white)
                             .padding(.horizontal, 8)
@@ -79,23 +87,62 @@ struct CatalogFlagEditorView: View {
     @ViewBuilder
     private var expandedContent: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-            // Current flags
+            // Loading state
             if isLoading {
                 ProgressView()
                     .frame(maxWidth: .infinity)
-            } else if adminFlags.isEmpty {
-                Text("No flags set")
-                    .font(DesignSystem.Typography.formLabel)
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, DesignSystem.Spacing.md)
             } else {
-                ForEach(adminFlags) { flag in
-                    FlagRow(
-                        flag: flag,
-                        onToggle: { toggleFlag(flag) },
-                        onDelete: { deleteFlag(flag) }
-                    )
+                // Bundled flags (read-only, from catalog.sqlite)
+                if !bundledFlags.isEmpty {
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+                        HStack {
+                            Image(systemName: "shippingbox.fill")
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                                .font(.caption)
+                            Text("Bundled (\(bundledFlags.count))")
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                        }
+
+                        ForEach(bundledFlags) { flag in
+                            BundledFlagRow(flag: flag)
+                        }
+                    }
+                }
+
+                // Admin flags (editable)
+                if !adminFlags.isEmpty {
+                    if !bundledFlags.isEmpty {
+                        Divider()
+                    }
+
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+                        HStack {
+                            Image(systemName: "pencil.circle.fill")
+                                .foregroundColor(DesignSystem.Colors.moltenOrange)
+                                .font(.caption)
+                            Text("Your Edits (\(adminFlags.count))")
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                        }
+
+                        ForEach(adminFlags) { flag in
+                            FlagRow(
+                                flag: flag,
+                                onToggle: { toggleFlag(flag) },
+                                onDelete: { deleteFlag(flag) }
+                            )
+                        }
+                    }
+                }
+
+                // Empty state
+                if bundledFlags.isEmpty && adminFlags.isEmpty {
+                    Text("No flags set")
+                        .font(DesignSystem.Typography.formLabel)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, DesignSystem.Spacing.md)
                 }
             }
 
@@ -153,16 +200,20 @@ struct CatalogFlagEditorView: View {
         defer { isLoading = false }
 
         do {
-            let allFlags = try await catalogFlagAdminRepository.fetchFlags(for: itemStableId)
-            // Filter out hidden flags (handled by separate UI elements)
-            adminFlags = allFlags.filter { $0.flag_key != kDescriptionReplacementKey && $0.flag_key != kProcessedKey }
+            // Load bundled flags (read-only from catalog.sqlite)
+            bundledFlags = try await catalogFlagBundledRepository.fetchFlags(for: itemStableId)
 
-            // Count total unique items with any data
-            let allAdminFlags = try await catalogFlagAdminRepository.fetchAllFlags()
-            let uniqueItems = Set(allAdminFlags.map { $0.item_stable_id })
+            // Load admin flags (editable)
+            let allAdminFlags = try await catalogFlagAdminRepository.fetchFlags(for: itemStableId)
+            // Filter out hidden flags (handled by separate UI elements)
+            adminFlags = allAdminFlags.filter { $0.flag_key != kDescriptionReplacementKey && $0.flag_key != kProcessedKey }
+
+            // Count total unique items with any data (admin flags only, for export)
+            let allFlags = try await catalogFlagAdminRepository.fetchAllFlags()
+            let uniqueItems = Set(allFlags.map { $0.item_stable_id })
             totalItemsWithData = uniqueItems.count
         } catch {
-            print("Error loading admin flags: \(error)")
+            print("Error loading flags: \(error)")
         }
     }
 
@@ -290,6 +341,49 @@ private struct FlagRow: View {
             .buttonStyle(.plain)
         }
         .padding(.vertical, DesignSystem.Spacing.xs)
+    }
+}
+
+// MARK: - Bundled Flag Row (Read-only)
+
+private struct BundledFlagRow: View {
+    let flag: CatalogFlagBundledModel
+
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.md) {
+            // Checkmark (always checked for bundled flags)
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+                .font(.title3)
+
+            // Flag info
+            VStack(alignment: .leading, spacing: 2) {
+                if let key = flag.typedFlagKey {
+                    Text(key.displayName)
+                        .font(DesignSystem.Typography.formLabel)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                    if let numeric = flag.flag_numeric, let unit = key.valueUnit {
+                        Text("\(Int(numeric))\(unit)")
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textTertiary)
+                    }
+                } else {
+                    Text(flag.flag_key)
+                        .font(DesignSystem.Typography.formLabel)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+            }
+
+            Spacer()
+
+            // Read-only indicator
+            Image(systemName: "lock.fill")
+                .font(.caption2)
+                .foregroundColor(DesignSystem.Colors.textTertiary)
+        }
+        .padding(.vertical, DesignSystem.Spacing.xs)
+        .opacity(0.8)
     }
 }
 
@@ -496,7 +590,8 @@ private struct ExportSheet: View {
     let deps = AppDependencies(persistenceController: .createTestController())
     return CatalogFlagEditorView(
         itemStableId: "bullseye-0001-0",
-        catalogFlagAdminRepository: deps.catalogFlagAdminRepository
+        catalogFlagAdminRepository: deps.catalogFlagAdminRepository,
+        catalogFlagBundledRepository: deps.catalogFlagBundledRepository
     )
     .padding()
 }

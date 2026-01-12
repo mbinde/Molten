@@ -1,0 +1,132 @@
+{
+  "batch_num": 1,
+  "timestamp": "2026-01-11T13:38:26.422600",
+  "items_processed": 20,
+  "flags_found": 9,
+  "results": [
+    {
+      "stable_id": "60S9AB",
+      "flags": []
+    },
+    {
+      "stable_id": "6BH79z",
+      "flags": []
+    },
+    {
+      "stable_id": "2cUKsH",
+      "flags": []
+    },
+    {
+      "stable_id": "33Ex7x",
+      "flags": []
+    },
+    {
+      "stable_id": "3dqMe0",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5nvPcK",
+      "flags": []
+    },
+    {
+      "stable_id": "68C3Q8",
+      "flags": []
+    },
+    {
+      "stable_id": "4t7yH0",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3N2vxQ",
+      "flags": []
+    },
+    {
+      "stable_id": "1Vf2bF",
+      "flags": []
+    },
+    {
+      "stable_id": "1rfLTz",
+      "flags": []
+    },
+    {
+      "stable_id": "2mRqSj",
+      "flags": []
+    },
+    {
+      "stable_id": "0S93vv",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "21YN2b",
+      "flags": []
+    },
+    {
+      "stable_id": "1nApAQ",
+      "flags": []
+    },
+    {
+      "stable_id": "4P71XH",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        },
+        {
+          "key": "mottled_color",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6venxW",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "65mM2J",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4Ujq9F",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6jj3gP",
+      "flags": [
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,162 @@
+{
+  "batch_num": 200,
+  "timestamp": "2026-01-11T14:30:28.312940",
+  "items_processed": 20,
+  "flags_found": 16,
+  "results": [
+    {
+      "stable_id": "5qykng",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3trGCV",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "69TtS3",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4uzaQM",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "6fQfWs",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "cadmium",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "19uKUP",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "5e1uUr",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4FLN0p",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "3GsFFc",
+      "flags": []
+    },
+    {
+      "stable_id": "05HyWa",
+      "flags": []
+    },
+    {
+      "stable_id": "3JkvpQ",
+      "flags": [
+        {
+          "key": "transparent",
+          "value": true
+        },
+        {
+          "key": "opaque",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "4UVJGb",
+      "flags": []
+    },
+    {
+      "stable_id": "6YFwut",
+      "flags": [
+        {
+          "key": "can_deep_encase",
+          "value": true
+        }
+      ]
+    },
+    {
+      "stable_id": "0KavqG",
+      "flags": []
+    },
+    {
+      "stable_id": "273hnH",
+      "flags": []
+    },
+    {
+      "stable_id": "6Lz3af",
+      "flags": []
+    },
+    {
+      "stable_id": "4ZVHKA",
+      "flags": []
+    },
+    {
+      "stable_id": "44s9fP",
+      "flags": []
+    },
+    {
+      "stable_id": "19h9PK",
+      "flags": []
+    },
+    {
+      "stable_id": "1rfmxB",
+      "flags": []
+    }
+  ]
+}

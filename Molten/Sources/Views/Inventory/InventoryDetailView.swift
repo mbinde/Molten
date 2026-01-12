@@ -64,8 +64,10 @@ struct InventoryDetailView: View {
     @State private var userTags: [String] = []
     @State private var isLoadingTags = false
 
-    // Bundled catalog flags state
+    // Bundled catalog flags state (DEBUG only)
+    #if DEBUG
     @State private var bundledFlags: [CatalogFlagBundledModel] = []
+    #endif
 
     // Shopping list state
     @State private var shoppingListItem: ItemShoppingModel?
@@ -1206,9 +1208,11 @@ struct InventoryDetailView: View {
         ) {
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
                 // Bundled catalog flags (shown as tag-style chips)
+                #if DEBUG
                 if !bundledFlags.isEmpty {
                     bundledFlagsView
                 }
+                #endif
 
                 if canShowManufacturerDescription,
                    let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
@@ -1224,31 +1228,30 @@ struct InventoryDetailView: View {
         .accessibilityIdentifier("manufacturer_website_link")
     }
 
+    #if DEBUG
     /// View showing bundled catalog flags as tag-style chips
     @ViewBuilder
     private var bundledFlagsView: some View {
         FlowLayout(spacing: DesignSystem.Spacing.xs) {
             ForEach(bundledFlags) { flag in
-                if let key = flag.typedFlagKey {
-                    Text(key.displayName)
-                        .font(DesignSystem.Typography.listItemCaption)
-                        .padding(.horizontal, DesignSystem.Spacing.sm)
-                        .padding(.vertical, DesignSystem.Spacing.xxs)
-                        .background(DesignSystem.Colors.tintInfo.opacity(0.3))
-                        .foregroundColor(DesignSystem.Colors.accentInfo)
-                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
-                } else {
-                    Text(flag.flag_key)
-                        .font(DesignSystem.Typography.listItemCaption)
-                        .padding(.horizontal, DesignSystem.Spacing.sm)
-                        .padding(.vertical, DesignSystem.Spacing.xxs)
-                        .background(DesignSystem.Colors.tintInfo.opacity(0.3))
-                        .foregroundColor(DesignSystem.Colors.accentInfo)
-                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
-                }
+                flagChip(for: flag)
             }
         }
     }
+
+    /// Individual flag chip styled like tags
+    @ViewBuilder
+    private func flagChip(for flag: CatalogFlagBundledModel) -> some View {
+        let displayText = flag.typedFlagKey?.displayName ?? flag.flag_key
+        Text(displayText)
+            .font(DesignSystem.Typography.listItemCaption)
+            .padding(.horizontal, DesignSystem.Spacing.sm)
+            .padding(.vertical, DesignSystem.Spacing.xxs)
+            .background(DesignSystem.Colors.tintInfo.opacity(0.3))
+            .foregroundColor(DesignSystem.Colors.accentInfo)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+    }
+    #endif
 
     // MARK: - User Notes Section
 

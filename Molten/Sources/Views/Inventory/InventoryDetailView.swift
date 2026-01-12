@@ -1247,8 +1247,8 @@ struct InventoryDetailView: View {
             .font(DesignSystem.Typography.listItemCaption)
             .padding(.horizontal, DesignSystem.Spacing.sm)
             .padding(.vertical, DesignSystem.Spacing.xxs)
-            .background(DesignSystem.Colors.tintInfo.opacity(0.3))
-            .foregroundColor(DesignSystem.Colors.accentInfo)
+            .background(DesignSystem.Colors.tintTeal)
+            .foregroundColor(DesignSystem.Colors.accentSecondary)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
     }
     #endif

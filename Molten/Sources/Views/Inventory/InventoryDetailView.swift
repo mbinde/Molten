@@ -64,6 +64,9 @@ struct InventoryDetailView: View {
     @State private var userTags: [String] = []
     @State private var isLoadingTags = false
 
+    // Bundled catalog flags state
+    @State private var bundledFlags: [CatalogFlagBundledModel] = []
+
     // Shopping list state
     @State private var shoppingListItem: ItemShoppingModel?
     @State private var isLoadingShoppingList = false
@@ -527,6 +530,7 @@ struct InventoryDetailView: View {
             loadUserImages()
             loadRecommendedSchedules()
             loadPricePerRod()
+            loadBundledFlags()
             #if DEBUG
             Task { await loadProcessedState() }
             #endif
@@ -576,6 +580,19 @@ struct InventoryDetailView: View {
                 print("No user tags found or error loading: \(error)")
             }
         }
+    }
+
+    private func loadBundledFlags() {
+        #if DEBUG
+        Task {
+            do {
+                bundledFlags = try await catalogFlagBundledRepository.fetchFlags(for: item.glassItem.stable_id)
+            } catch {
+                // No flags is fine, just leave empty
+                print("Error loading bundled flags: \(error)")
+            }
+        }
+        #endif
     }
 
     private func loadShoppingList() {
@@ -1188,6 +1205,11 @@ struct InventoryDetailView: View {
             accessibilityId: "section_description"
         ) {
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+                // Bundled catalog flags (shown as tag-style chips)
+                if !bundledFlags.isEmpty {
+                    bundledFlagsView
+                }
+
                 if canShowManufacturerDescription,
                    let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
                     expandableNotesCard(title: nil, content: notes, accessibilityId: "expand_description")
@@ -1200,6 +1222,32 @@ struct InventoryDetailView: View {
             }
         }
         .accessibilityIdentifier("manufacturer_website_link")
+    }
+
+    /// View showing bundled catalog flags as tag-style chips
+    @ViewBuilder
+    private var bundledFlagsView: some View {
+        FlowLayout(spacing: DesignSystem.Spacing.xs) {
+            ForEach(bundledFlags) { flag in
+                if let key = flag.typedFlagKey {
+                    Text(key.displayName)
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .padding(.horizontal, DesignSystem.Spacing.sm)
+                        .padding(.vertical, DesignSystem.Spacing.xxs)
+                        .background(DesignSystem.Colors.tintInfo.opacity(0.3))
+                        .foregroundColor(DesignSystem.Colors.accentInfo)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+                } else {
+                    Text(flag.flag_key)
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .padding(.horizontal, DesignSystem.Spacing.sm)
+                        .padding(.vertical, DesignSystem.Spacing.xxs)
+                        .background(DesignSystem.Colors.tintInfo.opacity(0.3))
+                        .foregroundColor(DesignSystem.Colors.accentInfo)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
+                }
+            }
+        }
     }
 
     // MARK: - User Notes Section

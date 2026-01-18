@@ -10,17 +10,29 @@ import SwiftUI
 
 /// Hero-style header with large product image and overlaid item name
 /// Used at the top of detail views for visual impact
+/// Supports multiple images with carousel display
 struct HeroHeader: View {
     let item: GlassItemModel
     var extendsToTop: Bool = false
     var onAddPhoto: (() -> Void)?
     var imageRefreshTrigger: UUID?  // Change this to force image reload
 
-    @State private var loadedImage: UIImage?
+    @State private var loadedImages: [UIImage] = []
+    @State private var selectedImageIndex: Int = 0
     @State private var isLoading = true
     @State private var showingFullScreen = false
     @State private var showingColorApproximationInfo = false
     @State private var isShowingColorApproximation = false
+
+    /// Number of images available
+    private var imageCount: Int {
+        max(loadedImages.count, 1)
+    }
+
+    /// Whether we have multiple images to show carousel
+    private var hasMultipleImages: Bool {
+        loadedImages.count > 1
+    }
 
     init(item: GlassItemModel, extendsToTop: Bool = false, onAddPhoto: (() -> Void)? = nil, imageRefreshTrigger: UUID? = nil) {
         self.item = item
@@ -35,22 +47,46 @@ struct HeroHeader: View {
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            // Large product image - fills width and crops vertically
-            // loadProductImageForDisplay always returns a usable image (product photo, gradient, or manufacturer logo)
+            // Large product image(s) - fills width and crops vertically
+            // Shows carousel when multiple images available
             GeometryReader { geometry in
-                if let image = loadedImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
+                if !loadedImages.isEmpty {
+                    if hasMultipleImages {
+                        // Multiple images - show carousel
+                        TabView(selection: $selectedImageIndex) {
+                            ForEach(loadedImages.indices, id: \.self) { index in
+                                Image(uiImage: loadedImages[index])
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: geometry.size.width, height: imageHeight)
+                                    .clipped()
+                                    .tag(index)
+                            }
+                        }
+                        .tabViewStyle(.page(indexDisplayMode: .never))
                         .frame(width: geometry.size.width, height: imageHeight)
-                        .clipped()
                         .contentShape(Rectangle())
                         .onTapGesture {
                             showingFullScreen = true
                         }
-                        .accessibilityLabel("Product image for \(item.name)")
-                        .accessibilityHint("Double tap to view full screen")
+                        .accessibilityLabel("Product images for \(item.name), \(selectedImageIndex + 1) of \(loadedImages.count)")
+                        .accessibilityHint("Swipe to see more images, double tap to view full screen")
                         .accessibilityAddTraits(.isButton)
+                    } else {
+                        // Single image
+                        Image(uiImage: loadedImages[0])
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: geometry.size.width, height: imageHeight)
+                            .clipped()
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                showingFullScreen = true
+                            }
+                            .accessibilityLabel("Product image for \(item.name)")
+                            .accessibilityHint("Double tap to view full screen")
+                            .accessibilityAddTraits(.isButton)
+                    }
                 } else {
                     // Loading or placeholder
                     Rectangle()
@@ -89,6 +125,21 @@ struct HeroHeader: View {
                         x: geometry.size.width - DesignSystem.Padding.standard - 12,
                         y: (extendsToTop ? geometry.safeAreaInsets.top : 0) + DesignSystem.Spacing.lg + 12
                     )
+                }
+            }
+
+            // Page indicators for multi-image carousel
+            if hasMultipleImages {
+                VStack {
+                    Spacer()
+                    HStack(spacing: 6) {
+                        ForEach(loadedImages.indices, id: \.self) { index in
+                            Circle()
+                                .fill(index == selectedImageIndex ? Color.white : Color.white.opacity(0.4))
+                                .frame(width: 6, height: 6)
+                        }
+                    }
+                    .padding(.bottom, 50)  // Position above text overlay
                 }
             }
 
@@ -164,7 +215,11 @@ struct HeroHeader: View {
             await loadImage()
         }
         .fullScreenCover(isPresented: $showingFullScreen) {
-            FullScreenImageView(image: loadedImage, itemName: item.name)
+            if hasMultipleImages {
+                FullscreenImageGallery(images: loadedImages, startIndex: selectedImageIndex)
+            } else {
+                FullScreenImageView(image: loadedImages.first, itemName: item.name)
+            }
         }
     }
 
@@ -206,15 +261,48 @@ struct HeroHeader: View {
             stableId: item.stable_id
         )
 
-        // Use the centralized image loading logic
-        loadedImage = await ImageHelpers.loadProductImageForDisplay(
+        // Check if we have multiple images available
+        let imagePaths = item.image_paths ?? []
+        let imageThumbPaths = item.image_thumb_paths ?? []
+        let useThumbnail = !UserSettings.shared.downloadFullSizeImages
+
+        if imagePaths.count > 1 {
+            // Load multiple images
+            var images: [UIImage] = []
+            for i in 0..<imagePaths.count {
+                let path = imagePaths[i]
+                let thumbPath = imageThumbPaths.indices.contains(i) ? imageThumbPaths[i] : nil
+
+                if let image = await ImageDownloadService.loadImage(
+                    manufacturer: item.manufacturer,
+                    exactFilename: path,
+                    exactThumbnailFilename: thumbPath,
+                    useThumbnail: useThumbnail
+                ) {
+                    images.append(image)
+                }
+            }
+
+            // If we loaded multiple images, use them
+            if images.count > 1 {
+                loadedImages = images
+                return
+            }
+        }
+
+        // Fall back to single image loading (primary image or gradient)
+        if let image = await ImageHelpers.loadProductImageForDisplay(
             itemCode: item.stable_id,
             manufacturer: item.manufacturer,
             stableId: item.stable_id,
             imagePath: item.image_path,
             imageThumbPath: item.image_thumb_path,
             dominantColors: item.dominant_colors
-        )
+        ) {
+            loadedImages = [image]
+        } else {
+            loadedImages = []
+        }
     }
 }
 
@@ -260,65 +348,6 @@ private struct FullScreenImageView: View {
                     .padding()
             }
         }
-    }
-}
-
-/// Zoomable image view with pinch gesture
-private struct ZoomableImageView: View {
-    let image: UIImage
-
-    @State private var scale: CGFloat = 1.0
-    @State private var lastScale: CGFloat = 1.0
-    @State private var offset: CGSize = .zero
-    @State private var lastOffset: CGSize = .zero
-
-    var body: some View {
-        Image(uiImage: image)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .scaleEffect(scale)
-            .offset(offset)
-            .gesture(
-                MagnificationGesture()
-                    .onChanged { value in
-                        scale = lastScale * value
-                    }
-                    .onEnded { _ in
-                        lastScale = scale
-                        // Snap back if zoomed out too much
-                        if scale < 1.0 {
-                            withAnimation(.spring()) {
-                                scale = 1.0
-                                lastScale = 1.0
-                                offset = .zero
-                                lastOffset = .zero
-                            }
-                        }
-                    }
-            )
-            .simultaneousGesture(
-                DragGesture()
-                    .onChanged { value in
-                        if scale > 1.0 {
-                            offset = CGSize(
-                                width: lastOffset.width + value.translation.width,
-                                height: lastOffset.height + value.translation.height
-                            )
-                        }
-                    }
-                    .onEnded { _ in
-                        lastOffset = offset
-                    }
-            )
-            .onTapGesture(count: 2) {
-                // Double tap to reset zoom
-                withAnimation(.spring()) {
-                    scale = 1.0
-                    lastScale = 1.0
-                    offset = .zero
-                    lastOffset = .zero
-                }
-            }
     }
 }
 

@@ -79,6 +79,7 @@ struct CatalogDescriptionEditorView: View {
                         .font(.caption)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
 
@@ -105,6 +106,35 @@ struct CatalogDescriptionEditorView: View {
                 ProgressView()
                     .frame(maxWidth: .infinity)
             } else {
+                // Paste and Clear buttons at top
+                HStack {
+                    Button {
+                        if let pastedText = UIPasteboard.general.string {
+                            editedDescription = pastedText
+                            hasUnsavedChanges = true
+                        }
+                    } label: {
+                        Label("Paste", systemImage: "doc.on.clipboard")
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.accentPrimary)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(UIPasteboard.general.string == nil)
+
+                    Spacer()
+
+                    Button {
+                        editedDescription = ""
+                        hasUnsavedChanges = true
+                    } label: {
+                        Label("Clear", systemImage: "xmark.circle")
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(editedDescription.isEmpty)
+                }
+
                 // Text editor
                 TextEditor(text: $editedDescription)
                     .font(DesignSystem.Typography.formValue)
@@ -164,12 +194,15 @@ struct CatalogDescriptionEditorView: View {
                     }
                 }
 
-                // Done button to dismiss keyboard and save
-                if isTextEditorFocused {
+                // Done/Save button - shows when editing or when there are unsaved changes
+                if isTextEditorFocused || hasUnsavedChanges {
                     Button {
                         isTextEditorFocused = false
+                        Task {
+                            await saveIfNeeded()
+                        }
                     } label: {
-                        Text("Done Editing")
+                        Text(isTextEditorFocused ? "Done Editing" : "Save")
                             .font(DesignSystem.Typography.formLabel)
                             .frame(maxWidth: .infinity)
                     }
@@ -235,7 +268,7 @@ struct CatalogDescriptionEditorView: View {
 
     private func deleteReplacement(_ record: CatalogFlagAdminModel) async {
         do {
-            try await catalogFlagAdminRepository.removeFlag(record.id)
+            try await catalogFlagAdminRepository.removeAdminFlag(record.id)
             existingRecord = nil
         } catch {
             print("Error deleting description replacement: \(error)")

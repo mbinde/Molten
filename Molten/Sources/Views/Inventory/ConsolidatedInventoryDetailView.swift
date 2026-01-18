@@ -79,7 +79,10 @@ struct ConsolidatedInventoryDetailView: View {
                                 Text("\(glassItem.coe)")
                                     .fontWeight(.medium)
                             }
-                            
+
+                            // Bundled catalog flags
+                            BundledFlagsChipsView(itemStableId: glassItem.stable_id)
+
                             if let mfr_notes = glassItem.mfr_notes, !mfr_notes.isEmpty {
                                 Text(mfr_notes)
                                     .font(.caption)

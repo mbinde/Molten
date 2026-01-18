@@ -233,6 +233,11 @@ class CatalogViewModel: CatalogViewModelProtocol {
     // MARK: - Constants
 
     private static let productTypeFilterKey = "catalog.selectedProductTypes"
+    private static let coeFilterKey = "catalog.selectedCOEs"
+    private static let manufacturerFilterKey = "catalog.selectedManufacturers"
+    private static let tagsFilterKey = "catalog.selectedTags"
+    private static let searchTitlesOnlyKey = "catalog.searchTitlesOnly"
+    private static let sortOptionKey = "catalog.sortOption"
 
     // MARK: - Published State
 
@@ -269,6 +274,7 @@ class CatalogViewModel: CatalogViewModelProtocol {
     var searchTitlesOnly = true {
         didSet {
             if searchTitlesOnly != oldValue {
+                saveSearchTitlesOnly()
                 applyFilters()
             }
         }
@@ -277,6 +283,7 @@ class CatalogViewModel: CatalogViewModelProtocol {
     var selectedTags: Set<String> = [] {
         didSet {
             if selectedTags != oldValue {
+                saveTagsFilter()
                 applyFilters()
             }
         }
@@ -285,6 +292,7 @@ class CatalogViewModel: CatalogViewModelProtocol {
     var selectedCOEs: Set<Int32> = [] {
         didSet {
             if selectedCOEs != oldValue {
+                saveCOEFilter()
                 applyFilters()
             }
         }
@@ -293,6 +301,7 @@ class CatalogViewModel: CatalogViewModelProtocol {
     var selectedManufacturers: Set<String> = [] {
         didSet {
             if selectedManufacturers != oldValue {
+                saveManufacturerFilter()
                 applyFilters()
             }
         }
@@ -313,6 +322,7 @@ class CatalogViewModel: CatalogViewModelProtocol {
     var sortOption: SortOption = .name {
         didSet {
             if sortOption != oldValue {
+                saveSortOption()
                 // Ratings are always loaded, so just re-sort
                 applySorting()
             }
@@ -341,14 +351,54 @@ class CatalogViewModel: CatalogViewModelProtocol {
     init(catalogService: CatalogService) {
         self.catalogService = catalogService
 
-        // Load saved product type filter from UserDefaults, default to "all"
+        // Load saved filters from UserDefaults
         // Note: We set the backing storage directly to avoid triggering didSet during init
+
+        // Product type filter
         if let savedData = UserDefaults.standard.data(forKey: Self.productTypeFilterKey),
            let savedTypes = try? JSONDecoder().decode(Set<String>.self, from: savedData) {
             self._selectedProductTypes = savedTypes
         } else {
-            // Default to "all" (empty set) if no saved filter
             self._selectedProductTypes = []
+        }
+
+        // COE filter
+        if let savedData = UserDefaults.standard.data(forKey: Self.coeFilterKey),
+           let savedCOEs = try? JSONDecoder().decode([Int32].self, from: savedData) {
+            self._selectedCOEs = Set(savedCOEs)
+        } else {
+            self._selectedCOEs = []
+        }
+
+        // Manufacturer filter
+        if let savedData = UserDefaults.standard.data(forKey: Self.manufacturerFilterKey),
+           let savedManufacturers = try? JSONDecoder().decode([String].self, from: savedData) {
+            self._selectedManufacturers = Set(savedManufacturers)
+        } else {
+            self._selectedManufacturers = []
+        }
+
+        // Tags filter
+        if let savedData = UserDefaults.standard.data(forKey: Self.tagsFilterKey),
+           let savedTags = try? JSONDecoder().decode([String].self, from: savedData) {
+            self._selectedTags = Set(savedTags)
+        } else {
+            self._selectedTags = []
+        }
+
+        // Search titles only preference
+        if UserDefaults.standard.object(forKey: Self.searchTitlesOnlyKey) != nil {
+            self._searchTitlesOnly = UserDefaults.standard.bool(forKey: Self.searchTitlesOnlyKey)
+        } else {
+            self._searchTitlesOnly = true  // default
+        }
+
+        // Sort option
+        if let savedSortRaw = UserDefaults.standard.string(forKey: Self.sortOptionKey),
+           let savedSort = SortOption(rawValue: savedSortRaw) {
+            self._sortOption = savedSort
+        } else {
+            self._sortOption = .name  // default
         }
 
         // Set up debouncing for search text (300ms delay)
@@ -654,6 +704,37 @@ class CatalogViewModel: CatalogViewModelProtocol {
         if let encoded = try? JSONEncoder().encode(selectedProductTypes) {
             UserDefaults.standard.set(encoded, forKey: Self.productTypeFilterKey)
         }
+    }
+
+    /// Save COE filter to UserDefaults for persistence across sessions
+    private func saveCOEFilter() {
+        if let encoded = try? JSONEncoder().encode(Array(selectedCOEs)) {
+            UserDefaults.standard.set(encoded, forKey: Self.coeFilterKey)
+        }
+    }
+
+    /// Save manufacturer filter to UserDefaults for persistence across sessions
+    private func saveManufacturerFilter() {
+        if let encoded = try? JSONEncoder().encode(Array(selectedManufacturers)) {
+            UserDefaults.standard.set(encoded, forKey: Self.manufacturerFilterKey)
+        }
+    }
+
+    /// Save tags filter to UserDefaults for persistence across sessions
+    private func saveTagsFilter() {
+        if let encoded = try? JSONEncoder().encode(Array(selectedTags)) {
+            UserDefaults.standard.set(encoded, forKey: Self.tagsFilterKey)
+        }
+    }
+
+    /// Save search titles only preference to UserDefaults
+    private func saveSearchTitlesOnly() {
+        UserDefaults.standard.set(searchTitlesOnly, forKey: Self.searchTitlesOnlyKey)
+    }
+
+    /// Save sort option to UserDefaults for persistence across sessions
+    private func saveSortOption() {
+        UserDefaults.standard.set(sortOption.rawValue, forKey: Self.sortOptionKey)
     }
 
     // MARK: - Generic Filter Computation

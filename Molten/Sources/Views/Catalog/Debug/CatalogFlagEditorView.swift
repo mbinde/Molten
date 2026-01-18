@@ -19,9 +19,11 @@ struct CatalogFlagEditorView: View {
     let itemStableId: String
     let catalogFlagAdminRepository: CatalogFlagAdminRepository
     let catalogFlagBundledRepository: CatalogFlagBundledRepository
+    let catalogTagAdminRepository: CatalogTagAdminRepository
 
     @State private var adminFlags: [CatalogFlagAdminModel] = []
     @State private var bundledFlags: [CatalogFlagBundledModel] = []
+    @State private var adminFlagRemovals: Set<String> = []  // flag_keys marked for removal
     @State private var isLoading = false
     @State private var showingAddFlag = false
     @State private var exportedJSON: ExportedJSONWrapper? = nil
@@ -65,6 +67,7 @@ struct CatalogFlagEditorView: View {
                         .font(.caption)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
 
@@ -92,7 +95,7 @@ struct CatalogFlagEditorView: View {
                 ProgressView()
                     .frame(maxWidth: .infinity)
             } else {
-                // Bundled flags (read-only, from catalog.sqlite)
+                // Bundled flags (from catalog.sqlite, can be marked for removal)
                 if !bundledFlags.isEmpty {
                     VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
                         HStack {
@@ -105,7 +108,12 @@ struct CatalogFlagEditorView: View {
                         }
 
                         ForEach(bundledFlags) { flag in
-                            BundledFlagRow(flag: flag)
+                            BundledFlagRow(
+                                flag: flag,
+                                isMarkedForRemoval: adminFlagRemovals.contains(flag.flag_key),
+                                onMarkForRemoval: { markFlagForRemoval(flag) },
+                                onUndoRemoval: { undoFlagRemoval(flag) }
+                            )
                         }
                     }
                 }
@@ -200,13 +208,17 @@ struct CatalogFlagEditorView: View {
         defer { isLoading = false }
 
         do {
-            // Load bundled flags (read-only from catalog.sqlite)
+            // Load bundled flags (from catalog.sqlite)
             bundledFlags = try await catalogFlagBundledRepository.fetchFlags(for: itemStableId)
 
-            // Load admin flags (editable)
-            let allAdminFlags = try await catalogFlagAdminRepository.fetchFlags(for: itemStableId)
+            // Load admin flag additions (editable)
+            let allAdminAdditions = try await catalogFlagAdminRepository.fetchFlagAdditions(for: itemStableId)
             // Filter out hidden flags (handled by separate UI elements)
-            adminFlags = allAdminFlags.filter { $0.flag_key != kDescriptionReplacementKey && $0.flag_key != kProcessedKey }
+            adminFlags = allAdminAdditions.filter { $0.flag_key != kDescriptionReplacementKey && $0.flag_key != kProcessedKey }
+
+            // Load admin flag removals (bundled flags marked for deletion)
+            let allAdminRemovals = try await catalogFlagAdminRepository.fetchFlagRemovals(for: itemStableId)
+            adminFlagRemovals = Set(allAdminRemovals.map { $0.flag_key })
 
             // Count total unique items with any data (admin flags only, for export)
             let allFlags = try await catalogFlagAdminRepository.fetchAllFlags()
@@ -235,7 +247,27 @@ struct CatalogFlagEditorView: View {
 
     private func deleteFlag(_ flag: CatalogFlagAdminModel) {
         Task {
-            try? await catalogFlagAdminRepository.removeFlag(flag.id)
+            try? await catalogFlagAdminRepository.removeAdminFlag(flag.id)
+            await loadFlags()
+        }
+    }
+
+    private func markFlagForRemoval(_ flag: CatalogFlagBundledModel) {
+        Task {
+            try? await catalogFlagAdminRepository.markFlagForRemoval(
+                item_stable_id: itemStableId,
+                flag_key: flag.flag_key
+            )
+            await loadFlags()
+        }
+    }
+
+    private func undoFlagRemoval(_ flag: CatalogFlagBundledModel) {
+        Task {
+            try? await catalogFlagAdminRepository.removeAdminFlag(
+                item_stable_id: itemStableId,
+                flag_key: flag.flag_key
+            )
             await loadFlags()
         }
     }
@@ -244,26 +276,37 @@ struct CatalogFlagEditorView: View {
     private func exportFlags() async {
         do {
             let allFlags = try await catalogFlagAdminRepository.fetchAllFlags()
-            print("DEBUG: fetchAllFlags returned \(allFlags.count) flags")
+            let allTags = try await catalogTagAdminRepository.fetchAllTags()
+            print("DEBUG: fetchAllFlags returned \(allFlags.count) flags, \(allTags.count) tags")
 
-            // Separate flags from description replacements
-            let regularFlags = allFlags.filter { $0.flag_key != kDescriptionReplacementKey }
-            let descriptionReplacements = allFlags.filter { $0.flag_key == kDescriptionReplacementKey }
-            print("DEBUG: regularFlags=\(regularFlags.count), descReplacements=\(descriptionReplacements.count)")
+            // Separate flags into additions and removals, excluding special keys
+            let regularFlags = allFlags.filter { $0.flag_key != kDescriptionReplacementKey && $0.flag_key != kProcessedKey }
+            let flagAdditions = regularFlags.filter { !$0.is_removal }
+            let flagRemovals = regularFlags.filter { $0.is_removal }
+            let descriptionReplacements = allFlags.filter { $0.flag_key == kDescriptionReplacementKey && !$0.is_removal }
+            print("DEBUG: flagAdditions=\(flagAdditions.count), flagRemovals=\(flagRemovals.count), descReplacements=\(descriptionReplacements.count)")
 
             // Build JSON manually to avoid Codable actor isolation issues
             var json = "{\n"
-            json += "  \"version\": \"1.0\",\n"
+            json += "  \"version\": \"1.2\",\n"
 
             let formatter = ISO8601DateFormatter()
             json += "  \"exported_at\": \"\(formatter.string(from: Date()))\",\n"
 
-            // Flags array
+            // Flags array (additions only)
             json += "  \"flags\": [\n"
-            for (index, flag) in regularFlags.enumerated() {
-                let comma = index < regularFlags.count - 1 ? "," : ""
+            for (index, flag) in flagAdditions.enumerated() {
+                let comma = index < flagAdditions.count - 1 ? "," : ""
                 let numericStr = flag.flag_numeric.map { String($0) } ?? "null"
                 json += "    { \"item_stable_id\": \"\(flag.item_stable_id)\", \"flag_key\": \"\(flag.flag_key)\", \"flag_value\": \(flag.flag_value), \"flag_numeric\": \(numericStr) }\(comma)\n"
+            }
+            json += "  ],\n"
+
+            // Flag removals array
+            json += "  \"flag_removals\": [\n"
+            for (index, flag) in flagRemovals.enumerated() {
+                let comma = index < flagRemovals.count - 1 ? "," : ""
+                json += "    { \"item_stable_id\": \"\(flag.item_stable_id)\", \"flag_key\": \"\(flag.flag_key)\" }\(comma)\n"
             }
             json += "  ],\n"
 
@@ -277,6 +320,26 @@ struct CatalogFlagEditorView: View {
                     .replacingOccurrences(of: "\"", with: "\\\"")
                     .replacingOccurrences(of: "\n", with: "\\n")
                 json += "    { \"item_stable_id\": \"\(flag.item_stable_id)\", \"description\": \"\(escapedDesc)\" }\(comma)\n"
+            }
+            json += "  ],\n"
+
+            // Separate tag additions from removals
+            let tagAdditions = allTags.filter { !$0.is_removal }
+            let tagRemovals = allTags.filter { $0.is_removal }
+
+            // Tags array (additions)
+            json += "  \"tags\": [\n"
+            for (index, tag) in tagAdditions.enumerated() {
+                let comma = index < tagAdditions.count - 1 ? "," : ""
+                json += "    { \"item_stable_id\": \"\(tag.item_stable_id)\", \"tag\": \"\(tag.tag)\" }\(comma)\n"
+            }
+            json += "  ],\n"
+
+            // Tag removals array
+            json += "  \"tag_removals\": [\n"
+            for (index, tag) in tagRemovals.enumerated() {
+                let comma = index < tagRemovals.count - 1 ? "," : ""
+                json += "    { \"item_stable_id\": \"\(tag.item_stable_id)\", \"tag\": \"\(tag.tag)\" }\(comma)\n"
             }
             json += "  ]\n"
             json += "}"
@@ -344,16 +407,19 @@ private struct FlagRow: View {
     }
 }
 
-// MARK: - Bundled Flag Row (Read-only)
+// MARK: - Bundled Flag Row (Can be marked for removal)
 
 private struct BundledFlagRow: View {
     let flag: CatalogFlagBundledModel
+    let isMarkedForRemoval: Bool
+    let onMarkForRemoval: () -> Void
+    let onUndoRemoval: () -> Void
 
     var body: some View {
         HStack(spacing: DesignSystem.Spacing.md) {
-            // Checkmark (always checked for bundled flags)
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(DesignSystem.Colors.textSecondary)
+            // Checkmark (shows removal state)
+            Image(systemName: isMarkedForRemoval ? "xmark.circle.fill" : "checkmark.circle.fill")
+                .foregroundColor(isMarkedForRemoval ? DesignSystem.Colors.accentDanger : DesignSystem.Colors.textSecondary)
                 .font(.title3)
 
             // Flag info
@@ -361,29 +427,48 @@ private struct BundledFlagRow: View {
                 if let key = flag.typedFlagKey {
                     Text(key.displayName)
                         .font(DesignSystem.Typography.formLabel)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .foregroundColor(isMarkedForRemoval ? DesignSystem.Colors.textTertiary : DesignSystem.Colors.textSecondary)
+                        .strikethrough(isMarkedForRemoval, color: DesignSystem.Colors.accentDanger)
 
                     if let numeric = flag.flag_numeric, let unit = key.valueUnit {
                         Text("\(Int(numeric))\(unit)")
                             .font(DesignSystem.Typography.listItemCaption)
                             .foregroundColor(DesignSystem.Colors.textTertiary)
+                            .strikethrough(isMarkedForRemoval, color: DesignSystem.Colors.accentDanger)
                     }
                 } else {
                     Text(flag.flag_key)
                         .font(DesignSystem.Typography.formLabel)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .foregroundColor(isMarkedForRemoval ? DesignSystem.Colors.textTertiary : DesignSystem.Colors.textSecondary)
+                        .strikethrough(isMarkedForRemoval, color: DesignSystem.Colors.accentDanger)
                 }
             }
 
             Spacer()
 
-            // Read-only indicator
-            Image(systemName: "lock.fill")
-                .font(.caption2)
-                .foregroundColor(DesignSystem.Colors.textTertiary)
+            // Remove/Undo button
+            if isMarkedForRemoval {
+                Button {
+                    onUndoRemoval()
+                } label: {
+                    Image(systemName: "arrow.uturn.backward.circle.fill")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.accentPrimary)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Button {
+                    onMarkForRemoval()
+                } label: {
+                    Image(systemName: "xmark.circle")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textTertiary)
+                }
+                .buttonStyle(.plain)
+            }
         }
         .padding(.vertical, DesignSystem.Spacing.xs)
-        .opacity(0.8)
+        .opacity(isMarkedForRemoval ? 0.6 : 0.8)
     }
 }
 
@@ -397,9 +482,21 @@ private struct AddFlagSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedFlagKeys: Set<GlassFlagKey> = []
     @State private var numericValues: [GlassFlagKey: String] = [:]
+    @State private var searchText: String = ""
 
     private var availableFlags: [GlassFlagKey] {
         GlassFlagKey.allCases.filter { !existingFlags.contains($0.rawValue) }
+    }
+
+    private var filteredFlags: [GlassFlagKey] {
+        if searchText.isEmpty {
+            return availableFlags.sorted { $0.displayName < $1.displayName }
+        }
+        let lowercasedSearch = searchText.lowercased()
+        return availableFlags.filter {
+            $0.displayName.lowercased().contains(lowercasedSearch) ||
+            $0.rawValue.lowercased().contains(lowercasedSearch)
+        }.sorted { $0.displayName < $1.displayName }
     }
 
     private var selectedNumericFlags: [GlassFlagKey] {
@@ -410,7 +507,7 @@ private struct AddFlagSheet: View {
         NavigationStack {
             Form {
                 Section("Select Flags") {
-                    ForEach(availableFlags, id: \.rawValue) { flagKey in
+                    ForEach(filteredFlags, id: \.rawValue) { flagKey in
                         Button {
                             if selectedFlagKeys.contains(flagKey) {
                                 selectedFlagKeys.remove(flagKey)
@@ -473,6 +570,7 @@ private struct AddFlagSheet: View {
                     .disabled(selectedFlagKeys.isEmpty || !isValid)
                 }
             }
+            .searchable(text: $searchText, prompt: "Search flags")
         }
         .presentationDetents([.medium, .large])
     }
@@ -591,7 +689,8 @@ private struct ExportSheet: View {
     return CatalogFlagEditorView(
         itemStableId: "bullseye-0001-0",
         catalogFlagAdminRepository: deps.catalogFlagAdminRepository,
-        catalogFlagBundledRepository: deps.catalogFlagBundledRepository
+        catalogFlagBundledRepository: deps.catalogFlagBundledRepository,
+        catalogTagAdminRepository: deps.catalogTagAdminRepository
     )
     .padding()
 }

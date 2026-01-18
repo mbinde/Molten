@@ -26,6 +26,7 @@ enum GlassFlagKey: String, Codable, CaseIterable, Sendable {
     case strikingColor = "striking_color"
     case mottledColor = "mottled_color"
     case reductionColor = "reduction_color"
+    case reactive = "reactive"
     case reactsWithSilver = "reacts_with_silver"
     case reactsWithCopper = "reacts_with_copper"
     case shocky = "shocky"
@@ -35,11 +36,21 @@ enum GlassFlagKey: String, Codable, CaseIterable, Sendable {
     case containsSilver = "contains_silver"
     case goodStringers = "good_for_stringers"
     case transparent = "transparent"
+    case translucent = "translucent"
     case opaque = "opaque"
     case meltsSmoothly = "melts_smoothly"
     case meltNeutralOxidizing = "melt_neutral_oxidizing"
+    case neutralFlame = "neutral_flame"
+    case oxidizingFlame = "oxidizing_flame"
     case heatSlowly = "heat_slowly"
     case cadmium = "cadmium"
+    case etchesPoorly = "etches_poorly"
+    case thinsWhenStretched = "thins_when_stretched"
+    case containsSparkles = "contains_sparkles"
+    case glowsInDark = "glows_in_dark"
+    case experimental = "experimental"
+    case discontinued = "discontinued"
+    case metallicLuster = "metallic_luster"
 
     // Parametric flags (flag_value = true/false, flag_numeric = value)
     case customAnnealTemp = "custom_anneal_temp"
@@ -69,7 +80,8 @@ enum GlassFlagKey: String, Codable, CaseIterable, Sendable {
         case .colorMaturesInKiln: return "Color matures in kiln"
         case .strikingColor: return "Striking color"
         case .reductionColor: return "Reduction color"
-        case .mottledColor: return "Mottled color"
+        case .mottledColor: return "Multicolored/Mottled/Variegated"
+        case .reactive: return "Reactive"
         case .reactsWithSilver: return "Reacts with silver"
         case .reactsWithCopper: return "Reacts with copper"
         case .shocky: return "Shocky (thermal shock prone)"
@@ -79,12 +91,22 @@ enum GlassFlagKey: String, Codable, CaseIterable, Sendable {
         case .containsSilver: return "Contains silver"
         case .goodStringers: return "Good for stringers (stretches thin well)"
         case .transparent: return "Transparent"
+        case .translucent: return "Translucent"
         case .opaque: return "Opaque"
         case .meltsSmoothly: return "Melts smoothly"
-        case .meltNeutralOxidizing: return "Melt in an Neutral Oxidizing Flame"
+        case .meltNeutralOxidizing: return "Use Neutral to Oxidizing Flame"
+        case .neutralFlame: return "Neutral flame"
+        case .oxidizingFlame: return "Oxidizing flame"
         case .heatSlowly: return "Heat slowly"
         case .cadmium: return "Contains cadmium"
-            
+        case .etchesPoorly: return "Etches poorly"
+        case .thinsWhenStretched: return "Thins when stretched"
+        case .containsSparkles: return "Contains sparkles"
+        case .glowsInDark: return "Glows in the dark"
+        case .experimental: return "Experimental/test"
+        case .discontinued: return "Discontinued/Limited"
+        case .metallicLuster: return "Metallic/luster finish"
+
         case .customAnnealTemp: return "Custom anneal temperature"
         case .maxWorkingTemp: return "Max working temperature"
         case .holdTime: return "Hold time"
@@ -113,6 +135,7 @@ let kProcessedKey = "__processed__"
 
 /// Admin-created catalog flag (for catalog contributions)
 /// Stored in CloudKit, exported to JSON for incorporation into catalog
+/// Can represent either an addition (is_removal = false) or removal (is_removal = true) of a flag
 struct CatalogFlagAdminModel: Identifiable, Equatable, Hashable, Sendable {
     nonisolated let id: UUID
     nonisolated let item_stable_id: String
@@ -120,6 +143,7 @@ struct CatalogFlagAdminModel: Identifiable, Equatable, Hashable, Sendable {
     nonisolated let flag_value: Bool
     nonisolated let flag_numeric: Double?
     nonisolated let description_replacement: String?
+    nonisolated let is_removal: Bool
     nonisolated let created_at: Date
     nonisolated let updated_at: Date
 
@@ -130,6 +154,7 @@ struct CatalogFlagAdminModel: Identifiable, Equatable, Hashable, Sendable {
         flag_value: Bool = true,
         flag_numeric: Double? = nil,
         description_replacement: String? = nil,
+        is_removal: Bool = false,
         created_at: Date = Date(),
         updated_at: Date = Date()
     ) {
@@ -139,6 +164,7 @@ struct CatalogFlagAdminModel: Identifiable, Equatable, Hashable, Sendable {
         self.flag_value = flag_value
         self.flag_numeric = flag_numeric
         self.description_replacement = description_replacement
+        self.is_removal = is_removal
         self.created_at = created_at
         self.updated_at = updated_at
     }
@@ -149,14 +175,16 @@ struct CatalogFlagAdminModel: Identifiable, Equatable, Hashable, Sendable {
         item_stable_id: String,
         flagKey: GlassFlagKey,
         flag_value: Bool = true,
-        flag_numeric: Double? = nil
+        flag_numeric: Double? = nil,
+        is_removal: Bool = false
     ) {
         self.init(
             id: id,
             item_stable_id: item_stable_id,
             flag_key: flagKey.rawValue,
             flag_value: flag_value,
-            flag_numeric: flag_numeric
+            flag_numeric: flag_numeric,
+            is_removal: is_removal
         )
     }
 

@@ -45,6 +45,34 @@ class CoreDataCatalogFlagAdminRepository: @unchecked Sendable, CatalogFlagAdminR
         }
     }
 
+    func fetchFlagAdditions(for item_stable_id: String) async throws -> [CatalogFlagAdminModel] {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "CatalogFlagAdmin")
+            fetchRequest.predicate = NSPredicate(
+                format: "item_stable_id == %@ AND deleted_at == nil AND is_removal == NO",
+                item_stable_id
+            )
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "flag_key", ascending: true)]
+
+            let results = try context.fetch(fetchRequest)
+            return results.compactMap { self.modelFromManagedObject($0) }
+        }
+    }
+
+    func fetchFlagRemovals(for item_stable_id: String) async throws -> [CatalogFlagAdminModel] {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "CatalogFlagAdmin")
+            fetchRequest.predicate = NSPredicate(
+                format: "item_stable_id == %@ AND deleted_at == nil AND is_removal == YES",
+                item_stable_id
+            )
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "flag_key", ascending: true)]
+
+            let results = try context.fetch(fetchRequest)
+            return results.compactMap { self.modelFromManagedObject($0) }
+        }
+    }
+
     func saveFlag(_ flag: CatalogFlagAdminModel) async throws {
         try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
             // Check if flag already exists for this item + key
@@ -75,6 +103,7 @@ class CoreDataCatalogFlagAdminRepository: @unchecked Sendable, CatalogFlagAdminR
             managedObject.setValue(flag.item_stable_id, forKey: "item_stable_id")
             managedObject.setValue(flag.flag_key, forKey: "flag_key")
             managedObject.setValue(flag.flag_value, forKey: "flag_value")
+            managedObject.setValue(flag.is_removal, forKey: "is_removal")
             if let numeric = flag.flag_numeric {
                 managedObject.setValue(numeric, forKey: "flag_numeric")
             } else {
@@ -91,7 +120,41 @@ class CoreDataCatalogFlagAdminRepository: @unchecked Sendable, CatalogFlagAdminR
         }
     }
 
-    func removeFlag(_ flagId: UUID) async throws {
+    func markFlagForRemoval(item_stable_id: String, flag_key: String) async throws {
+        try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
+            // Check if a removal record already exists
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "CatalogFlagAdmin")
+            fetchRequest.predicate = NSPredicate(
+                format: "item_stable_id == %@ AND flag_key == %@ AND is_removal == YES AND deleted_at == nil",
+                item_stable_id, flag_key
+            )
+
+            let existingRemovals = try context.fetch(fetchRequest)
+            if !existingRemovals.isEmpty {
+                self.log.debug("Flag removal record already exists for \(flag_key) on \(item_stable_id)")
+                return
+            }
+
+            // Create new removal record
+            guard let entity = NSEntityDescription.entity(forEntityName: "CatalogFlagAdmin", in: context) else {
+                throw CatalogFlagRepositoryError.entityNotFound("CatalogFlagAdmin")
+            }
+
+            let managedObject = NSManagedObject(entity: entity, insertInto: context)
+            managedObject.setValue(UUID(), forKey: "id")
+            managedObject.setValue(item_stable_id, forKey: "item_stable_id")
+            managedObject.setValue(flag_key, forKey: "flag_key")
+            managedObject.setValue(true, forKey: "flag_value")
+            managedObject.setValue(true, forKey: "is_removal")
+            managedObject.setValue(Date(), forKey: "created_at")
+            managedObject.setValue(Date(), forKey: "updated_at")
+
+            try context.save()
+            self.log.info("Created removal record for flag \(flag_key) on \(item_stable_id)")
+        }
+    }
+
+    func removeAdminFlag(_ flagId: UUID) async throws {
         try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
             let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "CatalogFlagAdmin")
             fetchRequest.predicate = NSPredicate(format: "id == %@", flagId as CVarArg)
@@ -109,7 +172,7 @@ class CoreDataCatalogFlagAdminRepository: @unchecked Sendable, CatalogFlagAdminR
         }
     }
 
-    func removeFlag(item_stable_id: String, flag_key: String) async throws {
+    func removeAdminFlag(item_stable_id: String, flag_key: String) async throws {
         try await CoreDataHelper.performAsyncVoid(on: backgroundContext) { context in
             let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "CatalogFlagAdmin")
             fetchRequest.predicate = NSPredicate(
@@ -215,6 +278,7 @@ class CoreDataCatalogFlagAdminRepository: @unchecked Sendable, CatalogFlagAdminR
         let flag_value = object.value(forKey: "flag_value") as? Bool ?? true
         let flag_numeric = object.value(forKey: "flag_numeric") as? Double
         let description_replacement = object.value(forKey: "description_replacement") as? String
+        let is_removal = object.value(forKey: "is_removal") as? Bool ?? false
 
         return CatalogFlagAdminModel(
             id: id,
@@ -223,6 +287,7 @@ class CoreDataCatalogFlagAdminRepository: @unchecked Sendable, CatalogFlagAdminR
             flag_value: flag_value,
             flag_numeric: flag_numeric,
             description_replacement: description_replacement,
+            is_removal: is_removal,
             created_at: created_at,
             updated_at: updated_at
         )

@@ -17,18 +17,27 @@ nonisolated protocol CatalogFlagAdminRepository: Sendable {
 
     // MARK: - Single Item Operations
 
-    /// Fetch all admin flags for a specific item
+    /// Fetch all admin flags for a specific item (both additions and removals)
     func fetchFlags(for item_stable_id: String) async throws -> [CatalogFlagAdminModel]
+
+    /// Fetch only flag additions for a specific item
+    func fetchFlagAdditions(for item_stable_id: String) async throws -> [CatalogFlagAdminModel]
+
+    /// Fetch only flag removals for a specific item
+    func fetchFlagRemovals(for item_stable_id: String) async throws -> [CatalogFlagAdminModel]
 
     /// Add or update an admin flag
     /// If a flag with the same item_stable_id and flag_key exists, it will be updated
     func saveFlag(_ flag: CatalogFlagAdminModel) async throws
 
-    /// Remove a specific flag by ID
-    func removeFlag(_ flagId: UUID) async throws
+    /// Mark a bundled flag for removal from an item
+    func markFlagForRemoval(item_stable_id: String, flag_key: String) async throws
 
-    /// Remove a flag by item and key
-    func removeFlag(item_stable_id: String, flag_key: String) async throws
+    /// Remove a specific admin flag record by ID (undo an addition or removal)
+    func removeAdminFlag(_ flagId: UUID) async throws
+
+    /// Remove an admin flag record by item and key
+    func removeAdminFlag(item_stable_id: String, flag_key: String) async throws
 
     // MARK: - Batch Operations
 

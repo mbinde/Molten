@@ -55,6 +55,7 @@ struct CatalogOriginalDescriptionView: View {
                         .font(.caption)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
 
@@ -131,9 +132,22 @@ struct CatalogOriginalDescriptionView: View {
                     Divider()
                         .padding(.vertical, DesignSystem.Spacing.xs)
 
-                    Text("Original manufacturer text:")
-                        .font(DesignSystem.Typography.formLabel)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                    HStack {
+                        Text("Original manufacturer text:")
+                            .font(DesignSystem.Typography.formLabel)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                        Spacer()
+
+                        Button {
+                            UIPasteboard.general.string = desc
+                        } label: {
+                            Label("Copy", systemImage: "doc.on.doc")
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .foregroundColor(DesignSystem.Colors.accentPrimary)
+                        }
+                        .buttonStyle(.plain)
+                    }
 
                     Text(desc)
                         .font(DesignSystem.Typography.formValue)

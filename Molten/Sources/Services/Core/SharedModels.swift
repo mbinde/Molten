@@ -33,6 +33,11 @@ struct GlassItemModel: CatalogItem {
     let image_thumb_path: String?
     let dominant_colors: [String]?  // Optional array of hex color strings (e.g., ["#2E5E41", "#1D4030", "#0C2219"])
 
+    // Multi-image support
+    let image_urls: [String]?  // Array of all remote image URLs (up to 5)
+    let image_paths: [String]?  // Array of all local image paths
+    let image_thumb_paths: [String]?  // Array of all thumbnail paths
+
     // Color analysis fields
     let representative_color: String?  // Single representative hex color (e.g., "#1d3f2e")
     let color_spread: Double?  // Color distance/spread value indicating color variation
@@ -46,6 +51,7 @@ struct GlassItemModel: CatalogItem {
          mfr_notes: String? = nil, coe: Int32, url: String? = nil, mfr_status: String,
          image_url: String? = nil, image_path: String? = nil, image_thumb_path: String? = nil,
          dominant_colors: [String]? = nil,
+         image_urls: [String]? = nil, image_paths: [String]? = nil, image_thumb_paths: [String]? = nil,
          representative_color: String? = nil, color_spread: Double? = nil,
          color_clusters: Int? = nil, color_confidence: String? = nil) {
         self.stable_id = stable_id
@@ -62,6 +68,9 @@ struct GlassItemModel: CatalogItem {
         self.image_path = image_path
         self.image_thumb_path = image_thumb_path
         self.dominant_colors = dominant_colors
+        self.image_urls = image_urls
+        self.image_paths = image_paths
+        self.image_thumb_paths = image_thumb_paths
         self.representative_color = representative_color
         self.color_spread = color_spread
         self.color_clusters = color_clusters
@@ -662,6 +671,11 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
     let temperatureRangeHigh: Int?  // Only for coatings (°F)
     let inlineTags: [String]?  // Tags stored inline in catalog (coatings/tools)
 
+    // Multi-image support (only for glass items currently)
+    let image_urls: [String]?
+    let image_paths: [String]?
+    let image_thumb_paths: [String]?
+
     // Color analysis fields (only for glass items)
     let representative_color: String?  // Single representative hex color
     let color_spread: Double?  // Color distance/spread value
@@ -689,6 +703,9 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.temperatureRangeLow = nil  // Glass items don't have temperature range
         self.temperatureRangeHigh = nil
         self.inlineTags = nil  // Glass items get tags from ItemTags repository
+        self.image_urls = glassItem.image_urls
+        self.image_paths = glassItem.image_paths
+        self.image_thumb_paths = glassItem.image_thumb_paths
         self.representative_color = glassItem.representative_color
         self.color_spread = glassItem.color_spread
         self.color_clusters = glassItem.color_clusters
@@ -717,6 +734,10 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.temperatureRangeHigh = coatingItem.temperatureRangeHigh
         // Parse inline tags from coating catalog
         self.inlineTags = Self.parseCommaSeparatedQuotedString(coatingItem.tags)
+        // Coatings don't have multi-image support yet
+        self.image_urls = nil
+        self.image_paths = nil
+        self.image_thumb_paths = nil
         // Coatings don't have color analysis fields
         self.representative_color = nil
         self.color_spread = nil
@@ -743,6 +764,10 @@ struct UnifiedCatalogItem: Identifiable, Equatable, Hashable, Sendable {
         self.temperatureRangeLow = nil  // Tools don't have temperature range
         self.temperatureRangeHigh = nil
         self.inlineTags = nil  // Tools don't have tags yet
+        // Tools don't have multi-image support yet
+        self.image_urls = nil
+        self.image_paths = nil
+        self.image_thumb_paths = nil
         // Tools don't have color analysis fields
         self.representative_color = nil
         self.color_spread = nil

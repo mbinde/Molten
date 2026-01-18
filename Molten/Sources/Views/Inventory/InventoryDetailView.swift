@@ -28,9 +28,10 @@ struct InventoryDetailView: View {
     let kilnScheduleService: KilnScheduleService
     let glassItemRepository: GlassItemRepository
     let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
+    let catalogFlagBundledRepository: CatalogFlagBundledRepository
     #if DEBUG
     let catalogFlagAdminRepository: CatalogFlagAdminRepository
-    let catalogFlagBundledRepository: CatalogFlagBundledRepository
+    let catalogTagAdminRepository: CatalogTagAdminRepository
     #endif
 
     /// Optional callback for QR scan workflow - shows "Manage Inventory" button near inventory section
@@ -64,10 +65,6 @@ struct InventoryDetailView: View {
     @State private var userTags: [String] = []
     @State private var isLoadingTags = false
 
-    // Bundled catalog flags state (DEBUG only)
-    #if DEBUG
-    @State private var bundledFlags: [CatalogFlagBundledModel] = []
-    #endif
 
     // Shopping list state
     @State private var shoppingListItem: ItemShoppingModel?
@@ -114,7 +111,8 @@ struct InventoryDetailView: View {
 
     // MARK: - Initializers
 
-    /// Initialize with complete inventory model and service
+    #if DEBUG
+    /// Initialize with complete inventory model and service (DEBUG build with admin flags)
     init(
         item: CompleteInventoryItemModel,
         inventoryTrackingService: InventoryTrackingService? = nil,
@@ -129,6 +127,7 @@ struct InventoryDetailView: View {
         storageLocationDefinitionRepository: StorageLocationDefinitionRepository,
         catalogFlagAdminRepository: CatalogFlagAdminRepository,
         catalogFlagBundledRepository: CatalogFlagBundledRepository,
+        catalogTagAdminRepository: CatalogTagAdminRepository,
         onManageInventory: (() -> Void)? = nil
     ) {
         self.item = item
@@ -142,10 +141,9 @@ struct InventoryDetailView: View {
         self.kilnScheduleService = kilnScheduleService
         self.glassItemRepository = glassItemRepository
         self.storageLocationDefinitionRepository = storageLocationDefinitionRepository
-        #if DEBUG
-        self.catalogFlagAdminRepository = catalogFlagAdminRepository
         self.catalogFlagBundledRepository = catalogFlagBundledRepository
-        #endif
+        self.catalogFlagAdminRepository = catalogFlagAdminRepository
+        self.catalogTagAdminRepository = catalogTagAdminRepository
         self.onManageInventory = onManageInventory
         // Initialize from user settings
         self._isManufacturerNotesExpanded = State(initialValue: UserSettings.shared.expandManufacturerDescriptionsByDefault)
@@ -153,6 +151,7 @@ struct InventoryDetailView: View {
         // Initialize currentItem with the passed item
         self._currentItem = State(initialValue: item)
     }
+    #endif
 
     /// Convenience init using AppDependencies
     init(
@@ -171,9 +170,10 @@ struct InventoryDetailView: View {
         self.kilnScheduleService = deps.kilnScheduleService
         self.glassItemRepository = deps.glassItemRepository
         self.storageLocationDefinitionRepository = deps.storageLocationDefinitionRepository
+        self.catalogFlagBundledRepository = deps.catalogFlagBundledRepository
         #if DEBUG
         self.catalogFlagAdminRepository = deps.catalogFlagAdminRepository
-        self.catalogFlagBundledRepository = deps.catalogFlagBundledRepository
+        self.catalogTagAdminRepository = deps.catalogTagAdminRepository
         #endif
         self.onManageInventory = onManageInventory
         // Initialize from user settings
@@ -358,10 +358,15 @@ struct InventoryDetailView: View {
                     .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.1) : DesignSystem.Colors.backgroundSecondary.opacity(0.5))
                     .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large))
 
+                    CatalogTagEditorView(
+                        itemStableId: currentItem.glassItem.stable_id
+                    )
+
                     CatalogFlagEditorView(
                         itemStableId: currentItem.glassItem.stable_id,
                         catalogFlagAdminRepository: catalogFlagAdminRepository,
-                        catalogFlagBundledRepository: catalogFlagBundledRepository
+                        catalogFlagBundledRepository: catalogFlagBundledRepository,
+                        catalogTagAdminRepository: catalogTagAdminRepository
                     )
 
                     CatalogDescriptionEditorView(
@@ -532,7 +537,6 @@ struct InventoryDetailView: View {
             loadUserImages()
             loadRecommendedSchedules()
             loadPricePerRod()
-            loadBundledFlags()
             #if DEBUG
             Task { await loadProcessedState() }
             #endif
@@ -582,19 +586,6 @@ struct InventoryDetailView: View {
                 print("No user tags found or error loading: \(error)")
             }
         }
-    }
-
-    private func loadBundledFlags() {
-        #if DEBUG
-        Task {
-            do {
-                bundledFlags = try await catalogFlagBundledRepository.fetchFlags(for: item.glassItem.stable_id)
-            } catch {
-                // No flags is fine, just leave empty
-                print("Error loading bundled flags: \(error)")
-            }
-        }
-        #endif
     }
 
     private func loadShoppingList() {
@@ -681,7 +672,7 @@ struct InventoryDetailView: View {
                 try await catalogFlagAdminRepository.saveFlag(flag)
             } else {
                 // Remove the processed flag
-                try await catalogFlagAdminRepository.removeFlag(
+                try await catalogFlagAdminRepository.removeAdminFlag(
                     item_stable_id: currentItem.glassItem.stable_id,
                     flag_key: kProcessedKey
                 )
@@ -1058,8 +1049,8 @@ struct InventoryDetailView: View {
 
             SpecificationTileGrid(tiles: specificationTiles)
 
-            // Price per rod (from storage locations)
-            if let avgPrice = averagePricePerRod {
+            // Price per rod (from storage locations) - only show if price > 0
+            if let avgPrice = averagePricePerRod, avgPrice > 0 {
                 VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                     HStack {
                         Text("Your average price per rod:")
@@ -1208,11 +1199,10 @@ struct InventoryDetailView: View {
         ) {
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
                 // Bundled catalog flags (shown as tag-style chips)
-                #if DEBUG
-                if !bundledFlags.isEmpty {
-                    bundledFlagsView
-                }
-                #endif
+                BundledFlagsChipsView(
+                    itemStableId: currentItem.glassItem.stable_id,
+                    repository: catalogFlagBundledRepository
+                )
 
                 if canShowManufacturerDescription,
                    let notes = currentItem.glassItem.mfr_notes, !notes.isEmpty {
@@ -1227,31 +1217,6 @@ struct InventoryDetailView: View {
         }
         .accessibilityIdentifier("manufacturer_website_link")
     }
-
-    #if DEBUG
-    /// View showing bundled catalog flags as tag-style chips
-    @ViewBuilder
-    private var bundledFlagsView: some View {
-        FlowLayout(spacing: DesignSystem.Spacing.xs) {
-            ForEach(bundledFlags) { flag in
-                flagChip(for: flag)
-            }
-        }
-    }
-
-    /// Individual flag chip styled like tags
-    @ViewBuilder
-    private func flagChip(for flag: CatalogFlagBundledModel) -> some View {
-        let displayText = flag.typedFlagKey?.displayName ?? flag.flag_key
-        Text(displayText)
-            .font(DesignSystem.Typography.listItemCaption)
-            .padding(.horizontal, DesignSystem.Spacing.sm)
-            .padding(.vertical, DesignSystem.Spacing.xxs)
-            .background(DesignSystem.Colors.tintTeal)
-            .foregroundColor(DesignSystem.Colors.accentSecondary)
-            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
-    }
-    #endif
 
     // MARK: - User Notes Section
 

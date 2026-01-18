@@ -165,6 +165,9 @@ private struct SearchResultsView: View {
     }
 
     private func performSearch(query: String) {
+        // Treat non-meaningful search text (empty, only quotes) as empty
+        let effectiveQuery = SearchTextParser.isSearchTextMeaningful(query) ? query : ""
+
         isLoading = true
 
         Task {
@@ -202,12 +205,12 @@ private struct SearchResultsView: View {
             }
 
             let filtered: [CompleteInventoryItemModel]
-            if query.isEmpty {
+            if effectiveQuery.isEmpty {
                 // Show all items when no search query
                 filtered = allItems
             } else {
                 // Use SearchTextParser for consistent search behavior with main catalog
-                let searchMode = SearchTextParser.parseSearchText(query)
+                let searchMode = SearchTextParser.parseSearchText(effectiveQuery)
                 // Always search all fields in global search (not just titles)
                 filtered = allItems.filter { item in
                     let allFields = [

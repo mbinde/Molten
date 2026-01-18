@@ -87,6 +87,7 @@ class AppDependencies {
     private var _twistCaneRepository: TwistCaneRepository?
     private var _catalogFlagAdminRepository: CatalogFlagAdminRepository?
     private var _catalogFlagUserRepository: CatalogFlagUserRepository?
+    private var _catalogTagAdminRepository: CatalogTagAdminRepository?
     #if os(iOS)
     private var _userImageRepository: UserImageRepository?
     #endif
@@ -253,6 +254,13 @@ class AppDependencies {
         if let repo = _catalogFlagUserRepository { return repo }
         let repo = CoreDataCatalogFlagUserRepository(context: persistenceController.cloudContext)
         _catalogFlagUserRepository = repo
+        return repo
+    }
+
+    var catalogTagAdminRepository: CatalogTagAdminRepository {
+        if let repo = _catalogTagAdminRepository { return repo }
+        let repo = CoreDataCatalogTagAdminRepository(context: persistenceController.cloudContext)
+        _catalogTagAdminRepository = repo
         return repo
     }
 

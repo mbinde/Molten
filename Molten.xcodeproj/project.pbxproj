@@ -90,12 +90,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationService.swift; sourceTree = "<group>"; };
-		878F664543088F1B86740DD2 /* UnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationRepository.swift; sourceTree = "<group>"; };
-		B244734885B21EAEB2AAC553 /* ServiceType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceType.swift; sourceTree = "<group>"; };
-		DB95FB5AC403E8CFD93211C5 /* CoreDataUnifiedLocationRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataUnifiedLocationRepository.swift; sourceTree = "<group>"; };
-		E7C7A65B94A6533A14E7AE47 /* taglia_tools.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = taglia_tools.json; sourceTree = "<group>"; };
-		F0AA0F21EF80657D274B4674 /* ToolItemDataLoadingService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToolItemDataLoadingService.swift; sourceTree = "<group>"; };
 		F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = ViewModelTests.xctestplan; sourceTree = "<group>"; };
 		F528A82F2EC693C700CE1F4A /* Molten.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Molten.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F528A8302EC693C700CE1F4A /* MoltenShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoltenShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -110,7 +104,6 @@
 		F5D3D6A72E9DCDE600DAA195 /* UnitTestsOnly.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTestsOnly.xctestplan; sourceTree = "<group>"; };
 		F5D3D6CC2E9DE21600DAA195 /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
 		F5FACB512EA0C9590084A6D0 /* RepositoryTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = RepositoryTests.xctestplan; sourceTree = "<group>"; };
-		F887709B0F20E4BA442FDEF0 /* UnifiedLocationModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnifiedLocationModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -837,140 +830,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		05644C20A407154AE488E490 /* Molten */ = {
-			isa = PBXGroup;
-			children = (
-				9B5114D65B4563A1A693922E /* Sources */,
-				E3AF640BE0097D12B5FB61B9 /* Tests */,
-				594EB86C56E6C4B279430E7B /* Data */,
-			);
-			path = Molten;
-			sourceTree = "<group>";
-		};
-		160E2B3414703E0C705D824A /* Services */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Services;
-			sourceTree = "<group>";
-		};
-		20315DBE882FEEB1FA04C5C6 /* CoreData */ = {
-			isa = PBXGroup;
-			children = (
-				DB95FB5AC403E8CFD93211C5 /* CoreDataUnifiedLocationRepository.swift */,
-			);
-			path = CoreData;
-			sourceTree = "<group>";
-		};
-		2BE70CCF94663BB26256A8B1 /* DataLoading */ = {
-			isa = PBXGroup;
-			children = (
-				F0AA0F21EF80657D274B4674 /* ToolItemDataLoadingService.swift */,
-			);
-			path = DataLoading;
-			sourceTree = "<group>";
-		};
-		4775012C3270866CDFBD0A9A /* Core */ = {
-			isa = PBXGroup;
-			children = (
-				32EF0758F08BF42CB3761565 /* UnifiedLocationService.swift */,
-			);
-			path = Core;
-			sourceTree = "<group>";
-		};
-		594EB86C56E6C4B279430E7B /* Data */ = {
-			isa = PBXGroup;
-			children = (
-				A5B1C4F2D3237B073CAF9C79 /* Tools */,
-			);
-			path = Data;
-			sourceTree = "<group>";
-		};
-		60B9505ADF25024ADEAE86D6 /* Services */ = {
-			isa = PBXGroup;
-			children = (
-				4775012C3270866CDFBD0A9A /* Core */,
-				2BE70CCF94663BB26256A8B1 /* DataLoading */,
-			);
-			path = Services;
-			sourceTree = "<group>";
-		};
-		80B81B9AFF141392A88693AA /* Repositories */ = {
-			isa = PBXGroup;
-			children = (
-				CA711F134995AC292780E108 /* Protocols */,
-				20315DBE882FEEB1FA04C5C6 /* CoreData */,
-			);
-			path = Repositories;
-			sourceTree = "<group>";
-		};
-		899629067652491404FA6654 /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				CDD2E43F4304C4C1211F66CC /* Domain */,
-			);
-			path = Models;
-			sourceTree = "<group>";
-		};
-		9B5114D65B4563A1A693922E /* Sources */ = {
-			isa = PBXGroup;
-			children = (
-				899629067652491404FA6654 /* Models */,
-				80B81B9AFF141392A88693AA /* Repositories */,
-				60B9505ADF25024ADEAE86D6 /* Services */,
-			);
-			path = Sources;
-			sourceTree = "<group>";
-		};
-		A5B1C4F2D3237B073CAF9C79 /* Tools */ = {
-			isa = PBXGroup;
-			children = (
-				E7C7A65B94A6533A14E7AE47 /* taglia_tools.json */,
-			);
-			path = Tools;
-			sourceTree = "<group>";
-		};
-		AA64CC0D40B6CD107FD59D77 /* Repositories */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Repositories;
-			sourceTree = "<group>";
-		};
-		CA711F134995AC292780E108 /* Protocols */ = {
-			isa = PBXGroup;
-			children = (
-				878F664543088F1B86740DD2 /* UnifiedLocationRepository.swift */,
-			);
-			path = Protocols;
-			sourceTree = "<group>";
-		};
-		CC009B2CA2EF5ACD442430FD /* MoltenTests */ = {
-			isa = PBXGroup;
-			children = (
-				AA64CC0D40B6CD107FD59D77 /* Repositories */,
-				160E2B3414703E0C705D824A /* Services */,
-			);
-			path = MoltenTests;
-			sourceTree = "<group>";
-		};
-		CDD2E43F4304C4C1211F66CC /* Domain */ = {
-			isa = PBXGroup;
-			children = (
-				B244734885B21EAEB2AAC553 /* ServiceType.swift */,
-				F887709B0F20E4BA442FDEF0 /* UnifiedLocationModel.swift */,
-			);
-			path = Domain;
-			sourceTree = "<group>";
-		};
-		E3AF640BE0097D12B5FB61B9 /* Tests */ = {
-			isa = PBXGroup;
-			children = (
-				CC009B2CA2EF5ACD442430FD /* MoltenTests */,
-			);
-			path = Tests;
-			sourceTree = "<group>";
-		};
 		F5A13C422E890146002C0F7A = {
 			isa = PBXGroup;
 			children = (
@@ -982,7 +841,6 @@
 				F5A13C4D2E890146002C0F7A /* Molten */,
 				F53C0BB22EA7FB020020E1AB /* ScreenshotAutomation */,
 				F5DB4DAA2EAB159C00F6E879 /* MoltenShareExtension */,
-				05644C20A407154AE488E490 /* Molten */,
 				F528A82F2EC693C700CE1F4A /* Molten.app */,
 				F528A8302EC693C700CE1F4A /* MoltenShareExtension.appex */,
 				F528A8312EC693C700CE1F4A /* MoltenTests.xctest */,

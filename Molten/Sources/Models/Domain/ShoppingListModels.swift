@@ -75,7 +75,10 @@ struct DetailedShoppingListItemModel {
             image_url: catalogItem.image_url,
             image_path: catalogItem.image_path,
             image_thumb_path: catalogItem.image_thumb_path,
-            dominant_colors: catalogItem.dominant_colors
+            dominant_colors: catalogItem.dominant_colors,
+            image_urls: catalogItem.image_urls,
+            image_paths: catalogItem.image_paths,
+            image_thumb_paths: catalogItem.image_thumb_paths
         )
     }
 }
@@ -153,7 +156,10 @@ struct DetailedLowStockItemModel {
             image_url: catalogItem.image_url,
             image_path: catalogItem.image_path,
             image_thumb_path: catalogItem.image_thumb_path,
-            dominant_colors: catalogItem.dominant_colors
+            dominant_colors: catalogItem.dominant_colors,
+            image_urls: catalogItem.image_urls,
+            image_paths: catalogItem.image_paths,
+            image_thumb_paths: catalogItem.image_thumb_paths
         )
     }
 }
@@ -212,7 +218,10 @@ struct DetailedMinimumModel: Sendable {
             image_url: catalogItem.image_url,
             image_path: catalogItem.image_path,
             image_thumb_path: catalogItem.image_thumb_path,
-            dominant_colors: catalogItem.dominant_colors
+            dominant_colors: catalogItem.dominant_colors,
+            image_urls: catalogItem.image_urls,
+            image_paths: catalogItem.image_paths,
+            image_thumb_paths: catalogItem.image_thumb_paths
         )
     }
 }

@@ -128,8 +128,32 @@ struct HeroHeader: View {
                 }
             }
 
-            // Page indicators for multi-image carousel
+            // Chevron indicators and page dots for multi-image carousel
             if hasMultipleImages {
+                // Chevron indicators showing swipe direction
+                HStack {
+                    // Left chevron - visible when there are previous images
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                        .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                        .opacity(selectedImageIndex > 0 ? 0.8 : 0)
+                        .padding(.leading, 12)
+
+                    Spacer()
+
+                    // Right chevron - visible when there are more images
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                        .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                        .opacity(selectedImageIndex < loadedImages.count - 1 ? 0.8 : 0)
+                        .padding(.trailing, 12)
+                }
+                .padding(.bottom, 70)  // Position above text overlay
+                .allowsHitTesting(false)  // Don't block swipe gestures
+
+                // Page indicator dots
                 VStack {
                     Spacer()
                     HStack(spacing: 6) {

@@ -445,9 +445,9 @@ struct MainTabView: View {
             case .kilnSchedules:
                 return FeatureFlags.ENABLE_KILN_SCHEDULES
             case .caneMaker:
-                return FeatureFlags.ENABLE_CANE_MAKER
+                return FeatureFlags.ENABLE_TWIST
             case .wigWag:
-                return FeatureFlags.ENABLE_CANE_MAKER  // Use same flag as cane maker
+                return FeatureFlags.ENABLE_WIGWAG
             case .settings:
                 return true // Allow Settings in tab bar if user customizes
             default:

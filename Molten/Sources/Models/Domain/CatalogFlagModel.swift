@@ -64,13 +64,14 @@ enum GlassFlagKey: String, Codable, CaseIterable, Sendable {
     // Parametric flags (flag_value = true/false, flag_numeric = value)
     case customAnnealTemp = "custom_anneal_temp"
     case maxWorkingTemp = "max_working_temp"
+    case garagingTemp = "garaging_temp"
     case holdTime = "hold_time"
     case rampDownRate = "ramp_down_rate"
 
     /// Whether this flag type requires a numeric value
     nonisolated var requiresNumericValue: Bool {
         switch self {
-        case .customAnnealTemp, .maxWorkingTemp, .holdTime, .rampDownRate:
+        case .customAnnealTemp, .maxWorkingTemp, .garagingTemp, .holdTime, .rampDownRate:
             return true
         default:
             return false
@@ -127,6 +128,7 @@ enum GlassFlagKey: String, Codable, CaseIterable, Sendable {
 
         case .customAnnealTemp: return "Custom anneal temperature"
         case .maxWorkingTemp: return "Max working temperature"
+        case .garagingTemp: return "Garaging temperature"
         case .holdTime: return "Hold time"
         case .rampDownRate: return "Ramp down rate"
         }
@@ -135,7 +137,7 @@ enum GlassFlagKey: String, Codable, CaseIterable, Sendable {
     /// Unit suffix for numeric values (nil for boolean flags)
     nonisolated var valueUnit: String? {
         switch self {
-        case .customAnnealTemp, .maxWorkingTemp: return "°F"
+        case .customAnnealTemp, .maxWorkingTemp, .garagingTemp: return "°F"
         case .holdTime: return "min"
         case .rampDownRate: return "°F/hr"
         default: return nil

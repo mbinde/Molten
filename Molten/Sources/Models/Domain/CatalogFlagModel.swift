@@ -59,6 +59,7 @@ enum GlassFlagKey: String, Codable, CaseIterable, Sendable {
     case discontinued = "discontinued"
     case metallicLuster = "metallic_luster"
     case satinSheen = "satin_sheen"
+    case patterned = "patterned"
 
     // Parametric flags (flag_value = true/false, flag_numeric = value)
     case customAnnealTemp = "custom_anneal_temp"
@@ -122,6 +123,7 @@ enum GlassFlagKey: String, Codable, CaseIterable, Sendable {
         case .discontinued: return "Discontinued/Limited"
         case .metallicLuster: return "Metallic/luster finish"
         case .satinSheen: return "Satin sheen"
+        case .patterned: return "Patterned (streaky/striped)"
 
         case .customAnnealTemp: return "Custom anneal temperature"
         case .maxWorkingTemp: return "Max working temperature"

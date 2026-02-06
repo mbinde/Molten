@@ -60,6 +60,11 @@ enum FeatureFlags {
     /// IMPLEMENTED: Tab visibility
     nonisolated static let ENABLE_WIGWAG = false
 
+    /// Controls whether the unified Glass view is enabled
+    /// When true, shows single "Glass" tab instead of separate Catalog/Inventory/Shopping
+    /// IMPLEMENTED: Tab visibility, MainTabView
+    nonisolated static let ENABLE_UNIFIED_GLASS_VIEW = true
+
     /// Controls whether the Ratings feature is enabled
     /// Set to false to disable ratings management for launch
     /// IMPLEMENTED: Settings menu visibility

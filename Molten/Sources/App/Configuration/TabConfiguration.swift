@@ -83,6 +83,9 @@ class TabConfiguration {
             self.tabs = savedTabs.compactMap { DefaultTab(rawValue: $0) }
             self.maxVisibleTabs = UserDefaults.standard.object(forKey: maxVisibleTabsKey) as? Int ?? Self.defaultMaxVisibleTabs()
 
+            // Migrate legacy tabs to unified view if needed
+            migrateLegacyTabsIfNeeded()
+
             // Add any new tabs and remove any disabled tabs
             reconcileTabs()
         } else {
@@ -101,28 +104,69 @@ class TabConfiguration {
         isInitializing = false
     }
 
+    /// Migrates legacy Catalog/Inventory/Shopping tabs to unified Supplies tab
+    /// This runs BEFORE reconcileTabs to ensure proper positioning
+    private func migrateLegacyTabsIfNeeded() {
+        guard FeatureFlags.ENABLE_UNIFIED_GLASS_VIEW else { return }
+
+        // Find the position of the first legacy tab (catalog, inventory, or shopping)
+        // We'll insert .glass at that position to maintain user's tab order
+        let legacyTabs: [DefaultTab] = [.catalog, .inventory, .shopping]
+        let firstLegacyIndex = tabs.firstIndex { legacyTabs.contains($0) }
+
+        // Check if we have any legacy tabs to migrate
+        let hasLegacyTabs = tabs.contains { legacyTabs.contains($0) }
+        let hasGlass = tabs.contains(.glass)
+
+        if hasLegacyTabs && !hasGlass {
+            // Insert .glass at the position of the first legacy tab
+            let insertIndex = firstLegacyIndex ?? 0
+            tabs.insert(.glass, at: insertIndex)
+
+            // Remove the legacy tabs
+            tabs.removeAll { legacyTabs.contains($0) }
+        }
+    }
+
     // MARK: - Default Configuration
 
     /// Returns default tab order based on app features
     static func defaultTabOrder() -> [DefaultTab] {
         let allAvailableTabs = Self.allAvailableTabs()
 
-        // Default order: Core features in tab bar (Catalog, Inventory, Shopping, Purchases)
-        // Additional features in More menu (Locations, Projects, Logbook, Recipes, Kiln Schedules, Settings)
-        let preferredOrder: [DefaultTab] = [
-            .catalog,
-            .inventory,
-            .shopping,
-            .purchases,     // Core feature - receipt imports
-            .locations,     // In More menu - stores/classes
-            .projectPlans,  // In More menu - Projects
-            .logbook,       // In More menu
-            .recipes,       // In More menu
-            .kilnSchedules, // In More menu
-            .caneMaker,     // In More menu - Cane twist visualizer
-            .wigWag,        // In More menu - Wigwag cane visualizer
-            .settings       // In More menu
-        ]
+        // Default order depends on whether unified glass view is enabled
+        let preferredOrder: [DefaultTab]
+        if FeatureFlags.ENABLE_UNIFIED_GLASS_VIEW {
+            // Unified view: Glass tab replaces Catalog/Inventory/Shopping
+            preferredOrder = [
+                .glass,         // Unified Glass view (replaces Catalog, Inventory, Shopping)
+                .purchases,     // Core feature - receipt imports
+                .locations,     // In More menu - stores/classes
+                .projectPlans,  // In More menu - Projects
+                .logbook,       // In More menu
+                .recipes,       // In More menu
+                .kilnSchedules, // In More menu
+                .caneMaker,     // In More menu - Cane twist visualizer
+                .wigWag,        // In More menu - Wigwag cane visualizer
+                .settings       // In More menu
+            ]
+        } else {
+            // Legacy: Separate Catalog, Inventory, Shopping tabs
+            preferredOrder = [
+                .catalog,
+                .inventory,
+                .shopping,
+                .purchases,     // Core feature - receipt imports
+                .locations,     // In More menu - stores/classes
+                .projectPlans,  // In More menu - Projects
+                .logbook,       // In More menu
+                .recipes,       // In More menu
+                .kilnSchedules, // In More menu
+                .caneMaker,     // In More menu - Cane twist visualizer
+                .wigWag,        // In More menu - Wigwag cane visualizer
+                .settings       // In More menu
+            ]
+        }
 
         // Return in preferred order, filtering to only available tabs
         return preferredOrder.filter { allAvailableTabs.contains($0) }
@@ -151,6 +195,12 @@ class TabConfiguration {
     static func allAvailableTabs() -> [DefaultTab] {
         return DefaultTab.allCases.filter { tab in
             switch tab {
+            case .glass:
+                // Unified glass view - replaces catalog/inventory/shopping when enabled
+                return FeatureFlags.ENABLE_UNIFIED_GLASS_VIEW
+            case .catalog, .inventory, .shopping:
+                // Legacy separate tabs - only show when unified view is disabled
+                return !FeatureFlags.ENABLE_UNIFIED_GLASS_VIEW
             case .projects:
                 // Legacy combined Projects tab - check feature flag
                 return FeatureFlags.ENABLE_PROJECTS
@@ -167,7 +217,7 @@ class TabConfiguration {
             case .wigWag:
                 return FeatureFlags.ENABLE_WIGWAG
             default:
-                // Include all other tabs: catalog, inventory, shopping, settings, locations
+                // Include all other tabs: settings, locations
                 return true
             }
         }
@@ -178,9 +228,15 @@ class TabConfiguration {
     /// Reconciles saved tabs with currently available tabs.
     /// - Adds new tabs (inserted before Settings to preserve user's tab order)
     /// - Removes tabs that are no longer available (feature flags disabled)
+    /// - Handles unified glass view migration (replaces catalog/inventory/shopping with glass)
     private func reconcileTabs() {
         let availableTabs = Set(Self.allAvailableTabs())
         let currentTabs = Set(tabs)
+
+        // Special handling for unified glass view migration:
+        // If .glass is available but user had .catalog/.inventory/.shopping, put .glass at the front
+        let hadLegacyTabs = currentTabs.contains(.catalog) || currentTabs.contains(.inventory) || currentTabs.contains(.shopping)
+        let needsGlass = availableTabs.contains(.glass) && !currentTabs.contains(.glass)
 
         // Remove tabs that are no longer available
         tabs = tabs.filter { availableTabs.contains($0) }
@@ -189,11 +245,16 @@ class TabConfiguration {
         let newTabs = availableTabs.subtracting(currentTabs)
 
         if !newTabs.isEmpty {
-            // Insert new tabs before Settings (or at end if Settings not found)
-            // Note: Settings has rawValue 99 so it's always sorted last
-            let settingsIndex = tabs.firstIndex(of: .settings) ?? tabs.endIndex
             for newTab in newTabs.sorted(by: { $0.rawValue < $1.rawValue }) {
-                tabs.insert(newTab, at: settingsIndex)
+                if newTab == .glass && hadLegacyTabs {
+                    // Migration: .glass replaces catalog/inventory/shopping, put it first
+                    tabs.insert(newTab, at: 0)
+                } else {
+                    // Insert other new tabs before Settings (or at end if Settings not found)
+                    // Note: Settings has rawValue 99 so it's always sorted last
+                    let settingsIndex = tabs.firstIndex(of: .settings) ?? tabs.endIndex
+                    tabs.insert(newTab, at: settingsIndex)
+                }
             }
         }
 

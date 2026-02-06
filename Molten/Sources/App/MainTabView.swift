@@ -48,8 +48,8 @@ extension Notification.Name {
 
 /// Main tab view that provides navigation between the app's primary sections
 struct MainTabView: View {
-    @AppStorage("lastActiveTab") private var lastActiveTabRawValue = DefaultTab.catalog.rawValue
-    @State private var selectedTab: DefaultTab = .catalog
+    @AppStorage("lastActiveTab") private var lastActiveTabRawValue = DefaultTab.glass.rawValue
+    @State private var selectedTab: DefaultTab = .glass
     @State private var showingMoreMenu = false
     @State private var showingTabCustomization = false
     @State private var showingSearch = false
@@ -96,15 +96,24 @@ struct MainTabView: View {
     }
     
     private var lastActiveTab: DefaultTab {
-        let savedTab = DefaultTab(rawValue: lastActiveTabRawValue) ?? .catalog
+        let savedTab = DefaultTab(rawValue: lastActiveTabRawValue) ?? .glass
 
         // Ensure the saved tab is still available with current feature flags
-        return MainTabView.availableTabs().contains(savedTab) ? savedTab : .catalog
+        // If user was on catalog/inventory/shopping, migrate to .glass when unified view is enabled
+        if FeatureFlags.ENABLE_UNIFIED_GLASS_VIEW {
+            if savedTab == .catalog || savedTab == .inventory || savedTab == .shopping {
+                return .glass
+            }
+        }
+
+        return MainTabView.availableTabs().contains(savedTab) ? savedTab : .glass
     }
 
     /// Determine search scope based on current tab
     private var searchScopeForCurrentTab: GlobalSearchScope {
         switch selectedTab {
+        case .glass:
+            return .catalog  // Unified view handles its own filtering
         case .inventory:
             return .inventory
         case .shopping:
@@ -129,6 +138,8 @@ struct MainTabView: View {
             // Main content area - extends under tab bar
             Group {
                 switch selectedTab {
+                case .glass:
+                    UnifiedGlassView(deps: deps)
                 case .catalog:
                     CatalogView(deps: deps)
                 case .inventory:
@@ -191,7 +202,8 @@ struct MainTabView: View {
                 ZStack(alignment: .bottom) {
                     // Floating buttons anchored to screen edges
                     HStack {
-                        // Floating filter button (left side) - show on Catalog, Inventory, Shopping tabs (but not on detail views)
+                        // Floating filter button (left side) - show on legacy Catalog, Inventory, Shopping tabs (but not on detail views)
+                        // Note: .glass tab has its own search/filter UI
                         if (selectedTab == .catalog || selectedTab == .inventory || selectedTab == .shopping) && !isShowingDetailView {
                             Button {
                                 switch selectedTab {
@@ -403,6 +415,7 @@ struct MainTabView: View {
 
             // Mark tabs as viewed so they stay alive
             switch newTab {
+            case .glass: glassHasBeenViewed = true
             case .catalog: catalogHasBeenViewed = true
             case .inventory: inventoryHasBeenViewed = true
             case .shopping: shoppingHasBeenViewed = true
@@ -416,6 +429,7 @@ struct MainTabView: View {
     }
 
     // Track which tabs have been viewed to keep them alive
+    @State private var glassHasBeenViewed = false
     @State private var catalogHasBeenViewed = false
     @State private var inventoryHasBeenViewed = false
     @State private var shoppingHasBeenViewed = false
@@ -431,6 +445,12 @@ struct MainTabView: View {
     static func availableTabs() -> [DefaultTab] {
         return DefaultTab.allCases.filter { tab in
             switch tab {
+            case .glass:
+                // Unified glass view - replaces catalog/inventory/shopping when enabled
+                return FeatureFlags.ENABLE_UNIFIED_GLASS_VIEW
+            case .catalog, .inventory, .shopping:
+                // Legacy separate tabs - only show when unified view is disabled
+                return !FeatureFlags.ENABLE_UNIFIED_GLASS_VIEW
             case .projects:
                 // Legacy combined Projects tab - check feature flag
                 return FeatureFlags.ENABLE_PROJECTS
@@ -450,8 +470,8 @@ struct MainTabView: View {
                 return FeatureFlags.ENABLE_WIGWAG
             case .settings:
                 return true // Allow Settings in tab bar if user customizes
-            default:
-                return true // Always show catalog, inventory, shopping
+            case .locations:
+                return true // Locations tab is always available
             }
         }
     }
@@ -493,6 +513,7 @@ struct MainTabView: View {
     private func markTabAsViewed(_ tab: DefaultTab) {
         // Mark tabs as viewed so they stay alive
         switch tab {
+        case .glass: glassHasBeenViewed = true
         case .catalog: catalogHasBeenViewed = true
         case .inventory: inventoryHasBeenViewed = true
         case .shopping: shoppingHasBeenViewed = true

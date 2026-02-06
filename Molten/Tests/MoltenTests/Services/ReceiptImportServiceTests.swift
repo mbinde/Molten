@@ -569,7 +569,7 @@ struct StorageLocationSplittingTests {
             purchaseRecordItemId: purchaseItemId,
             unitPrice: Decimal(10.00),
             currency: "USD",
-            purchaseDate: Date()
+            purchaseDate: orderDate
         )
 
         #expect(linkedLocations.count == 1)
@@ -609,7 +609,7 @@ struct StorageLocationSplittingTests {
             purchaseRecordItemId: purchaseItemId,
             unitPrice: Decimal(10.00),
             currency: "USD",
-            purchaseDate: Date()
+            purchaseDate: orderDate
         )
 
         #expect(linkedLocations.count == 1)
@@ -647,7 +647,7 @@ struct StorageLocationSplittingTests {
             purchaseRecordItemId: purchaseItemId,
             unitPrice: Decimal(10.00),
             currency: "USD",
-            purchaseDate: Date()
+            purchaseDate: orderDate
         )
 
         // Should create new linked location with quantity 3
@@ -736,7 +736,7 @@ struct StorageLocationSplittingTests {
             purchaseRecordItemId: purchaseItemId,
             unitPrice: Decimal(10.00),
             currency: "USD",
-            purchaseDate: Date()
+            purchaseDate: orderDate
         )
 
         // Should link all of location1 (3) and split 2 from location2

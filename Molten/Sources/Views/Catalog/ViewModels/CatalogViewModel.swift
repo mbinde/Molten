@@ -5,6 +5,10 @@
 //  Created by Assistant on 10/27/25.
 //  Protocol-based ViewModel for CatalogView - enables testability
 //
+//  ⚠️ DEPRECATED: This ViewModel is superseded by UnifiedGlassViewModel.swift
+//  When ENABLE_UNIFIED_GLASS_VIEW is true, this ViewModel is not used.
+//  TODO: Delete this file once UnifiedGlassView is stable in production.
+//
 
 import Foundation
 import SwiftUI

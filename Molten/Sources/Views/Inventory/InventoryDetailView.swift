@@ -45,7 +45,6 @@ struct InventoryDetailView: View {
     @State private var showingInventoryDetails = false
     @State private var showingShoppingListOptions = false
     @State private var showingUserNotesEditor = false
-    @State private var showingUserTagsEditor = false
     @State private var showingAddInventory = false
     @State private var showingUpgradePrompt = false
     @State private var showingMoveSheet = false
@@ -60,11 +59,6 @@ struct InventoryDetailView: View {
     @State private var userNotes: UserNotesModel?
     @State private var isLoadingNotes = false
     @State private var isUserNotesExpanded = false
-
-    // User tags state
-    @State private var userTags: [String] = []
-    @State private var isLoadingTags = false
-
 
     // Shopping list state
     @State private var shoppingListItem: ItemShoppingModel?
@@ -349,11 +343,6 @@ struct InventoryDetailView: View {
                         shoppingListSection
                     }
 
-                    // Tags Section
-                    if !currentItem.tags.isEmpty || !userTags.isEmpty {
-                        tagsSection
-                    }
-
                     // Custom Images Section - only show when user has uploaded images
                     if !userImages.isEmpty {
                         customImagesSection
@@ -494,15 +483,6 @@ struct InventoryDetailView: View {
                 userNotesRepository: userNotesRepository
             )
         }
-        .sheet(isPresented: $showingUserTagsEditor, onDismiss: {
-            // Reload tags after editing
-            loadUserTags()
-        }) {
-            UserTagsEditor(
-                item: item,
-                userTagsRepository: userTagsRepository
-            )
-        }
         .sheet(isPresented: $showingAddInventory, onDismiss: {
             // Refresh item data after adding inventory
             refreshItemData()
@@ -560,7 +540,6 @@ struct InventoryDetailView: View {
             NotificationCenter.default.post(name: .detailViewAppeared, object: nil)
             loadInitialData()
             loadUserNotes()
-            loadUserTags()
             loadShoppingList()
             loadUserImages()
             loadRecommendedSchedules()
@@ -601,20 +580,6 @@ struct InventoryDetailView: View {
             } catch {
                 // No notes is fine, just leave userNotes as nil
                 print("No user notes found or error loading: \(error)")
-            }
-        }
-    }
-
-    private func loadUserTags() {
-        Task {
-            isLoadingTags = true
-            defer { isLoadingTags = false }
-
-            do {
-                userTags = try await userTagsRepository.fetchTags(forItem: item.glassItem.stable_id)
-            } catch {
-                // No tags is fine, just leave empty
-                print("No user tags found or error loading: \(error)")
             }
         }
     }
@@ -1182,60 +1147,6 @@ struct InventoryDetailView: View {
         return sku.wholeMatch(of: syntheticPattern) != nil
     }
 
-    // MARK: - Tags Section
-
-    private var tagsSection: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-            HStack {
-                Text("Tags")
-                    .font(DesignSystem.Typography.subsectionTitle)
-                    .fontWeight(DesignSystem.FontWeight.semibold)
-                    .foregroundColor(DesignSystem.Colors.textPrimary)
-
-                Spacer()
-
-                Button(action: { showingUserTagsEditor = true }) {
-                    HStack(spacing: DesignSystem.Spacing.xs) {
-                        Image(systemName: "pencil")
-                        Text("Manage")
-                    }
-                    .font(DesignSystem.Typography.listItemCaption)
-                    .foregroundColor(DesignSystem.Colors.accentUser)
-                }
-            }
-
-            // Tags flow layout
-            FlowLayout(spacing: DesignSystem.Spacing.sm) {
-                ForEach(allTags, id: \.self) { tag in
-                    tagChip(tag: tag, isUserTag: userTags.contains(tag))
-                }
-            }
-        }
-        .padding(DesignSystem.Padding.standard)
-        .background(DesignSystem.Colors.backgroundSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.extraLarge))
-    }
-
-    private var allTags: [String] {
-        Array(Set(currentItem.tags + userTags)).sorted()
-    }
-
-    private func tagChip(tag: String, isUserTag: Bool) -> some View {
-        HStack(spacing: DesignSystem.Spacing.xs) {
-            if isUserTag {
-                Image(systemName: "person.fill")
-                    .font(.caption2)
-            }
-            Text(tag)
-                .font(DesignSystem.Typography.listItemCaptionSmall)
-                .fontWeight(DesignSystem.FontWeight.medium)
-        }
-        .padding(.horizontal, DesignSystem.Spacing.sm)
-        .padding(.vertical, DesignSystem.Spacing.xs)
-        .background(isUserTag ? DesignSystem.Colors.tintUser : DesignSystem.Colors.tintPrimary)
-        .foregroundColor(isUserTag ? DesignSystem.Colors.accentUser : DesignSystem.Colors.accentPrimary)
-        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium))
-    }
 
     // MARK: - Description Section
 

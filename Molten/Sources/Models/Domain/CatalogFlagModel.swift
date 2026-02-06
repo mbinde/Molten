@@ -60,6 +60,7 @@ enum GlassFlagKey: String, Codable, CaseIterable, Sendable {
     case metallicLuster = "metallic_luster"
     case satinSheen = "satin_sheen"
     case patterned = "patterned"
+    case speckled = "speckled"
 
     // Parametric flags (flag_value = true/false, flag_numeric = value)
     case customAnnealTemp = "custom_anneal_temp"
@@ -98,7 +99,7 @@ enum GlassFlagKey: String, Codable, CaseIterable, Sendable {
         case .boilsEasily: return "Boils easily"
         case .devitrifies: return "Prone to devitrification"
         case .sensitiveToCoolingRate: return "Sensitive to cooling rate"
-        case .containsSilver: return "Contains silver"
+        case .containsSilver: return "A Contains silver"
         case .containsCopper: return "Contains copper"
         case .containsChrome: return "Contains chrome"
         case .goodStringers: return "Good for stringers (stretches thin well)"
@@ -121,10 +122,11 @@ enum GlassFlagKey: String, Codable, CaseIterable, Sendable {
         case .uvReactive: return "UV reactive"
         case .cflColorshift: return "CFL colorshift"
         case .experimental: return "Experimental/test"
-        case .discontinued: return "Discontinued/Limited"
-        case .metallicLuster: return "Metallic/luster finish"
+        case .discontinued: return "A Discontinued/Limited"
+        case .metallicLuster: return "A Metallic/luster finish"
         case .satinSheen: return "Satin sheen"
         case .patterned: return "Patterned (streaky/striped)"
+        case .speckled: return "Speckled"
 
         case .customAnnealTemp: return "Custom anneal temperature"
         case .maxWorkingTemp: return "Max working temperature"

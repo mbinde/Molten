@@ -134,6 +134,10 @@ struct UnifiedGlassView: View {
             .onReceive(NotificationCenter.default.publisher(for: .catalogFlagChanged)) { _ in
                 Task { await loadProcessedItems() }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .detailViewDisappeared)) { _ in
+                // Reload processed items when returning from detail view
+                Task { await loadProcessedItems() }
+            }
             #endif
         }
     }

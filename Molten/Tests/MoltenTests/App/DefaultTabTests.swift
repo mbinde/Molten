@@ -64,31 +64,45 @@ struct DefaultTabTests {
 
     @Test("settings has correct raw value")
     func testSettingsRawValue() {
-        #expect(DefaultTab.settings.rawValue == 8)
+        #expect(DefaultTab.settings.rawValue == 99)
     }
 
     @Test("locations has correct raw value")
     func testLocationsRawValue() {
-        #expect(DefaultTab.locations.rawValue == 9)
+        #expect(DefaultTab.locations.rawValue == 8)
     }
 
     @Test("kilnSchedules has correct raw value")
     func testKilnSchedulesRawValue() {
-        #expect(DefaultTab.kilnSchedules.rawValue == 10)
+        #expect(DefaultTab.kilnSchedules.rawValue == 9)
+    }
+
+    @Test("caneMaker has correct raw value")
+    func testCaneMakerRawValue() {
+        #expect(DefaultTab.caneMaker.rawValue == 10)
+    }
+
+    @Test("wigWag has correct raw value")
+    func testWigWagRawValue() {
+        #expect(DefaultTab.wigWag.rawValue == 11)
     }
 
     @Test("DefaultTab can be initialized from raw value")
     func testInitFromRawValue() {
         #expect(DefaultTab(rawValue: 0) == .catalog)
         #expect(DefaultTab(rawValue: 1) == .inventory)
-        #expect(DefaultTab(rawValue: 8) == .settings)
-        #expect(DefaultTab(rawValue: 10) == .kilnSchedules)
+        #expect(DefaultTab(rawValue: 8) == .locations)
+        #expect(DefaultTab(rawValue: 9) == .kilnSchedules)
+        #expect(DefaultTab(rawValue: 10) == .caneMaker)
+        #expect(DefaultTab(rawValue: 11) == .wigWag)
+        #expect(DefaultTab(rawValue: 99) == .settings)
     }
 
     @Test("DefaultTab returns nil for invalid raw value")
     func testInvalidRawValue() {
         #expect(DefaultTab(rawValue: -1) == nil)
-        #expect(DefaultTab(rawValue: 11) == nil)
+        #expect(DefaultTab(rawValue: 12) == nil)
+        #expect(DefaultTab(rawValue: 98) == nil)
         #expect(DefaultTab(rawValue: 100) == nil)
     }
 
@@ -98,7 +112,7 @@ struct DefaultTabTests {
     func testAllCases() {
         let allCases = DefaultTab.allCases
 
-        #expect(allCases.count == 11)
+        #expect(allCases.count == 13)
         #expect(allCases.contains(.catalog))
         #expect(allCases.contains(.inventory))
         #expect(allCases.contains(.shopping))
@@ -107,9 +121,11 @@ struct DefaultTabTests {
         #expect(allCases.contains(.projectPlans))
         #expect(allCases.contains(.logbook))
         #expect(allCases.contains(.recipes))
-        #expect(allCases.contains(.settings))
         #expect(allCases.contains(.locations))
         #expect(allCases.contains(.kilnSchedules))
+        #expect(allCases.contains(.caneMaker))
+        #expect(allCases.contains(.wigWag))
+        #expect(allCases.contains(.settings))
     }
 
     @Test("allCases order is consistent with raw values")
@@ -124,9 +140,11 @@ struct DefaultTabTests {
         #expect(allCases[5] == .projectPlans)
         #expect(allCases[6] == .logbook)
         #expect(allCases[7] == .recipes)
-        #expect(allCases[8] == .settings)
-        #expect(allCases[9] == .locations)
-        #expect(allCases[10] == .kilnSchedules)
+        #expect(allCases[8] == .locations)
+        #expect(allCases[9] == .kilnSchedules)
+        #expect(allCases[10] == .caneMaker)
+        #expect(allCases[11] == .wigWag)
+        #expect(allCases[12] == .settings)
     }
 
     // MARK: - Display Name Tests
@@ -292,13 +310,18 @@ struct DefaultTabTests {
         #expect(rawValues.count == uniqueRawValues.count)
     }
 
-    @Test("Raw values are sequential starting from 0")
-    func testRawValuesSequential() {
-        let rawValues = DefaultTab.allCases.map { $0.rawValue }.sorted()
+    @Test("Raw values are mostly sequential with settings as special case")
+    func testRawValuesPattern() {
+        // Settings has raw value 99 to always sort last; all others are sequential 0-11
+        let nonSettingsCases = DefaultTab.allCases.filter { $0 != .settings }
+        let rawValues = nonSettingsCases.map { $0.rawValue }.sorted()
 
         for (index, value) in rawValues.enumerated() {
             #expect(value == index)
         }
+
+        // Settings is the special case with raw value 99
+        #expect(DefaultTab.settings.rawValue == 99)
     }
 
     // MARK: - UserDefaults Compatibility Tests

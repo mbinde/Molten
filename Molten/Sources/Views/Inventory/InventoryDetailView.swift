@@ -105,6 +105,11 @@ struct InventoryDetailView: View {
     @State private var errorMessage: String?
     @State private var showingShareSheet = false
 
+    // Online stock availability state
+    @State private var onlineStock: OnlineStockModel?
+    @State private var isLoadingStock = false
+    @State private var stockLoadError: Error?
+
     #if DEBUG
     @State private var isProcessed = false
     #endif
@@ -293,6 +298,29 @@ struct InventoryDetailView: View {
 
                     // Specifications tile grid
                     specificationsSection
+
+                    // Online Stock Availability Section
+                    if FeatureFlags.ENABLE_ONLINE_STOCK {
+                        OnlineStockCard(
+                            stockData: onlineStock,
+                            isLoading: isLoadingStock,
+                            error: stockLoadError,
+                            onRetailerTap: { retailer in
+                                if let urlString = retailer.productUrl,
+                                   let url = URL(string: urlString) {
+                                    #if os(iOS)
+                                    UIApplication.shared.open(url)
+                                    #elseif os(macOS)
+                                    NSWorkspace.shared.open(url)
+                                    #endif
+                                }
+                            },
+                            onRefresh: {
+                                loadOnlineStock(forceRefresh: true)
+                            }
+                        )
+                        .padding(.horizontal)
+                    }
 
                     // Rating Words Section
                     RatingWordsSection(itemStableId: currentItem.glassItem.stable_id)
@@ -537,6 +565,9 @@ struct InventoryDetailView: View {
             loadUserImages()
             loadRecommendedSchedules()
             loadPricePerRod()
+            if FeatureFlags.ENABLE_ONLINE_STOCK {
+                loadOnlineStock()
+            }
             #if DEBUG
             Task { await loadProcessedState() }
             #endif
@@ -601,6 +632,25 @@ struct InventoryDetailView: View {
             }
 
             isLoadingShoppingList = false
+        }
+    }
+
+    private func loadOnlineStock(forceRefresh: Bool = false) {
+        Task {
+            isLoadingStock = true
+            stockLoadError = nil
+            defer { isLoadingStock = false }
+
+            do {
+                onlineStock = try await AppDependencies.shared.onlineStockService.getStock(
+                    for: currentItem.catalogItem.stable_id,
+                    forceRefresh: forceRefresh
+                )
+            } catch {
+                stockLoadError = error
+                // Stock checking is optional - don't show error to user
+                print("Error loading online stock: \(error)")
+            }
         }
     }
 

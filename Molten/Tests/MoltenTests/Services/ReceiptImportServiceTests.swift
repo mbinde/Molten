@@ -568,7 +568,8 @@ struct StorageLocationSplittingTests {
             matchResult: matchResult,
             purchaseRecordItemId: purchaseItemId,
             unitPrice: Decimal(10.00),
-            currency: "USD"
+            currency: "USD",
+            purchaseDate: Date()
         )
 
         #expect(linkedLocations.count == 1)
@@ -607,7 +608,8 @@ struct StorageLocationSplittingTests {
             matchResult: matchResult,
             purchaseRecordItemId: purchaseItemId,
             unitPrice: Decimal(10.00),
-            currency: "USD"
+            currency: "USD",
+            purchaseDate: Date()
         )
 
         #expect(linkedLocations.count == 1)
@@ -644,7 +646,8 @@ struct StorageLocationSplittingTests {
             matchResult: matchResult,
             purchaseRecordItemId: purchaseItemId,
             unitPrice: Decimal(10.00),
-            currency: "USD"
+            currency: "USD",
+            purchaseDate: Date()
         )
 
         // Should create new linked location with quantity 3
@@ -687,7 +690,8 @@ struct StorageLocationSplittingTests {
             matchResult: matchResult,
             purchaseRecordItemId: purchaseItemId,
             unitPrice: nil,
-            currency: nil
+            currency: nil,
+            purchaseDate: nil
         )
 
         // New linked location should inherit original dateAdded
@@ -731,7 +735,8 @@ struct StorageLocationSplittingTests {
             matchResult: matchResult,
             purchaseRecordItemId: purchaseItemId,
             unitPrice: Decimal(10.00),
-            currency: "USD"
+            currency: "USD",
+            purchaseDate: Date()
         )
 
         // Should link all of location1 (3) and split 2 from location2
@@ -777,7 +782,8 @@ struct StorageLocationSplittingTests {
             matchResult: matchResult,
             purchaseRecordItemId: purchaseItemId,
             unitPrice: nil,
-            currency: nil
+            currency: nil,
+            purchaseDate: nil
         )
 
         // New linked location should not have container count

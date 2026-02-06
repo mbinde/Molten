@@ -45,6 +45,11 @@ enum FeatureFlags {
     /// Set to false to disable shopping list features for launch
     nonisolated static let ENABLE_SHOPPING_LISTS = true
 
+    /// Controls whether online stock checking is enabled
+    /// Set to false to disable checking retailer stock availability for launch
+    /// IMPLEMENTED: InventoryDetailView stock card
+    nonisolated static let ENABLE_ONLINE_STOCK = false
+
     /// Controls whether the Recipes section is enabled
     /// Set to false to disable recipe features for launch
     /// IMPLEMENTED: Tab visibility

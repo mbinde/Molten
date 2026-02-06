@@ -39,6 +39,9 @@ struct SubscriptionManagerTests {
 
     @Test("SubscriptionManager updates EntitlementService to free when no Pro access")
     func testNoProAccessUpdatesTierToFree() async throws {
+        // Clear the cache to ensure no stale premium status
+        EntitlementCache.shared.clearCache()
+
         // Arrange
         let entitlementService = EntitlementService(tier: .premium)
         let mockSubscriptionService = MockSubscriptionService(hasProAccess: false)
@@ -47,11 +50,12 @@ struct SubscriptionManagerTests {
             subscriptionService: mockSubscriptionService
         )
 
-        // Wait for initialization to complete
-        try await Task.sleep(for: .milliseconds(100))
+        // Wait for initialization to complete (init has 500ms delay)
+        try await Task.sleep(for: .milliseconds(600))
 
-        // Act
+        // Act - call checkSubscriptionStatus and wait for inner Task
         await manager.checkSubscriptionStatus()
+        try await Task.sleep(for: .milliseconds(200))
 
         // Assert
         #expect(entitlementService.currentTier == .free)
@@ -156,10 +160,12 @@ struct SubscriptionManagerTests {
             subscriptionService: mockSubscriptionService
         )
 
-        // Act - check status multiple times
+        // Act - check status and wait for async inner task to complete
         await manager.checkSubscriptionStatus()
+        // Wait for the inner Task in checkSubscriptionStatus to complete
+        try await Task.sleep(for: .milliseconds(200))
         await manager.checkSubscriptionStatus()
-        await manager.checkSubscriptionStatus()
+        try await Task.sleep(for: .milliseconds(200))
 
         // Assert - should still be premium (idempotent)
         #expect(entitlementService.currentTier == .premium)

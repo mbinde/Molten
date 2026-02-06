@@ -38,6 +38,11 @@ struct UnifiedGlassView: View {
     @State private var showingLocationSelection = false
     @State private var showingStoreSelection = false
 
+    #if DEBUG
+    // Processed items tracking (for row highlighting during review)
+    @State private var processedItemIds: Set<String> = []
+    #endif
+
     // Services for detail views
     private let deps: AppDependencies
 
@@ -109,6 +114,9 @@ struct UnifiedGlassView: View {
             }
             .task {
                 await viewModel.loadData()
+                #if DEBUG
+                await loadProcessedItems()
+                #endif
             }
             .refreshable {
                 await viewModel.refreshData()
@@ -122,6 +130,11 @@ struct UnifiedGlassView: View {
             .onReceive(NotificationCenter.default.publisher(for: .shoppingListItemAdded)) { _ in
                 Task { await viewModel.refreshData() }
             }
+            #if DEBUG
+            .onReceive(NotificationCenter.default.publisher(for: .catalogFlagChanged)) { _ in
+                Task { await loadProcessedItems() }
+            }
+            #endif
         }
     }
 
@@ -505,6 +518,13 @@ struct UnifiedGlassView: View {
                     catalogRow(for: item)
                 }
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                #if DEBUG
+                .listRowBackground(
+                    processedItemIds.contains(item.catalogItem.stable_id)
+                        ? DesignSystem.Colors.accentSuccess.opacity(0.15)
+                        : nil
+                )
+                #endif
             }
         }
         .listStyle(.plain)
@@ -805,6 +825,37 @@ struct UnifiedGlassView: View {
         default: return type.capitalized
         }
     }
+
+    #if DEBUG
+    // MARK: - Processed Items (DEBUG)
+
+    @MainActor
+    private func loadProcessedItems() async {
+        do {
+            var allProcessedIds = Set<String>()
+
+            // Check admin repository (CloudKit - manually set in app)
+            let adminRepo = deps.catalogFlagAdminRepository
+            let adminFlags = try await adminRepo.fetchAllFlags()
+            let adminProcessed = adminFlags
+                .filter { $0.flag_key == kProcessedKey && $0.flag_value }
+                .map { $0.item_stable_id }
+            allProcessedIds.formUnion(adminProcessed)
+
+            // Check bundled repository (SQLite - imported from export)
+            let bundledRepo = deps.catalogFlagBundledRepository
+            let bundledFlags = try await bundledRepo.fetchAllFlags()
+            let bundledProcessed = bundledFlags
+                .filter { $0.flag_key == kProcessedKey && $0.flag_value }
+                .map { $0.item_stable_id }
+            allProcessedIds.formUnion(bundledProcessed)
+
+            processedItemIds = allProcessedIds
+        } catch {
+            print("Error loading processed items: \(error)")
+        }
+    }
+    #endif
 }
 
 // MARK: - Unified Checkout Sheet

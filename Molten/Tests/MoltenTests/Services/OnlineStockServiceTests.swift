@@ -2,7 +2,7 @@
 //  OnlineStockServiceTests.swift
 //  MoltenTests
 //
-//  Tests for online stock service and cache
+//  Tests for online stock service (repository-based)
 //
 
 import Foundation
@@ -10,92 +10,31 @@ import Testing
 
 @testable import Molten
 
-// MARK: - OnlineStockCache Tests
+// MARK: - Mock Stock Repository
 
-@Suite("OnlineStockCache Tests")
 @MainActor
-struct OnlineStockCacheTests {
+class MockStockRepository: StockRepositoryProtocol {
+    var mockStockData: [String: OnlineStockModel] = [:]
+    var getStockCallCount = 0
+    var getStockBulkCallCount = 0
+    var lastBulkRequest: [String]?
+    var shouldThrowError = false
 
-    @Test("Cache returns nil for missing items")
-    func testCacheMiss() {
-        let cache = OnlineStockCache()
-        let result = cache.get("nonexistent")
-        #expect(result == nil)
-    }
-
-    @Test("Cache returns stored item")
-    func testCacheHit() {
-        let cache = OnlineStockCache()
-        let stock = createTestStock(itemStableId: "test123")
-
-        cache.set(stock)
-        let result = cache.get("test123")
-
-        #expect(result != nil)
-        #expect(result?.itemStableId == "test123")
-    }
-
-    @Test("Cache invalidates specific item")
-    func testInvalidateItem() {
-        let cache = OnlineStockCache()
-        cache.set(createTestStock(itemStableId: "item1"))
-        cache.set(createTestStock(itemStableId: "item2"))
-
-        cache.invalidate("item1")
-
-        #expect(cache.get("item1") == nil)
-        #expect(cache.get("item2") != nil)
-    }
-
-    @Test("Cache invalidates all items")
-    func testInvalidateAll() {
-        let cache = OnlineStockCache()
-        cache.set(createTestStock(itemStableId: "item1"))
-        cache.set(createTestStock(itemStableId: "item2"))
-        cache.set(createTestStock(itemStableId: "item3"))
-
-        cache.invalidateAll()
-
-        #expect(cache.get("item1") == nil)
-        #expect(cache.get("item2") == nil)
-        #expect(cache.get("item3") == nil)
-    }
-
-    @Test("Cache overwrites existing item")
-    func testOverwrite() {
-        let cache = OnlineStockCache()
-
-        let oldStock = createTestStock(itemStableId: "test", inStockCount: 1)
-        let newStock = createTestStock(itemStableId: "test", inStockCount: 3)
-
-        cache.set(oldStock)
-        cache.set(newStock)
-
-        let result = cache.get("test")
-        #expect(result?.retailers.count == 3)
-    }
-
-    // MARK: - Test Helpers
-
-    func createTestStock(itemStableId: String, inStockCount: Int = 2) -> OnlineStockModel {
-        let retailers = (0..<inStockCount).map { i in
-            RetailerStockModel(
-                retailerCode: "retailer\(i)",
-                retailerName: "Retailer \(i)",
-                stockStatus: .inStock,
-                lastChecked: Date(),
-                productUrl: nil,
-                price: nil,
-                priceUnit: nil,
-                currency: nil,
-                quantityAvailable: nil
-            )
+    func getStock(for itemStableId: String) throws -> OnlineStockModel? {
+        getStockCallCount += 1
+        if shouldThrowError {
+            throw StockDatabaseError.databaseNotInitialized
         }
-        return OnlineStockModel(
-            itemStableId: itemStableId,
-            retailers: retailers,
-            lastUpdated: Date()
-        )
+        return mockStockData[itemStableId]
+    }
+
+    func getStockBulk(for itemStableIds: [String]) throws -> [OnlineStockModel] {
+        getStockBulkCallCount += 1
+        lastBulkRequest = itemStableIds
+        if shouldThrowError {
+            throw StockDatabaseError.databaseNotInitialized
+        }
+        return itemStableIds.compactMap { mockStockData[$0] }
     }
 }
 
@@ -105,128 +44,90 @@ struct OnlineStockCacheTests {
 @MainActor
 struct OnlineStockServiceTests {
 
-    @Test("Service returns cached data when available")
-    func testCacheHit() async throws {
-        let mockClient = MockOnlineStockAPIClient()
-        let cache = OnlineStockCache()
+    @Test("Service returns nil when no stock database exists")
+    func testNoDatabaseReturnsNil() async throws {
+        let mockRepo = MockStockRepository()
+        // Don't set any stock data - simulates empty database
 
-        // Pre-populate cache
-        let cachedStock = createTestStock(itemStableId: "cached123")
-        cache.set(cachedStock)
+        // Create a service that reports no database
+        let service = TestableOnlineStockService(repository: mockRepo, hasDatabase: false)
+        let result = try await service.getStock(for: "test123")
 
-        let service = OnlineStockService(apiClient: mockClient, cache: cache)
-        let result = try await service.getStock(for: "cached123")
-
-        #expect(result.itemStableId == "cached123")
-        #expect(mockClient.fetchStockCallCount == 0, "Should not call API when cached")
+        #expect(result == nil)
+        #expect(mockRepo.getStockCallCount == 0, "Should not query when no database")
     }
 
-    @Test("Service fetches from API when cache miss")
-    func testCacheMiss() async throws {
-        let mockClient = MockOnlineStockAPIClient()
-        mockClient.mockStockResponse = createTestStock(itemStableId: "api123")
+    @Test("Service returns stock data from repository")
+    func testReturnsStockFromRepository() async throws {
+        let mockRepo = MockStockRepository()
+        mockRepo.mockStockData["item123"] = createTestStock(itemStableId: "item123")
 
-        let service = OnlineStockService(apiClient: mockClient, cache: OnlineStockCache())
-        let result = try await service.getStock(for: "api123")
+        let service = TestableOnlineStockService(repository: mockRepo, hasDatabase: true)
+        let result = try await service.getStock(for: "item123")
 
-        #expect(result.itemStableId == "api123")
-        #expect(mockClient.fetchStockCallCount == 1)
+        #expect(result != nil)
+        #expect(result?.itemStableId == "item123")
+        #expect(mockRepo.getStockCallCount == 1)
     }
 
-    @Test("Service bypasses cache when forceRefresh is true")
-    func testForceRefresh() async throws {
-        let mockClient = MockOnlineStockAPIClient()
-        mockClient.mockStockResponse = createTestStock(itemStableId: "test", inStockCount: 5)
+    @Test("Service returns nil for item not in database")
+    func testItemNotFound() async throws {
+        let mockRepo = MockStockRepository()
+        // No data for this item
 
-        let cache = OnlineStockCache()
-        cache.set(createTestStock(itemStableId: "test", inStockCount: 2))
+        let service = TestableOnlineStockService(repository: mockRepo, hasDatabase: true)
+        let result = try await service.getStock(for: "nonexistent")
 
-        let service = OnlineStockService(apiClient: mockClient, cache: cache)
-        let result = try await service.getStock(for: "test", forceRefresh: true)
-
-        #expect(result.retailers.count == 5, "Should have fresh data from API")
-        #expect(mockClient.fetchStockCallCount == 1)
+        #expect(result == nil)
+        #expect(mockRepo.getStockCallCount == 1)
     }
 
-    @Test("Service caches fetched data")
-    func testCachesAfterFetch() async throws {
-        let mockClient = MockOnlineStockAPIClient()
-        mockClient.mockStockResponse = createTestStock(itemStableId: "new123")
+    @Test("Service bulk fetch returns matching items")
+    func testBulkFetch() async throws {
+        let mockRepo = MockStockRepository()
+        mockRepo.mockStockData["item1"] = createTestStock(itemStableId: "item1")
+        mockRepo.mockStockData["item2"] = createTestStock(itemStableId: "item2")
 
-        let cache = OnlineStockCache()
-        let service = OnlineStockService(apiClient: mockClient, cache: cache)
-
-        // First call - fetches from API
-        _ = try await service.getStock(for: "new123")
-        #expect(mockClient.fetchStockCallCount == 1)
-
-        // Second call - should use cache
-        _ = try await service.getStock(for: "new123")
-        #expect(mockClient.fetchStockCallCount == 1, "Should use cached data")
-    }
-
-    @Test("Service bulk fetch uses cache for available items")
-    func testBulkFetchWithPartialCache() async throws {
-        let mockClient = MockOnlineStockAPIClient()
-        mockClient.mockBulkResponse = [
-            createTestStock(itemStableId: "item2"),
-            createTestStock(itemStableId: "item3")
-        ]
-
-        let cache = OnlineStockCache()
-        cache.set(createTestStock(itemStableId: "item1"))
-
-        let service = OnlineStockService(apiClient: mockClient, cache: cache)
+        let service = TestableOnlineStockService(repository: mockRepo, hasDatabase: true)
         let results = try await service.getStockBulk(for: ["item1", "item2", "item3"])
 
-        #expect(results.count == 3)
-        #expect(mockClient.fetchStockBulkCallCount == 1)
-        // Should only request items not in cache
-        #expect(mockClient.lastBulkRequest == ["item2", "item3"])
+        #expect(results.count == 2) // Only item1 and item2 found
+        #expect(mockRepo.getStockBulkCallCount == 1)
+        #expect(mockRepo.lastBulkRequest == ["item1", "item2", "item3"])
     }
 
-    @Test("Service bulk fetch with forceRefresh fetches all items")
-    func testBulkFetchForceRefresh() async throws {
-        let mockClient = MockOnlineStockAPIClient()
-        mockClient.mockBulkResponse = [
-            createTestStock(itemStableId: "item1"),
-            createTestStock(itemStableId: "item2")
-        ]
+    @Test("Service bulk fetch returns empty for empty request")
+    func testBulkFetchEmpty() async throws {
+        let mockRepo = MockStockRepository()
 
-        let cache = OnlineStockCache()
-        cache.set(createTestStock(itemStableId: "item1"))
-
-        let service = OnlineStockService(apiClient: mockClient, cache: cache)
-        let results = try await service.getStockBulk(for: ["item1", "item2"], forceRefresh: true)
-
-        #expect(results.count == 2)
-        #expect(mockClient.lastBulkRequest == ["item1", "item2"])
-    }
-
-    @Test("Service handles empty bulk request")
-    func testEmptyBulkRequest() async throws {
-        let mockClient = MockOnlineStockAPIClient()
-        let service = OnlineStockService(apiClient: mockClient, cache: OnlineStockCache())
-
+        let service = TestableOnlineStockService(repository: mockRepo, hasDatabase: true)
         let results = try await service.getStockBulk(for: [])
 
         #expect(results.isEmpty)
-        #expect(mockClient.fetchStockBulkCallCount == 0)
+        #expect(mockRepo.getStockBulkCallCount == 0, "Should not call repo for empty request")
     }
 
-    @Test("Service bulk fetch with all items cached skips API call")
-    func testBulkFetchAllCached() async throws {
-        let mockClient = MockOnlineStockAPIClient()
+    @Test("Service bulk fetch returns empty when no database")
+    func testBulkFetchNoDatabase() async throws {
+        let mockRepo = MockStockRepository()
+        mockRepo.mockStockData["item1"] = createTestStock(itemStableId: "item1")
 
-        let cache = OnlineStockCache()
-        cache.set(createTestStock(itemStableId: "item1"))
-        cache.set(createTestStock(itemStableId: "item2"))
+        let service = TestableOnlineStockService(repository: mockRepo, hasDatabase: false)
+        let results = try await service.getStockBulk(for: ["item1"])
 
-        let service = OnlineStockService(apiClient: mockClient, cache: cache)
-        let results = try await service.getStockBulk(for: ["item1", "item2"])
+        #expect(results.isEmpty)
+        #expect(mockRepo.getStockBulkCallCount == 0, "Should not query when no database")
+    }
 
-        #expect(results.count == 2)
-        #expect(mockClient.fetchStockBulkCallCount == 0, "Should not call API when all items cached")
+    @Test("Service reports hasStockDatabase correctly")
+    func testHasStockDatabase() {
+        let mockRepo = MockStockRepository()
+
+        let serviceWithDb = TestableOnlineStockService(repository: mockRepo, hasDatabase: true)
+        let serviceWithoutDb = TestableOnlineStockService(repository: mockRepo, hasDatabase: false)
+
+        #expect(serviceWithDb.hasStockDatabase == true)
+        #expect(serviceWithoutDb.hasStockDatabase == false)
     }
 
     // MARK: - Test Helpers
@@ -253,40 +154,28 @@ struct OnlineStockServiceTests {
     }
 }
 
-// MARK: - Mock API Client
+// MARK: - Testable Service (allows overriding hasStockDatabase)
 
 @MainActor
-class MockOnlineStockAPIClient: OnlineStockAPIClientProtocol {
-    var mockStockResponse: OnlineStockModel?
-    var mockBulkResponse: [OnlineStockModel] = []
-    var mockError: Error?
+class TestableOnlineStockService: OnlineStockServiceProtocol {
+    private let repository: StockRepositoryProtocol
+    private let _hasDatabase: Bool
 
-    var fetchStockCallCount = 0
-    var fetchStockBulkCallCount = 0
-    var lastBulkRequest: [String]?
-
-    func fetchStock(for itemStableId: String) async throws -> OnlineStockModel {
-        fetchStockCallCount += 1
-
-        if let error = mockError {
-            throw error
-        }
-
-        guard let response = mockStockResponse else {
-            throw OnlineStockAPIError.itemNotFound
-        }
-
-        return response
+    init(repository: StockRepositoryProtocol, hasDatabase: Bool) {
+        self.repository = repository
+        self._hasDatabase = hasDatabase
     }
 
-    func fetchStockBulk(for itemStableIds: [String]) async throws -> [OnlineStockModel] {
-        fetchStockBulkCallCount += 1
-        lastBulkRequest = itemStableIds
+    var hasStockDatabase: Bool { _hasDatabase }
 
-        if let error = mockError {
-            throw error
-        }
+    func getStock(for itemStableId: String) async throws -> OnlineStockModel? {
+        guard hasStockDatabase else { return nil }
+        return try repository.getStock(for: itemStableId)
+    }
 
-        return mockBulkResponse
+    func getStockBulk(for itemStableIds: [String]) async throws -> [OnlineStockModel] {
+        guard !itemStableIds.isEmpty else { return [] }
+        guard hasStockDatabase else { return [] }
+        return try repository.getStockBulk(for: itemStableIds)
     }
 }

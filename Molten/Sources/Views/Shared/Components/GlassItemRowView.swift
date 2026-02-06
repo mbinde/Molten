@@ -237,6 +237,7 @@ extension GlassItemRowView {
     }
 
     /// Unified "All" mode row with status indicators for inventory and wish list
+    /// Shows simple icons on the right to indicate status (no counts - that's for "Mine" mode)
     static func unified(
         item: CompleteInventoryItemModel,
         hasInventory: Bool,
@@ -248,23 +249,18 @@ extension GlassItemRowView {
                 showFullCode: false
             ).mainContent
 
-            // Status indicators on trailing edge
+            // Status icons on trailing edge - simple indicators
             if hasInventory || onWishList {
-                VStack(alignment: .trailing, spacing: DesignSystem.Spacing.xs) {
+                HStack(spacing: DesignSystem.Spacing.sm) {
                     if hasInventory {
-                        HStack(spacing: DesignSystem.Spacing.xxs) {
-                            Image(systemName: "archivebox.fill")
-                                .font(.system(size: 12))
-                            Text("\(Int(item.totalQuantity))")
-                                .font(DesignSystem.Typography.listItemCaption)
-                                .fontWeight(DesignSystem.FontWeight.medium)
-                        }
-                        .foregroundColor(DesignSystem.Colors.moltenTeal)
-                        .accessibilityLabel("In inventory: \(Int(item.totalQuantity))")
+                        Image(systemName: "archivebox.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(DesignSystem.Colors.moltenTeal)
+                            .accessibilityLabel("In inventory")
                     }
                     if onWishList {
                         Image(systemName: "heart.fill")
-                            .font(.system(size: 12))
+                            .font(.system(size: 16))
                             .foregroundColor(DesignSystem.Colors.moltenOrange)
                             .accessibilityLabel("On wish list")
                     }

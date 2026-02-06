@@ -5,10 +5,14 @@
 //  Created by Melissa Binde on 9/28/25.
 //  ✅ MIGRATED to GlassItem Architecture on 10/14/25
 //
+//  ⚠️ DEPRECATED: This view is superseded by UnifiedGlassView.swift
+//  When ENABLE_UNIFIED_GLASS_VIEW is true, this view is not used.
+//  TODO: Delete this file once UnifiedGlassView is stable in production.
+//
 //  MIGRATION SUMMARY:
 //  • Updated from CatalogItemModel to CompleteInventoryItemModel
 //  • Switched from getAllItems() to getAllGlassItems() API
-//  • Updated all property accesses to use glassItem.property structure  
+//  • Updated all property accesses to use glassItem.property structure
 //  • Converted "code" references to "naturalKey" system
 //  • Added Hashable conformance to CompleteInventoryItemModel for navigation
 //

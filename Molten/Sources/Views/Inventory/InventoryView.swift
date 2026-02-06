@@ -6,6 +6,10 @@
 //  Migrated to Repository Pattern on 10/12/25 by Assistant
 //  Updated for GlassItem architecture on 10/14/25
 //
+//  ⚠️ DEPRECATED: This view is superseded by UnifiedGlassView.swift
+//  When ENABLE_UNIFIED_GLASS_VIEW is true, this view is not used.
+//  TODO: Delete this file once UnifiedGlassView is stable in production.
+//
 
 import SwiftUI
 import Foundation

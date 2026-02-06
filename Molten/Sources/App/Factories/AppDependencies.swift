@@ -477,6 +477,7 @@ class AppDependencies {
     private var _inventorySharingManager: InventorySharingManager?
     private var _backupService: BackupService?
     private var _receiptService: ReceiptService?
+    private var _onlineStockService: OnlineStockService?
 
     // Label update services (created lazily)
     private var _labelDatabaseService: LabelDatabaseService?
@@ -658,6 +659,16 @@ class AppDependencies {
         }
         let service = ReceiptService()
         _receiptService = service
+        return service
+    }
+
+    /// Online stock availability service (created lazily)
+    var onlineStockService: OnlineStockService {
+        if let service = _onlineStockService {
+            return service
+        }
+        let service = OnlineStockService()
+        _onlineStockService = service
         return service
     }
 

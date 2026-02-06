@@ -21,9 +21,13 @@ struct CatalogViewModelTests {
     init() {
         // Clean UserDefaults before each test suite to prevent pollution
         // These filters are loaded from UserDefaults by CatalogViewModel init()
+        // Keys must match CatalogViewModel's static key constants
         UserDefaults.standard.removeObject(forKey: "catalog.selectedProductTypes")
-        UserDefaults.standard.removeObject(forKey: "selectedManufacturerFilter")
-        UserDefaults.standard.removeObject(forKey: "selectedCOETypes")
+        UserDefaults.standard.removeObject(forKey: "catalog.selectedCOEs")
+        UserDefaults.standard.removeObject(forKey: "catalog.selectedManufacturers")
+        UserDefaults.standard.removeObject(forKey: "catalog.selectedTags")
+        UserDefaults.standard.removeObject(forKey: "catalog.searchTitlesOnly")
+        UserDefaults.standard.removeObject(forKey: "catalog.sortOption")
         UserDefaults.standard.synchronize()
     }
 
@@ -120,8 +124,10 @@ struct CatalogViewModelTests {
             catalogService: AppDependencies.shared.catalogService
         )
 
-        // Simulate loaded items
+        // Simulate loaded items and trigger filter computation
         viewModel.items = items
+        viewModel.applyFilters()  // Must call after setting items to compute counts
+        viewModel.applyFilters()  // Must call after setting items to compute counts
 
         // When: Filtering by product type "glass"
         viewModel.selectedProductTypes = ["glass"]
@@ -149,6 +155,7 @@ struct CatalogViewModelTests {
         )
 
         viewModel.items = items
+        viewModel.applyFilters()  // Must call after setting items to compute counts
 
         // When: Filtering by product type "tool"
         viewModel.selectedProductTypes = ["tool"]
@@ -185,6 +192,7 @@ struct CatalogViewModelTests {
         )
 
         viewModel.items = items
+        viewModel.applyFilters()  // Must call after setting items to compute counts
 
         // When: Filtering by product type "glass"
         viewModel.selectedProductTypes = ["glass"]
@@ -212,6 +220,7 @@ struct CatalogViewModelTests {
         )
 
         viewModel.items = items
+        viewModel.applyFilters()  // Must call after setting items to compute counts
 
         // When: Selecting both "glass" and "tool" types
         viewModel.selectedProductTypes = ["glass", "tool"]
@@ -237,6 +246,7 @@ struct CatalogViewModelTests {
         )
 
         viewModel.items = items
+        viewModel.applyFilters()  // Must call after setting items to compute counts
 
         // When: First filtering by "glass", then clearing
         viewModel.selectedProductTypes = ["glass"]
@@ -270,6 +280,7 @@ struct CatalogViewModelTests {
         )
 
         viewModel.items = items
+        viewModel.applyFilters()  // Must call after setting items to compute counts
 
         // When: Applying COE filter for COE 90
         viewModel.selectedCOEs = [90]
@@ -298,6 +309,7 @@ struct CatalogViewModelTests {
         )
 
         viewModel.items = items
+        viewModel.applyFilters()  // Must call after setting items to compute counts
 
         // When: Applying COE filter for COE 90
         viewModel.selectedCOEs = [90]
@@ -325,6 +337,7 @@ struct CatalogViewModelTests {
         )
 
         viewModel.items = items
+        viewModel.applyFilters()  // Must call after setting items to compute counts
 
         // When: Filtering by product type "coating" AND COE 90
         viewModel.selectedProductTypes = ["coating"]
@@ -354,6 +367,7 @@ struct CatalogViewModelTests {
         )
 
         viewModel.items = items
+        viewModel.applyFilters()  // Must call after setting items to compute counts
 
         // When: Filtering by product type "coating" with a COE filter active
         viewModel.selectedProductTypes = ["coating"]
@@ -413,6 +427,7 @@ struct CatalogViewModelTests {
         )
 
         viewModel.items = items
+        viewModel.applyFilters()  // Must call after setting items to compute counts
 
         // When: Filtering by product type "coating"
         viewModel.selectedProductTypes = ["coating"]
@@ -440,6 +455,7 @@ struct CatalogViewModelTests {
         )
 
         viewModel.items = items
+        viewModel.applyFilters()  // Must call after setting items to compute counts
 
         // When: Filtering by "metallic" tag
         viewModel.selectedTags = ["metallic"]

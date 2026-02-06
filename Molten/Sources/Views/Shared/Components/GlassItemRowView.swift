@@ -198,18 +198,6 @@ struct GlassItemRowView: View {
             if let badge = badgeContent {
                 badge
             }
-
-            // Tags if available
-            if !item.tags.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: DesignSystem.Spacing.xs) {
-                        ForEach(item.tags, id: \.self) { tag in
-                            BadgeLabel.tag(tag)
-                        }
-                    }
-                    .padding(.horizontal, 1)
-                }
-            }
         }
     }
 
@@ -246,6 +234,44 @@ extension GlassItemRowView {
             item: .init(from: item),
             showFullCode: false
         )
+    }
+
+    /// Unified "All" mode row with status indicators for inventory and wish list
+    static func unified(
+        item: CompleteInventoryItemModel,
+        hasInventory: Bool,
+        onWishList: Bool
+    ) -> some View {
+        HStack(spacing: DesignSystem.Spacing.lg) {
+            GlassItemRowView(
+                item: .init(from: item),
+                showFullCode: false
+            ).mainContent
+
+            // Status indicators on trailing edge
+            if hasInventory || onWishList {
+                VStack(alignment: .trailing, spacing: DesignSystem.Spacing.xs) {
+                    if hasInventory {
+                        HStack(spacing: DesignSystem.Spacing.xxs) {
+                            Image(systemName: "archivebox.fill")
+                                .font(.system(size: 12))
+                            Text("\(Int(item.totalQuantity))")
+                                .font(DesignSystem.Typography.listItemCaption)
+                                .fontWeight(DesignSystem.FontWeight.medium)
+                        }
+                        .foregroundColor(DesignSystem.Colors.moltenTeal)
+                        .accessibilityLabel("In inventory: \(Int(item.totalQuantity))")
+                    }
+                    if onWishList {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(DesignSystem.Colors.moltenOrange)
+                            .accessibilityLabel("On wish list")
+                    }
+                }
+            }
+        }
+        .padding(.vertical, DesignSystem.Spacing.xs)
     }
 
     /// Inventory-style row with quantity badge

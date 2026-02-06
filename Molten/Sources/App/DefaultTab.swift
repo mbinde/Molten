@@ -8,6 +8,7 @@
 import Foundation
 
 enum DefaultTab: Int, CaseIterable {
+    case glass = -1 // Unified glass view (replaces catalog, inventory, shopping)
     case catalog = 0
     case inventory = 1
     case shopping = 2
@@ -24,6 +25,8 @@ enum DefaultTab: Int, CaseIterable {
 
     var displayName: String {
         switch self {
+        case .glass:
+            return "Supplies"
         case .catalog:
             return "Catalog"
         case .inventory:
@@ -55,6 +58,8 @@ enum DefaultTab: Int, CaseIterable {
 
     var systemImage: String {
         switch self {
+        case .glass:
+            return "archivebox" // Same as old Inventory tab for familiarity
         case .catalog:
             return "text.justify" // Looks like multiple horizontal lines (rods)
         case .inventory:

@@ -195,33 +195,40 @@ struct TabConfigurationTests {
 
     @Test("maxVisibleTabs should affect tabBarTabs count")
     func testMaxVisibleTabsAffectsTabBar() {
-        // Arrange: Create configuration with 6 tabs
+        // Arrange: Create configuration with always-available tabs
         let config = createCleanConfiguration()
-        config.tabs = [.catalog, .inventory, .shopping, .purchases, .projectPlans, .logbook]
+        // Use only tabs that are always available (not behind feature flags)
+        config.tabs = [.catalog, .inventory, .shopping, .locations, .settings]
+        let totalTabs = config.tabs.count
 
         // Act & Assert: Change maxVisibleTabs and verify tabBarTabs adapts
+        // Note: effectiveMaxVisibleTabs = min(maxVisibleTabs, maxTabsThatFit)
+        // so we test within bounds that should work on any screen size
+        config.maxVisibleTabs = 2
+        #expect(config.tabBarTabs.count <= 2, "Should respect maxVisibleTabs limit")
+        #expect(config.tabBarTabs.count == min(2, config.effectiveMaxVisibleTabs))
+
         config.maxVisibleTabs = 3
-        #expect(config.tabBarTabs.count == 3)
+        #expect(config.tabBarTabs.count <= 3, "Should respect maxVisibleTabs limit")
 
-        config.maxVisibleTabs = 5
-        #expect(config.tabBarTabs.count == 5)
-
-        config.maxVisibleTabs = 10
-        #expect(config.tabBarTabs.count == 6, "Should not exceed total tabs")
+        config.maxVisibleTabs = 100
+        #expect(config.tabBarTabs.count == totalTabs, "Should not exceed total tabs")
     }
 
     @Test("maxVisibleTabs should affect moreTabs count")
     func testMaxVisibleTabsAffectsMoreMenu() {
-        // Arrange: Create configuration with 6 tabs
+        // Arrange: Create configuration with always-available tabs
         let config = createCleanConfiguration()
-        config.tabs = [.catalog, .inventory, .shopping, .purchases, .projectPlans, .logbook]
+        config.tabs = [.catalog, .inventory, .shopping, .locations, .settings]
+        let totalTabs = config.tabs.count
 
         // Act & Assert: Change maxVisibleTabs and verify moreTabs adapts
-        config.maxVisibleTabs = 4
-        #expect(config.moreTabs.count == 2)
+        config.maxVisibleTabs = 2
+        let expectedMore = totalTabs - config.effectiveMaxVisibleTabs
+        #expect(config.moreTabs.count == expectedMore)
 
-        config.maxVisibleTabs = 6
-        #expect(config.moreTabs.count == 0)
+        config.maxVisibleTabs = 100
+        #expect(config.moreTabs.count == 0, "No more tabs when all visible")
     }
 
     // MARK: - Helper Methods

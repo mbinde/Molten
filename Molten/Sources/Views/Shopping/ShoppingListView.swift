@@ -4,6 +4,10 @@
 //
 //  Created by Assistant on 10/16/25.
 //
+//  ⚠️ DEPRECATED: This view is superseded by UnifiedGlassView.swift
+//  When ENABLE_UNIFIED_GLASS_VIEW is true, this view is not used.
+//  TODO: Delete this file once UnifiedGlassView is stable in production.
+//
 
 import SwiftUI
 import CoreData

@@ -264,6 +264,28 @@ class CoreDataCatalogFlagAdminRepository: @unchecked Sendable, CatalogFlagAdminR
         }
     }
 
+    func deleteAllFlags() async throws -> Int {
+        return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "CatalogFlagAdmin")
+            fetchRequest.predicate = NSPredicate(format: "deleted_at == nil")
+
+            let results = try context.fetch(fetchRequest)
+            let count = results.count
+
+            // Soft delete all flags for CloudKit sync
+            for flag in results {
+                flag.setValue(Date(), forKey: "deleted_at")
+            }
+
+            if count > 0 {
+                try context.save()
+                self.log.info("Soft deleted \(count) admin flags")
+            }
+
+            return count
+        }
+    }
+
     // MARK: - Private Helpers
 
     private func modelFromManagedObject(_ object: NSManagedObject) -> CatalogFlagAdminModel? {

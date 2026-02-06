@@ -208,8 +208,9 @@ struct CatalogFlagEditorView: View {
         defer { isLoading = false }
 
         do {
-            // Load bundled flags (from catalog.sqlite)
-            bundledFlags = try await catalogFlagBundledRepository.fetchFlags(for: itemStableId)
+            // Load bundled flags (from catalog.sqlite), excluding hidden flags
+            let allBundledFlags = try await catalogFlagBundledRepository.fetchFlags(for: itemStableId)
+            bundledFlags = allBundledFlags.filter { $0.flag_key != kProcessedKey }
 
             // Load admin flag additions (editable)
             let allAdminAdditions = try await catalogFlagAdminRepository.fetchFlagAdditions(for: itemStableId)

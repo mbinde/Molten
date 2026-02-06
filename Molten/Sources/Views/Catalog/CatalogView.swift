@@ -517,12 +517,25 @@ struct CatalogView: View {
     @MainActor
     private func loadProcessedItems() async {
         do {
-            let repo = AppDependencies.shared.catalogFlagAdminRepository
-            let allFlags = try await repo.fetchAllFlags()
-            let processed = allFlags
+            var allProcessedIds = Set<String>()
+
+            // Check admin repository (CloudKit - manually set in app)
+            let adminRepo = AppDependencies.shared.catalogFlagAdminRepository
+            let adminFlags = try await adminRepo.fetchAllFlags()
+            let adminProcessed = adminFlags
                 .filter { $0.flag_key == kProcessedKey && $0.flag_value }
                 .map { $0.item_stable_id }
-            processedItemIds = Set(processed)
+            allProcessedIds.formUnion(adminProcessed)
+
+            // Check bundled repository (SQLite - imported from export)
+            let bundledRepo = AppDependencies.shared.catalogFlagBundledRepository
+            let bundledFlags = try await bundledRepo.fetchAllFlags()
+            let bundledProcessed = bundledFlags
+                .filter { $0.flag_key == kProcessedKey && $0.flag_value }
+                .map { $0.item_stable_id }
+            allProcessedIds.formUnion(bundledProcessed)
+
+            processedItemIds = allProcessedIds
         } catch {
             print("Error loading processed items: \(error)")
         }

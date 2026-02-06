@@ -652,8 +652,17 @@ struct InventoryDetailView: View {
     @MainActor
     private func loadProcessedState() async {
         do {
-            let flags = try await catalogFlagAdminRepository.fetchFlags(for: currentItem.glassItem.stable_id)
-            isProcessed = flags.contains { $0.flag_key == kProcessedKey && $0.flag_value }
+            let stableId = currentItem.glassItem.stable_id
+
+            // Check admin repository (CloudKit - manually set in app)
+            let adminFlags = try await catalogFlagAdminRepository.fetchFlags(for: stableId)
+            let adminProcessed = adminFlags.contains { $0.flag_key == kProcessedKey && $0.flag_value }
+
+            // Check bundled repository (SQLite - imported from export)
+            let bundledFlags = try await catalogFlagBundledRepository.fetchFlags(for: stableId)
+            let bundledProcessed = bundledFlags.contains { $0.flag_key == kProcessedKey && $0.flag_value }
+
+            isProcessed = adminProcessed || bundledProcessed
         } catch {
             print("Error loading processed state: \(error)")
         }

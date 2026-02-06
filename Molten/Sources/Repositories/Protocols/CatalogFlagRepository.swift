@@ -54,6 +54,9 @@ nonisolated protocol CatalogFlagAdminRepository: Sendable {
 
     /// Find all items that have a specific flag with a specific value
     func findItems(withFlagKey flag_key: String, value: Bool) async throws -> [String]
+
+    /// Delete all admin flags (for clearing CloudKit data to rely on bundled flags only)
+    func deleteAllFlags() async throws -> Int
 }
 
 // MARK: - Bundled Flag Repository

@@ -11,6 +11,8 @@ import SQLite3
 struct DebugSettingsView: View {
     @AppStorage("showDebugInfo") private var showDebugInfo = false
     @State private var showingResetDisclaimerAlert = false
+    @State private var showingClearAdminFlagsAlert = false
+    @State private var adminFlagsDeletedCount: Int?
     @State private var actualCatalogVersion: Int = 0
     @ObservedObject private var catalogPreferences = CatalogUpdatePreferences.shared
 
@@ -104,6 +106,26 @@ struct DebugSettingsView: View {
             } footer: {
                 Text("Tools for managing catalog data, generating test inventory, and diagnosing Core Data issues.")
             }
+
+            Section {
+                Button {
+                    showingClearAdminFlagsAlert = true
+                } label: {
+                    Label("Clear Admin Flags from CloudKit", systemImage: "trash")
+                        .foregroundColor(DesignSystem.Colors.accentDanger)
+                }
+                .accessibilityIdentifier("debug_settings_clear_admin_flags")
+
+                if let count = adminFlagsDeletedCount {
+                    Text("Deleted \(count) admin flags")
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+            } header: {
+                Text("Catalog Flags")
+            } footer: {
+                Text("Clear all admin flags from CloudKit to rely only on bundled catalog flags. Use this to reduce memory usage after exporting and importing flags into the bundled catalog.")
+            }
         }
         .navigationTitle("Debug Settings")
         .task {
@@ -116,6 +138,29 @@ struct DebugSettingsView: View {
             }
         } message: {
             Text("This will reset the alpha disclaimer acknowledgment. The disclaimer will appear again on next app launch.")
+        }
+        .alert("Clear Admin Flags", isPresented: $showingClearAdminFlagsAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Clear All", role: .destructive) {
+                Task {
+                    await clearAdminFlags()
+                }
+            }
+        } message: {
+            Text("This will delete all admin flags from CloudKit. The app will rely only on bundled catalog flags. This cannot be undone.")
+        }
+    }
+
+    private func clearAdminFlags() async {
+        do {
+            let repo = deps.catalogFlagAdminRepository
+            let count = try await repo.deleteAllFlags()
+            adminFlagsDeletedCount = count
+            print("Deleted \(count) admin flags from CloudKit")
+            // Notify catalog to refresh
+            NotificationCenter.default.post(name: .catalogFlagChanged, object: nil)
+        } catch {
+            print("Error clearing admin flags: \(error)")
         }
     }
 

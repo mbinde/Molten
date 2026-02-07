@@ -113,7 +113,7 @@ class UnifiedGlassViewModel {
 
     var debouncedSearchText = ""
 
-    var searchTitlesOnly = true {
+    var searchTitlesOnly = false {  // TODO: revert to true later - temporarily searching descriptions too
         didSet {
             if searchTitlesOnly != oldValue {
                 saveSearchTitlesOnly()

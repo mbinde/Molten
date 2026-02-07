@@ -614,6 +614,7 @@ struct UnifiedGlassView: View {
             }
         }
         .listStyle(.plain)
+        .contentMargins(.bottom, 80, for: .scrollContent)  // Space for tab bar
     }
 
     private var wishListList: some View {
@@ -632,6 +633,7 @@ struct UnifiedGlassView: View {
             }
         }
         .listStyle(.plain)
+        .contentMargins(.bottom, 80, for: .scrollContent)  // Space for tab bar
     }
 
     // MARK: - Row Views

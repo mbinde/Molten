@@ -293,6 +293,8 @@ class FriendInventoryViewModel {
                         name: catalogItem.glassItem.name,
                         imagePath: catalogItem.glassItem.image_path,
                         imageThumbPath: catalogItem.glassItem.image_thumb_path,
+                        imagePaths: catalogItem.glassItem.image_paths,
+                        imageThumbPaths: catalogItem.glassItem.image_thumb_paths,
                         dominantColors: catalogItem.glassItem.dominant_colors,
                         tags: catalogItem.allTags,
                         coe: catalogItem.catalogItem.coe,
@@ -456,6 +458,8 @@ class FriendInventoryViewModel {
                         name: myItem.catalogItem.name,
                         imagePath: myItem.catalogItem.image_path,
                         imageThumbPath: myItem.catalogItem.image_thumb_path,
+                        imagePaths: myItem.catalogItem.image_paths,
+                        imageThumbPaths: myItem.catalogItem.image_thumb_paths,
                         dominantColors: myItem.catalogItem.dominant_colors,
                         tags: myItem.allTags,
                         coe: myItem.catalogItem.coe,
@@ -708,6 +712,8 @@ struct CatalogData {
     let name: String
     let imagePath: String?
     let imageThumbPath: String?
+    let imagePaths: [String]?  // Multi-image support
+    let imageThumbPaths: [String]?  // Multi-image support
     let dominantColors: [String]?
     let tags: [String]
     let coe: Int32?  // Optional - coatings/tools don't have COE

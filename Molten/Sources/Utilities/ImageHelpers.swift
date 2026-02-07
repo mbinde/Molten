@@ -1124,7 +1124,7 @@ struct AutoRotatingProductThumbnail: View {
                 itemCode: itemCode,
                 manufacturer: manufacturer,
                 stableId: stableId,
-                imagePath: paths?.first,
+                imagePath: imagePaths?.first,
                 imageThumbPath: imageThumbPaths?.first,
                 dominantColors: dominantColors
             ) {

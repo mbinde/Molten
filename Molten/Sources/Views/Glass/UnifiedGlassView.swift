@@ -22,6 +22,7 @@ struct UnifiedGlassView: View {
     @State private var navigationPath = NavigationPath()
     @State private var showingFilterSheet = false
     @State private var showingHelp = false
+    @State private var showingSettings = false
     @State private var localSearchText = ""  // Local copy to avoid TextField re-renders
     @FocusState private var isSearchFocused: Bool
 
@@ -30,6 +31,18 @@ struct UnifiedGlassView: View {
     @State private var basketItems: Set<String> = []
     @State private var shoppingQuantities: [String: Double] = [:]
     @State private var showingCheckoutSheet = false
+
+    // Inventory feature states (from old InventoryView)
+    @State private var showingAddInventory = false
+    @State private var showingQRScanner = false
+    @State private var showingInventorySharing = false
+    @State private var showingLabelDesigner = false
+    @State private var showingManageLocations = false
+    @State private var showingUpgradePrompt = false
+    @State private var pendingShareCode: String? = nil
+
+    // Shopping feature states
+    @State private var showingAddShoppingItem = false
 
     // Filter sheet states
     @State private var showingCOESelection = false
@@ -43,8 +56,9 @@ struct UnifiedGlassView: View {
     @State private var processedItemIds: Set<String> = []
     #endif
 
-    // Services for detail views
+    // Services and environment
     private let deps: AppDependencies
+    @Environment(EntitlementService.self) private var entitlementService
 
     // MARK: - Initialization
 
@@ -79,7 +93,7 @@ struct UnifiedGlassView: View {
                 // Main content
                 mainContent
             }
-            .navigationTitle("Glass")
+            .navigationTitle("Supplies")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -88,11 +102,7 @@ struct UnifiedGlassView: View {
                     sortMenu
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button {
-                        showingHelp = true
-                    } label: {
-                        Image(systemName: "questionmark.circle")
-                    }
+                    contextMenu
                 }
             }
             .navigationDestination(for: GlassNavigationDestination.self) { destination in
@@ -109,8 +119,75 @@ struct UnifiedGlassView: View {
             .sheet(isPresented: $showingHelp) {
                 CatalogHelpView()
             }
+            .sheet(isPresented: $showingSettings) {
+                SuppliesSettingsView()
+            }
             .sheet(isPresented: $showingCheckoutSheet) {
                 checkoutSheet
+            }
+            // Inventory feature sheets
+            .sheet(isPresented: $showingAddInventory, onDismiss: {
+                Task {
+                    try? await Task.sleep(nanoseconds: 100_000_000)
+                    await viewModel.refreshData()
+                }
+            }) {
+                AddInventoryItemView(prefilledNaturalKey: nil, deps: deps)
+            }
+            .sheet(isPresented: $showingQRScanner) {
+                QRCodeScannerView { scannedURL in
+                    if let url = URL(string: scannedURL) {
+                        NotificationCenter.default.post(
+                            name: .openMoltenDeepLink,
+                            object: nil,
+                            userInfo: ["url": url]
+                        )
+                    }
+                }
+            }
+            .sheet(isPresented: $showingLabelDesigner) {
+                LabelDesignerView(items: viewModel.filteredItems)
+            }
+            .sheet(isPresented: $showingManageLocations) {
+                ManageLocationsView(
+                    storageLocationDefinitionRepository: deps.storageLocationDefinitionRepository,
+                    storageLocationRepository: deps.storageLocationRepository,
+                    inventoryTrackingService: deps.inventoryTrackingService,
+                    onLocationsChanged: {
+                        Task { await viewModel.refreshData() }
+                    }
+                )
+            }
+            .sheet(isPresented: $showingUpgradePrompt) {
+                UpgradePromptView(
+                    feature: "inventory",
+                    currentCount: viewModel.inventoryItemIds.count,
+                    limit: entitlementService.getInventoryLimit() ?? 0
+                )
+            }
+            .fullScreenCover(isPresented: $showingInventorySharing) {
+                NavigationStack {
+                    InventorySharingView(pendingShareCode: pendingShareCode)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Done") {
+                                    showingInventorySharing = false
+                                    pendingShareCode = nil
+                                }
+                            }
+                        }
+                }
+            }
+            // Shopping feature sheets
+            .sheet(isPresented: $showingAddShoppingItem, onDismiss: {
+                Task {
+                    try? await Task.sleep(nanoseconds: 100_000_000)
+                    await viewModel.refreshData()
+                }
+            }) {
+                NavigationStack {
+                    AddShoppingListItemView(deps: deps)
+                }
             }
             .task {
                 await viewModel.loadData()
@@ -150,7 +227,7 @@ struct UnifiedGlassView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(DesignSystem.Colors.textSecondary)
 
-                TextField("Search glass...", text: $localSearchText)
+                TextField("Search supplies...", text: $localSearchText)
                     .focused($isSearchFocused)
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
@@ -217,23 +294,32 @@ struct UnifiedGlassView: View {
         let isSelected = viewModel.quickFilter == filter
         let count = countForQuickFilter(filter)
 
+        // Use .fill variant when selected
+        let iconName = isSelected ? "\(filter.systemImage).fill" : filter.systemImage
+
         return Button {
             withAnimation(.easeInOut(duration: 0.2)) {
                 viewModel.quickFilter = filter
             }
         } label: {
             HStack(spacing: DesignSystem.Spacing.xs) {
-                Image(systemName: filter.systemImage)
+                Image(systemName: iconName)
                     .font(.system(size: 14, weight: .medium))
-                Text(filter.displayName)
-                    .font(.system(size: 14, weight: .medium))
+
+                // Selected tab: icon + text + count
+                // Unselected tabs: icon + count only (more compact)
+                if isSelected {
+                    Text(filter.displayName)
+                        .font(.system(size: 14, weight: .medium))
+                }
+
                 if count > 0 {
-                    Text("(\(count))")
-                        .font(.system(size: 12))
+                    Text(isSelected ? "(\(count))" : "\(count)")
+                        .font(.system(size: 12, weight: isSelected ? .regular : .medium))
                         .foregroundColor(isSelected ? .white.opacity(0.8) : DesignSystem.Colors.textSecondary)
                 }
             }
-            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.horizontal, isSelected ? DesignSystem.Spacing.md : DesignSystem.Spacing.sm)
             .padding(.vertical, DesignSystem.Spacing.sm)
             .background(
                 RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
@@ -617,6 +703,98 @@ struct UnifiedGlassView: View {
             Image(systemName: "arrow.up.arrow.down")
         }
         .accessibilityIdentifier("glass_sort_button")
+    }
+
+    // MARK: - Context Menu (ellipsis)
+
+    private var contextMenu: some View {
+        Menu {
+            // Context-specific actions based on current mode
+            switch viewModel.quickFilter {
+            case .myGlass:
+                // Inventory actions
+                Button {
+                    showingAddInventory = true
+                } label: {
+                    Label("Add Inventory", systemImage: "plus")
+                }
+
+                Button {
+                    showingQRScanner = true
+                } label: {
+                    Label("Scan QR Code", systemImage: "camera")
+                }
+
+                Divider()
+
+                Button {
+                    showingInventorySharing = true
+                } label: {
+                    Label("Inventory Sharing", systemImage: "person.2")
+                }
+
+                Button {
+                    showingLabelDesigner = true
+                } label: {
+                    Label("Print Labels", systemImage: "qrcode")
+                }
+                .disabled(viewModel.filteredItems.isEmpty)
+
+                Button {
+                    showingManageLocations = true
+                } label: {
+                    Label("Manage Locations", systemImage: "archivebox")
+                }
+
+            case .wishList:
+                // Shopping list actions
+                Button {
+                    showingAddShoppingItem = true
+                } label: {
+                    Label("Add to Shopping List", systemImage: "plus")
+                }
+
+                if !isShoppingMode {
+                    Button {
+                        isShoppingMode = true
+                    } label: {
+                        Label("Start Shopping", systemImage: "cart")
+                    }
+                }
+
+            case .all:
+                // All mode - show quick add options
+                Button {
+                    showingAddInventory = true
+                } label: {
+                    Label("Add Inventory", systemImage: "plus.circle")
+                }
+
+                Button {
+                    showingAddShoppingItem = true
+                } label: {
+                    Label("Add to Shopping List", systemImage: "heart")
+                }
+            }
+
+            Divider()
+
+            // Always available
+            Button {
+                showingSettings = true
+            } label: {
+                Label("Settings", systemImage: "gear")
+            }
+
+            Button {
+                showingHelp = true
+            } label: {
+                Label("Help", systemImage: "questionmark.circle")
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+        }
+        .accessibilityIdentifier("supplies_menu")
     }
 
     // MARK: - Filter Sheet

@@ -28,9 +28,16 @@ struct GlassItemRowView: View {
         let stableId: String
         let imagePath: String?
         let imageThumbPath: String?
+        let imagePaths: [String]?  // Multi-image support
+        let imageThumbPaths: [String]?  // Multi-image support
         let dominantColors: [String]?
         let tags: [String]
         let rating: AggregatedRatingModel?  // Optional rating data
+
+        /// Whether this item has multiple images
+        var hasMultipleImages: Bool {
+            (imagePaths?.count ?? 0) > 1
+        }
 
         init(from completeItem: CompleteInventoryItemModel) {
             self.name = completeItem.glassItem.name
@@ -39,6 +46,8 @@ struct GlassItemRowView: View {
             self.stableId = completeItem.glassItem.stable_id
             self.imagePath = completeItem.glassItem.image_path
             self.imageThumbPath = completeItem.glassItem.image_thumb_path
+            self.imagePaths = completeItem.glassItem.image_paths
+            self.imageThumbPaths = completeItem.glassItem.image_thumb_paths
             self.dominantColors = completeItem.glassItem.dominant_colors
             self.tags = completeItem.allTags
             self.rating = completeItem.rating
@@ -51,6 +60,8 @@ struct GlassItemRowView: View {
             self.stableId = detailedShoppingItem.catalogItem.stable_id
             self.imagePath = detailedShoppingItem.catalogItem.image_path
             self.imageThumbPath = detailedShoppingItem.catalogItem.image_thumb_path
+            self.imagePaths = detailedShoppingItem.catalogItem.image_paths
+            self.imageThumbPaths = detailedShoppingItem.catalogItem.image_thumb_paths
             self.dominantColors = detailedShoppingItem.catalogItem.dominant_colors
             self.tags = detailedShoppingItem.allTags
             self.rating = nil  // Shopping list items don't include ratings
@@ -64,18 +75,22 @@ struct GlassItemRowView: View {
             self.stableId = enrichedItem.snapshot.stableId
             self.imagePath = enrichedItem.catalogData?.imagePath
             self.imageThumbPath = enrichedItem.catalogData?.imageThumbPath
+            self.imagePaths = enrichedItem.catalogData?.imagePaths
+            self.imageThumbPaths = enrichedItem.catalogData?.imageThumbPaths
             self.dominantColors = enrichedItem.catalogData?.dominantColors
             self.tags = enrichedItem.catalogData?.tags ?? []
             self.rating = nil  // Friend inventory items don't include ratings
         }
 
-        init(name: String, manufacturer: String, sku: String?, stableId: String, imagePath: String? = nil, imageThumbPath: String? = nil, dominantColors: [String]? = nil, tags: [String], rating: AggregatedRatingModel? = nil) {
+        init(name: String, manufacturer: String, sku: String?, stableId: String, imagePath: String? = nil, imageThumbPath: String? = nil, imagePaths: [String]? = nil, imageThumbPaths: [String]? = nil, dominantColors: [String]? = nil, tags: [String], rating: AggregatedRatingModel? = nil) {
             self.name = name
             self.manufacturer = manufacturer
             self.sku = sku
             self.stableId = stableId
             self.imagePath = imagePath
             self.imageThumbPath = imageThumbPath
+            self.imagePaths = imagePaths
+            self.imageThumbPaths = imageThumbPaths
             self.dominantColors = dominantColors
             self.tags = tags
             self.rating = rating
@@ -125,8 +140,33 @@ struct GlassItemRowView: View {
         }
     }
 
-    /// Just the thumbnail image
+    /// Just the thumbnail image - uses auto-rotating version if multiple images available
+    @ViewBuilder
     var thumbnail: some View {
+        #if canImport(UIKit)
+        if item.hasMultipleImages {
+            AutoRotatingProductThumbnail(
+                itemCode: item.stableId,
+                manufacturer: item.manufacturer,
+                stableId: item.stableId,
+                imagePaths: item.imagePaths,
+                imageThumbPaths: item.imageThumbPaths,
+                dominantColors: item.dominantColors,
+                size: 60,
+                rotationInterval: 5.0
+            )
+        } else {
+            ProductImageThumbnail(
+                itemCode: item.stableId,
+                manufacturer: item.manufacturer,
+                stableId: item.stableId,
+                imagePath: item.imagePath,
+                imageThumbPath: item.imageThumbPath,
+                dominantColors: item.dominantColors,
+                size: 60
+            )
+        }
+        #else
         ProductImageThumbnail(
             itemCode: item.stableId,
             manufacturer: item.manufacturer,
@@ -136,6 +176,7 @@ struct GlassItemRowView: View {
             dominantColors: item.dominantColors,
             size: 60
         )
+        #endif
     }
 
     /// Just the text content (name, manufacturer, SKU, badges, tags)
@@ -237,6 +278,7 @@ extension GlassItemRowView {
     }
 
     /// Unified "All" mode row with status indicators for inventory and wish list
+    /// Shows simple icons on the right to indicate status (no counts - that's for "Mine" mode)
     static func unified(
         item: CompleteInventoryItemModel,
         hasInventory: Bool,
@@ -248,23 +290,18 @@ extension GlassItemRowView {
                 showFullCode: false
             ).mainContent
 
-            // Status indicators on trailing edge
+            // Status icons on trailing edge - simple indicators
             if hasInventory || onWishList {
-                VStack(alignment: .trailing, spacing: DesignSystem.Spacing.xs) {
+                HStack(spacing: DesignSystem.Spacing.sm) {
                     if hasInventory {
-                        HStack(spacing: DesignSystem.Spacing.xxs) {
-                            Image(systemName: "archivebox.fill")
-                                .font(.system(size: 12))
-                            Text("\(Int(item.totalQuantity))")
-                                .font(DesignSystem.Typography.listItemCaption)
-                                .fontWeight(DesignSystem.FontWeight.medium)
-                        }
-                        .foregroundColor(DesignSystem.Colors.moltenTeal)
-                        .accessibilityLabel("In inventory: \(Int(item.totalQuantity))")
+                        Image(systemName: "archivebox.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(DesignSystem.Colors.moltenTeal)
+                            .accessibilityLabel("In inventory")
                     }
                     if onWishList {
                         Image(systemName: "heart.fill")
-                            .font(.system(size: 12))
+                            .font(.system(size: 16))
                             .foregroundColor(DesignSystem.Colors.moltenOrange)
                             .accessibilityLabel("On wish list")
                     }

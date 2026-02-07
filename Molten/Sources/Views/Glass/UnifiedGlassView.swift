@@ -231,6 +231,14 @@ struct UnifiedGlassView: View {
                     .focused($isSearchFocused)
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    .toolbar {
+                        ToolbarItemGroup(placement: .keyboard) {
+                            Spacer()
+                            Button("Done") {
+                                isSearchFocused = false
+                            }
+                        }
+                    }
                     #endif
                     .autocorrectionDisabled()
                     .onChange(of: localSearchText) { _, newValue in
@@ -618,7 +626,8 @@ struct UnifiedGlassView: View {
             }
         }
         .listStyle(.plain)
-        .contentMargins(.bottom, 80, for: .scrollContent)  // Space for tab bar
+        .scrollDismissesKeyboard(.immediately)
+        .contentMargins(.bottom, 100, for: .scrollContent)  // Space for custom floating tab bar
     }
 
     private var wishListList: some View {
@@ -637,7 +646,8 @@ struct UnifiedGlassView: View {
             }
         }
         .listStyle(.plain)
-        .contentMargins(.bottom, 80, for: .scrollContent)  // Space for tab bar
+        .scrollDismissesKeyboard(.immediately)
+        .contentMargins(.bottom, 100, for: .scrollContent)  // Space for custom floating tab bar
     }
 
     // MARK: - Row Views
@@ -933,7 +943,7 @@ struct UnifiedGlassView: View {
         }
         .navigationTitle("Manufacturers")
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            ToolbarItem(placement: .confirmationAction) {
                 Button("Clear") {
                     viewModel.selectedManufacturers.removeAll()
                 }
@@ -966,7 +976,7 @@ struct UnifiedGlassView: View {
         }
         .navigationTitle("COE")
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            ToolbarItem(placement: .confirmationAction) {
                 Button("Clear") {
                     viewModel.selectedCOEs.removeAll()
                 }

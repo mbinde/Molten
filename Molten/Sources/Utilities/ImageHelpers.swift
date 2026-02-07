@@ -1134,24 +1134,26 @@ struct AutoRotatingProductThumbnail: View {
             return
         }
 
-        let useThumbnail = !UserSettings.shared.downloadFullSizeImages
         var images: [UIImage] = []
 
+        // Load each image using the full fallback chain
         for i in 0..<paths.count {
             let imagePath = paths[i]
             let thumbPath = imageThumbPaths?[safe: i]
 
-            if let image = await ImageDownloadService.loadImage(
+            if let image = await ImageHelpers.loadProductImageForDisplay(
+                itemCode: itemCode,
                 manufacturer: manufacturer,
-                exactFilename: imagePath,
-                exactThumbnailFilename: thumbPath,
-                useThumbnail: useThumbnail
+                stableId: stableId,
+                imagePath: imagePath,
+                imageThumbPath: thumbPath,
+                dominantColors: dominantColors
             ) {
                 images.append(image)
             }
         }
 
-        // If no images loaded, try fallback
+        // If no images loaded, try fallback with first path
         if images.isEmpty {
             if let fallback = await ImageHelpers.loadProductImageForDisplay(
                 itemCode: itemCode,

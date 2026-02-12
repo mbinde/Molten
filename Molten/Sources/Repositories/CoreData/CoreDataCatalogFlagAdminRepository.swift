@@ -84,11 +84,24 @@ class CoreDataCatalogFlagAdminRepository: @unchecked Sendable, CatalogFlagAdminR
 
             let existingFlags = try context.fetch(fetchRequest)
 
+            // Also check for any deleted records for this item
+            let deletedFetchRequest = NSFetchRequest<NSManagedObject>(entityName: "CatalogFlagAdmin")
+            deletedFetchRequest.predicate = NSPredicate(
+                format: "item_stable_id == %@ AND flag_key == %@ AND deleted_at != nil",
+                flag.item_stable_id, flag.flag_key
+            )
+            let deletedFlags = try context.fetch(deletedFetchRequest)
+
             let managedObject: NSManagedObject
             if let existing = existingFlags.first {
-                // Update existing flag
+                // Update existing active flag
                 managedObject = existing
                 self.log.debug("Updating existing admin flag \(flag.flag_key) for \(flag.item_stable_id)")
+            } else if let deleted = deletedFlags.first {
+                // Reactivate a deleted flag instead of creating new
+                managedObject = deleted
+                managedObject.setValue(nil, forKey: "deleted_at")
+                self.log.debug("Reactivating deleted admin flag \(flag.flag_key) for \(flag.item_stable_id)")
             } else {
                 // Create new flag
                 guard let entity = NSEntityDescription.entity(forEntityName: "CatalogFlagAdmin", in: context) else {
@@ -117,6 +130,9 @@ class CoreDataCatalogFlagAdminRepository: @unchecked Sendable, CatalogFlagAdminR
             managedObject.setValue(Date(), forKey: "updated_at")
 
             try context.save()
+
+            // Refresh the context to ensure changes are visible to subsequent fetches
+            context.refreshAllObjects()
         }
     }
 
@@ -222,6 +238,9 @@ class CoreDataCatalogFlagAdminRepository: @unchecked Sendable, CatalogFlagAdminR
 
     func fetchAllFlags() async throws -> [CatalogFlagAdminModel] {
         return try await CoreDataHelper.performAsync(on: backgroundContext) { context in
+            // Refresh context to ensure we see recently saved changes
+            context.refreshAllObjects()
+
             let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "CatalogFlagAdmin")
             fetchRequest.predicate = NSPredicate(format: "deleted_at == nil")
             fetchRequest.sortDescriptors = [

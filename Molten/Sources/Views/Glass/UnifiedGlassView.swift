@@ -616,13 +616,6 @@ struct UnifiedGlassView: View {
                     catalogRow(for: item)
                 }
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                #if DEBUG
-                .listRowBackground(
-                    processedItemIds.contains(item.catalogItem.stable_id)
-                        ? DesignSystem.Colors.accentSuccess.opacity(0.15)
-                        : nil
-                )
-                #endif
             }
         }
         .listStyle(.plain)
@@ -654,6 +647,10 @@ struct UnifiedGlassView: View {
 
     @ViewBuilder
     private func catalogRow(for item: CompleteInventoryItemModel) -> some View {
+        #if DEBUG
+        let isProcessed = processedItemIds.contains(item.catalogItem.stable_id)
+        #endif
+
         // Use existing row view based on mode
         switch viewModel.quickFilter {
         case .all:
@@ -661,12 +658,21 @@ struct UnifiedGlassView: View {
             let hasInventory = viewModel.inventoryItemIds.contains(item.catalogItem.stable_id)
             let onWishList = viewModel.shoppingListItemIds.contains(item.catalogItem.stable_id)
             GlassItemRowView.unified(item: item, hasInventory: hasInventory, onWishList: onWishList)
+                #if DEBUG
+                .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.15) : Color.clear)
+                #endif
         case .myGlass:
             // In "My Glass" mode, show inventory row with quantities
             GlassItemRowView.inventory(item: item, selectedLocations: viewModel.selectedLocations)
+                #if DEBUG
+                .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.15) : Color.clear)
+                #endif
         case .wishList:
             // This shouldn't happen in catalogRow
             GlassItemRowView.catalog(item: item)
+                #if DEBUG
+                .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.15) : Color.clear)
+                #endif
         }
     }
 
@@ -1025,29 +1031,33 @@ struct UnifiedGlassView: View {
 
     @MainActor
     private func loadProcessedItems() async {
-        do {
-            var allProcessedIds = Set<String>()
+        var allProcessedIds = Set<String>()
 
-            // Check admin repository (CloudKit - manually set in app)
+        // Check admin repository (CloudKit - manually set in app)
+        do {
             let adminRepo = deps.catalogFlagAdminRepository
             let adminFlags = try await adminRepo.fetchAllFlags()
             let adminProcessed = adminFlags
-                .filter { $0.flag_key == kProcessedKey && $0.flag_value }
+                .filter { $0.flag_key == kProcessedKey && $0.flag_value && !$0.is_removal }
                 .map { $0.item_stable_id }
             allProcessedIds.formUnion(adminProcessed)
+        } catch {
+            print("Error loading admin processed items: \(error)")
+        }
 
-            // Check bundled repository (SQLite - imported from export)
+        // Check bundled repository (SQLite - imported from export)
+        do {
             let bundledRepo = deps.catalogFlagBundledRepository
             let bundledFlags = try await bundledRepo.fetchAllFlags()
             let bundledProcessed = bundledFlags
                 .filter { $0.flag_key == kProcessedKey && $0.flag_value }
                 .map { $0.item_stable_id }
             allProcessedIds.formUnion(bundledProcessed)
-
-            processedItemIds = allProcessedIds
         } catch {
-            print("Error loading processed items: \(error)")
+            print("Error loading bundled processed items: \(error)")
         }
+
+        processedItemIds = Set(allProcessedIds)
     }
     #endif
 }

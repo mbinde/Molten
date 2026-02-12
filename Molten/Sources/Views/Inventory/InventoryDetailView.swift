@@ -352,13 +352,14 @@ struct InventoryDetailView: View {
                     // Debug: Catalog Flag Editor (only in DEBUG builds)
                     #if DEBUG
                     // Processed checkbox - always visible, not in a dropdown
-                    HStack {
-                        Button {
-                            isProcessed.toggle()
-                            Task {
-                                await saveProcessedState()
-                            }
-                        } label: {
+                    // Entire row is tappable
+                    Button {
+                        isProcessed.toggle()
+                        Task {
+                            await saveProcessedState()
+                        }
+                    } label: {
+                        HStack {
                             HStack(spacing: DesignSystem.Spacing.sm) {
                                 Image(systemName: isProcessed ? "checkmark.square.fill" : "square")
                                     .foregroundColor(isProcessed ? DesignSystem.Colors.accentSuccess : DesignSystem.Colors.textSecondary)
@@ -367,13 +368,13 @@ struct InventoryDetailView: View {
                                     .font(DesignSystem.Typography.formLabel)
                                     .foregroundColor(DesignSystem.Colors.textPrimary)
                             }
+                            Spacer()
                         }
-                        .buttonStyle(.plain)
-                        Spacer()
+                        .padding(DesignSystem.Padding.standard)
+                        .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.1) : DesignSystem.Colors.backgroundSecondary.opacity(0.5))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large))
                     }
-                    .padding(DesignSystem.Padding.standard)
-                    .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.1) : DesignSystem.Colors.backgroundSecondary.opacity(0.5))
-                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large))
+                    .buttonStyle(.plain)
 
                     CatalogTagEditorView(
                         itemStableId: currentItem.glassItem.stable_id
@@ -686,10 +687,11 @@ struct InventoryDetailView: View {
     @MainActor
     private func saveProcessedState() async {
         do {
+            let stableId = currentItem.glassItem.stable_id
             if isProcessed {
                 // Save the processed flag
                 let flag = CatalogFlagAdminModel(
-                    item_stable_id: currentItem.glassItem.stable_id,
+                    item_stable_id: stableId,
                     flag_key: kProcessedKey,
                     flag_value: true
                 )
@@ -697,7 +699,7 @@ struct InventoryDetailView: View {
             } else {
                 // Remove the processed flag
                 try await catalogFlagAdminRepository.removeAdminFlag(
-                    item_stable_id: currentItem.glassItem.stable_id,
+                    item_stable_id: stableId,
                     flag_key: kProcessedKey
                 )
             }

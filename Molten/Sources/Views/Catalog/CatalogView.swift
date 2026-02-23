@@ -527,7 +527,7 @@ struct CatalogView: View {
             let adminRepo = AppDependencies.shared.catalogFlagAdminRepository
             let adminFlags = try await adminRepo.fetchAllFlags()
             let adminProcessed = adminFlags
-                .filter { $0.flag_key == kProcessedKey && $0.flag_value }
+                .filter { $0.flag_key == kProcessedKey && $0.flag_value && !$0.is_removal }
                 .map { $0.item_stable_id }
             allProcessedIds.formUnion(adminProcessed)
 

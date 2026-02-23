@@ -22,6 +22,7 @@ struct UnifiedGlassView: View {
     @State private var navigationPath = NavigationPath()
     @State private var showingFilterSheet = false
     @State private var showingHelp = false
+    @State private var showingSettings = false
     @State private var localSearchText = ""  // Local copy to avoid TextField re-renders
     @FocusState private var isSearchFocused: Bool
 
@@ -31,6 +32,18 @@ struct UnifiedGlassView: View {
     @State private var shoppingQuantities: [String: Double] = [:]
     @State private var showingCheckoutSheet = false
 
+    // Inventory feature states (from old InventoryView)
+    @State private var showingAddInventory = false
+    @State private var showingQRScanner = false
+    @State private var showingInventorySharing = false
+    @State private var showingLabelDesigner = false
+    @State private var showingManageLocations = false
+    @State private var showingUpgradePrompt = false
+    @State private var pendingShareCode: String? = nil
+
+    // Shopping feature states
+    @State private var showingAddShoppingItem = false
+
     // Filter sheet states
     @State private var showingCOESelection = false
     @State private var showingManufacturerSelection = false
@@ -38,13 +51,17 @@ struct UnifiedGlassView: View {
     @State private var showingLocationSelection = false
     @State private var showingStoreSelection = false
 
+    // Color search state
+    @State private var showingColorSearch = false
+
     #if DEBUG
     // Processed items tracking (for row highlighting during review)
     @State private var processedItemIds: Set<String> = []
     #endif
 
-    // Services for detail views
+    // Services and environment
     private let deps: AppDependencies
+    @Environment(EntitlementService.self) private var entitlementService
 
     // MARK: - Initialization
 
@@ -68,6 +85,9 @@ struct UnifiedGlassView: View {
                     .padding(.horizontal)
                     .padding(.top, DesignSystem.Spacing.sm)
 
+                // Active color filter chip
+                activeColorFilterChip
+
                 // Search bar
                 searchBar
                     .padding(.horizontal)
@@ -79,7 +99,7 @@ struct UnifiedGlassView: View {
                 // Main content
                 mainContent
             }
-            .navigationTitle("Glass")
+            .navigationTitle("Supplies")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -88,11 +108,7 @@ struct UnifiedGlassView: View {
                     sortMenu
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button {
-                        showingHelp = true
-                    } label: {
-                        Image(systemName: "questionmark.circle")
-                    }
+                    contextMenu
                 }
             }
             .navigationDestination(for: GlassNavigationDestination.self) { destination in
@@ -106,11 +122,92 @@ struct UnifiedGlassView: View {
             .sheet(isPresented: $showingFilterSheet) {
                 filterSheet
             }
+            .sheet(isPresented: $showingColorSearch) {
+                ColorSearchSheet(
+                    selectedColor: $viewModel.searchColor,
+                    tolerance: $viewModel.colorTolerance,
+                    colorVarianceFilter: $viewModel.colorVarianceFilter,
+                    onApply: {
+                        viewModel.applyColorSearch()
+                    },
+                    onClear: viewModel.colorSearchActive ? {
+                        viewModel.clearColorSearch()
+                    } : nil,
+                    isSearchActive: viewModel.colorSearchActive
+                )
+            }
             .sheet(isPresented: $showingHelp) {
                 CatalogHelpView()
             }
+            .sheet(isPresented: $showingSettings) {
+                SuppliesSettingsView()
+            }
             .sheet(isPresented: $showingCheckoutSheet) {
                 checkoutSheet
+            }
+            // Inventory feature sheets
+            .sheet(isPresented: $showingAddInventory, onDismiss: {
+                Task {
+                    try? await Task.sleep(nanoseconds: 100_000_000)
+                    await viewModel.refreshData()
+                }
+            }) {
+                AddInventoryItemView(prefilledNaturalKey: nil, deps: deps)
+            }
+            .sheet(isPresented: $showingQRScanner) {
+                QRCodeScannerView { scannedURL in
+                    if let url = URL(string: scannedURL) {
+                        NotificationCenter.default.post(
+                            name: .openMoltenDeepLink,
+                            object: nil,
+                            userInfo: ["url": url]
+                        )
+                    }
+                }
+            }
+            .sheet(isPresented: $showingLabelDesigner) {
+                LabelDesignerView(items: viewModel.filteredItems)
+            }
+            .sheet(isPresented: $showingManageLocations) {
+                ManageLocationsView(
+                    storageLocationDefinitionRepository: deps.storageLocationDefinitionRepository,
+                    storageLocationRepository: deps.storageLocationRepository,
+                    inventoryTrackingService: deps.inventoryTrackingService,
+                    onLocationsChanged: {
+                        Task { await viewModel.refreshData() }
+                    }
+                )
+            }
+            .sheet(isPresented: $showingUpgradePrompt) {
+                UpgradePromptView(
+                    feature: "inventory",
+                    currentCount: viewModel.inventoryItemIds.count,
+                    limit: entitlementService.getInventoryLimit() ?? 0
+                )
+            }
+            .fullScreenCover(isPresented: $showingInventorySharing) {
+                NavigationStack {
+                    InventorySharingView(pendingShareCode: pendingShareCode)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Done") {
+                                    showingInventorySharing = false
+                                    pendingShareCode = nil
+                                }
+                            }
+                        }
+                }
+            }
+            // Shopping feature sheets
+            .sheet(isPresented: $showingAddShoppingItem, onDismiss: {
+                Task {
+                    try? await Task.sleep(nanoseconds: 100_000_000)
+                    await viewModel.refreshData()
+                }
+            }) {
+                NavigationStack {
+                    AddShoppingListItemView(deps: deps)
+                }
             }
             .task {
                 await viewModel.loadData()
@@ -130,11 +227,40 @@ struct UnifiedGlassView: View {
             .onReceive(NotificationCenter.default.publisher(for: .shoppingListItemAdded)) { _ in
                 Task { await viewModel.refreshData() }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .findSimilarColors)) { notification in
+                handleFindSimilarColors(notification)
+            }
             #if DEBUG
             .onReceive(NotificationCenter.default.publisher(for: .catalogFlagChanged)) { _ in
                 Task { await loadProcessedItems() }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .detailViewDisappeared)) { _ in
+                // Reload processed items when returning from detail view
+                Task { await loadProcessedItems() }
+            }
             #endif
+        }
+    }
+
+    /// Handle "Find Similar Colors" notification from detail view
+    private func handleFindSimilarColors(_ notification: Notification) {
+        guard let colorHex = notification.userInfo?["color"] as? String else { return }
+
+        // Convert hex to SwiftUI Color
+        if let (r, g, b) = ColorDistance.hexToRGB(colorHex) {
+            viewModel.searchColor = Color(red: r, green: g, blue: b)
+
+            // Apply variance filter if provided
+            if let varianceFilter = notification.userInfo?["varianceFilter"] as? ColorVarianceFilter {
+                viewModel.colorVarianceFilter = varianceFilter
+            }
+
+            // Apply tolerance if provided (default to "very close" = 5.0)
+            if let tolerance = notification.userInfo?["tolerance"] as? Double {
+                viewModel.colorTolerance = tolerance
+            }
+
+            viewModel.applyColorSearch()
         }
     }
 
@@ -146,10 +272,18 @@ struct UnifiedGlassView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(DesignSystem.Colors.textSecondary)
 
-                TextField("Search glass...", text: $localSearchText)
+                TextField("Search supplies...", text: $localSearchText)
                     .focused($isSearchFocused)
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    .toolbar {
+                        ToolbarItemGroup(placement: .keyboard) {
+                            Spacer()
+                            Button("Done") {
+                                isSearchFocused = false
+                            }
+                        }
+                    }
                     #endif
                     .autocorrectionDisabled()
                     .onChange(of: localSearchText) { _, newValue in
@@ -206,6 +340,56 @@ struct UnifiedGlassView: View {
             ForEach(GlassQuickFilter.allCases) { filter in
                 quickFilterButton(for: filter)
             }
+
+            Spacer()
+
+            // Color search button
+            ColorSearchButton(
+                isActive: viewModel.colorSearchActive,
+                activeColor: viewModel.colorSearchActive ? viewModel.searchColor : nil,
+                action: { showingColorSearch = true }
+            )
+        }
+    }
+
+    // MARK: - Active Color Filter Chip
+
+    @ViewBuilder
+    private var activeColorFilterChip: some View {
+        if viewModel.colorSearchActive {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                HStack(spacing: DesignSystem.Spacing.xs) {
+                    // Color swatch
+                    Circle()
+                        .fill(viewModel.searchColor)
+                        .frame(width: 16, height: 16)
+                        .overlay(
+                            Circle()
+                                .strokeBorder(Color.primary.opacity(0.2), lineWidth: 1)
+                        )
+
+                    Text("Color filter active")
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+
+                    Button {
+                        viewModel.clearColorSearch()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(DesignSystem.Colors.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, DesignSystem.Spacing.sm)
+                .padding(.vertical, DesignSystem.Spacing.xs)
+                .background(DesignSystem.Colors.backgroundSecondary)
+                .cornerRadius(DesignSystem.CornerRadius.small)
+
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.top, DesignSystem.Spacing.xs)
         }
     }
 
@@ -213,23 +397,32 @@ struct UnifiedGlassView: View {
         let isSelected = viewModel.quickFilter == filter
         let count = countForQuickFilter(filter)
 
+        // Use .fill variant when selected
+        let iconName = isSelected ? "\(filter.systemImage).fill" : filter.systemImage
+
         return Button {
             withAnimation(.easeInOut(duration: 0.2)) {
                 viewModel.quickFilter = filter
             }
         } label: {
             HStack(spacing: DesignSystem.Spacing.xs) {
-                Image(systemName: filter.systemImage)
+                Image(systemName: iconName)
                     .font(.system(size: 14, weight: .medium))
-                Text(filter.displayName)
-                    .font(.system(size: 14, weight: .medium))
+
+                // Selected tab: icon + text + count
+                // Unselected tabs: icon + count only (more compact)
+                if isSelected {
+                    Text(filter.displayName)
+                        .font(.system(size: 14, weight: .medium))
+                }
+
                 if count > 0 {
-                    Text("(\(count))")
-                        .font(.system(size: 12))
+                    Text(isSelected ? "(\(count))" : "\(count)")
+                        .font(.system(size: 12, weight: isSelected ? .regular : .medium))
                         .foregroundColor(isSelected ? .white.opacity(0.8) : DesignSystem.Colors.textSecondary)
                 }
             }
-            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.horizontal, isSelected ? DesignSystem.Spacing.md : DesignSystem.Spacing.sm)
             .padding(.vertical, DesignSystem.Spacing.sm)
             .background(
                 RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.medium)
@@ -518,16 +711,11 @@ struct UnifiedGlassView: View {
                     catalogRow(for: item)
                 }
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                #if DEBUG
-                .listRowBackground(
-                    processedItemIds.contains(item.catalogItem.stable_id)
-                        ? DesignSystem.Colors.accentSuccess.opacity(0.15)
-                        : nil
-                )
-                #endif
             }
         }
         .listStyle(.plain)
+        .scrollDismissesKeyboard(.immediately)
+        .contentMargins(.bottom, 100, for: .scrollContent)  // Space for custom floating tab bar
     }
 
     private var wishListList: some View {
@@ -546,12 +734,18 @@ struct UnifiedGlassView: View {
             }
         }
         .listStyle(.plain)
+        .scrollDismissesKeyboard(.immediately)
+        .contentMargins(.bottom, 100, for: .scrollContent)  // Space for custom floating tab bar
     }
 
     // MARK: - Row Views
 
     @ViewBuilder
     private func catalogRow(for item: CompleteInventoryItemModel) -> some View {
+        #if DEBUG
+        let isProcessed = processedItemIds.contains(item.catalogItem.stable_id)
+        #endif
+
         // Use existing row view based on mode
         switch viewModel.quickFilter {
         case .all:
@@ -559,12 +753,21 @@ struct UnifiedGlassView: View {
             let hasInventory = viewModel.inventoryItemIds.contains(item.catalogItem.stable_id)
             let onWishList = viewModel.shoppingListItemIds.contains(item.catalogItem.stable_id)
             GlassItemRowView.unified(item: item, hasInventory: hasInventory, onWishList: onWishList)
+                #if DEBUG
+                .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.15) : Color.clear)
+                #endif
         case .myGlass:
             // In "My Glass" mode, show inventory row with quantities
             GlassItemRowView.inventory(item: item, selectedLocations: viewModel.selectedLocations)
+                #if DEBUG
+                .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.15) : Color.clear)
+                #endif
         case .wishList:
             // This shouldn't happen in catalogRow
             GlassItemRowView.catalog(item: item)
+                #if DEBUG
+                .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.15) : Color.clear)
+                #endif
         }
     }
 
@@ -613,6 +816,98 @@ struct UnifiedGlassView: View {
             Image(systemName: "arrow.up.arrow.down")
         }
         .accessibilityIdentifier("glass_sort_button")
+    }
+
+    // MARK: - Context Menu (ellipsis)
+
+    private var contextMenu: some View {
+        Menu {
+            // Context-specific actions based on current mode
+            switch viewModel.quickFilter {
+            case .myGlass:
+                // Inventory actions
+                Button {
+                    showingAddInventory = true
+                } label: {
+                    Label("Add Inventory", systemImage: "plus")
+                }
+
+                Button {
+                    showingQRScanner = true
+                } label: {
+                    Label("Scan QR Code", systemImage: "camera")
+                }
+
+                Divider()
+
+                Button {
+                    showingInventorySharing = true
+                } label: {
+                    Label("Inventory Sharing", systemImage: "person.2")
+                }
+
+                Button {
+                    showingLabelDesigner = true
+                } label: {
+                    Label("Print Labels", systemImage: "qrcode")
+                }
+                .disabled(viewModel.filteredItems.isEmpty)
+
+                Button {
+                    showingManageLocations = true
+                } label: {
+                    Label("Manage Locations", systemImage: "archivebox")
+                }
+
+            case .wishList:
+                // Shopping list actions
+                Button {
+                    showingAddShoppingItem = true
+                } label: {
+                    Label("Add to Shopping List", systemImage: "plus")
+                }
+
+                if !isShoppingMode {
+                    Button {
+                        isShoppingMode = true
+                    } label: {
+                        Label("Start Shopping", systemImage: "cart")
+                    }
+                }
+
+            case .all:
+                // All mode - show quick add options
+                Button {
+                    showingAddInventory = true
+                } label: {
+                    Label("Add Inventory", systemImage: "plus.circle")
+                }
+
+                Button {
+                    showingAddShoppingItem = true
+                } label: {
+                    Label("Add to Shopping List", systemImage: "heart")
+                }
+            }
+
+            Divider()
+
+            // Always available
+            Button {
+                showingSettings = true
+            } label: {
+                Label("Settings", systemImage: "gear")
+            }
+
+            Button {
+                showingHelp = true
+            } label: {
+                Label("Help", systemImage: "questionmark.circle")
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+        }
+        .accessibilityIdentifier("supplies_menu")
     }
 
     // MARK: - Filter Sheet
@@ -689,18 +984,16 @@ struct UnifiedGlassView: View {
                     }
                 }
 
-                // Clear all button
-                Section {
-                    Button("Clear All Filters") {
-                        viewModel.clearAllFilters()
-                    }
-                    .foregroundColor(DesignSystem.Colors.accentDanger)
-                    .disabled(!viewModel.hasActiveFilters)
-                }
             }
             .navigationTitle("Filters")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Clear") {
+                        viewModel.clearAllFilters()
+                    }
+                    .disabled(!viewModel.hasActiveFilters)
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         showingFilterSheet = false
@@ -749,7 +1042,7 @@ struct UnifiedGlassView: View {
         }
         .navigationTitle("Manufacturers")
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            ToolbarItem(placement: .confirmationAction) {
                 Button("Clear") {
                     viewModel.selectedManufacturers.removeAll()
                 }
@@ -782,7 +1075,7 @@ struct UnifiedGlassView: View {
         }
         .navigationTitle("COE")
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            ToolbarItem(placement: .confirmationAction) {
                 Button("Clear") {
                     viewModel.selectedCOEs.removeAll()
                 }
@@ -831,29 +1124,33 @@ struct UnifiedGlassView: View {
 
     @MainActor
     private func loadProcessedItems() async {
-        do {
-            var allProcessedIds = Set<String>()
+        var allProcessedIds = Set<String>()
 
-            // Check admin repository (CloudKit - manually set in app)
+        // Check admin repository (CloudKit - manually set in app)
+        do {
             let adminRepo = deps.catalogFlagAdminRepository
             let adminFlags = try await adminRepo.fetchAllFlags()
             let adminProcessed = adminFlags
-                .filter { $0.flag_key == kProcessedKey && $0.flag_value }
+                .filter { $0.flag_key == kProcessedKey && $0.flag_value && !$0.is_removal }
                 .map { $0.item_stable_id }
             allProcessedIds.formUnion(adminProcessed)
+        } catch {
+            print("Error loading admin processed items: \(error)")
+        }
 
-            // Check bundled repository (SQLite - imported from export)
+        // Check bundled repository (SQLite - imported from export)
+        do {
             let bundledRepo = deps.catalogFlagBundledRepository
             let bundledFlags = try await bundledRepo.fetchAllFlags()
             let bundledProcessed = bundledFlags
                 .filter { $0.flag_key == kProcessedKey && $0.flag_value }
                 .map { $0.item_stable_id }
             allProcessedIds.formUnion(bundledProcessed)
-
-            processedItemIds = allProcessedIds
         } catch {
-            print("Error loading processed items: \(error)")
+            print("Error loading bundled processed items: \(error)")
         }
+
+        processedItemIds = Set(allProcessedIds)
     }
     #endif
 }

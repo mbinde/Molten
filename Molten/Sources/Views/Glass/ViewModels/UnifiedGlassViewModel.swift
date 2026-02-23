@@ -113,7 +113,7 @@ class UnifiedGlassViewModel {
 
     var debouncedSearchText = ""
 
-    var searchTitlesOnly = true {
+    var searchTitlesOnly = false {  // TODO: revert to true later - temporarily searching descriptions too
         didSet {
             if searchTitlesOnly != oldValue {
                 saveSearchTitlesOnly()
@@ -191,6 +191,36 @@ class UnifiedGlassViewModel {
                 applyFilters()
             }
         }
+    }
+
+    // MARK: - Color Search State
+
+    /// Whether color search is currently active
+    var colorSearchActive = false
+
+    /// The selected color for searching
+    var searchColor: Color = .blue
+
+    /// Color match tolerance (Delta E: 3 = very close, 25 = similar)
+    var colorTolerance: Double = 12.0
+
+    /// Which color variance levels to include in search results
+    var colorVarianceFilter: ColorVarianceFilter = .high
+
+    /// Cached color distances for sorting (stable_id -> distance)
+    private var colorDistanceCache: [String: Double] = [:]
+
+    /// Apply color search and filter the list
+    func applyColorSearch() {
+        colorSearchActive = true
+        applyFilters()
+    }
+
+    /// Clear color search and return to normal list
+    func clearColorSearch() {
+        colorSearchActive = false
+        colorDistanceCache.removeAll()
+        applyFilters()
     }
 
     // MARK: - Cached Values
@@ -557,7 +587,60 @@ class UnifiedGlassViewModel {
             filtered = filtered.filter { !selectedTags.isDisjoint(with: Set($0.allTags)) }
         }
 
+        // Color search filter
+        if colorSearchActive {
+            filtered = applyColorFilter(to: filtered)
+        }
+
         return filtered
+    }
+
+    /// Apply color search filter and sort by color match quality
+    private func applyColorFilter(to items: [CompleteInventoryItemModel]) -> [CompleteInventoryItemModel] {
+        // Clear cache for fresh calculation
+        colorDistanceCache.removeAll()
+
+        // Filter items that match the color criteria
+        var matchingItems: [(item: CompleteInventoryItemModel, distance: Double)] = []
+
+        for item in items {
+            // Get dominant colors from the catalog item
+            let dominantColors = item.catalogItem.dominant_colors ?? []
+
+            // Skip items without color data
+            guard !dominantColors.isEmpty else { continue }
+
+            // Get color confidence (high, medium, low) - defaults to "medium" if not set
+            let confidence = item.catalogItem.color_confidence ?? "medium"
+
+            // Check if this item's variance level is included in the filter
+            let isIncludedByVariance = colorVarianceFilter.includes(confidence: confidence)
+
+            // If item is excluded by variance filter, skip it entirely
+            guard isIncludedByVariance else { continue }
+
+            // Calculate color distance
+            if let distance = ColorDistance.minimumDistance(from: searchColor, to: dominantColors) {
+                // For low-confidence (high-variance) items, include them regardless of distance
+                // but give them a penalty for sorting purposes
+                if confidence == "low" {
+                    // Always include low-confidence items (reactive, dichroic, etc.)
+                    // Use max of actual distance and 30 to sort them after good matches
+                    let sortDistance = max(distance, 30.0)
+                    matchingItems.append((item, sortDistance))
+                    colorDistanceCache[item.catalogItem.stable_id] = sortDistance
+                } else if distance <= colorTolerance {
+                    // Normal matching based on tolerance
+                    matchingItems.append((item, distance))
+                    colorDistanceCache[item.catalogItem.stable_id] = distance
+                }
+            }
+        }
+
+        // Sort by color match quality (best matches first)
+        matchingItems.sort { $0.distance < $1.distance }
+
+        return matchingItems.map { $0.item }
     }
 
     // MARK: - Sorting

@@ -352,13 +352,14 @@ struct InventoryDetailView: View {
                     // Debug: Catalog Flag Editor (only in DEBUG builds)
                     #if DEBUG
                     // Processed checkbox - always visible, not in a dropdown
-                    HStack {
-                        Button {
-                            isProcessed.toggle()
-                            Task {
-                                await saveProcessedState()
-                            }
-                        } label: {
+                    // Entire row is tappable
+                    Button {
+                        isProcessed.toggle()
+                        Task {
+                            await saveProcessedState()
+                        }
+                    } label: {
+                        HStack {
                             HStack(spacing: DesignSystem.Spacing.sm) {
                                 Image(systemName: isProcessed ? "checkmark.square.fill" : "square")
                                     .foregroundColor(isProcessed ? DesignSystem.Colors.accentSuccess : DesignSystem.Colors.textSecondary)
@@ -367,13 +368,13 @@ struct InventoryDetailView: View {
                                     .font(DesignSystem.Typography.formLabel)
                                     .foregroundColor(DesignSystem.Colors.textPrimary)
                             }
+                            Spacer()
                         }
-                        .buttonStyle(.plain)
-                        Spacer()
+                        .padding(DesignSystem.Padding.standard)
+                        .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.1) : DesignSystem.Colors.backgroundSecondary.opacity(0.5))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large))
                     }
-                    .padding(DesignSystem.Padding.standard)
-                    .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.1) : DesignSystem.Colors.backgroundSecondary.opacity(0.5))
-                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.large))
+                    .buttonStyle(.plain)
 
                     CatalogTagEditorView(
                         itemStableId: currentItem.glassItem.stable_id
@@ -686,10 +687,11 @@ struct InventoryDetailView: View {
     @MainActor
     private func saveProcessedState() async {
         do {
+            let stableId = currentItem.glassItem.stable_id
             if isProcessed {
                 // Save the processed flag
                 let flag = CatalogFlagAdminModel(
-                    item_stable_id: currentItem.glassItem.stable_id,
+                    item_stable_id: stableId,
                     flag_key: kProcessedKey,
                     flag_value: true
                 )
@@ -697,7 +699,7 @@ struct InventoryDetailView: View {
             } else {
                 // Remove the processed flag
                 try await catalogFlagAdminRepository.removeAdminFlag(
-                    item_stable_id: currentItem.glassItem.stable_id,
+                    item_stable_id: stableId,
                     flag_key: kProcessedKey
                 )
             }
@@ -1048,18 +1050,78 @@ struct InventoryDetailView: View {
             )
 
             // Quick actions bar for common operations
-            QuickActionsBar(actions: [
-                QuickAction(title: "Inventory", icon: "archivebox.fill") {
-                    checkLimitAndShowAddInventory()
-                },
-                QuickAction(title: "Shopping", icon: "cart.fill") {
-                    showingShoppingListOptions = true
-                },
-                QuickAction(title: "Note", icon: "note.text") {
-                    showingUserNotesEditor = true
-                }
-            ])
+            QuickActionsBar(actions: quickActions)
         }
+    }
+
+    /// Build the list of quick actions, conditionally including "Similar" if color data exists
+    private var quickActions: [QuickAction] {
+        var actions = [
+            QuickAction(title: "Inventory", icon: "archivebox.fill") {
+                checkLimitAndShowAddInventory()
+            },
+            QuickAction(title: "Shopping", icon: "cart.fill") {
+                showingShoppingListOptions = true
+            },
+            QuickAction(title: "Note", icon: "note.text") {
+                showingUserNotesEditor = true
+            }
+        ]
+
+        // Add "Similar" action if item has color data
+        if currentItem.glassItem.representative_color != nil ||
+           (currentItem.glassItem.dominant_colors != nil && !currentItem.glassItem.dominant_colors!.isEmpty) {
+            actions.append(
+                QuickAction(title: "Similar", icon: "eyedropper") {
+                    findSimilarColors()
+                }
+            )
+        }
+
+        return actions
+    }
+
+    /// Trigger a color search for items similar to this one
+    private func findSimilarColors() {
+        // Use representative_color first, fall back to first dominant color
+        let colorHex: String?
+        if let representative = currentItem.glassItem.representative_color {
+            colorHex = representative
+        } else if let dominantColors = currentItem.glassItem.dominant_colors, let first = dominantColors.first {
+            colorHex = first
+        } else {
+            colorHex = nil
+        }
+
+        guard let hex = colorHex else { return }
+
+        // Determine variance filter based on this item's color_confidence
+        // high confidence = uniform color = low variance filter
+        // low confidence = high variance = high variance filter
+        let confidence = currentItem.glassItem.color_confidence ?? "medium"
+        let varianceFilter: ColorVarianceFilter
+        switch confidence {
+        case "high":
+            varianceFilter = .low
+        case "low":
+            varianceFilter = .high
+        default:
+            varianceFilter = .medium
+        }
+
+        // Post notification with color info - the catalog view will handle the search
+        NotificationCenter.default.post(
+            name: .findSimilarColors,
+            object: nil,
+            userInfo: [
+                "color": hex,
+                "varianceFilter": varianceFilter,
+                "tolerance": 5.0  // "Very close" tolerance
+            ]
+        )
+
+        // Dismiss to go back to catalog
+        dismiss()
     }
 
     // MARK: - Specifications Section

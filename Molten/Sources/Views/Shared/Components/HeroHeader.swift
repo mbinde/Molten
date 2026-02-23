@@ -23,6 +23,11 @@ struct HeroHeader: View {
     @State private var showingFullScreen = false
     @State private var showingColorApproximationInfo = false
     @State private var isShowingColorApproximation = false
+    @State private var autoRotateTimer: Timer?
+    @State private var userHasInteracted = false
+
+    /// Auto-rotation interval in seconds
+    private let autoRotateInterval: TimeInterval = 4.0
 
     /// Number of images available
     private var imageCount: Int {
@@ -68,6 +73,19 @@ struct HeroHeader: View {
                         .contentShape(Rectangle())
                         .onTapGesture {
                             showingFullScreen = true
+                        }
+                        .onAppear {
+                            startAutoRotation()
+                        }
+                        .onDisappear {
+                            stopAutoRotation()
+                        }
+                        .onChange(of: selectedImageIndex) { _, _ in
+                            // User swiped manually - stop auto-rotation permanently
+                            if autoRotateTimer != nil {
+                                userHasInteracted = true
+                                stopAutoRotation()
+                            }
                         }
                         .accessibilityLabel("Product images for \(item.name), \(selectedImageIndex + 1) of \(loadedImages.count)")
                         .accessibilityHint("Swipe to see more images, double tap to view full screen")
@@ -327,6 +345,24 @@ struct HeroHeader: View {
         } else {
             loadedImages = []
         }
+    }
+
+    // MARK: - Auto-Rotation
+
+    private func startAutoRotation() {
+        guard loadedImages.count > 1, !userHasInteracted else { return }
+        stopAutoRotation()
+
+        autoRotateTimer = Timer.scheduledTimer(withTimeInterval: autoRotateInterval, repeats: true) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                selectedImageIndex = (selectedImageIndex + 1) % loadedImages.count
+            }
+        }
+    }
+
+    private func stopAutoRotation() {
+        autoRotateTimer?.invalidate()
+        autoRotateTimer = nil
     }
 }
 

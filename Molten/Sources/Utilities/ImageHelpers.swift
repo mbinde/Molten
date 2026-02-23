@@ -987,3 +987,206 @@ struct ProductImageThumbnail: View {
         #endif
     }
 }
+
+// MARK: - Auto-Rotating Product Thumbnail
+
+/// A product thumbnail that automatically rotates through multiple images
+/// Rotation stops when user interacts with the image
+#if canImport(UIKit)
+struct AutoRotatingProductThumbnail: View {
+    let itemCode: String
+    let manufacturer: String?
+    let stableId: String?
+    let imagePaths: [String]?
+    let imageThumbPaths: [String]?
+    let dominantColors: [String]?
+    let size: CGFloat
+    let rotationInterval: TimeInterval
+
+    @State private var currentIndex: Int = 0
+    @State private var loadedImages: [UIImage] = []
+    @State private var isLoading: Bool = true
+    @State private var userHasInteracted: Bool = false
+    @State private var rotationTask: Task<Void, Never>?
+
+    /// Number of images available
+    private var imageCount: Int {
+        max(imagePaths?.count ?? 0, 1)
+    }
+
+    /// Whether we have multiple images to rotate through
+    private var hasMultipleImages: Bool {
+        imageCount > 1 && loadedImages.count > 1
+    }
+
+    init(
+        itemCode: String,
+        manufacturer: String? = nil,
+        stableId: String? = nil,
+        imagePaths: [String]? = nil,
+        imageThumbPaths: [String]? = nil,
+        dominantColors: [String]? = nil,
+        size: CGFloat = 60,
+        rotationInterval: TimeInterval = 5.0
+    ) {
+        self.itemCode = itemCode
+        self.manufacturer = manufacturer
+        self.stableId = stableId
+        self.imagePaths = imagePaths
+        self.imageThumbPaths = imageThumbPaths
+        self.dominantColors = dominantColors
+        self.size = size
+        self.rotationInterval = rotationInterval
+    }
+
+    var body: some View {
+        ZStack {
+            if !loadedImages.isEmpty {
+                // Show current image with crossfade animation
+                ForEach(Array(loadedImages.enumerated()), id: \.offset) { index, image in
+                    if index == currentIndex {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: size, height: size)
+                            .clipped()
+                            .transition(.opacity.animation(.easeInOut(duration: 0.5)))
+                    }
+                }
+            } else if isLoading {
+                // Loading state
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray5))
+                    .frame(width: size, height: size)
+                    .overlay {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    }
+            } else {
+                // Fallback placeholder
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray5))
+                    .frame(width: size, height: size)
+                    .overlay {
+                        Image(systemName: "photo")
+                            .foregroundColor(Color(.systemGray3))
+                            .font(.system(size: size * 0.4))
+                    }
+            }
+
+            // Multi-image indicator dots (bottom)
+            if hasMultipleImages {
+                VStack {
+                    Spacer()
+                    HStack(spacing: 3) {
+                        ForEach(0..<loadedImages.count, id: \.self) { index in
+                            Circle()
+                                .fill(index == currentIndex ? Color.white : Color.white.opacity(0.5))
+                                .frame(width: 4, height: 4)
+                        }
+                    }
+                    .padding(.bottom, 4)
+                }
+            }
+        }
+        .frame(width: size, height: size)
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(.systemGray4), lineWidth: 0.5)
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            // User tapped - stop auto-rotation and manually advance
+            userHasInteracted = true
+            rotationTask?.cancel()
+            if hasMultipleImages {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    currentIndex = (currentIndex + 1) % loadedImages.count
+                }
+            }
+        }
+        .task {
+            await loadAllImages()
+            startAutoRotation()
+        }
+        .onDisappear {
+            rotationTask?.cancel()
+        }
+    }
+
+    private func loadAllImages() async {
+        isLoading = true
+
+        guard let paths = imagePaths, !paths.isEmpty else {
+            // Fall back to single image loading
+            if let image = await ImageHelpers.loadProductImageForDisplay(
+                itemCode: itemCode,
+                manufacturer: manufacturer,
+                stableId: stableId,
+                imagePath: imagePaths?.first,
+                imageThumbPath: imageThumbPaths?.first,
+                dominantColors: dominantColors
+            ) {
+                loadedImages = [image]
+            }
+            isLoading = false
+            return
+        }
+
+        var images: [UIImage] = []
+
+        // Load each image using the full fallback chain
+        for i in 0..<paths.count {
+            let imagePath = paths[i]
+            let thumbPath = imageThumbPaths?[safe: i]
+
+            if let image = await ImageHelpers.loadProductImageForDisplay(
+                itemCode: itemCode,
+                manufacturer: manufacturer,
+                stableId: stableId,
+                imagePath: imagePath,
+                imageThumbPath: thumbPath,
+                dominantColors: dominantColors
+            ) {
+                images.append(image)
+            }
+        }
+
+        // If no images loaded, try fallback with first path
+        if images.isEmpty {
+            if let fallback = await ImageHelpers.loadProductImageForDisplay(
+                itemCode: itemCode,
+                manufacturer: manufacturer,
+                stableId: stableId,
+                imagePath: paths.first,
+                imageThumbPath: imageThumbPaths?.first,
+                dominantColors: dominantColors
+            ) {
+                images = [fallback]
+            }
+        }
+
+        loadedImages = images
+        isLoading = false
+    }
+
+    private func startAutoRotation() {
+        guard hasMultipleImages, !userHasInteracted else { return }
+
+        rotationTask = Task {
+            while !Task.isCancelled && !userHasInteracted {
+                try? await Task.sleep(nanoseconds: UInt64(rotationInterval * 1_000_000_000))
+
+                guard !Task.isCancelled, !userHasInteracted, hasMultipleImages else { break }
+
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        currentIndex = (currentIndex + 1) % loadedImages.count
+                    }
+                }
+            }
+        }
+    }
+}
+#endif

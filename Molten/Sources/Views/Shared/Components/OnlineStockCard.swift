@@ -29,23 +29,22 @@ struct OnlineStockCard: View {
         self.onRefresh = onRefresh
     }
 
+    /// Whether we have stock to display
+    private var hasStockToShow: Bool {
+        guard let data = stockData else { return false }
+        return !data.retailers.isEmpty && data.anyInStock
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+        VStack(alignment: .leading, spacing: hasStockToShow ? DesignSystem.Spacing.lg : 0) {
             header
 
             if isLoading {
                 loadingState
-            } else if error != nil {
-                errorState
-            } else if let data = stockData {
-                if data.retailers.isEmpty {
-                    emptyState
-                } else {
-                    retailerList(data.retailers)
-                }
-            } else {
-                emptyState
+            } else if hasStockToShow {
+                retailerList(stockData!.retailers)
             }
+            // No content shown for error, empty, or out-of-stock - header handles it
         }
         .padding(DesignSystem.Padding.standard)
         .background(DesignSystem.Colors.backgroundSecondary)
@@ -56,18 +55,27 @@ struct OnlineStockCard: View {
 
     private var header: some View {
         HStack {
-            Label("Online Availability", systemImage: "globe")
+            Label("Online Availability", systemImage: "cart.fill")
                 .font(DesignSystem.Typography.subsectionTitle)
                 .fontWeight(DesignSystem.FontWeight.semibold)
                 .foregroundColor(DesignSystem.Colors.textPrimary)
 
             Spacer()
 
-            if let data = stockData {
-                if data.anyInStock {
-                    Text("\(data.inStockCount) in stock")
+            // Status indicator
+            if !isLoading {
+                if let data = stockData, data.anyInStock {
+                    Text("In stock")
                         .font(DesignSystem.Typography.listItemCaption)
                         .foregroundColor(DesignSystem.Colors.accentSuccess)
+                } else if error != nil {
+                    Text("Unavailable")
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .foregroundColor(DesignSystem.Colors.textTertiary)
+                } else {
+                    Text("No stock found")
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .foregroundColor(DesignSystem.Colors.accentDanger)
                 }
             }
 
@@ -94,81 +102,94 @@ struct OnlineStockCard: View {
         .padding(.vertical, DesignSystem.Spacing.lg)
     }
 
-    // MARK: - Error State
-
-    private var errorState: some View {
-        VStack(spacing: DesignSystem.Spacing.sm) {
-            Image(systemName: "exclamationmark.triangle")
-                .foregroundColor(DesignSystem.Colors.accentWarning)
-            Text("Couldn't check availability")
-                .font(DesignSystem.Typography.listItemCaption)
-                .foregroundColor(DesignSystem.Colors.textSecondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, DesignSystem.Spacing.lg)
-    }
-
-    // MARK: - Empty State
-
-    private var emptyState: some View {
-        Text("No retailer data available")
-            .font(DesignSystem.Typography.listItemCaption)
-            .foregroundColor(DesignSystem.Colors.textTertiary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, DesignSystem.Spacing.lg)
-    }
-
     // MARK: - Retailer List
+
+    /// A display row combining retailer info with a specific price option
+    private struct DisplayRow: Identifiable {
+        let retailer: RetailerStockModel
+        let option: PriceOptionModel?
+        let form: String?
+
+        var id: String {
+            "\(retailer.retailerCode)-\(option?.variantId ?? "default")-\(form ?? "none")"
+        }
+
+        var isAvailable: Bool {
+            option?.available ?? retailer.stockStatus.isAvailable
+        }
+    }
 
     private func retailerList(_ retailers: [RetailerStockModel]) -> some View {
         VStack(spacing: DesignSystem.Spacing.sm) {
-            // Sort: in-stock first, then low stock, then others
-            ForEach(sortedRetailers(retailers)) { retailer in
-                retailerRow(retailer)
+            ForEach(buildDisplayRows(retailers)) { row in
+                retailerRow(row)
             }
         }
     }
 
-    private func sortedRetailers(_ retailers: [RetailerStockModel]) -> [RetailerStockModel] {
-        retailers.sorted { lhs, rhs in
-            // In stock items first
-            if lhs.stockStatus.isAvailable && !rhs.stockStatus.isAvailable {
-                return true
+    /// Build display rows - one per form per retailer
+    private func buildDisplayRows(_ retailers: [RetailerStockModel]) -> [DisplayRow] {
+        var rows: [DisplayRow] = []
+
+        for retailer in retailers {
+            let bestOptions = retailer.bestOptionPerForm
+
+            if bestOptions.isEmpty {
+                // No price options, show single row with retailer info
+                rows.append(DisplayRow(retailer: retailer, option: nil, form: nil))
+            } else {
+                // One row per form with best price
+                for option in bestOptions {
+                    rows.append(DisplayRow(retailer: retailer, option: option, form: option.form))
+                }
             }
-            if !lhs.stockStatus.isAvailable && rhs.stockStatus.isAvailable {
-                return false
+        }
+
+        // Sort: available first, then by retailer name, then by form
+        return rows.sorted { lhs, rhs in
+            if lhs.isAvailable && !rhs.isAvailable { return true }
+            if !lhs.isAvailable && rhs.isAvailable { return false }
+            if lhs.retailer.retailerName != rhs.retailer.retailerName {
+                return lhs.retailer.retailerName < rhs.retailer.retailerName
             }
-            // Then alphabetically by name
-            return lhs.retailerName < rhs.retailerName
+            return (lhs.form ?? "") < (rhs.form ?? "")
         }
     }
 
     // MARK: - Retailer Row
 
-    private func retailerRow(_ retailer: RetailerStockModel) -> some View {
+    private func retailerRow(_ row: DisplayRow) -> some View {
         Button {
-            onRetailerTap?(retailer)
+            onRetailerTap?(row.retailer)
         } label: {
             HStack(spacing: DesignSystem.Spacing.md) {
                 // Status indicator
-                stockStatusIcon(retailer.stockStatus)
+                stockStatusIcon(row.isAvailable ? .inStock : .outOfStock)
 
-                // Retailer name
-                Text(retailer.retailerName)
-                    .font(DesignSystem.Typography.listItemSubtitle)
-                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                // Retailer name with optional form
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(row.retailer.retailerName)
+                        .font(DesignSystem.Typography.listItemSubtitle)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                    if let form = row.form {
+                        Text(form)
+                            .font(DesignSystem.Typography.listItemCaption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                }
 
                 Spacer()
 
                 // Price if available
-                if let price = retailer.formattedPrice {
+                if let price = row.option?.formattedPrice {
                     Text(price)
                         .font(DesignSystem.Typography.listItemCaption)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
 
                 // Link indicator
-                if retailer.productUrl != nil {
+                if row.retailer.productUrl != nil {
                     Image(systemName: "arrow.up.right")
                         .font(.caption2)
                         .foregroundColor(DesignSystem.Colors.textTertiary)
@@ -176,11 +197,11 @@ struct OnlineStockCard: View {
             }
             .padding(.vertical, DesignSystem.Spacing.xs)
             .padding(.horizontal, DesignSystem.Spacing.sm)
-            .background(retailer.productUrl != nil ? DesignSystem.Colors.background : Color.clear)
+            .background(row.retailer.productUrl != nil ? DesignSystem.Colors.background : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.small))
         }
         .buttonStyle(.plain)
-        .disabled(retailer.productUrl == nil)
+        .disabled(row.retailer.productUrl == nil)
     }
 
     // MARK: - Stock Status Icon
@@ -209,26 +230,40 @@ struct OnlineStockCard: View {
 #Preview("With Stock Data") {
     let retailers = [
         RetailerStockModel(
-            retailerCode: "bullseye",
-            retailerName: "Bullseye Glass Co",
+            retailerCode: "northstar",
+            retailerName: "Northstar Glassworks",
             stockStatus: .inStock,
             lastChecked: Date(),
-            productUrl: "https://bullseye.com/product/123",
-            price: 4.50,
-            priceUnit: "rod",
-            currency: "USD",
-            quantityAvailable: 25
+            productUrl: "https://northstarglass.com/product/123",
+            priceOptions: [
+                PriceOptionModel(variantId: "1", variantTitle: "Rods - First Quality", price: 85.00, priceUnit: "lb", currency: "USD", available: true),
+                PriceOptionModel(variantId: "2", variantTitle: "Rods - Odd Quality", price: 65.00, priceUnit: "lb", currency: "USD", available: true),
+                PriceOptionModel(variantId: "3", variantTitle: "Frit", price: 90.00, priceUnit: "16 oz jar", currency: "USD", available: true)
+            ],
+            quantityAvailable: 3
         ),
         RetailerStockModel(
-            retailerCode: "frantz",
-            retailerName: "Frantz Art Glass",
-            stockStatus: .lowStock,
+            retailerCode: "lws",
+            retailerName: "Lampwork Supply",
+            stockStatus: .inStock,
             lastChecked: Date(),
-            productUrl: "https://frantz.com/product/123",
-            price: 4.75,
-            priceUnit: "rod",
-            currency: "USD",
-            quantityAvailable: 3
+            productUrl: "https://lampworksupply.com/product/123",
+            priceOptions: [
+                PriceOptionModel(variantId: "4", variantTitle: "Rods - First Quality", price: 80.00, priceUnit: "lb", currency: "USD", available: true),
+                PriceOptionModel(variantId: "5", variantTitle: "Fine Frit", price: 85.00, priceUnit: "16 oz jar", currency: "USD", available: true)
+            ],
+            quantityAvailable: 2
+        ),
+        RetailerStockModel(
+            retailerCode: "abr",
+            retailerName: "ABR Imagery",
+            stockStatus: .inStock,
+            lastChecked: Date(),
+            productUrl: "https://abrimagery.com/product/123",
+            priceOptions: [
+                PriceOptionModel(variantId: "6", variantTitle: "Rods", price: 25.50, priceUnit: "1/4 lb", currency: "USD", available: true)
+            ],
+            quantityAvailable: 1
         ),
         RetailerStockModel(
             retailerCode: "delphi",
@@ -236,20 +271,7 @@ struct OnlineStockCard: View {
             stockStatus: .outOfStock,
             lastChecked: Date(),
             productUrl: "https://delphi.com/product/123",
-            price: nil,
-            priceUnit: nil,
-            currency: nil,
-            quantityAvailable: nil
-        ),
-        RetailerStockModel(
-            retailerCode: "arrow",
-            retailerName: "Arrow Springs",
-            stockStatus: .unknown,
-            lastChecked: Date(),
-            productUrl: nil,
-            price: nil,
-            priceUnit: nil,
-            currency: nil,
+            priceOptions: [],
             quantityAvailable: nil
         )
     ]

@@ -157,13 +157,10 @@ class StockAPIClient: NSObject, StockAPIClientProtocol {
             // Read downloaded file
             var data = try Data(contentsOf: localURL)
 
-            // Decompress if gzipped
-            if let contentEncoding = httpResponse.value(forHTTPHeaderField: "Content-Encoding"),
-               contentEncoding.lowercased() == "gzip" {
-                log.debug("Decompressing gzipped stock data")
-                data = try data.gunzipped()
-            } else if data.isGzipped {
-                log.debug("Detected gzipped data, decompressing")
+            // Decompress if gzipped (may need multiple passes if double-compressed)
+            // The server stores gzipped files, and HTTP transport may add another layer
+            while data.isGzipped {
+                log.debug("Decompressing gzipped stock data (\(data.count) bytes)")
                 data = try data.gunzipped()
             }
 

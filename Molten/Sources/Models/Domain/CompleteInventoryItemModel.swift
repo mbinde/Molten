@@ -25,13 +25,14 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
     let allTags: [String]  // Pre-computed combined tags for performance
     let rating: AggregatedRatingModel?  // Optional rating data (loaded on-demand for sorting)
     let isMultiColor: Bool  // True if item has __multi__ flag (display stripes instead of gradient)
+    let isOnlineInStock: Bool  // True if item is in stock at any online retailer
 
     nonisolated var id: String { catalogItem.stable_id }
 
     // MARK: - Initializers
 
     /// Initialize with automatic allTags computation
-    nonisolated init(catalogItem: UnifiedCatalogItem, inventory: [InventoryModel], storageLocations: [StorageLocationModel] = [], tags: [String], userTags: [String], rating: AggregatedRatingModel? = nil, isMultiColor: Bool = false) {
+    nonisolated init(catalogItem: UnifiedCatalogItem, inventory: [InventoryModel], storageLocations: [StorageLocationModel] = [], tags: [String], userTags: [String], rating: AggregatedRatingModel? = nil, isMultiColor: Bool = false, isOnlineInStock: Bool = false) {
         self.catalogItem = catalogItem
         self.inventory = inventory
         self.storageLocations = storageLocations
@@ -39,13 +40,14 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
         self.userTags = userTags
         self.rating = rating
         self.isMultiColor = isMultiColor
+        self.isOnlineInStock = isOnlineInStock
         // Pre-compute allTags for performance (avoid repeated computation in views)
         self.allTags = Array(Set(tags + userTags)).sorted()
     }
 
     /// Convenience initializer from GlassItemModel (for backward compatibility)
-    nonisolated init(glassItem: GlassItemModel, inventory: [InventoryModel], storageLocations: [StorageLocationModel] = [], tags: [String], userTags: [String], rating: AggregatedRatingModel? = nil, isMultiColor: Bool = false) {
-        self.init(catalogItem: UnifiedCatalogItem(glassItem: glassItem), inventory: inventory, storageLocations: storageLocations, tags: tags, userTags: userTags, rating: rating, isMultiColor: isMultiColor)
+    nonisolated init(glassItem: GlassItemModel, inventory: [InventoryModel], storageLocations: [StorageLocationModel] = [], tags: [String], userTags: [String], rating: AggregatedRatingModel? = nil, isMultiColor: Bool = false, isOnlineInStock: Bool = false) {
+        self.init(catalogItem: UnifiedCatalogItem(glassItem: glassItem), inventory: inventory, storageLocations: storageLocations, tags: tags, userTags: userTags, rating: rating, isMultiColor: isMultiColor, isOnlineInStock: isOnlineInStock)
     }
 
     // MARK: - Backward Compatibility
@@ -82,7 +84,8 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
                lhs.userTags == rhs.userTags &&
                lhs.rating?.averageRating == rhs.rating?.averageRating &&
                lhs.rating?.totalRatings == rhs.rating?.totalRatings &&
-               lhs.isMultiColor == rhs.isMultiColor
+               lhs.isMultiColor == rhs.isMultiColor &&
+               lhs.isOnlineInStock == rhs.isOnlineInStock
     }
 
     nonisolated func hash(into hasher: inout Hasher) {
@@ -92,5 +95,6 @@ struct CompleteInventoryItemModel: Identifiable, Equatable, Hashable, Sendable {
         hasher.combine(rating?.averageRating)
         hasher.combine(rating?.totalRatings)
         hasher.combine(isMultiColor)
+        hasher.combine(isOnlineInStock)
     }
 }

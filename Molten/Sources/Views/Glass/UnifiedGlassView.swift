@@ -984,6 +984,19 @@ struct UnifiedGlassView: View {
                     }
                 }
 
+                // Online Stock section
+                if FeatureFlags.ENABLE_ONLINE_STOCK {
+                    Section("Availability") {
+                        Toggle(isOn: Binding(
+                            get: { viewModel.onlineInStockOnly },
+                            set: { viewModel.onlineInStockOnly = $0 }
+                        )) {
+                            Label("In Stock Online", systemImage: "cart.fill")
+                        }
+                        .tint(DesignSystem.Colors.accentSuccess)
+                    }
+                }
+
             }
             .navigationTitle("Filters")
             .navigationBarTitleDisplayMode(.inline)

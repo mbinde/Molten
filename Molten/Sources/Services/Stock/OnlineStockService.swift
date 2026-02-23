@@ -14,6 +14,7 @@ import os
 protocol OnlineStockServiceProtocol {
     func getStock(for itemStableId: String) async throws -> OnlineStockModel?
     func getStockBulk(for itemStableIds: [String]) async throws -> [OnlineStockModel]
+    func getInStockItemIds() async throws -> Set<String>
     var hasStockDatabase: Bool { get }
 }
 
@@ -51,6 +52,10 @@ class OnlineStockService: OnlineStockServiceProtocol {
                 log.debug("No stock data found for item: \(itemStableId)")
             }
             return stock
+        } catch StockDatabaseError.databaseNotInitialized {
+            // Database file missing or not initialized - treat as no database
+            log.debug("Stock database not initialized, treating as unavailable")
+            return nil
         } catch {
             log.error("Error reading stock data: \(error.localizedDescription)")
             throw error
@@ -74,8 +79,33 @@ class OnlineStockService: OnlineStockServiceProtocol {
             let results = try repository.getStockBulk(for: itemStableIds)
             log.debug("Found stock data for \(results.count) of \(itemStableIds.count) items")
             return results
+        } catch StockDatabaseError.databaseNotInitialized {
+            // Database file missing or not initialized - treat as no database
+            log.debug("Stock database not initialized, treating as unavailable")
+            return []
         } catch {
             log.error("Error reading bulk stock data: \(error.localizedDescription)")
+            throw error
+        }
+    }
+
+    /// Get all item stable IDs that have stock available at any retailer
+    /// - Returns: Set of item stable IDs with in_stock status
+    func getInStockItemIds() async throws -> Set<String> {
+        guard hasStockDatabase else {
+            log.debug("No stock database available yet")
+            return []
+        }
+
+        do {
+            let results = try repository.getInStockItemIds()
+            log.debug("Found \(results.count) items with online stock")
+            return results
+        } catch StockDatabaseError.databaseNotInitialized {
+            log.debug("Stock database not initialized, treating as unavailable")
+            return []
+        } catch {
+            log.error("Error reading in-stock item IDs: \(error.localizedDescription)")
             throw error
         }
     }

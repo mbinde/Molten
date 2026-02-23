@@ -34,6 +34,7 @@ struct GlassItemRowView: View {
         let tags: [String]
         let rating: AggregatedRatingModel?  // Optional rating data
         let isMultiColor: Bool  // If true, display stripes instead of gradient
+        let isOnlineInStock: Bool  // If true, item is in stock at an online retailer
 
         /// Whether this item has multiple images
         var hasMultipleImages: Bool {
@@ -53,6 +54,7 @@ struct GlassItemRowView: View {
             self.tags = completeItem.allTags
             self.rating = completeItem.rating
             self.isMultiColor = completeItem.isMultiColor
+            self.isOnlineInStock = completeItem.isOnlineInStock
         }
 
         init(from detailedShoppingItem: DetailedShoppingListItemModel, isMultiColor: Bool = false) {
@@ -68,6 +70,7 @@ struct GlassItemRowView: View {
             self.tags = detailedShoppingItem.allTags
             self.rating = nil  // Shopping list items don't include ratings
             self.isMultiColor = isMultiColor
+            self.isOnlineInStock = false  // Shopping list items don't track online stock
         }
 
         init(from enrichedItem: EnrichedFriendInventoryItem, isMultiColor: Bool = false) {
@@ -84,9 +87,10 @@ struct GlassItemRowView: View {
             self.tags = enrichedItem.catalogData?.tags ?? []
             self.rating = nil  // Friend inventory items don't include ratings
             self.isMultiColor = isMultiColor
+            self.isOnlineInStock = false  // Friend inventory items don't track online stock
         }
 
-        init(name: String, manufacturer: String, sku: String?, stableId: String, imagePath: String? = nil, imageThumbPath: String? = nil, imagePaths: [String]? = nil, imageThumbPaths: [String]? = nil, dominantColors: [String]? = nil, tags: [String], rating: AggregatedRatingModel? = nil, isMultiColor: Bool = false) {
+        init(name: String, manufacturer: String, sku: String?, stableId: String, imagePath: String? = nil, imageThumbPath: String? = nil, imagePaths: [String]? = nil, imageThumbPaths: [String]? = nil, dominantColors: [String]? = nil, tags: [String], rating: AggregatedRatingModel? = nil, isMultiColor: Bool = false, isOnlineInStock: Bool = false) {
             self.name = name
             self.manufacturer = manufacturer
             self.sku = sku
@@ -99,6 +103,7 @@ struct GlassItemRowView: View {
             self.tags = tags
             self.rating = rating
             self.isMultiColor = isMultiColor
+            self.isOnlineInStock = isOnlineInStock
         }
     }
 
@@ -258,22 +263,31 @@ extension GlassItemRowView {
         )
     }
 
-    /// Unified "All" mode row with status indicators for inventory and wish list
+    /// Unified "All" mode row with status indicators for inventory, wish list, and online stock
     /// Shows simple icons on the right to indicate status (no counts - that's for "Mine" mode)
+    @ViewBuilder
     static func unified(
         item: CompleteInventoryItemModel,
         hasInventory: Bool,
         onWishList: Bool
     ) -> some View {
+        let rowData = GlassItemRowData(from: item)
+
         HStack(spacing: DesignSystem.Spacing.lg) {
             GlassItemRowView(
-                item: .init(from: item),
+                item: rowData,
                 showFullCode: false
             ).mainContent
 
             // Status icons on trailing edge - simple indicators
-            if hasInventory || onWishList {
+            if hasInventory || onWishList || rowData.isOnlineInStock {
                 HStack(spacing: DesignSystem.Spacing.sm) {
+                    if rowData.isOnlineInStock {
+                        Image(systemName: "cart.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(DesignSystem.Colors.accentSuccess)
+                            .accessibilityLabel("Available online")
+                    }
                     if hasInventory {
                         Image(systemName: "archivebox.fill")
                             .font(.system(size: 16))

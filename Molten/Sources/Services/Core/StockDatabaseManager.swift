@@ -33,15 +33,15 @@ final class StockDatabaseManager: StockDatabaseManagerProtocol {
     private let connectionLock = NSLock()
     private nonisolated(unsafe) var databaseConnection: OpaquePointer?
 
-    /// URL of the stock database in Documents directory
-    private var documentsDatabaseURL: URL {
-        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    /// URL of the stock database in Documents directory (computed once, thread-safe)
+    private nonisolated var documentsDatabaseURL: URL {
+        let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         return documentsURL.appendingPathComponent(databaseName)
     }
 
-    /// Whether the stock database file exists
-    var databaseExists: Bool {
-        fileManager.fileExists(atPath: documentsDatabaseURL.path)
+    /// Whether the stock database file exists (thread-safe)
+    nonisolated var databaseExists: Bool {
+        FileManager.default.fileExists(atPath: documentsDatabaseURL.path)
     }
 
     // MARK: - Initialization
@@ -142,6 +142,19 @@ final class StockDatabaseManager: StockDatabaseManagerProtocol {
         connectionLock.lock()
         defer { connectionLock.unlock() }
 
+        // Lazily open connection if database exists but connection isn't open
+        if databaseConnection == nil && databaseExists {
+            guard sqlite3_open_v2(
+                documentsDatabaseURL.path,
+                &databaseConnection,
+                SQLITE_OPEN_READONLY,
+                nil
+            ) == SQLITE_OK else {
+                let errorMessage = String(cString: sqlite3_errmsg(databaseConnection))
+                throw StockDatabaseError.cannotOpenDatabase(errorMessage)
+            }
+        }
+
         guard let connection = databaseConnection else {
             throw StockDatabaseError.databaseNotInitialized
         }
@@ -218,25 +231,30 @@ final class StockDatabaseManager: StockDatabaseManagerProtocol {
             sqlite3_close(db)
         }
 
-        // Check for required tables
-        let requiredTables = ["stock_status", "metadata"]
-        for table in requiredTables {
-            let query = "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
-            var statement: OpaquePointer?
+        // Check for required tables using simple query (no parameter binding issues)
+        let query = "SELECT name FROM sqlite_master WHERE type='table'"
+        var statement: OpaquePointer?
 
-            guard sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK else {
-                throw StockDatabaseError.queryFailed("Failed to prepare table check query")
+        guard sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK else {
+            throw StockDatabaseError.queryFailed("Failed to prepare table check query")
+        }
+
+        defer {
+            sqlite3_finalize(statement)
+        }
+
+        var foundTables = Set<String>()
+        while sqlite3_step(statement) == SQLITE_ROW {
+            if let namePtr = sqlite3_column_text(statement, 0) {
+                foundTables.insert(String(cString: namePtr))
             }
+        }
 
-            sqlite3_bind_text(statement, 1, table, -1, nil)
+        let requiredTables: Set<String> = ["stock_status", "metadata"]
+        let missingTables = requiredTables.subtracting(foundTables)
 
-            defer {
-                sqlite3_finalize(statement)
-            }
-
-            guard sqlite3_step(statement) == SQLITE_ROW else {
-                throw StockDatabaseError.invalidStructure("Missing required table: \(table)")
-            }
+        if !missingTables.isEmpty {
+            throw StockDatabaseError.invalidStructure("Missing required table: \(missingTables.first!)")
         }
     }
 }

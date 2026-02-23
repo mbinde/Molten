@@ -65,6 +65,7 @@ class UnifiedGlassViewModel {
     private static let searchTitlesOnlyKey = "unifiedGlass.searchTitlesOnly"
     private static let selectedLocationsKey = "unifiedGlass.selectedLocations"
     private static let selectedStoreKey = "unifiedGlass.selectedStore"
+    private static let onlineInStockOnlyKey = "unifiedGlass.onlineInStockOnly"
 
     // MARK: - Data State
 
@@ -177,6 +178,16 @@ class UnifiedGlassViewModel {
         didSet {
             if selectedStore != oldValue {
                 saveStoreFilter()
+                applyFilters()
+            }
+        }
+    }
+
+    /// Online stock filter - when true, only show items available online
+    var onlineInStockOnly: Bool = false {
+        didSet {
+            if onlineInStockOnly != oldValue {
+                saveOnlineInStockFilter()
                 applyFilters()
             }
         }
@@ -310,6 +321,11 @@ class UnifiedGlassViewModel {
 
         // Store filter
         self._selectedStore = UserDefaults.standard.string(forKey: Self.selectedStoreKey)
+
+        // Online in stock filter
+        if UserDefaults.standard.object(forKey: Self.onlineInStockOnlyKey) != nil {
+            self._onlineInStockOnly = UserDefaults.standard.bool(forKey: Self.onlineInStockOnlyKey)
+        }
     }
 
     private func setupUserDefaultsObserver() {
@@ -341,7 +357,8 @@ class UnifiedGlassViewModel {
         !selectedManufacturers.isEmpty ||
         !selectedProductTypes.isEmpty ||
         !selectedLocations.isEmpty ||
-        selectedStore != nil
+        selectedStore != nil ||
+        onlineInStockOnly
     }
 
     var activeFilterCount: Int {
@@ -352,6 +369,7 @@ class UnifiedGlassViewModel {
         if !selectedProductTypes.isEmpty { count += 1 }
         if !selectedLocations.isEmpty { count += 1 }
         if selectedStore != nil { count += 1 }
+        if onlineInStockOnly { count += 1 }
         return count
     }
 
@@ -376,11 +394,11 @@ class UnifiedGlassViewModel {
         errorMessage = nil
 
         do {
-            // Load catalog items and shopping lists in parallel
-            async let catalogItems = catalogService.getAllGlassItems(sortBy: .name)
+            // Load catalog items via cache (includes online stock enrichment) and shopping lists in parallel
+            async let catalogItems = CatalogDataCache.loadItems(using: catalogService)
             async let shoppingData = shoppingListService.generateAllShoppingLists()
 
-            allItems = try await catalogItems
+            allItems = await catalogItems
             shoppingLists = try await shoppingData
 
             updateCaches()
@@ -433,6 +451,7 @@ class UnifiedGlassViewModel {
         selectedProductTypes = []
         selectedLocations = []
         selectedStore = nil
+        onlineInStockOnly = false
     }
 
     // MARK: - Filtering
@@ -585,6 +604,11 @@ class UnifiedGlassViewModel {
         // Tag filter
         if !selectedTags.isEmpty {
             filtered = filtered.filter { !selectedTags.isDisjoint(with: Set($0.allTags)) }
+        }
+
+        // Online in stock filter
+        if onlineInStockOnly {
+            filtered = filtered.filter { $0.isOnlineInStock }
         }
 
         // Color search filter
@@ -901,6 +925,10 @@ class UnifiedGlassViewModel {
         } else {
             UserDefaults.standard.removeObject(forKey: Self.selectedStoreKey)
         }
+    }
+
+    private func saveOnlineInStockFilter() {
+        UserDefaults.standard.set(onlineInStockOnly, forKey: Self.onlineInStockOnlyKey)
     }
 
     private func notifyFilterCountChanged() {

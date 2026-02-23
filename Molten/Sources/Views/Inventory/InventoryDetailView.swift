@@ -293,6 +293,16 @@ struct InventoryDetailView: View {
                     // Specifications tile grid
                     specificationsSection
 
+                    // Rating Words Section
+                    RatingWordsSection(itemStableId: currentItem.glassItem.stable_id)
+
+                    // Glass Item Details Section (description, user notes)
+                    // Only show if there's content to display
+                    if hasGlassItemDetails {
+                        glassItemDetailsSection
+                            .id("glass-item-section")
+                    }
+
                     // Online Stock Availability Section
                     if FeatureFlags.ENABLE_ONLINE_STOCK {
                         OnlineStockCard(
@@ -314,16 +324,6 @@ struct InventoryDetailView: View {
                             }
                         )
                         .padding(.horizontal)
-                    }
-
-                    // Rating Words Section
-                    RatingWordsSection(itemStableId: currentItem.glassItem.stable_id)
-
-                    // Glass Item Details Section (description, user notes)
-                    // Only show if there's content to display
-                    if hasGlassItemDetails {
-                        glassItemDetailsSection
-                            .id("glass-item-section")
                     }
 
                     // Recommended Kiln Schedules Section - only show if schedules exist
@@ -609,7 +609,15 @@ struct InventoryDetailView: View {
             defer { isLoadingStock = false }
 
             do {
-                // Note: forceRefresh no longer needed - stock data is synced from local database
+                // If force refresh, check for updates from server first
+                if forceRefresh {
+                    let stockUpdateService = AppDependencies.shared.stockUpdateService
+                    if let metadata = try await stockUpdateService.checkForUpdates() {
+                        try await stockUpdateService.downloadAndInstallUpdate(metadata: metadata)
+                    }
+                }
+
+                // Now read from local database
                 onlineStock = try await AppDependencies.shared.onlineStockService.getStock(
                     for: currentItem.catalogItem.stable_id
                 )

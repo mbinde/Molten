@@ -150,12 +150,53 @@ class CatalogDataCache: ObservableObject {
         do {
             let loadedItems = try await catalogService.getAllGlassItems()
 
-            #if DEBUG
-            let itemsWithInventory = loadedItems.filter { $0.totalQuantity > 0 }
-            log.warning("📦 [CatalogDataCache] Loaded \(loadedItems.count) items, \(itemsWithInventory.count) with inventory")
-            #endif
+            // Fetch online stock availability in parallel
+            let inStockItemIds: Set<String>
+            if FeatureFlags.ENABLE_ONLINE_STOCK {
+                do {
+                    let stockService = AppDependencies.shared.onlineStockService
+                    log.warning("📦 [CatalogDataCache] Stock service hasStockDatabase: \(stockService.hasStockDatabase)")
+                    inStockItemIds = try await stockService.getInStockItemIds()
+                    log.warning("📦 [CatalogDataCache] Found \(inStockItemIds.count) items with online stock")
+                    if !inStockItemIds.isEmpty {
+                        // Log a sample of IDs to verify format
+                        let sampleIds = Array(inStockItemIds.prefix(5))
+                        log.warning("📦 [CatalogDataCache] Sample stock IDs: \(sampleIds)")
+                    }
+                } catch {
+                    log.warning("📦 [CatalogDataCache] Online stock check failed (non-fatal): \(error.localizedDescription)")
+                    inStockItemIds = []
+                }
+            } else {
+                log.warning("📦 [CatalogDataCache] Online stock feature disabled")
+                inStockItemIds = []
+            }
 
-            items = loadedItems
+            // Enrich items with online stock availability
+            let enrichedItems = loadedItems.map { item in
+                CompleteInventoryItemModel(
+                    catalogItem: item.catalogItem,
+                    inventory: item.inventory,
+                    storageLocations: item.storageLocations,
+                    tags: item.tags,
+                    userTags: item.userTags,
+                    rating: item.rating,
+                    isMultiColor: item.isMultiColor,
+                    isOnlineInStock: inStockItemIds.contains(item.catalogItem.stable_id)
+                )
+            }
+
+            let itemsWithInventory = enrichedItems.filter { $0.totalQuantity > 0 }
+            let itemsWithOnlineStock = enrichedItems.filter { $0.isOnlineInStock }
+            log.warning("📦 [CatalogDataCache] Loaded \(enrichedItems.count) items, \(itemsWithInventory.count) with inventory, \(itemsWithOnlineStock.count) with online stock")
+
+            // Log sample catalog IDs to compare formats
+            if !enrichedItems.isEmpty {
+                let sampleCatalogIds = enrichedItems.prefix(5).map { $0.catalogItem.stable_id }
+                log.warning("📦 [CatalogDataCache] Sample catalog IDs: \(sampleCatalogIds)")
+            }
+
+            items = enrichedItems
             isLoaded = true
         } catch {
             #if DEBUG

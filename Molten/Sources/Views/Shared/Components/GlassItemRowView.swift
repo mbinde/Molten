@@ -140,33 +140,9 @@ struct GlassItemRowView: View {
         }
     }
 
-    /// Just the thumbnail image - uses auto-rotating version if multiple images available
+    /// Just the thumbnail image
     @ViewBuilder
     var thumbnail: some View {
-        #if canImport(UIKit)
-        if item.hasMultipleImages {
-            AutoRotatingProductThumbnail(
-                itemCode: item.stableId,
-                manufacturer: item.manufacturer,
-                stableId: item.stableId,
-                imagePaths: item.imagePaths,
-                imageThumbPaths: item.imageThumbPaths,
-                dominantColors: item.dominantColors,
-                size: 60,
-                rotationInterval: 5.0
-            )
-        } else {
-            ProductImageThumbnail(
-                itemCode: item.stableId,
-                manufacturer: item.manufacturer,
-                stableId: item.stableId,
-                imagePath: item.imagePath,
-                imageThumbPath: item.imageThumbPath,
-                dominantColors: item.dominantColors,
-                size: 60
-            )
-        }
-        #else
         ProductImageThumbnail(
             itemCode: item.stableId,
             manufacturer: item.manufacturer,
@@ -176,7 +152,6 @@ struct GlassItemRowView: View {
             dominantColors: item.dominantColors,
             size: 60
         )
-        #endif
     }
 
     /// Just the text content (name, manufacturer, SKU, badges, tags)

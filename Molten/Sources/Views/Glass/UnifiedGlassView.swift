@@ -51,6 +51,9 @@ struct UnifiedGlassView: View {
     @State private var showingLocationSelection = false
     @State private var showingStoreSelection = false
 
+    // Color search state
+    @State private var showingColorSearch = false
+
     #if DEBUG
     // Processed items tracking (for row highlighting during review)
     @State private var processedItemIds: Set<String> = []
@@ -81,6 +84,9 @@ struct UnifiedGlassView: View {
                 quickFilterTabs
                     .padding(.horizontal)
                     .padding(.top, DesignSystem.Spacing.sm)
+
+                // Active color filter chip
+                activeColorFilterChip
 
                 // Search bar
                 searchBar
@@ -115,6 +121,20 @@ struct UnifiedGlassView: View {
             }
             .sheet(isPresented: $showingFilterSheet) {
                 filterSheet
+            }
+            .sheet(isPresented: $showingColorSearch) {
+                ColorSearchSheet(
+                    selectedColor: $viewModel.searchColor,
+                    tolerance: $viewModel.colorTolerance,
+                    includeHighVariance: $viewModel.includeHighVarianceGlass,
+                    onApply: {
+                        viewModel.applyColorSearch()
+                    },
+                    onClear: viewModel.colorSearchActive ? {
+                        viewModel.clearColorSearch()
+                    } : nil,
+                    isSearchActive: viewModel.colorSearchActive
+                )
             }
             .sheet(isPresented: $showingHelp) {
                 CatalogHelpView()
@@ -207,11 +227,25 @@ struct UnifiedGlassView: View {
             .onReceive(NotificationCenter.default.publisher(for: .shoppingListItemAdded)) { _ in
                 Task { await viewModel.refreshData() }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .findSimilarColors)) { notification in
+                handleFindSimilarColors(notification)
+            }
             #if DEBUG
             .onReceive(NotificationCenter.default.publisher(for: .catalogFlagChanged)) { _ in
                 Task { await loadProcessedItems() }
             }
             #endif
+        }
+    }
+
+    /// Handle "Find Similar Colors" notification from detail view
+    private func handleFindSimilarColors(_ notification: Notification) {
+        guard let colorHex = notification.userInfo?["color"] as? String else { return }
+
+        // Convert hex to SwiftUI Color
+        if let (r, g, b) = ColorDistance.hexToRGB(colorHex) {
+            viewModel.searchColor = Color(red: r, green: g, blue: b)
+            viewModel.applyColorSearch()
         }
     }
 
@@ -291,6 +325,56 @@ struct UnifiedGlassView: View {
             ForEach(GlassQuickFilter.allCases) { filter in
                 quickFilterButton(for: filter)
             }
+
+            Spacer()
+
+            // Color search button
+            ColorSearchButton(
+                isActive: viewModel.colorSearchActive,
+                activeColor: viewModel.colorSearchActive ? viewModel.searchColor : nil,
+                action: { showingColorSearch = true }
+            )
+        }
+    }
+
+    // MARK: - Active Color Filter Chip
+
+    @ViewBuilder
+    private var activeColorFilterChip: some View {
+        if viewModel.colorSearchActive {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                HStack(spacing: DesignSystem.Spacing.xs) {
+                    // Color swatch
+                    Circle()
+                        .fill(viewModel.searchColor)
+                        .frame(width: 16, height: 16)
+                        .overlay(
+                            Circle()
+                                .strokeBorder(Color.primary.opacity(0.2), lineWidth: 1)
+                        )
+
+                    Text("Color filter active")
+                        .font(DesignSystem.Typography.listItemCaption)
+                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+
+                    Button {
+                        viewModel.clearColorSearch()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(DesignSystem.Colors.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, DesignSystem.Spacing.sm)
+                .padding(.vertical, DesignSystem.Spacing.xs)
+                .background(DesignSystem.Colors.backgroundSecondary)
+                .cornerRadius(DesignSystem.CornerRadius.small)
+
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.top, DesignSystem.Spacing.xs)
         }
     }
 

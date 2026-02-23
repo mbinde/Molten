@@ -193,6 +193,36 @@ class UnifiedGlassViewModel {
         }
     }
 
+    // MARK: - Color Search State
+
+    /// Whether color search is currently active
+    var colorSearchActive = false
+
+    /// The selected color for searching
+    var searchColor: Color = .blue
+
+    /// Color match tolerance (Delta E: 3 = very close, 25 = similar)
+    var colorTolerance: Double = 12.0
+
+    /// Whether to include glass with high color variance (reactive, dichroic, etc.)
+    var includeHighVarianceGlass: Bool = true
+
+    /// Cached color distances for sorting (stable_id -> distance)
+    private var colorDistanceCache: [String: Double] = [:]
+
+    /// Apply color search and filter the list
+    func applyColorSearch() {
+        colorSearchActive = true
+        applyFilters()
+    }
+
+    /// Clear color search and return to normal list
+    func clearColorSearch() {
+        colorSearchActive = false
+        colorDistanceCache.removeAll()
+        applyFilters()
+    }
+
     // MARK: - Cached Values
 
     private var cachedAllTags: [String] = []
@@ -557,7 +587,52 @@ class UnifiedGlassViewModel {
             filtered = filtered.filter { !selectedTags.isDisjoint(with: Set($0.allTags)) }
         }
 
+        // Color search filter
+        if colorSearchActive {
+            filtered = applyColorFilter(to: filtered)
+        }
+
         return filtered
+    }
+
+    /// Apply color search filter and sort by color match quality
+    private func applyColorFilter(to items: [CompleteInventoryItemModel]) -> [CompleteInventoryItemModel] {
+        // Clear cache for fresh calculation
+        colorDistanceCache.removeAll()
+
+        // Filter items that match the color criteria
+        var matchingItems: [(item: CompleteInventoryItemModel, distance: Double)] = []
+
+        for item in items {
+            // Get dominant colors from the catalog item
+            let dominantColors = item.catalogItem.dominant_colors ?? []
+
+            // Skip items without color data (unless they might be high-variance)
+            guard !dominantColors.isEmpty else { continue }
+
+            // Get color spread if available
+            let colorSpread = item.catalogItem.color_spread
+
+            // Check if this is a high-variance item
+            let isHighVariance = (colorSpread ?? 0) > ColorDistance.highSpreadThreshold
+
+            if isHighVariance && includeHighVarianceGlass {
+                // Always include high-variance glass, but give it a moderate distance for sorting
+                matchingItems.append((item, 50.0))
+                colorDistanceCache[item.catalogItem.stable_id] = 50.0
+            } else if let distance = ColorDistance.minimumDistance(from: searchColor, to: dominantColors) {
+                // Check if within tolerance
+                if distance <= colorTolerance {
+                    matchingItems.append((item, distance))
+                    colorDistanceCache[item.catalogItem.stable_id] = distance
+                }
+            }
+        }
+
+        // Sort by color match quality (best matches first)
+        matchingItems.sort { $0.distance < $1.distance }
+
+        return matchingItems.map { $0.item }
     }
 
     // MARK: - Sorting

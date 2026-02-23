@@ -1048,18 +1048,60 @@ struct InventoryDetailView: View {
             )
 
             // Quick actions bar for common operations
-            QuickActionsBar(actions: [
-                QuickAction(title: "Inventory", icon: "archivebox.fill") {
-                    checkLimitAndShowAddInventory()
-                },
-                QuickAction(title: "Shopping", icon: "cart.fill") {
-                    showingShoppingListOptions = true
-                },
-                QuickAction(title: "Note", icon: "note.text") {
-                    showingUserNotesEditor = true
-                }
-            ])
+            QuickActionsBar(actions: quickActions)
         }
+    }
+
+    /// Build the list of quick actions, conditionally including "Similar" if color data exists
+    private var quickActions: [QuickAction] {
+        var actions = [
+            QuickAction(title: "Inventory", icon: "archivebox.fill") {
+                checkLimitAndShowAddInventory()
+            },
+            QuickAction(title: "Shopping", icon: "cart.fill") {
+                showingShoppingListOptions = true
+            },
+            QuickAction(title: "Note", icon: "note.text") {
+                showingUserNotesEditor = true
+            }
+        ]
+
+        // Add "Similar" action if item has color data
+        if currentItem.glassItem.representative_color != nil ||
+           (currentItem.glassItem.dominant_colors != nil && !currentItem.glassItem.dominant_colors!.isEmpty) {
+            actions.append(
+                QuickAction(title: "Similar", icon: "eyedropper") {
+                    findSimilarColors()
+                }
+            )
+        }
+
+        return actions
+    }
+
+    /// Trigger a color search for items similar to this one
+    private func findSimilarColors() {
+        // Use representative_color first, fall back to first dominant color
+        let colorHex: String?
+        if let representative = currentItem.glassItem.representative_color {
+            colorHex = representative
+        } else if let dominantColors = currentItem.glassItem.dominant_colors, let first = dominantColors.first {
+            colorHex = first
+        } else {
+            colorHex = nil
+        }
+
+        guard let hex = colorHex else { return }
+
+        // Post notification with color info - the catalog view will handle the search
+        NotificationCenter.default.post(
+            name: .findSimilarColors,
+            object: nil,
+            userInfo: ["color": hex]
+        )
+
+        // Dismiss to go back to catalog
+        dismiss()
     }
 
     // MARK: - Specifications Section

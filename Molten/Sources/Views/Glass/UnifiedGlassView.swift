@@ -126,7 +126,7 @@ struct UnifiedGlassView: View {
                 ColorSearchSheet(
                     selectedColor: $viewModel.searchColor,
                     tolerance: $viewModel.colorTolerance,
-                    includeHighVariance: $viewModel.includeHighVarianceGlass,
+                    colorVarianceFilter: $viewModel.colorVarianceFilter,
                     onApply: {
                         viewModel.applyColorSearch()
                     },
@@ -245,6 +245,17 @@ struct UnifiedGlassView: View {
         // Convert hex to SwiftUI Color
         if let (r, g, b) = ColorDistance.hexToRGB(colorHex) {
             viewModel.searchColor = Color(red: r, green: g, blue: b)
+
+            // Apply variance filter if provided
+            if let varianceFilter = notification.userInfo?["varianceFilter"] as? ColorVarianceFilter {
+                viewModel.colorVarianceFilter = varianceFilter
+            }
+
+            // Apply tolerance if provided (default to "very close" = 5.0)
+            if let tolerance = notification.userInfo?["tolerance"] as? Double {
+                viewModel.colorTolerance = tolerance
+            }
+
             viewModel.applyColorSearch()
         }
     }

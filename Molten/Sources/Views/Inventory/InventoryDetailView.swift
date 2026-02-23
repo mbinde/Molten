@@ -1093,11 +1093,29 @@ struct InventoryDetailView: View {
 
         guard let hex = colorHex else { return }
 
+        // Determine variance filter based on this item's color_confidence
+        // high confidence = uniform color = low variance filter
+        // low confidence = high variance = high variance filter
+        let confidence = currentItem.glassItem.color_confidence ?? "medium"
+        let varianceFilter: ColorVarianceFilter
+        switch confidence {
+        case "high":
+            varianceFilter = .low
+        case "low":
+            varianceFilter = .high
+        default:
+            varianceFilter = .medium
+        }
+
         // Post notification with color info - the catalog view will handle the search
         NotificationCenter.default.post(
             name: .findSimilarColors,
             object: nil,
-            userInfo: ["color": hex]
+            userInfo: [
+                "color": hex,
+                "varianceFilter": varianceFilter,
+                "tolerance": 5.0  // "Very close" tolerance
+            ]
         )
 
         // Dismiss to go back to catalog

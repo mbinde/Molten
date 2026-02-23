@@ -28,6 +28,7 @@ actor CatalogService {
     private let userTagsRepository: UserTagsRepository
     private let ratingService: RatingService
     private let storageLocationRepository: StorageLocationRepository
+    private let catalogFlagBundledRepository: CatalogFlagBundledRepository
 
     // MARK: - Initialization
 
@@ -41,7 +42,8 @@ actor CatalogService {
         itemTagsRepository: ItemTagsRepository,
         userTagsRepository: UserTagsRepository,
         ratingService: RatingService,
-        storageLocationRepository: StorageLocationRepository
+        storageLocationRepository: StorageLocationRepository,
+        catalogFlagBundledRepository: CatalogFlagBundledRepository
     ) {
         self.glassItemRepository = glassItemRepository
         self.coatingItemRepository = coatingItemRepository
@@ -52,6 +54,7 @@ actor CatalogService {
         self.userTagsRepository = userTagsRepository
         self.ratingService = ratingService
         self.storageLocationRepository = storageLocationRepository
+        self.catalogFlagBundledRepository = catalogFlagBundledRepository
     }
     
     // MARK: - GlassItem System Support
@@ -163,6 +166,16 @@ actor CatalogService {
         // OPTIMIZED: Batch fetch user tags for all items
         let userTagsByItem = try await userTagsRepository.fetchTagsForItems(allItemKeys)
 
+        // OPTIMIZED: Batch fetch __multi__ flags for stripe display
+        let multiColorItemIds: Set<String>
+        do {
+            let ids = try await catalogFlagBundledRepository.findItems(withFlagKey: GlassFlagKey.multi.rawValue)
+            multiColorItemIds = Set(ids)
+        } catch {
+            // Flags are optional - continue without them
+            multiColorItemIds = []
+        }
+
         // OPTIMIZED: Conditionally fetch ratings (only when needed for sorting or explicitly requested)
         // Note: Using pattern matching instead of == to avoid Swift 6 actor isolation issue with Equatable
         let sortNeedsRatings = if case .rating = sortBy { true } else { false }
@@ -213,7 +226,8 @@ actor CatalogService {
                 storageLocations: storageLocations,
                 tags: tags,
                 userTags: userTags,
-                rating: rating
+                rating: rating,
+                isMultiColor: multiColorItemIds.contains(catalogItem.stable_id)
             )
             completeItems.append(completeItem)
         }
@@ -252,6 +266,15 @@ actor CatalogService {
         // OPTIMIZED: Batch fetch user tags for all items
         let userTagsByItem = try await userTagsRepository.fetchTagsForItems(allItemKeys)
 
+        // OPTIMIZED: Batch fetch __multi__ flags for stripe display
+        let multiColorItemIds: Set<String>
+        do {
+            let ids = try await catalogFlagBundledRepository.findItems(withFlagKey: GlassFlagKey.multi.rawValue)
+            multiColorItemIds = Set(ids)
+        } catch {
+            multiColorItemIds = []
+        }
+
         // Convert to complete models using batch-fetched data
         var completeItems: [CompleteInventoryItemModel] = []
         for glassItem in candidateItems {
@@ -269,7 +292,8 @@ actor CatalogService {
                 inventory: inventory,
                 storageLocations: storageLocations,
                 tags: tags,
-                userTags: userTags
+                userTags: userTags,
+                isMultiColor: multiColorItemIds.contains(glassItem.stable_id)
             )
             completeItems.append(completeItem)
         }

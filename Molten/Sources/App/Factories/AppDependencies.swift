@@ -335,7 +335,8 @@ class AppDependencies {
             itemTagsRepository: itemTagsRepository,
             userTagsRepository: userTagsRepository,
             ratingService: ratingService,
-            storageLocationRepository: storageLocationRepository
+            storageLocationRepository: storageLocationRepository,
+            catalogFlagBundledRepository: catalogFlagBundledRepository
         )
         _catalogService = service
         return service

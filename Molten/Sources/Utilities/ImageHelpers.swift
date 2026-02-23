@@ -63,43 +63,53 @@ struct ImageHelpers {
 
     // MARK: - Gradient Image Generation
 
-    /// Generates a UIImage with a linear gradient from hex color strings
+    /// Generates a UIImage with a linear gradient or vertical stripes from hex color strings
     /// This allows gradient images to be returned from loadProductImageForDisplay instead of nil
     /// - Parameters:
     ///   - colors: Array of hex color strings (e.g., ["#2E5E41", "#1D4030"])
     ///   - size: Size of the image to generate (default 120x120 for good quality scaling)
-    /// - Returns: UIImage with gradient, or nil if colors are invalid
-    nonisolated static func generateGradientImage(from colors: [String], size: CGSize = CGSize(width: 120, height: 120)) -> UIImage? {
+    ///   - useStripes: If true, draws vertical stripes instead of a smooth gradient (for multi-color items)
+    /// - Returns: UIImage with gradient or stripes, or nil if colors are invalid
+    nonisolated static func generateGradientImage(from colors: [String], size: CGSize = CGSize(width: 120, height: 120), useStripes: Bool = false) -> UIImage? {
         // Convert hex strings to UIColors
         let uiColors = colors.compactMap { hexToUIColor($0) }
         guard !uiColors.isEmpty else { return nil }
 
-        // Create a horizontal linear gradient
         UIGraphicsBeginImageContextWithOptions(size, true, 0)
         defer { UIGraphicsEndImageContext() }
 
         guard let context = UIGraphicsGetCurrentContext() else { return nil }
 
-        // Create gradient
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let cgColors = uiColors.map { $0.cgColor } as CFArray
-
-        // If only one color, duplicate it for a solid fill
-        let gradientColors: CFArray
-        if uiColors.count == 1 {
-            gradientColors = [uiColors[0].cgColor, uiColors[0].cgColor] as CFArray
+        if useStripes {
+            // Draw vertical stripes - no blending between colors
+            let stripeWidth = size.width / CGFloat(uiColors.count)
+            for (index, color) in uiColors.enumerated() {
+                let rect = CGRect(x: CGFloat(index) * stripeWidth, y: 0, width: stripeWidth, height: size.height)
+                context.setFillColor(color.cgColor)
+                context.fill(rect)
+            }
         } else {
-            gradientColors = cgColors
-        }
+            // Create a horizontal linear gradient
+            let colorSpace = CGColorSpaceCreateDeviceRGB()
+            let cgColors = uiColors.map { $0.cgColor } as CFArray
 
-        guard let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: nil) else {
-            return nil
-        }
+            // If only one color, duplicate it for a solid fill
+            let gradientColors: CFArray
+            if uiColors.count == 1 {
+                gradientColors = [uiColors[0].cgColor, uiColors[0].cgColor] as CFArray
+            } else {
+                gradientColors = cgColors
+            }
 
-        // Draw horizontal gradient (left to right, like ColorSwatchView)
-        let startPoint = CGPoint(x: 0, y: size.height / 2)
-        let endPoint = CGPoint(x: size.width, y: size.height / 2)
-        context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: [])
+            guard let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: nil) else {
+                return nil
+            }
+
+            // Draw horizontal gradient (left to right, like ColorSwatchView)
+            let startPoint = CGPoint(x: 0, y: size.height / 2)
+            let endPoint = CGPoint(x: size.width, y: size.height / 2)
+            context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: [])
+        }
 
         return UIGraphicsGetImageFromCurrentImageContext()
     }
@@ -184,6 +194,7 @@ struct ImageHelpers {
     /// Single source of truth for product image loading decision tree
     /// ALWAYS returns a usable image - never nil. Falls back to gradient or manufacturer logo.
     /// - Parameter excludeUserImages: If true, skips user-uploaded images and only returns manufacturer/catalog images
+    /// - Parameter isMultiColor: If true, draws vertical stripes instead of gradient (for items with __multi__ flag)
     @MainActor
     static func loadProductImageForDisplay(
         itemCode: String,
@@ -192,7 +203,8 @@ struct ImageHelpers {
         imagePath: String?,
         imageThumbPath: String?,
         dominantColors: [String]?,
-        excludeUserImages: Bool = false
+        excludeUserImages: Bool = false,
+        isMultiColor: Bool = false
     ) async -> UIImage? {
         // Step 0: User-uploaded image (highest priority - always wins)
         // Skip this step if excludeUserImages is true (used for "Your Photos" section)
@@ -210,8 +222,8 @@ struct ImageHelpers {
         if colorChipMode == .always {
             // Check if we have dominant_colors
             if let colors = dominantColors, !colors.isEmpty {
-                // Generate and return gradient image
-                if let gradientImage = generateGradientImage(from: colors) {
+                // Generate and return gradient image (or stripes if multi-color)
+                if let gradientImage = generateGradientImage(from: colors, useStripes: isMultiColor) {
                     return gradientImage
                 }
             }
@@ -257,8 +269,8 @@ struct ImageHelpers {
                         ImageHelpers.loadProductImage(for: itemCode, manufacturer: manufacturer, stableId: nil, imagePath: nil)
                     }.value
                 } else {
-                    // Generate and return gradient image
-                    if let colors = dominantColors, let gradientImage = generateGradientImage(from: colors) {
+                    // Generate and return gradient image (or stripes if multi-color)
+                    if let colors = dominantColors, let gradientImage = generateGradientImage(from: colors, useStripes: isMultiColor) {
                         return gradientImage
                     }
                     // Gradient generation failed - fall through to manufacturer logo
@@ -281,7 +293,7 @@ struct ImageHelpers {
 
             // Step 3: No product image found - try gradient if we have colors
             if let colors = dominantColors, !colors.isEmpty {
-                if let gradientImage = generateGradientImage(from: colors) {
+                if let gradientImage = generateGradientImage(from: colors, useStripes: isMultiColor) {
                     return gradientImage
                 }
             }
@@ -583,6 +595,7 @@ struct ProductImageView: View {
     let imageThumbPath: String?
     let dominantColors: [String]?
     let size: CGFloat
+    let isMultiColor: Bool
 
     @State private var loadedImage: UIImage?
     @State private var isLoading: Bool
@@ -591,7 +604,7 @@ struct ProductImageView: View {
     // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
     private static let sharedUserImageRepository = AppDependencies.shared.userImageRepository
 
-    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, dominantColors: [String]? = nil, size: CGFloat = 60) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, dominantColors: [String]? = nil, size: CGFloat = 60, isMultiColor: Bool = false) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.stableId = stableId
@@ -599,6 +612,7 @@ struct ProductImageView: View {
         self.imageThumbPath = imageThumbPath
         self.dominantColors = dominantColors
         self.size = size
+        self.isMultiColor = isMultiColor
 
         // Check cache synchronously to avoid loading flash on view recreation
         if let cachedImage = ImageHelpers.getCachedImage(itemCode: itemCode, manufacturer: manufacturer) {
@@ -696,7 +710,8 @@ struct ProductImageView: View {
             stableId: stableId,
             imagePath: imagePath,
             imageThumbPath: imageThumbPath,
-            dominantColors: dominantColors
+            dominantColors: dominantColors,
+            isMultiColor: isMultiColor
         )
 
         isLoading = false
@@ -716,6 +731,7 @@ struct ProductImageDetail: View {
     let allowImageUpload: Bool
     let allowFullScreen: Bool
     let onImageUploaded: (() -> Void)?
+    let isMultiColor: Bool
 
     @State private var loadedImage: UIImage?
     @State private var isLoading: Bool = true
@@ -727,7 +743,7 @@ struct ProductImageDetail: View {
     // CRITICAL: Shared repository instance (NOT created per view to avoid Core Data threading issues)
     private static let sharedUserImageRepository = AppDependencies.shared.userImageRepository
 
-    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, dominantColors: [String]? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, allowFullScreen: Bool = true, onImageUploaded: (() -> Void)? = nil) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, dominantColors: [String]? = nil, maxSize: CGFloat = 200, allowImageUpload: Bool = false, allowFullScreen: Bool = true, onImageUploaded: (() -> Void)? = nil, isMultiColor: Bool = false) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.stableId = stableId
@@ -738,6 +754,7 @@ struct ProductImageDetail: View {
         self.allowImageUpload = allowImageUpload
         self.allowFullScreen = allowFullScreen
         self.onImageUploaded = onImageUploaded
+        self.isMultiColor = isMultiColor
     }
 
     var body: some View {
@@ -818,7 +835,8 @@ struct ProductImageDetail: View {
             stableId: stableId,
             imagePath: imagePath,
             imageThumbPath: imageThumbPath,
-            dominantColors: dominantColors
+            dominantColors: dominantColors,
+            isMultiColor: isMultiColor
         )
 
         isLoading = false
@@ -952,8 +970,9 @@ struct ProductImageThumbnail: View {
     let imageThumbPath: String?
     let dominantColors: [String]?
     let size: CGFloat
+    let isMultiColor: Bool
 
-    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, dominantColors: [String]? = nil, size: CGFloat = 40) {
+    init(itemCode: String, manufacturer: String? = nil, stableId: String? = nil, imagePath: String? = nil, imageThumbPath: String? = nil, dominantColors: [String]? = nil, size: CGFloat = 40, isMultiColor: Bool = false) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
         self.stableId = stableId
@@ -961,11 +980,12 @@ struct ProductImageThumbnail: View {
         self.imageThumbPath = imageThumbPath
         self.dominantColors = dominantColors
         self.size = size
+        self.isMultiColor = isMultiColor
     }
 
     var body: some View {
         #if canImport(UIKit)
-        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, stableId: stableId, imagePath: imagePath, imageThumbPath: imageThumbPath, dominantColors: dominantColors, size: size)
+        ProductImageView(itemCode: itemCode, manufacturer: manufacturer, stableId: stableId, imagePath: imagePath, imageThumbPath: imageThumbPath, dominantColors: dominantColors, size: size, isMultiColor: isMultiColor)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(Color(.systemGray4), lineWidth: 0.5)
@@ -1002,6 +1022,7 @@ struct AutoRotatingProductThumbnail: View {
     let dominantColors: [String]?
     let size: CGFloat
     let rotationInterval: TimeInterval
+    let isMultiColor: Bool
 
     @State private var currentIndex: Int = 0
     @State private var loadedImages: [UIImage] = []
@@ -1027,7 +1048,8 @@ struct AutoRotatingProductThumbnail: View {
         imageThumbPaths: [String]? = nil,
         dominantColors: [String]? = nil,
         size: CGFloat = 60,
-        rotationInterval: TimeInterval = 5.0
+        rotationInterval: TimeInterval = 5.0,
+        isMultiColor: Bool = false
     ) {
         self.itemCode = itemCode
         self.manufacturer = manufacturer
@@ -1037,6 +1059,7 @@ struct AutoRotatingProductThumbnail: View {
         self.dominantColors = dominantColors
         self.size = size
         self.rotationInterval = rotationInterval
+        self.isMultiColor = isMultiColor
     }
 
     var body: some View {
@@ -1126,7 +1149,8 @@ struct AutoRotatingProductThumbnail: View {
                 stableId: stableId,
                 imagePath: imagePaths?.first,
                 imageThumbPath: imageThumbPaths?.first,
-                dominantColors: dominantColors
+                dominantColors: dominantColors,
+                isMultiColor: isMultiColor
             ) {
                 loadedImages = [image]
             }
@@ -1147,7 +1171,8 @@ struct AutoRotatingProductThumbnail: View {
                 stableId: stableId,
                 imagePath: imagePath,
                 imageThumbPath: thumbPath,
-                dominantColors: dominantColors
+                dominantColors: dominantColors,
+                isMultiColor: isMultiColor
             ) {
                 images.append(image)
             }
@@ -1161,7 +1186,8 @@ struct AutoRotatingProductThumbnail: View {
                 stableId: stableId,
                 imagePath: paths.first,
                 imageThumbPath: imageThumbPaths?.first,
-                dominantColors: dominantColors
+                dominantColors: dominantColors,
+                isMultiColor: isMultiColor
             ) {
                 images = [fallback]
             }

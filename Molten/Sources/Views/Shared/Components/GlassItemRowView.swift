@@ -33,6 +33,7 @@ struct GlassItemRowView: View {
         let dominantColors: [String]?
         let tags: [String]
         let rating: AggregatedRatingModel?  // Optional rating data
+        let isMultiColor: Bool  // If true, display stripes instead of gradient
 
         /// Whether this item has multiple images
         var hasMultipleImages: Bool {
@@ -51,9 +52,10 @@ struct GlassItemRowView: View {
             self.dominantColors = completeItem.glassItem.dominant_colors
             self.tags = completeItem.allTags
             self.rating = completeItem.rating
+            self.isMultiColor = completeItem.isMultiColor
         }
 
-        init(from detailedShoppingItem: DetailedShoppingListItemModel) {
+        init(from detailedShoppingItem: DetailedShoppingListItemModel, isMultiColor: Bool = false) {
             self.name = detailedShoppingItem.catalogItem.name
             self.manufacturer = detailedShoppingItem.catalogItem.manufacturer
             self.sku = detailedShoppingItem.catalogItem.sku
@@ -65,9 +67,10 @@ struct GlassItemRowView: View {
             self.dominantColors = detailedShoppingItem.catalogItem.dominant_colors
             self.tags = detailedShoppingItem.allTags
             self.rating = nil  // Shopping list items don't include ratings
+            self.isMultiColor = isMultiColor
         }
 
-        init(from enrichedItem: EnrichedFriendInventoryItem) {
+        init(from enrichedItem: EnrichedFriendInventoryItem, isMultiColor: Bool = false) {
             // Use catalog data if available, otherwise use snapshot data with fallbacks
             self.name = enrichedItem.catalogData?.name ?? enrichedItem.snapshot.sku
             self.manufacturer = enrichedItem.snapshot.manufacturer
@@ -80,9 +83,10 @@ struct GlassItemRowView: View {
             self.dominantColors = enrichedItem.catalogData?.dominantColors
             self.tags = enrichedItem.catalogData?.tags ?? []
             self.rating = nil  // Friend inventory items don't include ratings
+            self.isMultiColor = isMultiColor
         }
 
-        init(name: String, manufacturer: String, sku: String?, stableId: String, imagePath: String? = nil, imageThumbPath: String? = nil, imagePaths: [String]? = nil, imageThumbPaths: [String]? = nil, dominantColors: [String]? = nil, tags: [String], rating: AggregatedRatingModel? = nil) {
+        init(name: String, manufacturer: String, sku: String?, stableId: String, imagePath: String? = nil, imageThumbPath: String? = nil, imagePaths: [String]? = nil, imageThumbPaths: [String]? = nil, dominantColors: [String]? = nil, tags: [String], rating: AggregatedRatingModel? = nil, isMultiColor: Bool = false) {
             self.name = name
             self.manufacturer = manufacturer
             self.sku = sku
@@ -94,6 +98,7 @@ struct GlassItemRowView: View {
             self.dominantColors = dominantColors
             self.tags = tags
             self.rating = rating
+            self.isMultiColor = isMultiColor
         }
     }
 
@@ -150,7 +155,8 @@ struct GlassItemRowView: View {
             imagePath: item.imagePath,
             imageThumbPath: item.imageThumbPath,
             dominantColors: item.dominantColors,
-            size: 60
+            size: 60,
+            isMultiColor: item.isMultiColor
         )
     }
 

@@ -157,63 +157,54 @@ enum ColorDistance {
 
     /// Threshold for considering glass as "high spread" (rainbow/reactive)
     static let highSpreadThreshold: Double = 50.0
+}
 
-    /// Check if an item matches the color search criteria
-    /// - Parameters:
-    ///   - dominantColors: The item's dominant colors (hex strings)
-    ///   - colorSpread: The item's color spread value (nil if unknown)
-    ///   - targetColor: The color being searched for
-    ///   - tolerance: Maximum acceptable distance (0-100 scale)
-    ///   - includeHighSpread: Whether to include high-spread items regardless of match
-    /// - Returns: Whether the item matches
-    static func itemMatches(
-        dominantColors: [String]?,
-        colorSpread: Double?,
-        targetColor: Color,
-        tolerance: Double,
-        includeHighSpread: Bool
-    ) -> Bool {
-        // No colors = no match
-        guard let colors = dominantColors, !colors.isEmpty else {
-            return false
-        }
+// MARK: - Color Variance Filter
 
-        // Check if this is a high-spread item
-        let isHighSpread = (colorSpread ?? 0) > highSpreadThreshold
+/// Filter options for color variance/confidence levels in color search
+/// Based on color_confidence values: high (solid), medium (some variation), low (highly varied)
+enum ColorVarianceFilter: String, CaseIterable, Identifiable {
+    /// Only include solid/uniform colors (high confidence)
+    case low = "Low"
 
-        // If high spread and we're including them, always include
-        if isHighSpread && includeHighSpread {
+    /// Include solid and moderate variation (high + medium confidence)
+    case medium = "Medium"
+
+    /// Include all items regardless of variance (high + medium + low confidence)
+    case high = "High"
+
+    var id: String { rawValue }
+
+    /// Check if a given confidence level is included by this filter
+    func includes(confidence: String) -> Bool {
+        switch self {
+        case .low:
+            return confidence == "high"
+        case .medium:
+            return confidence == "high" || confidence == "medium"
+        case .high:
             return true
         }
-
-        // Calculate minimum distance to any dominant color
-        guard let distance = minimumDistance(from: targetColor, to: colors) else {
-            return false
-        }
-
-        // Match if within tolerance
-        return distance <= tolerance
     }
 
-    /// Sort items by color match quality (best matches first)
-    /// - Parameters:
-    ///   - items: Items with dominant_colors
-    ///   - targetColor: Color to sort by
-    /// - Returns: Items sorted by distance (closest first), with distance values
-    static func sortedByDistance<T>(
-        items: [T],
-        targetColor: Color,
-        dominantColors: (T) -> [String]?
-    ) -> [(item: T, distance: Double)] {
-        var results: [(item: T, distance: Double)] = []
-
-        for item in items {
-            if let colors = dominantColors(item),
-               let distance = minimumDistance(from: targetColor, to: colors) {
-                results.append((item, distance))
-            }
+    /// Short label for segmented control
+    var shortLabel: String {
+        switch self {
+        case .low: return "Low"
+        case .medium: return "Medium"
+        case .high: return "High"
         }
+    }
 
-        return results.sorted { $0.distance < $1.distance }
+    /// Explanation text for the option (shown in italics)
+    var explanation: String {
+        switch self {
+        case .low:
+            return "Glass with a very uniform color that does not vary."
+        case .medium:
+            return "Glass with a moderate amount of color variability, e.g. streaks or moderate reduction effects."
+        case .high:
+            return "Glass with high color variability, e.g. glass with high silver content."
+        }
     }
 }

@@ -204,8 +204,8 @@ class UnifiedGlassViewModel {
     /// Color match tolerance (Delta E: 3 = very close, 25 = similar)
     var colorTolerance: Double = 12.0
 
-    /// Whether to include glass with high color variance (reactive, dichroic, etc.)
-    var includeHighVarianceGlass: Bool = true
+    /// Which color variance levels to include in search results
+    var colorVarianceFilter: ColorVarianceFilter = .high
 
     /// Cached color distances for sorting (stable_id -> distance)
     private var colorDistanceCache: [String: Double] = [:]
@@ -607,22 +607,30 @@ class UnifiedGlassViewModel {
             // Get dominant colors from the catalog item
             let dominantColors = item.catalogItem.dominant_colors ?? []
 
-            // Skip items without color data (unless they might be high-variance)
+            // Skip items without color data
             guard !dominantColors.isEmpty else { continue }
 
-            // Get color spread if available
-            let colorSpread = item.catalogItem.color_spread
+            // Get color confidence (high, medium, low) - defaults to "medium" if not set
+            let confidence = item.catalogItem.color_confidence ?? "medium"
 
-            // Check if this is a high-variance item
-            let isHighVariance = (colorSpread ?? 0) > ColorDistance.highSpreadThreshold
+            // Check if this item's variance level is included in the filter
+            let isIncludedByVariance = colorVarianceFilter.includes(confidence: confidence)
 
-            if isHighVariance && includeHighVarianceGlass {
-                // Always include high-variance glass, but give it a moderate distance for sorting
-                matchingItems.append((item, 50.0))
-                colorDistanceCache[item.catalogItem.stable_id] = 50.0
-            } else if let distance = ColorDistance.minimumDistance(from: searchColor, to: dominantColors) {
-                // Check if within tolerance
-                if distance <= colorTolerance {
+            // If item is excluded by variance filter, skip it entirely
+            guard isIncludedByVariance else { continue }
+
+            // Calculate color distance
+            if let distance = ColorDistance.minimumDistance(from: searchColor, to: dominantColors) {
+                // For low-confidence (high-variance) items, include them regardless of distance
+                // but give them a penalty for sorting purposes
+                if confidence == "low" {
+                    // Always include low-confidence items (reactive, dichroic, etc.)
+                    // Use max of actual distance and 30 to sort them after good matches
+                    let sortDistance = max(distance, 30.0)
+                    matchingItems.append((item, sortDistance))
+                    colorDistanceCache[item.catalogItem.stable_id] = sortDistance
+                } else if distance <= colorTolerance {
+                    // Normal matching based on tolerance
                     matchingItems.append((item, distance))
                     colorDistanceCache[item.catalogItem.stable_id] = distance
                 }

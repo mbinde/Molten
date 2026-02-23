@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		06D7D54F3062A2AA3F41A409 /* StockRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A0C3DD953C05AC38F6A398B /* StockRepository.swift */; };
+		5EEFB13DEF8F616522E27972 /* StockUpdateServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B8A97AA774A156A285D443 /* StockUpdateServiceTests.swift */; };
+		72CDF72E94608A627EB5B227 /* StockDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 095EB917BC9DACA9E650D5AD /* StockDatabaseManager.swift */; };
+		86CA90F58AEE3FCB3057B4C1 /* StockUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C16D3BB13E3B1DB87A6DCA /* StockUpdateService.swift */; };
+		CAD157053BD151271A352F81 /* StockUpdatePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0395AED162F61D6F3BDC0D28 /* StockUpdatePreferences.swift */; };
+		D16E0E92BC7275E7801DC146 /* StockAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CF844F73BD21FA5A471334D /* StockAPIClient.swift */; };
 		F506B6B72EAFC5CB00CDBC6D /* ViewModelTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */; };
 		F53C0BD32EA81F980020E1AB /* Screenshots.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = F53C0BD22EA81F980020E1AB /* Screenshots.xctestplan */; };
 		F59F21B92EBF2CDE005A6269 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = F59F21B82EBF2CDE005A6269 /* RevenueCat */; };
@@ -90,6 +96,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0395AED162F61D6F3BDC0D28 /* StockUpdatePreferences.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StockUpdatePreferences.swift; path = Molten/Sources/Models/Domain/StockUpdatePreferences.swift; sourceTree = "<group>"; };
+		095EB917BC9DACA9E650D5AD /* StockDatabaseManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StockDatabaseManager.swift; path = Molten/Sources/Services/Core/StockDatabaseManager.swift; sourceTree = "<group>"; };
+		3A0C3DD953C05AC38F6A398B /* StockRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StockRepository.swift; path = Molten/Sources/Repositories/StockRepository.swift; sourceTree = "<group>"; };
+		58C16D3BB13E3B1DB87A6DCA /* StockUpdateService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StockUpdateService.swift; path = Molten/Sources/Services/Core/StockUpdateService.swift; sourceTree = "<group>"; };
+		5CF844F73BD21FA5A471334D /* StockAPIClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StockAPIClient.swift; path = Molten/Sources/Services/Network/StockAPIClient.swift; sourceTree = "<group>"; };
+		A8B8A97AA774A156A285D443 /* StockUpdateServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StockUpdateServiceTests.swift; path = Molten/Tests/MoltenTests/Services/StockUpdateServiceTests.swift; sourceTree = "<group>"; };
 		F506B6B62EAFC5CB00CDBC6D /* ViewModelTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = ViewModelTests.xctestplan; sourceTree = "<group>"; };
 		F528A82F2EC693C700CE1F4A /* Molten.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Molten.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F528A8302EC693C700CE1F4A /* MoltenShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoltenShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -236,7 +248,6 @@
 				Tests/MoltenTests/Services/LocationServiceTests.swift,
 				Tests/MoltenTests/Services/ManufacturerFilterServiceTests.swift,
 				Tests/MoltenTests/Services/MockCatalogUpdateHelpers.swift,
-				Tests/MoltenTests/Services/OnlineStockAPIClientTests.swift,
 				Tests/MoltenTests/Services/OnlineStockServiceTests.swift,
 				Tests/MoltenTests/Services/ProjectExportServiceTests.swift,
 				Tests/MoltenTests/Services/ProjectImportServiceTests.swift,
@@ -249,6 +260,7 @@
 				Tests/MoltenTests/Services/ReceiptServiceTests.swift,
 				Tests/MoltenTests/Services/ReportingServiceTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
+				Tests/MoltenTests/Services/StockUpdateServiceTests.swift,
 				Tests/MoltenTests/Services/SubscriptionServiceTests.swift,
 				Tests/MoltenTests/ShareCodeGeneratorTests.swift,
 				Tests/MoltenTests/SubscriptionManagerTests.swift,
@@ -473,7 +485,6 @@
 				Tests/MoltenTests/Services/LocationServiceTests.swift,
 				Tests/MoltenTests/Services/ManufacturerFilterServiceTests.swift,
 				Tests/MoltenTests/Services/MockCatalogUpdateHelpers.swift,
-				Tests/MoltenTests/Services/OnlineStockAPIClientTests.swift,
 				Tests/MoltenTests/Services/OnlineStockServiceTests.swift,
 				Tests/MoltenTests/Services/ProjectExportServiceTests.swift,
 				Tests/MoltenTests/Services/ProjectImportServiceTests.swift,
@@ -486,6 +497,7 @@
 				Tests/MoltenTests/Services/ReceiptServiceTests.swift,
 				Tests/MoltenTests/Services/ReportingServiceTests.swift,
 				Tests/MoltenTests/Services/ShoppingListServiceTests.swift,
+				Tests/MoltenTests/Services/StockUpdateServiceTests.swift,
 				Tests/MoltenTests/Services/SubscriptionServiceTests.swift,
 				Tests/MoltenTests/ShareCodeGeneratorTests.swift,
 				Tests/MoltenTests/SubscriptionManagerTests.swift,
@@ -838,6 +850,80 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1A97D4D379A949648F1BF893 /* MoltenTests */ = {
+			isa = PBXGroup;
+			children = (
+				CDF9C887715D630B91EF45C1 /* Services */,
+			);
+			name = MoltenTests;
+			sourceTree = "<group>";
+		};
+		1AFF6BD06917B8B4F6637D4F /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				0395AED162F61D6F3BDC0D28 /* StockUpdatePreferences.swift */,
+			);
+			name = Domain;
+			sourceTree = "<group>";
+		};
+		3F952F19E315EB8D453DECCE /* Repositories */ = {
+			isa = PBXGroup;
+			children = (
+				3A0C3DD953C05AC38F6A398B /* StockRepository.swift */,
+			);
+			name = Repositories;
+			sourceTree = "<group>";
+		};
+		4013F5E1A0C410543E71BC4E /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				D171BDD4FB0F1DF1CB879D7A /* Core */,
+				C8BF7FFFAE32AA42E0FF9402 /* Network */,
+			);
+			name = Services;
+			sourceTree = "<group>";
+		};
+		C512B47A78083F157CAE09F1 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				1AFF6BD06917B8B4F6637D4F /* Domain */,
+			);
+			name = Models;
+			sourceTree = "<group>";
+		};
+		C8BF7FFFAE32AA42E0FF9402 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				5CF844F73BD21FA5A471334D /* StockAPIClient.swift */,
+			);
+			name = Network;
+			sourceTree = "<group>";
+		};
+		CDF9C887715D630B91EF45C1 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A8B8A97AA774A156A285D443 /* StockUpdateServiceTests.swift */,
+			);
+			name = Services;
+			sourceTree = "<group>";
+		};
+		D171BDD4FB0F1DF1CB879D7A /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				58C16D3BB13E3B1DB87A6DCA /* StockUpdateService.swift */,
+				095EB917BC9DACA9E650D5AD /* StockDatabaseManager.swift */,
+			);
+			name = Core;
+			sourceTree = "<group>";
+		};
+		E59CC99DBCC059132336DCF6 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				1A97D4D379A949648F1BF893 /* MoltenTests */,
+			);
+			name = Tests;
+			sourceTree = "<group>";
+		};
 		F5A13C422E890146002C0F7A = {
 			isa = PBXGroup;
 			children = (
@@ -858,7 +944,19 @@
 				F528A8352EC693C700CE1F4A /* InventoryImport.xctest */,
 				F528A8362EC693C700CE1F4A /* ScreenshotAutomation.xctest */,
 				F528A8372EC693C700CE1F4A /* ViewModelTests.xctest */,
+				FD2ECDB087672D5211A07FDF /* Sources */,
+				E59CC99DBCC059132336DCF6 /* Tests */,
 			);
+			sourceTree = "<group>";
+		};
+		FD2ECDB087672D5211A07FDF /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				3F952F19E315EB8D453DECCE /* Repositories */,
+				C512B47A78083F157CAE09F1 /* Models */,
+				4013F5E1A0C410543E71BC4E /* Services */,
+			);
+			name = Sources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1232,6 +1330,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5EEFB13DEF8F616522E27972 /* StockUpdateServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1239,6 +1338,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				06D7D54F3062A2AA3F41A409 /* StockRepository.swift in Sources */,
+				CAD157053BD151271A352F81 /* StockUpdatePreferences.swift in Sources */,
+				86CA90F58AEE3FCB3057B4C1 /* StockUpdateService.swift in Sources */,
+				72CDF72E94608A627EB5B227 /* StockDatabaseManager.swift in Sources */,
+				D16E0E92BC7275E7801DC146 /* StockAPIClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

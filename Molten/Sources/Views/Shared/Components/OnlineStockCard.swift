@@ -289,7 +289,7 @@ struct OnlineStockCard: View {
     OnlineStockCard(
         stockData: nil,
         isLoading: false,
-        error: OnlineStockAPIError.serverError(statusCode: 500)
+        error: StockDatabaseError.databaseNotInitialized
     )
     .padding()
 }

@@ -479,6 +479,8 @@ class AppDependencies {
     private var _backupService: BackupService?
     private var _receiptService: ReceiptService?
     private var _onlineStockService: OnlineStockService?
+    private var _stockUpdateService: StockUpdateService?
+    private var _stockRepository: StockRepository?
 
     // Label update services (created lazily)
     private var _labelDatabaseService: LabelDatabaseService?
@@ -592,6 +594,7 @@ class AppDependencies {
         let service = BackgroundUpdateService(
             updateService: catalogUpdateService,
             labelUpdateService: labelUpdateService,
+            stockUpdateService: stockUpdateService,
             networkMonitor: NetworkMonitor.shared
         )
         _backgroundUpdateService = service
@@ -668,8 +671,33 @@ class AppDependencies {
         if let service = _onlineStockService {
             return service
         }
-        let service = OnlineStockService()
+        let service = OnlineStockService(repository: stockRepository)
         _onlineStockService = service
+        return service
+    }
+
+    /// Stock repository (created lazily)
+    var stockRepository: StockRepository {
+        if let repo = _stockRepository {
+            return repo
+        }
+        let repo = StockRepository()
+        _stockRepository = repo
+        return repo
+    }
+
+    /// Stock update service (created lazily)
+    var stockUpdateService: StockUpdateService {
+        if let service = _stockUpdateService {
+            return service
+        }
+        let service = StockUpdateService(
+            apiClient: StockAPIClient(),
+            databaseManager: StockDatabaseManager.shared,
+            storageService: try! CatalogStorageService(),  // Reuse catalog storage
+            networkMonitor: NetworkMonitor.shared
+        )
+        _stockUpdateService = service
         return service
     }
 

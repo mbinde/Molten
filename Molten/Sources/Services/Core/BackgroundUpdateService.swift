@@ -3,7 +3,7 @@
 //  Molten
 //
 //  Created by Assistant on 11/9/25.
-//  Background catalog and label database update checking and downloading
+//  Background catalog, label, and stock database update checking and downloading
 //
 
 import Foundation
@@ -12,20 +12,23 @@ import UserNotifications
 
 private let log = Logger(subsystem: "com.molten", category: "BackgroundUpdateService")
 
-/// Service for handling automatic catalog and label updates in the background
+/// Service for handling automatic catalog, label, and stock updates in the background
 @MainActor
 final class BackgroundUpdateService {
     private let catalogUpdateService: any CatalogUpdateServiceProtocol
     private let labelUpdateService: LabelUpdateService?
+    private let stockUpdateService: StockUpdateServiceProtocol?
     private let networkMonitor: any NetworkMonitorProtocol
 
     init(
         updateService: any CatalogUpdateServiceProtocol,
         labelUpdateService: LabelUpdateService? = nil,
+        stockUpdateService: StockUpdateServiceProtocol? = nil,
         networkMonitor: any NetworkMonitorProtocol
     ) {
         self.catalogUpdateService = updateService
         self.labelUpdateService = labelUpdateService
+        self.stockUpdateService = stockUpdateService
         self.networkMonitor = networkMonitor
     }
 
@@ -36,6 +39,9 @@ final class BackgroundUpdateService {
 
         // Check label updates
         await checkForLabelUpdatesIfNeeded()
+
+        // Check stock updates
+        await checkForStockUpdatesIfNeeded()
     }
 
     /// Check for catalog updates if conditions are met
@@ -122,6 +128,18 @@ final class BackgroundUpdateService {
         // Use the label update service's built-in background check
         // which handles auto-update preferences, timing, and network policy
         await labelUpdateService.performBackgroundUpdateCheck()
+    }
+
+    /// Check for stock database updates if conditions are met
+    private func checkForStockUpdatesIfNeeded() async {
+        guard let stockUpdateService = stockUpdateService else {
+            log.debug("🔕 Stock update service not configured, skipping")
+            return
+        }
+
+        // Use the stock update service's built-in background check
+        // which handles timing (every 6 hours) and network policy
+        await stockUpdateService.checkForUpdatesIfNeeded()
     }
 
     // MARK: - Private Helpers

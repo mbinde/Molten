@@ -609,9 +609,9 @@ struct InventoryDetailView: View {
             defer { isLoadingStock = false }
 
             do {
+                // Note: forceRefresh no longer needed - stock data is synced from local database
                 onlineStock = try await AppDependencies.shared.onlineStockService.getStock(
-                    for: currentItem.catalogItem.stable_id,
-                    forceRefresh: forceRefresh
+                    for: currentItem.catalogItem.stable_id
                 )
             } catch {
                 stockLoadError = error

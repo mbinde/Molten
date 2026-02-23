@@ -44,7 +44,7 @@ struct GlassManufacturers {
         "OR": "Origin Glass",
         "PAR": "Parramore Glass",
         "PDX": "PDX Tubing Co",
-        "RE": "Reichenbach",
+        "REI": "Reichenbach",
         "REUSCHE": "Reusche",
         "TAG": "Trautmann Art Glass",
         "THMP": "Thompson Enamel",
@@ -67,7 +67,7 @@ struct GlassManufacturers {
         "GA": "ga",
         "GAF": "gaf",
         "GTRON": "gtron",
-        "RE": "re",
+        "REI": "rei",
         "REUSCHE": "reusche",
         "TAG": "tag",
         "VF": "vf",
@@ -119,7 +119,7 @@ struct GlassManufacturers {
         "OR": false,           // Origin Glass - NO permission (no idea who to ask)
         "PAR": false,          // Parramore Glass - NO permission (no idea who to ask)
         "PDX": false,          // PDX Tubing Co - NO permission (no idea who to ask)
-        "RE": false,           // Reichenbach - NO permission (no idea who to ask)
+        "REI": false,          // Reichenbach - NO permission (no idea who to ask)
         "REUSCHE": false,     // Reusche - NO permission (no product images in PDF catalogs)
         "TAG": false,          // Trautmann Art Glass - NO permission (need to reach Northstar somehow)
         "THMP": true,         // Thompson Enamel - permission granted via email
@@ -161,7 +161,7 @@ struct GlassManufacturers {
         "OR": true,
         "PAR": true,
         "PDX": true,
-        "RE": true,
+        "REI": true,
         "REUSCHE": true,
         "TAG": true,
         "THMP": true,
@@ -200,7 +200,7 @@ struct GlassManufacturers {
         "OR": true,            // Origin Glass
         "PAR": true,           // Parramore Glass
         "PDX": false,          // PDX Tubing Co - DO NOT SHIP
-        "RE": true,            // Reichenbach
+        "REI": true,           // Reichenbach
         "REUSCHE": true,       // Reusche
         "TAG": true,           // Trautmann Art Glass
         "THMP": true,          // Thompson Enamel
@@ -302,7 +302,7 @@ struct GlassManufacturers {
         "KUG": [104],         // Kugler makes 104
         "LAU": [104],         // Lauscha makes 104
         "NSP": [104],         // Northstar Precision 104 makes 104
-        "RE": [104],          // Reichenbach makes 104
+        "REI": [104],         // Reichenbach makes 104
         "VF": [104]           // Vetrofond makes 104
     ]
     
@@ -417,7 +417,7 @@ struct GlassManufacturers {
             return .blue
         case "vetrofond", "vf":
             return .green
-        case "reichenbach", "re":
+        case "reichenbach", "rei":
             return .purple
         case "double helix", "dh":
             return .red

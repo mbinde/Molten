@@ -54,7 +54,7 @@ struct UnifiedGlassView: View {
     // Color search state
     @State private var showingColorSearch = false
 
-    #if DEBUG
+    #if FLAG_ADMIN_UI
     // Processed items tracking (for row highlighting during review)
     @State private var processedItemIds: Set<String> = []
     #endif
@@ -211,7 +211,7 @@ struct UnifiedGlassView: View {
             }
             .task {
                 await viewModel.loadData()
-                #if DEBUG
+                #if FLAG_ADMIN_UI
                 await loadProcessedItems()
                 #endif
             }
@@ -230,7 +230,7 @@ struct UnifiedGlassView: View {
             .onReceive(NotificationCenter.default.publisher(for: .findSimilarColors)) { notification in
                 handleFindSimilarColors(notification)
             }
-            #if DEBUG
+            #if FLAG_ADMIN_UI
             .onReceive(NotificationCenter.default.publisher(for: .catalogFlagChanged)) { _ in
                 Task { await loadProcessedItems() }
             }
@@ -731,7 +731,7 @@ struct UnifiedGlassView: View {
 
     @ViewBuilder
     private func catalogRow(for item: CompleteInventoryItemModel) -> some View {
-        #if DEBUG
+        #if FLAG_ADMIN_UI
         let isProcessed = processedItemIds.contains(item.catalogItem.stable_id)
         #endif
 
@@ -742,19 +742,19 @@ struct UnifiedGlassView: View {
             let hasInventory = viewModel.inventoryItemIds.contains(item.catalogItem.stable_id)
             let onWishList = viewModel.shoppingListItemIds.contains(item.catalogItem.stable_id)
             GlassItemRowView.unified(item: item, hasInventory: hasInventory, onWishList: onWishList)
-                #if DEBUG
+                #if FLAG_ADMIN_UI
                 .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.15) : Color.clear)
                 #endif
         case .myGlass:
             // In "My Glass" mode, show inventory row with quantities
             GlassItemRowView.inventory(item: item, selectedLocations: viewModel.selectedLocations)
-                #if DEBUG
+                #if FLAG_ADMIN_UI
                 .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.15) : Color.clear)
                 #endif
         case .wishList:
             // This shouldn't happen in catalogRow
             GlassItemRowView.catalog(item: item)
-                #if DEBUG
+                #if FLAG_ADMIN_UI
                 .background(isProcessed ? DesignSystem.Colors.accentSuccess.opacity(0.15) : Color.clear)
                 #endif
         }
@@ -1108,8 +1108,8 @@ struct UnifiedGlassView: View {
         }
     }
 
-    #if DEBUG
-    // MARK: - Processed Items (DEBUG)
+    #if FLAG_ADMIN_UI
+    // MARK: - Processed Items (FLAG_ADMIN_UI)
 
     @MainActor
     private func loadProcessedItems() async {

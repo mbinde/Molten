@@ -9,6 +9,19 @@ import Foundation
 import SwiftUI
 
 /// Debug configuration for development builds
+///
+/// ## FLAG_ADMIN_UI
+/// To enable the catalog flag/tag/description admin UI:
+/// 1. Go to Build Settings > Swift Compiler - Custom Flags
+/// 2. Find "Active Compilation Conditions" (SWIFT_ACTIVE_COMPILATION_CONDITIONS)
+/// 3. Add "FLAG_ADMIN_UI" to the Debug configuration
+///    e.g., "DEBUG FLAG_ADMIN_UI $(inherited)"
+/// 4. Clean build folder and rebuild
+///
+/// This enables:
+/// - Flag/tag/description editors in InventoryDetailView
+/// - Processed item highlighting in catalog lists
+/// - Processed/unprocessed filter button in CatalogView toolbar
 struct DebugConfig {
 
     // MARK: - Development Utilities

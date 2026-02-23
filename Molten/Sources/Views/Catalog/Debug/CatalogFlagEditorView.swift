@@ -4,15 +4,15 @@
 //
 //  Created on 2025-12-21.
 //
-//  Debug-only view for editing catalog flags on glass items
-//  Appears at the bottom of InventoryDetailView in DEBUG builds
+//  Admin UI view for editing catalog flags on glass items
+//  Appears at the bottom of InventoryDetailView when FLAG_ADMIN_UI is enabled
 //
 
 import SwiftUI
 
-#if DEBUG
+#if FLAG_ADMIN_UI
 
-/// Debug-only editor for catalog flags
+/// Admin UI editor for catalog flags
 /// Allows adding/editing flags that will be exported for catalog updates
 /// Also displays bundled flags (read-only) from the catalog SQLite database
 struct CatalogFlagEditorView: View {

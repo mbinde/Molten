@@ -2,15 +2,15 @@
 //  CatalogTagEditorView.swift
 //  Molten
 //
-//  Debug-only view for editing catalog tags on glass items
-//  Appears at the bottom of InventoryDetailView in DEBUG builds
+//  Admin UI view for editing catalog tags on glass items
+//  Appears at the bottom of InventoryDetailView when FLAG_ADMIN_UI is enabled
 //
 
 import SwiftUI
 
-#if DEBUG
+#if FLAG_ADMIN_UI
 
-/// Debug-only editor for catalog tags
+/// Admin UI editor for catalog tags
 /// Allows adding/editing tags that sync via CloudKit and can be exported
 struct CatalogTagEditorView: View {
     let itemStableId: String

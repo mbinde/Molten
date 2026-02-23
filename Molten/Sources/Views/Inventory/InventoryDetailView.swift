@@ -29,7 +29,7 @@ struct InventoryDetailView: View {
     let glassItemRepository: GlassItemRepository
     let storageLocationDefinitionRepository: StorageLocationDefinitionRepository
     let catalogFlagBundledRepository: CatalogFlagBundledRepository
-    #if DEBUG
+    #if FLAG_ADMIN_UI
     let catalogFlagAdminRepository: CatalogFlagAdminRepository
     let catalogTagAdminRepository: CatalogTagAdminRepository
     #endif
@@ -104,14 +104,14 @@ struct InventoryDetailView: View {
     @State private var isLoadingStock = false
     @State private var stockLoadError: Error?
 
-    #if DEBUG
+    #if FLAG_ADMIN_UI
     @State private var isProcessed = false
     #endif
 
     // MARK: - Initializers
 
-    #if DEBUG
-    /// Initialize with complete inventory model and service (DEBUG build with admin flags)
+    #if FLAG_ADMIN_UI
+    /// Initialize with complete inventory model and service (FLAG_ADMIN_UI build with admin flags)
     init(
         item: CompleteInventoryItemModel,
         inventoryTrackingService: InventoryTrackingService? = nil,
@@ -170,7 +170,7 @@ struct InventoryDetailView: View {
         self.glassItemRepository = deps.glassItemRepository
         self.storageLocationDefinitionRepository = deps.storageLocationDefinitionRepository
         self.catalogFlagBundledRepository = deps.catalogFlagBundledRepository
-        #if DEBUG
+        #if FLAG_ADMIN_UI
         self.catalogFlagAdminRepository = deps.catalogFlagAdminRepository
         self.catalogTagAdminRepository = deps.catalogTagAdminRepository
         #endif
@@ -349,8 +349,9 @@ struct InventoryDetailView: View {
                             .id("your-photos")
                     }
 
-                    // Debug: Catalog Flag Editor (only in DEBUG builds)
-                    #if DEBUG
+                    // Catalog Flag Editor (only when FLAG_ADMIN_UI is enabled)
+                    // To enable: Add FLAG_ADMIN_UI to SWIFT_ACTIVE_COMPILATION_CONDITIONS in Build Settings
+                    #if FLAG_ADMIN_UI
                     // Processed checkbox - always visible, not in a dropdown
                     // Entire row is tappable
                     Button {
@@ -548,7 +549,7 @@ struct InventoryDetailView: View {
             if FeatureFlags.ENABLE_ONLINE_STOCK {
                 loadOnlineStock()
             }
-            #if DEBUG
+            #if FLAG_ADMIN_UI
             Task { await loadProcessedState() }
             #endif
         }
@@ -664,7 +665,7 @@ struct InventoryDetailView: View {
         )
     }
 
-    #if DEBUG
+    #if FLAG_ADMIN_UI
     @MainActor
     private func loadProcessedState() async {
         do {

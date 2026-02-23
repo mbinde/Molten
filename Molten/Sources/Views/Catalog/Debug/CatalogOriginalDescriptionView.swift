@@ -4,15 +4,15 @@
 //
 //  Created on 2025-12-21.
 //
-//  Debug-only view showing the original manufacturer description and AI sources
+//  Admin UI view showing the original manufacturer description and AI sources
 //
 
 import SwiftUI
 import SQLite3
 
-#if DEBUG
+#if FLAG_ADMIN_UI
 
-/// Debug-only view to show the original manufacturer description and AI sources
+/// Admin UI view to show the original manufacturer description and AI sources
 /// Queries the mfrdesc SQLite directly to avoid modifying the model
 struct CatalogOriginalDescriptionView: View {
     let itemStableId: String

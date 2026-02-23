@@ -10,7 +10,7 @@ import SwiftUI
 struct CatalogListView: View {
     let items: [CompleteInventoryItemModel]
 
-    #if DEBUG
+    #if FLAG_ADMIN_UI
     let processedItemIds: Set<String>
     #endif
 
@@ -20,7 +20,7 @@ struct CatalogListView: View {
                 NavigationLink(value: CatalogNavigationDestination.catalogItemDetail(itemModel: item)) {
                     GlassItemRowView.catalog(item: item)
                 }
-                #if DEBUG
+                #if FLAG_ADMIN_UI
                 .listRowBackground(
                     processedItemIds.contains(item.glassItem.stable_id)
                         ? DesignSystem.Colors.accentSuccess.opacity(0.15)

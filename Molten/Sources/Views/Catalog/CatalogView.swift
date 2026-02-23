@@ -25,8 +25,8 @@ enum CatalogSearchScope: String, CaseIterable {
     case titlesOnly = "Only titles"
 }
 
-#if DEBUG
-/// Filter for processed/unprocessed items (debug only)
+#if FLAG_ADMIN_UI
+/// Filter for processed/unprocessed items (admin UI only)
 enum ProcessedFilter: CaseIterable {
     case all
     case unprocessedOnly
@@ -104,8 +104,8 @@ struct CatalogView: View {
     // The ViewModel's searchText setter handles debouncing and triggers filtering
     @State private var localSearchText = ""
 
-    #if DEBUG
-    // Debug-only: filter by processed state
+    #if FLAG_ADMIN_UI
+    // Admin UI only: filter by processed state
     @State private var processedFilter: ProcessedFilter = .all
     @State private var processedItemIds: Set<String> = []
     #endif
@@ -191,7 +191,7 @@ struct CatalogView: View {
     // MIGRATION: Get sorted filtered items from ViewModel instead of manual cache
     private var sortedFilteredItems: [CompleteInventoryItemModel] {
         let items = viewModel.sortedFilteredItems
-        #if DEBUG
+        #if FLAG_ADMIN_UI
         switch processedFilter {
         case .all:
             return items
@@ -472,7 +472,7 @@ struct CatalogView: View {
                 )
                 .presentationDetents([.medium, .large])
             }
-            #if DEBUG
+            #if FLAG_ADMIN_UI
             .task {
                 await loadProcessedItems()
             }
@@ -499,8 +499,8 @@ struct CatalogView: View {
         .accessibilityIdentifier("catalog_sort_button")
     }
 
-    #if DEBUG
-    // Debug-only: Button to cycle through processed filter states
+    #if FLAG_ADMIN_UI
+    // Admin UI only: Button to cycle through processed filter states
     private var processedFilterButton: some View {
         Button {
             processedFilter = processedFilter.nextFilter
@@ -557,7 +557,7 @@ struct CatalogView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     HStack(spacing: DesignSystem.Spacing.sm) {
                         sortMenu
-                        #if DEBUG
+                        #if FLAG_ADMIN_UI
                         processedFilterButton
                         #endif
                     }
@@ -609,7 +609,7 @@ struct CatalogView: View {
     }
     
     private var catalogListView: some View {
-        #if DEBUG
+        #if FLAG_ADMIN_UI
         CatalogListView(items: sortedFilteredItems, processedItemIds: processedItemIds)
         #else
         CatalogListView(items: sortedFilteredItems)

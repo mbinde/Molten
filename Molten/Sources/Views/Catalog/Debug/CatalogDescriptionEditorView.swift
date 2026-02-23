@@ -4,15 +4,15 @@
 //
 //  Created on 2025-12-21.
 //
-//  Debug-only view for editing catalog descriptions
-//  Appears below the flag editor in InventoryDetailView in DEBUG builds
+//  Admin UI view for editing catalog descriptions
+//  Appears below the flag editor in InventoryDetailView when FLAG_ADMIN_UI is enabled
 //
 
 import SwiftUI
 
-#if DEBUG
+#if FLAG_ADMIN_UI
 
-/// Debug-only editor for catalog descriptions
+/// Admin UI editor for catalog descriptions
 /// Pre-populates with current description, auto-saves when changed
 struct CatalogDescriptionEditorView: View {
     let itemStableId: String

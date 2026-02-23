@@ -16,8 +16,8 @@ struct ColorSearchSheet: View {
     /// Match tolerance (0-100, where 0 is exact match)
     @Binding var tolerance: Double
 
-    /// Whether to include glass with high color variance
-    @Binding var includeHighVariance: Bool
+    /// Which color variance levels to include
+    @Binding var colorVarianceFilter: ColorVarianceFilter
 
     /// Called when user applies the search
     let onApply: () -> Void
@@ -40,8 +40,8 @@ struct ColorSearchSheet: View {
                     // Tolerance slider
                     toleranceSection
 
-                    // High variance option
-                    highVarianceSection
+                    // Color variance filter
+                    colorVarianceSection
                 }
                 .padding()
             }
@@ -138,21 +138,25 @@ struct ColorSearchSheet: View {
         }
     }
 
-    // MARK: - High Variance Section
+    // MARK: - Color Variance Section
 
-    private var highVarianceSection: some View {
+    private var colorVarianceSection: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
-            Toggle(isOn: $includeHighVariance) {
-                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
-                    Text("Include High-Variance Glass")
-                        .font(DesignSystem.Typography.formLabel)
+            Text("Include glass with color variation of:")
+                .font(DesignSystem.Typography.sectionTitle)
 
-                    Text("Show glass that displays multiple colors or changes appearance (reactive, dichroic, opal, etc.)")
-                        .font(DesignSystem.Typography.listItemCaption)
-                        .foregroundStyle(DesignSystem.Colors.textSecondary)
+            Picker("Color Variation", selection: $colorVarianceFilter) {
+                ForEach(ColorVarianceFilter.allCases) { filter in
+                    Text(filter.shortLabel).tag(filter)
                 }
             }
-            .tint(DesignSystem.Colors.accentPrimary)
+            .pickerStyle(.segmented)
+
+            Text(colorVarianceFilter.explanation)
+                .font(DesignSystem.Typography.listItemCaption)
+                .italic()
+                .foregroundStyle(DesignSystem.Colors.textSecondary)
+                .animation(.easeInOut(duration: 0.15), value: colorVarianceFilter)
         }
         .padding()
         .background(DesignSystem.Colors.backgroundSecondary)
@@ -439,13 +443,13 @@ struct ColorSlidersPicker: View {
 
 #Preview {
     @Previewable @State var color: Color = .blue
-    @Previewable @State var tolerance: Double = 30
-    @Previewable @State var includeHighVariance: Bool = true
+    @Previewable @State var tolerance: Double = 12
+    @Previewable @State var colorVarianceFilter: ColorVarianceFilter = .high
 
     ColorSearchSheet(
         selectedColor: $color,
         tolerance: $tolerance,
-        includeHighVariance: $includeHighVariance,
+        colorVarianceFilter: $colorVarianceFilter,
         onApply: {},
         onClear: {},
         isSearchActive: true

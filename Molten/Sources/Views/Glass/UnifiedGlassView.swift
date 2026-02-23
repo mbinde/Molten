@@ -963,18 +963,16 @@ struct UnifiedGlassView: View {
                     }
                 }
 
-                // Clear all button
-                Section {
-                    Button("Clear All Filters") {
-                        viewModel.clearAllFilters()
-                    }
-                    .foregroundColor(DesignSystem.Colors.accentDanger)
-                    .disabled(!viewModel.hasActiveFilters)
-                }
             }
             .navigationTitle("Filters")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Clear") {
+                        viewModel.clearAllFilters()
+                    }
+                    .disabled(!viewModel.hasActiveFilters)
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         showingFilterSheet = false
